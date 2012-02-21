@@ -1,5 +1,5 @@
-RMPOLET2 ;EDS/PAK - HOME OXYGEN LETTERS ;7/24/98
- ;;3.0;PROSTHETICS;**29,55,159**;Feb 09, 1996;Build 2
+RMPOLET2        ;EDS/PAK - HOME OXYGEN LETTERS ;7/24/98
+ ;;3.0;PROSTHETICS;**29,55**;Feb 09, 1996
  ;
  ; ODJ - patch 55 - 1/30/01 - replace hard code 121 mail symbol with
  ;                            site param. extrinsic (AUG-1097-32118)
@@ -35,7 +35,7 @@ ASKHEAD ;
  I %=0 W !,"Answer 'Yes' for a header, 'No' for no header."
  Q
  ;
-PRINT(HEAD) ; Print H.O. correspondence
+PRINT(HEAD)   ; Print H.O. correspondence
  N DATE
  ;
  U IO(0) S Y=DT X ^DD("DD") S DATE=Y D:HEAD=1 HEADER
@@ -60,7 +60,7 @@ BODY ; Set up array for filing and print letter
  S NAME=$P(REC,U),SURNM=$P(NAME,",",2),FRSTNM=$P(NAME,",")
  S LN=$E(FRSTNM_" "_SURNM_SP,1,40)_"In Reply Refer To: "_RMPO("NAME")_"/"_$$ROU^RMPRUTIL(RMPOXITE)
  D LINE(LN)
- S LN=$P(REC,U,10),LN=$E(LN_SP,1,40)
+ S LN=$P(REC,U,10),LN=$E(LN_SP,1,40)_"SSN: "_$P(REC,U,2)
  D LINE(LN)
  S LN=$P(REC,U,11) I LN]"" S LN=$E(LN_SP,1,40) D LINE(LN)
  I $P(REC,U,12)]"" D LINE($P(REC,U,12))

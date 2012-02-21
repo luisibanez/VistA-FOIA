@@ -1,5 +1,5 @@
-%ZTLOAD5 ;SEA/RDS-TaskMan: P I: Task Status ;1/18/08  14:29
- ;;8.0;KERNEL;**49,339,446**;JUL 10, 1995;Build 35
+%ZTLOAD5 ;SEA/RDS-TaskMan: P I: Task Status ;03/30/2004  17:00
+ ;;8.0;KERNEL;**49,339**;JUL 10, 1995;Build 3
  ;
 INPUT ;check input parameters for error conditions
  N %,ZT1,ZT2,ZT3
@@ -7,16 +7,11 @@ INPUT ;check input parameters for error conditions
  I $D(ZTSK)>1 S %=ZTSK K ZTSK S ZTSK=%
  S ZTSK(0)=0,ZTSK(1)=0,ZTSK(2)="Undefined"
  I ZTSK<1!('$D(^%ZTSK(ZTSK,0))) Q
- L +^%ZTSK(ZTSK):5 E  S ZTSK(2)="Busy" Q  ;p446
- D SEARCH L -^%ZTSK(ZTSK)
+ L +^%ZTSK(ZTSK) D SEARCH L -^%ZTSK(ZTSK)
  Q
  ;
 SEARCH ;search ^%ZTSCH for task
- I $D(^%ZTSCH("TASK",ZTSK))#2 D  Q
- . S ZTSK(0)=1,ZTSK(1)=2,ZTSK(2)="Active: Running"
- . ;With a zero lock timeout it may report "active" falsely
- . L +^%ZTSCH("TASK",ZTSK):0 I $T S ZTSK(1)=5,ZTSK(2)="Inactive: Interrupted" L -^%ZTSCH("TASK",ZTSK) ;p446
- . Q
+ I $D(^%ZTSCH("TASK",ZTSK))#2 S ZTSK(0)=1,ZTSK(1)=2,ZTSK(2)="Active: Running" Q
  S ZT1=0 D  Q:ZTSK(0)  ;*339
  . F  S ZT1=$O(^%ZTSCH(ZT1)) Q:ZT1'>0  I $D(^%ZTSCH(ZT1,ZTSK))#2 S ZTSK(0)=1,ZTSK(1)=1,ZTSK(2)="Active: Pending" Q
  S ZT1="" D  Q:ZTSK(0)

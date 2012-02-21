@@ -1,5 +1,5 @@
-ACKQASU4 ;HCIOFO/AG - New/Edit Visit Utilities  ; 12/31/07 7:28am
- ;;3.0;QUASAR;**17**;Feb 11, 2000;Build 28
+ACKQASU4 ;HCIOFO/AG - New/Edit Visit Utilities  ;  04/01/99
+ ;;3.0;QUASAR;;Feb 11, 2000
  ;Per VHA Directive 10-93-142, this routine SHOULD NOT be modified.
  ;
  ;
@@ -197,10 +197,13 @@ DIAGHIST ; ensure diagnosis is on Patient history
 PROVCHK(ACKPRV) ;  Check to see if Provider is on Quasar Staff file - if so
  ;          function passes back Quasars Provider IEN No else null
  ;
- N ACKA,ACKB,NPNAME S ACKB=""
+ N ACKA,ACKB S ACKB=""
  I ACKPRV="" Q ACKB
- ;ACKQ*3*17 
- S NPNAME=$$GET1^DIQ(200,ACKPRV,.01,"")
- I '$D(^ACK(509850.3,"B",NPNAME)) Q ACKB
- Q $O(^ACK(509850.3,"B",NPNAME,ACKB))
+ ;  If not on USR file then definitely wont be on Quasar
+ I '$D(^USR(8930.3,"B",ACKPRV)) Q ACKB
+ S ACKA=""
+ F  S ACKA=$O(^USR(8930.3,"B",ACKPRV,ACKA)) Q:'+ACKA!(ACKB'="")  D
+ . I '$D(^ACK(509850.3,"B",ACKA)) Q
+ . S ACKB=$O(^ACK(509850.3,"B",ACKA,ACKB))
+ Q ACKB
  ;

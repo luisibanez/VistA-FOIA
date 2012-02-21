@@ -1,5 +1,5 @@
-ACKQRU ;AUG/JLTP BIR/PTD HCIOFO/AG-Support Routine for Reports ; 9/2/09 11:56am
- ;;3.0;QUASAR;**17**;Feb 11, 2000;Build 28
+ACKQRU ;AUG/JLTP BIR/PTD HCIOFO/AG-Support Routine for Reports ; [ 11/08/95 9:26 ]
+ ;;3.0;QUASAR;;Feb 11, 2000
  ;Per VHA Directive 10-93-142, this routine SHOULD NOT be modified.
 DTRANGE ;
 BEGDT N ACKTMPB
@@ -60,9 +60,7 @@ PARAMS ;
  . S DIC(0)="AEMQZ",DIC=509850.3
  . S DIC("S")="I $P(^(0),U,2)]"""",$P(""CF^O^S"",U,ACKSS)[$P(^(0),U,2)"
  . D ^DIC K DIC S:Y<0 DIRUT=1 Q:$D(DIRUT)
- . ;*17 Update to correctly set DUZ
- . ;S ACKSTF(+Y)=$P(Y,U,2)
- . S ACKSTF(+Y)=$$CONVERT1^ACKQUTL4(+Y)
+ . S ACKSTF(+Y)=$P(Y,U,2)
  ; if ALL staff selected then get them from staff file
  I ACKSS>3 D
  . S I=0 F  S I=$O(^ACK(509850.3,I)) Q:'I  D
@@ -71,9 +69,7 @@ PARAMS ;
  . . I ACKSS=4,"CF"'[X Q
  . . I ACKSS=5,X'="O" Q
  . . I ACKSS=6,X'="S" Q
- . . ;*17 Update to correctly set DUZ
- . . ;S ACKSTF(I)=$P(^ACK(509850.3,I,0),U)
- . . S ACKSTF(I)=$$CONVERT1^ACKQUTL4(I)
+ . . S ACKSTF(I)=$P(^ACK(509850.3,I,0),U)
  ;
  ; end
  Q

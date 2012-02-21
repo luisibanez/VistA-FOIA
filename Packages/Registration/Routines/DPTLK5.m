@@ -1,5 +1,5 @@
 DPTLK5 ;BAY/JAT,EG - Patient lookup APIs for patient safety issues ; 11 Aug 2005 8:20 AM
- ;;5.3;Registration;**265,276,277,485,675,788**;Aug 13, 1993;Build 18
+ ;;5.3;Registration;**265,276,277,485,675**;Aug 13, 1993
  Q
 BS5(DPTDFN) ;function checks if other patients on "BS5" xref
  ; with same last name
@@ -51,7 +51,6 @@ FFP ; This function checks if the 'Display Fugitive Felon Message'
  W !?17,$CHAR(7) W:$D(IORVON) IORVON W "*** WARNING - FFP FLAG ACTIVE ***" W:$D(IORVOFF) IORVOFF
  W !?19,$CHAR(7) W:$D(IORVON) IORVON W "PLEASE NOTIFY YOUR SUPERVISOR" W:$D(IORVOFF) IORVOFF
  W !
- I '$D(DGCLIST) D
- . S DIR(0)="FAO",DIR("A")="Enter <RETURN> to continue."
- . D ^DIR K DIR
+ S DIR(0)="FAO",DIR("A")="Enter <RETURN> to continue."
+ D ^DIR K DIR
  Q

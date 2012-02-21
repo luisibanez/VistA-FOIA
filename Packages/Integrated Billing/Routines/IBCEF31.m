@@ -1,5 +1,5 @@
 IBCEF31 ;ALB/ESG - FORMATTER SPECIFIC BILL FLD FUNCTIONS - CONT ;14-NOV-03
- ;;2.0;INTEGRATED BILLING;**155,296,349,400,432**;21-MAR-94;Build 192
+ ;;2.0;INTEGRATED BILLING;**155,296,349**;21-MAR-94;Build 46
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  Q
@@ -76,31 +76,8 @@ PGDX(DXCNT,IBX0,IBXDA,IBXLN,IBXCOL,IBXSIZE,IBXSAVE) ; Subroutine - Checks for Di
  F JUMP=DXCNT+4:4 Q:'$D(IBXSAVE("DX",JUMP))  D  ;
  . ;calculate page number where Dx number JUMP will print
  . S IBPG=JUMP\4+(JUMP#4>0)
- . S VAL=$P($$ICD9^IBACSV(+IBXSAVE("DX",JUMP)),U)   ; resolve Dx pointer
+ . S VAL=$P($G(^ICD9(+IBXSAVE("DX",JUMP),0)),U)   ; resolve Dx pointer
  . S VAL=$$FORMAT^IBCEF3(VAL,$G(IBX0),$G(IBXDA))  ;format Dx value
  . D SETGBL^IBCEFG(IBPG,IBXLN,IBXCOL,VAL,.IBXSIZE) ;store in output global
  Q  ;PGDX
  ;
-DXSV(IB,IBXSAVE) ; output formatter subroutine
- ; save off DX codes in IBXSAVE("DX")
- N Z,IBCT
- S (Z,IBCT)=0
- F  S Z=$O(IB(Z)) Q:'Z  I $G(IB(Z)) S IBCT=IBCT+1 M IBXSAVE("DX",IBCT)=IB(Z)
- Q
- ;
-AUTRF(IBXIEN,IBL,Z) ; returns auth # and referral# if room for both, separated by a space - IB*2.0*432
- ; IBXIEN=  claim ien
- ; IBL   =  field length-1 to allow for 1 blank space between numbers (28 for CMS 1500, 30 for UB-04)
- ; Z     =  1 for PRIMARY, 2 for SECONDARY, 3 for TERTIARY
- ; 
- N IBXDATA,IBZ
- Q:$G(IBXIEN)="" ""
- ; if CMS 1500, find current codes
- I $G(Z)="",$G(IBL)=28 S Z=$$COBN^IBCEF(IBXIEN)
- Q:$G(Z)="" ""
- ; if length not defined, default to shortest
- S:IBL="" IBL=28
- D F^IBCEF("N-"_$P("PRIMARY^SECONDARY^TERTIARY",U,Z)_" AUTH CODE",,,IBXIEN)
- D F^IBCEF("N-"_$P("PRIMARY^SECONDARY^TERTIARY",U,Z)_" REFERRAL NUMBER","IBZ",,IBXIEN)
- ; if length of auth and referral combined is too long, only return auth code
- Q $S(IBZ="":IBXDATA,IBXDATA="":IBZ,$L(IBXDATA)+$L(IBZ)>IBL:IBXDATA,1:IBXDATA_" "_IBZ)

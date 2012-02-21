@@ -1,8 +1,8 @@
-IBCNERPC ;DAOU/RO - eIV PAYER LINK REPORT COMPILE ;AUG-2003
- ;;2.0;INTEGRATED BILLING;**184,252,271,416**;21-MAR-94;Build 58
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCNERPC ;DAOU/RO - IIV PAYER LINK REPORT COMPILE ;AUG-2003
+ ;;2.0;INTEGRATED BILLING;**184,252,271**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
- ; eIV - Insurance Verification
+ ; IIV - Insurance Identification and Verification
  ;
  ; Input vars from IBCNERPB:
  ;  IBCNESPC("REP")=1 for Payer List report, 2 for Company List
@@ -51,7 +51,7 @@ EN(IBCNERTN,IBCNESPC) ; Entry
  ; Ins Report
  I IBREP=2 G INS
  ;
- ; Loop thru the eIV payer File (#365.12)
+ ; Loop thru the IIV payer File (#365.12)
  S IBPY=0,SORT1=""
  F  S IBPY=$O(^IBE(365.12,IBPY)) Q:'IBPY  D  Q:$G(ZTSTOP)
  . I $D(ZTQUEUED),$$S^%ZTLOAD() S ZTSTOP=1 Q

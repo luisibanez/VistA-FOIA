@@ -1,6 +1,6 @@
-IBCNEUT3 ;DAOU/AM - eIV MISC. UTILITIES ;12-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,252,271,416**;21-MAR-94;Build 58
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCNEUT3 ;DAOU/AM - IIV MISC. UTILITIES ;12-JUN-2002
+ ;;2.0;INTEGRATED BILLING;**184,252,271**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; The purpose of the INSERROR utility is to identify a legitimate
  ; Insurance Company name, returning the associated Payer IEN and
@@ -12,7 +12,7 @@ IBCNEUT3 ;DAOU/AM - eIV MISC. UTILITIES ;12-JUN-2002
  ; validated in routine IBCNEUT4) :
  ;
  ; [1] Does it have a National ID?
- ; [2] Does the National ID have eIV defined?
+ ; [2] Does the National ID have IIV defined?
  ; [3] Is the Payer active (i.e. the deactivated flag is turned off)
  ; [4] Is the national connection enabled?
  ; [5] Is the National ID blocked by VISTA?
@@ -133,7 +133,12 @@ INSERROR(TYPE,IEN,ERRFLG,ARRAY) ;
  ;
  ;  If the first two lookups failed, check the Ins Co Synonym file:
  ; Retrieve all ins co IENs that match in the Synonym file
- M INSIEN=^DIC(36,"C",INSNAME)
+ ;M INSIEN=^DIC(36,"C",INSNAME)
+ N %X,%Y
+ S %X="^DIC(36,""C"",INSNAME,"
+ S %Y="INSIEN("
+ I $D(^DIC(36,"C",INSNAME))#10=1 S INSIEN=^DIC(36,"C",INSNAME)
+ D %XY^%RCR K %X,%Y
  ;
  ; If nothing found in the Synonym file, error out
  I '$D(INSIEN) S SYMIEN=$$ERROR^IBCNEUT8("B1","Insurance company "_INSNAME_" could not be matched to a valid entry in the Insurance Company file.") G EXIT

@@ -1,5 +1,5 @@
-BPSJVAL2 ;BHAM ISC/LJF - Validate Pharmacy data ;3/5/08  11:14
- ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5,7**;JUN 2004;Build 46
+BPSJVAL2 ;BHAM ISC/LJF - Validate Pharmacy data ;2004-03-01
+ ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5**;JUN 2004;Build 45
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  N PHARMIX,RET,DIR,X
@@ -49,14 +49,14 @@ VALIDATE(BPSJDDD) ;
 2 ; NCPDP Number - C
  S ZNOTE="   NCPDP NUMBER - VALID"
  I RETCODE(RIX)="" D
- . I BPSJDDD=0 D
+ . I BPSJDDD=0 D 
  . . I '$D(RETCODE(17)) Q
  . . S ZNOTE="** NCPDP NUMBER - NCPDP OR NPI - Missing/Invalid",RETCODE=2
  . . S RETCODE(RIX)=ZNOTE_RETCODE(RIX)
  Q
 3 ; PHARMACY NAME - R
  S ZNOTE="   PHARMACY NAME"
- I RETCODE(RIX)="" D
+ I RETCODE(RIX)="" D 
  . S ZNOTE="** PHARMACY NAME - Missing/Invalid",RETCODE=3
  I RETCODE(RIX)]"" S RETCODE(RIX)=": "_$$DECODE(RETCODE(RIX))
  S RETCODE(RIX)=ZNOTE_RETCODE(RIX)
@@ -68,7 +68,7 @@ VALIDATE(BPSJDDD) ;
  . S RETCODE(RIX)=ZNOTE_RETCODE(RIX)
  Q
 5 ; Hour of Operation
- S ZNOTE="" ; not sending anymore
+ S ZNOTE="   HOURS OF OPERATION - VALID"
  Q
 6 ; Mailing Address - R
  S ZNOTE=$$TRIMTAIL(RETCODE(RIX))
@@ -88,7 +88,7 @@ VALIDATE(BPSJDDD) ;
  S VALDATA=($L($P(ZNOTE,CPS,4))<1)+VALDATA  ; State
  S VALDATA=($L($P(ZNOTE,CPS,5))<1)+VALDATA  ; Zip
  S ZNOTE="   REMITTANCE ADDRESS - Required - VALID"
- I VALDATA D
+ I VALDATA D 
  . S ZNOTE="** REMITTANCE ADDRESS - Missing/Invalid",RETCODE=7
  . S RETCODE(RIX)=ZNOTE_RETCODE(RIX)
  Q
@@ -160,7 +160,7 @@ TRIMTAIL(INSTR) ;
  ; Input:
  ;   INSTR - String to normalize
  ; Output
- ;   Normalize data
+ ;   Normalize data  
 DECODE(INSTR) ;
  N TRCH
  S TRCH("\F\")="|",TRCH("\R\")="~",TRCH("\E\")="\"

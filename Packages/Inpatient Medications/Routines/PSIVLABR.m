@@ -1,5 +1,5 @@
 PSIVLABR ;BIR/PR-REPRINT LABELS ;30 May 2001  12:36 PM
- ;;5.0; INPATIENT MEDICATIONS ;**58,82,178,184**;16 DEC 97;Build 12
+ ;;5.0; INPATIENT MEDICATIONS ;**58,82,178**;16 DEC 97;Build 9
  ;
  ; Reference to ^%ZIS(2 is supported by DBIA 3435.
  ; Reference to ^PS(52.6 is supported by DBIA 1231.
@@ -48,7 +48,7 @@ START S PSIV1=1,LINE=0 D RE D
  . I PSJIO,$G(PSJIO("EL"))]"" X PSJIO("EL")
  I PSJIO,$G(PSJIO("FE"))]"" X PSJIO("FE")
  D:'$D(PSIVCT) ^PSIVSTAT
-Q K PSIV,PSIVDOSE,PSIVCT,PSIVWD,P16,LINE,MESS,PSIV2,PSIVFLAG,PSIVRM,PSIV1,PDOSE,PDATE,XX1,XX2,BAG,CX,PSIMESS Q
+Q K PSIV,PSIVDOSE,PSIVCT,PSIVWD,P16,LINE,MESS,PSIV2,PSIVFLAG,PSIVRM,PSIV1,PDOSE,PDATE,XX1,XX2,BAG,CX Q
 RE ;
  ;NEED THE CODE BELOW?
  ;;I PSIV1,P(4)="A"!(P(5)=0) S:P(15)>2880!('P(15)) P(15)=2880 S P(16)=P16+PSIV1#(1440/P(15)+.5\1) S:'P(16) P(16)=PSIV1
@@ -78,8 +78,7 @@ INF S X=$P(P(8),"@") D:X]"" P
  I $D(^PS(55,DFN,"IV",+ON,3)) S X=$P(^(3),"^") D:X]"" P
  S X=P(9) D:X]"" P
  S X=P(11) D:X]"" P
- ;PSJ*5*184 - Display all messages if more than one additive has a message.
- I $D(MESS) S PSIMESS="" F  S PSIMESS=$O(MESS(PSIMESS)) Q:PSIMESS=""  S X=PSIMESS D P
+ I $D(MESS) S X=MESS D P
  I $D(^PS(59.5,PSIVSN,4)) S Y=^(4) F PSIV=1:1 S X=$P(Y,U,PSIV) Q:X=""  D P
  ;S X=PSIV1_"["_$S(PSIV1:PSIVNOL,1:PSIV2)_"]"_"  "_$S('PSIV1:PSIVNOW,1:"") D P
  S X=PSIVBAG D P
@@ -114,8 +113,7 @@ PMR ; Print Med Route on label
  . S X=$E(X,PSIVRM+1,999)
  Q
 SOL1 S X=$S($D(^PS(52.7,$P(PSIV,U,2),0)):$P(^(0),"^")_" "_$P(^PS(55,DFN,"IVBCMA",PSJIDNO,"SOL",+PSIV,0),U,2),1:"**********") Q
-MESS ;PSJ*5*184 -make MESS a local array so all messages display for all additives.
- I $P(^PS(52.6,+Y,0),U,9)]"" S MESS($P(^PS(52.6,+Y,0),U,9))=""
+MESS I '$D(MESS) I $P(^PS(52.6,+Y,0),U,9)]"" S MESS=$P(^(0),U,9)
  Q
 CONVER ;Expand dose to date.dose and set in X
  I P(15)>1440 S X=$$CONVER1^PSIVORE2($P(PSIVDOSE," "),P(15),(PSIV1-1)) Q
