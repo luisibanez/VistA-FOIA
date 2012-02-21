@@ -1,6 +1,5 @@
-PRSATP1 ; HISC/REL,WOIFO/PLT - Daily Post verification ;11/28/2006
- ;;4.0;PAID;**34,57,112**;Sep 21, 1995;Build 54
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRSATP1 ; HISC/REL-Daily Post verification ;2/28/2000
+ ;;4.0;PAID;**34,57**;Sep 21, 1995
  ;routine is called to validate data entered during the 
  ;screenman posting of an employees pay period
  ;
@@ -11,23 +10,12 @@ PRSATP1 ; HISC/REL,WOIFO/PLT - Daily Post verification ;11/28/2006
  .I Z2>1440,TWO'="Y","OT CT SB ON UA"'[$P(Z,"^",K+2) D E4 Q
  .I Z2>2880 D E5 Q
  .I $P(Z,"^",K+2)="" D E9 Q
- .;check duplicate start time if no rs-type of time in exception string z for node 2
- .I Z'["^RS",'(Z["HX"&("ON HW"[$P(Z,"^",K+2))),'(Z["^ON"&(Z["OT")),'(Z["^ON"&(Z["CT")),$D(T(Z1)) D E3 Q
+ .I '(Z["HX"&("ON HW"[$P(Z,"^",K+2))),'(Z["^ON"&(Z["OT")),'(Z["^ON"&(Z["CT")),$D(T(Z1)) D E3 Q
  .I $P(Z,"^",K+2)="HW",Z'["HX",'$P($G(^PRST(458,PPI,"E",DFN,"D",DAY,0)),"^",12) D E7 Q
- .I $P(Z,"^",K+2)'="" S T(Z1)=$G(T(Z1))_$P(Z,U,K+2)_U,T(Z1,K)=Z2_"^"_$P(Z,"^",K,K+3)
+ .I $P(Z,"^",K+2)'="" S T(Z1,K)=Z2_"^"_$P(Z,"^",K,K+3)
  .Q
  I '$D(T) Q
- ;check duplicate start time if rs in exception string z for node 2.
- S Z1="" I Z["^RS",'(Z["^ON"&(Z["OT")),'(Z["^ON"&(Z["CT")) F  S Z1=$O(T(Z1)) QUIT:Z1=""  QUIT:Z["HX"&("^ON^HW^"[T(Z1))  I $L(T(Z1),U)>2 D  QUIT:Z1="*"
- . N A
- . S A=T(Z1),A=U_A
- . I $L(A,U)>4 S Z1="*" QUIT
- . I A'["^RS^" S A=$P(A,"^ON")_$P(A,"^ON",2) S:A="" A="^ON" I "^CT^"'[A,"^OT^"'[A,Z'["^HX"!("^HW^"'[A) S Z1="*" QUIT
- . I A["^RS^" S A=$P(A,"^RS")_$P(A,"^RS",2) S:A="" A="^RS" I "^CT^OT^RG^ON^HW^"'[A S Z1="*" QUIT
- . QUIT
- G:Z1="*" E3
- ;exclude rs with ct, ot, rg, on, hw for error e2 check
- I Z'["HX",'(Z["^ON"&(Z["OT")),'(Z["^ON"&(Z["CT")) S Z1="" F  S Z1=$O(T(Z1)) Q:Z1=""  G:Z1'<T(Z1,$O(T(Z1,0))) E1 S Y=$O(T(Z1)) I Y,T(Z1,$O(T(Z1,0)))>Y G E2:'(T(Z1)["RS^"&("^CT^OT^RG^ON^HW^"[T(Y)))&'("^CT^OT^RG^ON^HW^"[T(Z1)&(T(Y)["RS^"))
+ I Z'["HX",'(Z["^ON"&(Z["OT")),'(Z["^ON"&(Z["CT")) S Z1="" F  S Z1=$O(T(Z1)) Q:Z1=""  G:Z1'<T(Z1,$O(T(Z1,0))) E1 S Y=$O(T(Z1)) I Y,T(Z1,$O(T(Z1,0)))>Y G E2
  S Z1="",LL=1 F  S Z1=$O(T(Z1)) Q:Z1=""  F K=0:0 S K=$O(T(Z1,K)) Q:K<1  D
  .S $P(ZS,"^",LL)=$P(T(Z1,K),"^",2),$P(ZS,"^",LL+1)=$P(T(Z1,K),"^",3),$P(ZS,"^",LL+2)=$P(T(Z1,K),"^",4) S:$P(T(Z1,K),"^",5)'="" $P(ZS,"^",LL+3)=$P(T(Z1,K),"^",5)
  .S LL=LL+4 Q

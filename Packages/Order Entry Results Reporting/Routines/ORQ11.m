@@ -1,5 +1,5 @@
 ORQ11 ;slc/dcm-Get patient orders in context ;3/31/04  09:57
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,27,48,72,78,99,94,148,141,177,186,190,195,215,243,295**;Dec 17, 1997;Build 63
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,27,48,72,78,99,94,148,141,177,186,190,195,215**;Dec 17, 1997
 LOOP ; -- main loop through "ACT" x-ref
  I $G(XREF)="AW" D AW Q
  I $G(FLG)=27 D EXPD^ORQ12 Q
@@ -43,15 +43,15 @@ ALL1 ; 1 -- secondary pass for All, Recent Orders, Unsigned
  Q
  ;
 CUR ; 2 -- Active/Current
- N X,X0,X1,X2,X3,X8,%H,YD,%,TM,IFN,ACTOR,NORX,OIEN,OACT
- I $G(GROUP)=$O(^ORD(100.98,"B","ALL SERVICES",0)),$G(ORWARD),$G(DGPMT)'=1 S NORX=$O(^ORD(100.98,"B","O RX",0)) ;K:X ORGRP(X) ; 177 screen out Outpt Meds if inpt
+ N X,X0,X1,X2,X3,%H,YD,%,TM,IFN,ACTOR,OIEN,OACT
+ I $G(GROUP)=$O(^ORD(100.98,"B","ALL SERVICES",0)),$G(ORWARD),$G(DGPMT)'=1 S X=$O(^ORD(100.98,"B","O RX",0)) K:X ORGRP(X) ; 177 screen out Outpt Meds if inpt
  S X2=+$$GET^XPAR("SYS","ORPF ACTIVE ORDERS CONTEXT HRS",1,"I"),X=$H,X=+X*24+($P(X,",",2)/3600),X1=X-X2,X3=X1#24,X1=X1\24,X2=$J(X3*3600,0,0),%H=X1_","_X2 D YMD^%DTC S YD=+(X_%)
  S TM=SDATE F  S TM=$O(^OR(100,"AC",PAT,TM)) Q:TM<1!(TM>EDATE)  S IFN=0 F  S IFN=$O(^OR(100,"AC",PAT,TM,IFN)) Q:IFN<1  I $D(^OR(100,IFN,0)),$D(^(3)) S X0=^(0),X3=^(3) D
  . Q:'$D(ORGRP($P(X0,U,11)))  S ACTOR=0
- . F  S ACTOR=$O(^OR(100,"AC",PAT,TM,IFN,ACTOR)) Q:ACTOR<1  I $D(^OR(100,IFN,8,ACTOR,0)) S X8=^(0) D
- .. I "^10^12^"[(U_$P(X8,U,15)_U) K ^OR(100,"AC",PAT,TM,IFN,ACTOR) Q
- .. I $P(X8,U,15)=13,$P(X8,U)<YD K ^OR(100,"AC",PAT,TM,IFN,ACTOR) Q
- .. I $P(X8,U,15)="",ACTOR'=$P(X3,U,7) K ^OR(100,"AC",PAT,TM,IFN,ACTOR) Q
+ . F  S ACTOR=$O(^OR(100,"AC",PAT,TM,IFN,ACTOR)) Q:ACTOR<1  I $D(^OR(100,IFN,8,ACTOR,0)) S X=^(0) D
+ .. I "^10^12^"[(U_$P(X,U,15)_U) K ^OR(100,"AC",PAT,TM,IFN,ACTOR) Q
+ .. I $P(X,U,15)=13,$P(X,U)<YD K ^OR(100,"AC",PAT,TM,IFN,ACTOR) Q
+ .. I $P(X,U,15)="",ACTOR'=$P(X3,U,7) K ^OR(100,"AC",PAT,TM,IFN,ACTOR) Q
  .. ;AGP waiting for approval change to remove duplicate orders for DC reason
  .. ;I ACTOR>0,$P($G(^OR(100,IFN,8,ACTOR,0)),U,2)="DC" S OIEN=IFN,OACT=ACTOR
  .. ;I OIEN=IFN,OACT>ACTOR K ^OR(100,"AC",PAT,TM,IFN,ACTOR) Q 
@@ -61,11 +61,9 @@ CUR ; 2 -- Active/Current
 CUR1 ; 2 -- secondary pass for Active/Current
  N STOP S STOP=$P(X0,U,9)
  I STS=10 K ^OR(100,"AC",PAT,TM,IFN) Q  ;no delayed orders
- I $P(X8,U,4)=2,$P(X8,U,15)=11 G CURX ;incl all unsig/unrel actions
  I '$D(YD),"^1^2^7^12^13^14^"[(U_STS_U) K ^OR(100,"AC",PAT,TM,IFN) Q
  I $D(YD),"^1^2^7^12^13^14^"[(U_STS_U),STOP<YD K ^OR(100,"AC",PAT,TM,IFN) Q
- I $G(NORX),NORX=$P(X0,U,11) Q  ;skip Rx for inpatients
-CURX D GET^ORQ12(IFN,ORLIST,DETAIL,ACTOR)
+ D GET^ORQ12(IFN,ORLIST,DETAIL,ACTOR)
  Q
  ;
 DC1 ; 3 -- secondary pass for DC
@@ -122,8 +120,8 @@ UVC1 ; 10 -- secondary pass for Unverified/Clerk
  Q
  ;
 INPT() ; -- Returns 1 or 0, if inpt order using X0=^OR(100,IFN,0)
- I ($P(X0,U,12)="I")!($$TYPE^OREVNTX($P(X0,U,17))="D") Q 1
- I $P($G(^SC(+$P(X0,U,10),0)),U,3)="W" Q 1 ;UNCOMMENTED IN *295
+ I ($P(X0,U,12)="I")!($P(X0,U,17)="D") Q 1
+ I $P($G(^SC(+$P(X0,U,10),0)),U,3)="W" Q 1
  Q 0
  ;
 SIG ; 11 -- Unsigned

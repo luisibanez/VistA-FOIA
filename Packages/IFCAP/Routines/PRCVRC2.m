@@ -1,10 +1,6 @@
-PRCVRC2 ;WOIFO/BMM/VAC - silently build RIL for DynaMed ; 12/3/07 10:32am
-V ;;5.1;IFCAP;**81,119**;Oct 20, 2000;Build 8
- ;Per VHA Directive 2004-038, this routine should not be modified.
- ;
- ;12/07 Code modified to fix error in GETTXN due to logic error.
- ;  Added KILL statements to eliminate finding random ^TMP global data
- ;  from other routines and to clean up ^DIC calls.
+PRCVRC2 ;WOIFO/BMM - silently build RIL for DynaMed ; 12/16/04
+V ;;5.1;IFCAP;**81**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;validation, error code for PRCVRC1
  ;
@@ -32,7 +28,7 @@ GETTXN(PRCVSTR) ;obtain current transaction number (if exists) from
  Q:$G(PRCVSTR)="" 0
  N TXN,PRCVE,PRCVRN S TXN="",(PRCVRN,PRCVE)=0
  ;check if Entry Number def in 410.1
- K ATXN,^TMP("DIERR",$J),^TMP("DILIST",$J)
+ K ATXN
  D FIND^DIC(410.1,,"1","BX",PRCVSTR,,,,,"ATXN")
  ;
  S TXN=+$G(ATXN("DILIST","ID",1,1))
@@ -42,20 +38,17 @@ GETTXN(PRCVSTR) ;obtain current transaction number (if exists) from
  . K PRCVAT S PRCVAT(410.1,"+1,",.01)=PRCVSTR
  . S PRCVAT(410.1,"+1,",2)=DT
  . S PRCVAT(410.1,"+1,",1)=1
- . K ^TMP("DIERR",$J),^TMP("DILIST",$J)
  . D UPDATE^DIE("","PRCVAT","PRCVRN")
  . ;don't send msg here
  . ;I $D(^TMP("DIERR",$J)) D SENDMSG(7,PRCVGL,0,1) S PRCVE=1 Q
- . I $D(^TMP("DIERR",$J))>0 K ^TMP("DIERR",$J),^TMP("DILIST",$J) S PRCVE=1 Q
+ . I $D(^TMP("DIERR",$J)) S PRCVE=1 Q
  . S PRCVRN=PRCVRN(1)
  S TXN=TXN+1
  K PRCVSA S PRCVSA(410.1,PRCVRN_",",1)=TXN
- K ^TMP("DIERR",$J),^TMP("DILIST",$J)
  D FILE^DIE("","PRCVSA")
  ;don't send msg here
  ;I $D(^TMP("DILIST",$J)) D SENDMSG(7,PRCVGL,0,1) Q 0
- I $D(^TMP("DIERR",$J))>0 K ^TMP("DIERR",$J),^TMP("DILIST",$J) Q 0
- K ^TMP("DIERR",$J),^TMP("DILIST",$J)
+ I $D(^TMP("DILIST",$J)) Q 0
  S TXN="000"_TXN,TXN=$E(TXN,$L(TXN)-3,$L(TXN))
  Q TXN
  ;

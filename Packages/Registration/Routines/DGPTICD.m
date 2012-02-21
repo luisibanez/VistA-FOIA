@@ -1,5 +1,5 @@
 DGPTICD ;ALB/MTC - PTF DRG Grouper Utility ; 2/19/02 3:08pm
- ;;5.3;Registration;**375,441,510,559,599,606,775,785**;Aug 13, 1993;Build 7
+ ;;5.3;Registration;**375,441,510,559,599,606**;Aug 13, 1993
  ;variables to pass in:
  ;  DGDX <- format: DX CODE1^DX CODE2^DX CODE3^...                      (REQUIRED)
  ;  DGSURG <- format: SURGERY CODE1^SURGERY CODE2^SURGERY CODE3^...       (OPTIONAL)
@@ -24,7 +24,7 @@ DGPTICD ;ALB/MTC - PTF DRG Grouper Utility ; 2/19/02 3:08pm
  G Q:'$D(ICDDX)
  ;
  ;-- build ICDPRC array
- K ICDPRC
+ ;K ICDPRC
  ;I $D(DGPROC) S DGSURG=$S('$D(DGSURG):DGPROC,1:DGSURG_DGPROC)
  ;I $D(DGSURG) S DGI=0 F  S DGI=DGI+1 Q:$P(DGSURG,U,DGI)=""  D
  ;. I $D(^ICD0($P(DGSURG,U,DGI),0)) S ICDPRC(DGI)=$P(DGSURG,U,DGI)
@@ -35,12 +35,10 @@ DGPTICD ;ALB/MTC - PTF DRG Grouper Utility ; 2/19/02 3:08pm
  . S DGPTTMP=$$ICDOP^ICDCODE(X,+$G(DGDAT))
  . I +DGPTTMP>0,($P(DGPTTMP,U,10)) S SUB=SUB+1,ICDPRC(SUB)=X
  I $D(DGSURG) F I=2:1 S X=$P(DGSURG,U,I) Q:X=""  D
- .S J=0 F  S J=$O(ICDPRC(J)) Q:'J
- .;I X=$G(ICDPRC(J)) S FLG=1 Q
- .;I FLG Q
+ . S FLG=0,J=0 F  S J=$O(ICDPRC(J)) Q:'J  I X=$G(ICDPRC(J)) S FLG=1 Q
+ . I FLG Q
  . S DGPTTMP=$$ICDOP^ICDCODE(X,+$G(DGDAT))
  . I +DGPTTMP>0,($P(DGPTTMP,U,10)) S SUB=SUB+1,ICDPRC(SUB)=X
- . S ICDSURG(SUB)=$P(DGPTTMP,U,2)
  ;
  ;-- set other required variables
  S ICDTRS=DGTRS,ICDEXP=DGEXP,ICDDMS=DGDMS
@@ -50,8 +48,7 @@ DGPTICD ;ALB/MTC - PTF DRG Grouper Utility ; 2/19/02 3:08pm
  D ^ICDDRG S DRG=ICDDRG I '$D(DGDRGPRT) G Q
  ;
 PRT ;print DRG and national HCFA values
- I (ICDDATE<3071001)&(DRG=468!(DRG=469)!(DRG=470)) W *7
- I DRG=998!(DRG=999) W *7
+ I DRG=468!(DRG=469)!(DRG=470) W *7
  S Y=ICDDATE D DD^%DT ; Y=external representation of effective date
  W !!?9,"Effective Date:","  ",Y
  S DRG(0)=$$DRG^ICDGTDRG(DRG,DGDAT) W !!,"Diagnosis Related Group: ",$J(DRG,6),?36,"Average Length of Stay(ALOS): ",$J($P(DRG(0),"^",8),6)

@@ -1,6 +1,6 @@
 IBTRED01 ;ALB/AAS - EXPAND/EDIT CLAIMS TRACKING ENTRY - CONT; 01-JUL-1993
- ;;2.0;INTEGRATED BILLING;**389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;Version 2.0 ; INTEGRATED BILLING ;; 21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 % I '$G(IBTRN)!($G(IORVON)="") G ^IBTRED
  D UR,REVIEW,SC
@@ -68,7 +68,7 @@ UR ; -- ur information region
  ;
 4 ; -- Visit region for prosthetics
  N IBDA,IBRMPR S IBDA=$P(IBTRND,"^",9) D PRODATA^IBTUTL1(IBDA)
- D SET^IBCNSP(START+2,OFFSET,"          Item: "_$P($$PIN^IBCSC5B(+IBDA),U,2))
+ D SET^IBCNSP(START+2,OFFSET,"          Item: "_$G(IBRMPR(660,+IBDA,4,"E")))
  D SET^IBCNSP(START+3,OFFSET,"   Description: "_$G(IBRMPR(660,+IBDA,24,"E")))
  D SET^IBCNSP(START+4,OFFSET,"      Quantity: "_$J($G(IBRMPR(660,+IBDA,5,"E")),$L($G(IBRMPR(660,+IBDA,14,"E")))))
  D SET^IBCNSP(START+5,OFFSET,"    Total Cost: $"_$G(IBRMPR(660,+IBDA,14,"E")))

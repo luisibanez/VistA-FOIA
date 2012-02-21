@@ -1,19 +1,21 @@
-BPSOSHF ;BHAM ISC/SD/lwj/DLF - Get/Format/Set value for repeating segments ;06/01/2004
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5,8,10**;JUN 2004;Build 27
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+BPSOSHF ;BHAM ISC/SD/lwj/DLF - Get/Format/Set value for DUR/PPS segment ;06/01/2004
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
  ;
  ; This routine is an addendum to BPSOSCF.  Its purpose is to handle
- ; some of the repeating fields that now exist in NCPDP 5.1.
+ ; some of the repeating fields that now exist in NCPDP 5.1.  
  ; The logic was put in here rather than BPSOSCF to keep the original
  ; routine (BPSOSCF) from growing too large and too cumbersome to
  ; maintain.
  ;
-DURPPS(FORMAT,NODE,MEDN) ;EP called from BPSOSCF
+ ; At this point, the only repeating fields we handle in this routine
+ ; are those contained in the DUR/PPS segment.
+ ;
+DURPPS(FORMAT,NODE,MEDN)     ;EP called from BPSOSCF  
  ;---------------------------------------------------------------
- ;NCPDP 5.1 changes
+ ;NCPDP 5.1 changes   
  ; Processing of the 5.1 DUR/PPS segment is much different than the
  ; conventional segments of 3.2, simply because all of its fields
- ; are optional, and repeating.  The repeating portion of this
+ ; are optional, and repeating.  The repeating portion of this 
  ; causes us to have yet another index we have to account for, and
  ; we must be able to tell which of the fields really needs to be
  ; populated.  The population of this segment is based on those
@@ -29,8 +31,9 @@ DURPPS(FORMAT,NODE,MEDN) ;EP called from BPSOSCF
  ; for values - if there aren't any, we don't need to write this
  ; segment
  ;
- N FIELD,RECCNT,DUR,FLD,OVERRIDE,FLAG,ORD,FLDIEN,FLDNUM,FLDNUMB,FOUND
+ N FIELD,BPS51,RECCNT,DUR,FLD,OVERRIDE,FLAG,ORD,FLDIEN,FLDNUM
  S FLAG="FS"
+ I ^BPS(9002313.99,1,"CERTIFIER")=DUZ S FLAG="GFS"
  ;
  Q:'$D(BPS("RX",MEDN,"DUR"))
  ;
@@ -40,6 +43,7 @@ DURPPS(FORMAT,NODE,MEDN) ;EP called from BPSOSCF
  D GETFLDS(FORMAT,NODE,.FIELD)
  ;
  ; now lets get, format and set the field
+ S BPS51=1 ;needed in the set logic for dual 3.2/5.1 fields
  S (ORD,RECCNT,DUR)=0
  S RECCNT=RECCNT+1
  F  S DUR=$O(BPS("RX",MEDN,"DUR",DUR)) Q:DUR=""  D
@@ -50,110 +54,13 @@ DURPPS(FORMAT,NODE,MEDN) ;EP called from BPSOSCF
  ... S FLDIEN="",FLDIEN=$P(FIELD(ORD),U)
  ... S BPS("X")=BPS("RX",MEDN,"DUR",DUR,FLDNUM)
  ... S FOUND=1
- ... D XFLDCODE^BPSOSCF(NODE,FLDIEN,FLAG)  ;format/set
+ ... D XFLDCODE^BPSOSCF(FLDIEN,FLAG)  ;format/set
  ;
  ; this sets the record count and last record on the subfile
  S ^BPSC(BPS(9002313.02),400,BPS(9002313.0201),473.01,0)="^9002313.1001A^"_RECCNT_"^"_RECCNT
  ;
  Q
- ;
-COB(FORMAT,NODE,MEDN) ; COB fields processing, NODE=160
- ;---------------------------------------------------------------
- ; The COB data is stored in the following local array:
- ;
- ;      BPS("RX",MEDN,"OTHER PAYER",.....
- ;
- ; Array built in routine BPSOSCD.
- ; Special note - Overrides are not allowed on this multiple.
- ;    "Special" code is not accounted for either.
- ;---------------------------------------------------------------
- ;
- N FIELD,FLD,OVERRIDE,FLAG,ORD,NCPFLD,BPD,BPD1,BPD2,PCE,BPSOPIEN,BPSOAIEN,BPSORIEN
- S FLAG="FS"
- ;
- ; Quit if there is no data in the array
- Q:'$D(BPS("RX",MEDN,"OTHER PAYER"))
- ;
- ; next we need to figure out which fields on this format are really
- ; needed, then we will loop through and populate them
- ;
- D GETFLDS(FORMAT,NODE,.FIELD)
- ;
- ; re-sort this list by the NCPDP field#
- ; NCPFLD(NCPDP FIELD#) = internal field#
- K NCPFLD S ORD=0 F  S ORD=$O(FIELD(ORD)) Q:'ORD  S FLD=$P(FIELD(ORD),U,2) I FLD'="" S NCPFLD(FLD)=+FIELD(ORD)
- ;
- ; see if 337-4C is needed
- S FLD=337
- I $D(NCPFLD(FLD)) D
- . S BPS("X")=$P($G(BPS("RX",MEDN,"OTHER PAYER",0)),U,1)     ; get
- . I BPS("X")="" Q
- . D XFLDCODE^BPSOSCF(NODE,NCPFLD(FLD),FLAG)                 ; format/set
- . Q
- ;
- ; now lets get, format and set the rest of the COB fields
- S BPSOPIEN=0 F  S BPSOPIEN=$O(BPS("RX",MEDN,"OTHER PAYER",BPSOPIEN)) Q:'BPSOPIEN  D
- . S BPD=$G(BPS("RX",MEDN,"OTHER PAYER",BPSOPIEN,0))
- . ; Note that pieces 8 (Payer-Patient Responsibility Count) and 9 (Benefit Stage Count) are only set
- . ;   by Certification Code
- . F PCE=1:1:9 D
- .. S FLD=$S(PCE=1:337,PCE=2:338,PCE=3:339,PCE=4:340,PCE=5:443,PCE=6:341,PCE=7:471,PCE=8:353,PCE=9:392,1:0) Q:'FLD
- .. I '$D(NCPFLD(FLD)) Q                          ; field not needed
- .. I $P(BPD,U,PCE)="" Q                          ; data is nil
- .. S BPS("X")=$P(BPD,U,PCE)                      ; get
- .. D XFLDCODE^BPSOSCF(NODE,NCPFLD(FLD),FLAG)     ; format/set
- .. Q
- . ;
- . ; Now look at the other payer amount paid fields
- . S BPSOAIEN=0 F  S BPSOAIEN=$O(BPS("RX",MEDN,"OTHER PAYER",BPSOPIEN,"P",BPSOAIEN)) Q:'BPSOAIEN  D
- .. S BPD1=$G(BPS("RX",MEDN,"OTHER PAYER",BPSOPIEN,"P",BPSOAIEN,0))
- .. F PCE=1,2 D
- ... S FLD=$S(PCE=1:431,PCE=2:342,1:0) Q:'FLD
- ... I '$D(NCPFLD(FLD)) Q                          ; field not needed
- ... I $P(BPD1,U,PCE)="" Q                         ; data is nil
- ... S BPS("X")=$P(BPD1,U,PCE)                     ; get
- ... D XFLDCODE^BPSOSCF(NODE,NCPFLD(FLD),FLAG)     ; format/set
- .. Q
- . ;
- . ; Now look at the other payer reject code fields
- . S BPSORIEN=0 F  S BPSORIEN=$O(BPS("RX",MEDN,"OTHER PAYER",BPSOPIEN,"R",BPSORIEN)) Q:'BPSORIEN  D
- .. S BPD2=$G(BPS("RX",MEDN,"OTHER PAYER",BPSOPIEN,"R",BPSORIEN,0))
- .. S FLD=472
- .. I '$D(NCPFLD(FLD)) Q                          ; field not needed
- .. I BPD2="" Q                                   ; data is nil
- .. S BPS("X")=BPD2                               ; get
- .. D XFLDCODE^BPSOSCF(NODE,NCPFLD(FLD),FLAG)     ; format/set
- .. Q
- . ;
- . ; Now look at the other payer-patient amount paid fields
- . ; Currently, this multiple is only set by certification code
- . S BPSOAIEN=0 F  S BPSOAIEN=$O(BPS("RX",MEDN,"OTHER PAYER",BPSOPIEN,"PP",BPSOAIEN)) Q:'BPSOAIEN  D
- .. S BPD1=$G(BPS("RX",MEDN,"OTHER PAYER",BPSOPIEN,"PP",BPSOAIEN,0))
- .. F PCE=1,2 D
- ... S FLD=$S(PCE=1:352,PCE=2:351,1:0) Q:'FLD
- ... I '$D(NCPFLD(FLD)) Q                          ; field not needed
- ... I $P(BPD1,U,PCE)="" Q                         ; data is nil
- ... S BPS("X")=$P(BPD1,U,PCE)                     ; get
- ... D XFLDCODE^BPSOSCF(NODE,NCPFLD(FLD),FLAG)     ; format/set
- .. Q
- . ;
- . ; Now look at the Benefit Stages fields
- . ; Currently, this multiple is only set by certification code
- . S BPSOAIEN=0 F  S BPSOAIEN=$O(BPS("RX",MEDN,"OTHER PAYER",BPSOPIEN,"BS",BPSOAIEN)) Q:'BPSOAIEN  D
- .. S BPD1=$G(BPS("RX",MEDN,"OTHER PAYER",BPSOPIEN,"BS",BPSOAIEN,0))
- .. F PCE=1,2 D
- ... S FLD=$S(PCE=1:394,PCE=2:393,1:0) Q:'FLD
- ... I '$D(NCPFLD(FLD)) Q                          ; field not needed
- ... I $P(BPD1,U,PCE)="" Q                         ; data is nil
- ... S BPS("X")=$P(BPD1,U,PCE)                     ; get
- ... D XFLDCODE^BPSOSCF(NODE,NCPFLD(FLD),FLAG)     ; format/set
- .. Q
- . Q
- ;
-COBX ;
- Q
- ;
-GETFLDS(FORMAT,NODE,FIELD) ;EP NCPDP 5.1
+GETFLDS(FORMAT,NODE,FIELD) ;EP NCPDP 5.1 
  ;---------------------------------------------------------------
  ;This routine will get the list of repeating fields that must be
  ; be worked with separately

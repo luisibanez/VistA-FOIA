@@ -1,10 +1,9 @@
-XPDIST ;SFISC/RSD - site tracking; 06/01/2006 ;03/05/2008
- ;;8.0;KERNEL;**66,108,185,233,350,393,486,539**;Jul 10, 1995;Build 11
- ; Per VHA Directive 2004-038, this routine should not be modified.
+XPDIST ;SFISC/RSD - site tracking; [5/7/02 5:53am] ;01/25/2006
+ ;;8.0;KERNEL;**66,108,185,233,350**;Jul 10, 1995;Build 7
  ;Returns ""=failed, XMZ=sent
  ;D0=ien in file 9.7, XPY=national site tracking^address(optional)
 EN(D0,XPY) ;send message
- N %,DIFROM,XPD,XPD0,XPD1,XPD2,XPDV,XPZ,X,X1,Z,Y,XPD6,XPDTRACK
+ N %,DIFROM,XPD,XPD0,XPD1,XPD2,XPDV,XPDTEXT,XPZ,XMDUZ,XMSUB,XMTEXT,XMY,XMZ,X,X1,Z,Y,XPD6
  ;Get data needed
  I '$D(^XPD(9.7,$G(D0),0)) D BMES^XPDUTL(" INSTALL file entry missing") Q ""
  ;p350 -add node 6 for the Test# and Seq#. -REM
@@ -15,13 +14,41 @@ EN(D0,XPY) ;send message
  ;XPZ(1)=start, XPZ(2)=completion date/time, XPZ(3)=run time
  S XPZ(1)=$P(XPD1,U),XPZ(2)=$P(XPD1,U,3),XPZ(3)=$$FMDIFF^XLFDT(XPZ(2),XPZ(1),3),XPZ(1)=$$FMTE^XLFDT(XPZ(1)),XPZ(2)=$$FMTE^XLFDT(XPZ(2))
  D LOCAL
- S XPDTRACK=$$TRACK
  D REMEDY ;p350 -REM
  Q $$FORUM()
-LOCAL ;Send a message to local mail group
- N XMY,XPDTEXT,XMTEXT,XMDUZ,XMSUB,XMZ
+ ;
+ ;
+FORUM() ;send to Server on FORUM
+ Q:$G(XPY)="" ""
+ S:XPY XMY("S.A5CSTS@FORUM.VA.GOV")="" ;,XMY("ESSRESOURCE@MED.VA.GOV")=""
+ S:$L($P(XPY,U,2)) XMY($P(XPY,U,2))=""
  K ^TMP($J)
+ ;Quit if not VA production primary domain
+ I $G(^XMB("NETNAME"))'[".VA.GOV" D BMES^XPDUTL(" Not a VA primary domain") Q ""
+ X ^%ZOSF("UCI") S %=^%ZOSF("PROD")
+ S:%'["," Y=$P(Y,",")
+ I Y'=% D BMES^XPDUTL(" Not a production UCI") Q ""
+ ;Message for server
+ S XPDTEXT(1,0)="PACKAGE INSTALL"
+ S XPDTEXT(2,0)="SITE: "_$G(^XMB("NETNAME"))
+ S XPDTEXT(3,0)="PACKAGE: "_XPD
+ S XPDTEXT(4,0)="VERSION: "_XPDV
+ S XPDTEXT(5,0)="Start time: "_XPZ(1)
+ S XPDTEXT(6,0)="Completion time: "_XPZ(2)
+ S XPDTEXT(7,0)="Run time: "_XPZ(3)
+ S XPDTEXT(8,0)="DATE: "_DT
+ S XPDTEXT(9,0)="Installed by: "_$P($G(^VA(200,+$P(XPD0,U,11),0)),U)
+ S XPDTEXT(10,0)="Install Name: "_$P(XPD0,U)
+ S XPDTEXT(11,0)="Distribution Date: "_$P(XPD1,U,4)
+ S XPDTEXT(12,0)=XPD2
+ S XMDUZ=$S($P(XPD0,U,11):+$P(XPD0,U,11),1:.5),XMTEXT="XPDTEXT(",XMSUB=$P(XPD0,U)_" INSTALLATION"
+ D ^XMD
+ K ^TMP($J)
+ Q "#"_$G(XMZ)
+ ;
+LOCAL ;Send a message to local mail group
  S X=$$MAILGRP^XPDUTL(XPD) Q:X=""
+ K ^TMP($J),XMY
  S XMY(X)="" D GETENV^%ZOSV
  ;Message for users
  S XPDTEXT(1,0)="PACKAGE INSTALL"
@@ -36,23 +63,19 @@ LOCAL ;Send a message to local mail group
  S XPDTEXT(10,0)="Distribution Date: "_$$FMTE^XLFDT($P(XPD1,U,4))
  S XMDUZ=$S($P(XPD0,U,11):+$P(XPD0,U,11),1:.5),XMTEXT="XPDTEXT(",XMSUB=$P(XPD0,U)_" INSTALLATION"
  D ^XMD
+ K XMTEXT
  Q
-TRACK() ; Should VA track the installation of this patch at a national level?
- Q:$G(XPY)="" 0  ; No - National site tracking was not requested
- ;Quit if not VA production primary domain
- I $G(^XMB("NETNAME"))'[".VA.GOV" D BMES^XPDUTL(" Not a VA primary domain") Q 0
- ;X ^%ZOSF("UCI") S %=^%ZOSF("PROD")
- ;S:%'["," Y=$P(Y,",")
- ;I Y'=% D BMES^XPDUTL(" Not a production UCI") Q ""
- ; 486/GMB Replaced the above 3 lines with the following line:
- I '$$PROD^XUPROD D BMES^XPDUTL(" Not a production UCI") Q 0
- Q 1
+ ;
 REMEDY ;Send to Remedy Server - ESSRESOURCE@MED.VA.GOV *p350 -REM
- Q:'XPDTRACK
- N XMY,XPDTEXT,XMTEXT,XMDUZ,XMSUB,XMZ
- K ^TMP($J)
+ Q:$G(XPY)=""
  S:XPY XMY("ESSRESOURCE@MED.VA.GOV")=""
  S:$L($P(XPY,U,2)) XMY($P(XPY,U,2))=""
+ K ^TMP($J)
+ ;Quit if not VA production primary domain
+ I $G(^XMB("NETNAME"))'[".VA.GOV" D BMES^XPDUTL(" Not a VA primary domain") Q
+ X ^%ZOSF("UCI") S %=^%ZOSF("PROD")
+ S:%'["," Y=$P(Y,",")
+ I Y'=% D BMES^XPDUTL(" Not a production UCI") Q
  ;Message for server (all in one string)
  ;XMTEXT=Type(1),Domain(2-65),Pkg(66-95),Version(96-125),
  ;       StartTime(126-147),CompleteTime(148-169),RunTime(170-177),
@@ -66,27 +89,5 @@ REMEDY ;Send to Remedy Server - ESSRESOURCE@MED.VA.GOV *p350 -REM
  S XPDTEXT(1,0)=X1
  S XMDUZ=$S($P(XPD0,U,11):+$P(XPD0,U,11),1:.5),XMTEXT="XPDTEXT(",XMSUB="KIDS-"_$P(XPD0,U)_" INSTALLATION"
  D ^XMD
+ K ^TMP($J),XMTEXT
  Q
-FORUM() ;send to Server on FORUM
- Q:'XPDTRACK ""
- N XMY,XPDTEXT,XMTEXT,XMDUZ,XMSUB,XMZ
- K ^TMP($J)
- S:XPY XMY("S.A5CSTS@FORUM.VA.GOV")=""
- S:$L($P(XPY,U,2)) XMY($P(XPY,U,2))=""
- ;Message for server
- S XPDTEXT(1,0)="PACKAGE INSTALL"
- S XPDTEXT(2,0)="SITE: "_$G(^XMB("NETNAME"))
- S XPDTEXT(3,0)="PACKAGE: "_XPD
- S XPDTEXT(4,0)="VERSION: "_XPDV
- S XPDTEXT(5,0)="Start time: "_XPZ(1)
- S XPDTEXT(6,0)="Completion time: "_XPZ(2)
- S XPDTEXT(7,0)="Run time: "_XPZ(3)
- S XPDTEXT(8,0)="DATE: "_DT
- S XPDTEXT(9,0)="Installed by: "_$P($G(^VA(200,+$P(XPD0,U,11),0)),U)
- S XPDTEXT(10,0)="Install Name: "_$P(XPD0,U)
- S XPDTEXT(11,0)="Distribution Date: "_$P(XPD1,U,4)
- S XPDTEXT(12,0)=XPD2
- S XPDTEXT(13,0)=+XPD6
- S XMDUZ=$S($P(XPD0,U,11):+$P(XPD0,U,11),1:.5),XMTEXT="XPDTEXT(",XMSUB=$P(XPD0,U)_" INSTALLATION"
- D ^XMD
- Q "#"_$G(XMZ)

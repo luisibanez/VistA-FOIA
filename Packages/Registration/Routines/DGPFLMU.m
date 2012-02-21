@@ -1,5 +1,5 @@
-DGPFLMU ;ALB/KCL - PRF ASSIGNMENT LISTMAN UTILITIES ; 3/06/06 3:39pm
- ;;5.3;Registration;**425,650**;Aug 13, 1993;Build 3
+DGPFLMU ;ALB/KCL - PRF ASSIGNMENT LISTMAN UTILITIES ; 4/25/03 3:39pm
+ ;;5.3;Registration;**425**;Aug 13, 1993
  ;
  ;no direct entry
  QUIT
@@ -48,8 +48,6 @@ BLDLIST(DGDFN) ;This procedure will build list of flag assignments for a patient
  ;
  N DGIEN  ;ien of assignment
  N DGIENS ;array of assignment ien's
- N DGPFA  ;assignment data array
- N DGPFAH ;assignment history data array
  N DGPTR  ;pointer to last assignment history record
  N DGTXT  ;msg text if no assignments for patient
  ;
@@ -108,6 +106,10 @@ BLDLIN(DGLNUM,DGPFA,DGPFAH,DGIEN) ;This procedure will build and setup ListMan l
  S DGTXT=$$FDATE^VALM1(+$G(DGPFAH("INITASSIGN")))
  S DGLINE=$$SETFLD^VALM1(DGTXT,DGLINE,"ASSIGN DATE")
  ;
+ ;approved by
+ S DGTXT=$P($G(DGPFAH("APPRVBY")),U,2)
+ S DGLINE=$$SETFLD^VALM1(DGTXT,DGLINE,"APPROV BY")
+ ;
  ;review date
  S DGTXT=+$G(DGPFA("REVIEWDT"))
  S DGTXT=$S(DGTXT:$$FDATE^VALM1(DGTXT),1:"N/A")
@@ -122,10 +124,6 @@ BLDLIN(DGLNUM,DGPFA,DGPFAH,DGIEN) ;This procedure will build and setup ListMan l
  S DGTXT="NO"
  I $P($G(DGPFA("FLAG")),U)["26.11" S DGTXT="YES"
  S DGLINE=$$SETFLD^VALM1(DGTXT,DGLINE,"LOCAL")
- ;
- ;owner site
- S DGTXT=$P($G(DGPFA("OWNER")),U,2)
- S DGLINE=$$SETFLD^VALM1(DGTXT,DGLINE,"OWNER SITE")
  ;
  ;construct initial list array
  D SET^VALM10(DGLNUM,DGLINE,DGLNUM)

@@ -1,28 +1,13 @@
 EASEZDD ;ALB/CMF - EZ help for long texts  ;22 FEB 2005
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**57,70**;Mar 15, 2001;Build 26
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**57**;Mar 15, 2001
  ;
-H112 ;Non-Reimbursed Medical Expenses (408.21 / 1.12)
- ;EAS*1.0*70
- S DIR("?",1)="This response must be a number.  Enter the total amount of non-reimbursed"
- S DIR("?",2)="medical expenses paid by the veteran during the previous calendar year.  The"
- S DIR("?",3)="expenses can be for the veteran or for persons that the veteran has a legal or"
- S DIR("?",4)="moral obligation to support.  The expenses must actually have been paid by the"
- S DIR("?",5)="veteran.  Reportable medical expenses include amounts paid for the following:"
- S DIR("?",6)="fees of physicians, dentists, and other providers of health services; hospital"
- S DIR("?",7)="and nursing home fees; medical insurance premiums (including the Medicare"
- S DIR("?",8)="premium); drugs and medicines; eyeglasses; any other expenses that are"
- S DIR("?",9)="reasonably related to medical care.  Do not list expenses which the veteran has"
- S DIR("?",10)="paid if the veteran expects to receive reimbursement from insurance or some"
- S DIR("?",11)="other source."
- S DIR("?",12)=" "
- S DIR("?",13)="By law, not all of the non-reimbursed medical expenses paid by the veteran"
- S DIR("?",14)="during the previous calendar year may be deducted from the total annual income."
- S DIR("?",15)="The total amount of the non-reimbursed medical expenses entered in this field"
- S DIR("?",16)="will be automatically adjusted based upon the veteran's maximum annual pension"
- S DIR("?",17)="amount and number of dependents."
- S DIR("?",18)=" "
- S DIR("?",19)="Intake clerks should remind the veteran to keep receipts for claimed medical"
- S DIR("?")="expenses."
+H112 ;Applicant Medical Expense
+ S DIR("?",1)="This response must be a number.  Enter the total"
+ S DIR("?",2)="amount of unreimbursed medical expenses paid by the"
+ S DIR("?",3)="veteran during the previous calendar year.  The"
+ S DIR("?",4)="expenses can be for the veteran or for persons that"
+ S DIR("?",5)="the veteran has a legal or moral obligation"
+ S DIR("?")="to support."
  Q
  ;
 H07 ;Amount Contributed to Spouse
@@ -72,3 +57,4 @@ PN ;Phone Number
  S DIR(0)="FO^8:8^K:X'?3N1""-""4N X"
  S DIR("?")="This response must be numeric. Use format nnn-nnnn. Example 222-1234."
  Q
+ ;

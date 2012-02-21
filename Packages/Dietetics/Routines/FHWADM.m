@@ -1,20 +1,18 @@
 FHWADM ; HISC/REL - Set up admission ;12/4/00  10:35
- ;;5.5;DIETETICS;**5,8,21**;Jan 28, 2005;Build 6
+ ;;5.5;DIETETICS;;Jan 28, 2005
  ; Changes necessary for new file #115 design:
  ; The .01 (1 piece of 0 node) for inpatients is now "P"_DFN (ie P7623)
  ; Therefore this file is no longer DINUMed to file #2.
  N FHWF S FHWF=$S($D(^ORD(101)):1,1:0)
  S FHZ115="P"_DFN D ADD^FHOMDPA
  I '$D(^FHPT(FHDFN,"A",0)) S ^FHPT(FHDFN,"A",0)="^115.01^^"
- D UPALFP  ;update food pref's based on allergy data
- D OPM  ;cancel any existing outpatient meals
- D NOW^%DTC S (FHNOW,FHX3,X)=$S($D(^DGPM(ADM,0)):$P(^(0),"^",1),1:%)
+ D NOW^%DTC S (FHX3,X)=$S($D(^DGPM(ADM,0)):$P(^(0),"^",1),1:%)
  I $D(^FHPT(FHDFN,"A",ADM)) S $P(^(ADM,0),"^",1)=X G:$G(^DPT(DFN,.105))'=ADM KIL G UPD
  S $P(^FHPT(FHDFN,"A",0),"^",3)=ADM,$P(^(0),"^",4)=$P(^(0),"^",4)+1
  S ^FHPT(FHDFN,"A",ADM,0)=X_"^^^^^^^^"
  S FHX1=$G(^DPT(DFN,.108)),FHX2=""
  I FHX1 S FHX1=$O(^FH(119.6,"AR",FHX1,0))
- I 'FHX1  S FHX1=$G(^DPT(DFN,.1)) I FHX1'="" S FHX1=$O(^DIC(42,"B",FHX1,0)) S:FHX1 FHX1=$O(^FH(119.6,"AW",FHX1,0))
+ E  S FHX1=$G(^DPT(DFN,.1)) I FHX1'="" S FHX1=$O(^DIC(42,"B",FHX1,0)) S:FHX1 FHX1=$O(^FH(119.6,"AW",FHX1,0))
  S FHX1=$G(^FH(119.6,+FHX1,0))
  S FHX2=$P(FHX1,"^",16),FHX1=$P(FHX1,"^",15) I 'FHX1,FHX2'="Y" G UPD
  S X=$S(FHX3>%:FHX3,1:%)
@@ -48,62 +46,4 @@ ADD ; Add diet associated Diet Restriction
  D UPD^FHMTK7
  K COM,DPAT,EVT,FP,L,LN,LP,LS,M,M1,M2,MEAL,N,NM,NO,NUM,NX,OPAT,P,PP,PNN,PNO,R1,SF,SP,X3,^TMP($J),Z
  Q
-UPALFP ;Update Food Preferences for all Patient's based on Allergies
- I FHDFN="" Q
- K FHMISS D ALG^FHCLN I '$O(^TMP($J,"FHGMRAL","")) Q
- F FHGMRN=0:0 S FHGMRN=$O(^TMP($J,"FHGMRAL",FHGMRN)) Q:FHGMRN=""  D UPDFP^FHWGMR
- K ^TMP($J,"FHGMRAL"),^TMP($J,"FHMISS"),FHGMRN,FHMSAL,FHMSFP,FHMSPT
- Q
-OPM ; Delete any future outpatient meals orders upon patient admission
- I '$D(^FHPT(FHDFN,"OP")),'$D(^FHPT(FHDFN,"SM")),'$D(^FHPT(FHDFN,"GM")) Q
- S X1=DT,X2=-1 D C^%DTC S FHDT=X_.999
- F FHRMDT=FHDT:0 S FHRMDT=$O(^FHPT(FHDFN,"OP","B",FHRMDT)) Q:FHRMDT'>0  F FHRNUM=0:0 S FHRNUM=$O(^FHPT(FHDFN,"OP","B",FHRMDT,FHRNUM)) Q:FHRNUM'>0  D CANRM
- F FHSM=FHDT:0 S FHSM=$O(^FHPT(FHDFN,"SM",FHSM)) Q:FHSM'>0  D CANSM
- F FHGM=FHDT:0 S FHGM=$O(^FHPT(FHDFN,"GM",FHGM)) Q:FHGM'>0  D CANGM
- Q
-CANRM ;
- D CANRM^FHOMRC1
- S FHORN=$P($G(^FHPT(FHDFN,"OP",FHRNUM,0)),U,12)
- S FHMPNUM=$P($G(^FHPT(FHDFN,"OP",FHRNUM,0)),U,6)
- S FHDT2=$P($G(^FHPT(FHDFN,"OP",FHRNUM,0)),U,1)
- S FILL="R;"_FHMPNUM_";"_FHDT2_";"_FHDT2_";;"
- D CAN
- I $D(^FHPT(FHDFN,"OP",FHRNUM,1)) D CNAO100,CANAO^FHOMRC1
- I $D(^FHPT(FHDFN,"OP",FHRNUM,2)) D CNEL100,CANEL^FHOMRC1
- I $D(^FHPT(FHDFN,"OP",FHRNUM,3)) D CNTF100,CANTF^FHOMRC1
- Q
-CNAO100 ;Backdoor message to update file #100 with AO cancel order
- S FHORN=$P($G(^FHPT(FHDFN,"OP",FHRNUM,1)),U,4),FILL="A;"_FHRNUM D CAN Q
-CNEL100 ;Backdoor message to update file #100 with EL cancel order
- S FHORN=$P($G(^FHPT(FHDFN,"OP",FHRNUM,2)),U,5),FILL="E;"_FHRNUM D CAN Q
-CNTF100 ;Backdoor message to update file #100 with TF cancel order
- S FHORN=$P($G(^FHPT(FHDFN,"OP",FHRNUM,3)),U,4),FILL="T;"_FHRNUM D CAN Q
- ;
-CANSM ;
- S FHSTAT="C",(DA,FHDA)=FHSM,DA(1)=FHDFN
- I $G(FHORN)="" S FHORN=$P($G(^FHPT(FHDFN,"SM",FHDA,0)),U,12)
- I '$D(^FHPT(DA(1),"SM",DA,0)) Q
- S DIE="^FHPT("_DA(1)_",""SM"","
- S DR="1////^S X=FHSTAT;14////^S X=FHORN;11.5////^S X=FHSTAT" D ^DIE
- S FHZN=$G(^FHPT(FHDFN,"SM",FHDA,0))
- S FHACT="C",FHOPTY="S",FHOPDT=FHDA D SETSM^FHOMRO2
-CNSM100 ;Backdoor message to update file #100 with SM cancel order
- S FHORN=$P($G(^FHPT(FHDFN,"SM",FHDA,0)),U,12),FILL="S;"_FHDA D CAN
- ;if an SM E/L Tray exists cancel that too:
-CNSMEL S FHORN=$P($G(^FHPT(FHDFN,"SM",FHDA,1)),U,4) I FHORN="" Q
- S FILL="G;"_FHDA D CAN Q
- ;
-CANGM ;
- S FHSTAT="C",(DA,FHDA)=FHGM,DA(1)=FHDFN
- S DIE="^FHPT("_DA(1)_",""GM"","
- S DR="8////^S X=FHSTAT;9////^S X=DUZ" D ^DIE
- S FHZN=$G(^FHPT(FHDFN,"GM",FHDA,0))
- S FHACT="C",FHOPTY="G",FHOPDT=FHDA D SETGM^FHOMRO2 ;set event
- Q
-CAN ;
- Q:'$$PATCH^XPDUTL("OR*3.0*215")  ;must have CPRSv26 for O.M. backdoor
- D MSHCA^FHOMUTL,EVSEND^FHWOR
- Q
-KIL ;
- K %,%H,%I,DIC,DIE,DIR,FHDT,FHDT2,FHRMDT,FHRNUM,FHNOW,FHX1,FHX2,FHX3
- K FHRMB,FHWRD,X Q
+KIL K %,%H,%I,FHX1,FHX2,FHX3,FHRMB,FHWRD,X Q

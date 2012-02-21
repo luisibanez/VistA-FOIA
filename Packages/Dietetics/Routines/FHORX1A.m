@@ -1,5 +1,5 @@
 FHORX1A ; HISC/REL/NCA/RVD - Diet Activity Report (cont) ;3/17/95  10:06
- ;;5.5;DIETETICS;**1,5,8**;Jan 28, 2005;Build 28
+ ;;5.5;DIETETICS;**1**;Jan 28, 2005
  ;
  ;process inpatient data.
  S PG=0 S FHPIO="** INPATIENT **" D HDR
@@ -7,7 +7,8 @@ FHORX1A ; HISC/REL/NCA/RVD - Diet Activity Report (cont) ;3/17/95  10:06
  ;
  ;process outpatient data.
  S FHPIO="** OUTPATIENT **" D HDR
- S (FHUSERNM,P0)="",(FHNMSV,NN)=0 F  S P0=$O(^TMP($J,"O",P0)) Q:P0=""  S (FHBRK,FHNON,FHEVE)=0 D LST1
+ S P0="",NN=0 F  S P0=$O(^TMP($J,"O",P0)) Q:P0=""  D LST1
+ ;
  S:$G(FHP) $P(^FH(119.73,FHP,0),"^",2)=NOW
  I '$G(FHP) F FHII=0:0 S FHII=$O(^FH(119.73,FHII)) Q:FHII'>0  S $P(^FH(119.73,FHII,0),"^",2)=NOW
  Q
@@ -15,7 +16,7 @@ FHORX1A ; HISC/REL/NCA/RVD - Diet Activity Report (cont) ;3/17/95  10:06
 LST K PP S NP=0 F DA=0:0 S DA=$O(^TMP($J,"I",P0,DA)) Q:DA<1  S Z=^(DA) D L1
  D L2 Q
  ;
-LST1 K PP S NP=0 F DA=0:0 S DA=$O(^TMP($J,"O",P0,DA)) Q:DA'>0  D T1
+LST1 K PP S NP=0 F DA=0:0 S DA=$O(^TMP($J,"O",P0,DA)) Q:DA<1  S Z=^(DA) D T1,T2
  Q
  ;
 L1 ; Process event
@@ -37,40 +38,130 @@ L2 S W1=$P(P0,"~",2),R1=$P(P0,"~",4),FHDFN=$P(P0,"~",5)
  S N1=$P(Y0,"^",1)
  ;D PID^FHDPA
  S TC=$P($G(^FHPT(FHDFN,"A",ADM,0)),"^",5),SF=$P($G(^(0)),"^",7),SO=$D(^FHPT("ASP",FHDFN,ADM))
- D:$Y>(IOSL-6) HDR W !!,$E(W1_" "_R1,1,20),?22,N1,?50,BID,?63,$S(SF:"SF",1:""),?66,$S(SO:"SO",1:""),?73,TC
- D ALG^FHCLN W !,"Allergies: ",$S(ALG="":"None on file",1:ALG),!
+ D:$Y>(IOSL-6) HDR W !!,$E(W1_" "_R1,1,20),?22,N1,?50,BID,?63,$S(SF:"SF",1:""),?66,$S(SO:"SO",1:""),?73,TC,!
  D ^FHORX1C D:NP NEWP Q
  ;
 T1 ; Process outpatient event
- S FHTDAT=$G(^TMP($J,"O",P0,DA)),DFN=$P(P0,"~",4)
+ S FHTDAT=$G(^TMP($J,"O",P0,DA))
  S FHACTI=$P(FHTDAT,"^",1)
  S DTP=$P(FHTDAT,"^",2)
  S BID=$P(FHTDAT,"^",3)
  S FHDESC=$P(FHTDAT,"^",4)
  S FHTC=$P(FHTDAT,"^",5)
- ;I FHBRK=1,(FHDESC["Recurring Meal cancelled"),(FHDESC["Break") Q
- ;I FHNON=1,(FHDESC["Recurring Meal cancelled"),(FHDESC["Noon") Q
- ;I FHEVE=1,(FHDESC["Recurring Meal cancelled"),(FHDESC["Eve") Q
- ;I (FHDESC["Recurring Meal cancelled"),(FHDESC["Break") S FHBRK=1
- ;I (FHDESC["Recurring Meal cancelled"),(FHDESC["Noon") S FHNON=1
- ;I (FHDESC["Recurring Meal cancelled"),(FHDESC["Eve") S FHEVE=1
  S FHDES1=$P(FHDESC,",",1)
  S FHDIET=$P(FHDES1,":",2),FHDIET=$E(FHDIET,2,$L(FHDIET))
  I FHDIET'="",$D(^FH(111,"B",FHDIET)) S FHDIDA=$O(^FH(111,"B",FHDIET,0))
  I $G(FHDIDA),$D(^FH(111,FHDIDA,0)) S FHDIET=$P(^FH(111,FHDIDA,0),U,7)
  S:FHDIET="" FHDIET="NO ORDER"
  S Y=FHDIET
- S W1=$P(P0,"~",2),R1=$P(P0,"~",4),(N1,FHDPTN)=$P(P0,"~",5)
- ;T2
+ S W1=$P(P0,"~",2),R1=$P(P0,"~",4),N1=$P(P0,"~",5)
+ Q
+ ;
+T2 S W1=$P(P0,"~",2),R1=$P(P0,"~",4),FHDPTN=$P(P0,"~",5)
+ ;Q:'$G(FHDFN)
+ ;D PATNAME^FHOMUTL
+ ;S FHDASAV=DA
+ ;
  I $D(^FH(119.8,DA,0)) S FHUSER=$P(^(0),U,9) S:$G(FHUSER) FHUSERN=$P(^VA(200,FHUSER,0),U,1)
- ;S EVT=FHDESC_" by "_FHUSERN
- I FHDESC["Standing" S FHSO1=$P(FHDESC,":",1),FHDESC="Outpatient SO"_$E(FHDESC,$L(FHSO1)+1,$L(FHDESC))
- I FHDESC["Supplemental" S FHSF1=$P(FHDESC,":",1),FHDESC="Outpatient SF"_$E(FHDESC,$L(FHSF1)+1,$L(FHDESC))
- S EVT=FHDESC
+ S EVT=FHDESC_" by "_FHUSERN
  I $Y>(IOSL-6) D HDR
- I (FHNMSV=0)!(FHNMSV'=P0) W !!,$E(W1,1,20),?22,FHDPTN,?50,BID,?73,FHTC D ALG^FHCLN W !,"Allergies: ",$S(ALG="":"None on file",1:ALG),!
- S FHNMSV=P0
+ W !!,$E(W1,1,20),?22,FHDPTN,?50,BID,?73,FHTC
+ W !!,?12,"Date of Activity: ",DTP
  D LNE
+ Q
+ ;
+ F FHDA=0:0 S FHDA=$O(^TMP($J,"O",P0,FHDA)) Q:FHDA<1  S Z=^(FHDA) D
+ .S FHMTY=$P(Z,"^",1),FHPNM=$P(Z,"^",2),FHDTE=$P(Z,"^",4)
+ .S FHSTAT=$P(Z,"^",5)
+ .S FHSTANAM=""
+ .I FHMTY="SPECIAL" S FHSTANAM=$S(FHSTAT="C":"CANCELLED",FHSTAT="D":"DENIED",FHSTAT="A":"AUTHORIZED",1:"PENDING")
+ .I FHMTY="RECURRING",FHSTAT="C" D  Q
+ ..W:FHDTE'="" !!,?12,"Date: ",FHDTE
+ ..W !,?14,"CANCELLED!!!"
+ ..W:FHMTY'="" !,?14,"Service Type: ",FHMTY
+ .S FHCOMM=$P(Z,"^",10),FHTCD=$P(Z,"^",15)
+ .S FHCLA=$P(Z,"^",16),FHCOS=$P(Z,"^",17)
+ .S FHMEAL=$P(Z,"^",11),FHDIET=$P(Z,"^",6),FHCLRK=$P(Z,"^",7)
+ .I $Y>(IOSL-6) D HDR W !!,$E(W1,1,20),?22,FHPNM,?50,FHBID,?73,FHTCD
+ .I FHMTY="GUEST" D  Q
+ ..W:FHDTE'="" !!,?12,"Date: ",FHDTE
+ ..W:FHDIET'="" !,?14,"Diet: ",FHDIET
+ ..W:FHMEAL'="" !,?14,"Meal: (",FHMEAL,")"
+ ..I $Y>(IOSL-6) D HDR
+ ..W:FHMTY'="" !,?14,"Service Type: ",FHMTY
+ ..W:FHCLA'="" !,?14,"Classification: ",FHCLA
+ ..W:FHCOS'="" !,?14,"Charge: ",FHCOS
+ .;
+ .I FHMTY="SPECIAL" D  Q
+ ..W:FHDTE'="" !!,?12,"Date: ",FHDTE
+ ..W:FHDIET'="" !,?14,"Diet: ",FHDIET
+ ..W:FHSTANAM'="" !,?14,"Status: ",FHSTANAM
+ ..W:FHMEAL'="" !,?14,"Meal: (",FHMEAL,")"
+ ..W:FHMTY'="" !,?14,"Service Type: ",FHMTY
+ ..I FHCOMM'="" S EVT="  Comment: "_FHCOMM D LNE^FHORX1C
+ .S (FHAOT,FHAOC,FHELTT,FHELTBM,FHTFCOM,FHTFTC,FHTFTKD,FHTFPR)=""
+ .S (FHDAIN,FHAOCN)=""
+ .I $D(^FHPT(FHDFN,"OP","B",FHDA)) D
+ ..S FHDAIN=$O(^FHPT(FHDFN,"OP","B",FHDA,0))
+ .I $G(FHDAIN),$D(^FHPT(FHDFN,"OP",FHDAIN,1)) D
+ ..S FHRDAT1=$G(^FHPT(FHDFN,"OP",FHDAIN,1))
+ ..S FHAOT=$P(FHRDAT1,U,1)
+ ..S FHAOC=$P(FHRDAT1,U,2)
+ ..S FHAOCN=$P(FHRDAT1,U,5)
+ ..S:FHAOCN="C" FHAOCN="Cancelled"
+ ..I $G(FHAOC),($D(^VA(200,FHAOC,0))) S FHAOC=$P(^VA(200,FHAOC,0),U,1)
+ .I $D(^FHPT(FHDFN,"OP","SM",FHDA,1)) D
+ ..S FHRDAT1=$G(^FHPT(FHDFN,"OP","SM",FHDA,1))
+ ..S FHELTT=$P(FHRDAT1,U,1)
+ ..S FHELTBM=$P(FHRDAT1,U,2)
+ ..I $G(FHAOC),($D(^VA(200,FHAOC,0))) S FHAOC=$P(^VA(200,FHAOC,0),U,1)
+ .I $D(^FHPT(FHDFN,"OP",FHDA,2)) D
+ ..S FHRDAT2=$G(^FHPT(FHDFN,"OP",FHDAIN,2))
+ ..S FHELTT=$P(FHRDAT2,U,1)
+ ..S FHELTBM=$P(FHRDAT2,U,2)
+ .S FHTFCN=""
+ .I $G(FHDAIN),$D(^FHPT(FHDFN,"OP",FHDAIN,3)) D
+ ..S FHRDAT3=$G(^FHPT(FHDFN,"OP",FHDAIN,3))
+ ..S FHTFCOM=$P(FHRDAT3,U,1)
+ ..S FHTFTC=$P(FHRDAT3,U,2)
+ ..S FHTFTKD=$P(FHRDAT3,U,3)
+ ..S FHTFCN=$P(FHRDAT3,U,5)
+ ..S:FHTFCN="C" FHTFCN="Cancelled"
+ .;get Tube Feeding data
+ .I $G(FHDAIN) D
+ ..F FHTFDA=0:0 S FHTFDA=$O(^FHPT(FHDFN,"OP",FHDAIN,"TF",FHTFDA)) Q:FHTFDA'>0  D
+ ...S FHTFDAT=$G(^FHPT(FHDFN,"OP",FHDAIN,"TF",FHTFDA,0))
+ ...S FHTFPR=$P(FHTFDAT,U,1)
+ ...I $G(FHTFPR),$D(^FH(118.2,FHTFPR,0)) S FHTFPR=$P(^FH(118.2,FHTFPR,0),U,1)
+ ...S FHTFST=$P(FHTFDAT,U,2)
+ ...S:$G(FHTFST) FHTFST=$S(FHTFST=1:"1/4",FHTFST=2:"1/2",FHTFST=3:"3/4",FHTFST=4:"FULL",1:"")
+ ...S FHTFQU=$P(FHTFDAT,U,3)
+ ...S FHTFCC=$P(FHTFDAT,U,4)
+ .W:FHDTE'="" !!,?12,"Date: ",FHDTE
+ .W:FHDIET'="" !,?14,"Diet: ",FHDIET
+ .W:FHMEAL'="" !,?14,"Meal: (",FHMEAL,")"
+ .W:FHMTY'="" !,?14,"Service Type: ",FHMTY
+ .;
+ .I FHAOT'="",FHMTY="RECURRING" S EVT="  Additional Order: "_FHAOT_" "_FHAOCN_" By: "_FHAOC D LNE^FHORX1C
+ .I FHELTT'="" S EVT="  Early/Late Tray Time: "_FHELTT_"  Bag Meal: "_FHELTBM D LNE^FHORX1C
+ .I FHTFCOM'="",FHMTY="RECURRING" S EVT="  TF: "_FHTFCOM_"  TF Total MLs: "_FHTFTC_"  TF Total KCALS/Day: "_FHTFTKD_" "_FHTFCN D LNE^FHORX1C
+ .I FHTFPR'="",FHMTY="RECURRING" D
+ ..S EVT="  TF Product: "_FHTFPR_"  TF Strength: "_FHTFST_"  TF Quantity: "_FHTFQU_"  TF Product ML/Day: "_FHTFCC_" "_FHTFCN
+ ..D LNE^FHORX1C
+ .;
+ K ALG I $G(DFN) D ALG^FHCLN I ALG'="" S EVT="Allergies: "_ALG,TYP="A" D LNE^FHORX1C
+ S DA=FHDASAV
+ ;get food preference
+ S FHFPDAT=$O(^FHPT(FHDFN,"P",0))
+ I $G(FHFPDAT) D
+ .F FHFPI=0:0 S FHFPI=$O(^FHPT(FHDFN,"P",FHFPI)) Q:FHFPI'>0  D
+ ..S FHFPDAT1=$G(^FHPT(FHDFN,"P",FHFPI,0))
+ ..S FHFP52=$P(FHFPDAT1,U,1)
+ ..S FHFPME=$P(FHFPDAT1,U,2)
+ ..I $G(FHFP52),$D(^FH(115.2,FHFP52,0)) D
+ ...S EVT="Pref: "_$P(^FH(115.2,FHFP52,0),U,1)_"  ("_FHFPME_")"
+ ...I $Y>(IOSL-6) D HDR W !!,$E(W1,1,20),?22,FHPNM,?50,FHBID,?73,FHTCD
+ ...D LNE^FHORX1C
  Q
  ;
 HDR ;W:'($E(IOST,1,2)'="C-"&'PG) @IOF S PG=PG+1 W !?20,"D I E T   A C T I V I T Y   R E P O R T",?72,"Page ",PG

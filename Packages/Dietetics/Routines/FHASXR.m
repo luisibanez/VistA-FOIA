@@ -1,5 +1,5 @@
 FHASXR ; HISC/REL - Print Screening ;5/10/93  15:10
- ;;5.5;DIETETICS;**5,8**;Jan 28, 2005;Build 28
+ ;;5.5;DIETETICS;;Jan 28, 2005
 F0 R !!,"Print by PATIENT or COMMUNICATION OFFICE or ALL or WARD? WARD// ",X:DTIME G:'$T!(X["^") KIL S:X="" X="W" D TR^FH
  I $P("PATIENT",X,1)'="",$P("WARD",X,1)'="",$P("COMMUNICATION OFFICE",X,1)'="",$P("ALL",X,1)'="" W *7,"  Answer with P or C or A or W" G F0
  G P0:X?1"P".E,W0:X?1"W".E I X?1"A".E S (DFN,ADM,WARD)="" G W1
@@ -14,11 +14,15 @@ P1 S NP=$P($G(^FH(119.9,1,3)),"^",3) I NP'="A" G P3
 P2 R !!,"Include Nutrition Profiles? (Y/N): ",NP:DTIME G:'$T!(NP["^") KIL S:NP="" NP="^" S X=NP D TR^FH S NP=X I $P("YES",NP,1)'="",$P("NO",NP,1)'="" W *7,!,"  Answer YES or NO" G P2
 P3 S NP=$S(NP?1"Y".E:1,1:0)
  I NP=0 S FHNUM=9999 G L0
-P4 ;ask user for how far to print encounter, 1 yr back as default.
- W ! S %DT="AEP",%DT("A")="Print Dietetics Encounter since Date: "
- S %DT("B")="T-365",%DT(0)="-T" D ^%DT K %DT Q:X["^"!$D(DTOUT)
- S FHET=Y
- D MONUM^FHOMUTL I FHNUM="" Q
+ W ! S DIR(0)="Y",DIR("A")="Would you like to display ALL monitors"
+ S DIR("B")="YES" D ^DIR
+ I Y="^" Q
+ I Y=1 S FHNUM=9999 G L0
+ S DIR(0)="N^1:9999"
+ S DIR("A")="How many monitors would you like to display?"
+ S DIR("B")=20 D ^DIR
+ I Y=""!(Y="^") Q
+ S FHNUM=Y
 L0 K IOP S %ZIS="MQ",%ZIS("B")="HOME" W ! D ^%ZIS K %ZIS,IOP G:POP KIL
  I $D(IO("Q")) S FHPGM="Q0^FHASXR",FHLST="DFN^ADM^WARD^TIM^NP^FHNUM" D EN2^FH G KIL
  U IO D Q0 D ^%ZISC K %ZIS,IOP G KIL

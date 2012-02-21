@@ -1,6 +1,5 @@
 MAGGTLB1 ;WOIFO/LB - RPC routine for Imaging Lab Interface ; [ 06/20/2001 08:56 ]
- ;;3.0;IMAGING;**59**;Nov 27, 2007;Build 20
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.0;IMAGING;;Mar 01, 2002
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGGTLB1 ;WOIFO/LB - RPC routine for Imaging Lab Interface ; [ 06/20/2001 08:56 
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -117,5 +117,4 @@ IMAGE2 ;
  . D ^DIK    ;Remove imaging pointers from lab subfile.
  I $D(DIERR) S MAGRY="0^Unsuccessful both files not updated." K DIERR Q
  S MAGRY="1^Success in filing both parent & image files." K DIERR
- D LINKDT^MAGGTU6(.X,+MAGIEN)
  Q

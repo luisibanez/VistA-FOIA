@@ -1,5 +1,5 @@
-GMRADEL ;HIRMFO/WAA-PATIENT DELETE REACTION ;11/14/06  13:18
- ;;4.0;Adverse Reaction Tracking;**36**;Mar 29, 1996;Build 9
+GMRADEL ;HIRMFO/WAA-PATIENT DELETE REACTION ; 2/13/96
+ ;;4.0;Adverse Reaction Tracking;;Mar 29, 1996
  ;
  ; Is this data Correct question:  
  ;Single Reaction:
@@ -48,14 +48,13 @@ DEL ; Main Entry point
  ; User want to delete the data
  D DELETE
  Q
-DELETE ; Deleting the data
+DELETE ; Deleteing the data
  N X
- ;W !,"One moment please deleting data..."
+ W !,"One moment please deleting data..."
  S X=0 F  S X=$O(^TMP($J,"GMRASF",X)) Q:X<1  D
  .N GMRAPA
  .S GMRAPA=$O(^TMP($J,"GMRASF",X,0)) ; find 120.8 data
  .S GMRAPA(0)=$G(^GMR(120.8,GMRAPA,0)) Q:GMRAPA(0)=""
- .I '$G(^TMP($J,"GMRASF",X,GMRAPA)) D EIE Q  ;36 Existing records are marked entered in error rather than being deleted
  .N GMRAPA1
  .S GMRAPA1=0
  .; find 120.85 data
@@ -66,14 +65,14 @@ DELETE ; Deleting the data
  ...N DIK,DA
  ...S DIK="^GMR(120.85,",DA=GMRAPA1 D ^DIK
  ...D UNLOCK^GMRAUTL(120.85,GMRAPA1) ; Unlocking the data 120.85
- ...;W "." ;36
+ ...W "."
  ...Q
  ..Q
  .D  ; delete 120.8 data
  ..N DIK,DA
  ..S DIK="^GMR(120.8,",DA=GMRAPA D ^DIK
  ..D UNLOCK^GMRAUTL(120.8,GMRAPA) ; Unlocking the data 120.8
- ..;W "." ;36
+ ..W "."
  ..Q
  .S X=$O(^TMP($J,"GMRASF","B",GMRAPA,0))
  .K ^TMP($J,"GMRASF",X,GMRAPA),^TMP($J,"GMRASF","B",GMRAPA,X)
@@ -89,13 +88,4 @@ DELPRT ; List all the reaction not signed
  .W !,$P(GMRAPA(0),U,2)
  .S GMRACNT=GMRACNT+1
  .Q
- Q
- ;
-EIE ;Section added in patch 36, will mark existing records entered in error
- N GMRADFN,ALDATA,SUB
- S GMRADFN=$P(GMRAPA(0),U)
- S ALDATA("GMRAERRDT")=$$NOW^XLFDT,ALDATA("GMRAERRBY")=$G(DUZ,.5)
- D EIE^GMRAGUI1(GMRAPA,GMRADFN,"ALDATA")
- S SUB=$O(^TMP($J,"GMRASF","B",GMRAPA,0))
- K ^TMP($J,"GMRASF",SUB,GMRAPA),^TMP($J,"GMRASF","B",GMRAPA,SUB) ;Delete entry as it's been taken care of
  Q

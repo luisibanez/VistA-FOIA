@@ -1,12 +1,9 @@
 IBCEF7 ;WOIFO/SS - FORMATTER AND EXTRACTOR SPECIFIC BILL FUNCTIONS ;8/6/03 10:56am
- ;;2.0;INTEGRATED BILLING;**232,349,432**;21-MAR-94;Build 192
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**232**;21-MAR-94
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 ALLPROV ;called from #364.5 entry "N-ALL CUR/OTH PROVIDER INFO"
- ;*342/TAZ - Added call to LPRV^IBCEF80 for line level providers; restructured due to line length
- I +$G(IBXSAVE("PROVINF",IBXIEN))=0 D
- . N IBZ
- . D PROVIDER(IBXIEN,"C",.IBZ),PROVIDER(IBXIEN,"O",.IBZ) S IBXSAVE("PROVINF",IBXIEN)=IBXIEN M IBXSAVE("PROVINF",IBXIEN)=IBZ
+ I +$G(IBXSAVE("PROVINF",IBXIEN))=0 N IBZ D PROVIDER(IBXIEN,"C",.IBZ),PROVIDER(IBXIEN,"O",.IBZ) S IBXSAVE("PROVINF",IBXIEN)=IBXIEN M IBXSAVE("PROVINF",IBXIEN)=IBZ
  Q
  ;for PRV1
  ;Input:
@@ -24,8 +21,8 @@ PRV1(IB399) ;
  . Q:$P(IBZ,"^",4)=""!$P(IBZ1,U,9)  ;if no FACILITY'S DEFAULT ID #
  . Q:$P(IBZ1,"^",4)!(IBDEFTYP=$P(IBZ,U,3))
  . S IBZN=$P(IBZ,"^",3),IBZNAME=$P(IBZ,"^",1)
- . I IBFRMTYP=2 Q:IBZN="1A"!(IBZNAME="MEDICARE PART A")  ;1500
- . I IBFRMTYP=3 Q:IBZN="1B"!(IBZNAME="MEDICARE PART B")  ;UB
+ . I IBFRMTYP=2 Q:IBZN="1A"!(IBZNAME="MEDICARE PART A")  ;HCFA
+ . I IBFRMTYP=3 Q:IBZN="1B"!(IBZNAME="MEDICARE PART B")  ;UB92
  . Q:$$CHCKPRV1^IBCEF73($S(IBFRMTYP=2:2,IBFRMTYP=3:1,1:0),IBZN)=0
  . I $P(IBZ,"^",2)=0!($P(IBZ,"^",2)=2) D
  . . S IBIND=IBIND+2
@@ -151,7 +148,6 @@ OTHADDR(IBXIEN) ;
  ;IBFUNC -function (3-RENDERING,etc)
  ;Output: VARIABLE POINTER (PTR;file_root)
 PROVPTR(IBIEN399,IBFUNC) ;
- ;*432/TAZ - No longer used for IBXSAVE array setup
  N IBN
  S IBN=$O(^DGCR(399,IBIEN399,"PRV","B",IBFUNC,0))
  I +IBN=0 Q 0
@@ -195,7 +191,7 @@ GETNMEL(IBFULL,IBEL) ;Get name element
  ; INSUR: Insurance PTR #36 or NONE
  ; IDTYPE: ID type
  ; ID: ID 
- ; FORMTYP: Form type 1=UB,2=1500
+ ; FORMTYP: Form type 1=UB92,2=HCFA 1500
  ; CARETYP: Care type 0=both inp/outp,1=inpatient, 2=outpatient
 PROVIDER(IB399,IBPROV,IBRES) ;
  N IBCURR,IBZ,IBRESARR
@@ -223,8 +219,8 @@ PSPRV(IBIFN) ; Returns information for bill ien IBIFN for purchased svc
  ;             1 if non-VA provider for rendering/attending
  ;  3rd digit: 0 if not purchased svc
  ;             1 if purchased svc
- ;  4th digit: 0 if 1500 bill
- ;             1 if UB bill
+ ;  4th digit: 0 if HCFA 1500 bill
+ ;             1 if UB-92 bill
  N IBSVC,Z,Z0,IBU2
  S IBSVC="000"_+$$INSFT^IBCEU5(IBIFN),IBU2=$G(^DGCR(399,IBIFN,"U2"))
  I $P(IBU2,U,10) S $E(IBSVC,1)=1 ; NON-VA FACILITY

@@ -1,5 +1,5 @@
-PXRMDEDI ; SLC/PJH - Edit PXRM reminder dialog. ;05/31/2006
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMDEDI ; SLC/PJH - Edit PXRM reminder dialog. ;08/09/2002
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;Used by protocol PXRM DIALOG SELECTION ITEM
  ;
@@ -35,9 +35,8 @@ DEL(SEQ,PXRMDIEN) ;Delete individual element from dialog or group
  ;
 IND(DIEN,SEL) ;Edit individual element
  W IORESET
- N DIC,DIDEL,DR,DTOUT,DTYP,DUOUT,DINUSE,HED,LFIND,LOCK,NATIONAL,OIEN,PLOCK,Y
+ N DIC,DIDEL,DR,DTOUT,DTYP,DUOUT,DINUSE,HED,LFIND,LOCK,NATIONAL,PLOCK,Y
  ;
- S OIEN=0
  ;Check for Uneditable flag
  S LOCK=$P($G(^PXRMD(801.41,DIEN,100)),U,4)
  S LFIND=$P($G(^PXRMD(801.41,DIEN,1)),U,5)
@@ -56,11 +55,10 @@ IND(DIEN,SEL) ;Edit individual element
  S DATA=$G(^TMP("PXRMDLG4",$J,"IEN",SEL))
  S PIEN=$P(DATA,U),SEQ=$P(DATA,U,2)
  ;National dialogs can only be edited
- I NATIONAL S ANS="E"
+ I NATIONAL,$G(LOCK)'=1 S ANS="E"
  ;In Group edit the group can only be edited
  I DIEN=PXRMDIEN S ANS="E"
  ;Ask what to do with local dialogs
- S DTYP=$P($G(^PXRMD(801.41,DIEN,0)),U,4) Q:DTYP=""
  I (('NATIONAL)&(DIEN'=PXRMDIEN))!((NATIONAL)&($G(PLOCK)=1)&(DIEN'=PXRMDIEN)&($G(LOCK)'=1)) D  Q:$D(DUOUT)!$D(DTOUT)
  .D PROMPT(.ANS,DIEN) Q:$D(DTOUT)!$D(DUOUT)
  .;Display usage
@@ -69,10 +67,13 @@ IND(DIEN,SEL) ;Edit individual element
  .; Verify delete
  .I ANS="D" D ASK(PIEN,SEQ)
  ;Ask what to do with National Dialogs that have a lock on them
- ;I NATIONAL,DIEN'=PXRMDIEN,$P($G(^PXRMD(801.41,DIEN,100)),U,4)=1 D  Q:$D(DUOUT)!$D(DTOUT)
- I NATIONAL,DIEN'=PXRMDIEN,LOCK=1,DTYP="G" D  Q
- .W !,"Cannot modify lock group from a higher level view. Please modify"
- .W !,"this group from the group editor screen." H 2
+ I NATIONAL,DIEN'=PXRMDIEN,$P($G(^PXRMD(801.41,DIEN,100)),U,4)=1 D  Q:$D(DUOUT)!$D(DTOUT)
+ .D PROMPT(.ANS,DIEN) Q:$D(DTOUT)!$D(DUOUT)
+ .;Display usage
+ .I "DC"[ANS D
+ ..W !,"Dialog Name: "_$P($G(^PXRMD(801.41,DIEN,0)),U)
+ .; Verify delete
+ .I ANS="D" D ASK(PIEN,SEQ)
  ;
  ;Delete line
  I ANS="D" D DEL(SEQ,PIEN) Q
@@ -80,16 +81,18 @@ IND(DIEN,SEL) ;Edit individual element
  I ANS="C" D SEL^PXRMDCPY(.DIEN,PIEN) Q:$D(DTOUT)!$D(DUOUT) 
  ;Determine if a taxonomy dialog
  N FIND
- I ANS="R" S OIEN=DIEN,(IEN,DIEN)=$P($G(^PXRMD(801.41,DIEN,49)),U,3)
+ I ANS="R" S (IEN,DIEN)=$P($G(^PXRMD(801.41,DIEN,49)),U,3)
  S FIND=$P($G(^PXRMD(801.41,IEN,1)),U,5),VALMBCK="R"
  ;Edit taxomomy dialog
  I $P(FIND,";",2)="PXD(811.2," D EDIT^PXRMGEDT("DTAX",$P(FIND,";"),0) Q
+ ;Determine dialog type
+ S DTYP=$P($G(^PXRMD(801.41,DIEN,0)),U,4) Q:DTYP=""
  ;Option to change an element to a group
  I DTYP="E",'NATIONAL D NTYP^PXRMDEDT(.DTYP) Q:$D(DUOUT)!$D(DTOUT)  D:DTYP="G"
  .S $P(^PXRMD(801.41,DIEN,0),U,4)=DTYP
  .W !,"Dialog element changed to a dialog group"
  ;Edit Element
- D EDIT^PXRMDEDT(DTYP,DIEN,OIEN)
+ D EDIT^PXRMDEDT(DTYP,DIEN)
  Q
  ;
 PROMPT(ANS,DIEN) ;Select Dialog Element Action

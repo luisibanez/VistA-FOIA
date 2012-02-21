@@ -1,5 +1,5 @@
-ICDUPDT ; DLS/DEK/KER - ICD Update Protocol for ICD Codes ; 02/22/2007
- ;;18.0;DRG Grouper;**6,11,28**;Oct 20, 2000;Build 3
+ICDUPDT ;DLS/DEK/KER - ICD Update Protocol for ICD Codes ; 10/22/2003
+ ;;18.0;DRG Grouper;**6,11**;Oct 20, 2000
  ;
  ; Quit Update if NOT ICD Diagnosis/Procedure Related 
  ;
@@ -8,5 +8,5 @@ ICDUPDT ; DLS/DEK/KER - ICD Update Protocol for ICD Codes ; 02/22/2007
  ;             the current protocol.  Control is passed
  ;             to the next sibling protocol.
  ;
- S:'$D(LEXSCHG("B",80))&('$D(LEXSCHG("B",80.1))) XQORQUIT=1
+ S:'$D(LEXSCHG(757.9,"B",80))&('$D(LEXSCHG(757.9,"B",80.1))) XQORQUIT=1
  Q

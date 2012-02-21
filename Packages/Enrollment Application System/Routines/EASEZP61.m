@@ -1,5 +1,5 @@
 EASEZP61 ;ALB/AMA - Print 1010EZ, Version 6 or greater, Cont. ; 10/19/2000
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**51,60,70**;Mar 15, 2001;Build 26
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**51,60**;Mar 15, 2001
  ;
  ; This routine copied from EASEZPF1; if the version # of the 1010EZ
  ; application is 6.0 or greater, then this routine will be executed.
@@ -42,23 +42,12 @@ DEM ; Print VA 10-10 Section I, Demographic information
  W !?3,@EASD@(6),?66,"|    ",@EASD@("8A")
  W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
  ;
- ;EAS*1.0*70
- I $G(@EASD@("9H"))="UNITED STATES" D  I 1  ;Use domestic address field labels
- . W !,"11. PERMANENT ADDRESS (Street)",?41,"|11A. CITY",?64,"|11B. STATE",?107,"|11C. ZIP CODE (9 digits)"
- . W !?4,@EASD@("9A"),?41,"|     ",@EASD@("9B"),?64,"|     ",@EASD@("9C"),?107,"|     ",@EASD@("9D")
- . W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
- . ;
- . W !,"11D. COUNTY",?35,"|11E. HOME TELEPHONE NUMBER (Include area code)  |11F. E-MAIL ADDRESS"
- . W !?5,@EASD@("9E"),?35,"|     ",@EASD@(10),?84,"|     ",@EASD@("11A")
+ W !,"11. PERMANENT ADDRESS (Street)",?41,"|11A. CITY",?64,"|11B. STATE",?107,"|11C. ZIP CODE (9 digits)"
+ W !?4,@EASD@("9A"),?41,"|     ",@EASD@("9B"),?64,"|     ",@EASD@("9C"),?107,"|     ",@EASD@("9D")
+ W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
  ;
- E  D  ;Use foreign address field labels
- . W !,"11. PERMANENT ADDRESS (Street)",?41,"|11A. CITY",?64,"|11B. PROVINCE",?107,"|11C. POSTAL CODE"
- . W !?4,@EASD@("9A"),?41,"|     ",@EASD@("9B"),?64,"|     ",@EASD@("9F"),?107,"|     ",@EASD@("9G")
- . W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
- . ;
- . W !,"11D. COUNTRY",?35,"|11E. HOME TELEPHONE NUMBER (Include area code)  |11F. E-MAIL ADDRESS"
- . W !?5,@EASD@("9H"),?35,"|     ",@EASD@(10),?84,"|     ",@EASD@("11A")
- ;
+ W !,"11D. COUNTY",?35,"|11E. HOME TELEPHONE NUMBER (Include area code)  |11F. E-MAIL ADDRESS"
+ W !?5,@EASD@("9E"),?35,"|     ",@EASD@(10),?84,"|     ",@EASD@("11A")
  W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
  ;
  W !,"11G. CELLULAR TELEPHONE NUMBER (Include area code)",?66,"|11H. PAGER NUMBER (Include area code)"

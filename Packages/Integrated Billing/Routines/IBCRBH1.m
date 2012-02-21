@@ -1,6 +1,6 @@
 IBCRBH1 ;ALB/ARH - RATES: BILL HELP DISPLAYS - CHARGES ; 10-OCT-1998
- ;;2.0;INTEGRATED BILLING;**106,245,370**;21-MAR-94;Build 5
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**106,245**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 DISPCHG(IBIFN) ; display a bills items and their charges, display only, does not change the charges on the bill
  ;
@@ -35,6 +35,12 @@ BILL(IBIFN,IBAA,IBRSARR) ; given a bill number calculate charges using schedules
  .. I IBBEVNT["PRESCRIPTION" D RX^IBCRBC1(IBIFN,IBRS,IBCS)
  .. I IBBEVNT["PROSTHETICS" D PI^IBCRBC1(IBIFN,IBRS,IBCS)
  .. I IBBEVNT["PROCEDURE" D CPT^IBCRBC1(IBIFN,IBRS,IBCS)
+ ;
+ I '$D(^TMP($J,"IBCRCC")) G END
+ ;
+ D MULTCPT^IBCRBCA1
+ D PSB^IBCRBCA2
+ D MODADJ^IBCRBCA3
  ;
 END Q
  ;

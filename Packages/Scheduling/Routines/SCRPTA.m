@@ -1,5 +1,5 @@
 SCRPTA ;ALB/CMM - Patient Listing w/Team Assignment Data ; 29 Jun 99  04:11PM
- ;;5.3;Scheduling;**41,48,52,114,174,181,177,526**;AUG 13, 1993;Build 8
+ ;;5.3;Scheduling;**41,48,52,114,174,181,177**;AUG 13, 1993
  ;
  ;Patient Listing w/Team Assignment Data Report
  ;
@@ -148,7 +148,7 @@ HEADER ;
 SHEAD ;
  ;setup column headers
  S @STORE@("H2")="Patient Name"
- S $E(@STORE@("H2"),19)="Pt ID"
+ S $E(@STORE@("H2"),24)="Pt ID"
  S $E(@STORE@("H1"),31)="Date"
  S $E(@STORE@("H2"),31)="Assigned"
  S $E(@STORE@("H2"),43)="PC?"

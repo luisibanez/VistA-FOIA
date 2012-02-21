@@ -1,10 +1,10 @@
-DICOMPV ;SFISC/GFT  BACKWARD-POINTERS IN COMPUTED FIELDS ;29JAN2005
- ;;22.0;VA FileMan;**1,6,76,114,144**;Mar 30, 1999;Build 5
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DICOMPV ;SFISC/GFT  BACKWARD-POINTERS IN COMPUTED FIELDS ;01:55 PM  18 Nov 2002
+ ;;22.0;VA FileMan;**1,6,76,114**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  N DIX,DICOTRY,DICOLEV
  D DRW^DICOMPX
-TRY F DICOTRY=1,2 S Y=$$BACK I Y[U Q:Y=U  D:$G(D)-.001 Y^DICOMPX G END
- S D=0 ;'D' is a flag to the calling routine, DICOMP0, saying we've found nothing here in DICOMPV
+TRY F DICOTRY=1,2 S Y=$$BACK I Y[U D:$G(D)-.001 Y^DICOMPX G END
+ S D=0 ;'D' is a flag to the calling routine, DICOMP0
 END Q
  ;
 BACK() N DICOB,DICODD
@@ -14,10 +14,8 @@ ARCH S Y=DICODD I DICOMP["W",$P($G(^DD(Y,0,"DI")),U,2)["Y" G DD ;No editing REST
  F DICOLEV=0:-1 G DD:'$D(^DD(Y,0)) Q:'$D(^(0,"UP"))  S Y=^("UP")
  I $D(^DIC(Y,0)),$P(^(0),X)="" X DIC("S") I $T,$D(^DIC(Y,0,"GL")) S V=^("GL"),D=0 F  S D=$O(^DD(J(DICOB),0,"PT",DICODD,D)) Q:'D  D  G Y:Y[U
 DINUM .I DICODD=Y,D=.01&(DICOTRY=1)&($P($G(^DD(Y,.01,0)),U,5,99)["DINUM=X")!(D=.001&(DICOTRY=2)) D YN("") I %=1 S %Y=V,X="D0" S:$D(DIFG) DIFG=1 D X(Y,D),P^DICOMPX S D=.001,Y=Y_U Q
- .Q:'$D(DICMX)  ;Stop if expression can't be multiple-valued
- .N DICOUT F DIX=0:0 S DIX=$O(^DD(DICODD,D,1,DIX)) Q:DIX'>0  S J=$G(^(DIX,0)) I +J=Y S %=$P(J,U,3,9) I $S(DICOTRY=1:%="",1:%]""&("MUMPS"[%)) D  G:$G(DICOUT) Q
- ..D YN("Cross-reference") I %<1 S Y=U,DICOUT=1 Q
- ..I %=1 D MP S DICOUT=1
+ .Q:'$D(DICMX)
+ .F DIX=0:0 S DIX=$O(^DD(DICODD,D,1,DIX)) Q:DIX'>0  S J=$G(^(DIX,0)) I +J=Y S %=$P(J,U,3,9) I $S(DICOTRY=1:%="",1:%]""&("MUMPS"[%)) D YN("Cross-reference") G Q:%<1 I %=1 D MP G Q
  .Q:DICOTRY=1
 INDEXES .F DIX=0:0 S DIX=$O(^DD("IX","F",DICODD,D,DIX)) Q:'DIX  I $P($G(^DD("IX",DIX,0)),U,4)="R",$P(^(0),U,9)=DICODD S J=$P(^(0),U,1,3) I +J=Y,$P($G(^(11.1,1,0)),U,2,4)=("F^"_DICODD_U_D) D YN("Index") G Q:%<1 I %=1 D MP G Q
 Q .Q
@@ -55,7 +53,7 @@ YN(SHOW) N X
  S %=1 I DICOMP["?" D
  .W !?3,"By '"_DICN_"', do you mean the "_X_" File,"
  .W !?7,"pointing via its '"_$P(^DD(DICODD,D,0),U),"' Field" S DICV=$P(^(0),U,2)
- .I SHOW]"" W !,"    (""",$P(J,U,2),""" ",SHOW,")"
+ .I SHOW]"" W " (""",$P(J,U,2),""" ",SHOW,")"
  .D YN^DICN
  I %=1 F M=M:1:$L(I)+1 Q:$F(X,$E(I,1,M))-1-M  S W=$E(I,M+1)
  Q

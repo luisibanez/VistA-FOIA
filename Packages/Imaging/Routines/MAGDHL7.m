@@ -1,6 +1,5 @@
-MAGDHL7 ;WOIFO/PMK,MLH - Routine to copy HL7 data from HLSDATA to ^MAGDHL7 ; 05/18/2007 11:23
- ;;3.0;IMAGING;**11,30,86,54**;03-July-2009;;Build 1424
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDHL7 ;WOIFO/PMK,MLH - Routine to copy HL7 data from HLSDATA to ^MAGDHL7 ; 05/06/2004  06:32
+ ;;3.0;IMAGING;**11,30**;16-September-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDHL7 ;WOIFO/PMK,MLH - Routine to copy HL7 data from HLSDATA to ^MAGDHL7 ; 05/
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -27,7 +27,6 @@ MAGDHL7 ;WOIFO/PMK,MLH - Routine to copy HL7 data from HLSDATA to ^MAGDHL7 ; 05/
  ;   EXAMPLE:  Replace xxxx With PACS GATEWAY
  ;
 ENTRY ; Entry point for HL7 1.5 version
- N DA,EDT,DIK,DIR,HLSDT,IX,KDT,MAGN,MAGOUT,POP
  ; Entry point from ^HLTRANS to copy the data from HLSDATA to ^MAGDHL7(
  ; This code was reset due to a max. string code error.  Peter indicated
  ; he did not need the 5th piece of the OBR segment.
@@ -39,20 +38,38 @@ ENTRY ; Entry point for HL7 1.5 version
  . S HLSDATA(IX-1)=HLSDATA(IX) K HLSDATA(IX)
  . S IX=$O(HLSDATA(IX))
  . Q
- Q:$D(HLSDT)
- S Y=$$NEWMSG($$NOW^XLFDT()\1)
+ G:$D(HLSDT) EX
+ D NOW^%DTC S X=$P(%,"."),DIC="^MAGDHL7(2006.5,"
+ S DIC(0)="LZ" D FILE^DICN
  S $P(^MAGDHL7(2006.5,+Y,0),"^",2)=$P(HLSDATA(0),"^",9) ; Message type
  S L=1,J=0 S ^MAGDHL7(2006.5,+Y,1,L,0)=HLSDATA(0)
  F  S J=$O(HLSDATA(J)) Q:J'>0  D
  . S L=L+1,^MAGDHL7(2006.5,+Y,1,L,0)=HLSDATA(J)
  . Q
  S ^MAGDHL7(2006.5,+Y,1,0)="^^"_L_U_L_U_DT
- ; Capture time
- S X=$P($G(^MAGDHL7(2006.5,+Y,0)),"^",3)
- K:X ^MAGDHL7(2006.5,"C",X,+Y)
- S X=$$NOW^XLFDT()
- S $P(^MAGDHL7(2006.5,+Y,0),"^",3)=X
- S ^MAGDHL7(2006.5,"C",X,+Y)=""
+ S DIE=DIC,DR=".03///^S X=""NOW""",DA=+Y D ^DIE ; Capture time
+ G EX
+ ;
+KIL ; Kill off old HL7 data in ^MAGDHL7(2006.5
+ ; Keep how many days?
+ S DIR("A")="   Select number of days to save HL7 Global",DIR(0)="N^0:31"
+ D ^DIR G EX:Y=""
+ S MAGN=Y
+ S %ZIS="Q",IOP="Q;""""" W !! D ^%ZIS I POP S MAGOUT="" G EX
+ I '$D(IO("Q")) D TK1^MAGDHL7 G EX
+ S ZTRTN="TK1^MAGDHL7",ZTSAVE("MAGN")="",ZTDESC="DELETE OLD HL7 RECORDS"
+ S ZTIO="",ZTDTH=$H D ^%ZTLOAD
+ G EX
+ ;
+TK1 ; Tasked job
+ S EDT=DT-MAGN,DIC="^MAGDHL7(2006.5,"
+ S KDT="" F  S KDT=$O(^MAGDHL7(2006.5,"B",KDT)) Q:KDT=""  Q:KDT>EDT  D
+ . S DA="" F  S DA=$O(^MAGDHL7(2006.5,"B",KDT,DA)) Q:DA=""  D ^DIK
+ . Q
+ G EX
+ ;
+EX ; EXIT
+ K DA,EDT,DIK,DIR,HLSDT,KDT,MAGN,MAGOUT,POP
  Q
  ;
 EN ; Entry point for HL7 1.6. Called from the MAG SEND ORU/ORM protocols.
@@ -73,10 +90,9 @@ EN2 ;
  ; Add demo and modality info expected by MAGDHR* routines on gateway
  D ADDDTA($NA(MAGRAD))
  ; Fall-Through intentional
- ; EdM: I can find no evidence that the label below is invoked from anywhere
- ;      in the released code...
 UPDATE ; Add the entry in the MAGDHL7(2006.5 global.
- S Y=$$NEWMSG($$NOW^XLFDT()\1)
+ D NOW^%DTC S X=$P(%,".") ; Getting today's date
+ S DIC="^MAGDHL7(2006.5,",DIC(0)="LZ" D FILE^DICN
  I +Y<1 Q  ; Entry not made in file.
  S $P(^MAGDHL7(2006.5,+Y,0),"^",2)=MAGTYPE
  ; Add HL7 message into word processing field.
@@ -84,12 +100,8 @@ UPDATE ; Add the entry in the MAGDHL7(2006.5 global.
  . ; If segment has more than one line of data, add as a single line
  . ; Peter's code will take care of this.
  . S J=0 F  S J=$O(MAGRAD(K,J)) Q:'J  S L=L+1,^MAGDHL7(2006.5,+Y,1,L,0)=MAGRAD(K,J)
- S ^MAGDHL7(2006.5,+Y,1,0)="^2006.502^"_L_"^"_L_"^"_DT
- S X=$P($G(^MAGDHL7(2006.5,+Y,0)),"^",3)
- K:X ^MAGDHL7(2006.5,"C",X,+Y)
- S X=$$NOW^XLFDT
- S $P(^MAGDHL7(2006.5,+Y,0),"^",3)=X
- S ^MAGDHL7(2006.5,"C",X,+Y)=""
+ S ^MAGDHL7(2006.5,+Y,1,0)="^^"_L_"^"_L_"^"_DT
+ S DIE=DIC,DR=".03///^S X=""NOW""",DA=+Y D ^DIE
  Q
  ;
 ADDDTA(XARY) ; SUBROUTINE - called by ENTRY, EN2
@@ -131,16 +143,4 @@ ADDDTA(XARY) ; SUBROUTINE - called by ENTRY, EN2
  . S @XARY@((S1+S2)/2)="NTE|1||bad HL7 message structure"
  . Q
  Q
- ;
-NEWMSG(DATE) ; Add a stub for a new message
- N D0,HDR
- S DATE=DATE\1
- L +^MAGDHL7(2006.5,0):1E9 ; Background process MUST wait
- S D0=$O(^MAGDHL7(2006.5," "),-1)+1
- S ^MAGDHL7(2006.5,D0,0)=DATE
- S:DATE'="" ^MAGDHL7(2006.5,"B",DATE,D0)=""
- S HDR=$G(^MAGDHL7(2006.5,0))
- S ^MAGDHL7(2006.5,0)="PACS MESSAGE^2006.5D^"_D0_"^"_($P(HDR,"^",4)+1)
- L -^MAGDHL7(2006.5,0)
- Q D0
  ;

@@ -1,6 +1,6 @@
 IBTUBO1 ;ALB/AAS - UNBILLED AMOUNTS - GENERATE UNBILLED REPORTS ;29-SEP-94
- ;;2.0;INTEGRATED BILLING;**19,31,32,91,123,159,247,155,277,339,399**;21-MAR-94;Build 8
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**19,31,32,91,123,159,247,155,277**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 OPT(IBOE,IBQUERY) ; - Has the outpatient encounter been billed?
  ;   Input: IBOE=pointer to outpatient encounter in file #409.68
@@ -13,10 +13,10 @@ OPT(IBOE,IBQUERY) ; - Has the outpatient encounter been billed?
  ;
  I '$G(DFN)!('$G(IBDT))!('$G(IBRT))!'$G(IBX) G OPTQ
  N IBCN,IBCPT,IBCT,IBDATA,IBDAY,IBDIV,IBFL,IBNAME,IBQUIT,IBNCF,IBXX,IBYD,IBYY,IBZ,IBMRA
- N IBCPTSUM,IBTCHRG
+ ;
  ; - Check to be sure the encounter is billable.
  I $$INPT^IBAMTS1(DFN,IBDT\1_.2359) G OPTQ ;  Became inpatient same day.
- I $G(IBOE),$$ENCL^IBAMTS2(IBOE)["1" G OPTQ ; "ao^ir^sc^swa^mst^hnc^cv^shad" encounter.
+ I $G(IBOE),$$ENCL^IBAMTS2(IBOE)["1" G OPTQ ; "ao^ir^sc^ec^mst^hnc^cv" encounter.
  S IBDAY=$E(IBDT,1,7),IBNAME=$P($G(^DPT(DFN,0)),U),IBQUIT="",IBNCF=0
  ;
  ; - If no encounter, see if add/edits or registrations are not billable.
@@ -54,7 +54,6 @@ OPT(IBOE,IBQUERY) ; - Has the outpatient encounter been billed?
  . S IBCPT(IBZ,2)=+$$BICOST^IBCRCI(IBRT,3,IBDAY,"PROCEDURE",IBZ,"",IBDIV,"",2)
  . ;
  . ; - Eliminate components without a charge.
- . S IBCPTSUM(IBZ)=+$G(IBCPT(IBZ,1))+$G(IBCPT(IBZ,2))
  . I 'IBCPT(IBZ,1) K IBCPT(IBZ,1)
  . I 'IBCPT(IBZ,2) K IBCPT(IBZ,2)
  ;
@@ -81,11 +80,9 @@ OPT(IBOE,IBQUERY) ; - Has the outpatient encounter been billed?
  . . ; - Get the procedure code and charge type for the revenue code.
  . . S IBZ=$P(IBYD,U,6)
  . . S IBCT=$S($P(IBYD,U,12):$P(IBYD,U,12),1:$P(IBDATA,U,4))
- . . S IBTCHRG=$P(IBYD,U,4)
  . . I 'IBZ!('IBCT) Q  ; Can't determine code/charge type for procedure.
  . . I $G(IBMRA(IBXX))'="" S:$D(IBCPT(IBZ)) IBCPT("MRA",IBZ,IBCT)=1 Q
  . . ; Delete procedure from unbilled procedures array.
- . . I $G(IBTCHRG)'<$G(IBCPTSUM(IBZ)) K IBCPT(IBZ) Q
  . . I $D(IBCPT(IBZ,IBCT)) K IBCPT(IBZ,IBCT) Q
  . . K IBCPT(IBZ)
  ;

@@ -1,5 +1,5 @@
-IVMCQ ;ALB/KCL/AEG/GAH - API FOR FINANCIAL QUERIES ; 28-N0V-06
- ;;2.0;INCOME VERIFICATION MATCH;**17,30,55,120**;21-OCT-94;Build 8
+IVMCQ ;ALB/KCL/AEG - API FOR FINANCIAL QUERIES ; 28-MAR-95
+ ;;2.0;INCOME VERIFICATION MATCH;**17,30,55**;21-OCT-94
  ;
  ;
 OPT ; Entry point for stand-alone financial query option.
@@ -159,6 +159,19 @@ NEED(DFN,IVMSENT,ERROR) ; Description: Used to determine if a financial query sh
  ; query is necessary.
  I ($P(IVML,U,4)="N")!($P(IVML,U,4)="L") D  G NEEDQ
  .S ERROR="PATIENT'S "_$S($P(IVML,U,5)=1:"MEANS",$P(IVML,U,5)=2:"COPAY EXEMPTION",1:"MEANS")_" TEST STATUS "_$P(IVML,U,3)_"."
+ .Q
+ ;
+ ; If current test is Cat C or Pending Adj., test date > 10/5/99, the
+ ; patient provided income info and agreed to pay no query is necessary.
+ I ($P(IVML,U,4)="C")!($P(IVML,U,4)="P"),$P(IVML,U,2)>2991005,$P($G(^DGMT(408.31,+IVML,0)),U,11)=1,$P($G(^DGMT(408.31,+IVML,0)),U,14)<1 D  G NEEDQ
+ .S ERROR="PATIENT IS "_$P($G(IVML),U,4)_" AFTER 10/5/99 / AGREED TO PAY"
+ .S ERROR=ERROR_" - QUERY NOT REQUIRED"
+ .Q
+ ; If patient is Cat C based upon declination to provide income but
+ ; agreed to pay -- no query is necessary.
+ I $P(IVML,U,4)="C",$P($G(^DGMT(408.31,+IVML,0)),U,11)=1,$P($G(^DGMT(408.31,+IVML,0)),U,14)=1 D  G NEEDQ
+ .S ERROR="PATIENT IS "_$P($G(IVML),U,4)_"/DECLINED TO PROVIDE INCOME/AGREED TO PAY"
+ .S ERROR=ERROR_" - QUERY NOT REQUIRED"
  .Q
  ;
  ; If current test is not REQUIRED and not NO LONGER REQUIRED and it is 

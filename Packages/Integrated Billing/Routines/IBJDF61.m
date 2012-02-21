@@ -1,6 +1,5 @@
 IBJDF61 ;ALB/RB - MISC. BILLS FOLLOW-UP REPORT (COMPILE) ;15-APR-00
- ;;2.0;INTEGRATED BILLING;**123,159,356**;21-MAR-94
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**123,159**;21-MAR-94
  ;
 ST ; - Tasked entry point.
  K IB,IBCAT,^TMP("IBJDF6P",$J),^TMP("IBJDF6D",$J) S IBQ=0
@@ -41,7 +40,7 @@ ST ; - Tasked entry point.
  . I IBCAT1>4 S IBDIV=0
  . E  D
  . . I 'IBSDV S IBDIV=0
- . . E  S IBDIV=$$DIV^IBJDF51(IBA)
+ . . E  S IBDIV=$$DIV^IBJD1(IBA)
  . ;
  . I IBSDV,IBDIV,'VAUTD Q:'$D(VAUTD(IBDIV))  ; Not a selected division.
  . ;
@@ -174,7 +173,7 @@ OTHQ Q Y
 COM ; - Get bill comments.
  N IBGLB,DAT,IBA1,IBC,COM,COM1,X1,X2
  ;
- S DAT=0,IBA1=$S(IBSH1="M":999999999,1:0)
+ S DAT=0,IBA1=$S(IBSH1="M":9999999,1:0)
  F  S IBA1=$S(IBSH1="M":$O(^PRCA(433,"C",IBA,IBA1),-1),1:$O(^PRCA(433,"C",IBA,IBA1))) Q:'IBA1  D  I IBSH1="M",DAT Q
  . S IBC=$G(^PRCA(433,IBA1,1)) Q:'IBC
  . I $G(IBSH2),$$FMDIFF^XLFDT(DT,+IBC)<IBSH2 Q  ; Comment age not minimum.

@@ -1,5 +1,5 @@
-DVBHQUP ;ALB/JLU  This routine is used for the upload option. ; 3/9/06 4:16pm
- ;;4.0;HINQ;**12,49,56**;03/25/92 
+DVBHQUP ;ALB/JLU  This routine is used for the upload option. ; 8/11/05 6:52am
+ ;;4.0;HINQ;**12,49**;03/25/92 
 A D A^DVBHUTIL
 B W !
 B1 R !,"Do you want to examine the Suspense file by 'P'atient or 'A'll  P// ",K1:DTIME G:'$T KA1 D P:"Pp"[K1!(K1=""),L:"Aa"[$E(K1_1)
@@ -9,32 +9,12 @@ KA1 D KA1^DVBHQEDT Q
 KA D KA^DVBHQEDT
  Q
 P S K1="^" K DVBDIQ D P1 I Y<0 S DVBOUT="^" Q
- N DVBQT,DVBTMP1,DVBTMP2
- S DIE="^DPT(",(DA,DFN)=+Y,DR="[DVBHINQ UPDATE]",DVBJ2=0 D TEM^DVBHIQR
- I '$D(DVBERCS) D CHKID^DVBHQD1
- I $G(DVBQT) D  G P
- . S DVBTMP1=$G(DVBNOALR)
- . S DVBTMP2=$G(DVBJ2)
- . S DVBNOALR=";4///a;5////"_DUZ_";6///N",DVBJ2=1 D FILE
- . S DVBNOALR=DVBTMP1
- . S DVBJ2=DVBTMP2
- D ^DIE:'$D(DVBERCS) K DIE,DR,DA
+ S DIE="^DPT(",(DA,DFN)=+Y,DR="[DVBHINQ UPDATE]",DVBJ2=0 D TEM^DVBHIQR,^DIE:'$D(DVBERCS) K DIE,DR,DA
  D C I DVBOUT'="^" G P
  Q
 L S ANS="",K1="^"
  I '$D(^DVB(395.5,"AC","N")) W !!,"No patients to be updated." H 3 Q
- F K2=0:0 S K2=$O(^DVB(395.5,"AC","N",K2)) Q:'K2!(DVBOUT="^")  D
- . I $D(^DVB(395.5,K2,"RS",0)),$P(^DVB(395.5,K2,0),U,5)'="Y",$P(^(0),U,5)'="I" D
- . . S DIE="^DPT(",(DA,DFN)=K2,DR="[DVBHINQ UPDATE]",DVBJ2=0 D TEM^DVBHIQR
- . . N DVBQT,DVBTMP1,DVBTMP2
- . . S DVBQT=1
- . . I '$D(DVBERCS) D CHKID^DVBHQD1 I DVBQT D  Q
- . . . S DVBTMP1=$G(DVBNOALR)
- . . . S DVBTMP2=$G(DVBJ2)
- . . . S DVBNOALR=";4///a;5////"_DUZ_";6///N",DVBJ2=1 D FILE
- . . . S DVBNOALR=DVBTMP1
- . . . S DVBJ2=DVBTMP2
- . . D ^DIE:'$D(DVBERCS) D C,KA Q:DVBOUT="^"
+ F K2=0:0 S K2=$O(^DVB(395.5,"AC","N",K2)) Q:'K2  I $D(^DVB(395.5,K2,"RS",0)),$P(^DVB(395.5,K2,0),U,5)'="Y",$P(^(0),U,5)'="I" S DIE="^DPT(",(DA,DFN)=K2,DR="[DVBHINQ UPDATE]",DVBJ2=0 D TEM^DVBHIQR,^DIE:'$D(DVBERCS) D C,KA Q:DVBOUT="^"
  Q
 C ;SETS UPDATED? FIELD, RUNS INCONSIS. CHECKER.
  Q:DVBOUT["^"  S DVB=DFN,DVBLP=2,DVBMM=1,DVBMM2=1 D QB^DVBHQZ6

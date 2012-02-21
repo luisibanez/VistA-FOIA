@@ -1,10 +1,29 @@
-PRS8MISC ;HISC/DAD,RM,RS-MISCELLANEOUS ADJUSTMENTS TO TIME CARD ;9/12/2006
- ;;4.0;PAID;**56,68,80,111,117**;Sep 21, 1995;Build 32
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- N ABUT,D,DY,M,NOTIME,PEROWK,WEEK
+PRS8MISC ;HISC/DAD,RM,RS-MISCELLANEOUS ADJUSTMENTS TO TIME CARD ;11/19/02
+ ;;4.0;PAID;**56,68,80**;Sep 21, 1995
+ N ABUT,AL,D,DY,DYWK,FLG,M,NOTIME,NUM,NL,NONP,NP,PEROWK,RL,WEEK,WP
+ I TYP["D" F X=1,2 D
+ .S (FLG(X),DYWK(X),NL(X),NONP(X),NP(X),NUM(X),RL(X),WP(X))=0
  S (PEROWK,NOTIME,PEROT,NOOT)=0 F DY=0:1:15 D
  .S WEEK=$S(DY>7:2,1:1)
  .S X=$G(^TMP($J,"PRS8",DY,2)),Y=$G(^("W"))
+ .I TYP["D",DY>0,DY<15 D  ; Set counts for Daily Employees.
+ ..S AL=$P(X,"^",3)
+ ..I AL="NP" S NP(WEEK)=NP(WEEK)+1    ; Non Pay for all days of week
+ ..I $D(^TMP($J,"PRS8",DY,"NL")) S NL(WEEK)=NL(WEEK)+1
+ ..;
+ ..Q:$G(^TMP($J,"PRS8",DY,"OFF"))=1  ;QUIT if the Non-Duty Day.
+ ..;
+ ..; The DYWK array keeps track of the number of days per week that
+ ..; a full time daily employee is scheduled to work.  This will be 
+ ..; used in AUTOLVCH^PRS8MSC1 to adjust leave charges.
+ ..S DYWK(WEEK)=DYWK(WEEK)+1
+ ..;
+ ..I AL="HX" S FLG(WEEK)=FLG(WEEK)+1   ; Holiday eXcused
+ ..I AL="AL" S NUM(WEEK)=NUM(WEEK)+1   ; Annual Leave
+ ..I AL="WP" S WP(WEEK)=WP(WEEK)+1     ; leave Without Pay
+ ..I AL="RL" S RL(WEEK)=RL(WEEK)+1     ; Restored annual Leave
+ ..I AL="NP" S NONP(WEEK)=NONP(WEEK)+1 ; NON Pay on a scheduled work day
+ ..Q
  .F M=1:1:96 S X=$E(Y,M) Q:'$L(X)  D  ; check for CB/FF OT and sleep time
  ..I "4EO"'[X!(X="O"&($E($G(^TMP($J,"PRS8",DY,"HOL")),M)=2)) S NOOT=0 ; set up periods of OT for PPD
  ..E  D
@@ -12,7 +31,7 @@ PRS8MISC ;HISC/DAD,RM,RS-MISCELLANEOUS ADJUSTMENTS TO TIME CARD ;9/12/2006
  ...S PEROT(PEROT)=PEROT(PEROT)_X
  ...Q
  ..I (TYP'["Ff"),SST,$E(ENT,27) D  ; set up per. of work for sleep time
- ...I "123OmosEeBbCctQ"'[X S NOTIME=0
+ ...I "123OmosEeBbCct"'[X S NOTIME=0
  ...E  D
  ....S:'NOTIME PEROWK=PEROWK+1,PEROWK(PEROWK)=DY_U_M_U_M_U,NOTIME=1
  ....S $P(PEROWK(PEROWK),U,3)=M+(96*(DY-PEROWK(PEROWK)))

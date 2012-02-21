@@ -1,6 +1,5 @@
-MAGDIR8A ;WOIFO/PMK - Read a DICOM image file ; 15 May 2007  10:42 AM
- ;;3.0;IMAGING;**11,51,49**;Mar 19, 2002;Build 2033;Apr 07, 2011
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDIR8A ;WOIFO/PMK - Read a DICOM image file ; 06 Apr 2004  10:08 AM
+ ;;3.0;IMAGING;**11**;14-April-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDIR8A ;WOIFO/PMK - Read a DICOM image file ; 15 May 2007  10:42 AM
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -47,11 +47,13 @@ RADLKUP ; Radiology patient/study lookup -- called by ^MAGDIR81
  Q
  ;
 RADLKUP1 ; not an entry point
- N LIST
  Q:CASENUMB=""    ;LB 12/16/98
- S X=$$ACCFIND^RAAPI(CASENUMB,.LIST)
- Q:X'=1  S X=LIST(1) ; two conditions, no accession number & duplicate
- S RADPT1=$P(X,"^",1),RADPT2=$P(X,"^",2),RADPT3=$P(X,"^",3)
+ S RAIX=$S($D(^RADPT("C")):"C",1:"AE") ; for Radiology Patch RA*5*7
+ S RAIX=$S(CASENUMB["-":"ADC",1:RAIX) ; select the cross-reference
+ S RADPT1=$O(^RADPT(RAIX,CASENUMB,"")) I 'RADPT1 Q
+ S RADPT2=$O(^RADPT(RAIX,CASENUMB,RADPT1,"")) I 'RADPT2 Q
+ S RADPT3=$O(^RADPT(RAIX,CASENUMB,RADPT1,RADPT2,"")) I 'RADPT3 Q
+ S X=$O(^RADPT(RAIX,CASENUMB,RADPT1,RADPT2,RADPT3))
  I '$D(^RADPT(RADPT1,0)) Q  ; no patient demographics file pointer
  ; get patient demographics file pointer
  S X=^RADPT(RADPT1,0),DFN=$P(X,"^")
@@ -84,7 +86,7 @@ CONLKUP ; CPRS Consult/Procedure patient/study lookup -- called by ^MAGDIR81
  Q
  ;
 PIDCHECK() ; compare VistA patient ID with DICOM patient ID
- N CHECK ;---- patient demographic comparison check value
+ N CHECK ;---- patient demographic comparision check value
  N FIRSTVAH ;- patient first name from VADM(1)
  N IDDCM ;---- patient id, w/o punctuation, from image header
  N IDVAH ;---- patient id from VADM(2)
@@ -111,7 +113,7 @@ PIDCHECK() ; compare VistA patient ID with DICOM patient ID
  . Q
  S FIRSTDCM=$S(FIRSTDCM[",":$P(FIRSTDCM,","),1:$P(FIRSTDCM," "))
  ; only check the first part of the name
- ; remove dashes and atypical punctuation from the DICOM PID
+ ; remove dashs and atypical punctuation from the DICOM PID
  S IDDCM="" F I=1:1:$L(PID) I $E(PID,I)?1AN S IDDCM=IDDCM_$E(PID,I)
  ;
  I CASENUMB="" Q "-1,NO CASE #"
@@ -135,8 +137,8 @@ PIDCHECK() ; compare VistA patient ID with DICOM patient ID
  Q 0  ; correct patient
  ;
 COMPARE(A,B) ; pattern match checker
- Q:A=B 1 ; exact match
  Q:A="" 0 Q:B="" 0 ; don't count missing data
+ Q:A=B 1 ; exact match
  ; calculate fractional value for pattern match
  N I,LENGTH,MATCH
  S MATCH=0,LENGTH=$S($L(B)>$L(A):$L(B),1:$L(A))

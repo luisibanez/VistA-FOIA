@@ -1,5 +1,5 @@
-FBPCR3 ;AISC/GRR,TET-PHARMACY POTENTIAL COST RECOVERY, SORT/PRINT ;30 Jun 2006  1:49 PM
- ;;3.5;FEE BASIS;**48,69,98**;JAN 30, 1995;Build 54
+FBPCR3 ;AISC/GRR,TET-PHARMACY POTENTIAL COST RECOVERY, SORT/PRINT ;2/4/93  09:59
+ ;;3.5;FEE BASIS;**48,69**;JAN 30, 1995
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
 EN ;entry point
  S (FBCATC,FBINS,FBPSF)=0
@@ -76,8 +76,7 @@ HDR1 W !!?(IOM-(13+$L(FBXPROG))/2),"FEE PROGRAM: ",FBXPROG
  Q
 SH ;subheader - vendor, prints when name changes
  I ($Y+4)>IOSL D HDR Q:FBOUT
- W !!,"Vendor: ",$P(FBVI,";"),?41,"Vendor ID: ",$P($P(FBVI,";",2),"/",1),?65,"Chain #: ",$P($G(^TMP($J,"FB",FBPSF,FBPT,FBPI,FBVI)),U)
- W !?20,"Fee Basis Billing Provider NPI: ",$P(FBVI,"/",2)
+ W !!,"Vendor:",$P(FBVI,";"),?41,"Vendor ID: ",$P(FBVI,";",2),?65,"Chain #: ",$P($G(^TMP($J,"FB",FBPSF,FBPT,FBPI,FBVI)),U)
  Q
 CR ;read for display
  S DIR(0)="E" W ! D ^DIR K DIR S:$D(DUOUT)!($D(DTOUT)) FBOUT=1

@@ -1,6 +1,5 @@
-PRSAPRT ; HISC/REL,WIRMFO/JAH-Return Record to TimeKeeper ;1/31/2007
- ;;4.0;PAID;**7,8,21,111**;Sep 21, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRSAPRT ; HISC/REL,WIRMFO/JAH-Return Record to TimeKeeper ;12/27/95  10:00
+ ;;4.0;PAID;**7,8,21**;Sep 21, 1995
  ;
  ; Comments & Modifications by JAH Washington IRMFO.
  ; Timecards are returned to Time Keeper 4 correction & 
@@ -36,7 +35,7 @@ NME ;ask for name of employee who's timecard is to be returned.
  ;Quit if employees name not found in file 450 (PAID employee).
  G:DFN<1 EX
  ;
- I '$D(^PRST(458,PPI,"E",DFN,0)) W $C(7),!!,"No Record exists to return!" G EX
+ I '$D(^PRST(458,PPI,"E",DFN,0)) W *7,!!,"No Record exists to return!" G EX
  ;
  ;Display message to payroll if employee has changed pay plans.  
  ;Austin will reject a timecard if pay plan is different.
@@ -51,14 +50,11 @@ NME ;ask for name of employee who's timecard is to be returned.
  I 'GO G EX
  ;
  S STAT=$P($G(^PRST(458,PPI,"E",DFN,0)),"^",2)
- I "T"[STAT W $C(7),!!,"TimeKeeper still has this Employee." G EX
- I STAT="P" D B W !!," . . . Returned to Timekeeper." G EX
- W $C(7),!!,"Warning! This Employee has already been Transmitted."
+ I "T"[STAT W *7,!!,"TimeKeeper still has this Employee." G EX
+ G:STAT="P" B W *7,!!,"Warning! This Employee has already been Transmitted."
 A R !!,"Return to Timekeeper Anyway? ",X:DTIME G:'$T!(X["^") EX S:X="" X="*" S X=$TR(X,"yesno","YESNO")
- I $P("YES",X,1)'="",$P("NO",X,1)'="" W $C(7)," Answer YES or NO" G A
+ I $P("YES",X,1)'="",$P("NO",X,1)'="" W *7," Answer YES or NO" G A
  I X?1"Y".E D B W !!," . . . Returned to Timekeeper." G EX
  G EX
-B S $P(^PRST(458,PPI,"E",DFN,0),"^",2)="T" K ^(5)
- D AUTOPINI^PRS8(PPI,DFN)
- Q
+B S $P(^PRST(458,PPI,"E",DFN,0),"^",2)="T" K ^(5) Q
 EX G KILL^XUSCLEAN

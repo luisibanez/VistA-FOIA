@@ -1,5 +1,5 @@
 ECXAPHA ;ALB/TMD-Pharmacy Extracts Unusual Volumes Report ; 12/22/03 10:20am
- ;;3.0;DSS EXTRACTS;**40,49,66,104,109,113**;Dec 22, 1997;Build 7
+ ;;3.0;DSS EXTRACTS;**40,49,66**;Dec 22, 1997
  ;
 EN ; entry point
  N X,Y,DATE,ECRUN,ECXOPT,ECXDESC,ECXSAVE,ECXTL,ECTHLD,ECSD
@@ -81,25 +81,23 @@ PROCESS ; entry point for queued report
  Q
  ;
 PRINT ; process temp file and print report
- N PG,QFLG,GTOT,LN,COUNT,FKEY,QTY,SSN,REC,EDAY,ECXCOUNT
+ N PG,QFLG,GTOT,LN,COUNT,FKEY,QTY,SSN,REC
  U IO
  I $D(ZTQUEUED),$$S^%ZTLOAD S ZTSTOP=1 K ZTREQ Q
  S (PG,QFLG,GTOT)=0,$P(LN,"-",132)=""
  D HEADER Q:QFLG
  S COUNT=0,FKEY="" F  S FKEY=$O(^TMP($J,FKEY)) Q:FKEY=""!QFLG  D
  .S QTY="" F  S QTY=$O(^TMP($J,FKEY,QTY)) Q:QTY=""!QFLG  D
- ..S EDAY="" F  S EDAY=$O(^TMP($J,FKEY,QTY,EDAY)) Q:EDAY=""!QFLG  D
- ...S ECXCOUNT="" F  S ECXCOUNT=$O(^TMP($J,FKEY,QTY,EDAY,ECXCOUNT)) Q:ECXCOUNT=""!QFLG  D
- ....S SSN=""
- ....F  S SSN=$O(^TMP($J,FKEY,QTY,EDAY,ECXCOUNT,SSN)) Q:SSN=""!QFLG  S REC=^(SSN)  D
- .....S COUNT=COUNT+1
- .....I $Y+3>IOSL D HEADER Q:QFLG
- .....W !,$P(REC,U),?8,$P(REC,U,2),?20,$P(REC,U,3),?29,$E($P(REC,U,4),1,40)
- .....W ?71,$P(REC,U,5),?89,$$RJ^XLFSTR($P(REC,U,6),9)_" "_$E($P(REC,U,7),1,7)
- .....I ECXOPT=1 D
- ......W ?108,$$RJ^XLFSTR($P(REC,U,8),12),?125,$$RJ^XLFSTR($P(REC,U,9),3)
- .....I ECXOPT'=1 D
- ......W ?116,$$RJ^XLFSTR($P(REC,U,8),14)
+ ..S SSN=""
+ ..F  S SSN=$O(^TMP($J,FKEY,QTY,SSN)) Q:SSN=""!QFLG  S REC=^(SSN)  D
+ ...S COUNT=COUNT+1
+ ...I $Y+3>IOSL D HEADER Q:QFLG
+ ...W !,$P(REC,U),?8,$P(REC,U,2),?20,$P(REC,U,3),?29,$E($P(REC,U,4),1,40)
+ ...W ?71,$P(REC,U,5),?89,$$RJ^XLFSTR($P(REC,U,6),9)_" "_$E($P(REC,U,7),1,7)
+ ...I ECXOPT=1 D
+ ....W ?108,$$RJ^XLFSTR($P(REC,U,8),12),?125,$$RJ^XLFSTR($P(REC,U,9),3)
+ ...I ECXOPT'=1 D
+ ....W ?116,$$RJ^XLFSTR($P(REC,U,8),14)
  Q:QFLG
  I COUNT=0 W !!,?8,"No unusual volumes to report for this extract"
 CLOSE ;

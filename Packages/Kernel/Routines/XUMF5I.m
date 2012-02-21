@@ -1,5 +1,5 @@
-XUMF5I ;ISS/PAVEL - XUMF5 MD5 Hash Entry point ;5/19/06  06:15
- ;;8.0;KERNEL;**383,407**;July 10, 1995;Build 8
+XUMF5I ;ISS/PAVEL - XUMF5 MD5 Hash Entry point ;06/17/05
+ ;;8.0;KERNEL;**383**;July 10, 1995
  ;
  ;MD5 based on info from 4.005 SORT BY VUID
  ;
@@ -14,19 +14,37 @@ EN(X0,MODE,IENCOUNT)  ;entry point to get MD5 algorithm
  ;        2 debugging mode.. all fields values, all hash values, all hash codes returned in Apl. ACK.
  ; IENCOUNT  = maximum entries for MD5 hash.. if NULL.. all entries counted...        
  ;
+ K ^TMP("PROOT",$J) ;ROOT of file in the case of pointer...
+ N X,Y,X1,X2,X3,X20,X201,X1NEW,X2NEW,X2OLD,X0NAME,XP,H,CNT,CNTT,CNHT,XMD5,XDATE
+ N DIC,ERR,ROOT,ROOTB,ROOTB0,POINTER,JUMP,START,TMP,TMP1,TMP2,FDA,VERSION
+ N SLEV,LEV,IENS,VAL,VALUE,SORT,SORT1,EXITMD5
+ N A,B,C,D,ABCD
  ; TMP(sequence, def entry IEN, file/subfile #, field #)=""
  ; TMP1(,"1,120.82,2,",2)="INTERNAL"
  ; TMP2(FILE #,FIELD #)=""  if internal value requested...
- N X,Y,X1,X2,X3,X20,X201,X1NEW,X2NEW,X2OLD,X0NAME,XP,H,CNT,CNTT,CNHT,XMD5,XDATE,XXP
- N DIC,ERR,ROOT,ROOTX,ROOTB,ROOTB0,POINTER,JUMP,START,TMP,TMP1,TMP2,TMP3,TMP4,TMP5,TMP6,TMP7,FDA,VERSION
- N SLEV,LEV,IENS,VAL,VALUE,SORT,SORT1,EXITMD5
- N A,B,C,D,ABCD
- D INIT^XUMF5II S X1=0
-2 F  S X1=$O(TMP(X1)) Q:'$$NEXTB1(LEV)!EXITMD5  S:'X1 X1=SLEV(LEV),X2OLD=0  S X2=$O(TMP(X1,X0,0)) Q:'X2  D
- .S (XP,JUMP)=0,XXP=$O(TMP(X1,X0,X2,0))
+ S DIC=4.005,X=$S(X0:"`",1:"")_X0,DIC(0)="Z",U="^" D ^DIC
+ I Y=-1 S ERROR="1^Unknown entry of 4.005 File: "_X0 Q "Unknown entry of 4.005 File"
+ S X0=+Y,X0NAME=$P(Y(0),U) S:'$G(MODE) MODE=+$P(Y(0),U,2) K TMP M TMP=@($$ROOT^DILFD(4.005,,0)_"""AC"",X0)")
+ D GETS^DIQ(4.005,X0_",","**","","TMP1")
+ S A="" F  S A=$O(TMP1(4.00511,A)) Q:'$L(A)  S:TMP1(4.00511,A,2)="INTERNAL" TMP2($P(A,",",2),$P(A,",",1))=""
+ ;MODE set from input parameter or from file.
+ S A=$C(1,35,69,103)
+ S B=$C(137,171,205,239)
+ S C=$C(254,220,186,152)
+ S D=$C(118,84,50,16)
+ S ABCD=A_B_C_D
+ S (CNT,CNTT,CNHT)=0
+ S VALUE=""
+ ;X1 = SEQUENCE
+ ;X2 = FILE/SUBFILE #
+ ;X3 = Field #
+ ;TMP = SEQUENCE OF ENTRIES TO BE PROCEEDED....
+ ;TMP1 = FILE # ALL ENTRIES
+ S START=1,X1=0,LEV=0,X2OLD=0,XMD5=$O(^TMP("XUMF ERROR",$J,9999999999999),-1)+1,EXITMD5=0
+2 F  S X1=$O(TMP(X1)) Q:'X1&'$$NEXTB1(LEV)!EXITMD5  S:'X1 X1=SLEV(LEV),X2OLD=0  S X2=$O(TMP(X1,X0,0)) Q:'X2  D
+ .S (XP,JUMP)=0
  .;************ File/subfile has changed ************
  .D:X2'=X2OLD
- ..;K ^TMP("UNIQUE",$J)
  ..;
  ..;************ File Level & Start ************
  ..I $D(^DIC(X2)),START D  Q
@@ -37,7 +55,6 @@ EN(X0,MODE,IENCOUNT)  ;entry point to get MD5 algorithm
  ..;
  ..;************ Going Up ************
  ..I $G(^DD(X2OLD,0,"UP"))=X2 D  Q
- ...K ^TMP("UNIQUE",$J,X2OLD)
  ...I $$NEXTB(LEV,X2OLD) S JUMP=2 Q
  ...K ROOT(LEV),ROOTB(LEV),ROOTB0(LEV),X20(LEV),X201(LEV),TMP1(LEV),X2OLD(LEV)
  ...S LEV=LEV-1,IENS=$P(IENS,",",$L(IENS,",")-LEV,9999),X2=X2OLD(LEV)
@@ -81,29 +98,50 @@ EN(X0,MODE,IENCOUNT)  ;entry point to get MD5 algorithm
  .Q:JUMP
  .;************ Get value & MD5 ************
  .S X3=$O(TMP(X1+XP,X0,X2,0)) Q:'X3
- .S VAL=$S($L(IENS):$G(TMP1(LEV,X2,IENS,X3)),1:"")
- .Q:'$L(VAL)
- .D:$O(TMP1(LEV,X2,IENS,X3,0))
- ..N X4 S X4=0,VAL="" F  S X4=$O(TMP1(LEV,X2,IENS,X3,X4)) Q:'X4  S VAL=VAL_$G(TMP1(LEV,X2,IENS,X3,X4))
- .;If value set as uniqueue and already exist dont take it into MD5
- .Q:'$L(VAL)
- .I $G(TMP5(X2,X3)) Q:$D(^TMP("UNIQUE",$J,X2,X3,VAL))  S ^TMP("UNIQUE",$J,X2,X3,VAL)=""
- .D
+ .S VAL=$S($L(IENS):$$UP($G(TMP1(LEV,X2,IENS,X3))),1:"") D:$L(VAL)
  ..N X,TMP,I
  ..I X3=99.99,$D(^DIC(X2)) S CNTT=CNTT+1 I $G(IENCOUNT),CNTT>IENCOUNT S EXITMD5=1,CNTT=CNTT-1 Q
  ..D:MODE>1.99 SETACK("File #: "_X2_" Field #: "_X3_" Value: "_VAL_" IENS: "_IENS)
  ..S CNT=$G(CNT)+1
  ..S VALUE=VALUE_VAL
-211 ..Q:$L(VALUE)<65
+ ..Q:$L(VALUE)<65
  ..S X=$E(VALUE,65,$L(VALUE)),VALUE=$E(VALUE,1,64)
  ..D:MODE
  ...D SETACK($S(MODE=1.1:"",1:"Value: ")_VALUE)
  ...D:MODE'=1.1 SETACK("HASH:  "_$$MAIN^XUMF5BYT($$HEX^XUMF5AU($$MD5E^XUMF5AU(ABCD,VALUE,0,CNHT+1*64))))
  ..S ABCD=$$MD5E^XUMF5AU(ABCD,VALUE,1)
  ..S VALUE=X,CNHT=CNHT+1
- ..G 211
  .Q
- G END^XUMF5II
+ ;************ So get the final ABCD value... ************
+ S ABCD=$$MD5E^XUMF5AU(ABCD,VALUE,0,CNHT*64+$L(VALUE))
+ D:MODE
+ .W ! D SETACK($S(MODE=1.1:"",1:"Last value: ")_VALUE)
+ .D SETACK("LAST HASH:  "_$$MAIN^XUMF5BYT($$HEX^XUMF5AU(ABCD))) W !
+ .D SETACK("Total number of Characters included in Hash : "_(CNHT*64+$L(VALUE)))
+ .D SETACK("Length of last value: "_$L(VALUE))
+ .D SETACK("Number of file entries: "_CNTT)
+ .D SETACK("Number of hash entries: "_(CNHT+1))
+ .D SETACK("Number of values: "_CNT)
+ .W !
+ ;************ Hex conversion + storage of the final ABCD value ************
+ S VALUE=$$MAIN^XUMF5BYT($$HEX^XUMF5AU(ABCD))
+ K FDA
+ S FDA(4.005,X0_",",4)=$$NOW^XLFDT
+ S FDA(4.005,X0_",",5)=VALUE
+ K ERR D FILE^DIE(,"FDA","ERR")
+ I $D(ERR) D
+ .S ERROR="1^MD5 Date updating error"
+ .D EM^XUMFX("file DIE call error message in RDT",.ERR)
+ .K ERR
+ D SETACK("MD5 Signature Entry: "_X0NAME)
+ D SETACK("Local Hash value: "_VALUE)
+ S ERROR=$G(ERROR)
+ S X1=$O(@($$ROOT^DILFD(4.009,,0,"ERR")_"0)"))_","
+ D GETS^DIQ(4.009,X1,"*",,"TMP3") S VERSION=$G(TMP3(4.009,X1,1))
+ S $P(ERROR,U,2)=$P(ERROR,U,2)_";CHECKSUM:"_VALUE_";VERSION:"_VERSION_";"
+ D SETACK("ERROR variable: "_ERROR)
+ K ^TMP("PROOT",$J)
+ Q VALUE
  Q
 GETONE(LEV,X2)     ;GET DATA
  S ROOT(LEV)=$$ROOT^DILFD(X2,"1,"_IENS,,"ERR")
@@ -112,24 +150,17 @@ GETONE(LEV,X2)     ;GET DATA
  .S ERROR="1^MD5 ROOT retrieval error, File/Subfile #: "_X2_" IENS: 1,"_IENS,EXITMD5=1,JUMP=2
  .D EM^XUMFX("file DIE call error message in RDT",.ERR)
  .K ERR
- S ROOTX(LEV)=ROOT(LEV)_"X201(LEV))" ;FOR LOOKUP OF ENTRIES
  S SORT1="",SORT="B" S:$D(^DIC(X2)) SORT="AMASTERVUID",SORT1="1,"
  S ROOTB(LEV)=ROOT(LEV)_""""_SORT_""",X20(LEV))"
  S X20(LEV)="",ROOTB0(LEV)=ROOT(LEV)_""""_SORT_""",X20(LEV),"_SORT1_"X201(LEV))"
- S:SORT="B" POINTER=$G(TMP7(X2,XXP)) ;Pointer = pointer to file #
+ S:SORT="B" POINTER=$$POINTER(X2) ;Pointer = pointer to file #
  I SORT="B",+POINTER D  ;Handle poiter type of subfile...
  .N BB S POINTER=$E(POINTER,2,$L(POINTER))
  .; ^TMP("PROOT",$J,Subfile #,IEN from up level,"Name sorted",IEN level)=""
  .; ^TMP("PROOT",$J,Subfile #,IEN from up level,X20(LEV),X201(LEV))=""
  .K ^TMP("PROOT",$J,X2)
- .;XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
- .S X201(LEV)=0 F  S X201(LEV)=$O(@(ROOTX(LEV)))  Q:'X201(LEV)  D
- ..I $G(TMP4(X2,XXP)) D  ; If  sort By VUID
- ...S BB=$$GET1^DIQ(X2,X201(LEV)_","_IENS,XXP,"I")     ;BB=IEN of poited to field
- ...S:BB BB=$$GET1^DIQ(TMP4(X2,XXP),BB_",",99.99,"E")  ;BB=VUID
- ..E  S BB=$$GET1^DIQ(X2,X201(LEV)_","_IENS,XXP,"E")   ; Else sort by .01    BB= .01
- ..S:$L(BB) ^TMP("PROOT",$J,X2,BB,X201(LEV))=""
- .;XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+ .F  S X20(LEV)=$O(@(ROOTB(LEV))) Q:'$L(X20(LEV))  S X201(LEV)=0 F  S X201(LEV)=$O(@(ROOTB0(LEV)))  Q:'X201(LEV)  D
+ ..S BB=POINTER_X20(LEV)_",0)",BB=$P(@(BB),U) S:$L(BB) ^TMP("PROOT",$J,X2,BB,X201(LEV))=""
  .S ROOTB(LEV)="^TMP(""PROOT"",$J,"_X2_",X20(LEV))"
  .S ROOTB0(LEV)="^TMP(""PROOT"",$J,"_X2_",X20(LEV),X201(LEV))"
  I SORT="B",LEV=2,X2=+$P(^DD(X2OLD(1),99.991,0),U,2) D  ;Handle Effective Date/Status multiple... only last date taken to HASH... TERMSTATUS
@@ -163,18 +194,22 @@ N1 Q:'$L(X20(LEV)) 0
  S X1=SLEV(LEV)-1,XP=1
  Q 1
 NEXTB1(LEV)     ;See if some other entries in x-ref at any level exist...  no variable is set.
- ;
- Q:X1 1
-3 Q:LEV=0 0
+3 ;
+ Q:LEV=0 0
  I LEV>1,'$L($G(X20(LEV))) G 4
  I LEV=1,'$L($G(X20(LEV))) Q 0
  I LEV=1,'($O(@(ROOTB0(LEV)))!$L($O(@(ROOTB(LEV))))) Q 0
- I LEV=1,'$$ACTALL() Q 0
  I X201(LEV),$O(@(ROOTB0(LEV))) Q 1
  Q:$L($O(@(ROOTB(LEV)))) 1 ;
  Q:LEV=1 0
 4 S LEV=LEV-1 G 3
  Q
+POINTER(X2)     ;GET THE POINTER FILE # IF POITER TYPE OF .01 FIELD
+ N FTYPE,TT,I
+ D FIELD^DID(X2,.01,,"POINTER","TT")
+ Q:'$L(TT("POINTER")) 0
+ S TT="1^"_TT("POINTER")
+ Q TT
 SETACK(X,MODE)      ;SET APPL. Acknowledgment + WRIGHT ?? 
  W X,!
  S:$G(MODE) ^TMP("XUMF ERROR",$J,XMD5,$O(^TMP("XUMF ERROR",$J,XMD5,9999999999999),-1)+1)=X
@@ -187,20 +222,10 @@ ACTIVE(FILE,IEN)        ;GET 1 = Active 0 = Inactive
  S (XT,XX)=0,X="TMP"
  F  S X=$Q(@(X)) Q:'$L(X)  S X1=$G(@(X)),X=$Q(@(X)),X2=$G(@(X)) S:X1>XT XT=X1,XX=+X2
  Q XX
-GETSIE(X2,IENS,LEV)     ;GET Internal/External values + replace pointed field .01 with VUID
+GETSIE(X2,IENS,LEV)     ;GET Internal/External values
  K TMP1(LEV) D GETS^DIQ(X2,IENS,"*","","TMP1(LEV)")
- D:$D(TMP2(X2))!$D(TMP4(X2))
+ D:$D(TMP2(X2))
  .N TMP3,I
  .D GETS^DIQ(X2,IENS,"*","I","TMP3")
  .S I="" F  S I=$O(TMP2(X2,I)) Q:'I  S:$D(TMP1(LEV,X2,IENS,I)) TMP1(LEV,X2,IENS,I)=TMP3(X2,IENS,I,"I")
- .;+++++++++++++++ Replace pointed .01 field with VUID if indicate so in 4.005
- .S I="" F  S I=$O(TMP4(X2,I)) Q:'I  S:$D(TMP1(LEV,X2,IENS,I)) TMP1(LEV,X2,IENS,I)=$$GET1^DIQ(TMP4(X2,I),TMP3(X2,IENS,I,"I")_",",99.99)
- Q
-ACTALL() ;See if there is some active entry on the file....
- N X1,X2,ACT
- S ACT=0,X1=X20(1),X2=X201(1)
- S:X20(1) X20(1)=X20(1)-.01
- F  S X20(1)=$O(@(ROOTB(1))) Q:'X20(1)!ACT  F  S X201(1)=$O(@(ROOTB0(1))) Q:'X201(1)  I $$ACTIVE(X2OLD(1),X201(1)) S ACT=1 Q
- S X20(1)=X1,X201(1)=X2
- Q ACT
  Q

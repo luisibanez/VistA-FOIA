@@ -1,5 +1,5 @@
-%ZOSVKSS ;OAK/KAK - Automatic INTEGRIT Routine (cont.) (Cache) ;5/9/07  10:44
- ;;8.0;KERNEL;**90,94,197,268,456**;Jul 26, 2004
+%ZOSVKSS ;OAK/KAK - Automatic INTEGRIT Routine (cont.) (Cache) ;21 AUG 97 2:42 pm
+ ;;8.0;KERNEL;**90,94,197,268**;Jul 26, 2004
  ;
  ; Version for Cache
  ;
@@ -8,7 +8,7 @@ RESTART ;-- called by routine C+6^%ZOSVKSE
  ;-- code from routine CHECKPNT
  ;
  K SUB,C
- N B,D,E,FLAG,LE,LL,LN,LNP,TL1
+ N B,FLAG
  ;
  S (ERR,FLAG,NP,NB,LSNP,LNB)=0
  ;

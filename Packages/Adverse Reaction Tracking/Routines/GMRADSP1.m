@@ -1,5 +1,5 @@
-GMRADSP1 ;HIRMFO/WAA-DISPLAY ALLERGY ;11/13/07  08:07
- ;;4.0;Adverse Reaction Tracking;**41**;Mar 29, 1996;Build 8
+GMRADSP1 ;HIRMFO/WAA-DISPLAY ALLERGY ;9/6/95  11:06
+ ;;4.0;Adverse Reaction Tracking;;Mar 29, 1996
 DISBLD(IEN,ARRAY) ; This subroutine will bulid the array that will
  ; be displayed for each reactant.  The IEN for each reactant in
  ; stored in GMRAPA.
@@ -12,17 +12,9 @@ ING ;Find all the ingredents for a reactant.
  .N GMRAFST,GMRAGBAL,GMRAING,GMRAINGR,GMRALLEG,GMRALST
  .S GMRAINGR=0,GMRALLEG=0
  .F  S GMRAINGR=$O(^GMR(120.8,IEN,2,GMRAINGR)) Q:GMRAINGR'>0  S GMRAGBAL=^GMR(120.8,IEN,2,GMRAINGR,0) D
- ..;--41-1
- ..D ZERO^PSN50P41(GMRAGBAL,"","","ENCAP")
- ..I '$D(^TMP($J,"ENCAP",GMRAGBAL)) K ^TMP($J,"ENCAP") Q
- ..;--41-1
- ..;--41-2
- ..I $P(NODE,U,2)=$P(^TMP($J,"ENCAP",GMRAGBAL,.01),U) Q
- ..;--41-2
- ..;--41-3
- ..S GMRALLEG(IEN,$P(^TMP($J,"ENCAP",GMRAGBAL,.01),U))="",GMRALLEG=GMRALLEG+1
- ..K ^TMP($J,"ENCAP")
- ..;--41-3
+ ..Q:$G(^PS(50.416,GMRAGBAL,0))=""  ; Didn't find the given ingredent.
+ ..I $P(NODE,U,2)=$P(^PS(50.416,GMRAGBAL,0),U) Q
+ ..S GMRALLEG(IEN,$P(^PS(50.416,GMRAGBAL,0),U))="",GMRALLEG=GMRALLEG+1
  ..Q
  .I GMRALLEG S (GMRAINGR,GMRAING)="",CNT=CNT+1,ARRAY(CNT)="",GMRAFST=1,GMRALST=0 F  S GMRAINGR=$O(GMRALLEG(IEN,GMRAINGR)) Q:GMRAINGR=""  D
  ..I $O(GMRALLEG(IEN,GMRAINGR))="" S GMRALST=1

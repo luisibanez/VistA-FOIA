@@ -1,7 +1,6 @@
 SDRPA05 ;BP-OIFO/ESW - Evaluate appointment status for HL7  ; 9/10/04 9:34am
- ;;5.3;Scheduling;**290,333,349,376,491**;AUG 13, 2003;Build 53
+ ;;5.3;Scheduling;**290,333,349,376**;AUG 13, 2003
  ;Evaluation of the appointment status is done from the computed field to match the displayed/printed status in the appointment management
- ;SD/491 - MODIFIED $$SCHEDULE to cut off appointments considered as rescheduled by with the scheduled date<2250000
  Q
  ;
 STATUS(DFN,SDADT,SDCL,TODAY,SFD) ;
@@ -100,6 +99,6 @@ SCHEDULE(DFN,SDCL,SDADT) ; Scheduling flag
  N SDCDTI S SDCDTI=SDCDT\1
  N SDRESCH S SDRESCH=""
  ;exclude the same appointments
- N SDAPDT S SDAPDT="" F  S SDAPDT=$O(^DPT("ASADM",SDCDTI,DFN,SDAPDT)) Q:SDAPDT=""  I SDAPDT>3030000 I SDAPDT'=SDADT I $D(^DPT(DFN,"S",SDAPDT)) D  Q:SDRESCH'=""
+ N SDAPDT S SDAPDT="" F  S SDAPDT=$O(^DPT("ASADM",SDCDTI,DFN,SDAPDT)) Q:SDAPDT=""  I SDAPDT'=SDADT I $D(^DPT(DFN,"S",SDAPDT)) D  Q:SDRESCH'=""
  .S SDCLN=+$P(^DPT(DFN,"S",SDAPDT,0),U) I $P(^SC(SDCLN,0),"^",7)=$P(^SC(SDCL,0),"^",7) S SDRESCH="RS"_"^"_SDAPDT ;compare stop code pointers
  S:SDRESCH="" SDRESCH="^" Q SDRESCH

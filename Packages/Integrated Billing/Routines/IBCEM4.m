@@ -1,6 +1,6 @@
 IBCEM4 ;ALB/TMP - IB ELECTRONIC MESSAGE SCREEN TEXT MAINT ;19-APR-2001
- ;;2.0;INTEGRATED BILLING;**137,368**;21-MAR-1994;Build 21
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137**;21-MAR-1994
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; entry point for maintenance
  D EN^VALM("IBCE MESSAGE TEXT MAIN")
@@ -59,9 +59,9 @@ CKREVU(IBTEXT,IBNR,IBSKIP,IBREV) ; Check IBTEXT contains 'no review
  ;         text found
  ;
  N T,Y,Z,Z0
- S (IBREV,Y)=0,Z="",IBTEXT=$$UP^XLFSTR($G(IBTEXT))
- I '$G(IBSKIP) F  S Z=$O(^IBE(361.3,"AC",1,Z)) Q:Z=""  I IBTEXT[$$UP^XLFSTR(Z) S IBREV=1 Q  ; Always review messages with this text
- I 'IBREV S Z="" F  S Z=$O(^IBE(361.3,"AC",0,Z)) Q:Z=""  I IBTEXT[$$UP^XLFSTR(Z) S Y=1,IBNR=Z Q  ; Message contains text to make review unnecessary
+ S (IBREV,Y)=0,Z=""
+ I '$G(IBSKIP) F  S Z=$O(^IBE(361.3,"AC",1,Z)) Q:Z=""  I IBTEXT[Z S IBREV=1 Q  ; Always review messages with this text
+ I 'IBREV S Z="" F  S Z=$O(^IBE(361.3,"AC",0,Z)) Q:Z=""  I IBTEXT[Z S Y=1,IBNR=Z Q  ; Message contains text to make review unnecessary
  Q Y
  ;
 REPORT ; Produce a report of messages filed without review by user-selected

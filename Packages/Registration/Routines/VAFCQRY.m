@@ -1,6 +1,5 @@
 VAFCQRY ;BIR/DLR-Query for patient demographics ;10/18/2000
- ;;5.3;Registration;**428,575,627,707**;Aug 13, 1993;Build 14
- ;   
+ ;;5.3;Registration;**428,575,627**;Aug 13, 1993
 IN ;process in the patient query
  N IEN,HLA,VAFCCNT,ICN,CLAIM,SG,VAFCER,VAFC,DFN,STATE,CITY,SUBCOMP,COMP,REP,LVL,LVL2,VAFC,SSN
  S VAFCCNT=1,VAFCER=1
@@ -19,23 +18,18 @@ RESP ;Response processing initiated from the MPI.
 ROUTE ;Routine logic initiated from the MPI.
  Q
 BLDRSP(DFN,VAFCCNT) ;
- N EVN,PID,PD1,SEQ,ERR,CNT,X,PV2,RADE,LABE,PRES
+ N EVN,PID,PD1,SEQ,ERR,CNT,X
  ;construct EVN (for TF Event Type AND Last Treatment Date)
  S SEQ="1,2" D BLDEVN(DFN,.SEQ,.EVN,.HL,"A19",.ERR) S ^TMP("HLA",$J,VAFCCNT)=EVN(1) S VAFCCNT=VAFCCNT+1
  ;construct PID
- S SEQ="ALL" D BLDPID(DFN,1,.SEQ,.PID,.HL,.ERR) S ^TMP("HLA",$J,VAFCCNT)=PID(1) S X=1,CNT=1 F  S X=$O(PID(X)) Q:'X  I $D(PID(X)) S ^TMP("HLA",$J,VAFCCNT,CNT)=PID(X),CNT=CNT+1
+ S SEQ="" D BLDPID(DFN,1,.SEQ,.PID,.HL,.ERR) S ^TMP("HLA",$J,VAFCCNT)=PID(1) S X=1,CNT=1 F  S X=$O(PID(X)) Q:'X  I $D(PID(X)) S ^TMP("HLA",$J,VAFCCNT,CNT)=PID(X),CNT=CNT+1
  S VAFCCNT=VAFCCNT+1
- ;construct PD1 **707
- ;S SEQ="3" D BLDPD1(DFN,.SEQ,.PD1,.HL,.ERR) S ^TMP("HLA",$J,VAFCCNT)=PD1(1)
- S PD1=$$PD1^VAFCSB I PD1'="" S ^TMP("HLA",$J,VAFCCNT)=PD1,VAFCCNT=VAFCCNT+1 ;**707
- S PV1=$$PV1^VAFCSB I PV1'="" S ^TMP("HLA",$J,VAFCCNT)=PV1,VAFCCNT=VAFCCNT+1 ;**707
- S PV2=$$PV2^VAFCSB I PV2'="" S ^TMP("HLA",$J,VAFCCNT)=PV2,VAFCCNT=VAFCCNT+1 ;**707
- S PRES=$$PHARA^VAFCSB I PRES'="" S ^TMP("HLA",$J,VAFCCNT)=PRES,VAFCCNT=VAFCCNT+1 ;**707
- S LABE=$$LABE^VAFCSB I LABE'="" S ^TMP("HLA",$J,VAFCCNT)=LABE,VAFCCNT=VAFCCNT+1 ;**707
- S RADE=$$RADE^VAFCSB I RADE'="" S ^TMP("HLA",$J,VAFCCNT)=RADE,VAFCCNT=VAFCCNT+1 ;**707
+ ;construct PD1 (for CMOR)
+ S SEQ="3" D BLDPD1(DFN,.SEQ,.PD1,.HL,.ERR) S ^TMP("HLA",$J,VAFCCNT)=PD1(1)
+ S VAFCCNT=VAFCCNT+1
  ;** PATCH 575
  ;construct ZPD segment
- S SEQ="1,17,21,34" ;**707 Added 1, 21 and 34 to ZPD fields
+ S SEQ="17"
  S ^TMP("HLA",$J,VAFCCNT)=$$EN1^VAFHLZPD(DFN,SEQ)
  S VAFCCNT=VAFCCNT+1
  Q
@@ -106,5 +100,13 @@ BLDPID(DFN,CNT,SEQ,PID,HL,ERR) ;build PID from File #2
  ;if this is a mismatch a null or """" should be passed in, so that
  ;the ICN will be removed at the site
  ;
+ N VADEFSW
+ D BLDPID^VAFCQRY1(DFN,CNT,SEQ,.PID,.HL,.ERR)
+ Q
+VDFPID(DFN,CNT,SEQ,PID,HL,ERR) ;build PID from FilE #2 for Vitra.
+ ;This is the same as above except the HL7 control char will be encoded 
+ ;when the APID is built
+ N VADEFSW
+ S VADEFSW="HL7"
  D BLDPID^VAFCQRY1(DFN,CNT,SEQ,.PID,.HL,.ERR)
  Q

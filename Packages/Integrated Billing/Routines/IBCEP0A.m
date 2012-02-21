@@ -1,6 +1,5 @@
 IBCEP0A ;ALB/TMP - EDI UTILITIES for insurance assigned provider ID ;01-NOV-00
- ;;2.0;INTEGRATED BILLING;**137,232,320,377**;21-MAR-94;Build 23
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,232**;21-MAR-94
  ;
 NEW(IBINS,IBPRV,IBPTYP,IBDEF) ; Add new insurance co assigned id
  ; IBDEF = flag sent as 1 if only insurance co defaults are being added
@@ -24,10 +23,7 @@ NEW(IBINS,IBPRV,IBPTYP,IBDEF) ; Add new insurance co assigned id
  . Q
  ;
  I '$G(IBPTYP) D  G:IBQ NEWQ
- . S DIR(0)="PAr^355.97:AEMQ",DIR("A")="Select Provider ID Qualifier: "
- . S DIR("?")="Enter a Qualifier to identify the type of ID number you are entering."
- . S DIR("S")="I $$RAINS^IBCEPU(Y)"   ; Rendering/Attending IDs provided by ins
- . S DA=0
+ . S DIR(0)="PA^355.97:AEMQ",DIR("A")="Select Provider ID Type: ",DIR("?")="Enter the type of provider that the new provider id(s) will apply to",DIR("S")=$S('$G(IBPRV):"I ""03456""[+$P($G(^(0)),U,2)",1:"I ""046""[+$P($G(^(0)),U,2)"),DA=0
  . W ! D ^DIR K DIR W !
  . I $D(DTOUT)!$D(DUOUT)!'Y S IBQ=1 Q
  . S IBPTYP=+Y
@@ -100,19 +96,18 @@ PRVNJMP(VALMBG) ; Navigate to a specific provider name (from insurance co
  . W ! D ^DIR K DIR W !
  Q
  ;
-PRVTJMP(VALMBG) ; Navigate to a specific type of ID qualifier (from ins co option)
+PRVTJMP(VALMBG) ; Navigate to a specific provider id type (from ins co option)
  ;
  N DIR,X,Y
  D FULL^VALM1
- S DIR(0)="PAO^355.97:AEMQ",DIR("A")="Select type of ID Qualifier: "
- S DIR("?")="Select a type of ID Qualifier to display the IDs of that type."
+ S DIR(0)="PAO^355.97:AEMQ",DIR("A")="SELECT PROVIDER ID TYPE: ",DIR("?",1)="SELECTING A PROVIDER ID TYPE WILL FORCE THE DISPLAY TO SKIP TO THE DATA FOR ",DIR("?")="  THAT PROVIDER ID TYPE"
  S DIR("S")="I $D(^TMP(""IBPRV_INS_ID"",$J,""ZXPTYP"",+Y))"
  W ! D ^DIR K DIR W !
  I Y>0,'$D(DTOUT),'$D(DUOUT) D
  . N Z
  . S Z=$G(^TMP("IBPRV_INS_ID",$J,"ZXPTYP",+Y))
  . I Z S VALMBG=Z Q
- . S DIR(0)="EA",DIR("A",1)="This type of ID Qualifier does not exist in the current display",DIR("A")="Press the Enter key to continue"
+ . S DIR(0)="EA",DIR("A",1)="THIS PROVIDER ID TYPE DOES NOT EXIST IN THE CURRENT DISPLAY",DIR("A")="PRESS THE ENTER KEY TO CONTINUE"
  . W ! D ^DIR K DIR W !
  Q
  ;
@@ -122,9 +117,7 @@ CHGINS ; Change insurance co being displayed, using the same or new params
  D FULL^VALM1
  S DIC="^DIC(36,",DIC(0)="AEMQ" D ^DIC
  S IBINEW=+Y
- ;
  I IBINEW>0,IBINS'=IBINEW D
- . D COPYPROV^IBCEP5A(IBINS)
  . S DIR(0)="YA",DIR("?")="IF YOU WANT TO CHANGE THE FORMAT OF THE DISPLAY, RESPOND NO HERE"
  . S DIR("A")="DO YOU WANT TO DISPLAY THE NEW INS. CO IDS USING THE CURRENT DISPLAY FORMAT?: ",DIR("B")="YES" W ! D ^DIR W ! K DIR
  . Q:Y'=1
@@ -180,3 +173,4 @@ ADDID(IBINS,IBPRV,IBPTYP) ; Adds a new ID for the provider and/or ins co
  . S IBIEN=+Y
  . D NEWID^IBCEP5B(355.91,IBINS,"",IBPTYP,IBIEN,1)
 ADDIDQ Q IBQ
+ ;

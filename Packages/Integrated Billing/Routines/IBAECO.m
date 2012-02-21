@@ -1,5 +1,5 @@
-IBAECO ;ALB/BGA - LONG TERM CARE OUTPATIENT TRACKER ;16-OCT-01
- ;;2.0;INTEGRATED BILLING;**164,171,176,188,312**;21-MAR-94
+IBAECO ;ALB/BGA-LONG TERM CARE OUTPATIENT TRACKER ; 16-OCT-01
+ ;;2.0;INTEGRATED BILLING;**164,171,176,188**;21-MAR-94
  ;;Per VHA DIRECTIVE 10-93-142, this routine should not be modified.
  ;
  ; Comment- This routine is invoked via the appointment driver ^IBAMTS
@@ -13,7 +13,6 @@ IBAECO ;ALB/BGA - LONG TERM CARE OUTPATIENT TRACKER ;16-OCT-01
  ;
  ; Determine if this encounter has a status of checked out
 EN N IBEVT,IBEV0,DFN,IBSDHDL,IBORG,IBOE,IBLTCST,IBCL,IBDT,IBST,IBM
- N IBSWINFO S IBSWINFO=$$SWSTAT^IBBAPI()                   ;IB*2.0*312
  S IBSDHDL=0
  ;
  ; === ON/OFF Switch by date if before 11/15/06 software will not run
@@ -33,9 +32,6 @@ EN N IBEVT,IBEV0,DFN,IBSDHDL,IBORG,IBOE,IBLTCST,IBCL,IBDT,IBST,IBM
  . . . S DFN=$P(IBEVT,U,2),IBDT=$S(+IBEVT:+IBEVT,1:+IBEV0),IBST=$P(IBEVT,U,3)
  . . . Q:IBDT<$$STDATE^IBAECU1
  . . . Q:'DFN!('IBDT)
- . . . ;
- . . . ; Do NOT PROCESS on VistA if IBDT>=Switch Eff Date  ;CCR-930
- . . . I +IBSWINFO,(IBDT+1)>$P(IBSWINFO,"^",2) Q           ;IB*2.0*312
  . . . ;
  . . . ; stop code preset and LTC event?
  . . . I 'IBST Q

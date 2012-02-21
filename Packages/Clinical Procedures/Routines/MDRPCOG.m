@@ -1,5 +1,5 @@
 MDRPCOG ; HOIFO/DP - CP Gateway ; [01-09-2003 15:20]
- ;;1.0;CLINICAL PROCEDURES;**6**;Apr 01, 2004;Build 102
+ ;;1.0;CLINICAL PROCEDURES;;Apr 01, 2004
  ; Description:
  ; This is the main routine that manages the CLINICAL PROCEDURES Gateway functions.  
  ; Access to these functions is controlled via the MD GATEWAY RPC.
@@ -113,12 +113,6 @@ RPC(RESULTS,OPTION,DATA,P1) ; [Procedure]
  NEW MDENV,MDERR,MDFDA
  S RESULTS=$NA(^TMP("MDRPCOB",$J)) K @RESULTS
  D @OPTION
- Q
- ;
-RUNNING ; [Procedure] Returns 0/1 and message on running status
- ; Note: If lock CAN be obtained, then gateway is NOT running
- L +^MDD("CPGATEWAY"):1 E  S @RESULTS@(0)="1^RUNNING" Q
- L -(^MDD("CPGATEWAY")) S @RESULTS@(0)="0^NOT RUNNING"
  Q
  ;
 SETFILE ; [Procedure] Set filename of new attachment

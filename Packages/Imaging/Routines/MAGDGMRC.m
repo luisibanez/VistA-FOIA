@@ -1,6 +1,5 @@
-MAGDGMRC ;WOIFO/PMK - Read a DICOM image file ; 12/15/2006 13:50
- ;;3.0;IMAGING;**10,51,50,85**;16-March-2007;;Build 1039
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDGMRC ;WOIFO/PMK - Read a DICOM image file ; 12 Sep 2003  4:01 PM
+ ;;3.0;IMAGING;**10**;Nov 06, 2003
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDGMRC ;WOIFO/PMK - Read a DICOM image file ; 12/15/2006 13:50
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -15,6 +15,7 @@ MAGDGMRC ;WOIFO/PMK - Read a DICOM image file ; 12/15/2006 13:50
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;
  ; This is the set of GMRC APIs that are use by the VistA Imaging
  ; DICOM Gateway
  ;
@@ -27,7 +28,7 @@ ANYREQ(DFN) ; check if any GMRC requests are present for the patient
  ; ask for requests for the patient
  S WRK=$NA(^TMP("MAG",$J,$T(+0))) K @WRK
  S ADFN(1)=DFN
- D FIND^DIC(123,,"@;.02I","QX",.ADFN,,"F",,,WRK,WRK)
+ D FIND^DIC(123,,"@;.02I","Q",.ADFN,,"F",,,WRK,WRK)
  ;
  ; check returns to see if any are actually for this patient (see note
  ; on SEARCH below)
@@ -57,8 +58,8 @@ TIULAST(GMRCIEN) ; find the ien of the most recent TIU note for this request
  K @WRK
  Q +TIUIEN
  ;
-TIUALL(GMRCIEN,RESULT) ; find all IENs for the TIU notes for this request
- N MAGIEN,TIUIEN,TIUPTR,TIUXIEN,Y
+TIUALL(GMRCIEN,RESULT) ; find all ien's for the TIU notes for this request
+ N MAGIEN,TIUIEN,TIUPTR,TIUXIEN
  N WRK ; root of work global
  K RESULT
  ; set up the array to look through
@@ -70,28 +71,25 @@ TIUALL(GMRCIEN,RESULT) ; find all IENs for the TIU notes for this request
  . S TIUIEN=$P($G(@WRK@("DILIST","ID",TIUPTR,.01)),"^",1)
  . I $P(TIUIEN,";",2)'="TIU(8925," Q  ; not a TIU document
  . S TIUIEN=+TIUIEN ; strip off variable pointer stuff
- . S TIUXIEN=""
- . F  S TIUXIEN=$O(^TIU(8925.91,"B",TIUIEN,TIUXIEN)) Q:'TIUXIEN  D
- . . S Y=$G(^TIU(8925.91,TIUXIEN,0)) Q:'Y
- . . S MAGIEN=$P(Y,"^",2)
- . . S RESULT=RESULT+1
- . . S RESULT(RESULT)=TIUIEN_"^GMRC-"_GMRCIEN_"^"_MAGIEN
- . . Q
+ . S DIC="^TIU(8925.91,",DIC(0)="SXZ",D="B",X=TIUIEN D IX^DIC Q:Y'>0
+ . S TIUXIEN=+Y,MAGIEN=$P($G(Y(0)),"^",2)
+ . S RESULT=RESULT+1
+ . S RESULT(RESULT)=TIUIEN_"^"_TIUXIEN_"^"_MAGIEN
  . Q
  K @WRK
  Q
  ;
-FWDFROM(GMRCIEN) ; for a forwarded request, determine the FORWARD FROM service
+FWDFROM(GMRCIEN) ; for a forwarded reqest, determine the FORWARD FROM service
  N FWDFROM,I
  N WRK ; root of work global
  ; set up the array to look through
  S WRK=$NA(^TMP("MAG",$J,$T(+0))) K @WRK
  D LIST^DIC(123.02,","_GMRCIEN_",",".01I;6I",,,,,,,,WRK,WRK)
- ; traverse the array
+ ; traverse the array    
  S FWDFROM=0
  I GMRCIEN D
  . S I=$O(@WRK@("DILIST","ID"," "),-1)
- . I I D  ; get the FORWARDED FROM service
+ . I I D  ; get the FORWARDED FROM service 
  . . S FWDFROM=$G(@WRK@("DILIST","ID",I,6))
  . . Q
  . Q
@@ -110,7 +108,7 @@ UNSIGNED(GMRCIEN) ; check if there are any unsigned TIU notes for the request
  . S X=$P($G(@WRK@("DILIST","ID",TIUPTR,.01)),"^",1)
  . ; if TIU note, check if unsigned
  . I X?.N1";TIU(8925," D  ; check status of TIU note for completion
- . . ; status in ^TIU(8925.6) - use first 5 "UNs" per Margy McClenanhan
+ . . ; status in ^TIU(8925.6) - use first 5 "UN's" per Margy McClenanhan
  . . S TIUSTAT=$$GET1^DIQ(8925,+X,.05,"I")
  . . I TIUSTAT,TIUSTAT<6 S UNSIGNED=1 ; got one!
  . . Q
@@ -124,13 +122,13 @@ SEARCH(DFN,CUTOFF,CLINIC,REQUEST) ; search for requests for a given clinic
  ; an existing GMRC request.  This determination is performed by using
  ; an association between the SERVICE for the request and the CLINIC
  ; where the request is to be performed.
- ;
+ ; 
  ; This subroutine passes all of the (recent) requests for a patient and
- ; builds a list of those that can be performed in the designated clinic.
+ ; builds a list of those that can be perfomed in the designated clinic.
  ;
  ; Maybe the replacement for Appointment Management and future versions
  ; of CPRS Order Entry and Consult Request Tracking will capable of
- ; correctly maintaining this essential association.
+ ; correctly maintaining this essential association. 
  ;
  N GMRIDX,GMRC0,GMRCDATE,GMRCIEN,SERVICE,STATUS
  N WRK ; --- root of results global
@@ -144,10 +142,10 @@ SEARCH(DFN,CUTOFF,CLINIC,REQUEST) ; search for requests for a given clinic
  ; directly (because there is a .001 field defined in the DD of File
  ; #123).  So we grab the DFN in the .02 field for later double-
  ; checking.
- ;
+ ; 
  S ADFN(1)=DFN
  S WRK=$NA(^TMP("MAG",$J,$T(+0))) K @WRK
- D FIND^DIC(123,,"@;.02I;1I;3I;5I;8I","QX",.ADFN,,"F",,,WRK,WRK)
+ D FIND^DIC(123,,"@;.02I;1I;3I;5I;8I","Q",.ADFN,,"F",,,WRK,WRK)
  ; traverse the results
  S GMRIDX=""
  F  S GMRIDX=$O(@WRK@("DILIST","ID",GMRIDX)) Q:'GMRIDX  D
@@ -156,8 +154,8 @@ SEARCH(DFN,CUTOFF,CLINIC,REQUEST) ; search for requests for a given clinic
  . I $G(@WRK@("DILIST","ID",GMRIDX,3))<CUTOFF Q  ; too far back
  . S SERVICE=$G(@WRK@("DILIST","ID",GMRIDX,1)) Q:SERVICE=""
  . I '$$ISCLINIC^MAGDGMRC(SERVICE,CLINIC) Q  ; not a service or clinic
- . S STATUS=$G(@WRK@("DILIST","ID",GMRIDX,8)) ; CPRS status
- . I STATUS S STATUS=$$GET1^DIQ(100.01,STATUS,.1) ; CPRS status abbrev
+ . S STATUS=$G(@WRK@("DILIST","ID",GMRIDX,8)) ; cprs status
+ . I STATUS S STATUS=$$GET1^DIQ(100.01,STATUS,.1) ; cprs status abbrev
  . S REQUEST=$G(REQUEST)+1
  . S REQUEST(REQUEST)=GMRCIEN_"^"_SERVICE_"^"_STATUS
  . Q
@@ -170,4 +168,3 @@ ISCLINIC(SERVICE,CLINIC) ; is a particular clinic defined for a given service?
  S ISCLINIC=0
  I SERVICE,CLINIC,$D(^MAG(2006.5831,SERVICE,1,"B",CLINIC)) S ISCLINIC=1
  Q ISCLINIC
- ;

@@ -1,27 +1,9 @@
 RAEDCN ;HISC/CAH,FPT,GJC,SS AISC/MJK,RMO-Edit Exams by Case Number ;1/11/02  11:15
- ;;5.0;Radiology/Nuclear Medicine;**5,13,10,18,28,31,34,45,85,97**;Mar 16, 1998;Build 6
- ;
- ; 06/11/2007 KAM/BAY RA*5*85 Remedy Call 174790 Change Exam Cancel
- ;            to allow only descendent exams with stub report
- ;
+ ;;5.0;Radiology/Nuclear Medicine;**5,13,10,18,28,31,34,45**;Mar 16, 1998
  ;last modified by SS JUNE 21,2000 for P18
 START D SET^RAPSET1 I $D(XQUIT) K XQUIT,RAFLG,RADR,POP,RAQUICK Q
-START1 ;
- N RAERR
- D ^RACNLU S RAERR=0 G Q:X="^"
- I RADR="[RA DIAGNOSTIC BY CASE]" D  I RAERR R !?5,"Press RETURN to exit:",RAXIT:DTIME G Q
- .N RAPRTSET,RAMEMARR,RA3,RA7003,RA17
- .D EN2^RAUTL20(.RAMEMARR)
- .S RA3=99
- .; disallow case that is a member of a printset, fld 25 = 2
- .I RAPRTSET W ! D WHYMSG2^RASTED S RAERR=1 Q
- .S RA7003=$G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0))
- .S RA17=$P(RA7003,U,17)
- .; disallow case that has no report or has stub report
- .I 'RA17!($$STUB^RAEDCN1(+RA17)) S RAERR=1 W !?3,$C(7),"No report has been entered yet for this exam, therefore it cannot be edited.",! Q
- .; disallow case that has an elec. filed report
- .I $P($G(^RARPT(+RA17,0)),U,5)="EF" S RAERR=1 D WARN1 Q
- .Q
+START1 D ^RACNLU G Q:X="^"
+ I RADR="[RA DIAGNOSTIC BY CASE]" N RAPRTSET,RAMEMARR,RA3 D EN2^RAUTL20(.RAMEMARR) S RA3=99 I RAPRTSET W ! D WHYMSG2^RASTED G Q  ;skip edit because member of set =2
  I $D(^RA(72,"AA",RAIMGTY,9,+RAST)),'$D(^XUSEC("RA MGR",+$G(DUZ))) W !!?3,$C(7),"You do not have the appropriate access privileges to edit completed exams." G START1
  I $D(^RA(72,"AA",RAIMGTY,0,+RAST)) W !!?3,$C(7),"Exam has been 'cancelled' therefore it cannot be edited." G START1
  I RADR="[RA DIAGNOSTIC BY CASE]",$D(^RARPT(RARPT,0)),$P(^(0),"^",5)="V" W !!?3,$C(7),"A report has been verified for this exam, therefore it cannot be edited.",! G START
@@ -82,12 +64,11 @@ CANCEL D SET^RAPSET1 I $D(XQUIT) K XQUIT Q
  S RAXIT=$$CKREASON^RAEDCN1("C") I RAXIT K RAXIT Q  ;P18
  D ^RACNLU G Q:X="^" I $D(^RA(72,"AA",RAIMGTY,0,+RAST)) W !?3,$C(7),"This exam has already been cancelled!" G Q
  I $D(^RA(72,+RAST,0)),$P(^(0),"^",6)'="y" W !?3,$C(7),"This exam is in the '",$P(^(0),"^"),"' status and cannot be 'CANCELLED'." G Q
- ; 06/11/2007 KAM/BAY *85 Added descendent check to next line
-ASKIMG I RARPT,($$STUB^RAEDCN1(RARPT)),($$PSET^RAEDCN1(RADFN,RADTI,RACNI)) D  G:"Nn"[$E(X) Q G:"Yy"[$E(X) ASKCAN W:X'["?" $C(7) W !!?3,"Enter 'YES' to cancel a descendent exam with images, or 'NO' not to." G ASKIMG
+ASKIMG I RARPT,($$STUB^RAEDCN1(RARPT)) D  G:"Nn"[$E(X) Q G:"Yy"[$E(X) ASKCAN W:X'["?" $C(7) W !!?3,"Enter 'YES' to cancel an exam with images, or 'NO' not to." G ASKIMG
  . S X=RANME_"'s Case No. "_$E(RADTE,4,7)_$E(RADTE,1,2)_"-"_RACN
  . W !!?10,"----------------------------------",$C(7)
  . W !?10,X
- . W !?10,"This descendent exam has associated images.",$C(7)
+ . W !?10,"This exam has associated images.",$C(7)
  . W !?10,"----------------------------------",$C(7)
  . I '$D(^XUSEC("RA MGR",DUZ)) D  S X="N" Q
  .. W !!?3,"** You do not have the  RA MGR  key to cancel an exam with images. **",$C(7)
@@ -147,6 +128,4 @@ SETVARS ; Setup key Rad/Nuc Med variables
  I $O(RACCESS(DUZ,""))="" D SETVARS^RAPSET1(0)
  Q:'($D(RACCESS(DUZ))\10)  ; user does not have location access
  I $G(RAIMGTY)="" D SETVARS^RAPSET1(1) K:$G(RAIMGTY)="" XQUIT
- Q
-WARN1 W !?3,"An electronically filed report has already been entered for this case.",!?3,"Please use the 'Outside Report Entry/Edit' option to change or enter",!?3,"diagnostic code for this case.",!!
  Q

@@ -1,6 +1,6 @@
 IBJTBC ;ALB/ARH - TPI BILL PROCEDURES SCREEN ;02-MAR-1995
- ;;2.0;INTEGRATED BILLING;**39,80,51,137,210,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**39,80,51,137,210**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; -- main entry point for IBJ TP BILL PROCEDURES
  D EN^VALM("IBJT BILL PROCEDURES")
@@ -27,7 +27,7 @@ EXIT ; -- exit code
  ;
 BLD ;
  N IB,IBI,IBJ,IBX,IBY,IBDXI,IBLN,IBSTR,IBD,IBT,IBPRC,IBXDATA,IBZPRC,IBZDX
- D F^IBCEF("N-UB-04 PROCEDURES","IBZPRC",,IBIFN)
+ D F^IBCEF("N-UB92 PROCEDURES","IBZPRC",,IBIFN)
  S IBSTR=""
  I +$O(IBZPRC(0))=0 S IBLN=1 F IBSTR="","Bill contains no procedures." S IBLN=$$SET(IBSTR,IBLN)
  ;

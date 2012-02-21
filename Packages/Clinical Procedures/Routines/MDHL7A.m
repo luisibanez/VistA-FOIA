@@ -1,36 +1,25 @@
-MDHL7A ; HOIFO/WAA - Routine to Decode HL7 for CP ;05/21/09  15:57
- ;;1.0;CLINICAL PROCEDURES;**6,11,21**;Apr 01, 2004;Build 30
+MDHL7A ; HOIFO/WAA - Routine to Decode HL7 for CP ; [05-07-2001 10:38]
+ ;;1.0;CLINICAL PROCEDURES;;Apr 01, 2004
  ; Reference DBIA #10035 [Supported] for DPT calls.
  ; Reference DBIA #10106 [Supported] for HLFNC calls.
  ; Reference DBIA #10062 [Supported] for VADPT6 calls.
- ; Reference DBIA #2701 [Supported] for MPIF001 calls
- ; Reference DBIA #10096 [Supported] for ^%ZOSF calls
+ ; Reference DBIA #2701 [Supported] for MPIF001 Calls
 EN ; [Procedure] Entry Point for Message Array in MSG
  N %,BID,CODE,CPT,DA,DATE,DFN,DIK,DLCO,DTO,DZ,ERRTX,EXAM,EXE,MDFLAG,FIL
  N I,ICNT,ID,IMP,J,K,LBL,LINO,LINE,LN,MDAPP,MDRTN,MG,MSG,N,NAM,NEXT,NUM
  N ORIFN,P,PID,PIEN,S,SEG,SET,SEP,MDSSN,STR,STYP,SUB,TCNT,TXT,UNIQ,SEC
  N UNITS,VA,VAL,X,XMBODY,XMDUZ,XMSUBJ,XMTO,Z,ZZ,Z1,Z2,MDERROR
  N ECODE,MDIEN,MDOBX,NUMZ,PNAM,ZCODE,MDDEV,MDD702,DEVNAME,DEVIEN,MDQFLG
- N MDIORD,MDHORD
- K ^TMP($J,"MDHL7A"),^TMP($J,"MDHL7"),^TMP($J,"MDHL7A1")
- S MDFLAG=0,MDERROR=0,MDQFLG=0,MDHORD=""
- Q:$G(HLMTIENS)=""
- S ^TMP($J,"MDHL7A1")=""
- S HLREST="^TMP($J,""MDHL7A1"")"
- S X=$$MSGIEN^MDHL7U3(HLMTIENS,HLREST) ; This code is to convert the HL7 Message **6**
- I $P(X,U)=0 D  Q
- . S DEVIEN=0,ECODE=0
- . S ERRTX=$P(X,U,2)
- . D ^MDHL7X
- . Q
- I $P(X,U)=1 D XVERT^MDHL7U3("MDHL7A1","MDHL7A")
- K HLNODE,^TMP($J,"MDHL7A1")
+ N MDIORD
+ K ^TMP($J,"MDHL7A"),^TMP($J,"MDHL7")
+ S MDFLAG=0,MDERROR=0,MDQFLG=0
+ F I=1:1 X HLNEXT Q:MDQFLG  S ^TMP($J,"MDHL7A",I)=$TR(HLNODE,$C(10),""),J=0 S:HLQUIT<1 MDQFLG=1 F  S J=$O(HLNODE(J)) Q:J<1  S ^TMP($J,"MDHL7A",I,J)=$TR(HLNODE(J),$C(10),"")
+ K HLNODE
  ;
 EN2 ; [Procedure] No Description
- S (DEVIEN,DEVNAME)="",I=0
+ S (DEVIEN,DEVNAME)=""
  F I=1:1 S X=$G(^TMP($J,"MDHL7A",I)) Q:X=""  Q:$E(X,1,3)="OBX"  D
  . S:$E(X,1,3)="MSH" DEVNAME=$P(X,"|",4)
- . I DEVNAME="",HLREC("SFN")'="" S DEVNAME=HLREC("SFN")
  . I $E(X,1,3)="MSH",DEVNAME'="Instrument Manager" S DEVIEN=$O(^MDS(702.09,"B",DEVNAME,0))
  . I $E(X,1,3)="OBR" D
  .. I DEVNAME="Instrument Manager" D
@@ -48,7 +37,7 @@ EN2 ; [Procedure] No Description
  . Q
  I DEVIEN="",DEVNAME'="" S DEVIEN=$O(^MDS(702.09,"B",DEVNAME,0))
  I DEVNAME="" S ERRTX="Invalid device Code" D ^MDHL7X Q
- I DEVIEN="" S ERRTX="Invalid device entry "_DEVNAME D ^MDHL7X Q
+ I DEVIEN="" S ERRTX="Invalid device entry" D ^MDHL7X Q
  S ZCODE=$P($G(^MDS(702.09,DEVIEN,.1)),"^",2)
  S ECODE=0,INST=DEVIEN,MDAPP=DEVNAME
  I 'INST S ERRTX="Invalid Application Code" D ^MDHL7X Q
@@ -57,8 +46,11 @@ EN2 ; [Procedure] No Description
  . Q
  I (ZCODE="M")!(ZCODE="B") D  Q:MDERROR  Q:ZCODE="M"  ;
  . S MDFLAG=1,MDERROR=0 ; Tell Medicine that CP is talking to HL7
+ . ;S MSG(1)=^TMP($J,"MDHL7A",1)
+ . ;S MSG(2)=^TMP($J,"MDHL7A",2)
  . D ^MDHL7MCA ; Run the Medicine routines
  . Q:MDERROR  ; Medicine found an error and sent an error back
+ . ;;I ZCODE="M" D GENACK^MDHL7X
  . Q
  S NUMZ=$O(^TMP($J,"MDHL7A",""),-1)
  S NUM=0,MDOBX=0
@@ -98,20 +90,16 @@ MSH ; [Procedure] Decode MSH
  Q
  ;
 OBR ; [Procedure] Check OBR
- Q:$G(MDHORD)'=""
  N MDGMRC
  S X=$G(^TMP($J,"MDHL7A",NUM)) I $E(X,1,3)'="OBR" S ERRTX="OBR not found when expected" D ^MDHL7X Q
  S SEG("OBR")=X
  S MDIORD=$P(X,"|",4)
- S MDD702=$S(+MDIORD<1:"",1:$$GETSTDY^MDRPCOT1(MDIORD)) S:MDHORD="" MDHORD=MDD702
- S:MDD702="" MDD702=MDHORD
- I MDD702'="" S MDD702=$$CHK^MDNCHK(MDD702) ; PATCH 11
+ S MDD702=$S(+MDIORD<1:"",1:$$GETSTDY^MDRPCOT1(MDIORD))
  S ORIFN=$P(X,"|",3),(EXAM,%)=$P(X,"|",5) I EXAM'="" S EXAM=$P(%,"^",2) I EXAM="" S EXAM=$P(%,"^",1)
  S CPT=$P(X,"|",5) I $P(CPT,"^",3)["CPT" S CPT=$P(CPT,"^",1)
  S DTO="",DATE=$P(X,"|",8) I DATE'="" S:$L(DATE)>14 DATE=$E(DATE,1,14) S DTO=$$FMDATE^HLFNC(DATE)
  ;  vvv== Added to address the issues of mismatch
  I $G(MDD702)>0 I DFN'=$$GET1^DIQ(702,MDD702,.01,"I") S ERRTX="Patient name Mismatch. Name in PID doesn't match the name in the CP Order #"_MDD702_"." D ^MDHL7X Q
- I $G(MDD702)>0 I MDDOB'=$$GET1^DIQ(2,DFN,.03,"I") S ERRTX="Patient DOB Mismatch. DOB in PID doesn't match the DOB in the CP Order #"_MDD702_"." D ^MDHL7X Q
  I DTO="" S ERRTX="Missing required Date/Time of Procedure in OBR" D ^MDHL7X Q
  ;;S UNIQ=$TR($H,",","-")
  S UNIQ=$$NEWID(DFN,DATE,INST,$G(MDD702),HLMTIEN)
@@ -120,14 +108,11 @@ OBR ; [Procedure] Check OBR
  N SET S SET=DTO_"^"_$P(UNIQ,U,2),ICNT=0 N IMP
  S MDRTN=$P($G(^MDS(702.09,INST,.1)),"^",1) S:MDRTN'["^" MDRTN="^"_MDRTN
  S X=MDRTN S:X["^" X=$P(X,"^",2) X ^%ZOSF("TEST") I '$T S ERRTX="Processing routine not found" D ^MDHL7X Q  ; IA %10096
- D CPTICD^MDHL7U3(X,MDIEN) ; Update CPT and ICD9
- D PHY^MDHL7U3(X,MDIEN) ; Get Doc who did the procedure.
  Q
  ;
 PID ; [Procedure] Check PID
  S X=$G(^TMP($J,"MDHL7A",NUM)) I $E(X,1,3)'="PID" S ERRTX="PID not second record" D ^MDHL7X Q
  S SEG("PID")=X
- S MDDOB=$P(X,"|",8) I MDDOB'="" S MDDOB=($E(MDDOB,1,4)-1700)_$E(MDDOB,5,8)
  I $L($P(X,"|",4))'<16 D  I +DFN=-1 Q
  . N ICN
  . S ICN=$P(X,"|",4)
@@ -155,15 +140,16 @@ MDSSN ; This subroutine is to match up the SSN for a patient.
  Q
  ;
 OBX ; [Observation]
+ ;Q:$P(^TMP($J,"MDHL7A",NUM),"|")'="OBX"
  D @MDRTN
  Q
 NEWID(DFN,DATE,INST,MDD702,HLMTIEN) ; Generate a new entry and ID of 703.1
- N NEWID,MDFDA,MDIEN,MDNO,MDRECI
+ N NEWID,MDFDA,MDIEN
  S NEWID=$TR($H,",","-")  ; Create inital ID
  L +(^MDD(703.1,"B")):60 E  Q "-1"
- ;^^--- Unable to get a lock in the file
+ ;^^--- Unable to get an lock in the file
  F  Q:'$D(^MDD(703.1,"B",NEWID))  H 1 S NEWID=$TR($H,",","-")
- ;^^--- Search to create a new ID if current ID is in use
+ ;^^--- Search to create an new ID in current ID is in use
  S MDFDA(703.1,"+1,",.01)=NEWID
  S MDFDA(703.1,"+1,",.02)=DFN
  S MDFDA(703.1,"+1,",.03)=$$HL7TFM^MDHL7U(DATE)
@@ -172,11 +158,7 @@ NEWID(DFN,DATE,INST,MDD702,HLMTIEN) ; Generate a new entry and ID of 703.1
  S MDFDA(703.1,"+1,",.06)=HLMTIEN
  D UPDATE^DIE("","MDFDA","MDIEN")
  L -(^MDD(703.1,"B"))
- I $G(MDIEN(1))>0 D  Q MDIEN(1)_U_NEWID
- . S ^MDD(703.1,MDIEN(1),.1,0)="^703.11S^0^0"
- . S MDRECI=+MDIEN(1)
- . S MDNO=$$NTIU^MDRPCW1(+MDD702,+MDRECI)
- . Q
+ I $G(MDIEN(1))>0 S ^MDD(703.1,MDIEN(1),.1,0)="^703.11S^0^0" Q MDIEN(1)_U_NEWID
  ; ^^--- Create Subfile and quit
  Q "-1"  ; Unable to create file
  ;

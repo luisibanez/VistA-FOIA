@@ -1,6 +1,5 @@
-SDAMA306 ;BPOIFO/ACS-Filter API Utilities ; 6/21/05 1:50pm
- ;;5.3;Scheduling;**301,347,508**;13 Aug 1993
- ;PER VHA DIRECTIVE 2004-038, DO NOT MODIFY THIS ROUTINE
+SDAMA306 ;BPOIFO/ACS-Filter API Utilities ; 8/10/04 2:40pm
+ ;;5.3;Scheduling;**301,347**;13 Aug 1993
  ;
  ;
  ;*****************************************************************
@@ -13,21 +12,12 @@ SDAMA306 ;BPOIFO/ACS-Filter API Utilities ; 6/21/05 1:50pm
  ;                        MADE (FIELD #16) AND 2 NEW FIELDS TO RETURN:
  ;                        1) AUTO-REBOOKED APPT DATE/TIME (FIELD #24)
  ;                        2) NO-SHOW/CANCEL APPT DATE/TIME (FIELD #25)
- ;02/22/07  SD*5.3*508    SEE SDAMA301 FOR CHANGE LIST
- ;*****************************************************************
- ;*****************************************************************
  ;
- ;INPUT
- ;  SDARRAY   Appointment Filter array (by reference)
- ;  
  ;*****************************************************************
 INITAE(SDARRAY) ;Initialize Array Entries as needed
  ;Initialize Appointment "From" and "To" dates if null
  N SDI
  F SDI=1,16  D INITDTS(SDI)
- ;
- ;Initialize Fields Array if ALL Fields Requested
- D:($$UPCASE(SDARRAY("FLDS"))="ALL") INITFLDS(.SDARRAY)
  ;
  ;Remove leading and trailing semi-colons from filter lists if present
  N SDNODE
@@ -57,8 +47,6 @@ INITAE(SDARRAY) ;Initialize Array Entries as needed
  . N SDLCHAR S SDLCHAR=$E(SDARRAY(2),$L(SDARRAY(2)))
  . I SDLCHAR="," Q
  . E  I SDLCHAR'="(" S SDARRAY(2)=SDARRAY(2)_","
- ;Initialize Encounter Filter
- S SDARRAY("ENCTR")=$$UPCASE($G(SDARRAY(12)))
  Q
  ;
  ;***************************************************
@@ -95,16 +83,3 @@ INITDTS(SDFLTR) ;initialize Appt Date/Time and Date Appt Made
  .S SDARRAY("DAMFR")=$G(SDFROM)
  .S SDARRAY("DAMTO")=$G(SDTO)
  Q
- ;
- ;*****************************************************************
- ;INPUT
- ;  SDARRAY   Appointment Filter array (by reference)
- ;*****************************************************************
-INITFLDS(SDARRAY) ;initialize Fields Requested
- N SDFLD
- S SDARRAY("FLDS")=""  ;Reset Field Array
- ;add all available fields to Field Request
- F SDFLD=1:1:26,28:1:SDARRAY("FC") S SDARRAY("FLDS")=SDARRAY("FLDS")_SDFLD_";"
- Q
-UPCASE(SDDATA) ;ensure RSA text is upper case
- Q $TR(SDDATA,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")

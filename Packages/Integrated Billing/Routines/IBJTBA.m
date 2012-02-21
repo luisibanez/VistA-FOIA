@@ -1,6 +1,6 @@
 IBJTBA ;ALB/ARH - TPI BILL CHARGE INFO SCREEN ;01-MAR-1995
- ;;2.0;INTEGRATED BILLING;**39,80,51,137,135,309,349,389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**39,80,51,137,135,309**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; -- main entry point for IBJ TP BILL CHARGES
  D EN^VALM("IBJT BILL CHARGES")
@@ -49,7 +49,7 @@ EXIT ; -- exit code
 BLD ; charges, as they would display on the bill
  N IBXDATA,IBXSAVE
  I $P($G(^DGCR(399,+IBIFN,0)),U,19)=2 D H1500 Q
- D UB04
+ D UB92
  K ^TMP("IBXSAVE",$J)
  Q
  ;
@@ -72,14 +72,14 @@ H1500 ; block 24
  S VALMCNT=IBLN-1
 H1500Q Q
  ;
-UB04 ;form locator 42-49,   IBIFN required
+UB92 ;form locator 42-49,   IBIFN required
  N X,Y,DIR,IBI,IBJ,IBX,IBLN,IBLC,IBLIN,IBPFORM,IBSTATE,IBCBILL,IBINPAT,IBQ,Z,Z0
  K ^TMP("IBXSAVE",$J)
  S IBLIN=$$RCBOX^IBCEF11()
  S IBQ=0,IBLC=9 Q:'$G(IBIFN)  K ^TMP("IBXDISP",$J)
  S IBPFORM=$S($P($G(^IBE(353,3,2)),U,8):$P(^(2),U,8),1:3)
  S IBX=$$BILLN^IBCEFG0(1,"1^99",IBLIN,+IBIFN,IBPFORM)
- I '$O(^TMP("IBXDISP",$J,0)) S VALMSG="No charges defined.",VALMQUIT="" G UB04Q
+ I '$O(^TMP("IBXDISP",$J,0)) S VALMSG="No charges defined.",VALMQUIT="" G UB92Q
  S Z="" F  S Z=$O(^TMP("IBXDISP",$J,1,Z),-1) Q:Z=""  S Z0=$G(^(Z)) Q:$TR(Z0," ")'=""  K ^(Z)
  S:Z ^TMP("IBXDISP",$J,1,Z+1)=" "
  S IBINPAT=$$INPAT^IBCEF(IBIFN,1)
@@ -98,7 +98,7 @@ UB04 ;form locator 42-49,   IBIFN required
  ;
  D MRA
  S VALMCNT=IBLN-1
-UB04Q Q
+UB92Q Q
  ;
 SETLN(STR,IBX,COL,WD) ;
  S IBX=$$SETSTR^VALM1(STR,IBX,COL,WD)
@@ -131,7 +131,7 @@ COB ; if there is an offset or a secondary/tertiary payer add it to the display,
  . S IBD=$P(IBCU1,U,1)-$P(IBCU1,U,2),IBD="Billed: "_$J(IBD,0,2) S IBSTR=$$SETLN(IBD,IBSTR,60,17)
  Q
  ;
-RX ;RX refill info for CMS-1500 TPJI display
+RX ;RX refill info for HCFA 1500 TPJI display
  N Z,Z0,Z1,IBSPC,IBD,IBI,IBSTR,IBARRAY,IBRXX
  S IBLN=IBLN+1
  S IBSPC=$J("",5)
@@ -151,12 +151,12 @@ RX ;RX refill info for CMS-1500 TPJI display
  . S IBSTR=$$SETLN(IBD,"",23,79),IBLN=$$SET(IBSTR,IBLN)
  Q
  ;
-PROS ;prosthetic info for CMS-1500 TPJI display
+PROS ;prosthetic info for HCFA 1500 TPJI display
  N Z,Z0,Z1,IBARRAY,IBSPC,IBD,IBI,IBSTR
  S IBSPC=$J("",10),IBLN=IBLN+1
  D SET^IBCSC5B(IBIFN,.IBARRAY)
  I $D(IBARRAY) D
- . S (Z,Z0)=0 F  S Z0=$O(IBARRAY(Z0)) Q:Z0=""  S Z1=0 F  S Z1=$O(IBARRAY(Z0,Z1)) Q:'Z1  S Z=Z+1,IBXDATA(Z)=$$DAT1^IBOUTL(Z0)_U_$E($$PINB^IBCSC5B(+IBARRAY(Z0,Z1)),1,39)
+ . S (Z,Z0)=0 F  S Z0=$O(IBARRAY(Z0)) Q:Z0=""  S Z1=0 F  S Z1=$O(IBARRAY(Z0,Z1)) Q:'Z1  S Z=Z+1,IBXDATA(Z)=$$DAT1^IBOUTL(Z0)_U_$E($P($$PIN^IBCSC5B(Z1),U,2),1,39)
  S IBD=$$SET("",IBLN)
  S IBD="PROSTHETIC REFILLS: (For TPJI display only)"
  S IBSTR=$$SETLN(IBD,"",1,79),IBLN=$$SET(IBSTR,IBLN)

@@ -1,5 +1,5 @@
-DGPFDD ;ALB/RPM - PRF DATA DICTIONARY UTILITIES ; 9/06/06 1:14pm
- ;;5.3;Registration;**425,554,650**;Aug 13, 1993;Build 3
+DGPFDD ;ALB/RPM - PRF DATA DICTIONARY UTILITIES ; 2/28/05 12:02pm
+ ;;5.3;Registration;**425,554**;Aug 13, 1993
  ;
  Q  ;No direct entry
  ;
@@ -165,104 +165,5 @@ GETLIST(DGCAT,DGLIST) ;Get list of TIU Progress Note Titles
  S DGRSLT=0
  ;
  I $G(DGCAT)>0,DGLIST]"",$$GETLIST^TIUPRF(DGCAT,DGLIST) S DGRSLT=1
- ;
- Q DGRSLT
- ;
-EVENT(DGDFN) ;PRF HL7 EVENT trigger
- ;This trigger creates an entry in the PRF HL7 EVENT (#26.21) file
- ;with an INCOMPLETE status.
- ;
- ;  Input:
- ;    DGDFN - pointer to patient in PATIENT (#2) file
- ;
- ;  Output: none
- ;
- N DGASGN
- ;
- ;validate input parameter
- Q:'$G(DGDFN)!('$D(^DPT(+$G(DGDFN),0)))
- ;
- ;don't record event when file re-indexing
- I $D(DIU(0))!($D(DIK)&$D(DIKJ)&$D(DIKLK)&$D(DIKS)&$D(DIN)) Q
- ;
- ;ICN must be national value
- Q:'$$MPIOK^DGPFUT(DGDFN)
- ;
- ;limit to one event per patient
- Q:$$FNDEVNT^DGPFHLL1(DGDFN)
- ;
- ;don't trigger when Category I PRF assignments exist
- Q:$$GETALL^DGPFAA(DGDFN,.DGASGN,"",1)
- ;
- ;record event
- D STOEVNT^DGPFHLL1(DGDFN)
- ;
- Q
- ;
-SCRNSEL(DGIEN,DGSEL) ;screen user selection
- ;This function checks that the selected action does not equal the
- ;current field value.
- ;
- ;  Input:
- ;   DGIEN - (required) MEDICAL CENTER DIVISION (#40.8) file (IEN)
- ;
- ;   DGSEL - (required) user selected action [1=enable, 0=disable]
- ;
- ; Output:
- ;   Function value - returns 1 on success, 0 on failure
- ;
- N DGERR   ;error root
- N DGFLD   ;field value
- N DGRSLT  ;function result
- ;
- S DGRSLT=0
- ;
- I +$G(DGIEN)>0,($G(DGSEL)]"") D
- . ;
- . S DGFLD=+$$GET1^DIQ(40.8,DGIEN_",",26.01,"I","","DGERR")
- . Q:$D(DGERR)
- . Q:(DGFLD=DGSEL)
- . ;
- . S DGRSLT=1
- ;
- Q DGRSLT
- ;
-SCRNDIV(DGIEN,DGSEL) ;division screen
- ;This function contains the screen logic for enabling/disabling a
- ;medical center division.
- ;
- ;The function (screen) is called from the following locations:
- ;   Function: $$ASKDIV^DGPFDIV
- ;         DD: Screen code for PRF ASSIGNMENT OWNERSHIP (#26.01) field
- ;             of the MEDICAL CENTER DIVISION (#40.8) file
- ;
- ;Entries will be screened if:
- ; - division is enabled and active assignments are associated with
- ;   the division
- ; - division is not associated with an active institution
- ; - division does not have a PARENT association in the
- ;   INSTITUTION (#4) file
- ;
- ;  Input:
- ;   DGIEN - (required) MEDICAL CENTER DIVISION (#40.8) file entry (IEN)
- ;           being screened
- ;   DGSEL - (required) user selected action [1=enable, 0=disable]
- ;
- ; Output:
- ;   Function value - returns 1 on success, 0 on failure
- ;
- N DGINST  ;ptr to INSTITUTION file
- N DGRSLT  ;function result
- ;
- S DGRSLT=0
- ;
- I +$G(DGIEN)>0,($G(DGSEL)]"") D
- . ;
- . S DGINST=+$P($G(^DG(40.8,DGIEN,0)),U,7)
- . I DGSEL=0,($D(^DGPF(26.13,"AOWN",DGINST,1))) Q
- . I DGSEL=1,'$$ACTIVE^XUAF4(DGINST) Q
- . I DGSEL=1,'$$PARENT^DGPFUT1(DGINST) Q
- . ;
- . S DGRSLT=1
  ;
  Q DGRSLT

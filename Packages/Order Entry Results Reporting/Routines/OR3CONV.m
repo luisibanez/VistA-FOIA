@@ -1,5 +1,5 @@
-OR3CONV ;SLC/MLI-OE/RR v3 conversion entry points ;8/11/06  13:31
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**14,215,260,243,296**;Dec 17, 1997;Build 19
+OR3CONV ;SLC/MLI-OE/RR v3 conversion entry points ;3/11/05  15:14
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**14,215**;Dec 17, 1997
  ;
  ; This routine contains the entry points to convert orders from
  ; all package (OE/RR, pharmacy, dietetics, etc.).
@@ -127,7 +127,7 @@ BGJ ; process via background job in order below
  ;
  ;
 5 ; patients with appointments past 4 weeks through next 4 weeks
- ; this call is no longer used
+ ; DBIA 3869
  N DFN,OREND,ORERR,ORI,ORLOC,ORSTART,X
  S ORSTART=$$FMADD^XLFDT(DT,-29),OREND=$$FMADD^XLFDT(DT,+29)
  S ORLOC=+$G(ORESTART) K ORESTART
@@ -227,7 +227,7 @@ ORCONV(ORVP) ; return 1 if OR orders need to be converted, otherwise 0
  Q 0
  ;
 PSCONV(DFN) ; return 1 to convert pharmacy orders for patient, otherwise 0
- ;I $P($G(^PS(55,DFN,0)),U,6)'=2!'$P($G(^(5.1)),U,11) Q 1
+ I $P($G(^PS(55,DFN,0)),U,6)'=2!'$P($G(^(5.1)),U,11) Q 1
  Q 0
  ;
 LRCONV() ; return 1 to convert

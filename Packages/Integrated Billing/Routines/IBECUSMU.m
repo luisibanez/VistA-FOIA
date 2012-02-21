@@ -1,5 +1,5 @@
 IBECUSMU ;ALB/CPM - PHARMACY BILLING OPTION UTILITIES ; 12-DEC-96
- ;;2.0;INTEGRATED BILLING;**52,347**;21-MAR-94;Build 24
+ ;;Version 2.0 ; INTEGRATED BILLING ;**52**; 21-MAR-94
  ;
  ;
 FINDC(IBIN,IBW,IBOUT) ; Find transactions which can be cancelled.
@@ -36,18 +36,12 @@ FINDB(IBRX,IBW,IBOUT) ; Find prescriptions which can be billed.
  ;                       2 => No writes
  ; Output:    IBOUT  --  Array of transactions which can be billed
  ;
- N IBARR,IBREF,IBKEY,IBCHTRN,IBCHTRN5,IBCHTRN6,IBREF1,LIST
- S LIST="FINDBLIST"
+ N IBARR,IBREF,IBKEY,IBCHTRN,IBCHTRN5,IBCHTRN6
  ;
  ; - build potential array from prescription (#52) file
  S IBARR(IBRX_";0")=$O(^IBA(351.5,"B",IBRX_";0",0))
- S IBREF=0
- D RX^PSO52API($$FILE^IBRXUTL(IBRX,2),LIST,IBRX,,"R^^",,)
- S IBREF=0 F  S IBREF=$O(^TMP($J,LIST,$$FILE^IBRXUTL(IBRX,2),IBRX,"RF",IBREF)) Q:IBREF'>0  D
- .Q:'IBREF
- .S IBARR(IBRX_";"_IBREF)=$O(^IBA(351.5,"B",IBRX_";"_IBREF,0))
+ S IBREF=0 F  S IBREF=$O(^PSRX(IBRX,1,IBREF)) Q:'IBREF  S IBARR(IBRX_";"_IBREF)=$O(^IBA(351.5,"B",IBRX_";"_IBREF,0))
  ;
- K ^TMP($J,LIST)
  S IBKEY="" F  S IBKEY=$O(IBARR(IBKEY)) Q:IBKEY=""  D
  .S IBCHTRN=IBARR(IBKEY)
  .I 'IBCHTRN S IBOUT(IBKEY)=IBCHTRN Q
@@ -80,7 +74,7 @@ SEL(IBARR) ; Select a fill for a prescription.
  S (IBSTR,IBKEY)="",IBNUM=-1
  F  S IBKEY=$O(IBARR(IBKEY)) Q:IBKEY=""  D
  .S IBRX=+IBKEY,IBREF=+$P(IBKEY,";",2)
- .S IBFILL=$S(IBREF:+$$SUBFILE^IBRXUTL(IBRX,IBREF,52,.01),1:+$$FILE^IBRXUTL(IBRX,22))
+ .S IBFILL=$S(IBREF:+$G(^PSRX(IBRX,1,IBREF,0)),1:+$P($G(^PSRX(IBRX,2)),"^",2))
  .S IBSTR=IBSTR_IBREF_":"_$S(IBREF:"Refill #"_IBREF,1:"Original Fill")_" (filled "_$$DAT1^IBOUTL(IBFILL)_");"
  ;
  I IBSTR="" G SELQ

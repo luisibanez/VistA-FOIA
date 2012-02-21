@@ -1,5 +1,5 @@
 ORDV08 ;DAN/SLC Testing new component ;8/22/01  11:30
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**109,120,243**;Dec 17,1997;Build 242
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**109,120**;Dec 17,1997
  ;
 RIM(ROOT,ORALPHA,OROMEGA,ORMAX,ORDBEG,ORDEND,OREXT)        ;Radiology report
  ;External Calls: MAIN^GMTSRAE(2),RPT^ORWRA
@@ -24,7 +24,6 @@ RIM(ROOT,ORALPHA,OROMEGA,ORMAX,ORDBEG,ORDEND,OREXT)        ;Radiology report
  . I $O(^TMP("ORXPND",$J,0)) S ORMORE=1 D SPMRG^ORDVU($NA(^TMP("ORXPND",$J)),$NA(^TMP("ORDATA",$J,ORCNT,"WP",6,1)),6) ;clinical history
  . I ORMORE S ^TMP("ORDATA",$J,ORCNT,"WP",7)="7^[+]" ;flag for detail
  . S ^TMP("ORDATA",$J,ORCNT,"WP",8)="8^"_$P(ORX0,U,14) ;Image available
- . S ^TMP("ORDATA",$J,ORCNT,"WP",9)="9^"_"i"_$P(ORX0,U,1)  ;EXAM ID
  K ^TMP("RAE",$J),^TMP("ORXPND",$J)
  S ROOT=$NA(^TMP("ORDATA",$J))
  Q

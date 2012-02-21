@@ -1,6 +1,5 @@
 IBCEP3 ;ALB/TMP - EDI UTILITIES for provider ID ;25-SEP-00
- ;;2.0;INTEGRATED BILLING;**137,207,232,280,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,207,232,280**;21-MAR-94
  ;
 CUNEED(IBIFN,IBSEQ,IBPTYP,IBRET,IBEMC) ; Determine if care unit needed for
  ; provider type and insurance company(s) on bill
@@ -45,7 +44,7 @@ CAREUN(IBINS,IBPTYP,IBFTYP,IBCTYP,IBRX) ; Find ien (file 355.96) for care
  ; care type
  ; IBINS = ien of ins co (file 36)
  ; IBPTYP = ien of provider id type (file 355.97)
- ; IBFTYP = form type (1=UB,2=1500)
+ ; IBFTYP = form type (1=UB92,2=HCFA)
  ; IBCTYP = care type (1=inpat,2=outpat)
  ; IBRX = 1 if outpat/Rx bill
  ;
@@ -156,7 +155,7 @@ PROFID(IBIFN,IBSEQ,IBID) ; Return id and type of rendering provider id
  ;  1 = FEDERAL TAX ID
  ;  2 = INSURANCE CO SPECIFIC ID
  ;  3 = NETWORK ID
- ; "" = not a CMS-1500 bill or no id found
+ ; "" = not a HCFA bill or no id found
  ; piece 2:
  ;  the id #
  N IBTYP,IBXDATA,IBZ

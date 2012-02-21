@@ -1,21 +1,22 @@
-ECUERPC ;ALB/JAM - Event Capture Data Entry Broker Utilities ;29 Oct 07
- ;;2.0; EVENT CAPTURE ;**25,32,33,46,47,59,72,95**;8 May 96;Build 26
+ECUERPC ;ALB/JAM;Event Capture Data Entry Broker Utilities ;Aug 16, 2000
+ ;;2.0; EVENT CAPTURE ;**25,32,33,46,47,59,72**;8 May 96
  ;
 USRUNT(RESULTS,ECARY) ;
+ ;
  ;This broker call returns an array of DSS units for a user & location
  ;        RPC: EC GETUSRDSSUNIT
- ;INPUTS     ECARY  - Contains the following subscripted elements
- ;            1. ECL   - Location IEN (if define gives User's DSS 
- ;                       units for a location)
- ;            2. ECDUZ - New Person IEN (if define gives list of 
- ;                       DSS Units available to user)
+ ;INPUTS        ECARY  - Contains the following subscripted elements
+ ;               1. ECL   - Location IEN (if define gives User's DSS 
+ ;                          units for a location)
+ ;               2. ECDUZ - New Person IEN (if define gives list of 
+ ;                          DSS Units available to user)
  ;
- ;OUTPUTS     RESULTS - Array of DSS Units. Data pieces as follows:-
- ;            PIECE - Description
- ;              1     IEN of file 724
- ;              2     Name of DSS Unit
- ;              3     Send to PCE Flag
- ;              4     Data Entry Date/Time Default
+ ;OUTPUTS        RESULTS - Array of DSS Units. Data pieces as follows:-
+ ;               PIECE - Description
+ ;                 1     IEN of file 724
+ ;                 2     Name of DSS Unit
+ ;                 3     Send to PCE Flag
+ ;                 4     Data Entry Date/Time Default
  N ECL,ECDUZ,CNT,STR,DPT,IEN
  D SETENV^ECUMRPC
  S ECL=$P(ECARY,U),ECDUZ=$P(ECARY,U,2) I ECL="",ECDUZ="" Q
@@ -43,19 +44,20 @@ UNTCHK ;Check if DSS unit exist as event code screen and if active
  S ^TMP($J,"ECUSRUNT",CNT)=STR
  Q
 CAT(RESULTS,ECARY) ;
+ ;
  ;This broker entry point returns an array of categories for an Event 
  ;Code screen based on location and DSS unit.
  ;        RPC: EC GETECSCATS
- ;INPUTS     ECARY  - Contains the following values separated by "^"
- ;            ECL  - Location IEN
- ;            ECD  - DSS Unit IEN
- ;            ECCSTA-Active or inactive category
- ;                   A-ctive (default), I-nactive, B-oth
+ ;INPUTS        ECARY  - Contains the following values separated by "^"
+ ;               ECL  - Location IEN
+ ;               ECD  - DSS Unit IEN
+ ;               ECCSTA-Active or inactive category
+ ;                      A-ctive (default), I-nactive, B-oth
  ;
- ;OUTPUTS     RESULTS - Array of categories. Data pieces as follows:-
- ;            PIECE - Description
- ;              1 - Category IEN
- ;              2 - Category description
+ ;OUTPUTS        RESULTS - Array of categories. Data pieces as follows:-
+ ;               PIECE - Description
+ ;                 1  - Category IEN
+ ;                 2  - Category description
  ;
  N ECL,ECD,ECC,CNT,DATA,ECCSTA
  D SETENV^ECUMRPC
@@ -67,23 +69,24 @@ CAT(RESULTS,ECARY) ;
  S RESULTS=$NA(^TMP($J,"ECSCATS"))
  Q
 PROC(RESULTS,ECARY) ;
+ ;
  ;This broker entry point returns an array of procedures for an Event 
  ;Code screen (file #720.3) based on location, DSS unit, and Category
  ;        RPC: EC GETECSPROCS
- ;INPUTS     ECARY  - Contains the following values separated by "^"
- ;            ECL  - Location IEN
- ;            ECD  - DSS Unit IEN
- ;            ECC  - Category IEN
- ;            ECDT - Procedure Date
+ ;INPUTS        ECARY  - Contains the following values separated by "^"
+ ;               ECL  - Location IEN
+ ;               ECD  - DSS Unit IEN
+ ;               ECC  - Category IEN
+ ;               ECDT - Procedure Date
  ;
- ;OUTPUTS     RESULTS - Array of procedures. Data pieces as follows:-
- ;            PIECE - Description
- ;              1  - EC National Number SPACE Procedure Name SPACE
- ;                - [Synonym]
- ;              2  - Procedure Code
- ;              3  - CPT Code
- ;              4  - Default volume (1 if no default volume)
- ;              5  - Event code screen IEN
+ ;OUTPUTS        RESULTS - Array of procedures. Data pieces as follows:-
+ ;               PIECE - Description
+ ;                 1  - EC National Number SPACE Procedure Name SPACE
+ ;                   - [Synonym]
+ ;                 2  - Procedure Code
+ ;                 3  - CPT Code
+ ;                 4  - Default volume (1 if no default volume)
+ ;                 5  - Event code screen IEN
  ;
  N ECL,ECD,ECC,CNT,DATA,STR,ECCPT,PX
  D SETENV^ECUMRPC
@@ -102,6 +105,7 @@ PROC(RESULTS,ECARY) ;
  K ^TMP("ECPRO",$J)
  Q
 ECPXMOD(RESULTS,ECARY) ;
+ ;
  ;Broker call returns modifier entries for a CPT Procedure
  ;        RPC: EC GETPXMODIFIER
  ;INPUTS   ECARY  - Contains the following values separated by "^"
@@ -117,22 +121,21 @@ ECPXMOD(RESULTS,ECARY) ;
  I ECCPT="" Q
  K ^TMP($J,"ECPXMODS") S (SUB,CNT)=0
  S DATA=$$CODM^ICPTCOD(ECCPT,"ECMOD","",ECDT) I +DATA<0 Q
- F  S SUB=$O(ECMOD(SUB)) Q:SUB=""  I $P(ECMOD(SUB),U,2)'="" D
- . I +$$MODP^ICPTMOD(ECCPT,$P(ECMOD(SUB),U,2),"I",ECDT)>0 D
- . . S CNT=CNT+1,^TMP($J,"ECPXMODS",CNT)=SUB_U_ECMOD(SUB)
+ F  S SUB=$O(ECMOD(SUB)) Q:SUB=""  D
+ . S CNT=CNT+1,^TMP($J,"ECPXMODS",CNT)=SUB_U_ECMOD(SUB)
  S RESULTS=$NA(^TMP($J,"ECPXMODS"))
  Q
 PRVDER(RESULTS,ECARY) ;
  ;remove this rpc before release;JAM 6/4/01
  ;This broker entry point returns an array of valid providers
  ;        RPC: EC GETPROVIDER
- ;INPUTS     ECARY  - Contains the following subscripted elements
- ;            ECDT  - Procedure date
+ ;INPUTS        ECARY  - Contains the following subscripted elements
+ ;               ECDT  - Procedure date
  ;
- ;OUTPUTS     RESULTS - Array of providers. Data pieces as follows:-
- ;            PIECE - Description
- ;             IEN of file 200^Provider Name^occupation^specialty^
- ;             subspecialty
+ ;OUTPUTS        RESULTS - Array of providers. Data pieces as follows:-
+ ;               PIECE - Description
+ ;                IEN of file 200^Provider Name^occupation^specialty^
+ ;                subspecialty
  ;
  N IEN,CNT,ECUTN,KEY,USR
  D SETENV^ECUMRPC
@@ -166,19 +169,20 @@ ELIG(RESULTS,ECARY) ;
  S RESULTS=$NA(^TMP($J,"ECPATELIG"))
  Q
 PRDEFS(RESULTS,ECARY) ;
+ ;
  ;This broker entry point returns the defaults for procedure data entry
  ;        RPC: EC GETPRODEFS
- ;INPUTS     ECARY  - Contains the following values separated by "^"
- ;            ECL  - Location IEN
- ;            ECD  - DSS Unit IEN
- ;            ECC  - Category IEN
+ ;INPUTS        ECARY  - Contains the following values separated by "^"
+ ;               ECL  - Location IEN
+ ;               ECD  - DSS Unit IEN
+ ;               ECC  - Category IEN
  ;
- ;OUTPUTS    RESULTS - Data pieces as follows:-
- ;           PIECE - Description
- ;             1 - Associated Clinic IEN
- ;             2 - Associated Clinic
- ;             3 - Medical Specialty IEN
- ;             4 - Medical Specialty
+ ;OUTPUTS        RESULTS - Data pieces as follows:-
+ ;               PIECE - Description
+ ;                 1  - Associated Clinic IEN
+ ;                 2  - Associated Clinic
+ ;                 3  - Medical Specialty IEN
+ ;                 4  - Medical Specialty
  ;
  N ECL,ECD,ECC,ECP,IEN,ASC,ASCNM,MEDSP,MEDSPNM,ECCH
  D SETENV^ECUMRPC
@@ -205,8 +209,8 @@ PATPROC(RESULTS,ECARY) ;
  ;          ECED  - End Date
  ;
  ;OUTPUTS  RESULTS - Array of Event Capture Patient entries contain
- ;          721 IEN^Procedure date/time^Category^Procedure^Volume^
- ;          Provider^ordering section^associated clinic^primary dx
+ ;          721 IEN^Procedure date and time^Category^Procedure^Volume^
+ ;          Provider^ordering section^associated clinic^primary diagnoses
  ;          ^Provider IEN
  ;
  N IEN,CNT,ECV,ECLOC,ECUNT,ECPAT,PX,NODE,DATA,PDT,PDX,PND,PDXD,CAT,ECI

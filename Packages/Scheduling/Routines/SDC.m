@@ -1,5 +1,5 @@
-SDC ;MAN/GRR,ALB/LDB - CANCEL A CLINIC'S AVAILABILITY ; 3/2/05 2:11pm
- ;;5.3;Scheduling;**15,32,79,132,167,478,487,523,545**;Aug 13, 1993;Build 8
+SDC ;MAN/GRR,ALB/LDB - CANCEL A CLINIC'S AVAILABILITY ; 12 SEP 84  1:27 pm
+ ;;5.3;Scheduling;**15,32,79,132,167,389**;Aug 13, 1993
  N SDATA,SDCNHDL ; for evt dvr
 SDC1 K SDLT,SDCP S NOAP="" D LO^DGUTL
  S DIC=44,DIC(0)="MEQA",DIC("S")="I $P(^(0),""^"",3)=""C"",'$G(^(""OOS""))",DIC("A")="Select CLINIC NAME: " D ^DIC K DIC("S"),DIC("A") G:'$D(^SC(+Y,"SL")) END^SDC0
@@ -22,8 +22,7 @@ WP S %="" W !,"WANT TO CANCEL PART OF THE DAY" D YN^DICN I '% W !,"REPLY YES (Y)
 F R !,"STARTING TIME: ",X:DTIME Q:U[X  D TC^SDC2 G F:Y<0 S FR=Y,ST=%
 T R !,"ENDING TIME: ",X:DTIME Q:U[X  D TC^SDC2 G T:Y<0 S SDHTO=X,TO=Y I TO'>FR W !,"Ending time must be greater than starting time",*7 G T
  I $$COED^SDC4(SC,FR,TO,1) K FR,SDHTO,TO,ST W ! G F
-ROPT R !,"Reason for cancellation:  ",I:DTIME I I?1"?".E W !,"YOU MAY ENTER A MESSAGE CONCERNING THE CANCELLATION HERE" G ROPT
- N CANREM S CANREM=I
+ROPT R !,"(OPTIONAL) MESSAGE: ",I:DTIME I I?1"?".E W !,"YOU MAY ENTER A MESSAGE CONCERNING THE CANCELLATION HERE" G ROPT
  Q:I["^"  I '$D(^SC(SC,"SDCAN",0)) S ^SC(SC,"SDCAN",0)="^44.05D^"_FR_"^1" G SKIP
  S A=^SC(SC,"SDCAN",0),SDCNT=$P(A,"^",4),^SC(SC,"SDCAN",0)=$P(A,"^",1,2)_"^"_FR_"^"_(SDCNT+1)
 SKIP S ^SC(SC,"SDCAN",FR,0)=FR_"^"_SDHTO
@@ -34,22 +33,14 @@ SKIP S ^SC(SC,"SDCAN",FR,0)=FR_"^"_SDHTO
  S DH=0,^(1)=I,FR=FR-.0001 G C ;NAKED REFERENCE - ^SC(IFN,"ST",Date,1)
 S S ^("CAN")=^SC(SC,"ST",SD,1) Q
  ;
-ALL N CANREM
- W !,"Reason for cancellation: " R CANREM:DTIME I $L(CANREM)>160!($L(CANREM)<3) W !,*7,"Reason must be between 3 to 160 characters long",! G ALL
- D S S ^(1)="   "_$E(SD,6,7)_"    **CANCELLED**",FR=SD,TO=SD+.9 ;NAKED REFERENCE - ^SC(IFN,"ST",Date,1)
+ALL D S S ^(1)="   "_$E(SD,6,7)_"    **CANCELLED**",FR=SD,TO=SD+.9 ;NAKED REFERENCE - ^SC(IFN,"ST",Date,1)
 C S FR=$O(^SC(SC,"S",FR)) I FR<1!(FR'<TO) W !!,"CANCELLED!  " K SDX G CHKEND^SDC0
- N TDH,TMPD,DIE,DR,NODE
  F I=0:0 S I=$O(^SC(SC,"S",FR,1,I)) Q:I'>0  D
- .I '$D(^SC(SC,"S",FR,1,I,0)) I $D(^("C")) S J=FR,J2=I D DELETE^SDC1 K J,J2 Q  ;SD*5.3*545 delete corrupt node
- .I '+$G(^SC(SC,"S",FR,1,I,0)) S J=FR,J2=I D DELETE^SDC1 K J,J2 Q  ;SD*5.3*545 if DFN is missing delete record
  .S DFN=+^SC(SC,"S",FR,1,I,0),SDCNHDL=$$HANDLE^SDAMEVT(1)
  .D BEFORE^SDAMEVT(.SDATA,DFN,FR,SC,I,SDCNHDL)
  .S $P(^SC(SC,"S",FR,1,I,0),"^",9)="C"
- .S:$D(^DPT(DFN,"S",FR,0)) NODE=^(0)  ;added SD/523
- .Q:$P(NODE,U,1)'=SC                  ;added SD/523
  .S ^DPT("ASDCN",SC,FR,DFN)=""
- .S SDSC=SC,SDTTM=FR,SDPL=I,TDH=DH,TMPD=CANREM D CANCEL^SDCNSLT S DH=TDH ;SD/478
- .I $D(^DPT(DFN,"S",FR,0)),$P(^(0),"^",2)'["C" S $P(^(0),"^",2)="C",$P(^(0),"^",12)=DUZ,$P(^(0),"^",14)=SDTIME,DH=DH+1,TDH=DH,DIE="^DPT(DFN,"_"""S"""_",",DR="17///^S X=CANREM",DA=FR D ^DIE S DH=TDH D MORE
+ .I $D(^DPT(DFN,"S",FR,0)),$P(^(0),"^",2)'["C" S $P(^(0),"^",2)="C",$P(^(0),"^",12)=DUZ,$P(^(0),"^",14)=SDTIME,DH=DH+1 D MORE
  G C
  ;
 B S X=SD D DOW^SDM0 S DOW=Y,SS=+$O(^SC(SC,"T"_Y,X)) I $D(^(SS,1)),^(1)]"" S DH=^(1),DO=X+1,DA(1)=SC
@@ -69,4 +60,3 @@ EVT ; -- separate tag if need to NEW vars
  N FR,I,SDTIME,DH,SC
  D CANCEL^SDAMEVT(.SDATA,DFN,SDTTM,SDSC,SDPL,0,SDCNHDL) K SDATA,SDCNHDL
  Q
- ;

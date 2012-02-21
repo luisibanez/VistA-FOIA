@@ -1,5 +1,5 @@
-PXRMVLST ; SLC/PKR - Validate a reminder definition for building a patient list. ;06/16/2005
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMVLST ; SLC/PKR - Validate a reminder definition for building a patient list. ;02/11/2005
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;==================================================
 CCF(FINDING) ;Check a computed finding to see if it can be used for building
  ;a list.
@@ -80,7 +80,6 @@ VDEF(RIEN) ;Check a reminder definition and see if it is valid for
  . D EN^DDIOL(TEXT)
  ;
  ;The cohort logic cannot contain or not.
- ;Change any !(' to !' before checking.
  S TEMP=$TR(PCLOG,"(","")
  S TEMP=$TR(TEMP,")","")
  I TEMP["!'" D  Q 0
@@ -89,6 +88,9 @@ VDEF(RIEN) ;Check a reminder definition and see if it is valid for
  ;
  S OPER="!&~"
  S PCLOG=$$STRREP^PXRMUTIL(PCLOG,"&'","~")
+ I PCLOG["'F" D  Q 0
+ . S TEXT="Logic cannot contain a not of a finding!"
+ . D EN^DDIOL(TEXT)
  D POSTFIX^PXRMSTAC(PCLOG,OPER,.PFSTACK)
  D CFSAA^PXRMPLST(.PFSTACK)
  M SSTACK=PFSTACK

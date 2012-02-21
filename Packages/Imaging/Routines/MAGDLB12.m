@@ -1,5 +1,5 @@
-MAGDLB12 ;WOIFO/LB,MLH - Routine to fix failed DICOM entries  ; 04/25/2005  07:46
- ;;3.0;IMAGING;**11,51,20**;Apr 12, 2006
+MAGDLB12 ;WOIFO/LB,MLH - Routine to fix failed DICOM entries  ; 01/30/2004  17:14
+ ;;3.0;IMAGING;**11**;14-April-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -9,91 +9,90 @@ MAGDLB12 ;WOIFO/LB,MLH - Routine to fix failed DICOM entries  ; 04/25/2005  07:4
  ;; | telephone (301) 734-0100.                                     |
  ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
- ;; | a Class II medical device.  As such, it may not be changed    |
- ;; | in any way.  Modifications to this software may result in an  |
- ;; | adulterated medical device under 21CFR820, the use of which   |
- ;; | is considered to be a violation of US Federal Statutes.       |
+ ;; | a medical device.  As such, it may not be changed in any way. |
+ ;; | Modifications to this software may result in an adulterated   |
+ ;; | medical device under 21CFR820, the use of which is considered |
+ ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
  Q
 LOOP ;
  N ANS,ANSR,CASENO,COMNT1,DATA,DATA1,DATA2,DATE,FILE,FIRST,FIRSTS
- N MACHID,MAGDY,MAGDIEN,MAGIEN,MAGTYPE,MSG,START,STOP,SUID
+ N MACHID,MAGDY,MAGDIEN,MAGIEN,MAGTYPE,MSG,START,STOP
  N MOD,MODEL,NEWCAS,NEWDFN,NEWDTI,NEWDTIM,NEWMUL,NEWNME,NEWPIEN,NEWPROC
  N NEWSSN,OK,OOUT,OUT,PAT,PID,PP,PREV,PREVS,REASON,SITE,STUDYUID,WHY,MAGFIX
  N KFIXALL ; -- does user hold MAGDFIX ALL security key?
  ;
  S KFIXALL=$$SECKEY()
  S (OOUT,OUT,PREV,FIRST)=0
- ; select a site - bail if no images to correct or no site selected
- S STAT=$$SITE(.SITE) Q:'SITE
- S SUID=0
- F  S SUID=$O(^MAGD(2006.575,"F",SITE,SUID)) Q:SUID=""!(OOUT)  D
- . S MAGIEN=$O(^MAGD(2006.575,"F",SITE,SUID,0)) Q:'MAGIEN
- . ; if image isn't on file, clean up xrefs
- . I '$D(^MAGD(2006.575,MAGIEN,0)) D  Q
- . . K ^MAGD(2006.575,"F",SITE,SUID,MAGIEN)
- . . Q
+ S SITE=""
+ F  S SITE=$O(^MAGD(2006.575,"F",SITE)) Q:'SITE  D
  . ; if gateway site isn't the user's site, bail unless the user holds
  . ; the MAGDFIX ALL security key
- . I $P($G(^MAGD(2006.575,MAGIEN,1)),U,5)'=DUZ(2),'KFIXALL Q
- . ;Only process Radiology images...medicine images done by other rtns.
- . S MAGTYPE=$P($G(^MAGD(2006.575,MAGIEN,"TYPE")),"^") I MAGTYPE'["RAD" Q
- . I $D(^MAGD(2006.575,MAGIEN,"FIXD")),$P(^MAGD(2006.575,MAGIEN,"FIXD"),"^") Q
- . I 'FIRST S PREV=MAGIEN,PREVS=SUID,FIRST=MAGIEN
- . D SET^MAGDLB1
+ . I SITE'=DUZ(2),'KFIXALL Q
+ . S SUID=0
+ . F  S SUID=$O(^MAGD(2006.575,"F",SITE,SUID)) Q:SUID=""!(OOUT)  D
+ . . S MAGIEN=$O(^MAGD(2006.575,"F",SITE,SUID,0)) Q:'MAGIEN
+ . . ; if image isn't on file, clean up xrefs
+ . . I '$D(^MAGD(2006.575,MAGIEN,0)) D  Q
+ . . . K ^MAGD(2006.575,"F",SITE,SUID,MAGIEN),^MAGD(2006.575,MAGIEN,0)
+ . . . Q
+ . . ; if gateway site isn't the user's site, bail unless the user holds
+ . . ; the MAGDFIX ALL security key
+ . . I $P($G(^MAGD(2006.575,MAGIEN,1)),U,5)'=DUZ(2),'KFIXALL Q
+ . . ;Only process Radiology images...medicine images done by other rtns.
+ . . S MAGTYPE=$P($G(^MAGD(2006.575,MAGIEN,"TYPE")),"^") I MAGTYPE'["RAD" Q
+ . . I $D(^MAGD(2006.575,MAGIEN,"FIXD")),$P(^MAGD(2006.575,MAGIEN,"FIXD"),"^") Q
+ . . I 'FIRST S PREV=MAGIEN,PREVS=SUID,FIRST=MAGIEN
+ . . D SET^MAGDLB1
+ . . Q
  . Q
  Q
-SITE(XSITE) ; select a site for which to process entries
- ; input:        none
- ; output:   .XSITE   site number for which to process entries
- ; 
- ; return:   0 always
- ; 
+SITE ;
  N CNT,KFIXALL,RESULT,SITES
- S (CNT,XSITE)=0 F  S XSITE=$O(^MAGD(2006.575,"F",XSITE)) Q:'XSITE  D
- . Q:'$$FIND1^DIC(4,"","","`"_XSITE)
- . S CNT=CNT+1,SITES(CNT)=XSITE
+ S (CNT,SITE)=0 F  S SITE=$O(^MAGD(2006.575,"F",SITE)) Q:'SITE  D
+ . Q:'$$FIND1^DIC(4,"","","`"_SITE)
+ . S CNT=CNT+1,SITES(CNT)=SITE
  . Q
- Q:'CNT 0
- ;
+ Q:'CNT
+LOOK ;
  S KFIXALL=$$SECKEY I '$$MDIV S KFIXALL=1
- ; If not multi-division set the KFIXALL - site should be able to correct any entry
- I KFIXALL D FIX(.SITES,CNT) Q 0
- I $D(DUZ(2)) D  Q 0
- . S XSITE=DUZ(2)
- . I '$D(^MAGD(2006.575,"F",XSITE)) W !,"No entries for division "_$$GET1^DIQ(4,+XSITE,".01","E")
+ ; If not multi-division set the KFIXALL - site should be able to correcty any entry
+ I KFIXALL D FIX(.SITES,CNT) Q
+ I $D(DUZ(2)) D  Q
+ . S SITE=DUZ(2)
+ . I '$D(^MAGD(2006.575,"F",SITE)) W !,"No entries for division "_$$GET1^DIQ(4,+SITE,".01","E")
  . Q
  D LKUSR(.RESULT,DUZ)
- I '$D(RESULT(0)) Q 0
- I $P(RESULT(0),"^")=0 W !,$P(RESULT,"^",2) Q 0
- ;
+ I '$D(RESULT(0)) Q
+ I $P(RESULT(0),"^")=0 W !,$P(RESULT,"^",2) Q
+SITE1 ;
  N EN,II,NSITE,MAGSITE,X
- S (CNT,XSITE)=0
+ S (CNT,SITE)=0
  S X=0 F  S X=$O(SITES(X)) Q:'X  S II=$G(SITES(X)) I II S NSITE(II)=""
  S II=0
  F  S II=$O(RESULT(II)) Q:'II  S EN=$G(RESULT(II)) I $D(NSITE(EN)) S CNT=CNT+1,MAGSITE(CNT)=EN
- I 'CNT Q 0 ;no matches
- I CNT=1 S XSITE=$G(MAGSITE(1)) Q 0
- D FIX(.MAGSITE,CNT) ; select a SITE to fix
- Q 0
+ I 'CNT Q  ;no matches
+ I CNT=1 S SITE=$G(MAGSITE(1)) Q
+ D FIX(.MAGSITE,CNT)
+ Q
  ;
-FIX(SITES,CNT) ;SUBROUTINE - Prepare to fix the entries for the user's division entries.        
- ; Multiple divisions have images to be corrected and user has appropriate security key.
+FIX(SITES,CNT) ;Fix the entries for the user's division entries.        
+ ; Multiple divisions have images to be corrected and user has appropirate security key.
  N DIR,I,Y,X
  I 'CNT Q
  I CNT=1 S SITE=$G(SITES(CNT)) Q
  S I=0 F  S I=$O(SITES(I)) Q:'I  D
  . W !,I,") ",$G(SITES(I)),"  ",$$GET1^DIQ(4,+$G(SITES(I)),".01","E")
  . Q
- F  D  Q:Y'>CNT
- . S DIR(0)="N:1:"_CNT
- . S DIR("A",1)="There are images to be corrected for multiple divisions."
- . S DIR("A")="Select by number (1-"_CNT_")"
- . D ^DIR
- . W:Y>CNT " ??"
- . Q
- S:Y SITE=$G(SITES(+Y))
+FIXE ;
+ S DIR(0)="N:1:"_CNT
+ S DIR("A",1)="There are images to be corrected for multiple divisions."
+ S DIR("A")="Select by number (1-"_CNT_")"
+ D ^DIR
+ Q:'+Y
+ I +Y>CNT W " ??" G FIXE
+ S SITE=$G(SITES(+Y))
  Q
  ;
 SECKEY() ;
@@ -103,14 +102,12 @@ SECKEY() ;
  D OWNSKEY^XUSRB(.MAGRSLT,.MAGKY)
  I +$G(MAGRSLT("MAGDFIX ALL")) Q 1
  Q 0
- ;
 MDIV() ;Multi-divisional flag
  N CNT,I
  S (CNT,I)=0
  F  S I=$O(^MAG(2006.1,I)) Q:'I  S CNT=CNT+1
  I CNT>1 Q 1
  Q 0
- ;
 LKUSR(RESULT,USER) ;
  ;RETURNS: 0^Message for failure
  ;         IENs for Institution file entry^
@@ -132,4 +129,3 @@ LKUSR(RESULT,USER) ;
  S RESULT(0)=CNT_"^Number of entries"
  ; Get the 1st institution, the calling routine should check for keys.
  Q
- ;

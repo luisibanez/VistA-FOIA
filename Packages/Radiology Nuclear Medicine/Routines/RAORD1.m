@@ -1,18 +1,5 @@
-RAORD1 ;HISC/CAH - AISC/RMO-Request An Exam ; 06/27/07 07:22am
- ;;5.0;Radiology/Nuclear Medicine;**10,45,41,75,86**;Mar 16, 1998;Build 7
- ;
- ;Supported IA #10035 reference to ^DPT(
- ;Supported IA #10040 reference to ^SC(
- ;Supported IA #10060 reference to ^VA(200
- ;Supported IA #2055 reference to $$EXTERNAL^DILFD
- ;Supported IA #2378 reference to ORCHK^GMRAOR
- ;Supported IA #10061 reference to ^VADPT
- ;Supported IA #10112 reference to ^VASITE
- ;Supported IA #10103 reference to ^XLFDT
- ;Supported IA #10141 reference to ^XPDUTL
- ;Supported IA #10009 reference to FILE^DICN
- ;Supported IA #10018 reference to ^DIE
- ;
+RAORD1 ;HISC/CAH - AISC/RMO-Request An Exam ; 01/21/05 11:25am
+ ;;5.0;Radiology/Nuclear Medicine;**10,45,41**;Mar 16, 1998
  ;*Billing Awareness Project:
  ; RABWDX Array: ICD Diagnosis^SC^AO^IR^EC^MST^HNC
  ;  RABWDX is used in RABWORD* and RABWPCE*. 
@@ -20,31 +7,17 @@ RAORD1 ;HISC/CAH - AISC/RMO-Request An Exam ; 06/27/07 07:22am
  ;*
  S RAPKG="" N RAPTLKUP,RAGMTS,RACOPYOR
  G ADDORD:$D(RAVSTFLG)&($D(RALIFN))&($D(RAPIFN))
- ;
  I '$D(RAREGFLG),'$D(RAVSTFLG) N RAPTLOCK K RAWARD D  G:'RAPTLKUP Q
 PAT .S DIC="^DPT(",DIC(0)="AEMQ" W ! D ^DIC K DIC
- .I Y<0 S RAPTLKUP=0 Q 
- .S RAPTLOCK=$$LK^RAUTL19(+Y_";DPT(") G:'RAPTLOCK PAT
+ .I Y<0 S RAPTLKUP=0 Q
+ .I $$ORVR^RAORDU()'<3 D  G:'RAPTLOCK PAT
+ ..S RAPTLOCK=$$LK^RAUTL19(+Y_";DPT(")
+ ..Q
  .S (DFN,RADFN)=+Y,(VA200,RAPTLKUP)=1
  .W ! D IN5^VADPT S:VAIP(1) RAWARD=$P(VAIP(5),"^",2)
  .D ELIG^RABWORD2
  .Q
- ;
-PL ;Ask for the patient location (REQ. LOCATION file: 75.1, field: #22)
- N RACPRS27 S RACPRS27=$$PATCH^XPDUTL("OR*3.0*243")
- S DIC("A")="Patient Location: ",DIC("B")=$S($D(RAWARD)#2:RAWARD,1:"")
- S DIC="^SC(",DIC(0)="AEMQ"
- ;
- ;With the installation of RA*5.0*86 and after the implementation of
- ;CPRS v27 all active locations are eligible for selection regardless
- ;of patient type.
- ;
- ;If RAWARD is defined it is set to the name of the ward; pass either a 0
- ;or 1.
- ;Pass either a 0 or 1 as a value for RACPRS27. If 1 then CPRS GUI v27
- ;(OR*3.0*243) is installed at this facility.
- S DIC("S")="I $$SCREEN^RAORD1A("_($D(RAWARD)#2)_","_(RACPRS27)_")"
- ;
+PL S DIC("A")="Patient Location: ",DIC("B")=$S($D(RAWARD):RAWARD,1:""),DIC="^SC(",DIC(0)="AEMQ",DIC("S")="I $$SCREEN^RAORD1A()"
  D ^DIC K DIC K:'$D(RAREGFLG) RAWARD G Q:Y<0 S RALIFN=+Y
  S DIC("A")="Person Requesting Order: "
  ;*Billing Awareness Project:
@@ -65,12 +38,15 @@ ENADD ;OE/RR Entry Point for the ACTION Option
  S RADIV=+$$SITE^VASITE(DT,+$P(RAL0,"^",15)) S:RADIV<0 RADIV=0
  S RADIV=$S($D(^RA(79,RADIV,0)):RADIV,1:$O(^RA(79,0)))
  S RAMDV=$TR($G(^RA(79,+RADIV,.1)),"YyNn","1100")
- D:'$D(RACAT)#2  ;if not defined, define the variable RACAT
- .I $D(RAWARD)#2 S RACAT="INPATIENT" Q
- .N Y S Y=$G(^RADPT(RADFN,0)) I Y="" S RACAT="OUTPATIENT" Q
- .S RACAT=$$EXTERNAL^DILFD(70,.04,"",$P(Y,U,4))
- .S:RACAT="" RACAT="OUTPATIENT"
+ S RACAT=$S($D(RACAT):RACAT,$D(RAWARD):"INPATIENT",$P(RAL0,"^",2)="PERSONNEL HEALTH":"EMPLOYEE",'$D(^RADPT(RADFN,0)):"OUTPATIENT",$P(^(0),"^",4)]"":$P($P(^DD(70,.04,0),$P(^RADPT(RADFN,0),"^",4)_":",2),";"),1:"OUTPATIENT")
+ I "IO"[$E(RACAT,1) D
+ .S RASTRNG=$$MATCH^RAORD1A(RACAT,RALIFN)
+ .;if necessary, change category of exam to match type of requesting
+ .;location and display msg to user
+ .S RACAT=$P(RASTRNG,"^"),RAWARD=$P(RASTRNG,"^",2)
  .Q
+ K:$D(RAWARD)&($E(RACAT,1)="O") RAWARD
+ K RASTRNG
  ; clear clin hist if:
  ;   rad backdoor, or
  ;   oe/rr's first order (quick or not)
@@ -101,19 +77,16 @@ Q ; Kill, unlock if locked, and quit
  K:'$D(RAREGFLG)&('$D(RAVSTFLG)) RACAT,RADFN,RANME,RAWARD
  I '$D(RAPKG) K RAMDIV,RAMDV,RAMLC
  I $D(RAPKG) K ORIFN,ORIT,ORL,ORNP,ORNS,ORPCL,ORPK,ORPV,ORPURG,ORSTS,ORTX,ORVP,RAPKG
- K RAHSMULT,RAPOP,RAIMAG,RAREAST,RAREQLOC
+ K RAHSMULT,RAPOP,RAIMAG,RAREQLOC
  K C,DI,DIG,DIH,DISYS,DIU,DIW,DIWF,DIWL,DIWR,DIWT,DN,I,ORCHART,POP,RAMDVZZ,RASCI,RASERIES
  Q
 CREATE S RACT=0 D MODS Q:$D(RAOUT)
-CREATE1 ;ask for the 'Date Desired' req'd P75
- S RAWHEN=$$DESDT^RAUTL12(RAPRI) S:RAWHEN=-1 RAOUT=1 Q:$D(RAOUT)#2
- S RAWHEN=$$FMTE^XLFDT(RAWHEN,1) ;convert to external format
+CREATE1 S RAWHEN=$$DESDT^RAUTL12(RAPRI) Q:$D(RAOUT)
  ; Ask pregnant if age is between 12 & 55.  Ask once for mult requests
  ; RASKPREG is the variable used to track if the pregnant prompt has
  ; been asked.  Ask only once for multiple requests.
  S:'$D(RASKPREG) RAPREG=$$PREG^RAORD1A(RADFN,$G(DT)),RASKPREG="" Q:$D(RAOUT)
- ;Reason for Study (req'd) & Clinical History (optional) asked in CH^RAUTL5 P75
- D CH^RAUTL5 Q:$D(RAOUT)  ;RAOUT: defined if Reason for Study is nonexistent
+ D CH^RAUTL5 Q:$D(RAOUT)  ; Ask for Clinical History.
 BAQUES ;*Billing Awareness Project
  ;   Ask Ordering ICD-9 Diagnosis and Related SC/EI/MST/HNC questions.
  N RADTM D NOW^%DTC S RADTM=%

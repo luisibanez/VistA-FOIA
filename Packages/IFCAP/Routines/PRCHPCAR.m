@@ -1,6 +1,6 @@
 PRCHPCAR ;WISC/AKS-Front End questions for Purchase Card processes ;6/9/96  21:40
- ;;5.1;IFCAP;**113**;Oct 20, 2000;Build 4
- ;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
 ASKPO ;Ask If they are processing a purchase or a requisition
  N DIR,Y,PRCHPR,PRCHNE
  S DIR(0)="SO^P:PURCHASE ORDER;R:REQUISITION"
@@ -75,18 +75,6 @@ CANDO ;Cancel a delivery order
  W ! S DIC="^PRC(442,",DIC(0)="AEQM"
  S DIC("A")="Select DELIVERY ORDER NUMBER: "
  S DIC("S")="I $P($G(^(7)),U,2)<9,$P($G(^(23)),U,11)=""D"""
- D ^DIC Q:+Y<0  K DIC
- S %A="Are sure you want to cancel this order",%B="",%=2
- D ^PRCFYN I %<1!(%=2) K %A,%B,% Q
- S DA=+Y,DIE="^PRC(442,",DR=".5///^S X=45" D ^DIE K DIE,DR
- D C2237^PRCH442A
- K DA,%A,%B,%
- QUIT
-AOCANPC ;Approving Official Cancel a purchase card order
- N DIC,Y,NREC,X
- W ! S DIC="^PRC(442,",DIC(0)="AEQM"
- S DIC("A")="Select PURCHASE CARD ORDER NUMBER: "
- S DIC("S")="I $P($G(^(7)),U,2)<9,$P($G(^(0)),U,2)=25,($P($G(^(23)),U,11)=""P""!($P($G(^(23)),U,11)=""S""))"
  D ^DIC Q:+Y<0  K DIC
  S %A="Are sure you want to cancel this order",%B="",%=2
  D ^PRCFYN I %<1!(%=2) K %A,%B,% Q

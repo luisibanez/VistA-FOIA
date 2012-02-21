@@ -1,18 +1,8 @@
-ORWCV ; SLC/KCM - Background Cover Sheet Load; ; 06/10/09
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,109,132,209,214,195,215,260,243,282,302,280**;Dec 17, 1997;Build 85
+ORWCV ; SLC/KCM - Background Cover Sheet Load; ;7/12/05  08:47
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,109,132,209,214,195,215**;Dec 17, 1997
  ;
- ;
- ; DBIA 1096    Reference to ^DGPM("ATID1"
- ; DBIA 1894    Reference to GETENC^PXAPI
- ; DBIA 1895    Reference to APPT2VST^PXAPI
- ; DBIA 2096    Reference to ^SD(409.63
- ; DBIA 2437    Reference to ^DGPM(
- ; DBIA 2965    Reference to ^DIC(405.1
  ; DBIA 4011    Access ^XWB(8994)
- ; DBIA 4313    Direct R/W permission to capacity mgmt global ^KMPTMP("KMPDT")
- ; DBIA 4325    References to AWCMCPR1
  ; DBIA 10061   Reference to ^UTILITY
- ; CPRS has a SACC exemption for usage of the variable $ZE
  ; 
 START(VAL,DFN,IP,HWND,LOC,NODO,NEWREM) ; start cover sheet build in background
  N ZTIO,ZTRTN,ZTDTH,ZTSAVE,ZTDESC,SECT,BACK,X,I,ORLIST,STR,FILE,NODE,ORHTIME,ORX
@@ -41,13 +31,13 @@ START(VAL,DFN,IP,HWND,LOC,NODO,NEWREM) ; start cover sheet build in background
  ; Start capacity planning timing clock - will be stopped in POLL code
  I +$G(^KMPTMP("KMPD-CPRS")) S ^KMPTMP("KMPDT","ORWCV",NODE)=$G(ORHTIME)_"^^"_$G(DUZ)_"^"_$G(IO("CLNM"))
  Q
-BUILD ; called in background by task manager, expects DFN, JobID 
+BUILD ; called in background by task manager, expects DFN, JobID
  N NODE,IFLE,ORFNUM,ID,ENT,RTN,INODE,PARAM1,PARAM2,DETAIL,X0,X2
  S NODE="ORWCV "_IP_"-"_HWND_"-"_DFN
  I $D(ZTQUEUED) S ZTREQ="@"
  I $G(^XTMP(NODE,"STOP")) K ^XTMP(NODE) Q  ; client no longer polling
  I '$D(^XTMP(NODE,0)) Q                    ; XTMP node has been purged
- L +^XTMP(NODE):$S($G(DILOCKTM)>0:DILOCKTM,1:5)
+ L +^XTMP(NODE)
  S ^XTMP(NODE,"DFN")=DFN
  ;N $ETRAP,$ESTACK
  ;S $ETRAP="D ERR^ORWCV Q"
@@ -105,7 +95,7 @@ POLL(LST,DFN,IP,HWND) ; poll for completed cover sheet parts
 STOP(OK,DFN,IP,HWND) ; stop cover sheet data retrieval
  S NODE="ORWCV "_IP_"-"_HWND_"-"_DFN,ILST=0,DONE=0
  S ^XTMP(NODE,"STOP")=1,OK=1
- L +^XTMP(NODE):$S($G(DILOCKTM)>0:DILOCKTM,1:5)
+ L +^XTMP(NODE)
  I $G(^XTMP(NODE,"DONE")) K ^XTMP(NODE)
  L -^XTMP(NODE)
  Q
@@ -122,12 +112,11 @@ LAB(LST,DFN) ; return labs for patient
 VST1(ORVISIT,DFN,BEG,END,SKIP) ;
  N ERR,ERRMSG
  S ERR=0 ; kludge to return errors
- Q:'$G(DFN)
  D VST(.ORVISIT,DFN,.BEG,.END,$G(SKIP),.ERR,.ERRMSG)
  I ERR K ORVISIT S ORVISIT(1)=ERRMSG
  Q
  ;
-TEST ;D VST(.ZZZ,76,2950101,3050401,777,1,1)
+TEST D VST(.ZZZ,76,2950101,3050401,777,1,1)
  Q
 VST(ORVISIT,DFN,BEG,END,SKIP,ERR,ERRMSG) ; return appts/admissions for patient
  N CHECKERR,VAERR,VASD,BDT,COUNT,DTM,EDT,LOC,NOW,ORQUERY,ORLST,STI,STS,TODAY,I,J,K,XI,XE,X
@@ -154,7 +143,6 @@ VST(ORVISIT,DFN,BEG,END,SKIP,ERR,ERRMSG) ; return appts/admissions for patient
  I BEG'>NOW D  ;past encounters from ACRP Toolkit - set in CALLBACK
  . S BDT=BEG
  . S EDT=$S(END<NOW:END,1:NOW)
- . D COVER^SDRROR
  . D OPEN^SDQ(.ORQUERY)
  . I '$$ERRCHK^SDQUT() D INDEX^SDQ(.ORQUERY,"PATIENT/DATE","SET")
  . I '$$ERRCHK^SDQUT() D PAT^SDQ(.ORQUERY,DFN,"SET")
@@ -201,29 +189,28 @@ CALLBACK(IEN,NODE0,ARRAY,STOP) ; called back from ACRP Toolkit for encounters
  I TYPE="V",$D(@ARRAY@(DTM,"V")) S COUNT=$O(@ARRAY@(DTM,"V","A"),-1)+1 ; same d/t
  S @ARRAY@(DTM,TYPE,COUNT)=TYPE_";"_DTM_";"_LOC_U_DTM_U_XLOC_U_XSTAT
  Q
-DTLVST(RPT,DFN,IEN,APPTINFO) ; return progress notes / discharge summary
+DTLVST(RPT,DFN,IEN,X) ; return progress notes / discharge summary
  N VISIT
- I $P(APPTINFO,";")="A" D  Q
- . S VISIT=$$APPT2VST^PXAPI(DFN,$P(APPTINFO,";",2),$P(APPTINFO,";",3))
- . I VISIT=0 S VISIT=+$$GETENC^PXAPI(DFN,$P(APPTINFO,";",2),$P(APPTINFO,";",3))
+ I $P(X,";")="A" D
+ . S VISIT=$$APPT2VST^PXAPI(DFN,$P(X,";",2),$P(X,";",3))
+ . I VISIT=0 S VISIT=+$$GETENC^PXAPI(DFN,$P(X,";",2),$P(X,";",3))
  . D DETNOTE^ORQQVS(.RPT,DFN,VISIT)
- I $P(APPTINFO,";")="V" D  Q
- . S VISIT=+$$GETENC^PXAPI(DFN,$P(APPTINFO,";",2),$P(APPTINFO,";",3))
+ I $P(X,";")="V" D
+ . S VISIT=+$$GETENC^PXAPI(DFN,$P(X,";",2),$P(X,";",3))
  . D DETNOTE^ORQQVS(.RPT,DFN,VISIT)
- I $P(APPTINFO,";")="I" D  Q
- . S VISIT=+$$GETENC^PXAPI(DFN,$P(APPTINFO,";",2),$P(APPTINFO,";",3))
+ I $P(X,";")="I" D
+ . S VISIT=+$$GETENC^PXAPI(DFN,$P(X,";",2),$P(X,";",3))
  . D DETSUM^ORQQVS(.RPT,DFN,VISIT)
  . K ^TMP("PXKENC",$J)
- I $P(APPTINFO,";")="R" D RCDTL^SDRROR
  Q
 X2FM(X) ; return FM date given relative date
  N %DT S %DT="TS" D ^%DT
  Q Y
 RNGLAB(DFN) ; return days back for patient
- N INPT,PAR,LOC
- S INPT=0 I $L($G(^DPT(DFN,.1))) S INPT=1,LOC=^(.1)
+ N INPT,PAR
+ S INPT=0 I $L($G(^DPT(DFN,.1))) S INPT=1
  S PAR="ORQQLR DATE RANGE "_$S(INPT:"INPT",1:"OUTPT")
- Q $$GET^XPAR("ALL"_$S(INPT:"^LOC."_LOC,1:""),PAR,1,"I")
+ Q $$GET^XPAR("ALL",PAR,1,"I")
  ;
 RNGVBEG() ; return start date for encounters
  Q $$GET^XPAR("ALL","ORQQCSDR CS RANGE START",1,"I")

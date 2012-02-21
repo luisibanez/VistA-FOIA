@@ -1,16 +1,13 @@
-PRCPRSOH ;WISC/RFJ/DAP/VAC-days of stock on hand report ; 10/19/06 9:09am
- ;;5.1;IFCAP;**84,83,98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPRSOH ;WISC/RFJ/DAP-days of stock on hand report ;22 Oct 92
+ ;;5.1;IFCAP;**84,83**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;*83 Routine PRCPLO associated with PRC*5.1*83 is a modified copy of
  ;this routine and any changes made to this routine should also be
  ;considered for that routine as well.
  ;
- ;*98 Modified to show if Standard, On-Demand or Both
- ;
  D ^PRCPUSEL Q:'$G(PRCP("I"))
  N DATEEND,DATEENDD,DATESTRD,DATESTRT,DAYSLEFT,DIR,GROUPALL,PRCPDAYS,PRCPEND,PRCPSTRT,PRCPTYPE,TOTALDAY,X,X1,X2,Y
- N ODIFLG,ODITEM,USEFLG
  K X S X(1)="The Days Of Stock On Hand Report will print a list of items which have stock on hand less than or greater than a specified number of days."
  D DISPLAY^PRCPUX2(40,79,.X)
  K X S X(1)="Select the date range which should be used for calculating the daily usage. *** Select by month & year only. ***" D DISPLAY^PRCPUX2(2,40,.X)
@@ -35,29 +32,16 @@ PRCPRSOH ;WISC/RFJ/DAP/VAC-days of stock on hand report ; 10/19/06 9:09am
  .   K X S X(1)="Select the Group Categories to display" D DISPLAY^PRCPUX2(2,40,.X)
  .   D GROUPSEL^PRCPURS1(PRCP("I"))
  ;
-ODIFLG ;*98 Set flag for Standard, On-Demand item or Both
- S ODIFLG="W"
- I PRCP("DPTYPE")'="W" S ODIFLG=$$ODIPROM^PRCPUX2(0)
- Q:ODIFLG=0
- ;
  S %ZIS="Q" D ^%ZIS Q:POP  I $D(IO("Q")) D  Q
  .   S ZTDESC="Days of Stock On Hand Report",ZTRTN="DQ^PRCPRSOH"
  .   S ZTSAVE("^TMP($J,""PRCPURS1"",")=""
- .   S ZTSAVE("DATE*")="",ZTSAVE("GROUP*")="",ZTSAVE("PRCP*")="",ZTSAVE("TOTALDAY")="",ZTSAVE("ZTREQ")="@",ZTSAVE("O*")="",ZTSAVE("U*")=""
+ .   S ZTSAVE("DATE*")="",ZTSAVE("GROUP*")="",ZTSAVE("PRCP*")="",ZTSAVE("TOTALDAY")="",ZTSAVE("ZTREQ")="@"
  .   D ^%ZTLOAD
  W !!,"<*> please wait <*>"
 DQ ;  queue starts here
  N AVERAGE,DATE,GROUP,GROUPNM,ITEMDA,ITEMDATA,NSN,ONHAND,TOTAL,X,Y
  K ^TMP($J,"PRCPRSOH")
  S ITEMDA=0 F  S ITEMDA=$O(^PRCP(445,PRCP("I"),1,ITEMDA)) Q:'ITEMDA  S ITEMDATA=$G(^(ITEMDA,0)) I ITEMDATA'="" D
- .; Select item based on selection criteria
- .   S USEFLG="Y"
- .   I PRCP("DPTYPE")'="W" D
- .   .  S ODITEM=$$ODITEM^PRCPUX2(PRCP("I"),ITEMDA)
- .   .  I ODIFLG=1&(ODITEM="Y") S USEFLG="N"
- .   .  I ODIFLG=2&(ODITEM'="Y") S USEFLG="N"
- .   .  I ODIFLG=3 S USEFLG="Y"
- .   I USEFLG="N" Q
  .   I $$REUSABLE^PRCPU441(ITEMDA) Q
  .   ;  calculate total usage between dates
  .   S DATE=$E(DATESTRT,1,5)-.01,TOTAL=0 F  S DATE=$O(^PRCP(445,PRCP("I"),1,ITEMDA,2,DATE)) Q:'DATE!(DATE>$E(DATEEND,1,5))  S TOTAL=TOTAL+$P($G(^(DATE,0)),"^",2)

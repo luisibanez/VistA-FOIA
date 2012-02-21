@@ -1,6 +1,6 @@
-IBCNSU ;ALB/AAS - INSURANCE UTILITY ROUTINE ;19-MAY-93
- ;;2.0;INTEGRATED BILLING;**28,103,371**; 21-MAR-94;Build 57
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCNSU ;ALB/AAS - INSURANCE UTILITY ROUTINE ; 19-MAY-93
+ ;;2.0;INTEGRATED BILLING;**28,103**; 21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 AB(IBCPOL,IBYR,IBASK) ; -- Return entry in Annual Benefits file
  ;  Input:  IBCPOL  = pointer to health insurance policy file
@@ -185,24 +185,3 @@ DELP(DFN,INS,IBC) ; -- can an insurance policy be deleted
  ;
  ;
 DELPQ Q X
- ;
-DUPADDRL(DATA,IBCNS,FLD1,FLD2) ; Insurance address lines can not be duplicated
- ; DATA - Value being compared
- ; FLD1 - First field to check against
- ; FLD2 - Second field to check against (OPTIONAL)
- ;
- ; Returns 1 if this field is a duplicate of another field.
- ;
- N Z1,Z2
- Q:$G(DATA)="" 0  ; should not happen because this is invoked as an input transform
- Q:'$G(IBCNS) 1  ; stop from editing through fileman
- S DATA=$$UP^XLFSTR($G(DATA)),DATA=$$TRIM^XLFSTR(DATA)
- S Z1=$$GET1^DIQ(36,+$G(IBCNS),+$G(FLD1),"I")
- S Z1=$$UP^XLFSTR(Z1),Z1=$$TRIM^XLFSTR(Z1)
- S Z2=$$GET1^DIQ(36,+$G(IBCNS),+$G(FLD2),"I")
- S Z2=$$UP^XLFSTR(Z2),Z2=$$TRIM^XLFSTR(Z2)
- I DATA=Z1 D CLEAN^DILF Q 1
- I DATA=Z2 D CLEAN^DILF Q 1
- D CLEAN^DILF
- Q 0
- ;

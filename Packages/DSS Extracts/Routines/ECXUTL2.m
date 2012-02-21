@@ -1,5 +1,5 @@
-ECXUTL2 ;ALB/JAP - Utilities for DSS Extracts (cont.) ;9/27/10  14:14
- ;;3.0;DSS EXTRACTS;**8,13,23,24,33,35,39,46,71,84,92,105,112,120,127**;Dec 22, 1997;Build 36
+ECXUTL2 ;ALB/JAP - Utilities for DSS Extracts (cont.) ; 5/25/05 12:00pm
+ ;;3.0;DSS EXTRACTS;**8,13,23,24,33,35,39,46,71,84**;Dec 22, 1997
  ;
 ECXDEF(ECXHEAD,ECXPACK,ECXGRP,ECXFILE,ECXRTN,ECXPIECE,ECXVER) ;variables specific to extract from file #727.1
  ;   input 
@@ -12,6 +12,7 @@ ECXDEF(ECXHEAD,ECXPACK,ECXGRP,ECXFILE,ECXRTN,ECXPIECE,ECXVER) ;variables specifi
  ;   ECXRTN  = routine field (#4)
  ;   ECXPIECE= running piece field (#11)
  ;   ECXVER  = dss version
+ ;
  N ECXIEN,ECXARR,DIC,DA,DR,DIQ
  S (ECXPACK,ECXGRP,ECXFILE,ECXRTN,ECXPIECE,ECXVER)="",ECXIEN=0
  S ECXIEN=+$O(^ECX(727.1,"C",ECXHEAD,ECXIEN))
@@ -27,12 +28,11 @@ ECXDEF(ECXHEAD,ECXPACK,ECXGRP,ECXFILE,ECXRTN,ECXPIECE,ECXVER) ;variables specifi
  ..S SS=22-$Y F JJ=1:1:SS W !
  ..S DIR(0)="E" W ! D ^DIR K DIR
  .W !!
- S DIC="^ECX(727.1,",DA=ECXIEN,DR=".01;1;4;7;9;11;13",DIQ="ECXARR"
+ S DIC="^ECX(727.1,",DA=ECXIEN,DR=".01;1;4;7;9;11",DIQ="ECXARR"
  D EN^DIQ1
  S ECXPACK=ECXARR(727.1,ECXIEN,7)
  ;if this is an inactive extract type, skip it
- ;I ECXPACK["Inactive" D  Q
- I ECXARR(727.1,ECXIEN,13)="YES" D  Q
+ I ECXPACK["Inactive" D  Q
  .D MES^XPDUTL(" ")
  .D MES^XPDUTL(" The "_ECHEAD_" Extract is no longer active/valid.")
  .D MES^XPDUTL(" ")
@@ -49,6 +49,7 @@ ECXDEF(ECXHEAD,ECXPACK,ECXGRP,ECXFILE,ECXRTN,ECXPIECE,ECXVER) ;variables specifi
  ;version of dss/tsi in Austin as specified by btso
  S ECXVER=7
  Q
+ ;
 PATDEM(DFN,DT1,PAR,FLG) ; determine patient information
  ;  DFN   =
  ;  DT    =
@@ -66,18 +67,15 @@ PATDEM(DFN,DT1,PAR,FLG) ; determine patient information
  .S ECXETH=PAT("ETHNIC"),ECXRC1=PAT("RACE1")
  I PAR["2" D
  .S ECXCNTY=PAT("COUNTY"),ECXSTATE=PAT("STATE"),ECXZIP=PAT("ZIP")
- .S ECXCNTRY=PAT("COUNTRY")
  I PAR["3" D
  .S ECXPOS=PAT("POS"),ECSC=PAT("SC STAT"),ECXSVC=PAT("SC%")
  .S ECXVET=PAT("VET"),ECXMEAN=PAT("MEANS"),ECXELIG=PAT("ELIG")
  .S ECXENRL=PAT("ENROLL LOC")
- .S ECXERI=PAT("ERI")
  I PAR["4" S ECXEMP=PAT("EMPLOY")
  I PAR["5" D
  .S ECXVIET=PAT("VIETNAM"),ECXAST=PAT("AO STAT"),ECXRST=PAT("IR STAT")
  .S ECXEST=PAT("EC STAT"),ECXPST=PAT("POW STAT"),ECXPLOC=PAT("POW LOC")
  .S ECXPHI=PAT("PHI"),ECXMST=PAT("MST STAT"),ECXAOL=PAT("AOL")
- .S ECXOEF=PAT("ECXOEF"),ECXOEFDT=PAT("ECXOEFDT")
  I PAR["6" D
  .S (ECXPAYOR,ECXSAI)="" D VISN19(DFN,.ECXPAYOR,.ECXSAI)
  I FLG'[3 D
@@ -98,11 +96,12 @@ KPATDEM ;
  K ECXSEX,ECXSSN,ECXSTAT,ECXSTATE,ECXSVC,ECXTS,ECXVIET,ECXZIP,VA,VAERR
  K ECXSBGRP
  Q
+ ;
 ENROLLM(DFN,RNDT) ;determines enrollment status, category, priority
- ;and user enrollee status
+ ;and user enrolle status
  ; input
  ;    DFN      = IEN from Patient file (Required)
- ;    RNDT     = Extract Run Date
+ ;    RNDT     = Entract Run Date
  ; output
  ;    ECXSTAT  = Enrollment status
  ;    ECXPRIOR = Enrollment priority
@@ -110,6 +109,7 @@ ENROLLM(DFN,RNDT) ;determines enrollment status, category, priority
  ;    ECXSBGRP = Enrollment subgroup
  ;    ECXUESTA = User enrollee
  ;    return value 0 if no data found, 1 if data found
+ ;
  N CAT,PRIOR,STAT,X,X1,X2,X3,ENRIEN,ENR,FL,SBGRP
  S (ECXCAT,ECXPRIOR,ECXSTAT,ECXSBGRP,ECXEUSTA)=""
  I $G(DFN)="" Q 0
@@ -131,8 +131,8 @@ ENROLLM(DFN,RNDT) ;determines enrollment status, category, priority
  S RNDT=($E(RNDT,1,3)-1)_$E(RNDT,4,7),FL=0
  F  S ENRIEN=$$FINDPRI^DGENA(ENRIEN) Q:'ENRIEN  D  Q:FL
  . S ENR=$$GET^DGENA(ENRIEN,.ENR)
- . I "^2^19^"[("^"_$G(ENR("STATUS"))_"^"),$G(ENR("EFFDATE"))>RNDT D
- . . S ECXSTAT=$G(ENR("STATUS")),ECXPRIOR=PRIOR,FL=1
+ . I "^2^19^"[("^"_ENR("STATUS")_"^"),ENR("EFFDATE")>RNDT D
+ . . S ECXSTAT=ENR("STATUS"),ECXPRIOR=PRIOR,FL=1
  . . S ECXCAT=$$CATEGORY^DGENA4(DFN,ECXSTAT)
  . . S ECXSBGRP=$$ENRSBGRP^DGENA4(DFN)
  . . S ECXSBGRP=$S(SBGRP=1:"a",SBGRP=3:"c",SBGRP=5:"e",SBGRP=7:"g",1:"")
@@ -140,6 +140,7 @@ ENROLLM(DFN,RNDT) ;determines enrollment status, category, priority
  ;no enrollment status found =2 or 19
  S ECXSTAT=STAT,ECXPRIOR=PRIOR,ECXCAT=CAT,ECXSBGRP=$S(SBGRP=1:"a",SBGRP=3:"c",SBGRP=5:"e",SBGRP=7:"g",1:"")
  Q 1
+ ;
 PRIMARY(ECXDFN,ECXDATE,ECXPREFX) ;determine patient's pc team and pc provider
  ; input
  ; ECXDFN    = file #2 ien (required)
@@ -147,9 +148,9 @@ PRIMARY(ECXDFN,ECXDATE,ECXPREFX) ;determine patient's pc team and pc provider
  ; ECXPREFX  = prefix for provider data (optional)
  ;             defaults to "2" if not specified otherwise
  ; output
- ; ECXPRIME  = pc team ien^prefix_pc provider ien^pc provider person
- ;class^pc provider npi^prefix_assoc pc provider ien^assoc pc provider
- ;person class^assoc pc provider npi
+ ; ECXPRIME  = pc team ien^prefix_pc provider ien^pc provider person class^pc provider npi
+ ;             ^prefix_assoc pc provider ien^assoc pc provider person class^assoc pc provider npi
+ ;
  N ECPTTM,ECPTPR,ECCLAS,ECPRIME,ECASPR,ECCLAS2
  S:'$D(ECXPREFX) ECXPREFX=2 S:(+ECXPREFX=0) ECXPREFX=2
  ;get pc team data
@@ -157,20 +158,19 @@ PRIMARY(ECXDFN,ECXDATE,ECXPREFX) ;determine patient's pc team and pc provider
  ;get primary pc provider data
  S ECPTPR=+$$OUTPTPR^SDUTL3(ECXDFN,ECXDATE)
  S ECCLAS="" I ECPTPR>0 S ECCLAS=$$PRVCLASS^ECXUTL(ECPTPR,ECXDATE)
- N ECXUSRTN S ECXUSRTN=$$NPI^XUSNPI("Individual_ID",ECPTPR,ECXDATE)
- S:+ECXUSRTN'>0 ECXUSRTN="" S ECPTNPI=$P(ECXUSRTN,U)
  S:ECPTPR=0 ECPTPR="" S:ECPTPR]"" ECPTPR=ECXPREFX_ECPTPR
+ S ECPTNPI=""
  ;assoc pc provider call ok if routine scapmca from patch177 is present
  S ECASPR=""
  S X="SCAPMCA" X ^%ZOSF("TEST") I $T D
  .S ECASPR=+$$OUTPTAP^SDUTL3(ECXDFN,ECXDATE)
  S ECCLAS2="" I ECASPR>0 S ECCLAS2=$$PRVCLASS^ECXUTL(ECASPR,ECXDATE)
- N ECXUSRTN S ECXUSRTN=$$NPI^XUSNPI("Individual_ID",ECASPR,ECXDATE)
- S:+ECXUSRTN'>0 ECXUSRTN="" S ECASNPI=$P(ECXUSRTN,U)
  S:ECASPR=0 ECASPR="" S:ECASPR]"" ECASPR=ECXPREFX_ECASPR
+ S ECASNPI=""
  ;assemble
  S ECXPRIME=ECPTTM_U_ECPTPR_U_ECCLAS_U_ECPTNPI_U_ECASPR_U_ECCLAS2_U_ECASNPI
  Q ECXPRIME
+ ;
 INP(ECXDFN,ECXDATE) ; check for inpatient status
  ; input
  ; ECXDFN  = file #2 ien (required)
@@ -183,11 +183,13 @@ INP(ECXDFN,ECXDATE) ; check for inpatient status
  ;       (file #40.8 ien);dss dept^dom
  ;           where patient status = I for inpatient
  ;                                = O for outpatient
+ ;
  N DFN,DSSDEPT,ECA,ECADM,ECMN,ECTS,ECWARD,ECDC,ECXINP,ECXPRO
  N ECXATP,ECXDD,ECXDOM,ECXPROF,ECXPWP,ECXWW,FAC,VAIP,WRD,ECXPWPPC
  N ECXATPPC
  D FIELD^DID(405,.19,,"SPECIFIER","ECXDD")
  S ECXPROF=$E(+$P(ECXDD("SPECIFIER"),"P",2)) K ECXDD
+ ;
  ;- Inpat/outpat indicator (ECA) initially set to "O" (outpatient)
  S DFN=ECXDFN,ECA="O"
  S (DSSDEPT,ECMN,ECTS,ECADM,ECWARD,ECDC,ECXATP,ECXPWP,ECXWW,WRD,FAC,ECXPWPPC,ECXATPPC)=""
@@ -195,6 +197,7 @@ INP(ECXDFN,ECXDATE) ; check for inpatient status
  S ECMN=$G(VAIP(1))
  I ECMN D
  .S ECTS=+$P($G(^DIC(45.7,+VAIP(8),0)),U,2) S:ECTS=0 ECTS=""
+ .;
  .;- Get inpat/outpat indicator
  .S ECA=$$INOUTP^ECXUTL4(ECTS)
  .S ECADM=+$G(VAIP(13,1)) S:ECADM=0 ECADM=""
@@ -213,9 +216,11 @@ INP(ECXDFN,ECXDATE) ; check for inpatient status
  S ECXDOM=$P($G(^ECX(727.831,+ECTS,0)),U,2)
  S ECXINP=ECA_U_ECMN_U_ECTS_U_ECADM_U_ECWARD_U_ECDC_U_ECXPWP_U_ECXATP_U_ECXWW_U_ECXDOM_U_ECXPWPPC_U_ECXATPPC
  Q ECXINP
+ ;
 VISN19(ECXDFN,ECXPAYOR,ECXSAI) ;visn 19 sharing agreement data
  ; input  ECXDFN = patient file ien
  ; output ECXPAYOR, ECXSAI (passed by reference)
+ ;
  N JJ,ALIAS,INSUR,DIC,DIQ,DA,DR,ECXARY,ECXERR,ECXDA
  S (ECXPAYOR,ECXSAI)=""
  D GETS^DIQ(2,ECXDFN,"1*,","I","ECXARY","ECXERR")
@@ -227,6 +232,7 @@ VISN19(ECXDFN,ECXPAYOR,ECXSAI) ;visn 19 sharing agreement data
  . W !,"The value of ECXPAYOR is: ",ECXPAYOR
  ;K ECXARY,ECXERR
  I ECXPAYOR]"" D GETS^DIQ(2,ECXDFN,".3121*,","I","ECXARY","ECXERR") D
+ . W !,"This is a test"
  . I $D(ECXERR) Q
  . S JJ=0,ECXDA=$O(ECXARY(2.312,JJ)) I ECXDA="" Q
  . S DA=$G(ECXARY(2.312,ECXDA,.01,"I")) I DA="" Q

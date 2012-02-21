@@ -1,5 +1,5 @@
-PSUAA1 ;BIR/RDC - ALLERGY/ADVERSE EVENT EXTRACT ; 11/5/08 7:08am
- ;;4.0;PHARMACY BENEFITS MANAGEMENT;**10,14**;MARCH, 2005;Build 1
+PSUAA1 ;BIR/RDC - ALLERGY/ADVERSE EVENT EXTRACT ; 23 FEB 2004
+ ;;4.0;PHARMACY BENEFITS MANAGEMENT;;MARCH, 2005
  ;
  ; Reference to file #4          supported by DBIA 10090
  ; Reference to file #2          supported by DBIA 10035 AND 3504
@@ -9,7 +9,6 @@ PSUAA1 ;BIR/RDC - ALLERGY/ADVERSE EVENT EXTRACT ; 11/5/08 7:08am
  ;
 EN ;
  N ARTMP,DFN,EDATE,GMRA,GMRACT,GMRAL,GMREC,ICN,K,LINECNT,LINEMAX,LINETOT,MSGCNT,NPTR,OPTR,OREC,PN,PREC,RPTR,RRDT,RREC,SDATE,SSN,STAT5ION,V,VPTR,X,Z
- K PSUMKFLG
  ;
  D INITZ
  D GETRECS
@@ -45,8 +44,6 @@ GETRECS ;  ;  **  extract reactive data  **
  F  S SDATE=$O(^GMR(120.8,"V",SDATE)) Q:SDATE>EDATE!('SDATE)  D
  . S VPTR=""                       ;*** loop through verified dates  ***
  . F  S VPTR=$O(^GMR(120.8,"V",SDATE,VPTR)) Q:VPTR=""  D
- .. K GMRACT,GMRAL,GMREC
- .. S PSUMKFLG=0
  .. S VREC=^GMR(120.8,VPTR,0)
  .. S DFN=$P(VREC,U)
  .. Q:$G(DFN)=""
@@ -58,20 +55,17 @@ GETRECS ;  ;  **  extract reactive data  **
  .. Q:'$D(GMRAL(VPTR))
  .. S GMREC=GMRAL(VPTR)
  .. D EN1^GMRAOR2(VPTR,.ARTMP)    ;  ** load multiple variables  **
- .. S Z="$",OREC=""
- .. D STATIC
- .. S V="" F  S V=$O(GMRACT("S",V)) Q:V=""!(V=7)  D
- ... S $P(OREC,Z,13+V)=$G(GMRACT("S",V))               ; * symptoms
- .. S $P(OREC,Z,20)=""
  .. S V="" F  S V=$O(GMRACT("O",V)) Q:V=""!(V=7)  D
+ ... S Z="$",OREC=""
+ ... D STATIC
  ... S $P(OREC,Z,12)=$P(GMRACT("O",V),U)               ; * event date
  ... S $P(OREC,Z,13)=$P(GMRACT("O",V),U,2)             ; * severity
- ... ;PSU*4*14 add reverse translation.
- ... D MAKE1 S PSUMKFLG=1,OREC=$TR(OREC,"^",Z)
- .. D:'$G(PSUMKFLG) MAKE1                ; **  load ^XTMP with OREC  **
- .. S:$G(MSGCNT) ^XTMP("PSU_"_PSUJOB,"PSUAA","MSGTCNT")=MSGCNT
- .. S:LINECNT=999999 LINECNT=1
- .. S:$G(LINECNT) ^XTMP("PSU_"_PSUJOB,"PSUAA","LINECNT")=LINECNT
+ ... S $P(OREC,Z,14)=$G(GMRACT("S",V))                     ; * symptoms
+ ... S $P(OREC,Z,15)=""
+ ... D MAKE1                      ; **  load ^XTMP with OREC  **
+ ... S:$G(MSGCNT) ^XTMP("PSU_"_PSUJOB,"PSUAA","MSGTCNT")=MSGCNT
+ ... S:LINECNT=999999 LINECNT=1
+ ... S:$G(LINECNT) ^XTMP("PSU_"_PSUJOB,"PSUAA","LINECNT")=LINECNT
  Q
  ;
 STATIC ;  ** set static pieces of record into OREC **
@@ -107,8 +101,7 @@ MAKE1 ;   ** load one record/message **
  S LINETOT=LINETOT+1
  I LINECNT>LINEMAX S MSGCNT=$G(MSGCNT)+1,LINECNT=1
  I $L(OREC)<254 S ^XTMP("PSU_"_PSUJOB,"PSUAA",MSGCNT,LINECNT)=OREC Q
- ;PSU*4*14 Add infinate loop safety.
- F K=254:-1:0 Q:$E(OREC,K)="^"
+ F K=254:-1 Q:$E(OREC,K)="^"
  S ^XTMP("PSU_"_PSUJOB,"PSUAA",MSGCNT,LINECNT)=$E(OREC,1,K)
  S LINECNT=LINECNT+1
  S LINETOT=LINETOT+1

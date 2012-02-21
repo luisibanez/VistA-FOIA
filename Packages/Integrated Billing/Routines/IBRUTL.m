@@ -1,6 +1,6 @@
 IBRUTL ;ALB/CPM-INTEGRATED BILLING - A/R INTERFACE UTILITIES ;03-MAR-92
- ;;2.0;INTEGRATED BILLING;**70,82,132,142,176,179,202,223,363**;21-MAR-94;Build 35
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**70,82,132,142,176,179,202,223**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 IB(IEN,RETN) ; Are there any IB Actions on hold for this bill?
  ;         Input:   IEN         -- ien of Bill(#399), A/R(#430)
@@ -37,12 +37,11 @@ HOLD(X,IBN,IBDUZ,IBSEQNO) ; Place IB Action on hold?
  N DFN,IBCOV,IBINDT,IBOUTP,HOLD,IBHOLDP,IBDUZ,I
  N IBVDT,IBAT,IBCAT,IBALTC
  ;
+ ;
  S HOLD=0
+ ;
  S IBHOLDP=$P($G(^IBE(350.9,1,1)),"^",20) ; Site parameter - HOLD MT BILLS W/INSURANCE
  S DFN=+$P(X,"^",2)
- ;
- ;check if ECME RX copay needs to be placed on HOLD
- I $$HOLDECME^IBNCPUT1(X)=0 G HOLDQ
  ;
  I $P(X,"^",5)=8 G HOLDQ ; action is already on hold
  I '$P($G(^IBE(350.1,+$P(X,"^",3),0)),"^",10) G HOLDQ ; action can't be placed on hold

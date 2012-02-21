@@ -1,7 +1,7 @@
-DGPTFM7 ;ALB/MJK - Display Phys. MPCR mvts ; 11/30/06 8:31am
- ;;5.3;Registration;**78,590,594,683,729**;Aug 13, 1993;Build 59
+DGPTFM7 ;ALB/MJK - Display Phys. CDR mvts ;4/13/04 1:26pm
+ ;;5.3;Registration;**78,590,594,683**;Aug 13, 1993
  ;
-EN ; entry pt to display MPCR screen
+EN ; entry pt to display CDR screen
  ; -- PTF and DGPTFMT must be defined
  ;
  S DGMAX=7,DGPTIFN=PTF,DGTOT=0 G BYPASS:DGPTFMT<2
@@ -12,7 +12,7 @@ EN ; entry pt to display MPCR screen
 BYPASS S (DGC,DGLDT)=0
 LOOP ;
  D HEADER:$Y>(IOSL-15) S DGLAST("DT")=DGLDT,DGLAST("C")=DGC
- I DGPTFMT<2 W !!,"  MPCR information not required for this admission."
+ I DGPTFMT<2 W !!,"  CDR information not required for this admission."
  F DGLDT=DGLDT:0 S DGLDT=$O(^UTILITY($J,"DGCDR",DGLDT)) Q:'DGLDT  I DGLDT>DGFMTDT S X=^(DGLDT) D PRT I 'DGPR Q:'(DGC#DGMAX)!(DGC=DGTOT)
  I DGPR D KILL Q
  W:DGC<DGTOT !,"...more movements available"
@@ -20,14 +20,14 @@ LOOP ;
  ;
  K X S $P(X,"-",81)="" W X
  I $D(DGBRCH) G @DGBRCH
- W !,"Enter <RET> to ",$S(DGC'<DGTOT:"go to MAS screen",1:"display more MPCR information"),!,"      '^N'  to go to screen N,  or '^' to abort: <",$S(DGC'<DGTOT:"MAS",1:"RET"),">// " R X:DTIME S:'$T X="^",DGPTOUT=""
+ W !,"Enter <RET> to ",$S(DGC'<DGTOT:"go to MAS screen",1:"display more CDR information"),!,"      '^N'  to go to screen N,  or '^' to abort: <",$S(DGC'<DGTOT:"MAS",1:"RET"),">// " R X:DTIME S:'$T X="^",DGPTOUT=""
  I X="^" D KILL G Q^DGPTF
  I X="",DGC<DGTOT G LOOP
  S:X="" X="^MAS"
  I X?1"^".E D KILL S DGPTSCRN="CDR" G ^DGPTFJ
  ;
 HELP ; -- screen help
- I DGC<DGTOT W !,"Press return to see more MPCR information"
+ I DGC<DGTOT W !,"Press return to see more CDR information"
  I DGC'<DGTOT W !,"Press return to go to the 'MAS' screen"
  W !,"        '^'  to stop the display"
  W !,"        '^N' to jump to screen #N (appears in upper right of screen '<N>')"
@@ -40,9 +40,9 @@ KILL ; -- kill off locals
  ;
 HEADER ;
  I DGPR D HEAD^DGPTFMO
- I 'DGPR W @IOF,HEAD,?72 S Z="<MPCR>" D Z^DGPTFM
+ I 'DGPR W @IOF,HEAD,?72 S Z="<CDR>" D Z^DGPTFM
  W !?23,"Rec",?38,"Losing Ward",?54,"PTF"
- W !?4,"Losing Date",?23,"Type",?28,"Ward/DRG",?38,"MPCR/Spec",?54,"MPCR/Spec",?68,"Lve/Pas/ Los"
+ W !?4,"Losing Date",?23,"Type",?28,"Ward/DRG",?38,"CDR/Spec",?54,"CDR/Spec",?68,"Lve/Pas/ Los"
  W !,"--------------------------------------------------------------------------------"
  Q
  ;

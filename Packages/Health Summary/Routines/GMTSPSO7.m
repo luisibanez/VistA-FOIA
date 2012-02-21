@@ -1,5 +1,5 @@
 GMTSPSO7 ; SLC/JER/KER - OP Rx Summary Component (V7) ; 08/27/2002
- ;;2.7;Health Summary;**15,28,37,56,78,80**;Oct 20, 1995;Build 9
+ ;;2.7;Health Summary;**15,28,37,56,78**;Oct 20, 1995
  ;
  ; External References
  ;   DBIA    330  ^PSOHCSUM, ACS^PSOHCSUM
@@ -12,12 +12,9 @@ MAIN ; OP Rx HS Component
  N ECD,GMR,IX,PSOBEGIN,PSOACT,GMX,GMTOP
  S PSOBEGIN=$S(GMTS2'=9999999:(9999999-GMTS2),1:"")
  I PSOBEGIN="" S PSOACT=1 K PSOBEGIN
- K ^TMP("PSOO",$J),^TMP($J,"GMTSPS")
- D PROF^PSO52API(DFN,"GMTSPS",1,9999999)
- I +$G(^TMP($J,"GMTSPS",DFN,0))<1,'$D(^TMP($J,"GMTSPS",DFN,"ARC")) Q
- I '$G(^TMP($J,"GMTSPS",DFN,0)),$D(^TMP($J,"GMTSPS",DFN,"ARC")) D CKP^GMTSUP Q:$D(GMTSQIT)  W "Patient Has Archived OP Prescriptions",!
- ;I '$D(^PS(55,DFN,"P")),'$D(^("ARC")) Q
- ;I '$O(^PS(55,DFN,"P",0)),$D(^PS(55,DFN,"ARC")) D CKP^GMTSUP Q:$D(GMTSQIT)  W "Patient Has Archived OP Prescriptions",!
+ K ^TMP("PSOO",$J)
+ I '$D(^PS(55,DFN,"P")),'$D(^("ARC")) Q
+ I '$O(^PS(55,DFN,"P",0)),$D(^PS(55,DFN,"ARC")) D CKP^GMTSUP Q:$D(GMTSQIT)  W "Patient Has Archived OP Prescriptions",!
  I $L($T(ACS^PSOHCSUM))>0 D ACS^PSOHCSUM I '$D(^TMP("PSOO",$J)) Q
  I $L($T(ACS^PSOHCSUM))'>0 D ^PSOHCSUM I '$D(^TMP("PSOO",$J)) Q
  S GMTSLO=GMTSLO+3
@@ -51,9 +48,7 @@ WRT ; Writes OP Pharmacy Segment Record
 HEAD ; Prints Header
  ;   Only write the next line when there is data
  S GMTOP=1
- K ^TMP($J,"GMTSPSSYS") D PSS^PSS59P7(1,,"GMTSPSSYS")
- I GMX'>0,$D(^DPT(DFN,.1)),^(.1)]"",+$G(^TMP($J,"GMTSPSSYS",1,40.1)) D CKP^GMTSUP Q:$D(GMTSQIT)  W "Outpatient prescriptions are cancelled 72 hours after admission",!
- ;I GMX'>0,$D(^DPT(DFN,.1)),^(.1)]"",+($P($G(^PS(59.7,1,40.1)),"^")) D CKP^GMTSUP Q:$D(GMTSQIT)  W "Outpatient prescriptions are cancelled 72 hours after admission",!
+ I GMX'>0,$D(^DPT(DFN,.1)),^(.1)]"",+($P($G(^PS(59.7,1,40.1)),"^")) D CKP^GMTSUP Q:$D(GMTSQIT)  W "Outpatient prescriptions are cancelled 72 hours after admission",!
  D CKP^GMTSUP Q:$D(GMTSQIT)  W !,"Drug....................................",?65,"Last",!
  D CKP^GMTSUP Q:$D(GMTSQIT)
  W ?18,"Rx #",?31,"Stat",?45,"Qty",?54,"Issued",?65,"Filled",?76,"Rem"

@@ -1,5 +1,5 @@
 IBCSCH1 ;ALB/MRL - BILLING HELPS (CONTINUED) ; 01 JUN 88 12:00
- ;;2.0;INTEGRATED BILLING;**106,125,51,245,266,395**;21-MAR-94;Build 3
+ ;;2.0;INTEGRATED BILLING;**106,125,51,245,266**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO DGCRSCH1
@@ -68,36 +68,3 @@ PAUSE(CNT) ;
  N IBI F IBI=CNT:1:20 W !
  N DIR,DUOUT,DTOUT,DIRUT,IBX,X,Y S IBX=0,DIR(0)="E" D ^DIR K DIR I $D(DIRUT) S IBX=1
  Q IBX
- ;
-DISPRX(IBIFN) ; display prescriptions
- N IBHDR,IBHDR1,IBX,IBZ,IBRXL,IBNPI,IBRX,IBQ,IBORG
- S IBQ=0
- ;
- I '$O(^IBA(362.4,"AIFN"_IBIFN,0)) W !!?5,"No Prescriptions Entered!",! D PAUSE^VALM1 Q
- ;
- ; get NPIs
- S IBX=$$RXSITE^IBCEF73A(IBIFN,.IBRXL)
- ;
- S IBHDR="W @IOF,!,""Prescriptions Assigned to this Bill"" X IBHDR1"
- S IBHDR1="W !,""--------------------------------------------------------------------------------"" "
- ;
- X IBHDR
- S IBRX=0 F  S IBRX=$O(^IBA(362.4,"AIFN"_IBIFN,IBRX)) Q:'IBRX!(IBQ)  S IBX=0 F  S IBX=$O(^IBA(362.4,"AIFN"_IBIFN,IBRX,IBX)) Q:'IBX!(IBQ)  D
- . S IBZ=$G(^IBA(362.4,IBX,0))
- . W !?5,"RX #: ",$P(IBZ,"^")
- . W ?50,"DATE: ",$$FMTE^XLFDT($P(IBZ,"^",3))
- . W !?5,"DRUG: ",$$EXTERNAL^DILFD(362.4,.04,"",$P(IBZ,"^",4))
- . W ?50,"NDC: ",$P(IBZ,"^",8)
- . W !?5,"DAYS SUPPLY: ",$P(IBZ,"^",6)
- . W ?50,"QUANTITY: ",$P(IBZ,"^",7)
- . S IBORG=$G(IBRXL(+$P(IBZ,"^",5),+$P(IBZ,"^",3)))
- . ; ia #4532
- . S IBNPI=$S(IBORG:$P($$NPI^XUSNPI("Organization_ID",IBORG),U),1:"")
- . W !?5,"NPI INSTITUTION: ",$S(IBORG:$$EXTERNAL^DILFD(350.9,.02,"",IBORG),1:"")
- . W ?50,"RX NPI: ",$S(IBNPI>0:IBNPI,1:"")
- . W !?5,"PROVIDER: ",$S($P(IBZ,"^",5):$$RXAPI1^IBNCPUT1($P(IBZ,"^",5),4),1:""),!
- . I $Y+7>IOSL S IBQ=$$PAUSE(0)
- D PAUSE^VALM1
- ;
- Q
- ;

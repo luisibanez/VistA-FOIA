@@ -1,6 +1,6 @@
-DDSU ;SFISC/MLH-PROCESS HELP ;10:48 AM  6 Sep 2006
- ;;22.0;VA FileMan;**4,3,54,151**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DDSU ;SFISC/MLH-PROCESS HELP ;7/18/00  08:18
+ ;;22.0;VA FileMan;**4,3,54**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
 LIST ;
  D FM:'$D(DDS),SC:$D(DDS)
  Q
@@ -42,8 +42,7 @@ SC1 S A6=A0,A0=$O(DDH(A0)) S:A6="" A6=A0-1
  I A4'="X"!(DY'>DDSHBX) S DY=DY+1 X DDXY
  I A4="E" D SC2 Q
  ;
- I $D(DDSCTRL) S:+DDSCTRL'=DDSCTRL!(DDSCTRL>3)!(DDSCTRL<1)!(DDSCTRL?.E1"."1N.N) DDSCTRL=2 ;DI*151
- I $Y'<(IOSL-($G(DDSCTRL,2)))!'A0 D SC2 Q:DDO'<1!(X=U)!'A0!DIY!$D(DTOUT)!$D(DUOUT)  S DY=DDSHBX+1,DX=0 X DDXY ;DI*151
+ I $Y'<(IOSL-1)!'A0 D SC2 Q:DDO'<1!(X=U)!'A0!DIY!$D(DTOUT)!$D(DUOUT)  S DY=DDSHBX+1,DX=0 X DDXY
  Q:A4=""
  ;
  D WR

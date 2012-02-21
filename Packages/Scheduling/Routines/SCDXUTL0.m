@@ -1,5 +1,5 @@
 SCDXUTL0 ;ALB/ESD - Generic functions for Amb Care HL7 Interface ; 5/31/05 11:23am
- ;;5.3;Scheduling;**44,55,69,77,85,110,122,94,66,132,180,235,256,258,325,451,441,562**;Aug 13, 1993;Build 7
+ ;;5.3;Scheduling;**44,55,69,77,85,110,122,94,66,132,180,235,256,258,325,451**;Aug 13, 1993
  ;
  ; This routine contains functions used with the Ambulatory Care
  ; Reporting Project (ACRP).
@@ -18,9 +18,6 @@ MTI(DFN,DATE,EC,AT,SDOE) ;Calculate Means Test Indicator
  S MTI=""
  S DFN=$G(DFN),DATE=$G(DATE),EC=$G(EC),AT=$G(AT),SDOE=$G(SDOE)
  I (DFN="")!(DATE="")!(EC="")!(EC=0)!(AT="")!(SDOE="") G MTQ
- ;
- ;SD*562 check for other possible invalid Eligibility codes
- I $L(EC)>2!(EC="-1") G MTQ
  ;
  ;- VA Code (get from MAS Eligibility Code IEN)
  S X=$G(^DIC(8.1,$P($G(^DIC(8,+EC,0)),"^",9),0))
@@ -105,8 +102,7 @@ PATCLASS(DFN,SDOE) ; - Return classification questions from PATIENT (#2) file
  S SDTEMP(5)=$$MST^SDCO22(DFN,$G(SDOE))
  S SDTEMP(6)=$$HNC^SDCO22(DFN,$G(SDOE))
  S SDTEMP(7)=$$CV^SDCO22(DFN,$G(SDOE))
- S SDTEMP(8)=$$SHAD^SDCO22(DFN)
- F X=1:1:8 S $P(PATCLASS,U,X)=$S(SDTEMP(X)=1:"Y",1:"N")
+ F X=1:1:7 S $P(PATCLASS,U,X)=$S(SDTEMP(X)=1:"Y",1:"N")
  Q PATCLASS
  ;
  ;

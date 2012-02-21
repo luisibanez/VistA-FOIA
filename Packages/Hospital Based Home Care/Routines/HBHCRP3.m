@@ -1,5 +1,5 @@
 HBHCRP3 ; LR VAMC(IRMS)/MJT-HBHC report on file 632, individual patient visit data by date range, includes all fields, calls DX^HBHCUTL3, DX80^HBHCUTL3, CPT^HBHCUTL3 ; Jan 2000
- ;;1.0;HOSPITAL BASED HOME CARE;**6,8,15,16,14,22**;NOV 01, 1993;Build 2
+ ;;1.0;HOSPITAL BASED HOME CARE;**6,8,15,16,14**;NOV 01, 1993
 PROMPT ; Prompt user for patient name
  K DIC S DIC="^DPT(",DIC(0)="AEMQ",HBHCCC=0 D ^DIC
  G:Y=-1 EXIT
@@ -12,7 +12,7 @@ PROMPT ; Prompt user for patient name
 DQ ; De-queue
  U IO
  S $P(HBHCY,"-",81)="",$P(HBHCZ,"=",81)="",$P(HBHCSP2," ",3)="",HBHCMSG="(continued from previous page...)"
- S HBHCDPT0=^DPT(HBHCDPT,0),HBHCINFO=$P(HBHCDPT0,U)_HBHCSP2_$E($P(HBHCDPT0,U,9),6,9)
+ S HBHCDPT0=^DPT(HBHCDPT,0),HBHCINFO=$P(HBHCDPT0,U)_HBHCSP2_$E($P(HBHCDPT0,U,9),1,3)_"-"_$E($P(HBHCDPT0,U,9),4,5)_"-"_$E($P(HBHCDPT0,U,9),6,9)
  S HBHCHEAD="Patient:  "_HBHCINFO_"  Visit Data",HBHCCOLM=(80-(30+$L(HBHCHEAD))\2) S:HBHCCOLM'>0 HBHCCOLM=1
  D:IO'=IO(0)!($D(IO("S"))) HDRRANGE^HBHCUTL
  I '$D(IO("S")),IO=IO(0) S HBHCCC=HBHCCC+1 D HDRRANGE^HBHCUTL

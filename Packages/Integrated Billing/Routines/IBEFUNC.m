@@ -1,5 +1,5 @@
 IBEFUNC ;ALB/RLW - EXTRINSIC FUNCTIONS ;12-JUN-92
- ;;2.0;INTEGRATED BILLING;**55,91,106,139,51,153,232,155,249,327,420**;21-MAR-94;Build 6
+ ;;2.0;INTEGRATED BILLING;**55,91,106,139,51,153,232,155,249**;21-MAR-94
  ;
 ETXT(X) ; -- output error text from 350.8
  ; -- input error code
@@ -156,9 +156,6 @@ REQMRA(IBIFN) ; Determine from site parameter, ins assigned to bill and txmn
  S IB0=$G(^DGCR(399,IBIFN,0))
  S COBINS=+$P($G(^DGCR(399,IBIFN,"M")),U,COBSEQ+1)
  I 'COBINS S IBOK=0 G REQMRAQ ;No next ins
- I $$COB^IBCEF(IBIFN)="S" D  I IBOK="R2" G REQMRAQ
- . S COBINS=$P($G(^DGCR(399,IBIFN,"M")),U,COBSEQ)
- . I +$$MCRWNR(COBINS)=1 S IBOK="R2"
  ;
  ; Check only rules with rule type = 2 (MRA REQUEST RESTRICTIONS)
  S IBDA=0 F  S IBDA=$O(^IBE(364.4,"AC",2,IBDA)) Q:'IBDA  S IB00=$G(^IBE(364.4,IBDA,0)) D  Q:'IBOK
@@ -201,27 +198,15 @@ MRATYPE(IBIEN,IBVAR) ; Returns: A = MEDICARE A   B = MEDICARE B
  S IBPLAN=$S($G(IBVAR)'="P":+$$POLICY^IBCEF(IBIEN,18),1:IBIEN)
  Q $P($G(^IBA(355.3,+IBPLAN,0)),U,14)
  ;
-MCRONBIL(IBIFN,IBFLG,IBTRBIL) ; Returns 0 if MCR WNR not on bill IBIFN
+MCRONBIL(IBIFN,IBFLG) ; Returns 0 if MCR WNR not on bill IBIFN
  ;  1 if on bill, is on or before current ins
  ;  2 if on bill, but after current ins
  ; IBFLG = a COB number if second "^" piece of return data should be
  ;         1 if MCRWNR is the insurance at that COB sequence (optional)
- ; IBTRBIL = tricare for CL1A-5 
- ;
  N Z,IBON,Q
  S IBON=0,Q=$$COBN^IBCEF(IBIFN)
- F Z=1:1:3 I $$WNRBILL(IBIFN,Z)!$$TRI(IBIFN,Z) S IBON=$S(Q'<Z:1,1:2)_$S('$G(IBFLG):"",Z'=IBFLG:"",1:"^1") Q
+ F Z=1:1:3 I $$WNRBILL(IBIFN,Z) S IBON=$S(Q'<Z:1,1:2)_$S('$G(IBFLG):"",Z'=IBFLG:"",1:"^1") Q
  Q IBON
- ;
-TRI(IBIFN,Z) ;return 1 if rate type & coverage type-Tricare
- N Z0,Z1,IBINS,IBRTY
- S Z1=0
- I '$G(IBTRBIL) Q Z1
- S IBINS=+$G(^DGCR(399,IBIFN,"I"_Z))
- S IBRTY=$P($G(^DGCR(399.3,+$P($G(^DGCR(399,IBIFN,0)),U,7),0)),U)
- S Z0=$G(^DIC(36,+IBINS,0))
- I IBRTY["TRICARE",$P($G(^IBE(355.2,+$P(Z0,U,13),0)),U)="TRICARE" S Z1=1
- Q Z1
  ;
 PROFEE(IBIFN) ; Returns whether any rev codes for prof fees
  ;  included on bill IBIFN  0 = not included,  1 = included,

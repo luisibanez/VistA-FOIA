@@ -1,5 +1,6 @@
-ECXDVSN ;ALB/JAP - Division selection utility ; 8/13/07 1:11pm
- ;;3.0;DSS EXTRACTS;**8,105**;Dec 22, 1997;Build 70
+ECXDVSN ;ALB/JAP - Division selection utility ;Sep 29, 1997
+ ;;3.0;DSS EXTRACTS;**8**;Dec 22, 1997
+ ;
 ADM(ECXDIV,ECXALL,ECXSTART,ECXEND,ECXERR) ;division information for ADM extract audit report
  ;selected inpatient divisions from medical center division file (#40.8)
  ;   input
@@ -22,6 +23,7 @@ ADM(ECXDIV,ECXALL,ECXSTART,ECXEND,ECXERR) ;division information for ADM extract 
  ;   error CODE
  ;   ECXERR   = 1, if input problem occurs
  ;              0, otherwise
+ ;
  N OUT,DIC,X,Y,NM,ECXD,ECXIEN,ECXDIEN,ECXACT,ECXNAME,ECXNUM
  S (OUT,ECXERR)=0
  ;if start date or end date missing, then both default to today
@@ -52,6 +54,7 @@ ADM(ECXDIV,ECXALL,ECXSTART,ECXEND,ECXERR) ;division information for ADM extract 
  I ECXERR=1 K ECXDIV
  I '$D(ECXDIV) S ECXERR=1
  Q
+ ;
 ACTDIV(ECXIEN,ECXSTART,ECXEND,ECXD,ECXACT) ;determine if division active at anytime during date range
  ;to be called by ADM^ECXDVSN
  ;   input
@@ -77,14 +80,17 @@ ACTDIV(ECXIEN,ECXSTART,ECXEND,ECXD,ECXACT) ;determine if division active at anyt
  ;if not active on start date and not active on end date, reset ecxact=0
  I DATE(ECXSTART)=-1,DATE(ECXEND)=-1 S ECXACT=0
  Q
+ ;
 MOV(ECXDIV,ECXALL,ECXSTART,ECXEND,ECXERR) ;division information for MOV extract audit report 
  ;selected divisions from medical center division file (#40.8)
  ;   input
  ;   (see ADM)
  ;   output
  ;   (see ADM)
+ ;
  D ADM^ECXDVSN(.ECXDIV,ECXALL,ECXSTART,ECXEND,.ECXERR)
  Q
+ ;
 PAS(ECXDIV,ECXALL,ECXERR) ;setup division/site information for PAS extract audit report
  ;   input
  ;   ECXDIV = passed by reference array variable
@@ -93,8 +99,10 @@ PAS(ECXDIV,ECXALL,ECXERR) ;setup division/site information for PAS extract audit
  ;   ECXDIV = data for default division/site;
  ;            ECXDIV(1)=ien in file #4^name^station number
  ;            where the INSTITUTION file pointer is obtained from file #728
+ ;
  S ECXALL=1 D DEFAULT^ECXDVSN(.ECXDIV,ECXALL,.ECXERR)
  Q
+ ;
 TRT(ECXDIV,ECXALL,ECXERR) ;setup division/site information for TRT extract audit report
  ;   input
  ;   ECXDIV = passed by reference array variable
@@ -103,8 +111,10 @@ TRT(ECXDIV,ECXALL,ECXERR) ;setup division/site information for TRT extract audit
  ;   ECXDIV = data for default division/site;
  ;            ECXDIV(1)=ien in file #4^name^station number
  ;            where the INSTITUTION file pointer is obtained from file #728
+ ;
  S ECXALL=1 D DEFAULT^ECXDVSN(.ECXDIV,ECXALL,.ECXERR)
  Q
+ ;
 DEFAULT(ECXDIV,ECXALL,ECXERR) ;default division/site information for audit report
  ;   input
  ;   ECXDIV = passed by reference array variable
@@ -113,6 +123,7 @@ DEFAULT(ECXDIV,ECXALL,ECXERR) ;default division/site information for audit repor
  ;   ECXDIV = data for default division/site;
  ;            ECXDIV(1)=ien in file #4^name^station number
  ;            where the INSTITUTION file pointer is obtained from file #728
+ ;
  N DIV,ECX
  S ECXERR=0
  S DIV=$P($G(^ECX(728,1,0)),U,1)
@@ -122,6 +133,7 @@ DEFAULT(ECXDIV,ECXALL,ECXERR) ;default division/site information for audit repor
  I '$D(ECX) S ECXERR=1
  I '$D(ECXDIV) S ECXERR=1
  Q
+ ;
 DEN(ECXDIV,ECXALL,ECXERR) ;setup division/site information for DEN extract audit report
  ;   input
  ;   ECXDIV = passed by reference array variable (required)
@@ -156,6 +168,7 @@ DEN(ECXDIV,ECXALL,ECXERR) ;setup division/site information for DEN extract audit
  I ECXERR=1 K ECXDIV
  I '$D(ECXDIV) S ECXERR=1
  Q
+ ;
 ECS(ECXDIV,ECXALL,ECXERR) ;setup division/location information for ECS extract audit report
  ;   input
  ;   ECXDIV = passed by reference array variable (required)
@@ -205,24 +218,3 @@ ECS(ECXDIV,ECXALL,ECXERR) ;setup division/location information for ECS extract a
  I ECXERR=1 K ECXDIV
  I '$D(ECXDIV) S ECXERR=1
  Q
-NUT() ; Set Divisions into screen array (prompt is one/many/all)
- ;Input  : SCRNARR - Screen array full global reference
- ;Output : 1 = OK     0 = User abort/timeout
- ;         @SCRNARR@("DIVISION") = User pick all divisions ?
- ;           1 = Yes (all)     0 = No
- ;         @SCRNARR@("DIVISION",PtrDiv) = Division name
- ;Note   : @SCRNARR@("DIVISION") is initialized (KILLed) on input
- ;       : @SCRNARR@("DIVISION",PtrDiv) is only set when the user
- ;         picked individual divisions (i.e. didn't pick all)
- ;
- ;Declare variables
- N VAUTD,Y,SCANARR
- ;Get division selection
- S DIC="^DIC(4,"
- S VAUTSTR="PATIENT DIVISION"
- S VAUTVB="SCANARR"
- S VAUTNI=2
- D FIRST^VAUTOMA
- I Y<0 Q 1
- M @SCRNARR@("DIVISION")=SCANARR
- Q 0

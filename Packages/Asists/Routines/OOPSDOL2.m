@@ -1,5 +1,5 @@
 OOPSDOL2 ;WIOFO/CAH-CA2 EXTRACT FOR DOL ;3/15/00
- ;;2.0;ASISTS;**17**;Jun 03, 2002;Build 2
+ ;;2.0;ASISTS;;Jun 03, 2002
 EN ; Entry
  N OCC,NAME,FN,KK,D62,D126,D226,D227
  S OOPSAR("CA")=$$UP^OOPSUTL4($G(^OOPS(2260,OOPDA,"CA")))
@@ -41,9 +41,10 @@ OP03 ; Seg OP03
  S OPX=OPX_U_$E("00",$L(D62)+1,2)_D62
  S OPX=OPX_U_$E("00",$L(D126)+1,2)_D126
  S OPX=OPX_U_$$DC^OOPSUTL3($P(OOPSAR("CA2J"),U,8))
- ; V2_P15 - name fix to remove spaces and dashes
- S NAME=$$NAMEFIX^OOPSDOLX($$GET1^DIQ(2260,OOPDA,"265:.01"))
- S OPX=OPX_U_$P(NAME,U,1)_U_$P(NAME,U,2)_U_$P(NAME,U,3)
+ S NAME=$$GET1^DIQ(2260,OOPDA,"265:.01"),FN=$P(NAME,",",2)
+ S OPX=OPX_U_$E($P(NAME,","),1,20)
+ F KK=1:0:1 Q:$E(FN,KK)'=" "  S FN=$E(FN,KK+1,$L(FN))
+ S OPX=OPX_U_$E($P(FN," "),1,10)_U_$E($P(FN," ",2),1,10)
  S OPX=OPX_U_$P(OOPSAR("CA2H"),U,8)_U_$$MKNUM^OOPSUTL2($P(OOPSAR("CA2H"),U,9))
  S OPX=OPX_U_$$DC^OOPSUTL3($P(OOPSAR("CA2ES"),U,6))
  S OPX=OPX_U_$$DC^OOPSUTL3($P(OOPSAR("CA2J"),U,6))_U_"^|"
@@ -87,18 +88,14 @@ OP04 ; Seg OP04
  D STORE^OOPSDOLX
 OP05 ; Seg OP05
  K OPX
- S OPX="OP05^"_$P(OOPSAR("CA2L"),U)
- ;V2_P15 - name fix to remove spaces and dashes - not needed here
- ;      as name sent in 1 field, put in for consistency
- S NAME=$$NAMEFIX^OOPSDOLX($P(OOPSAR("CA2L"),U,2))
- S OPX=OPX_U_$E($P(NAME,U,1)_","_$P(NAME,U,2)_" "_$P(NAME,U,3),1,35)
+ S OPX="OP05^"_$P(OOPSAR("CA2L"),U)_U_$P(OOPSAR("CA2L"),U,2)
  S OPX=OPX_U_$P(OOPSAR("CA2L"),U,3)_U_$P(OOPSAR("CA2L"),U,4)
  S OPX=OPX_U_$$GET1^DIQ(2260,OOPDA,"262:1")_U_$E($P(OOPSAR("CA2L"),U,6),1,5)
  I $P(OOPSAR("CA2J"),U)'="" S OPX=OPX_U_1
  E  S OPX=OPX_U
- ;V2_P15 - name fix to remove spaces and dashes
- S NAME=$$NAMEFIX^OOPSDOLX($P(OOPSAR("CA2J"),U))
- S OPX=OPX_U_$P(NAME,U,1)_U_$P(NAME,U,2)_U_$P(NAME,U,3)
+ S NAME=$P(OOPSAR("CA2J"),U),FN=$P(NAME,",",2)
+ F KK=1:0:1 Q:$E(FN,KK)'=" "  S FN=$E(FN,KK+1,$L(FN))
+ S OPX=OPX_U_$E($P(NAME,","),1,20)_U_$E($P(FN," "),1,10)_U_$E($P(FN," ",2),1,10)
  I $P(OOPSAR("CA2J"),U)'="" S OPX=OPX_U_$$GET1^DIQ(2260,OOPDA,"270:1")
  I $P(OOPSAR("CA2J"),U,2)'="" D
  .S OPX=OPX_U_$P(OOPSAR("CA2J"),U,2)_U_$P(OOPSAR("CA2J"),U,3)

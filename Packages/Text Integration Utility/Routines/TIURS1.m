@@ -1,5 +1,5 @@
 TIURS1 ; SLC/JER - Additional /es/ actions ;1/18/05
- ;;1.0;TEXT INTEGRATION UTILITIES;**7,36,58,100,109,142,156,184,233**;Jun 20, 1997;Build 3
+ ;;1.0;TEXT INTEGRATION UTILITIES;**7,36,58,100,109,142,156,184**;Jun 20, 1997
  ;12/11/00 Moved ELSIG,MULTIPRN,LIST here from TIURS
 ELSIG ; Sign rec
  N TIULST,TIUSLST,TIURJCT,TIUES,TIUI,X,X1,Y,TIUDAARY,TIUCHNG
@@ -48,8 +48,7 @@ ELSIG ; Sign rec
  . . . . W !!,"Item #",TIUI,": MUST have a Procedure Summary Code and Date/Time Performed",!,"before you may sign."
  . . . . W !!,"Removed from signature list.",!
  . . . . I $$READ^TIUU("FOA","Press RETURN to continue...")
- . . ; VMP/RJT - *233
- . . I $S(+$$REQCOSIG^TIULP(+TIU0,+TIUDA,DUZ):1,+$P(TIU15,U,6):1,1:0),(+$P(TIU12,U,8)'>0),'+$G(XTRASGNR)   D  Q:+TIUPOP
+ . . I $S(+$$REQCOSIG^TIULP(+TIU0,+TIUDA,DUZ):1,+$P(TIU15,U,6):1,1:0),(+$P(TIU12,U,8)'>0) D  Q:+TIUPOP
  . . . N COSIGNER
  . . . W !!,"Item #",TIUI,": ",TIUTYPE," for "
  . . . W $$PTNAME^TIULC1($P(TIU0,U,2))," will need cosignature..."

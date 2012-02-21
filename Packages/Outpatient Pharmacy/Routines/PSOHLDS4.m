@@ -1,11 +1,8 @@
-PSOHLDS4 ;BIR/PWC-Build HL7 Segments for Automated Interface ; 2/13/08 3:21pm
- ;;7.0;OUTPATIENT PHARMACY;**156,255,279**;DEC 1997;Build 9
+PSOHLDS4 ;BIR/PWC-Build HL7 Segments for Automated Interface ;04/10/2004
+ ;;7.0;OUTPATIENT PHARMACY;**156**;DEC 1997
  ;HLFNC       supp. by DBIA 10106
  ;DIC(5       supp. by DBIA 10056
- ;EN^PSNPPIO  supp. by DBIA 3794
  ;This routine is called from PSOHLDS1
- ;
- ;*255 moved tag NTEPMI from PSOHLDS2
  Q
 IAM(PSI) ;allergy list segment
  Q:'$D(DFN)!$D(PAS3)
@@ -57,28 +54,4 @@ ORC(PSI) ;common order segment
  S $P(ORC,"|",22)=$P(SITE,"^",2)_CS_CS_$P(SITE,"^",7)_CS_$S($D(^DIC(5,+$P(SITE,"^",8),0)):$P(^(0),"^",2),1:"UKN")_CS_PSOHZIP
  S $P(ORC,"|",23)="("_$P(SITE,"^",3)_")"_$P(SITE,"^",4)
  S ^TMP("PSO",$J,PSI)="ORC|"_ORC,PSI=PSI+1
- Q
- ;
-NTEPMI(PSI) ;build NTE segment for PMI sheets                   ;*255
- Q:'$D(DFN)  N A,I,PREVLN,CURRLN,PMI,PSNMSG,PSDRUG
- S PSDRUG=+$P(^PSRX(IRXN,0),"^",6),PMI=$$EN^PSNPPIO(PSDRUG,.PSNMSG)
- Q:'$D(^TMP($J,"PSNPMI"))
- ;PSO*7*279 Add missing PMI ID(7) to NTE Segment
- S ^TMP("PSO",$J,PSI)="NTE"_FS_7_FS_FS_^TMP($J,"PSNPMI",0)
- K A S CNT1=1,CNT=0
- F A="W","U","H","S","M","P","I","O","N","D","R" S CNT=CNT+1,A(CNT)=A
- F I=1:1:11 I $D(^TMP($J,"PSNPMI",A(I))) D
- .S CNT=$P(^TMP($J,"PSNPMI",A(I),0),"^",3)
- .S (PREVLN,CURRLN)=""
- .F J=1:1:CNT D
- .. S ^TMP("PSO",$J,PSI,CNT1)=^TMP($J,"PSNPMI",A(I),J,0)
- .. ;PSO*198 check if " " should be inserted
- .. S CURRLN=^TMP("PSO",$J,PSI,CNT1)
- .. S:CNT1>1 PREVLN=$S(CNT>1:^TMP("PSO",$J,PSI,CNT1-1),1:"")
- .. I CNT1>1,$$SPACE^PSOHLDS3(PREVLN,CURRLN) D
- ... S ^TMP("PSO",$J,PSI,CNT1)=" "_^TMP("PSO",$J,PSI,CNT1)
- .. I J=1 S $P(^TMP("PSO",$J,PSI,CNT1),":",1)="\H\"_$P(^TMP("PSO",$J,PSI,CNT1),":",1)_"\N\"
- .. S CNT1=CNT1+1
- S ^TMP("PSO",$J,PSI,CNT1-1)=^TMP("PSO",$J,PSI,CNT1-1)_FS_"Patient Medication Instructions"
- S PSI=PSI+1 K A,I,J,CNT,CNT1,^TMP($J,"PSNPMI")
  Q

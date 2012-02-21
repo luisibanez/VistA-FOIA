@@ -1,5 +1,5 @@
-VADPT1 ;ALB/MRL/MJK,ERC,TDM - PATIENT VARIABLES ; 7/28/09 1:54pm
- ;;5.3;Registration;**415,489,516,614,688,754**;Aug 13, 1993;Build 46
+VADPT1 ;ALB/MRL/MJK - PATIENT VARIABLES ; 08 DEC 1988 ; 11/9/04 6:17pm
+ ;;5.3;Registration;**415,489,516,614**;Aug 13, 1993
 1 ;Demographic [DEM]
  N W,Z,NODE
  ;
@@ -74,34 +74,18 @@ VADPT1 ;ALB/MRL/MJK,ERC,TDM - PATIENT VARIABLES ; 7/28/09 1:54pm
  ; -- employment status [7 - ES]
  S VAX=$S($D(^DPT(DFN,.311)):^(.311),1:""),W="EMPLOYED FULL TIME^EMPLOYED PART TIME^NOT EMPLOYED^SELF EMPLOYED^RETIRED^ACTIVE MILITARY DUTY^UNKNOWN"
  S Z=$P(VAX,"^",15),@VAV@($P(VAS,"^",7))=Z_$S(Z:"^"_$P(W,"^",Z),1:"")
- ;
- ; -- PHONE NUMBER [WORK] [8 - WP]
- I $D(^DPT(DFN,.13)) S @VAV@($P(VAS,"^",8))=$P(^(.13),"^",2)
  Q
  ;
 3 ;Address [ADD]
- N VAFOR
  S VABEG=$S($D(VATEST("ADD",9)):VATEST("ADD",9),1:DT),VAEND=$S($D(VATEST("ADD",10)):VATEST("ADD",10),1:DT)
  I $S($D(VAPA("P")):1,'$D(^DPT(DFN,.121)):1,$P(^(.121),"^",9)'="Y":1,'$P(^(.121),"^",7):1,$P(^(.121),"^",7)>VABEG:1,'$P(^(.121),"^",8):0,1:$P(^(.121),"^",8)<VAEND) S VAX=$S($D(^DPT(DFN,.11)):^(.11),1:""),VAX(1)=0
  E  S VAX=$S($D(^DPT(DFN,.121)):^(.121),1:""),VAX(1)=1
- ;set the foreign address fields into local variables for later
- I 'VAX(1) S VAFOR=$P(VAX,U,8,10)
- I VAX(1) D
- . I '$D(^DPT(DFN,.122)) S VAFOR="" Q
- . S VAFOR=$P(^DPT(DFN,.122),U,1,3)
  F I=1:1:6 S VAZ=$P(VAX,"^",I),@VAV@($P(VAS,"^",I))=VAZ I I=5,$D(^DIC(5,+VAZ,0)) S VAZ=$P(^(0),"^"),@VAV@($P(VAS,"^",5))=@VAV@($P(VAS,"^",5))_"^"_VAZ
  S VAZ=$S('VAX(1):$P(VAX,"^",7),1:$P(VAX,"^",11)) S:$D(^DIC(5,+$P(VAX,"^",5),1,+VAZ,0)) VAZ=VAZ_"^"_$P(^(0),"^",1) S @VAV@($P(VAS,"^",7))=VAZ
  S VAZIP4=$P(VAX,U,12)
  S @VAV@($P(VAS,U,11))=VAZIP4_$S('$G(VAZIP4):"",($L(VAZIP4)=5):U_VAZIP4,1:U_$E(VAZIP4,1,5)_"-"_$E(VAZIP4,6,9))
  ;DG*5.3*516
  I $D(^DPT(DFN,.13)) S @VAV@($P(VAS,"^",8))=$P(^(.13),"^",1)
- ;foreign address fields
- F I=1:1:3 S VAZ=$P(VAFOR,U,I) S @VAV@($P(VAS,U,I+22))=VAZ
- ;
- I $P($G(VAFOR),U,3)]"" D
- . S VACNTRY=$P(VAFOR,U,3)
- . S VACNTRY=$$CNTRYI^DGADDUTL(VACNTRY)
- . S $P(@VAV@($P(VAS,U,25)),U,2)=VACNTRY
  I 'VAX(1) G CA
  S @VAV@($P(VAS,"^",8))=$P(VAX,"^",10)
  F I=7,8 S VAZ=$P(VAX,"^",I),Y=VAZ X:Y]"" ^DD("DD") S @VAV@($P(VAS,"^",I+2))=VAZ_"^"_Y
@@ -125,13 +109,6 @@ CA ;Confidential Address
  ..S VACAT=$$GET1^DID(2.141,.01,"","POINTER","","DGERR")
  ..S VATYPNAM="" F I=1:1 S VATYPNAM=$P(VACAT,";",I) Q:VATYPNAM=""  D
  ...I +VATYPNAM[VATYP S VATYPNAM=$P(VATYPNAM,":",2),@VAV@($P(VAS,"^",22),VATYP)=VATYP_"^"_VATYPNAM_"^"_VAACT
- ;foreign address fields for the confidential address
- F I=1:1:3 S @VAV@($P(VAS,U,I+25))=$P(VAX,U,I+13)
- I @VAV@($P(VAS,U,28))]"" D
- . I '$D(^HL(779.004,$P(VAX,U,16),0)) Q
- . S $P(@VAV@($P(VAS,U,28)),U,2)=$$CNTRYI^DGADDUTL($P(VAX,U,16))
- ; -- CONFIDENTIAL PHONE NUMBER [29 - CPN]
- I $D(^DPT(DFN,.13)) S @VAV@($P(VAS,"^",29))=$P(^(.13),"^",15)
 Q3 K VABEG,VAEND,VAZIP4 Q
  ;
 4 ;Other Address [OAD]

@@ -1,6 +1,6 @@
-PRCPURS1 ;WISC/RFJ/VAC-select group category list                       ; 11/2/06 11:32am
- ;;5.1;IFCAP;**98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPURS1 ;WISC/RFJ-select group category list                       ;19 May 93
+ ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
@@ -50,21 +50,3 @@ ALLGRP() ;  select all group categories
  S XP="Do you want to select ALL group categories",XH="Enter 'YES' to select ALL groups, 'NO' to not select all groups."
  W !
  Q $$YN^PRCPUYN(1)
-ZEROQTY(Y) ;**98** Select zero quantity items to print or not or only
- ;DIRUT - "^" entered, exit from this option and return to menu
- ;Y - User selection, passed to calling routine for further process:
- ; If Y=1, Include Zero Quantity Items
- ; If Y=2, Do not include Zero Quantity Items
- ; If Y=3, Include ONLY Zero Quantity Items
- N X
- W !
- S X(1)="Select a number to display zero quantities or not "
- D DISPLAY^PRCPUX2(3,42,.X)
- K DIR
- S DIR(0)="S^1: Include Zero Quantity items;2: Do not include Zero Quantity items;3: Print  Only Zero Quantity items"
- S DIR("A")="Select"
- D ^DIR
- K DIR
- Q:$D(DIRUT) 0
- Q Y
- ;

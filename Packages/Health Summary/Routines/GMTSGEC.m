@@ -1,10 +1,10 @@
-GMTSGEC ; SLC/AGP - Ad Hoc Summary Driver ; 07/11/2007
- ;;2.7;Health Summary;**63,39,87**;Oct 20, 1995;Build 23
+GMTSGEC ; SLC/AGP - Ad Hoc Summary Driver ;5/17/05  12:24
+ ;;2.7;Health Summary;**63,39**;Oct 20, 1995
  ;                
  ;   DBIA  1268  ^AUTTHF(
  ;
 EN(X) ;
- I $P($G(^GMT(142.1,+$G(CMP),0)),U,4)="GECH" Q "I (($P(^(0),U,10)=""C"")&(+$P(^(0),U,11)'=1))&($E($P($G(^(0)),U,9),1,3)=""GEC"")"
+ I $P($G(^GMT(142.1,$G(CMP),0)),U,4)="GECH" Q "I (($P(^(0),U,10)=""C"")&(+$P(^(0),U,11)'=1))&($E($P($G(^(0)),U,9),1,3)=""GEC"")"
  Q "I $P(^(0),U,11)'=1"
  ;
 REPORT ;

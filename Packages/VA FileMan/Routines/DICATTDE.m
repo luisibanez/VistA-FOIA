@@ -1,6 +1,6 @@
-DICATTDE ;GFT;;END SCREEN EDIT ; 04 Jun 2007  3:39 PM
- ;;22.0;VA FileMan;**42,83,103,151**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DICATTDE ;GFT;10:56 AM  28 Feb 2002;END screen edit
+ ;;22.0;VA FileMan;**42,83,103**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 LAYGODEF ;should user see 'ADDING NEW'?
  N %
@@ -66,7 +66,6 @@ SCREEN S %=$$GET^DDSVALF(65,"DICATT SCREEN",6,"I",""),X=$P(^DD(DICATTA,DICATTF,0
  S DR="Q",X=98 D 0,DIE
  S DR="Q",X=99 D 0,DIE
  D FILEWORD^DICATTD0
-MUMPS I $P(^DD(DICATTA,DICATTF,0),U,2)["K" S ^(9)="@" ;**151
 RESET D GET^DICATTD ;now that we have filed, the NEW is OLD, in case they keep editing!
 Q Q
  ;

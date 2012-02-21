@@ -1,5 +1,5 @@
-IBCEMQC ;ALB/ESG - MRA EOB CRITERIA FOR AUTO-AUTHORIZE ; 11/1/06 10:34am
- ;;2.0;INTEGRATED BILLING;**155,323,302,350,359**;21-MAR-94;Build 9
+IBCEMQC ;ALB/ESG - MRA EOB CRITERIA FOR AUTO-AUTHORIZE ; 3/1/06 9:23am
+ ;;2.0;INTEGRATED BILLING;**155,323**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  Q   ; must be called at proper entry point
@@ -176,7 +176,7 @@ OKCOMBO ; This section lists OK combinations of adjustment category group codes
  ; OA-AB3 is created by VistA for the Covered Amount
  ; LQ-zzz is created by VistA for the Line Level remark
  ;
- ;;CO;A2,B6,42,45,172,94,194
+ ;;CO;A2,B6,42,45
  ;;PR;1,2,66,122,AAA
  ;;OA;AB3
  ;

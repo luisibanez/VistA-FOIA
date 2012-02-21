@@ -1,11 +1,12 @@
-PXRMEXIU ; SLC/PKR/PJH - Utilities for installing repository entries. ;03/16/2010
- ;;2.0;CLINICAL REMINDERS;**4,6,12,17**;Feb 04, 2005;Build 102
+PXRMEXIU ; SLC/PKR/PJH - Utilities for installing repository entries. ;09/16/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;===============================================
 DEF(FDA,NAMECHG) ;Check the reminder definition to make sure the related
  ;reminder exists and all the findings exist.
  N ABBR,ALIST,IEN,IENS,FILENUM,FINDING,LRD,OFINDING,PT01
  N RRG,SPONSOR,TEXT,VERSN
  S IENS=$O(FDA(811.9,""))
+ ;
  ;Related reminder guideline field 1.4.
  I $D(FDA(811.9,IENS,1.4)) D
  . S RRG=FDA(811.9,IENS,1.4)
@@ -45,20 +46,51 @@ DEF(FDA,NAMECHG) ;Check the reminder definition to make sure the related
  .. E  S FDA(811.9,IENS,101)=$P(Y,U,2)
  ;
  ;Linked reminder dialog field 51.
- S LRD=$G(FDA(811.9,IENS,51))
- S IEN=$S(LRD="":0,1:+$O(^PXRMD(801.41,"B",LRD,"")))
+ S LRD=+$G(FDA(811.9,IENS,51))
+ S IEN=$$EXISTS^PXRMEXIU(801.41,LRD)
  I IEN=0 K FDA(811.9,IENS,51)
  ;
  ;Search the finding multiple for replacements and missing findings.
- D SFMVPI(.FDA,.NAMECHG,811.902)
+ D BLDALIST^PXRMVPTR(811.902,.01,.ALIST)
+ S IENS=""
+ F  S IENS=$O(FDA(811.902,IENS)) Q:IENS=""  D
+ . S (FINDING,OFINDING)=FDA(811.902,IENS,.01)
+ . S ABBR=$P(FINDING,".",1)
+ . S PT01=$P(FINDING,".",2)
+ . S FILENUM=$P(ALIST(ABBR),U,1)
+ . I $D(NAMECHG(FILENUM,PT01)) D
+ .. S FINDING=ABBR_"."_NAMECHG(FILENUM,PT01)
+ .. S FDA(811.902,IENS,.01)=FINDING
+ . S IEN=+$$VFIND1(FINDING,.ALIST)
+ . I IEN=0 D
+ ..;Get replacement
+ .. N DIC,DUOUT,TEXT,X,Y
+ .. S TEXT="Finding "_FINDING_" does not exist; input a replacement or ^ to quit the install."
+ .. W !,TEXT
+ .. S DIC=FILENUM
+ .. I DIC["60" S DIC("S")="I $$LABPANEL^PXRMEXIU(Y)"
+ .. S DIC(0)="AEMNQ"
+ .. S Y=-1
+ .. F  Q:+Y'=-1  D
+ ...;If this is being called during a KIDS install we need echoing on.
+ ... I $D(XPDNM) X ^%ZOSF("EON")
+ ... D ^DIC
+ ... I $D(XPDNM) X ^%ZOSF("EOFF")
+ ... I $D(DUOUT) S Y="" K FDA
+ .. I Y="" Q
+ .. S FINDING=ABBR_"."_$P(Y,U,2),FDA(811.902,IENS,.01)=FINDING
+ .;Save the finding information for the history.
+ . S ^TMP("PXRMEXIA",$J,"DEFF",$P(IENS,",",1),OFINDING)=FINDING
+ .;Save changes to Orderable items for dialog
+ . I FILENUM=101.43,OFINDING'=FINDING
+ . S NAMECHG(FILENUM,$P(OFINDING,".",2))=$P(FINDING,".",2)
  S VERSN=$$GETTAGV^PXRMEXU3(^PXD(811.8,PXRMRIEN,100,3,0),"<PACKAGE_VERSION>")
  I VERSN=1.5 D CEFD^PXRMDATE(.FDA)
  Q
  ;
  ;===============================================
-EXISTS(FILENUM,NAME,FLAG) ;Check for existence of an entry with the
- ;same name. Return 0 for null name. If FLAG="W" then if necessary
- ;display the warning message.
+EXISTS(FILENUM,NAME) ;Check for existence of an entry with the same name.
+ ;Return 0 for null name
  I NAME="" Q 0
  ;Return the ien if it does, 0 otherwise.
  N IEN
@@ -77,24 +109,19 @@ EXISTS(FILENUM,NAME,FLAG) ;Check for existence of an entry with the
  ;File 8927.1 only allows upper case .01s.
  I FILENUM=8927.1 S RESULT=$$UP^XLFSTR(NAME)
  S IEN=$$FIND1^DIC(FILENUM,"",FLAGS,RESULT)
- I +IEN>0 Q IEN
  ;If IEN is null then there was an error try FIND^DIC.
- N FILENAME,LIST,MSG,NFOUND,TEXT
- D FIND^DIC(FILENUM,"","",FLAGS,NAME,"","","","","LIST","MSG")
- S NFOUND=+$P(LIST("DILIST",0),U,1)
- I NFOUND=0 Q 0
- I NFOUND=1 Q LIST("DILIST",2,1)
- ;Multiple entries with the same name found. If FLAG="W" display the
- ;warning message, return the first entry on the list and quit.
- I $G(FLAG)="W" D  Q LIST("DILIST",2,1)
+ I IEN="" D
+ . N FILENAME,LIST,MSG,NENTRIES,TEXT
  . S FILENAME=$$GET1^DID(FILENUM,"","","NAME")
- . S TEXT(1)="Warning there are "_NFOUND_" "_FILENAME_" entries with the name "_NAME_"!"
- . S TEXT(2)="If this is used as a finding, and it is not resolved by FileMan during"
- . S TEXT(3)="installation, any component using this finding will not install."
+ . D FIND^DIC(FILENUM,"","",FLAGS,NAME,"","","","","LIST","MSG")
+ . S NENTRIES=+$P(LIST("DILIST",0),U,1)
+ . S TEXT="Warning there are "_NENTRIES_" "_FILENAME_" entries with the name "_NAME_"!"
+ . S TEXT="You should stop and fix this problem now, if you continue"
+ . S TEXT="you will probably get a number of errors."
  . D EN^DDIOL(.TEXT)
  . H 3
- ;If FLAG is not "W" prompt the user for the replacement.
- I NFOUND>1 S IEN=$$GETIEN^PXRMEXU0(NFOUND,.LIST)
+ .;Set the IEN to the first entry in the list.
+ . S IEN=LIST("DILIST",2,1)
  Q IEN
  ;
  ;===============================================
@@ -104,11 +131,11 @@ GETACT(CHOICES,DIR) ;Get the action
  N DIROUT,DIRUT,DTOUT,DUOUT,X,Y
  S DIR(0)="S"_U
  I CHOICES["C" S DIR(0)=DIR(0)_"C:Create a new entry by copying to a new name"
- I CHOICES["D" S DIR(0)=DIR(0)_";D:Delete"
+ I CHOICES["D" S DIR(0)=DIR(0)_";D:Delete (from the reminder/dialog)"
  I CHOICES["I" S DIR(0)=DIR(0)_";I:Install"
  I CHOICES["M" S DIR(0)=DIR(0)_";M:Merge findings"
  I CHOICES["O" S DIR(0)=DIR(0)_";O:Overwrite the current entry"
- I CHOICES["P" S DIR(0)=DIR(0)_";P:Replace with an existing entry"
+ I CHOICES["P" S DIR(0)=DIR(0)_";P:Replace (in the reminder/dialog) with an existing entry"
  I CHOICES["Q" S DIR(0)=DIR(0)_";Q:Quit the install"
  I CHOICES["R" S DIR(0)=DIR(0)_";R:Restart"
  I CHOICES["S" S DIR(0)=DIR(0)_";S:Skip, do not install this entry"
@@ -136,9 +163,8 @@ GETUNAME(ATTR) ;Get a unique name to use, ATTR holds the attributes.
 GNEW S NEWPT01=$$GETNAME(ATTR("MIN FIELD LENGTH"),ATTR("FIELD LENGTH"))
  S IEN=+$$EXISTS(ATTR("FILE NUMBER"),NEWPT01)
  I IEN>0 D  G GNEW
- . S TEXT(1)=ATTR("FILE NAME")_" entry "_NEWPT01_" already exists."
- . S TEXT(2)="Input a different name or type <ENTER> to quit."
- . D EN^DDIOL(.TEXT)
+ . S TEXT=ATTR("FILE NAME")_" entry "_NEWPT01_" already exists, what do you want to do?"
+ . D EN^DDIOL(TEXT)
  E  S ATTR("NAME")=NEWPT01
  Q NEWPT01
  ;
@@ -152,6 +178,14 @@ HF(FDA,NAMECHG) ;Check the health factor to make sure a category does not
  Q
  ;
  ;===============================================
+LABPANEL(IEN) ;
+ N NODE
+ S NODE=^LAB(60,IEN,0)
+ I $P(NODE,U,4)'["CH" Q 1
+ I $P(NODE,U,5)="" Q 0
+ Q 1
+ ;
+ ;===============================================
 REXISTS(NAME,DATEP) ;See if this Exchange File entry already exists.
  N IEN,LUVALUE
  S LUVALUE(1)=NAME
@@ -160,36 +194,38 @@ REXISTS(NAME,DATEP) ;See if this Exchange File entry already exists.
  Q IEN
  ;
  ;===============================================
-SFMVPI(FDA,NAMECHG,SFN) ;Search a variable pointer list for items that do not
- ;exist and prompt the user for a replacement. Works for definitions,
- ;terms, and health summary types.
- N ABBR,ACTION,ALIST,DIR,IEN,IENS,FILENUM,FINDING,HSUB,OFINDING,PT01,TYPE
+SAME(ATTR,TA,NAME) ;Check existing entry and entry in packed reminder
+ ;definition to see if they are identical.
+ ;Present version only works for computed finding routines, other
+ ;types of entries can be added later.
+ N SAME
+ I ATTR("FILE NAME")="COMPUTED FINDING ROUTINE" S SAME=$$SAME^PXRMEXCF(.ATTR,.TA,NAME)
+ E  S SAME=1
+ Q SAME
+ ;
+ ;===============================================
+TERM(FDA,NAMECHG) ;Check the reminder term to make sure all the
+ ;findings exist.
+ N ABBR,ALIST,IEN,IENS,FILENUM,FINDING,OFINDING,PT01
  ;Search the finding multiple for replacements and missing findings.
- S HSUB=$S(SFN=142.14:"HSTI",SFN=811.52:"TRMF",1:"DEFF")
- S TYPE=$S(SFN=142.14:"Selection item",1:"Finding")
- D BLDALIST^PXRMVPTR(SFN,.01,.ALIST)
- S (ACTION,IENS)=""
- F  S IENS=$O(FDA(SFN,IENS)) Q:(IENS="")!(ACTION="Q")  D
- . S (FINDING,OFINDING)=FDA(SFN,IENS,.01)
+ D BLDALIST^PXRMVPTR(811.52,.01,.ALIST)
+ S IENS=""
+ F  S IENS=$O(FDA(811.52,IENS)) Q:IENS=""  D
+ . S (FINDING,OFINDING)=FDA(811.52,IENS,.01)
  . S ABBR=$P(FINDING,".",1)
  . S PT01=$P(FINDING,".",2)
  . S FILENUM=$P(ALIST(ABBR),U,1)
  . I $D(NAMECHG(FILENUM,PT01)) D
  .. S FINDING=ABBR_"."_NAMECHG(FILENUM,PT01)
- .. S FDA(SFN,IENS,.01)=FINDING
+ .. S FDA(811.52,IENS,.01)=FINDING
  . S IEN=+$$VFIND1(FINDING,.ALIST)
- . I IEN>0 S FDA(SFN,IENS,.01)=ABBR_".`"_IEN
  . I IEN=0 D
  ..;Get replacement
- .. N DIC,DUOUT,ROOT,TEXT,X,Y,YY
- .. S TEXT(1)=TYPE_" "_FINDING_" does not exist, what do you want to do?"
- .. D BMES^XPDUTL(.TEXT)
- .. S ACTION=$$GETACT^PXRMEXIU("DPQ",.DIR)
- .. I ACTION="Q" K FDA Q
- .. I ACTION="D" K FDA(SFN,IENS) Q 
+ .. N DIC,DUOUT,TEXT,X,Y
+ .. S TEXT="Finding "_FINDING_" does not exist; input a replacement or ^ to quit the install."
+ .. D BMES^XPDUTL(TEXT)
  .. S DIC=FILENUM
- .. S ROOT=$P($$ROOT^DILFD(FILENUM),U,2)
- .. S DIC("S")="S YY=Y_"";""_ROOT I $$VFINDING^PXRMINTR(YY)"
+ .. I DIC["60" S DIC("S")="I $$LABPANEL^PXRMEXIU(Y)"
  .. S DIC(0)="AEMNQ"
  .. S Y=-1
  .. F  Q:+Y'=-1  D
@@ -200,42 +236,13 @@ SFMVPI(FDA,NAMECHG,SFN) ;Search a variable pointer list for items that do not
  ... I $D(DUOUT) D
  .... S Y=""
  .... K FDA
- .. I Y="" K FDA(SFN,IENS)
+ .. I Y="" K FDA(811.52,IENS)
  .. E  D
  ... S FINDING=ABBR_"."_$P(Y,U,2)
- ... S FDA(SFN,IENS,.01)=FINDING
+ ... S FDA(811.52,IENS,.01)=FINDING
  .;Save the finding information for the history.
- . S ^TMP("PXRMEXIA",$J,HSUB,$P(IENS,",",1),OFINDING)=FINDING
+ . S ^TMP("PXRMEXIA",$J,"TRMF",$P(IENS,",",1),OFINDING)=FINDING
  Q
- ;
- ;===============================================
-TIUOBJ(FDA) ;Resolve the name of the health summary object.
- N END,HSOBJIEN,IENS,TEMP
- S IENS=$O(FDA(8925.1,""))
- S TEMP=$G(FDA(8925.1,IENS,9))
- I TEMP'["TIU^GMTSOBJ" Q
- S TEMP=$P(TEMP,",",2)
- S END=$L(TEMP)-1
- S TEMP=$E(TEMP,1,END)
- S HSOBJIEN=$O(^GMT(142.5,"B",TEMP,""))
- I HSOBJIEN="" D  Q
- . N TEXT
- . S TEXT(1)="Health Summary Object "_TEMP_" does not exist."
- . S TEXT(2)="It must be installed before this TIU Health Summary Object can be installed."
- . S TEXT(3)="Please go back and install it, making sure the corresponding Health Summary"
- . S TEXT(4)="Type has been installed first."
- . S TEXT(5)=" "
- . I '$D(XPDNM) D EN^DDIOL(.TEXT)
- . I $D(XPDNM) D BMES^XPDUTL(.TEXT)
- S FDA(8925.1,IENS,9)="S X=$$TIU^GMTSOBJ(DFN,"_HSOBJIEN_")"
- Q
- ;
- ;===============================================
-VDLGFIND(ABBR,IEN,ALIST) ;Determine if the finding item associated with a
- ;reminder dialog is active returns a 1 if it is inactive returns a 0.
- N FILENUM
- S FILENUM=$P(ALIST(ABBR),U,1)
- Q $$FILESCR^PXRMDLG6(IEN,FILENUM)
  ;
  ;===============================================
 VFIND1(VPTR,ALIST) ;Given a variable pointer of the form ABBR.NAME

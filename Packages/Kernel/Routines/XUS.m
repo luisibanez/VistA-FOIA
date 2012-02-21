@@ -1,5 +1,5 @@
-XUS ;SFISC/STAFF - SIGNON ;2/13/07  14:44
- ;;8.0;KERNEL;**16,26,49,59,149,180,265,337,419,434**;Jul 10, 1995;Build 6
+XUS ;SFISC/STAFF - SIGNON ;11/23/2004  12:34
+ ;;8.0;KERNEL;**16,26,49,59,149,180,265,337**;Jul 10, 1995
  ;Sign-on message numbers are 30810.51 to 30810.99
  S U="^" D INTRO^XUS1A()
  K  K ^XUTL("ZISPARAM",$I)
@@ -31,10 +31,8 @@ B K XUF,%1 S XUF=0 X XUEON
 PGM ;
  S Y=+$G(^%ZIS(1,XUDEV,201)) I Y>0,$$CHK S XQY=Y G OK
  S Y=+$G(^VA(200,DUZ,201)) I Y>0,$$CHK S XQY=Y G OK
- I $D(DUZ("ASH")) S Y=$O(^DIC(19,"B","XU NOP MENU",0)) I Y>0 S XQY=Y G OK ;rwf 403
  S XUM=16
  G NO
- ;
 OK D CHEK^XQ83
  S (XUA,PGM)="XQ"
  G NEXT^XUS1
@@ -79,7 +77,7 @@ ACCEPT(TO) ;Read A/V and echo '*' char.
  . S A=A_$C(C) W *42
  . Q
  Q A
- ;
+ ; 
 CHECKAV(X1) ;Check A/V code return DUZ or Zero. (Called from XUSRB)
  N %,%1,X,Y,IEN,DA,DIK
  S IEN=0
@@ -120,16 +118,15 @@ XOPT ;Setup initial XOPT
 SET1(FLAG) ;Setup parameters (also called from XUSRB)
  N %
  S U="^",XUEON=^%ZOSF("EON"),XUEOFF=^("EOFF")
- D XUVOL,XOPT S DUZ("LANG")=$P(XOPT,U,7) ;S:$P(XUVOL,U,6)="y" XRTL=XUCI_","_XQVOL
+ D XUVOL,XOPT S DUZ("LANG")=$P(XOPT,U,7) S:$P(XUVOL,U,6)="y" XRTL=XUCI_","_XQVOL
  K ^XUTL("XQ",$J) S XUF=0,XUDEV=0,DUZ=0,DUZ(0)="@",IOS=0,ION=""
  I FLAG S %ZIS="L",IOP="HOME" D ^%ZIS Q:POP
- S XUDEV=IOS,XUIOP=ION
+ S XUDEV=IOS,XUIOP=ION D:$D(XRTL) T0^%ZOSV
  D GETFAC^XUS3($G(IO("IP")))
  S %=$P(XOPT,U,14)
  I "N"'[% D
  . S XUF=(%["R")+1,XUF(.1)="",XUF(.2)=0,XUF(.3)=0
  . I %["D" S:$D(^XTV(8989.3,1,4.33,"B",XUDEV))[0 XUF=0
- S DILOCKTM=+$G(^DD("DILOCKTM"),1) ;p434 IA#4909
  Q
 SET2() ;EF. Return error code (also called from XUSRB)
  N %,X
@@ -141,15 +138,14 @@ SET2() ;EF. Return error code (also called from XUSRB)
  I $L(X) F I=1:1:15 I $L($P(X,U,I)) S $P(XOPT,U,I)=$P(X,U,I)
  S DTIME=600
  I '$P(XOPT,U,11),$D(^%ZIS(1,XUDEV,90)),^(90)>2800000,^(90)'>DT Q 8
+ I $D(XRT0) S XRTN="XUS" D T1^%ZOSV
  Q 0
  ;
 UVALID() ;EF. Is it valid for this user to sign on?
  I DUZ'>0 Q 4
  I $P(XUSER(1.1),U,5),$P(XUSER(1.1),U,5)>XUNOW S XUM(0)=$$FMTE^XLFDT($P(XUSER(1.1),U,5),"2PM") Q 18 ;User locked until
  I $P(XUSER(0),U,11),$P(XUSER(0),U,11)'>DT Q 11 ;Access Terminated
- I $D(DUZ("ASH")) Q 0 ;If auto handle, Allow to sign-on p434
  I $P(XUSER(0),U,7) Q 5 ;Disuser flag set
- I '$L($P(XUSER(1),U,2)) Q 21 ;p419, p434
  Q 0
  ;
 DEVPAS() ;EF. Ask device password

@@ -1,6 +1,6 @@
 IBCSC4F ;ALB/ARH - GET PTF DIAGNOSIS ; 10-OCT-1998
- ;;2.0;INTEGRATED BILLING;**106,403,400**;21-MAR-94;Build 52
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**106**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 PTFDXDT(IBPTF,IBDT1,IBDT2,TF) ; collect PTF Transfer (501) and Discharge (701) movements and diagnosis within a date range
  ; if end date is before Discharge date delete Discharge Diagnosis
@@ -98,26 +98,3 @@ PTFDX(IBPTF) ; collect all PTF Transfer (501) and Discharge (701) movements and 
  .. I +IBDSC S $P(^TMP($J,"IBDX","D",IBDDT,IBI),U,2)=1
  ;
  Q
- ;
-SETPOA(IBIFN) ; get POAs from file 19640.1 and put them into file 362.3
- N DIAG,DIEN,IBPTF,IEN362,ORDER,POASET
- ; get PTF ien
- S IBPTF=$P($G(^DGCR(399,IBIFN,0)),U,8) Q:IBPTF=""
- ; loop through all entries in 19640.1 for this PTF
- S DIEN="" F  S DIEN=$O(^DSIPPOA("B",IBPTF,DIEN)) Q:DIEN=""  D
- .S DIAG=$P($G(^DSIPPOA(DIEN,0)),U,3) Q:DIAG=""
- .; loop through all DXes in 362.3 for this claim and try to find a match for 19640.1 entry
- .S POASET=0,ORDER="" F  S ORDER=$O(^IBA(362.3,"AO",IBIFN,ORDER)) Q:ORDER=""!(POASET=1)  D
- ..S IEN362=$O(^IBA(362.3,"AO",IBIFN,ORDER,""))
- ..; if DX in 362.3 matches DX in 19640.1, put proper POA indicator into 362.3 and bail out
- ..I DIAG=$P($G(^IBA(362.3,IEN362,0)),U) S $P(^IBA(362.3,IEN362,0),U,4)=$P(^DSIPPOA(DIEN,0),U,4),POASET=1
- ..Q 
- .Q
- Q
- ;
-MAXECODE(IBIFN) ; returns 1 if there are already 3 Ecode diagnoses on the claim, 0 otherwise
- N IBDATE,IBDX,CNT
- Q:'IBIFN 0
- S CNT=0,IBDX="",IBDATE=$$BDATE^IBACSV(IBIFN)
- F  S IBDX=$O(^IBA(362.3,"AIFN"_IBIFN,IBDX))  Q:'IBDX  I $E($$ICD9^IBACSV(IBDX,IBDATE))="E" S CNT=CNT+1
- Q CNT>2

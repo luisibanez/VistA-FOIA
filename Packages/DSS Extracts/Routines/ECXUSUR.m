@@ -1,5 +1,5 @@
-ECXUSUR ;ALB/TJL-Surgery Extract Unusual Volume Report ; 9/4/07 8:19am
- ;;3.0;DSS EXTRACTS;**49,71,84,93,105**;July 1, 2003;Build 70
+ECXUSUR ;ALB/TJL-Surgery Extract Unusual Volume Report ; 5/26/05 2:44pm
+ ;;3.0;DSS EXTRACTS;**49,71,84**;July 1, 2003
  ;
 EN ; entry point
  N X,Y,DATE,ECRUN,ECXDESC,ECXSAVE,ECXTL,ECTHLD
@@ -88,14 +88,13 @@ PRINT ; process temp file and print report
  .S SUB="" F  S SUB=$O(^TMP($J,VOL,SUB)) Q:SUB=""!QFLG  S REC=^(SUB)  D
  ..S COUNT=COUNT+1
  ..I $Y+3>IOSL D HEADER Q:QFLG
- ..W !,?1,$P(REC,U),?7,$P(REC,U,2),?18,$P(REC,U,3),?27,$P(REC,U,4)
- ..W ?34,$P(REC,U,5),?55,$$RJ^XLFSTR($P(REC,U,7),4)
- ..W ?66,$$RJ^XLFSTR($P(REC,U,11),4),?77,$$RJ^XLFSTR($P(REC,U,9),4)
- ..W ?86,$$RJ^XLFSTR($P(REC,U,10),4),?93,$$RJ^XLFSTR($P(REC,U,6),4)
- ..W ?103,$$RJ^XLFSTR($P(REC,U,8),4),?113,$P(REC,U,14)
- ..W ?117,$P(REC,U,13)
+ ..W !,$P(REC,U),?6,$P(REC,U,2),?17,$P(REC,U,3),?26,$P(REC,U,4)
+ ..W ?33,$P(REC,U,5),?55,$$RJ^XLFSTR($P(REC,U,9),4)
+ ..W ?63,$$RJ^XLFSTR($P(REC,U,10),4),?74,$$RJ^XLFSTR($P(REC,U,11),4)
+ ..W ?83,$$RJ^XLFSTR($P(REC,U,6),4),?90,$$RJ^XLFSTR($P(REC,U,8),4)
+ ..W ?101,$$RJ^XLFSTR($P(REC,U,7),4),?114,$P(REC,U,13)
  Q:QFLG
- I COUNT=0 W !!,?8,$S(ECXFLAG=1:"No surgery volumes to report for this extract",1:"No unusual volumes to report for this extract")
+ I COUNT=0 W !!,?8,$S(FLAG=1:"No surgery volumes to report for this extract",1:"No unusual volumes to report for this extract")
 CLOSE ;
  I $E(IOST)="C",'QFLG D
  .S SS=22-$Y F JJ=1:1:SS W !
@@ -112,10 +111,10 @@ HEADER ;header and page control
  W !,$S(ECXFLAG:"SUR Volume Report",1:"Surgery Extract Unusual Volume Report"),?124,"Page: "_PG
  W !,"Start Date: ",ECSTART,?97,"Report Run Date/Time: "_ECRUN
  W !,"  End Date: ",ECEND I 'ECXFLAG W ?97,"     Threshold Value: ",ECTHLD
- W !!,?28,"Case",?38,"Encounter",?52,"Pt Holding",?63,"Anesthesia",?75,"Patient",?83,"Operation",?93,"PACU",?101,"OR Clean",?111,"Canc/",?121,"Principal"
- W !,?1,"Name",?10,"SSN",?20,"Day",?27,"Number",?40,"Number"
- W ?54,"Time",?66,"Time",?77,"Time",?86,"Time",?93,"Time",?103,"Time"
- W ?111,"Abort",?121,"Procedure"
+ W !!,?27,"Case",?37,"Encounter",?53,"Patient",?61,"Operation",?71,"Anesthesia",?83,"PACU",?89,"OR Clean",?99,"Pt Holding",?114,"Principal"
+ W !,"Name",?9,"SSN",?19,"Day",?26,"Number",?39,"Number"
+ W ?55,"Time",?63,"Time",?74,"Time",?83,"Time",?90,"Time",?101,"Time"
+ W ?114,"Procedure"
  W !,LN,!
  Q
  ;

@@ -1,6 +1,6 @@
 IBCSC3 ;ALB/MJB - MCCR SCREEN 3 (PAYER/MAILING ADDRESS) ;27 MAY 88 10:15
- ;;2.0;INTEGRATED BILLING;**8,43,52,80,82,51,137,232,320,377**;21-MAR-94;Build 23
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**8,43,52,80,82,51,137,232**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO DGCRSC3
  ;
@@ -13,6 +13,7 @@ EN N IB,IBX,IBINS,Y,Z
  D POL^IBCNSU41(DFN)
  F I=0,"M","M1","U","U2" S IB(I)=$S($D(^DGCR(399,IBIFN,I)):(^(I)),1:"")
  S IBOUTP=2,IBINDT=$S(+$G(IB("U")):+IB("U"),1:DT)
+ ;S Z=1,IBW=1 X IBWW W " Rate Type  : ",$S($P(IB(0),U,7)']"":IBU,$D(^DGCR(399.3,$P(IB(0),U,7),0)):$P(^(0),U),1:IBUN)
  ;
  S X=" Rate Type  : "_$S($P(IB(0),U,7)']"":IBU,$D(^DGCR(399.3,$P(IB(0),U,7),0)):$P(^(0),U),1:IBUN)
  S Z=1,IBW=1 X IBWW W X
@@ -29,7 +30,7 @@ EN N IB,IBX,IBINS,Y,Z
  I $P(IB(0),U,11)="o" W !?4,"Inst. Name : ",$S($P(IB("M"),U,11)']"":IBU,$D(^DIC(4,$P(IB("M"),U,11),0)):$P(^(0),U,1),1:"UNKNOWN INSTITUTION") G MAIL
  I $P(IB(0),U,11)="i" I $D(IBDD)>1,$D(^DGCR(399,IBIFN,"AIC")) G SHW
  D UP G LST:$D(IBDD)>1 W !?4,"Insurance : NO REIMBURSABLE INSURANCE INFORMATION ON FILE",!?17,"[Add Insurance Information by entering '1' at the prompt below]" G MAIL
- ;
+ ;W !?4,"Insurance Carrier",?40,"Whose",?66,"Relationship" S X="",$P(X,"=",81)="" W !,X
 LST N IBDTIN,IBICT
  S IBDTIN=+$G(IB("U")),IBICT=0
  W ! D HDR^IBCNS
@@ -43,24 +44,10 @@ LST1 W !?4,$S($D(^DIC(36,+IBDD(IBX,0),0)):$E($P(^(0),"^",1),1,20),1:"UNKNOWN") S
  Q
 SHW I $D(IBDD) S I="" F  S I=$O(IBDD(I)) Q:'I  D SHW1
 MAIL I $$BUFFER^IBCNBU1(DFN) W !!,?17,"***  Patient has Insurance Buffer entries  ***"
- ;
  S IB("M")=$S($D(^DGCR(399,IBIFN,"M")):^("M"),1:""),IB("M1")=$S($D(^DGCR(399,IBIFN,"M1")):^("M1"),1:""),IB(0)=^DGCR(399,IBIFN,0)
  S Z=2,IBW=1 W ! X IBWW
- N IBRAMS S IBRAMS=4.06
- I $$FT^IBCEF(IBIFN)=3 S IBRAMS=4.08
- S IB("RAFLAG",1)=$S($P(IB("M"),U,1)="":0,1:$$GET1^DIQ(36,$P(IB("M"),U,1),IBRAMS,"I"))
- S IB("RAFLAG",2)=$S($P(IB("M"),U,2)="":0,1:$$GET1^DIQ(36,$P(IB("M"),U,2),IBRAMS,"I"))
- S IB("RAFLAG",3)=$S($P(IB("M"),U,3)="":0,1:$$GET1^DIQ(36,$P(IB("M"),U,3),IBRAMS,"I"))
- S X=0
- I $P(IB("M1"),U,2)="",'IB("RAFLAG",1),$P(IB("M1"),U,3)="",'IB("RAFLAG",2),$P(IB("M1"),U,4)="",'IB("RAFLAG",3) S X=1
- W " Billing Provider Secondary IDs: "
- I X W IBUN          ; no data found, unspecified not required
- I 'X D              ; data found, display below
- . W !?5,"Primary Payer: ",$S($P(IB("M1"),U,2)]"":$P(IB("M1"),U,2),IB("RAFLAG",1):"ATT/REND ID",1:"")
- . W !?5,"Secondary Payer: ",$S($P(IB("M1"),U,3)]"":$P(IB("M1"),U,3),IB("RAFLAG",2):"ATT/REND ID",1:"")
- . W ?46,"Tertiary Payer: ",$S($P(IB("M1"),U,4)]"":$P(IB("M1"),U,4),IB("RAFLAG",3):"ATT/REND ID",1:"")
- . Q
- ;
+ S X=0 I $P(IB("M1"),U,2)="",$P(IB("M1"),U,3)="",$P(IB("M1"),U,4)="" S X=1 W " Facility ID #s: ",IBUN
+ I 'X W " Primary  : ",$P(IB("M1"),U,2),!?4,"Secondary: ",$P(IB("M1"),U,3),?45,"Tertiary : ",$P(IB("M1"),U,4)
  S Z=3,IBW=1 W ! X IBWW
  W " Mailing Address : "
  S X=+$G(^DGCR(399,IBIFN,"MP"))

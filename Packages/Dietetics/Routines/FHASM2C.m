@@ -1,12 +1,12 @@
-FHASM2C ; HISC/REL - Target Weight - Pediatric ;6/2/89  15:15
- ;;5.5;DIETETICS;**8**;Jan 28, 2005;Build 28
+FHASM2C ; HISC/REL - Ideal Weight - Pediatric ;6/2/89  15:15
+ ;;5.5;DIETETICS;;Jan 28, 2005
  ;;Normalized NCHS/CDC Anthropometric Reference
  S X1=+$J(AGE*12,0,0) I X1'>0!(X1>119) S IBW="" Q
 P1 S X=$P($T(WT+X1),";;",2) S:SEX="F" X=$P(X," ",4,6) S X3=$P(X," ",1),A1=$P(X," ",2),A2=$P(X," ",3)
  S X1=+$J(-.524*A1+X3,0,1),X2=+$J(.524*A2+X3,0,1)
  S W1=+$J(X1*2.2,0,0),W2=+$J(X2*2.2,0,0),W3=+$J(X3*2.2,0,0)
  I FHU'="M" S X1=W1,X2=W2,X3=W3
-P3 W !!,"Select Target Weight (",X1,"-",X2,") ",X3,$S(FHU'="M":" lb",1:" kg"),"// " R X:DTIME I '$T!(X["^") S IBW="^" Q
+P3 W !!,"Select Ideal Weight (",X1,"-",X2,") ",X3,$S(FHU'="M":" lb",1:" kg")," // " R X:DTIME I '$T!(X["^") S IBW="^" Q
  I X="" S IBW=W3 Q
  D WGT^FHASM1 I Y<1 D WGP^FHASM1 G P3
  S IBW=+Y I IBW<W1!(IBW>W2) S METH="E"

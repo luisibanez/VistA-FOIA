@@ -1,5 +1,5 @@
 DGPMV10 ;ALB/MRL/MIR - PATIENT MOVEMENT, CONT.; 11 APR 89 ; 4/15/03 5:48pm
- ;;5.3;Registration;**84,498,509,683,719**;Aug 13, 1993
+ ;;5.3;Registration;**84,498,509,683**;Aug 13, 1993
 CS ;Current Status
  ;first print primary care team/practitioner/attending
  D PCMM^SCRPU4(DFN,DT)
@@ -16,7 +16,10 @@ CS1 I +DGPMVI(2)=3,$D(^DGPM(+DGPMVI(17),0)) W ?39,"Discharge Type : ",$S($D(^DG(
  W ! I +DGPMVI(19,1) W "Patient chose not to be included in the Facility Directory for this admission"
  W !,$S("^4^5^"'[("^"_+DGPMVI(2)_"^"):"Admitted    ",1:"Checked-in  "),": "_$P(DGPMVI(13,1),"^",2)
  W ?39,$S("^4^5^"[("^"_+DGPMVI(2)_"^"):"Checked-out",+DGPMVI(2)=3:"Discharged ",1:"Transferred"),"    : ",$S("^1^4^"'[("^"_+DGPMVI(2)_"^"):$P(DGPMVI(3),"^",2),$P(DGPMVI(3),"^",2)'=$P(DGPMVI(13,1),"^",2):$P(DGPMVI(3),"^",2),1:"")
- W !,"Ward        : ",$E($P(DGPMVI(5),"^",2),1,24),?39,"Room-Bed       : ",$E($P(DGPMVI(6),"^",2),1,21) I "^4^5^"'[("^"_+DGPMVI(2)_"^") W !,"Provider    : ",$E($P(DGPMVI(7),"^",2),1,26),?39,"Specialty      : ",$E($P(DGPMVI(8),"^",2),1,21)
+ W !,"Ward        : ",$E($P(DGPMVI(5),"^",2),1,24),?39,"Room-Bed       : ",$E($P(DGPMVI(6),"^",2),1,21) I "^4^5^"'[("^"_+DGPMVI(2)_"^") W !,"Provider    : ",$E($P(DGPMVI(7),"^",2),1,26),?39,"Specialty      : "
+ N DGTS
+ S DGTS=$G(^DIC(42.4,+$P($G(^DIC(45.7,+DGPMVI(8),0)),"^",2),0))
+ W $S($P((DGTS),"^",2)'="":$E($P((DGTS),"^",2),1,21),1:$E($P((DGTS),"^"),1,21))
  W !,"Attending   : ",$E($P(DGPMVI(18),"^",2),1,26)
  D CS2
  S DGPMIFN=DGPMVI(13) I +DGPMVI(2)'=4&(+DGPMVI(2)'=5) D ^DGPMLOS W !!,"Admission LOS: ",+$P(X,"^",5),"  Absence days: ",+$P(X,"^",2),"  Pass Days: ",+$P(X,"^",3),"  ASIH days: ",+$P(X,"^",4)

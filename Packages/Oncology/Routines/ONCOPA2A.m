@@ -1,5 +1,5 @@
-ONCOPA2A ;Hines OIFO/RTK [PA Print Complete Abstract (132c)]; 09/05/97
- ;;2.11;ONCOLOGY;**15,16,22,25,34,36,37,44,48**;Mar 07, 1995;Build 13
+ONCOPA2A ;Hines OIFO/RTK-PRINT COMPLETE ABSTRACT (132c) CONT  09/05/97
+ ;;2.11;ONCOLOGY;**15,16,22,25,34,36,37,44**;Mar 07, 1995
  ; ONCO PRINT ABSTRACT CONTINUED
  W !!,"   Text-Remarks:  " F TX=0:0 S TX=$O(^ONCO(165.5,IEN,19,TX)) Q:TX'>0  W !?6,^ONCO(165.5,IEN,19,TX,0) D P Q:EX=U
  W !,"   Text Dx Proc-Phys.Exam:  " F TX=0:0 S TX=$O(^ONCO(165.5,IEN,10,TX)) Q:TX'>0  W !?6,^ONCO(165.5,IEN,10,TX,0) D P Q:EX=U
@@ -51,15 +51,19 @@ ONCOPA2A ;Hines OIFO/RTK [PA Print Complete Abstract (132c)]; 09/05/97
  .W "   ",ONCAB(165.51,SCT,.09) D P Q:EX=U
  .W !,"   Place:  ",ONCAB(165.51,SCT,2) D P Q:EX=U
  .W !,"   Comment(s):  " F TX=0:0 S TX=$O(^ONCO(165.5,IEN,4,SCT,1,TX)) Q:TX'>0  W !?6,^ONCO(165.5,IEN,4,SCT,1,TX,0) D P Q:EX=U
+ .Q
  S NAME="OTHER PRIMARY SITES" D FORMAT^ONCOPA1
  W !!,TITLE,!
+ S XDX=$O(^ONCO(165.5,"C",PTIEN,"")) I $O(^ONCO(165.5,"C",PTIEN,XDX)) W !?1,"Acc/Seq#",?15,"Primary Site",?37,"Last Tumor Status",?56,"Date DX",?68,"Abst Status",!
  S (FLG,J)=0 F XD1=0:0 S XD1=$O(^ONCO(165.5,"C",PTIEN,XD1)) Q:XD1'>""!(FLG=1)  I $$DIV^ONCFUNC(XD1)=DUZ(2) D
  .I $D(^ONCO(165.5,XD1,0)),XD1'=IEN S J=J+1 D ^ONCOCOML D P I EX=U S FLG=1
+ .Q
  I J=0 W !?24,"No Other Primary Sites"
  ;
  I IOST?1"C".E W ! K DIR S DIR(0)="E",DIR("A")="Enter RETURN to continue with this abstract" D ^DIR Q:'Y  D HDR G PA3
  D P Q:EX=U
 PA3 D ^ONCOPA3
+ ; WILL CALL ONCOPA3 ROUTINE FROM HERE TO CONTINUE...
  Q
 P ;
  I ($Y'<(LINE-1)) D  Q:EX=U  W !

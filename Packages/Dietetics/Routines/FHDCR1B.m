@@ -1,6 +1,5 @@
 FHDCR1B ; HISC/NCA - Diet Card Utilities ;2/23/00  09:51
- ;;5.5;DIETETICS;**5**;Jan 28, 2005;Build 53
- ;patch#5 - added outpatient SO.
+ ;;5.5;DIETETICS;;Jan 28, 2005
 Q1 ; Store Bread/Beverage default, Food Preference, and Recipes of meal
  S LN=$S(IOST?1"C".E:IOSL-2,1:IOSL-6),FHX4=FHX1 F SP=0:0 S SP=$O(^FH(119.72,SP)) Q:SP<1  S Z=$G(^(SP,0)),^TMP($J,"SRP",SP)=$P(Z,"^",1,4)
  I MEAL'="A" S M1=MEAL D GET Q
@@ -66,15 +65,6 @@ SO ; Store Standing Orders
  .S X=$G(^FHPT(FHDFN,"A",ADM,"SP",K,0)),Z=$P(X,"^",2),M=$P(X,"^",3) Q:'Z
  .I M[MEAL S TT(MEAL)=TT(MEAL)+1,SRT(TT(MEAL),MEAL)=$S($P(X,"^",8):$P(X,"^",8),1:1)_"   "_$E($P($G(^FH(118.3,+Z,0)),"^",1),1,15) Q
  Q
- ;
-SOUT ; Store Outpatient Standing Orders.
- Q:'$G(FHKD)
- S FHOPDAT0=$G(^FHPT(FHDFN,"OP",FHKD,0)) Q:$P(FHOPDAT0,U,15)="C"
- F K=0:0 S K=$O(^FHPT("ASPO",FHDFN,FHKD,K)) Q:K<1  D
- .S X=$G(^FHPT(FHDFN,"OP",FHKD,"SP",K,0)),Z=$P(X,"^",2),M=$P(X,"^",3) Q:'Z
- .I M[MEAL S TT(MEAL)=TT(MEAL)+1,SRT(TT(MEAL),MEAL)=$S($P(X,"^",8):$P(X,"^",8),1:1)_"   "_$E($P($G(^FH(118.3,+Z,0)),"^",1),1,15) Q
- Q
- ;
 SRP ; Store service point for each Production Diet of recipe
  I Z1 S:'$F(P4,"~"_SP_"~") P4=P4_SP_"~"
  S FHX3=$P(FHX2,";",2),SC=$S(FHX3'="":$E(FHX3,1),1:""),NUM=$S(SC'="":$P(FHX3,SC,2),1:"")

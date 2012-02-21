@@ -1,5 +1,5 @@
-MAGDFCNV ;WOIFO/PMK - Read HL7 and generate DICOM ; 06/06/2005  09:14
- ;;3.0;IMAGING;**11,51**;26-August-2005
+MAGDFCNV ;WOIFO/PMK - Read HL7 and generate DICOM ; 11/03/2003  15:30
+ ;;3.0;IMAGING;**11**;14-April-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -20,8 +20,9 @@ MAGDFCNV ;WOIFO/PMK - Read HL7 and generate DICOM ; 06/06/2005  09:14
  ;
  ; The M-to-M Broker Gateway can't use $$CONSOLID^MAGBAPI since is
  ; doesn't have DDP.
+ ; 
+ ; Note: The ^MAGOSFIL routine can never be on the VistA HIS. 
  ;
- ; Note: The ^MAGOSFIL routine can never be on the VistA HIS.
  ;
 CONSOLID() ; check if this is a consolidated site or not
  ; return 0 = non-consolidated (normal) site
@@ -46,14 +47,6 @@ ACQDEV(MFGR,MODEL,SITE) ; get pointer to the Acquisition Device file
  . S $P(^MAG(2006.04,0),"^",4)=ACQDEVP
  . L -^MAG(2006.04,0) ; clear the serial name generation code
  Q ACQDEVP
- ;
-EQUIVGRP(P1,P2) ; see if two SOP Class pointers are in equivalent groups
- N G1,G2
- Q:'$G(P1) 0
- Q:'$G(P2) 0
- S G1=$P($G(^MAG(2006.532,P1,0)),"^",3) S:G1="" G1=P1
- S G2=$P($G(^MAG(2006.532,P2,0)),"^",3) S:G2="" G2=P2
- Q G1=G2
  ;
 UP(X) ; special UPPER CASE function -- removes redundant blanks as well
  F  Q:X'["  "  S $E(X,$F(X,"  ")-1)=""  ; remove redundant blank

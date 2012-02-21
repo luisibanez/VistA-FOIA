@@ -1,5 +1,5 @@
 MDHL7X ; HOIFO/WAA -Generate HL7 Error Message ; 06/08/00
- ;;1.0;CLINICAL PROCEDURES;**6**;Apr 01, 2004;Build 102
+ ;;1.0;CLINICAL PROCEDURES;;Apr 01, 2004
  ; Reference IA #1131 for ^XMB("NETNAME") access.
  ; Reference IA #2165 for HLMA1 calls.
  ; Reference IA #2729 for XMXAPI calls.
@@ -11,10 +11,10 @@ GENERR ; Generate error message
  I 'MG!('$$MG^MDHL7U2(MG)) S MG=$$FIND1^DIC(3.8,"","BX","MD DEVICE ERRORS") Q:'MG
  S MG=$$GET1^DIQ(3.8,+MG_",",.01)
  S XMTO="G."_MG_"@"_^XMB("NETNAME"),XMINSTR("FROM")=.5
- I '$D(X) S X=$G(ECODE(0))
+ I '$D(X) S X=ECODE(0)
  S TXT(1)=ERRTX,TXT(2)=X,TXT(3)=" "
  S N=3
- I '$G(ECODE,1) D  ; This is to process Device errors
+ I 'ECODE D  ; This is to process Device errors
  . N X
  . S X=0
  . F  S X=$O(ECODE(X)) Q:X<1  S N=N+1,TXT(N)=ECODE(X)

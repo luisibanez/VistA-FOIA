@@ -1,6 +1,5 @@
 MAGGTU1 ;WOIFO/GEK - Silent Utilities ; [ 06/20/2001 08:57 ]
- ;;3.0;IMAGING;**3,8,85,59**;Nov 27, 2007;Build 20
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.0;IMAGING;**3,8**;Sep 15, 2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -17,17 +16,11 @@ MAGGTU1 ;WOIFO/GEK - Silent Utilities ; [ 06/20/2001 08:57 ]
  ;; +---------------------------------------------------------------+
  ;;
  Q
-DRIVE(X,SITE) ; Get the current drive for writing an image
+DRIVE(X) ; Get the current drive for writing an image
  ; Copied from MAGFILE and edited for silent running, made extrinsic.
- ; X : The Network Location to Write to.  Dicom Gateway sends this.
- ; IF 'X then use DUZ(2) to find IMAGE NETWORK WRITE LOCATION.
- ; P 85, Enable writing to any valid site. Not Just Duz(2)
- ; SITE : The Site to Write to.  Import API now sends this.
- ; 
  ;
- N Z,MAGREF,MAGREFNM,MAGDRIVE,MAGPLC
- S SITE=$S($G(SITE):SITE,1:$G(DUZ(2)))
- S MAGPLC=$$PLACE^MAGBAPI(SITE) ;pre-patch 85 was DUZ(2)
+ N Z,MAGREF,MAGREFNM,MAGDRIVE,MAGPLC ; DBI 9/20/02 - SEB
+ S MAGPLC=$$PLACE^MAGBAPI(DUZ(2))
  S MAGREF=$G(X)
  I $G(MAGWRITE)="PACS" S MAGREF=$$GET1^DIQ(2006.1,MAGPLC,1.03,"I") ; DBI 9/20/02 - SEB
  I 'MAGREF S MAGREF=$$GET1^DIQ(2006.1,MAGPLC,.03,"I") ; DBI 9/20/02 - SEB

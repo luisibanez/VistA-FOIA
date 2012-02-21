@@ -1,6 +1,6 @@
-PRCHLO2 ;WOIFO/RLL/DAP-EXTRACT ROUTINE (cont.)CLO REPORT SERVER ; 10/16/06 2:09pm
-V ;;5.1;IFCAP;**83,98**; Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCHLO2 ;WOIFO/RLL/DAP-EXTRACT ROUTINE (cont.)CLO REPORT SERVER ; 12/19/05 11:19am
+V ;;5.1;IFCAP;**83**;; Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ; Continuation of PRCHLO1. This program includes the extract
  ; logic for each of the 19 identified tables.
  ;
@@ -126,19 +126,9 @@ LPPOITM ; Loop on PO Item
  I POIA="" S POIA2="",IMID=""
  ;
  S $P(^TMP($J,"POITEM",POID,ITMID,0),U,8)=IMID  ; ItemMast.ID#
- S $P(^TMP($J,"POITEM",POID,ITMID,0),U,9)=POIA2  ; ItemMast.Description
- ;
- ; Patch 98 CR1 fix . ITEM Master entry may have been deleted if
- ; POIA2'="", but value for lookup is missing (POIA2A="")
- ; If this is the case, S POIAF="ITEM MASTER FILE ERROR "_POIA
- ;
+ S $P(^TMP($J,"POITEM",POID,ITMID,0),U,9)=POIA2  ; ItemMast.Decription
  I POIA2="" S POIAF=""
- I POIA2'=""  D  ; new logic RLL 8/9/06
- . I POIA2A="" S POIAF="ITEM MASTER FILE ERROR "_ITMID
- . I POIA2A'="" S POIAF=$P($G(^PRC(441,POIA2A,0)),U,15)
- . Q
- ; I POIA2'="" S POIAF=$P(^PRC(441,POIA2A,0),U,15)  ;original logic
- ; End Changes Patch 98 RLL 8/9/06
+ I POIA2'="" S POIAF=$P(^PRC(441,POIA2A,0),U,15)
  S $P(^TMP($J,"POITEM",POID,ITMID,0),U,10)=POIAF  ; NIF #
  ;
  S $P(^TMP($J,"POITEM",POID,ITMID,0),U,11)=$P(N0,U,2)  ; Quantity

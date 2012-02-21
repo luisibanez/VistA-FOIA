@@ -1,5 +1,5 @@
 IBCEFG4 ;ALB/TMP - OUTPUT FORMATTER MAINTENANCE - FORM ACTION PROCESSING ;22-JAN-96
- ;;2.0;INTEGRATED BILLING;**52,51,320**;21-MAR-94
+ ;;2.0;INTEGRATED BILLING;**52,51**;21-MAR-94
  ;
 ADDL ; Add a new local form
  N IBCT,IBDA,IBNAME,IBTYPE,IBBASE,IBNEW6,IBNEW7,IBOLD,IBOLD6,IBOLD7,LAST6,LAST7,DIR,X,Y,DD,DO,DIE,DR,DA,Z,Z0,Z1
@@ -25,16 +25,6 @@ ADDL2 W !!,"WANT TO COPY ALL FIELDS FROM AN EXISTING FORM" S %=2 D YN^DICN G:'(%
  G:Y<0 ADDL2 S IBOLD=+Y
  W !,"ARE YOU SURE YOU WANT TO MAKE THIS COPY" S %=2 D YN^DICN G:'(%+1#3) ADDLQ
  W !!,"This may take a little while ... please be patient while I build your new form"
- ;
- ; IB*2*320
- ; Make sure files 364.6 and 364.7 are set-up to add new entries in the
- ; local number range (greater than 10000).  We cannot allow these local
- ; entries to get added into the national number range.
- F Z=364.6,364.7 I $P($G(^IBA(Z,0)),U,3)<10000 D
- . N IBLAST S IBLAST=$O(^IBA(Z," "),-1)
- . I IBLAST<10000 S IBLAST=10000
- . S $P(^IBA(Z,0),U,3)=IBLAST
- . Q
  ;
  K ^TMP("IBX",$J)
  S Z=0 F  S Z=$O(^IBA(364.6,"APAR",IBOLD,Z)) Q:'Z  S Z0=0 F  S Z0=$O(^IBA(364.6,"APAR",IBOLD,Z,Z0)) Q:'Z0  S ^TMP("IBX",$J,1,Z0)=Z,^TMP("IBX",$J,2,Z)=Z0 ;Save off overrides
@@ -68,6 +58,7 @@ NEW(FILE,KEY) ; Add a new local entry to file 364.FILE whose .01 field is KEY
  S DLAYGO=364_"."_FILE,DIC="^IBA(364."_FILE_",",DIC("DR")=".02////L",X=KEY,DIC(0)="L"
  D FILE^DICN K DIC,DD,DO,DLAYGO
  W "."
+ I Y>9999 S $P(^IBA("364."_FILE,0),U,3)=$O(^IBA("364."_FILE,10000),-1)
  Q $S(Y>0:+Y,1:0)
  ;
 EDIT ; Edit a local form

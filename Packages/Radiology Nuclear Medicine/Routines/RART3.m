@@ -1,10 +1,7 @@
-RART3 ;HISC/GJC,SWM-Reporting Menu (Part 2) ;05/22/09  09:20
- ;;5.0;Radiology/Nuclear Medicine;**8,10,18,27,35,45,75,99**;Mar 16, 1998;Build 5
+RART3 ;HISC/GJC,SWM-Reporting Menu (Part 2) ;8/31/99  13:57
+ ;;5.0;Radiology/Nuclear Medicine;**8,10,18,27,35,45**;Mar 16, 1998
  ; continue from RART1
  ; last modif by SS for P18
- ; p99 changed the Staff Phys title to Staff Imaging Phys
- ;Supported IA #10103 reference to ^XLFDT
- ;
 QRPT ; Queue the report to run
  N X K IOP,%ZIS S %ZIS="Q",%ZIS("B")=""
  S %ZIS("S")="I $E($P($G(^%ZIS(2,+$P($G(^(""SUBTYPE"")),""^""),0)),""^""),1,2)=""P-"""
@@ -28,7 +25,7 @@ PHYS N RA2ND,R1,R2,RASTR
  S (R1,R2)=0 F  S R2=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"SRR",R2)) Q:'R2  S:+$G(^(R2,0)) R1=R1+1,RA2ND("SRR",R1)=+^(0),RA2ND("SRR",R1)=$E($P($G(^VA(200,RA2ND("SRR",R1),0)),"^"),1,20)
  S (R1,R2)=0 F  S R2=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"SSR",R2)) Q:'R2  S:+$G(^(R2,0)) R1=R1+1,RA2ND("SSR",R1)=+^(0),RA2ND("SSR",R1)=$E($P($G(^VA(200,RA2ND("SSR",R1),0)),"^"),1,20)
  S R1=$E($P($G(^VA(200,+$P(R3,"^",15),0)),"^"),1,15)
- S RASTR="Staff Imaging Phys: "_R1 S:R1]"" RASTR=RASTR_" (P)"
+ S RASTR="Staff Phys: "_R1 S:R1]"" RASTR=RASTR_" (P)"
 PHYS1 I '$O(RA2ND("SSR",0)) W !,RASTR G PHYS2
  S R1=0
 PHYS11 S R1=$O(RA2ND("SSR",R1)) G:R1="" PHYS19
@@ -48,22 +45,19 @@ MODSET ; print modifiers of all cases of print set
  N RACDIS,RALDIS,RACNISAV,RAMEMARR,R1
  D EN2^RAUTL20(.RAMEMARR) Q:'$O(RAMEMARR(0))
  S RACNISAV=RACNI,RACNI=0
- D CDIS^RAPROD S (RAREZON,RACNI)=0
- ;for printsets print the REASON FOR STUDY along with the lead procedure
- ;(avoid duplicate printing of the same data)
+ D CDIS^RAPROD S RACNI=0
  F  S RACNI=$O(RAMEMARR(RACNI)) Q:'RACNI  D  Q:$L($G(X))  I $G(RAXIT) S X="^" Q
  . S R1=$G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0))
  . D MODS^RAUTL2
  . ; If printing page at a time we need to check the length - RA*5*8
  . I $Y>(IOSL-6),'$D(RARTVERF) S RAP="" D WAIT^RART1 I X="^"!(X="P")!(X="T") Q
  . K X
- . D OUT1 S RAREZON=1
+ . D OUT1
  . S:+$P(R1,"^",28) X=$$RDIO1^RARTUTL1(+$P(R1,"^",28))  Q:$L($G(X))
  . S:+$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"RX",0)) X=$$PHARM1^RARTUTL(RACNI_","_RADTI_","_RADFN_",")
- . W:$O(RAMEMARR(RACNI)) !
  . Q
  S RACNI=RACNISAV
- W ! K RAREZON
+ W !
  Q
 OUT1 ; print Procedure name, CPT code, Procedure modifier, and CPT Modifiers
  ; $O(RAMEMARR(0)) may be defined, if previously called MODSET^RART3
@@ -72,10 +66,9 @@ OUT1 ; print Procedure name, CPT code, Procedure modifier, and CPT Modifiers
  ; RACDIS(n) not set for dupl proc+pmod+cptmod so don't display
  ; If printset, skip if not long format or case not marked for cond.displ
  I $O(RAMEMARR(0)),'$G(RALDIS),'$D(RACDIS(RACNI)) Q
- N I,J,RACRF S RACRF=1
+ N I,J
  N RA18RET S RA18RET=0 ;P18
  S R1=$G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0))
- S RASTUDY=$P($G(^RAO(75.1,+$P(R1,U,11),.1)),U) ;Convey 'Reason for Study' P75
  ; Check if cancelled and not part of this report
  I $P(^RA(72,+$P(R1,"^",3),0),"^",3)=0,($P(R1,"^",17)="") Q
  I $P(^RA(72,+$P(R1,"^",3),0),"^",3)=0 D
@@ -95,11 +88,8 @@ OUT1 ; print Procedure name, CPT code, Procedure modifier, and CPT Modifiers
  K RACMDATA Q:RA18RET=-1  ;P18
  W:Y'="None" !?5,"Proc Modifiers : ",Y
  W:Y(1)'="None" !?5,"CPT Modifiers  :"
- I Y(1)'="None" S RACRF=0 D
- .F I=1:1 Q:$P(Y(2),", ",I)']""  S J=$P(Y(2),", ",I),J=$$BASICMOD^RACPTMSC(J,DT) W ?22,$P(J,"^",2)," ",$P(J,"^",3) W:$P(Y(2),", ",I+1)]"" ! I '$D(RARTVERF),$Y>(IOSL-5) S RAXIT=$$EOS^RAUTL5() S:RAXIT RA18RET=-1 Q:RAXIT  W @IOF W !
+ I Y(1)'="None" F I=1:1 Q:$P(Y(2),", ",I)']""  S J=$P(Y(2),", ",I),J=$$BASICMOD^RACPTMSC(J,DT) W ?22,$P(J,"^",2)," ",$P(J,"^",3) W:$P(Y(2),", ",I+1)]"" ! I '$D(RARTVERF),$Y>(IOSL-5) S RAXIT=$$EOS^RAUTL5() S:RAXIT RA18RET=-1 Q:RAXIT  W @IOF W !
  Q:RA18RET=-1
- I $L(RASTUDY),$G(RAREZON,0)=0 W:RACRF ! S RACRF=0 D DIWP^RAUTL5(5,68,"Reason for Study: "_RASTUDY) ;P75
- K RASTUDY
  ;RATECHCO is defined in OPTION FILE's  ENTRY/EXIT ACTION
- I $D(RATECHCO) W:RACRF ! S RA18RET=$$PUTTCOM^RAUTL11(RADFN,RADTI,RACNI,"     Tech.Comment   : ",22,70,7,0,0,2,0) S:RA18RET=-1 RAXIT=1 Q:RA18RET=-1  ;P18
+ I $D(RATECHCO) W:$G(Y(1))="None" ! S RA18RET=$$PUTTCOM^RAUTL11(RADFN,RADTI,RACNI,"     Tech.Comment   : ",22,70,7,0,0,2,0) S:RA18RET=-1 RAXIT=1 Q:RA18RET=-1  ;P18
  Q

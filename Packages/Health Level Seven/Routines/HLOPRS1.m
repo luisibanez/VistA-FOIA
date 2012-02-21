@@ -1,6 +1,5 @@
-HLOPRS1 ;IRMFO-ALB/CJM -RTNs for parsing messages (continued);03/24/2004  14:43 ;01/19/2007
- ;;1.6;HEALTH LEVEL SEVEN;**118,131,133,134**;Oct 13, 1995;Build 30
- ;Per VHA Directive 2004-038, this routine should not be modified.
+HLOPRS1 ;IRMFO-ALB/CJM -RTNs for parsing messages (continued);03/24/2004  14:43
+ ;;1.6;HEALTH LEVEL SEVEN;**118,131**;Oct 13, 1995;Build 10
  ;
 PARSE(FIELD,REP,COMP,SUBCOMP,ESCAPE,SEG,TO) ;
  ;Parses the segment stored in SEG(1),SEG(2),... into TO()
@@ -21,9 +20,9 @@ PARSE(FIELD,REP,COMP,SUBCOMP,ESCAPE,SEG,TO) ;
  Q:$L($G(FIELD))'=1 0
  Q:$L($G(REP))'=1 0
  Q:$L($G(COMP))'=1 0
- Q:'$D(SUBCOMP) 0
+ Q:$L($G(SUBCOMP))'=1 0
  Q:'$D(SEG) 0
- S COUNTS("FIELD")=0
+ S COUNTS("FIELD")=1
  S COUNTS("REP")=1
  S COUNTS("COMP")=1
  S COUNTS("SUBCOMP")=1
@@ -45,7 +44,7 @@ PARSE(FIELD,REP,COMP,SUBCOMP,ESCAPE,SEG,TO) ;
  ..I $L(VALUE) S TO(COUNTS("FIELD"),COUNTS("REP"),COUNTS("COMP"),COUNTS("SUBCOMP"))=$$DESCAPE(VALUE,.FIELD,.COMP,.SUBCOMP,.REP,.ESCAPE),VALUE=""
  ..S COUNTS("SUBCOMP")=COUNTS("SUBCOMP")+1
  .E  S VALUE=VALUE_CHAR
- S TO("SEGMENT TYPE")=$G(TO(0,1,1,1)),TO(0)=TO("SEGMENT TYPE")
+ S TO("SEGMENT TYPE")=$G(TO(1,1,1,1))
  I (TO("SEGMENT TYPE")="BHS")!(TO("SEGMENT TYPE")="MSH") S TO("FIELD SEPARATOR")=FIELD
  Q 1
  ;
@@ -64,7 +63,6 @@ NEXTCHAR(SEG) ;
 DESCAPE(VALUE,FIELD,COMP,SUBCOMP,REP,ESCAPE) ;
  ;Replaces the escape sequences with the corresponding encoding character and returns the result as the function value
  ;
- Q:ESCAPE="" VALUE
  N NEWSTRNG,SUBSTRNG,SET,LEN,I,SUBLEN,CHAR
  S (NEWSTRNG,SUBSTRNG,SUBLEN)=""
  S SET="FSTRE"

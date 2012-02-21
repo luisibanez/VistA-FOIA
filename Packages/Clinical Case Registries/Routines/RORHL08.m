@@ -1,10 +1,10 @@
-RORHL08 ;HOIFO/BH - HL7 INPATIENT DATA: PV1,OBR ; 3/13/06 9:24am
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORHL08 ;HOIFO/BH - HL7 INPATIENT DATA: PV1,OBR ; 10/27/05 8:57am
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
  ; #92           Read access to the PTF file (controlled)
- ; #994          Read access to the PTF CLOSE OUT file (controlled)
+ ; #???          Read access to the PTF CLOSE OUT file (???)
  ;
  Q
  ;

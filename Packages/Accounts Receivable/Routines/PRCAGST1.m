@@ -1,5 +1,5 @@
 PRCAGST1 ;WASH-ISC@ALTOONA,PA/CMS-Print Patient Statement Bottom ;10/16/96  11:13 AM
-V ;;4.5;Accounts Receivable;**2,48,104,176,249**;Mar 20, 1995;Build 2
+V ;;4.5;Accounts Receivable;**2,48,104,176**;Mar 20, 1995
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;ENTRY FROM PRCAGST PAGE 1
  NEW AMT,BN,DAT,DESC,I,REF,THNK,TN,TTY,X,Y,RCTOTAL
@@ -58,7 +58,7 @@ HDR ;statement transaction header
  NEW I,Y
  S PAGE=$G(PAGE)+1
  I PAGE>1 W @IOF I $G(^RC(342,1,5))]"" F I=1:1:18 W !
- W !,"Department of Veterans Affairs",?50,"Acct No.:",$P($$SITE^VASITE(),U,3)_"/"_$E(SSN,6,9)
+ W !,"Department of Veterans Affairs",?50,"Acct No.: ",SSN
  W !,NAM,?50,"Page ",PAGE
  S Y="",$P(Y,"_",80)="" W !,Y
  W !,"|Date Posted|",?13,"     Description",?58,"| Amount ",?67,"| Reference |"

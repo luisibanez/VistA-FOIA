@@ -1,30 +1,15 @@
-RORXU006 ;HCIOFO/SG - REPORT PARAMETERS ;6/21/06 1:41pm
- ;;1.5;CLINICAL CASE REGISTRIES;**1,13**;Feb 17, 2006;Build 27
+RORXU006 ;HCIOFO/SG - REPORT PARAMETERS ; 2/8/06 8:04am
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
  ; #91           Read access to the file #60 (controlled)
- ; #417          The .01 field of file #40.8 (controlled)
  ; #2947         ATESTS^ORWLRR (controlled)
  ; #10035        Direct read of DOD field of file #2 (supported)
- ; #10040        Read access to HOSPITAL LOCATION file (supported)
+ ; #10040        Read access to HOSPITAL LOCATION file (suppotted)
+ ; #10082        Read access to the file #80 (supported)
+ ; #???          The .01 field of file #40.8
  ;
- ;******************************************************************************
- ;******************************************************************************
- ;                 --- ROUTINE MODIFICATION LOG ---
- ;        
- ;PKG/PATCH    DATE        DEVELOPER    MODIFICATION
- ;-----------  ----------  -----------  ----------------------------------------
- ;ROR*1.5*13   DEC  2010   A SAUNDERS   Moved code in tags CLINLST and DIVLST to
- ;                                      PARMS^RORXU002 so the clinic or
- ;                                      division XML will be returned for all
- ;                                      reports. 
- ;                                      NOTE: Patch 11 became patch 13.
- ;                                      Any references to patch 11 in the code
- ;                                      below is referring to path 13.
- ;
- ;******************************************************************************
- ;******************************************************************************
  Q
  ;
  ;***** PROCESSES THE LIST OF CLINICS
@@ -38,7 +23,6 @@ RORXU006 ;HCIOFO/SG - REPORT PARAMETERS ;6/21/06 1:41pm
  ;       >0  IEN of the CLINICS element
  ;
 CLINLST(RORTSK,PARTAG) ;
- Q 0  ;code removed for patch 11
  N IEN,LTAG,RORMSG,TMP
  I $D(RORTSK("PARAMS","CLINICS","C"))>1  D
  . S LTAG=$$ADDVAL^RORTSK11(RORTSK,"CLINICS",,PARTAG)  Q:LTAG'>0
@@ -85,7 +69,6 @@ CPTLST(RORTSK,PARTAG) ;
  ;       >0  IEN of the DIVISIONS element
  ;
 DIVLST(RORTSK,PARTAG) ;
- Q 0  ;code removed for patch 11
  N IEN,LTAG,RORMSG,TMP
  I $D(RORTSK("PARAMS","DIVISIONS","C"))>1  D
  . S LTAG=$$ADDVAL^RORTSK11(RORTSK,"DIVISIONS",,PARTAG)  Q:LTAG'>0
@@ -97,6 +80,28 @@ DIVLST(RORTSK,PARTAG) ;
  . . D ADDVAL^RORTSK11(RORTSK,"DIVISION",TMP,LTAG,,IEN)
  E  D:$$PARAM^RORTSK01("DIVISIONS","ALL")
  . S LTAG=$$ADDVAL^RORTSK11(RORTSK,"DIVISIONS","ALL",PARTAG)
+ Q +$G(LTAG)
+ ;
+ ;***** PROCESSES THE LIST OF ICD-9 CODES
+ ;
+ ; .RORTSK       Task number and task parameters
+ ;
+ ; PARTAG        Reference (IEN) to the parent tag
+ ;
+ ; Return Values:
+ ;       <0  Error code
+ ;       >0  IEN of the ICD9LST element
+ ;
+ICD9LST(RORTSK,PARTAG) ;
+ N ICD9,IEN,LTAG,TMP
+ I $D(RORTSK("PARAMS","ICD9LST","C"))>1  D
+ . S LTAG=$$ADDVAL^RORTSK11(RORTSK,"ICD9LST",,PARTAG)  Q:LTAG'>0
+ . S IEN=0
+ . F  S IEN=$O(RORTSK("PARAMS","ICD9LST","C",IEN))  Q:IEN'>0  D
+ . . S ICD9=$P(RORTSK("PARAMS","ICD9LST","C",IEN),U)  Q:ICD9=""
+ . . D ADDVAL^RORTSK11(RORTSK,"ICD9",ICD9,LTAG,,IEN)
+ E  D:$$PARAM^RORTSK01("ICD9LST","ALL")
+ . S LTAG=$$ADDVAL^RORTSK11(RORTSK,"ICD9LST","ALL",PARTAG)
  Q +$G(LTAG)
  ;
  ;***** PROCESSES THE LIST OF LAB TESTS

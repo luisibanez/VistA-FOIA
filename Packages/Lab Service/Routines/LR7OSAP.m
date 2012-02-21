@@ -1,5 +1,5 @@
 LR7OSAP ;slc/dcm/wty - Silent AP rpt (compare to LRAPCUM) ;3/27/2002
- ;;5.2;LAB SERVICE;**121,187,230,256,259,317**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**121,187,230,256,259**;Sep 27, 1994
  ;
 GET I '$D(^LR(LRDFN,LRSS)) Q
  N FST,X,LRPTR
@@ -18,7 +18,6 @@ F(PIECE) ;
  F  S C=$O(^LR(LRDFN,LRSS,LRI,LRV,C)) Q:'C  S X=$P(^(C,0),"^") D LN S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,X)
  Q
 W ;
- N LRTEXT
  I 'FST D
  . D LINE^LR7OSUM4,LN
  . S X=GIOM/2-($L(LRAA(1))/2+5),^TMP("LRH",$J,LRAA(1))=GCNT,^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(X,CCNT,"---- "_LRAA(1)_" ----")
@@ -46,14 +45,6 @@ W ;
  D LN S $P(LR("%"),"-",GIOM)="",^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,"Submitted by: "_$P(B,"^",5)),^(0)=^TMP("LRC",$J,GCNT,0)_$$S^LR7OS(38,CCNT,"Practitioner:"_LRW(7)) D LN S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,LR("%"))
  I LRW(11)="" D A,LN S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,"Report not verified") Q  ;don't show anymore data if not verified.
  I $D(^LR(LRDFN,LRSS,LRI,.1)) D LN S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,"Specimen: ") S LRV=.1 D F(1)
- I $P($G(^LR(LRDFN,LRSS,LRI,1.2,0)),"^",4) D
- .D LN
- .S LRTEXT="SUPPLEMENTARY REPORT HAS BEEN ADDED"
- .S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(14,CCNT,"*+* "_LRTEXT_" *+*")
- .D LN
- .S LRTEXT="REFER TO BOTTOM OF REPORT"
- .S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(19,CCNT,"*+* "_LRTEXT_" *+*")
- .D LN
  I $D(^LR(LRDFN,LRSS,LRI,.2)) D LN S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,"Brief Clinical History:") S LRV=.2 D F()
  I $D(^LR(LRDFN,LRSS,LRI,.3)) D LN S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,"Preoperative Diagnosis:") S LRV=.3 D F()
  I $D(^LR(LRDFN,LRSS,LRI,.4)) D LN S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,"Operative Findings:") S LRV=.4 D F()
@@ -76,8 +67,6 @@ W ;
  . S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,"Supplementary Report:")
  . S C=0 F  S C=$O(^LR(LRDFN,LRSS,LRI,1.2,C)) Q:'C  D
  .. S X=^LR(LRDFN,LRSS,LRI,1.2,C,0),Y=+X,X=$P(X,U,2)
- .. ;Don't even print supp date if supp is not released
- .. Q:'X
  .. D D^LRU,LN
  .. S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(3,CCNT,"Date: "_Y)
  .. I 'X S ^(0)=^TMP("LRC",$J,GCNT,0)_$$S^LR7OS(1,CCNT," not verified")

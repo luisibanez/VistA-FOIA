@@ -1,5 +1,5 @@
-QANCDNT ;HISC/GJC-Initial sighting of an incident ; 10/29/03 10:39am
- ;;2.0;Incident Reporting;**1,9,14,27,26,28,29,30,32**;08/07/1992;Build 3
+QANCDNT ;HISC/GJC-Initial sighting of an incident ; 8/28/03 12:46pm
+ ;;2.0;Incident Reporting;**1,9,14,27,26,28,29,30**;08/07/1992
  ;
  ;
  N QANQFLG
@@ -8,7 +8,7 @@ QANCDNT ;HISC/GJC-Initial sighting of an incident ; 10/29/03 10:39am
  I $G(QANQFLG)=1 D DEL Q
  D DIE
  Q
-NEWREC ;create new record number
+NEWREC  ;create new record number
  ;record number will be in the format XXX.YYnnnn where XXX is the
  ;three digit station number, YY is the 2 digit year and nnnn is
  ;the sequence number (and is also the IEN of file 742.4)
@@ -67,6 +67,9 @@ LIST . S QANCNT=0 X QANLIST
  Q
 DIE S DIE="^QA(742.4,",DA=QANIEN,DR="[QAN ENTER TIME]"
  D ^DIE K DIE,DR I $D(Y) D DEL Q:QANXIT
+ ;
+ ;S ^VMPTEST($H,$P(^QA(742.4,QANIEN,0),"^"))=XQUSER_U_$P(XQY0,U,2)  ;VMPTEST
+ ;
  S QANST=$P(^QA(742.4,QANIEN,0),U,2) I "12"[$P(^QA(742.1,QANST,0),U,2) S $P(^QA(742.4,QANIEN,0),U,9)=DT,QAQADICT=742.4,QAQAFLD=".1",X=DT D ENSET^QAQAXREF
  K ^UTILITY($J,"QAN PAT") F  D PAT Q:QANXIT!(QANOUT)  ;get the patient
  Q:QANXIT
@@ -102,7 +105,7 @@ PAT ;Patient data.
  S QANDOB=$P(^DPT(QANPIEN,0),U,3)
  I QANDOB]"" S X=DT,X1=X,X2=QANDOB,X="" D:X2 ^%DTC S X=X\365.25,QANAGE=X
  S QANPSDO(0)=Y(0),QANPSDO(0,0)=Y(0,0)
- S QANPID=$$QANPID(.Y)
+ S QANPID=$E($P(Y(0,0),",",2))_$E($P(Y(0,0)," ",2))_$E($P(Y(0,0),","))_$E(QANSSN,6,9)
  D ADMDT^QANUTL1
  K DIC,DD,DO,DINUM,DLAYGO S DLAYGO=742,DIC="^QA(742,",DIC(0)="L",X=QANPIEN D FILE^DICN K DIC,DD,DO,DINUM,DLAYGO
  I +Y=-1,('$G(QANFLAG)) D DEL Q
@@ -169,6 +172,13 @@ GOEDIT ;
  . . ;get most recent entry for 742 and 742.4 and if matches
  . . ;this entry, delete
  . . F QANFILE=742,742.4 D DIKAUDIT^QANEDIT(QANFILE) K QANFILE
+ ;
+ ; Testing for variables during brief entry/edit - VMPTEST -Ken McNeile 
+ ;I $D(QANF) S ^VMPTEST($H,$P(^QA(742.4,QANIEN,0),"^"),"QANCDNT","QANF")=QANF
+ ;I $D(QANFFLG) S ^VMPTEST($H,$P(^QA(742.4,QANIEN,0),"^"),"QANCDNT","QANFFLG")=QANFFLG
+ ;I $D(QANXIT) S ^VMPTEST($H,$P(^QA(742.4,QANIEN,0),"^"),"QANCDNT","QANXIT")=QANXIT
+ ;I $D(QANBFLG) S ^VMPTEST($H,$P(^QA(742.4,QANIEN,0),"^"),"QANCDNT","QANBFLG")=QANBFLG
+ ;
  I $G(^QA(742.4,QANIEN,0))]"" D
  . D ^QANBRIF ;transmit message to local mail group
  . S QANCC=0
@@ -178,16 +188,4 @@ GOEDIT ;
  . . S QANAME=$P(QANODE,U)
  . . S QANSSN=$P(QANODE,U,9)
  . . D:'$D(QANF) BULL^QANUTL3
-QANPID(Y) ;Function to set up Patient ID.
- N QANF,QANM,QANL
- S QANL=$P(Y(0,0),",")
- I QANL[" " D
- .S QANF=$E($P(Y(0,0),",",2))
- .S QANM=$E($P(Y(0,0)," ",3))
- .S QANPID=$G(QANF)_$G(QANM)_$E(QANL)_$E(QANSSN,6,9)
- I QANL'[" " D
- .S QANF=$E($P(Y(0,0),",",2))
- .S QANM=$E($P(Y(0,0)," ",2))
- .S QANPID=$G(QANF)_$G(QANM)_$E(QANL)_$E(QANSSN,6,9)
- Q QANPID
  Q

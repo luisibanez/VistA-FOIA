@@ -1,5 +1,5 @@
-ORQ12 ; slc/dcm - Get patient orders in context ;06/29/06
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**12,27,78,92,116,190,220,215,243**;Dec 17, 1997;Build 242
+ORQ12 ; slc/dcm - Get patient orders in context ;12/19/05
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**12,27,78,92,116,190,220,215**;Dec 17, 1997
 GET(IFN,NEWD,DETAIL,ACTOR) ; -- Setup TMP array
  ; IFN=ifn of order
  ; NEWD=3rd subscript in ^TMP("ORR",$J, node (ORLIST)
@@ -97,10 +97,9 @@ EXPD ; -- loop through ^XTMP("ORAE" to get expired orders
  .. Q:+$G(ORREP)>0  ;quit if order has been replaced
  .. S ^TMP("ORSORT",$J,9999999-TM,TO,IFN)=""
  S TM=0 F  S TM=$O(^TMP("ORSORT",$J,TM)) Q:'TM  S TO=0 F  S TO=$O(^TMP("ORSORT",$J,TM,TO)) Q:'TO  D
- .S IFN=0 F  S IFN=$O(^TMP("ORSORT",$J,TM,TO,IFN)) Q:'IFN  I $D(^OR(100,IFN,0)),$D(^(3)) S X0=^(0),X3=^(3) D
- ..S ACTOR=+$P(X3,U,7) D LP1^ORQ11
- ..;S ACTOR=0 F  S ACTOR=$O(^OR(100,"ACT",PAT,9999999-$P(X0,U,7),TO,IFN,ACTOR)) Q:ACTOR<1  I '$D(^TMP("ORGOTIT",$J,IFN,ACTOR)),$D(^OR(100,IFN,8,ACTOR,0)),$P(^(0),U,15)'=13 S X8=^(0),X7=$G(^(7)) D LP1^ORQ11
- S ^TMP("ORR",$J,ORLIST,"TOT")=$G(ORLST)
+ . S IFN=0 F  S IFN=$O(^TMP("ORSORT",$J,TM,TO,IFN)) Q:'IFN  I $D(^OR(100,IFN,0)),$D(^(3)) S X0=^(0),X3=^(3) D 
+ .. S ACTOR=0 F  S ACTOR=$O(^OR(100,"ACT",PAT,9999999-$P(X0,U,7),TO,IFN,ACTOR)) Q:ACTOR<1  I '$D(^TMP("ORGOTIT",$J,IFN,ACTOR)),$D(^OR(100,IFN,8,ACTOR,0)),$P(^(0),U,15)'=13 S X8=^(0),X7=$G(^(7)) D LP1^ORQ11
+ S ^TMP("ORR",$J,ORLIST,"TOT")=ORLST
  K ^TMP("ORSORT",$J),^TMP("ORGOTIT",$J)
  Q
 GETEIE(IFN,NEWD,DETAIL,ACTOR) ; -- Setup TMP array

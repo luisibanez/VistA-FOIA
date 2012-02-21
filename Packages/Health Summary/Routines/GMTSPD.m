@@ -1,5 +1,5 @@
-GMTSPD ; SLC/JER,KER - Interactive Print-by-Location ; 04/30/2002 [1/26/05 1:50pm]
- ;;2.7;Health Summary;**28,30,47,49,55,70**;Oct 20, 1995;Build 5
+GMTSPD ; SLC/JER,KER - Interactive Print-by-Location ; 04/30/2002
+ ;;2.7;Health Summary;**28,30,47,49,55**;Oct 20, 1995
  ;
  ; External
  ;    DBIA 10040  ^SC(
@@ -111,7 +111,7 @@ SELDATE() ; Visit/Surgery date range for Print-by-Clinic
  . S GMEND=Y
  Q $S(+GMEND>0&(GMEND>GMBEG):GMBEG_U_GMEND,+GMEND>0&(GMEND<GMBEG):GMEND_U_GMBEG,+GMEND>0&(GMEND=GMBEG):GMBEG,1:0)
 CKPAT(LOC) ; Checks for patients at selected location
- N %,%H,%T,LTYPE,X1,X2,X,Y,GMY,GMBEG,GMTSDATE,GMTSCDT,GMTSRES
+ N %,%H,%T,LTYPE,X1,X2,X,Y,GMY,GMBEG
  S LTYPE=$P(LOC,U,3)
  I LTYPE="W" D
  . S LOC=$P($G(^DIC(42,+$G(^SC(+LOC,42)),0)),U)
@@ -120,20 +120,7 @@ CKPAT(LOC) ; Checks for patients at selected location
  . S GMY=0
  . I +$P(LOC,U,5) S X1=$P(LOC,U,5),X2=1 D C^%DTC
  . I +$P(LOC,U,5)'>0 S X1=$P(LOC,U,4),X2=1 D C^%DTC
- . S GMTSCDT=$P(LOC,U,4)
- . D GETPLIST^SDAMA202(+LOC,"1",,GMTSCDT,X,.GMTSRES) Q:GMTSRES=0
- . I GMTSRES<0 D  Q
- . . S GMY=-1
- . . N GMTSERR
- . . S GMTSERR=$O(^TMP($J,"SDAMA202","GETPLIST","ERROR",0))
- . . I 'GMTSERR Q
- . . D MAIL^GMTSMAIL($G(^TMP($J,"SDAMA202","GETPLIST","ERROR",GMTSERR)),"Nightly Job to Queue HS Batch Print-by-Loc")
- . . K ^TMP($J,"SDAMA202","GETPLIST")
- . N GMTSI S GMTSI=0,GMTSDATE=0
- . F  S GMTSI=$O(^TMP($J,"SDAMA202","GETPLIST",GMTSI)) Q:'GMTSI  D
- . . I $G(^TMP($J,"SDAMA202","GETPLIST",GMTSI,1))<X S GMTSDATE=$G(^TMP($J,"SDAMA202","GETPLIST",GMTSI,1))
- . K ^TMP($J,"SDAMA202","GETPLIST")
- . I LTYPE="C",(+GMTSDATE),(+GMTSDATE'>X) S GMY=1
+ . I LTYPE="C",+$O(^SC(+LOC,"S",$P(LOC,U,4))),(+$O(^($P(LOC,U,4)))'>X) S GMY=1
  . I LTYPE="OR" D
  . . N OLOC S GMY=0,OLOC=+$O(^SRS("B",+LOC,0))
  . . I +OLOC,+$P(LOC,U,5)'>0,$O(^SRF("AOR",+OLOC,+$P(LOC,U,4),0)) S GMY=1

@@ -1,5 +1,5 @@
 RAO7UTL ;HISC/GJC,SS-Utilities for HL7 messages. ;9/5/97  08:55
- ;;5.0;Radiology/Nuclear Medicine;**18,45,57,82**;Mar 16, 1998;Build 8
+ ;;5.0;Radiology/Nuclear Medicine;**18,45,57**;Mar 16, 1998
  ;modified by SS JUN 19,2000 for P18
 EN1 ; Entry point to define some basic HL7 variables
  N I S RAHLFS="|",RAECH="^~\&"
@@ -157,31 +157,4 @@ UPDATP(RAY) ;update the parent procedure when a descendent is
  .L -^RAMIS(71,RAPIEN)
  .Q
  Q
- ;----------------------------
- ;called from 
- ;-Case # edit  START1+16^RAEDCN
- ;-Edit by patient
- ;-Tracking
- ;Saves proc ien before editing, locate the exam by patient, datetime and caseN 
-SVBEFOR(RAPATN,RAINVDT,RACIEN) ;P18;send radfn,radti,racni (instead of racn and new sequencing of params
- ; RAPRIEN() holds "before" values
- N RADATA,RAX,RA0,RA1,RA2,RA3
- S RADATA=$G(^RADPT(RAPATN,"DT",RAINVDT,"P",RACIEN,0))
- Q:RADATA=""  ;failure
- ; don't check parent here, since still need compare Req Phys & Proc Mods
- S RAPRIEN=$P(RADATA,"^",2) ; procedure ien
- S RAPRIEN(1)=RAPATN ; dfn
- S RAPRIEN(2)=RAINVDT ; inverse date exm
- S RAPRIEN(3)=RACIEN ; case ien
- S RAPRIEN(4)=$P(RADATA,"^",14) ; req phy
- D STR70^RAUTL10(.RAX,RAPATN,RAINVDT,RACIEN)
- S RAPRIEN(5)=RAX ; string of proc mods
- ; send "XX" if diffcs in Req.Phy &/or Proc Mods
- ; Next lines are for RA*5*82
- ; Save CPT modifiers before editing
- S RAX=0 K RAPRIEN("CMOD")
- F  S RAX=$O(^RADPT(RAPATN,"DT",RAINVDT,"P",RACIEN,"CMOD",RAX)) Q:'RAX  S RAPRIEN("CMOD",RAX)=+$G(^(RAX,0))
- ; Save Tech comments before editing
- S RAX=0 K RAPRIEN("TCOM")
- F  S RAX=$O(^RADPT(RAPATN,"DT",RAINVDT,"P",RACIEN,"L",RAX)) Q:'RAX  S RAPRIEN("TCOM",RAX)=$G(^(RAX,"TCOM"))
- Q  ;OK
+ ;

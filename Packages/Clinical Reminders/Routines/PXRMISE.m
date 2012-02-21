@@ -1,10 +1,10 @@
-PXRMISE ; SLC/PKR - Index size estimating routines. ;11/02/2009
- ;;2.0;CLINICAL REMINDERS;**6,12,17**;Feb 04, 2005;Build 102
+PXRMISE ; SLC/PKR - Index size estimating routines. ;01/12/2005
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;========================================================
 EST ;Driver for making index counts.
- N BLOCKS,FROM,FUNCTION,GBL,GLIST,IND,NE,NL,NUMGBL,RTN
- N SF,TASKIT,TBLOCKS,TO,XMSUB
+ N BLOCKS,FUNCTION,GBL,GLIST,IND,NE,NL,NUMGBL,RTN
+ N SF,TASKIT,TBLOCKS,XMSUB
  D SETDATA(.GBL,.GLIST,.NUMGBL,.RTN,.SF)
  I +SF=-1 D ERRORMSG^PXRMISF(SF)  Q
  S (NL,TBLOCKS)=0
@@ -26,9 +26,7 @@ EST ;Driver for making index counts.
  S NL=NL+1,^TMP("PXRMXMZ",$J,NL,0)=""
  S NL=NL+1,^TMP("PXRMXMZ",$J,NL,0)="End time "_$$FMTE^XLFDT($$NOW^XLFDT,"5Z")
  S XMSUB="Size estimate for index global"
- S FROM=$$GET1^DIQ(200,DUZ,.01)
- S TO(DUZ)=""
- D SEND^PXRMMSG("PXRMXMZ",XMSUB,.TO,FROM)
+ D SEND^PXRMMSG(XMSUB)
  S ZTREQ="@"
  Q
  ;
@@ -38,8 +36,7 @@ ESTTASK ;Task the index size estimation.
  S MINDT=$$NOW^XLFDT
  W !,"Queue the Clinical Reminders index size estimation."
  S DIR("A",1)="Enter the date and time you want the job to start."
- S DIR("A",2)="It must be after "_$$FMTE^XLFDT(MINDT,"5Z")
- S DIR("A")="Start the task at: "
+ S DIR("A")="It must be after "_$$FMTE^XLFDT(MINDT,"5Z")_" "
  S DIR(0)="DAU"_U_MINDT_"::RSX"
  D ^DIR
  I $D(DTOUT)!$D(DUOUT) Q
@@ -267,8 +264,8 @@ SETDATA(GBL,GLIST,NUMGBL,RTN,SF) ;
  S GLIST(15)="V SKIN TEST",GBL(15)=9000010.12
  S GLIST(16)="VITAL MEASUREMENT",GBL(16)=120.5
  S RTN(45)="NEPTF^PXRMISE"
- S RTN(52)="NEPSRX^PSO52CLR"
- S RTN(55)="NEPS^PSSCLINR"
+ S RTN(52)="NEPSRX^PXRMISE"
+ S RTN(55)="NEPS^PXRMISE"
  S RTN(63)="NELR^PXRMLABS"
  S RTN(70)="NERAD^PXRMISE"
  S RTN(100)="NEOR^PXRMISE"

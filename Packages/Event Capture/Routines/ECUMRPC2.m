@@ -1,5 +1,5 @@
-ECUMRPC2 ;ALB/JAM;Event Capture Management Broker Utils ; 23 Jul 2008
- ;;2.0; EVENT CAPTURE ;**25,30,42,46,47,49,75,72,95**;8 May 96;Build 26
+ECUMRPC2 ;ALB/JAM;Event Capture Management Broker Utils ; 10/4/00 4:58pm
+ ;;2.0; EVENT CAPTURE ;**25,30,42,46,47,49,75,72**;8 May 96
 GLOC(RESULTS,ECARY) ;
  ;
  ;This broker entry point returns all active Event Capture locations
@@ -99,9 +99,8 @@ FINDIC(ECFL,ECIEN,ECFLD,ECFLG,ECVAL,ECN,ECINDX,ECSCN,ECID,ECTG,ECER) ;
  D FIND^DIC(ECFL,ECIEN,ECFLD,ECFLG,ECVAL,ECN,ECINDX,ECSCN,ECID,ECTG,ECER)
  K ECFL,ECIEN,ECFLD,ECFLG,ECVAL,ECN,ECINDX,ECSCN,ECID
  Q
-PROV(ECNUM) ;Return a set of providers from the NEW PERSON file
+PROV ;Return a set of providers from the NEW PERSON file
  ;Input Variables:-
- ;  ECNUM  - # of records to return
  ;  FROM   - text to $O from
  ;  DATE   - checks for an active person class on this date (optional)
  ;  ECDIR  - $O direction
@@ -111,7 +110,7 @@ PROV(ECNUM) ;Return a set of providers from the NEW PERSON file
  ;  ^TMP($J,"ECFIND",1..n - returned array
  ;     IEN of file 200^Provider Name^occupation^specialty^subspecialty
  ;
- N I,IEN,CNT,FROM,DATE,ECUTN S I=0,CNT=$S(+$G(ECNUM)>0:ECNUM,1:44)  ;KEY="PROVIDER"
+ N I,IEN,CNT,FROM,DATE,ECUTN S I=0,CNT=44  ;KEY="PROVIDER"
  ;S FROM=$P(ECSTR,"|"),DATE=$P(ECSTR,"|",2)
  S FROM=$P(ECSTR,"|"),DATE=$P(ECSTR,"|",2),REPORT=$P(ECSTR,"|",3)
  F  Q:I'<CNT  S FROM=$O(^VA(200,"B",FROM),ECDIR) Q:FROM=""  D

@@ -1,6 +1,6 @@
 IBAERR ;ALB/AAS - INTEGRATED BILLING ERROR PROCESSING ROUTINE ; 14-FEB-91
- ;;2.0; INTEGRATED BILLING ;**7,70,347**; 21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0; INTEGRATED BILLING ;**7,70**; 21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
 % ;  -error processor
  ;
  ; Quit if the Means Test Nightly Compilation or Discharge job called
@@ -90,7 +90,7 @@ SAVX S IBAX=$S($D(IBSAVXU):IBSAVXU,$D(IBSAVX):IBSAVX,1:"") Q:IBAX=""
  S IBC=IBC+1,IBTXT(IBC)=" Service: "_$S($D(^DIC(49,+IBAX,0)):$P(^(0),"^"),1:"")
  S IBC=IBC+1,IBTXT(IBC)="    User: "_$S($D(^VA(200,+$P(IBAX,"^",4),0)):$P(^(0),"^"),$D(^VA(200,+DUZ,0)):$P(^(0),"^"),1:"")
  S IB="" F  S IB=$O(IBSAVX(IB)) Q:IB=""  D
- .K IBARXN I +$P(IBSAVX(IB),"^",1)=52 S IBARXN="Rx# "_$$FILE^IBRXUTL(+$P($P(IBSAVX(IB),"^"),":",2),.01) I $P($P(IBSAVX(IB),"^"),";",2)'="" S IBARXN=IBARXN_"/Refill# "_$P($P($P(IBSAVX(IB),"^"),";",2),":",2)
+ .K IBARXN I +$P(IBSAVX(IB),"^",1)=52 S IBARXN="Rx# "_$P($G(^PSRX(+$P($P(IBSAVX(IB),"^"),":",2),0)),"^") I $P($P(IBSAVX(IB),"^"),";",2)'="" S IBARXN=IBARXN_"/Refill# "_$P($P($P(IBSAVX(IB),"^"),";",2),":",2)
  .S IBC=IBC+1,IBTXT(IBC)="   Entry: "_$S($D(IBARXN):IBARXN,1:$P(IBSAVX(IB),"^",1)) K IBARXN
  S IB="" F  S IB=$O(IBSAVXU(IB)) Q:IB=""  S IBC=IBC+1,IBTXT(IBC)="  Ref No: "_$S($D(^IB(+IB,0)):$P(^(0),"^"),1:"")
  Q

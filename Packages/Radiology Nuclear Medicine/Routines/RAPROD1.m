@@ -1,7 +1,6 @@
 RAPROD1 ;HISC/FPT,GJC AISC/MJK,RMO-Detailed Exam View ;11/26/96  08:24
- ;;5.0;Radiology/Nuclear Medicine;**15,18,45,77**;Mar 16, 1998;Build 7
+ ;;5.0;Radiology/Nuclear Medicine;**15,18,45**;Mar 16, 1998
  ;last mof by SS for P18 JUN 29 ,00
- ;10/25/2006 BAY/KAM Remedy Call 161846, *77 - correct paging issue
 PER ; Display personnel information.
  K DIR,DIROUT,DIRUT,DTOUT,DUOUT N Y
  S DIR(0)="Y",DIR("B")="No"
@@ -18,12 +17,8 @@ ACT R !!,"Do you wish to display activity log? No// ",X:DTIME S X=$E(X) S:'$T X=
  W !!?23,"*** Exam Activity Log ***",!?2,"Date/Time",?25,"Action",?60,"Computer User",!?3,"Technologist comment",!?2,"---------------------",?25,"------",?60,"-------------"
  N RA18RET S RADD=70.07 F I=0:0 S I=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"L",I)) Q:I'>0  I $D(^(I,0)) S RAY=^(0),Y=+RAY D ACT1 S RA18RET=$$PUTTCOM3^RAUTL11(RADFN,RADTI,RACNI,I,"",3,78,7,0,1,6,0) S:RA18RET=-1 RAXIT=1 Q:RA18RET=-1  ;P18
  I $D(RAXIT) I RAXIT D Q QUIT  ;P18
- ;
  G STAT:'RARPT W !!?22,"*** Report Activity Log ***",!?2,"Date/Time",?25,"Action",?60,"Computer User",!?2,"---------",?25,"------",?60,"-------------"
- ;10/25/2006 BAY/KAM Remedy Call 161846, *77 - added screen length check to next line
- S RADD=74.01 F I=0:0 S I=$O(^RARPT(RARPT,"L",I)) Q:I'>0  I $D(^(I,0)) S RAY=^(0),Y=+RAY D ACT1 I $$CONTIN^RAUTL11(7)=-1 S RAXIT=1 Q
- ;10/25/2006 BAY/KAM Remedy Call 161846, *77 Added next line
- I $G(RAXIT) D Q QUIT
+ S RADD=74.01 F I=0:0 S I=$O(^RARPT(RARPT,"L",I)) Q:I'>0  I $D(^(I,0)) S RAY=^(0),Y=+RAY D ACT1
  W ! S X="",$P(X,"=",80)="" W X K X
  G STAT
 ACT1 D D^RAUTL W !?2,Y,?25,$E($P($P(^DD(RADD,2,0),$P(RAY,"^",2)_":",2),";"),1,33),?60,$E($S($D(^VA(200,+$P(RAY,"^",3),0)):$P(^(0),"^"),1:"Unknown"),1,18) Q

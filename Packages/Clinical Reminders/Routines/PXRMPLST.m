@@ -1,16 +1,17 @@
-PXRMPLST ; SLC/PKR - Build a patient list from a reminder definition. ;01/24/2007
- ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
+PXRMPLST ; SLC/PKR - Build a patient list from a reminder definition. ;12/14/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;Input  :  RIEN     - Reminder IEN
  ;          PLIST    - List returned in ^TMP($J,PLIST,DFN)
  ;          DFNONLY  - If true list contains only DFN information
  ;          PXRMDATE - Evaluation date
  ;===================================================
-BLDPLST(DEFARR,PLIST,DFNONLY) ;
- N DFN,DOBE,DOBS,ELE,ERROR,ERRSTR,IND,FNUM
+BLDPLST(RIEN,PLIST,DFNONLY,PXRMDATE) ;
+ N DEFARR,DFN,DOBE,DOBS,DOD,ELE,ERROR,ERRSTR,IND,FNUM
  N LIST1,LIST2,LNAME,LSP,LSTACK
  N NDR,NOT,OPER,PCLOG,PFSTACK,SEX,TYPE
  ;
+ D DEF^PXRMLDR(RIEN,.DEFARR)
  ;Get the cohort logic string. This has passed a validation before
  ;it can be selected for building patient lists so we don't need to
  ;check it here.
@@ -78,11 +79,14 @@ BLDPLST(DEFARR,PLIST,DFNONLY) ;
  ;frequency to 0Y and therefore remove the patient from the cohort.
  I PCLOG'["AGE" D AGEFI(.DEFARR,LIST1,"","0Y")
  ;
- I $G(DFNONLY) D
- . S DFN=0
- . F  S DFN=$O(^TMP($J,LIST1,1,DFN)) Q:DFN=""  D
- .. S ^TMP($J,PLIST,DFN)=""
- E  M ^TMP($J,PLIST)=^TMP($J,LIST1)
+ ;Remove all deceased patients from the final list.
+ S DFN=0
+ F  S DFN=$O(^TMP($J,LIST1,1,DFN)) Q:DFN=""  D
+ .;Reference to ^DPT DBIA #10035
+ . S DOD=$P($G(^DPT(DFN,.35)),U,1)
+ . I DOD'="" Q
+ . I $G(DFNONLY) S ^TMP($J,PLIST,DFN)="" Q
+ . M ^TMP($J,PLIST)=^TMP($J,LIST1)
  K ^TMP($J,LIST1)
  Q
  ;
@@ -120,7 +124,7 @@ AGEFI(DEFARR,LNAME,SEX,ONLYFREQ) ;Check for patients that need to be
  . S LOGOP(IND)=$S(FREQ="0Y":"~",FREQ="":"~",1:"!")
  . S MINAGE=$P(TEMP,U,2)
  . S MAXAGE=$P(TEMP,U,3)
- . S DOBE=$S(MINAGE="":$$NOW^PXRMDATE,1:$$GETDOB(MINAGE,"MIN"))
+ . S DOBE=$S(MINAGE="":DT,1:$$GETDOB(MINAGE,"MIN"))
  . S DOBS=$S(MAXAGE="":0,1:$$GETDOB(MAXAGE,"MAX"))
  . K ^TMP($J,TGLIST)
  . I FINUM=+FINUM D EVALPL^PXRMEVFI(.DEFARR,FINUM,TGLIST)
@@ -171,7 +175,7 @@ DOBR(DEFARR,NDR,DOBS,DOBE) ;Build the date of birth range.
  . S MINAGE=$P(TEMP,U,2)
  . S MAXAGE=$P(TEMP,U,3)
  . S NDR=NDR+1
- . S DOBE(NDR)=$S(MINAGE="":$$NOW^PXRMDATE,1:$$GETDOB(MINAGE,"MIN"))
+ . S DOBE(NDR)=$S(MINAGE="":DT,1:$$GETDOB(MINAGE,"MIN"))
  . S DOBS(NDR)=$S(MAXAGE="":0,1:$$GETDOB(MAXAGE,"MAX"))
  Q
  ;
@@ -195,10 +199,10 @@ GETDOB(AGE,TYPE) ;Given an age in years return the corresponding date of
  ;birth. If TYPE is MIN then find the date of birth that will make them
  ;that age. If TYPE is MAX find the last day that will make them
  ;that age, i.e., the next day is their birthday.
- N DATE,DOB
- S DATE=$$NOW^PXRMDATE
- I TYPE="MIN" S DOB=DATE-(10000*AGE)
- I TYPE="MAX" S DOB=DATE-(10000*(AGE+1)),DOB=$$FMADD^XLFDT(DOB,1)
+ N DOB
+ I TYPE="MIN" S DOB=DT-(10000*AGE)
+ I TYPE="MAX" S DOB=DT-(10000*(AGE+1)),DOB=$$FMADD^XLFDT(DOB,1)
+ ;S DOB=$S(TYPE="MIN":DT-(10000*AGE),TYPE="MAX":DT-(10000*(AGE+1)))
  Q DOB
  ;
  ;==================================================
@@ -228,7 +232,7 @@ LSA(SEX,NDR,DOBS,DOBE,LNAME) ;Build a list from a SEX & AGE finding.
  ;Reference to ^DPT DBIA #10035
  N DFN,DS,IND,SEXOK
  F IND=1:1:NDR D
- . S DS=DOBS(IND)-.000001
+ . S DS=DOBS(IND)-.1
  . F  S DS=$O(^DPT("ADOB",DS)) Q:(DS>DOBE(IND))!(DS="")  D
  .. S DFN=""
  .. F  S DFN=$O(^DPT("ADOB",DS,DFN)) Q:DFN=""  D

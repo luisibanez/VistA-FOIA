@@ -1,5 +1,5 @@
 FHOMGR1 ;Hines OIFO/RTK GUEST MEALS REQUEST MEAL  ;4/17/03  09:45
- ;;5.5;DIETETICS;**5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;;Jan 28, 2005
  ;
  D NOW^%DTC S STDT=X,FHDSDT=$$FMTE^XLFDT(STDT,"P") W !!,FHDSDT
  S FHMSG1="G" D ^FHOMDPA I FHDFN="" Q
@@ -11,7 +11,6 @@ CLASS ;Prompt for classification
  I Y'=-1 S FHCLASS=Y
 LOC ;Prompt for location
  D OUTLOC^FHOMUTL I FHLOC="" D EXMSG^FHOMUTL Q
- W ! D RMBED^FHOMUTL
  S FHCOMM=$P($G(^FH(119.6,FHLOC,0)),U,8)
 MEAL ;Prompt for meal
  K DIR,DIC S DIR("A")="Select Meal: "
@@ -35,14 +34,13 @@ SET1 K DIR S DIR("A")="Is this correct?: ",DIR(0)="YA",DIR("B")="Y" D ^DIR
 SETNODE ;
  S MLT=$S(FHMEAL="B":".08",FHMEAL="N":".13",1:".18")
  S STDTIM=STDT_MLT
- I $D(^FHPT(FHDFN,"GM","B",STDTIM)),$P($G(^FHPT(FHDFN,"GM",STDTIM,0)),U,9)'="C" D MESSAGE Q
- S DA(1)=FHDFN,DA=STDTIM,DIK="^FHPT("_DA(1)_",""GM""," D ^DIK  ;delete if there is a previous canceled GM for this date/meal
+ I $D(^FHPT(FHDFN,"GM","B",STDTIM)) D MESSAGE Q
  S Y=STDTIM K DIC,DO S DA(1)=FHDFN,DIC="^FHPT("_DA(1)_",""GM"","
  S DIC(0)="L",DIC("P")=$P(^DD(115,18,0),U,2),X=+Y,DINUM=X
  D FILE^DICN I Y=-1 Q
  K DIE S DA(1)=FHDFN,DIE="^FHPT("_DA(1)_",""GM"","
  S DA=+Y,FHDA=DA
- S DR="1////^S X=FHCLASS;2////^S X=FHMEAL;3////^S X=FHCHAR;4////^S X=FHLOC;4.5////^S X=FHRMBD;5////^S X=FHDIET"
+ S DR="1////^S X=FHCLASS;2////^S X=FHMEAL;3////^S X=FHCHAR;4////^S X=FHLOC;5////^S X=FHDIET"
  D ^DIE,OKMSG^FHOMUTL
  S FHZN=$G(^FHPT(FHDFN,"GM",FHDA,0))
  S FHACT="O",FHOPTY="G",FHOPDT=STDT D SETGM^FHOMRO2 ;set event

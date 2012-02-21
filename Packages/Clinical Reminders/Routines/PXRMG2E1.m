@@ -1,5 +1,5 @@
-PXRMG2E1 ;SLC/JVS -GEC #2 Extract initial arrays  ;7/14/05  08:10
- ;;2.0;CLINICAL REMINDERS;**2,4**;Feb 04, 2005;Build 21
+PXRMG2E1 ;SLC/JVS -GEC #2 Extract initial arrays  ;2/13/05  20:08
+ ;;2.0;CLINICAL REMINDERS;**2**;Feb 04, 2005
  Q
  ;
  ;Arrays
@@ -33,10 +33,9 @@ FIN(DATE,DFN) ;Check to see if finished
  S DONE=0,VDT="0000000"
  S GEC=0 F  S GEC=$O(^AUPNVHF("AED",DATE,DFN,GEC)) Q:GEC=""  D
  .I GEC=GECFDA S DONE=1 D
- ..;S DA=$O(^AUPNVHF("AED",DATE,DFN,GEC,0))
- ..;S VST=$P($G(^AUPNVHF(DA,0)),"^",3)
- ..;S VDT=$P($G(^AUPNVSIT(VST,0)),"^",1)
- ..S VDT=DATE
+ ..S DA=$O(^AUPNVHF("AED",DATE,DFN,GEC,0))
+ ..S VST=$P($G(^AUPNVHF(DA,0)),"^",3)
+ ..S VDT=$P($G(^AUPNVSIT(VST,0)),"^",1)
  Q DONE_"^"_VDT
  ;
 E(ARY,FIN,BDT,EDT,CHK,DFNONLY,TPAT) ;EXTRACT GEC REFERRALS
@@ -95,49 +94,102 @@ PAT ..;===Check Patient DFN to see if continue or quit
  ...;TO HERE BY REFERRAL
  ...S DA="" F  S DA=$O(^AUPNVHF("AED",DATE,DFN,GEC,DA)) Q:DA=""  D
  ....;TO HERE BY HEALTH FACTOR
- ....D ARAYS
+ ....D VDOC(DA,.VDOC,.LOCB)
  Q
 KILL ;Kill out unwanted Arrays
  K ^TMP("PXRMGEC",$J,"REF"),^TMP("PXRMGEC",$J,"REFDFN")
  Q
-ARAYS ;Set the Arrays for different reports
- ;===============================================================
- ;CHeck for new Referral
- I DATE1'=DATE!(DFN1'=DFN) S CNTREF=CNTREF+1,DATE1=DATE,DFN1=DFN
- ;===============================================================
- I ARY="HS" D
- .;CNTREF=Count or numbered Referral
- .;DFN   =Patient IEN
- .;DATE  =Starting Date of Referral
- .;VDT   =Finished Date of Referral-Visit of GECF
- .;CAT   =Health Factor Category
- .;DATEV =Date that each Dialog was done
- .;DA    =Ien of each Health Factor
- .;
- .N NAMEDA,NAME,CATDA,CAT,DATEV,DATEDA,AGE,PXRMAPT,AGEF,SSN
- .;
- .;---AGE---
- .D GETS^DIQ(2,DFN,.033,"ER","AGE")
- .S AGE=AGE(2,DFN_",","AGE","E")
- .S AGEF=0 I AGE>74 S AGEF=1
- .;---SSN---"M3456"
- .D GETS^DIQ(2,DFN,.0905,"ER","SSN")
- .S SSN=SSN(2,DFN_",","1U4N","E")
- .;---APPOINTMENTS---
- .;DBIA #3859
- .S PXRMAPT=0
- .D GETAPPT^SDAMA201(DFN,"1","R",$$FMADD^XLFDT(VDT,-365,0,0,0),VDT,.PXRMAPT,"")
- .I $D(^TMP($J,"SDAMA201","GETAPPT","ERROR")) S PXRMAPT=0
- .K ^TMP($J,"SDAMA201","GETAPPT")
- .;---APPOINTMENTS---
- .S NAMEDA=$P($G(^AUPNVHF(DA,0)),"^",1)
- .;GET COMMENTS
- .S NAME=$P($G(^AUTTHF(NAMEDA,0)),"^",1)
- .S DATEDA=$P($G(^AUPNVHF(DA,0)),"^",3)
- .S DATEV=$P($G(^AUPNVSIT(DATEDA,0)),"^",1)
- .S CATDA=$P($G(^AUTTHF(NAMEDA,0)),"^",3)
- .S CAT=$P($G(^AUTTHF(CATDA,0)),"^",1)
- .S ^TMP("PXRMGEC",$J,"GEC2",CNTREF,NAMEDA,AGEF,PXRMAPT,DFN,+$E($P(VDT,"."),4,5),SSN,VDT)=""
- .K AGE
+VDOC(DA,VDOC,LOCB) ;Get Dr's and location according to Visit
+ Q:ARY="CTD"
+ Q:ARY="CTP"
+ ;
+ S VDOC("UNKNOWN",DA)=""
+ Q:DA=""
+ Q:'$D(^AUPNVHF(DA))
+ S VDOC("UNKNOWN")=1
+ S VST=$P($G(^AUPNVHF(DA,0)),"^",3)
+ S DOC="" F  S DOC=$O(^AUPNVPRV("AD",VST,DOC)) Q:DOC=""  D
+ .K VDOC("UNKNOWN")
+ .S DOCT=$P($G(^AUPNVPRV(DOC,0)),"^",1)
+ .S DOCTN=$$GET1^DIQ(200,DOCT,.01)
+ .;S ^TMP("PXRMGEC",$J,"REFDOC",DOCTN,VDT,DOCT)=""
+ .I $D(VDOC(DOCTN,VDT)) S VDOC(DOCTN,VDT)=$G(VDOC(DOCTN,VDT))+1
+ .E  S VDOC(DOCTN,VDT)=1
+ .;DBIA #10040 However the ability for the Visit to store a pointer
+ .;to the location file might be removed in the future.
+ .S LOC=$P($G(^AUPNVSIT(VST,0)),"^",22)
+ .S LOCN=$P($G(^SC(LOC,0)),"^",1)
+ .;S ^TMP("PXRMGEC",$J,"REFLOC",LOCN,VDT)=""
+ .I DONE=1 D
+ ..K TMPDT(DATEY,DFNXX,DOCTN,LOCN)
+ ..K TMPDFN(DFNXX,DATEY,DOCTN,LOCN)
+ ..K TMPDOC(DOCTN,LOCN,DATEY,DFNXX)
+ ..K TMPLOC(LOCN,DOCTN,DATEY,DFNXX)
+ ..K ^TMP("PXRMGEC",$J,"TMPDT",DATEY,DFNXX,DOCTN,LOCN)
+ ..K ^TMP("PXRMGEC",$J,"TMPDFN",DFNXX,DATEY,DOCTN,LOCN)
+ ..K ^TMP("PXRMGEC",$J,"TMPDOC",DOCTN,LOCN,DATEY,DFNXX)
+ ..K ^TMP("PXRMGEC",$J,"TMPLOC",LOCN,DOCTN,DATEY,DFNXX)
+ .;===============================================================
+ .;CHeck for new Referral
+ .I DATE1'=DATE!(DFN1'=DFN) S CNTREF=CNTREF+1,DATE1=DATE,DFN1=DFN
+ .;===============================================================
+ .I ARY="HS" D
+ ..;CNTREF=Count or numbered Referral
+ ..;DFN   =Patient IEN
+ ..;DATE  =Starting Date of Referral
+ ..;VDT   =Finished Date of Referral-Visit of GECF
+ ..;CAT   =Health Factor Category
+ ..;DATEV =Date that each Dialog was done
+ ..;DA    =Ien of each Health Factor
+ ..;
+ ..N NAMEDA,NAME,CATDA,CAT,DATEV,DATEDA,AGE,PXRMAPT,AGEF,SSN
+ ..;DBIA #11
+ ..;---AGE---
+ ..D GETS^DIQ(2,DFN,.033,"ER","AGE")
+ ..S AGE=AGE(2,DFN_",","AGE","E")
+ ..S AGEF=0 I AGE>74 S AGEF=1
+ ..;---SSN---"M3456"
+ ..D GETS^DIQ(2,DFN,.0905,"ER","SSN")
+ ..S SSN=SSN(2,DFN_",","1U4N","E")
+ ..;---APPOINTMENTS---
+ ..;DBIA #3859
+ ..S PXRMAPT=0
+ ..D GETAPPT^SDAMA201(DFN,"1","R",$$FMADD^XLFDT(VDT,-365,0,0,0),VDT,.PXRMAPT,"")
+ ..K ^TMP($J,"SDAMA201","GETAPPT")
+ ..;---APPOINTMENTS---
+ ..S NAMEDA=$P($G(^AUPNVHF(DA,0)),"^",1)
+ ..;GET COMMENTS
+ ..S NAME=$P($G(^AUTTHF(NAMEDA,0)),"^",1)
+ ..S DATEDA=$P($G(^AUPNVHF(DA,0)),"^",3)
+ ..S DATEV=$P($G(^AUPNVSIT(DATEDA,0)),"^",1)
+ ..S CATDA=$P($G(^AUTTHF(NAMEDA,0)),"^",3)
+ ..S CAT=$P($G(^AUTTHF(CATDA,0)),"^",1)
+ ..;S ^TMP("PXRMGEC",$J,"HS",CNTREF,DFN,DATE,VDT,CAT,DATEV,DA)=""
+ ..S ^TMP("PXRMGEC",$J,"GEC2",CNTREF,NAMEDA,AGEF,PXRMAPT,DFN,+$E($P(VDT,"."),4,5),SSN,VDT)=""
+ ..K AGE
+ .;===============================================================
+ S DOCT=$P($G(^AUPNVHF(DA,12)),"^",4)
+ I DOCT>0 D
+ .Q:ARY="LOC"
+ .Q:ARY="DR"
+ .Q:ARY="HS1"
+ .Q:ARY="HS"
+ .Q:ARY="HFCD"
+ .S DOCTN=$$GET1^DIQ(200,DOCT,.01)
+ .I $D(VDOC(DA,DOCTN,DA)) S VDOC(DA,DOCTN,DA)=$G(VDOC(DA,DOCTN,DA))+1
+ .E  S VDOC(DA,DOCTN,DA)=1
+ .I DONE=1 D
+ ..K TMPDT(DATEY,DFNXX,DOCTN,LOCN)
+ ..K TMPDFN(DFNXX,DATEY,DOCTN,LOCN)
+ ..K TMPDOC(DOCTN,LOCN,DATEY,DFNXX)
+ ..K TMPLOC(LOCN,DOCTN,DATEY,DFNXX)
+ ..K ^TMP("PXRMGEC",$J,"TMPDT",DATEY,DFNXX,DOCTN,LOCN)
+ ..K ^TMP("PXRMGEC",$J,"TMPDFN",DFNXX,DATEY,DOCTN,LOCN)
+ ..K ^TMP("PXRMGEC",$J,"TMPDOC",DOCTN,LOCN,DATEY,DFNXX)
+ ..K ^TMP("PXRMGEC",$J,"TMPLOC",LOCN,DOCTN,DATEY,DFNXX)
+ .;==========================
+ .;CHeck for new Referral
+ .I DATE1'=DATE!(DFN1'=DFN) S CNTREF=CNTREF+1,DATE1=DATE,DFN1=DFN
+ .;==========================
  Q
  ;

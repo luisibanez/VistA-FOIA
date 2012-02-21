@@ -1,8 +1,8 @@
-IBCNERP4 ;DAOU/BHS - IBCNE USER INTERFACE eIV PAYER REPORT ;03-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,300,416**;21-MAR-94;Build 58
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCNERP4 ;DAOU/BHS - IBCNE USER INTERFACE IIV PAYER REPORT ;03-JUN-2002
+ ;;2.0;INTEGRATED BILLING;**184,271,300**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
- ; eIV - Insurance Verification Interface
+ ; IIV - Insurance Identification and Verification Interface
  ;
  ; Input parameter: N/A
  ; Other relevant variables:
@@ -28,9 +28,9 @@ EN ;
  S STOP=0
  S IBCNERTN="IBCNERP4"
  W @IOF
- W !,"eIV Payer Report",!
- W !,"Insurance verification inquiries are created daily."
- W !,"Select a date range in which inquiries were created by the eIV extracts."
+ W !,"IIV Payer Report",!
+ W !,"Insurance identification and verification inquiries are created daily."
+ W !,"Select a date range in which inquiries were created by the eIIV extracts."
  ;
  ; Prompts for Payer Report
  ; Date Range parameters
@@ -92,7 +92,7 @@ DTRANGE ; Determine the start and end dates for the date range parameter
  ;
  S DIR(0)="D^::EX"
  S DIR("A")="Start DATE"
- S DIR("?",1)="   Please enter a valid date for which an eIV Inquiry"
+ S DIR("?",1)="   Please enter a valid date for which an IIV Inquiry"
  S DIR("?")="   would have been created."
  D ^DIR K DIR
  I $D(DIRUT) S STOP=1 G DTRANGX
@@ -100,7 +100,7 @@ DTRANGE ; Determine the start and end dates for the date range parameter
  ; End date
 DTRANG1 S DIR(0)="D^::EX"
  S DIR("A")="  End DATE"
- S DIR("?",1)="   Please enter a valid date for which an eIV Inquiry"
+ S DIR("?",1)="   Please enter a valid date for which an IIV Inquiry"
  S DIR("?",2)="   would have been created.  This date must not precede"
  S DIR("?")="   the Start Date."
  D ^DIR K DIR
@@ -115,7 +115,7 @@ DTRANGX ; DTRANGE exit point
  ;
  ;
  ; called from IBCNERP5
- ; Loop through the eIV Response File (#365) 
+ ; Loop through the IIV Response File (#365) 
  ;  By DATE/TIME RECEIVED & PAYER & PATIENT Cross-Reference ("AE")
  ;  
 DATA N RDATA,RDATA1,TQDATA,IBCNEDT,IBCNEPTR,IBCNEPAT,RPYRIEN,RPYNM,PYRIEN,IBPNM,ERRCON
@@ -152,11 +152,11 @@ DATA N RDATA,RDATA1,TQDATA,IBCNEDT,IBCNEPTR,IBCNEPAT,RPYRIEN,RPYNM,PYRIEN,IBPNM,
  .... S PYRNM=$P($G(^IBE(365.12,PYRIEN,0)),U)
  .... ;  Cancelled (7) - Payer deactivated
  .... I $P($G(TQDATA),U,4)=7 Q
- .... ; Determine Deactivation DTM for eIV application
+ .... ; Determine Deactivation DTM for eIIV application
  .... I RPYNM'="~NO PAYER" D
  ..... S APIEN=$$PYRAPP^IBCNEUT5("IIV",RPYRIEN)
  ..... I APIEN,$P($G(^IBE(365.12,RPYRIEN,1,APIEN,0)),U,11) S $P(^TMP($J,IBCNERTN,RPYNM,RPYRIEN,"*"),U,11)=$P($G(^IBE(365.12,RPYRIEN,1,APIEN,0)),U,12)
- .... ; Determine Deactivation DTM for eIV application
+ .... ; Determine Deactivation DTM for eIIV application
  .... I PYRNM'="~NO PAYER",PYRIEN'=RPYRIEN D
  ..... S APIEN=$$PYRAPP^IBCNEUT5("IIV",PYRIEN)
  ..... I APIEN,$P($G(^IBE(365.12,PYRIEN,1,APIEN,0)),U,11) S $P(^TMP($J,IBCNERTN,PYRNM,PYRIEN,"*"),U,11)=$P($G(^IBE(365.12,PYRIEN,1,APIEN,0)),U,12)

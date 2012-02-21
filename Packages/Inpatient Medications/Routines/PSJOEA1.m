@@ -1,5 +1,5 @@
 PSJOEA1 ;BIR/MLM-INPATIENT ORDER ENTRY ;23 Jun 98 / 1:46 PM
- ;;5.0; INPATIENT MEDICATIONS ;**110,127,133,171**;16 DEC 97
+ ;;5.0; INPATIENT MEDICATIONS ;**110,127,133**;16 DEC 97
  ;
  ; Reference to ^PS(55 is supported by DBIA #2191.
  ; Reference to ^PSSLOCK is supported by DBIA #2789.
@@ -13,9 +13,7 @@ CHK ;Check to be sure all the orders in the complex order series are completed.
  . I PSJSTAT="DE" S PSJSTAT=$P($G(^TMP("PSJCOM2",$J,PSJO,0)),"^",9) I PSJSTAT="" S COMQUIT=1 Q
  . S:PSJSTAT2="" PSJSTAT2=PSJSTAT S:PSJSTAT'=PSJSTAT2 COMQUIT=2 Q:COMQUIT  S PSJSTAT2=PSJSTAT
  I COMQUIT,PSJOT="U",$G(^TMP("PSJCOM",$J))'="A" S:$G(PSJOWALL)]"" $P(^PS(55,PSGP,5.1),U)=PSJOWALL
- I (COMQUIT=2)!(COMQUIT&($G(^TMP("PSJCOM",$J))'="A")) D  Q
- .K ^TMP("PSJCOM",$J),^TMP("PSJCOM2",$J)
- .W !,"By not finishing all the orders, none of the orders will be updated." D PAUSE^VALM1
+ I (COMQUIT=2)!(COMQUIT&($G(^TMP("PSJCOM",$J))'="A")) W !,"By not finishing all the orders, none of the orders will be updated." D PAUSE^VALM1 Q
  I 'COMQUIT N PSJO S PSJO=0 F  S PSJO=$O(^TMP("PSJCOM",$J,PSJO)) Q:'PSJO  D
  .S PSGS0Y=$P($G(^TMP("PSJCOM",$J,+PSJO,2)),"^",5),PSGS0XT=$P($G(^TMP("PSJCOM",$J,+PSJO,2)),"^",6)
  .N EDITS0Y,EDITS0XT S EDITS0Y=$P($G(^TMP("PSJCOM2",$J,+PSJO,2)),"^",5),EDITS0XT=$P($G(^TMP("PSJCOM2",$J,+PSJO,2)),"^",6) D

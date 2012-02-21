@@ -1,5 +1,5 @@
 LR7OSAP1 ;slc/dcm/wty/kll - Silent AP rpt cont. ;3/28/2002
- ;;5.2;LAB SERVICE;**121,227,230,259,317,315**;Sep 27, 1994;Build 25
+ ;;5.2;LAB SERVICE;**121,227,230,259**;Sep 27, 1994
  Q:'$D(^XUSEC("LRLAB",DUZ))
  D LN
  S $P(LR("%"),"-",GIOM)="",^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,LR("%"))
@@ -13,14 +13,11 @@ LR7OSAP1 ;slc/dcm/wty/kll - Silent AP rpt cont. ;3/28/2002
  . S ^(0)=^TMP("LRC",$J,GCNT,0)_X
  . D M
  D LINE^LR7OSUM4
- N LRX
  S C=0
- F  S C=$O(^LR(LRDFN,LRSS,LRI,3,C)) Q:'C  S LRX=+^(C,0) D
- . S LRX=$$ICDDX^ICDCODE(LRX,,,1)
- . I +LRX=-1 Q
+ F  S C=$O(^LR(LRDFN,LRSS,LRI,3,C)) Q:'C  S X=+^(C,0),X=$G(^ICD9(X,0)) I $L(X) D
+ . S X(9)=$P(X,"^"),X=$P(X,"^",3)
  . D LN
- . S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,"ICD code: "_$P(LRX,"^",2))
- . S X=$P(LRX,"^",4)
+ . S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,"ICD code: "_X(9))
  . D:LR(69.2,.05) C^LRUA
  . S ^(0)=^TMP("LRC",$J,GCNT,0)_$$S^LR7OS(20,CCNT,X)
  Q
@@ -85,12 +82,10 @@ MODSR ;Modified Supplementary Report Audit Info
  D D^LRU
  S LRS2A=$S($D(^VA(200,LRS2A,0)):$P(^(0),"^"),1:LRS2A)
  S LRR1=Y,LRR2=LRS2A
+ ;S LRIENS=LRSP2_","_LRIENS
+ ;S LRR1=$$GET1^DIQ(LRFILE,LRIENS,.01)
+ ;S LRR2=$$GET1^DIQ(LRFILE,LRIENS,.02)
  S ^(0)=^TMP("LRC",$J,GCNT,0)_LRR1_LRSGN_LRR2_")"
- ;If RELEASED SUPP REPORT MODIFIED set to 1, display "NOT VERIFIED"
- I $P(^LR(LRDFN,LRSS,LRI,1.2,C,0),"^",3)=1 D
- .D LN
- .S LRTEXT="NOT VERIFIED"
- .S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(25,CCNT,"**-* "_LRTEXT_" *-**")
  Q
 M1 ;
  S A=0

@@ -1,5 +1,5 @@
-ORQQAL ; slc/CLA,JFR - Functions which return patient allergy data ;6/8/06  14:11
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**9,85,162,190,216,232,243**;Dec 17, 1997;Build 242
+ORQQAL ; slc/CLA,JFR - Functions which return patient allergy data ;9/16/04  13:29
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**9,85,162,190,216**;Dec 17, 1997
 LIST(ORAY,ORPT) ; RETURN PATIENT'S ALLERGY/ADVERSE REACTION INFO:
  ; null:no allergy assessment, 0:no known allergies, 1:pt has allergies
  ; if 1 also get: allergen/reactant^reaction/symptom^severity^allergy ien
@@ -59,27 +59,19 @@ RXN(ORAY,ORPT,SRC,NDF,PSDRUG) ; RETURN TRUE OR FALSE IF PATIENT IS ALLERGIC TO A
  K I,J,GMRADRCL,GMRAING,CL
  Q
 MEDCLASS(ORAY,DFN,PSDRUG) ;check for allergens with medications in same VA drug class
- N ORVACLS,CL,X,I,RET,TYP
- S TYP="DR"
+ N ORVACLS,ALLR,K,CL
  Q:+$G(PSDRUG)<1
- ;S ORVACLS=$P(^PSDRUG(PSDRUG,0),U,2)
- S ORVACLS=$$CLASS50^ORPEAPI(PSDRUG)
+ S ORVACLS=$P(^PSDRUG(PSDRUG,0),U,2)
  Q:$L(ORVACLS)<4
  Q:$G(ORVACLS)="HA000"  ;don't process herbal drug class for order checks
  S CL=$S($E(ORVACLS,1,4)="CN10":5,1:4) ;look at 5 chars if ANALGESICS
- D GETDATA^GMRAOR(DFN)
- Q:'$D(^TMP("GMRAOC",$J,"APC"))
- S I="" F  S I=$O(^TMP("GMRAOC",$J,"APC",I)) Q:'$L(I)  D
- .I $E(I,1,CL)=$E(ORVACLS,1,CL) S X=I
- I $L($G(X)) D
- .N IEN,NAME
- .D IEN^PSN50P65(,X,"ORQQAL")
- .S IEN=$O(^TMP($J,"ORQQAL","B",X,0))
- .I 'IEN S ORAY="2"_U_X Q
- .S NAME=$G(^TMP($J,"ORQQAL",IEN,1))
- .I '$L(NAME) S ORAY="2"_U_X Q
- .S ORAY="2"_U_NAME_": ("_$G(^TMP("GMRAOC",$J,"APC",X))_")"
- K ^TMP("GMRAOC",$J)
+ S GMRA="0^0^001",ALLR=""
+ D EN1^GMRADPT F  S ALLR=$O(GMRAL(ALLR)) Q:'ALLR!(+ORAY=2)  D
+ .K GMRACT D EN1^GMRAOR2(ALLR,"GMRACT") I $D(GMRACT("V")) D
+ ..S K=0 F  S K=$O(GMRACT("V",K)) Q:K'>0!(+ORAY=2)  D
+ ...I $E($P(GMRACT("V",K),U),1,CL)=$E(ORVACLS,1,CL) D
+ ....S ORAY="2"_U_$P(GMRACT("V",K),U,2)
+ K GMRA,GMRAL,GMRACT
  Q
 DETAIL(ORAY,DFN,ALLR,ID) ; RETURN DETAILED ALLERGY INFO FOR SPECIFIED ALLERGIC REACTION:
  D EN1^GMRAOR2(ALLR,"GMRACT")

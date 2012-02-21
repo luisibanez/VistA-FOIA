@@ -1,6 +1,5 @@
-MAGGTSY2 ;WOIFO/GEK/NST - Calls from Imaging windows for System Manager ; 22 Dec 2010 10:50 AM
- ;;3.0;IMAGING;**59,117**;Mar 19, 2002;Build 2238;Jul 15, 2011
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGGTSY2 ;WOIFO/GEK - Calls from Imaging windows for System Manager ; [ 06/20/2001 08:57 ]
+ ;;3.0;IMAGING;;Mar 01, 2002
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGGTSY2 ;WOIFO/GEK/NST - Calls from Imaging windows for System Manager ; 22 Dec
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -16,36 +16,15 @@ MAGGTSY2 ;WOIFO/GEK/NST - Calls from Imaging windows for System Manager ; 22 Dec
  ;; +---------------------------------------------------------------+
  ;;
  Q
-MAG(MAGRY,NODE) ;RPC Call to show node of Image File
- ;  NODE is the IEN of Image File :  ^MAG(2005,NODE
- N I,CT,X,TNODE,MAGFILE
+MAG(MAGRY,NODE) ; RPC Call for MAGSYS utility. Returns Global Node.
+ N CT,I,X,Y
  S MAGRY=$NA(^TMP("MAGNODE",$J))
- S NODE=$G(NODE)
- K @MAGRY
- S @MAGRY@(0)="Display NODE: "_$S($L(NODE):NODE,1:"LAST")
- S I=0,CT=0
- I $E(NODE)="^" G OTH
+ S NODE=+$G(NODE)
  I 'NODE S NODE=$P(^MAG(2005,0),U,3)
- S MAGFILE=$$FILE^MAGGI11(NODE)
- I MAGFILE'>0 Q  ; problem getting file number
- S I="^MAG(MAGFILE,"_NODE_","""")"
+ K @MAGRY
+ ;S @MAGRY@(0)="Display Imaging File NODE "_$S(NODE:NODE,1:"LAST")
+ S I=0,CT=0
+ S I="^MAG(2005,"_NODE_","""")"
  F  S X=$Q(@I) S I=X Q:$P(X,",",2)'=NODE  D
  . S CT=CT+1,@MAGRY@(CT)=X_" "_@X
- . Q
- I $P($G(^MAG(MAGFILE,NODE,2)),"^",6)="8925" D
- . S CT=CT+1,@MAGRY@(CT)="   *******   TIU    ******* "
- . S TNODE=$P(^MAG(MAGFILE,NODE,2),"^",7)
- . S I="^TIU(8925,"_TNODE_","""")"
- . F  S X=$Q(@I) S I=X Q:$P(X,",",2)'=TNODE  D
- . . S CT=CT+1,@MAGRY@(CT)=X_" "_@X
- . . Q
- Q
-OTH ;
- N OTHDA
- S OTHDA=$P(NODE,",",2)
- I OTHDA=0 S NODE=NODE_")" Q:'$D(@NODE)  S CT=$O(@MAGRY@(""),-1)+1,@MAGRY@(CT)=$G(@(NODE)) Q
- S I=NODE_","""")"
- F  S X=$Q(@I) S I=X Q:$P(X,",",2)'=OTHDA  D
- . S CT=$O(@MAGRY@(""),-1)+1,@MAGRY@(CT)=X_" "_@X
- . Q
  Q

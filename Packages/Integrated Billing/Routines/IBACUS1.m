@@ -1,6 +1,6 @@
 IBACUS1 ;ALB/CPM - TRICARE PATIENT RX COPAY CHARGES ; 02-AUG-96
- ;;2.0;INTEGRATED BILLING;**52,240,347**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,240**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 BILL(IBKEY,IBCHTRN) ; Create the TRICARE Rx copay charge.
  ;  Input:    IBKEY  --  1 ; 2, where
@@ -11,10 +11,10 @@ BILL(IBKEY,IBCHTRN) ; Create the TRICARE Rx copay charge.
  ;
  S IBY=1
  I '$G(IBKEY) G BILLQ
- I $$FILE^IBRXUTL(+IBKEY,.01)="" G BILLQ
+ I $G(^PSRX(+IBKEY,0))="" G BILLQ
  ;
  ; - need patient
- S DFN=$$FILE^IBRXUTL(+IBKEY,2)
+ S DFN=+$P($G(^PSRX(+IBKEY,0)),"^",2)
  I 'DFN S IBY="-1^IB002" G BILLQ
  ;
  ; - need action type

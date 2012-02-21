@@ -1,5 +1,5 @@
-HBHCRP16 ; LR VAMC(IRMS)/MJT-HBHC report on file 631, Admit/Reject Action field=Reject for date range, sorted by name, includes: patient name, Last Four, & evaluation date ; 12/21/05 3:30pm
- ;;1.0;HOSPITAL BASED HOME CARE;**6,22**;NOV 01, 1993;Build 2
+HBHCRP16 ; LR VAMC(IRMS)/MJT-HBHC report on file 631, Admit/Reject Action field=Reject for date range, sorted by name, includes: patient name, SSN, & evaluation date ;9508
+ ;;1.0;HOSPITAL BASED HOME CARE;**6**;NOV 01, 1993
  D START^HBHCUTL
  G:(HBHCBEG1=-1)!(HBHCEND1=-1) EXIT
  S %ZIS="Q",HBHCCC=0 K IOP,ZTIO,ZTSAVE D ^%ZIS G:POP EXIT
@@ -7,7 +7,7 @@ HBHCRP16 ; LR VAMC(IRMS)/MJT-HBHC report on file 631, Admit/Reject Action field=
 DQ ; De-queue
  U IO
  K ^TMP("HBHC",$J)
- S $P(HBHCY,"-",133)="",$P(HBHCZ,"=",133)="",HBHCHEAD="Rejections from Program",HBHCHDR="W !,""Patient Name"",?37,""Last Four"",?55,""Date"",?70,""Reject/Withdraw Reason""",HBHCCOLM=(132-(30+$L(HBHCHEAD))\2) S:HBHCCOLM'>0 HBHCCOLM=1
+ S $P(HBHCY,"-",133)="",$P(HBHCZ,"=",133)="",HBHCHEAD="Rejections from Program",HBHCHDR="W !,""Patient Name"",?37,""SSN"",?55,""Date"",?70,""Reject/Withdraw Reason""",HBHCCOLM=(132-(30+$L(HBHCHEAD))\2) S:HBHCCOLM'>0 HBHCCOLM=1
  D TODAY^HBHCUTL D:IO'=IO(0)!($D(IO("S"))) HDR132^HBHCUTL
  I '$D(IO("S")),(IO=IO(0)) S HBHCCC=HBHCCC+1 D HDR132^HBHCUTL
 LOOP ; Loop thru ^HBHC(631,"AI") evaluation date cross-ref to build report, rejects will only contain evaluation date data until HBHC/PCE patch installed
@@ -26,7 +26,7 @@ PROCESS ; Process record & build ^TMP("HBHC",$J) global
  ; Q:Admit/Reject Action field=Admit or is null 
  Q:($P(HBHCNOD0,U,15)=1)!($P(HBHCNOD0,U,15)="")
  S HBHCDPT0=^DPT($P(HBHCNOD0,U),0),HBHCREJ=$S($P(HBHCNOD0,U,16)]"":$P(^HBHC(631.1,$P(HBHCNOD0,U,16),0),U,2),1:"")
- S ^TMP("HBHC",$J,$P(HBHCDPT0,U),HBHCDATE)=$E($P(HBHCDPT0,U,9),6,9)_U_HBHCREJ
+ S ^TMP("HBHC",$J,$P(HBHCDPT0,U),HBHCDATE)=$E($P(HBHCDPT0,U,9),1,3)_"-"_$E($P(HBHCDPT0,U,9),4,5)_"-"_$E($P(HBHCDPT0,U,9),6,9)_U_HBHCREJ
  Q
 PRTLOOP ; Print loop
  S HBHCTOT=0

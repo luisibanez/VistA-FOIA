@@ -1,9 +1,8 @@
-PRS8HRSV ;WCIOFO/JAH-HOLIDAY FLAG, TIME CHECKER, WK() SET; 04/05/07 ; 6/30/09 12:40pm
- ;;4.0;PAID;**29,52,102,108,112,119**;Sep 21, 1995;Build 4
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;  Set up variable for holiday worked or holiday excused
+PRS8HRSV ;WCIOFO/JAH-HOLIDAY FLAG, TIME CHECKER, WK() SET; 12/21/05
+ ;;4.0;PAID;**29,52,102**;Sep 21, 1995
+ ;  Set up variable for holiday worked or holiday exused
  ;  Holiday worked coded 2 in DAY array
- ;  Holiday excused coded 1 in DAY array
+ ;  Holiday exused coded 1 in DAY array
  ;  A NON holiday is coded as all zero's in day array.
  ;
  ;  HOLIDAY WORKED
@@ -39,7 +38,7 @@ CHK ; --- Check ENT for acceptable X value
  ;       22        |    14      |  OT total hrs d3
  ;   ---------------------------------------------------
  ;
- N ZZ,PRSHOLSET S Y="^^^^^^28^^2^^^^^^^19^20^21^^12^13^14^^^^3^4^^^^",PRSHOLSET=0
+ N ZZ S Y="^^^^^^28^^2^^^^^^^19^20^21^^12^13^14^^^^3^4^^^^"
  ;
  ;   Set Y to a premium time in Y string, based on X 
  ;   OR set Y to zero if X is a non premium time or parttime hours.
@@ -60,18 +59,10 @@ CHK ; --- Check ENT for acceptable X value
  ;
  I X,Y=2,$E(ENT,+Y)'="H" S X=$S(TYP'["B":0,1:9)
  ;
- ;   IF 36/40 AWS with WP determine eligibility for OT/CT
- ;   Skip this check if time is HW (X=29) or OT on Hol (X=24)
- ;   
- I "KM"[$E(AC,1),$E(AC,2)=1,$P(C0,U,16)=72,X'=32,X'=29,X'=24 D
- . I HT>32 S X=$S(VAL="O":TOUR+15,VAL="e":7,1:X)  Q
- . I TH(W)>160 S X=$S(VAL="O":TOUR+19,VAL="e":7,1:X)  Q
- . I HT'>32,TH(W)'>160 S X=9
- ;
  ;   If X is hours in excess of 8/day & > 40/week & type of time
  ;   is compensatory time X = 0
  ;
- I "^16^17^18^"[("^"_X_"^"),TH(WK)>160,"Ee"[VAL S X=0
+ I "^16^17^18^"[("^"_X_"^"),TH(WK)>160!(TH>320),"Ee"[VAL S X=0
  ;
  ;   ** Significance of checking "X" now as opposed to Y.
  ;
@@ -111,10 +102,6 @@ CHK ; --- Check ENT for acceptable X value
  ..;
  ..I X'=32,$E(ENT,25),'HOLWKD D
  ...S ZZ=X
- ...; for 36/40 AWS w/ WP or NP report OT on Holiday as (OK/OS)
- ...; For 9mo AWS w/ Recess report OT on Holiday as (OK/OS)
- ...I +NAWS,VAL["O",$E(DAY(DAY,"HOL"),M)=0 S X=24 D SET S X=0 Q
- ...;
  ...S X=$S(TYP["P"!(TYP["I"):TOUR+28,1:24) D SET
  ...I TYP["P"!(TYP["I") S X=9 D SET
  ...S X=0
@@ -138,11 +125,11 @@ CHK ; --- Check ENT for acceptable X value
  ..;
  ..I $E(ENT,TOUR+21) S X=TOUR+28
  ;
- ;     IF employee is part time or a nurse or nurse hybrid 
+ ;     IF employee is part time & either a nurse or nurse hybrid 
  ;     & they worked the holiday
  ; ### SHOULD HYBRID BE ADDED TO THIS CHECK  HOW SHOULD THESE HYBRIDS
  ; ### TREATED ON A HOLIDAY
- I TYP["P"!(TYP["N")!(TYP["H"),HOLWKD,X=32 D
+ I TYP["P",TYP["N"!(TYP["H"),HOLWKD,X=32 D
  .;
  .;     J gets start & stop times for employee's holiday tour.
  .;     Start/stop times are represented w/ natural numbers
@@ -157,7 +144,7 @@ CHK ; --- Check ENT for acceptable X value
  .;
  .N I,J S J=$G(^TMP($J,"PRS8",DAY,"HWK")),ZZ=X
  .;
- .F I=1:2 Q:$P(J,U,I)=""  I M'<$P(J,U,I),M'>$P(J,U,I+1),'$G(PRSHOLSET) S X=29
+ .F I=1:2 Q:$P(J,U,I)=""  I M'<$P(J,U,I),M'>$P(J,U,I+1) S X=29
  .;
  .;     Holiday hrs-Day. reset X if 2 day tour.  Otherwise X = 0.
  .;
@@ -165,13 +152,6 @@ CHK ; --- Check ENT for acceptable X value
  ;
  ;
 SET ; --- Set value into WK array
- ;
- ; Nurses on the 36/40 AWS are FT with Normal Hours of 72.  Nurses on the 9 month
- ; AWS are PT with Normal Hours of 80.  Neither will not have Part Time Hours
- ; counted in their 8B string.
- ;
- Q:$E(AC,2)=1&($P(C0,U,16)=72)&(X=32)  ; 36/40 AWS
- Q:$E(AC,2)=2&(NH=320)&(X=32)  ; 9month AWS before any Recess processed
  ;
  ;     Full time employee & part time hours & normal hours WK1 + WK2
  ;     = biweekly normal hours.
@@ -182,7 +162,6 @@ SET ; --- Set value into WK array
  ;
  I +X D  Q
  . S $P(WK(W),"^",+X)=$P(WK(W),"^",+X)+1
- . I "^29^30^31^"[("^"_X_"^") S PRSHOLSET=1
  ;
  ;     When X is zero, reset to originally coded time.
  ;
@@ -197,8 +176,7 @@ TH ; --- increment total hours & compensatory time hours.
  ; I $S(VAL=4:1,"osEe"[VAL!(VAL="O"&('HOLWKD)):1,1:0) S TH=TH+1,TH(W)=TH(W)+1
  ;
  I $S(VAL=4:1,"osEe"[VAL!(VAL="O"&('HOLWKD)):1,1:0) D
- . Q:(HT>32)&(TH(W)<160)&(NH<320)&($E(ENT,19)=1)
- . Q:(HT>32)&(TH(W)<160)&(NH=320)&($E(ENT,19)=1)&($E(AC,2)=2)  ; 9month AWS
+ . Q:(HT>32)&(TH(W)<160)&(TH<320)
  . S TH=TH+1,TH(W)=TH(W)+1
  Q
  ;
@@ -208,13 +186,20 @@ G8 ; --- Check for greater than 8 hours in day
  ;
  Q:HTP'>32!(VAL="E")
  ;
+ ; Existing checks for FT and INT employees
+ I TYP["I",TYP'["B",TH(W)>160 S X=TOUR+19 D CHK^PRS8HRSV Q:X
+ ;
+ ; New checks for PT employees.  Check for OT Total Hours (OA/OE)
+ I TYP["P",TYP'["B" D  Q:X
+ . ;
+ . ; Checks for pay period
+ . I TH>320 S X=TOUR+19 D CHK^PRS8HRSV Q:X
+ . ;
+ . ; Checks for week
+ . I TH(W)>160 S X=TOUR+19 D CHK^PRS8HRSV Q:X
+ ;
  ; Checks for Hours Excess 8/day (DA/DE)
  S X=TOUR+15 D CHK^PRS8HRSV
  I X,NH<320,CYA2806>0 S CYA2806=CYA2806-1
- Q:X
- ;
- ; Checks for OT Total Hours (OA/OE)
- I TYP["I"!(TYP["P"),TYP'["B",TH(W)>160 S X=TOUR+19 D CHK^PRS8HRSV
  Q
- ;
  ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

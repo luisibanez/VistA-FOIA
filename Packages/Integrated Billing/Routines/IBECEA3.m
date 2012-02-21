@@ -1,9 +1,8 @@
-IBECEA3 ;ALB/CPM - Cancel/Edit/Add... Add a Charge ;30-MAR-93
- ;;2.0;INTEGRATED BILLING;**7,57,52,132,150,153,166,156,167,176,198,188,183,202,240,312,402**;21-MAR-94;Build 17
+IBECEA3 ;ALB/CPM-Cancel/Edit/Add... Add a Charge;30-MAR-93
+ ;;2.0;INTEGRATED BILLING;**7,57,52,132,150,153,166,156,167,176,198,188,183,202,240**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 ADD ; Add a Charge protocol
- N IBSWINFO S IBSWINFO=$$SWSTAT^IBBAPI()                     ;IB*2.0*312
  N IBGMT,IBGMTR
  S (IBGMT,IBGMTR)=0
  S IBCOMMIT=0,IBEXSTAT=$$RXST^IBARXEU(DFN,DT),IBCATC=$$BILST^DGMTUB(DFN),IBCVAEL=$$CVA^IBAUTL5(DFN),IBLTCST=$$LTCST^IBAECU(DFN,DT,1)
@@ -60,11 +59,6 @@ ADD ; Add a Charge protocol
  ;
 FR ; - ask 'bill from' date
  D FR^IBECEAU2(0) G:IBY<0 ADDQ
- ; Do NOT PROCESS on VistA if IBFR>=Switch Eff Date          ;CCR-930
- I +IBSWINFO,(IBFR+1)>$P(IBSWINFO,"^",2) D  G FR             ;IB*2.0*312
-   .W !!,"The 'Bill From' date cannot be on or AFTER the PFSS Effective Date"
-   .W ": ",$$FMTE^XLFDT($P(IBSWINFO,"^",2))
- ;
  S IBGMT=$$ISGMTPT^IBAGMT(DFN,IBFR),IBGMTR=0 ;GMT Copayment Status
  I IBGMT>0,IBXA>0,IBXA<4 W !,"The patient has GMT Copayment Status."
  ; - check the MT billing clock
@@ -103,7 +97,7 @@ FR ; - ask 'bill from' date
  . I $D(^IBA(351.81,IBCLDA,1,"AC",IBFR)) W !!,"This day is already marked as a Free Day." S IBY=-1
  . ;
  . ; have we already billed for this day
- . I $$BFO^IBECEAU(DFN,IBFR) W !!,"This patient has already been billed for this date." S IBY=-1
+ . I $D(^IB("AFDT",DFN,-IBFR)) W !!,"This patient has already been billed for this date." S IBY=-1
  ;
  ; - find per diem charge and description
  I IBXA=3 D  I 'IBCHG W !!,"Unable to determine the per diem rate.  Please check your rate table." G ADDQ
@@ -116,11 +110,6 @@ FR ; - ask 'bill from' date
  ;
 TO ; - ask 'bill to' date
  D TO^IBECEAU2(0) G:IBY<0 ADDQ
- ; Do NOT PROCESS on VistA if IBTO>=Switch Eff Date         ;CCR-930
- I +IBSWINFO,(IBTO+1)>$P(IBSWINFO,"^",2) D  G TO            ;IB*2.0*312
-  .W !!,"The 'Bill To' date cannot be on or AFTER the PFSS Effective Date"
-  .W ": ",$$FMTE^XLFDT($P(IBSWINFO,"^",2))
- ;
  I IBXA>0,IBXA<4,IBGMT'=$$ISGMTPT^IBAGMT(DFN,IBTO) W !!,"The patient's GMT Copayment status changed within the specified period!",! G ADDQ
  ;
  ; - calculate unit charge for LTC inpatient in IBCHG

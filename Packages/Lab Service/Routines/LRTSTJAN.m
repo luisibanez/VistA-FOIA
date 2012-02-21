@@ -1,5 +1,5 @@
 LRTSTJAN ;SLC/RWF,DCN-JAM TESTS ONTO (OR OFF) ACCESSIONS PART2 ;8/11/97
- ;;5.2;LAB SERVICE;**67,100,121,128,202,221,337**;Sep 27, 1994;Build 2
+ ;;5.2;LAB SERVICE;**67,100,121,128,202,221**;Sep 27, 1994
 DELOG ;This tag is no longer available - Routine LRTSTOUT replaces this call.
  W @IOF,!,$$CJ^XLFSTR(" The ability to DELETE an entire ORDER/ACCESSION ",80)
  W $$CJ^XLFSTR("has been REPLACED. The test(s) will now be marked",80)
@@ -10,16 +10,11 @@ EN D ^LRPARAM G:$G(LREND) END
  I '$D(LRLABKY) W !?5,"You are not authorized to change test status.",! G END
  K LRSCNXB
 EN1 ;
- N LRTOTL,LRIFN
  S (LREND,LRNOP)=0 K LRNATURE
  D FIX^LRTSTOUT G END:$G(LREND) I $G(LRNOP) D END G EN1
  W ! K DIR S DIR(0)="Y",DIR("A")="  Change Entire accession to Not Perform !! ",DIR("B")="NO" D ^DIR K DIR
  I $D(DIRUT) G EN1
- S LRTOTL=Y,LRIFN=0
- I LRTOTL>0 D
- .F  S LRIFN=$O(^LR(LRDFN,LRSS,LRIDT,LRIFN)) Q:LRIFN=""  S:$P($G(^LR(LRDFN,LRSS,LRIDT,LRIFN)),U)="pending" $P(^LR(LRDFN,LRSS,LRIDT,LRIFN),U)=""
- ;I Y=0 D CHG^LRTSTOUT W !!! G EN1
- I LRTOTL=0 D CHG^LRTSTOUT W !!! G EN1
+ I Y=0 D CHG^LRTSTOUT W !!! G EN1
  D FX2^LRTSTOUT I $G(LREND) D END W @IOF G EN1
  D
  . N LRTSTS

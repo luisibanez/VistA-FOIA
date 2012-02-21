@@ -1,9 +1,9 @@
-RORUTL05 ;HCIOFO/SG - MISCELLANEOUS UTILITIES ; 1/26/07 4:24pm
- ;;1.5;CLINICAL CASE REGISTRIES;**1,2**;Feb 17, 2006;Build 6
+RORUTL05 ;HCIOFO/SG - MISCELLANEOUS UTILITIES ; 10/21/05 3:50pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
- ; #4493         Read the .01 field of the file #771.7 (private)
+ ; #???          Read the .01 field of the file #771.7
  ; #10040        Access to the HOSPITAL LOCATION file (supported)
  ; #10061        DEM^VADPT (supported)
  ;
@@ -266,7 +266,6 @@ REMARK(REGLST,WD) ;
 VADEM(DFN,VALIDATE,VAPTYP,VAHOW) ;
  N I,J,X,A,K,K1,NC,NF,NQ,T,VAROOT
  D DEM^VADPT
- S VA("BID")=$E($P($G(VADM(2)),U),6,10)  ; Always 'Last4'
  Q:'$G(VALIDATE)
  ;--- Make sure that required fields are not empty
  S:$G(VADM(1))="" VADM(1)="Unknown ("_DFN_")"

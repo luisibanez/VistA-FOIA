@@ -1,6 +1,6 @@
 IBCNS1 ;ALB/AAS - INSURANCE MANAGEMENT SUPPORTED FUNCTIONS ;22-JULY-91
- ;;2.0;INTEGRATED BILLING;**28,60,52,85,107,51,137,240,371**;21-MAR-94;Build 57
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**28,60,52,85,107,51,137,240**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 INSURED(DFN,IBINDT) ; -- Is patient insured
  ; --Input  DFN     = patient
@@ -107,7 +107,6 @@ ALL(DFN,VAR,ACT,ADT,SOP) ; -- find all insurance data on a patient
  ;           var(x,2) =: ^dpt(dfn,.312,x,2)
  ;           var(x,3) =: ^dpt(dfn,.312,x,3)
  ;           var(x,4) =: ^dpt(dfn,.312,x,4)
- ;           var(x,5) =: ^dpt(dfn,.312,x,5)
  ;       var(x,355.3) =: ^iba(355.3,$p(var(x,0),"^",18),0)
  ;       var("S",COB sequence,x) =: (null) as an xref for COB
  ;
@@ -122,7 +121,6 @@ ALL(DFN,VAR,ACT,ADT,SOP) ; -- find all insurance data on a patient
  .S @VAR@(X,2)=$G(^DPT(DFN,.312,X,2))
  .S @VAR@(X,3)=$G(^DPT(DFN,.312,X,3))
  .S @VAR@(X,4)=$G(^DPT(DFN,.312,X,4))
- .S @VAR@(X,5)=$G(^DPT(DFN,.312,X,5))
  .S @VAR@(X,355.3)=$G(^IBA(355.3,+$P($G(^DPT(DFN,.312,X,0)),"^",18),0))
  .I $G(SOP) D
  ..N COB,WHO

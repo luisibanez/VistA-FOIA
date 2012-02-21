@@ -1,6 +1,5 @@
 IBCEMU2 ;ALB/DSM - IB MRA Utility ;01-MAY-2003
- ;;2.0;INTEGRATED BILLING;**155,320,349,436**;21-MAR-94;Build 31
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**155**;21-MAR-94
  ;
  Q
  ;
@@ -10,12 +9,9 @@ QMRA ; This is a background procedure that is spun off of the IB BATCH
  ; on the device associated with the 'Bill Addendum' Form Type.
  ; This process doesn't interact with users.
  ;
- ; IB*2*320:  MCS - Resubmit by Print produces a scratch global also
- ;            ^XTMP("IBCFP6",$J,.... for MRA's to print here
- ;
  ; Input:
  ;      IBJ   = $J of starting job
- ;      IBFTP = "IBMRA"_# (ien of form type) or "IBCFP6"
+ ;      IBFTP = "IBMRA"_# (ien of form type)
  ;
  N IBS1,IBS2,IBS3,IBIFN,IBQ,IBPGN
  S (IBS1,IBIFN,IBQ)=0
@@ -122,7 +118,7 @@ MRACALC(IBEOB,IBIFN,AR,PRCASV) ; Calculates Two Amounts:
  ;
  N I,LNLVL,EOBADJ,IBCOBN,INPAT,FRMTYP
  ;
- S FRMTYP=$$FT^IBCEF(IBIFN)       ;Form Type 2=1500; 3=UB
+ S FRMTYP=$$FT^IBCEF(IBIFN)       ;Form Type 2=HCFA 1500; 3=UB92
  S INPAT=$$INPAT^IBCEF(IBIFN)     ;Inpat/Outpat Flag
  S AR=$G(AR,0)    ;initialize AR flag
  F I=0,1,2 S IBEOB(I)=$G(^IBM(361.1,IBEOB,I))
@@ -135,10 +131,10 @@ MRACALC(IBEOB,IBIFN,AR,PRCASV) ; Calculates Two Amounts:
  ; For multiple EOB's, add up the amounts across EOB's
  S PRCASV("MEDURE")=$G(PRCASV("MEDURE"))+IBEOB(1)
  ;
- ; Handle CMS-1500 Form Type Next:
+ ; Handle HCFA 1500 Form Type Next:
  I FRMTYP=2 D MEDCARE(IBEOB,.PRCASV) Q
  ;
- ; Handle UB Form Type Next:
+ ; Handle UB92 Form Type Next:
  ; If Inpatient Calculate from Claim level data
  I INPAT D  Q  ;
  . K EOBADJ M EOBADJ=^IBM(361.1,IBEOB,10)
@@ -227,39 +223,3 @@ MRATYPE(BILL,ARDATE) ; Function - determines the MRA Receivable Type for a Third
 MRADTACT() ; Function - returns DATE MRA FIRST ACTIVATED at site
  Q $P($G(^IBE(350.9,1,8)),U,13)
  ;
- ;** start IB*2.0*436 **
-MRACALC2(IBIFN) ; Function - This tag will add all EOB's for a given claim number. 
- ; Returns the sum of the Medicare Contractual Adj Amt
- ;
- ; Input:  IBIFN            - ien of Claim file 399
- ; Output: PRCASV("MEDCA")  - Medicare Contractual Adj Amt
- ;
- ; Variables IBEOB          = ien of EOB file 361.1
- ;           PRCASV("MEDCA")= Medicare Contractual Adj Amt
- ; Note:
- ;   For clarification, the following terms mean exactly the same thing.
- ;   "Medicare Contractual Adj Amt" = "Medicare Unpaid Amt" = "Medicare Unallowable Amt"
- N IBEOB,I,LNLVL,EOBADJ,IBCOBN,INPAT,FRMTYP,PRCASV
- ;
- S PRCASV("MEDCA")=0
- S FRMTYP=$$FT^IBCEF(IBIFN)       ;Form Type 2=1500; 3=UB
- S INPAT=$$INPAT^IBCEF(IBIFN)     ;Inpat/Outpat Flag
- ; Get EOB data
- S IBEOB=0
- F  S IBEOB=$O(^IBM(361.1,"B",IBIFN,IBEOB)) Q:'IBEOB  D
- . F I=0,1,2 S IBEOB(I)=$G(^IBM(361.1,IBEOB,I))
- . I $P(IBEOB(0),U,4)'=1 Q  ;make sure it's an MRA
- . S IBCOBN=$$COBN^IBCEF(IBIFN) ;get current bill sequence
- . ;
- . ; Handle CMS-1500 Form Type Next:
- . I FRMTYP=2 D MEDCARE(IBEOB,.PRCASV) Q
- . ;
- . ; Handle UB Form Type Next:
- . ; If Inpatient Calculate from Claim level data
- . I INPAT D  Q  ;
- . . K EOBADJ M EOBADJ=^IBM(361.1,IBEOB,10)
- . . S PRCASV("MEDCA")=$G(PRCASV("MEDCA"))+$$CALCMCA(.EOBADJ)
- . ; If Outpatient Calculate from Service Line level data
- . D MEDCARE(IBEOB,.PRCASV)
- Q PRCASV("MEDCA") ;MRACALC2
- ;** end IB*2.0*436 **

@@ -1,5 +1,5 @@
-ONCSAPIU ;Hines OIFO/SG - COLLABORATIVE STAGING (UTILITIES)  ; 12/7/06 9:08am
- ;;2.11;ONCOLOGY;**40,47**;Mar 07, 1995;Build 19
+ONCSAPIU ;Hines OIFO/SG - COLLABORATIVE STAGING (UTILITIES)  ; 5/18/04 9:52am
+ ;;2.11;ONCOLOGY;**40**;Mar 07, 1995
  ;
  Q
  ;
@@ -15,7 +15,9 @@ GETCSURL() ;
  S DIV=+$G(DUZ(2)),IEN=+$O(^ONCO(160.1,"C",DIV,""))
  I IEN'>0  S IEN=+$O(^ONCO(160.1,0))  Q:IEN'>0 $$ERROR^ONCSAPIE(-22)
  S URL=$$GET1^DIQ(160.1,IEN,19,,,"ONCMSG")
- Q:URL="" $$ERROR^ONCSAPIE(-22)
+ ;--- Try to get the address of the user's workstation
+ I URL=""  D  Q:URL="" $$ERROR^ONCSAPIE(-22)
+ .; S:$G(IO("IP"))'="" URL=$G(IO("IP"))
  ;--- Parse the URL and supply the missing parts
  S RC=$$PARSE^ONCXURL(URL,.HOST,.PORT,.PATH)
  Q:RC<0 $$ERROR^ONCSAPIE(-11,URL)
@@ -32,7 +34,7 @@ GETCSURL() ;
  ;        0  Continue
  ;
 PAGE() ;
- I $E(IOST,1,2)'="C-"  S $Y=0  Q 0
+ I $G(IOST)'["C-"  S $Y=0  Q 0
  N DA,DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
  S DIR(0)="E"  D ^DIR  S $Y=0
  Q $S($D(DUOUT):-1,$D(DTOUT):-2,1:0)
@@ -62,26 +64,6 @@ UPDCSURL(URL) ;
  ;--- Cleanup and error processing
  L -^ONCO(160.1)
  Q $S(RC<0:RC,1:0)
- ;
- ;***** WRAPS THE STRING AND PRINTS IT
- ;
- ; X             Source string
- ; [DIWR]        Output width (IOM, by default)
- ;
-WW(X,DIWR) ;
- N DIWF,DIWL,I,TMP
- S:$G(DIWR)'>0 DIWR=$G(IOM,80)
- K ^UTILITY($J,"W")
- ;--- Wrap the string
- S DIWL=1,DIWF="|"  D ^DIWP
- ;--- Print the text
- S I=""
- F  S I=$O(^UTILITY($J,"W",DIWL,I))  Q:I=""  D
- . S TMP=$G(^UTILITY($J,"W",DIWL,I,0))
- . D EN^DDIOL($$TRIM^XLFSTR(TMP,"R"))
- ;--- Cleanup
- K ^UTILITY($J,"W")
- Q
  ;
  ;***** EMULATES AND EXTENDS THE ZWRITE COMMAND :-)
  ;

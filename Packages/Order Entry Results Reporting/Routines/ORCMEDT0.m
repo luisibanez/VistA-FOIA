@@ -1,5 +1,5 @@
-ORCMEDT0 ;SLC/MKB-Dialog Utilities ;08/06/2007
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**46,60,190,215,243,296**;Dec 17, 1997;Build 19
+ORCMEDT0 ;SLC/MKB-Dialog Utilities ;04:11 PM  12 Feb 1999
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**46,60,190,215**;Dec 17, 1997
 DIALOG(TYPE) ; -- Get Dialog file entry
  N X,Y,Z,D,DIC,DIE,DIK,DA,DR,DLAYGO,ORPKG,ORDLG,ORIT,OROI,I,IDX
  S ORPKG="ORDER ENTRY/RESULTS REPORTING",DIC="^ORD(101.41,",DIC(0)="AEQLZ"
@@ -47,7 +47,7 @@ DEL(DA) ; -- delete bad entry in Order Dialog file
  Q
  ;
 SAVE ; -- Save ORDG, responses in ORDIALOG to dialog ORQDLG
- N PROMPT,CNT,ITM,TYPE,INST,VALUE,INP,UD K ^ORD(101.41,ORQDLG,6)
+ N PROMPT,CNT,ITM,TYPE,INST,VALUE K ^ORD(101.41,ORQDLG,6)
  S (PROMPT,CNT)=0 F  S PROMPT=$O(ORDIALOG(PROMPT)) Q:PROMPT'>0  D
  . S ITM=ORDIALOG(PROMPT),TYPE=$E(ORDIALOG(PROMPT,0))
  . S INST=0 F  S INST=$O(ORDIALOG(PROMPT,INST)) Q:INST'>0  D
@@ -57,9 +57,6 @@ SAVE ; -- Save ORDG, responses in ORDIALOG to dialog ORQDLG
  . . M:TYPE="W" ^ORD(101.41,ORQDLG,6,CNT,2)=@VALUE
  . . S ^ORD(101.41,ORQDLG,6,"D",PROMPT,CNT)=""
  S ^ORD(101.41,ORQDLG,6,0)="^101.416^"_CNT_U_CNT
- S INP=+$O(^ORD(100.98,"B","INPATIENT MEDICATIONS",""))
- S UD=+$O(^ORD(100.98,"B","UNIT DOSE MEDICATIONS",""))
- I +$G(ORDG)>0,ORDG=INP,UD>0 S ORDG=UD
  S:$G(ORDG) $P(^ORD(101.41,ORQDLG,0),U,5)=+ORDG
  Q
  ;
@@ -70,6 +67,6 @@ ITEM(Z) ; -- Select new item to add
  S DIC("S")="I $P(^(0),U,4)'=""P"""
 IT1 D ^DIC I Y'>0 S Y=$S($D(DUOUT)!$D(DTOUT):"^",1:"") Q Y
  D RECURSV^ORCMEDT5(+Y,+ORMENU,.ORERR) I $D(ORERR) D  G IT1
- . W $C(7),!!,"If an item is already included on this menu, it may not be added!"
+ . W $C(7),!!,"An ancestor of this menu may not be added as an item!"
  . W !,ORERR S I=0 F  S I=$O(ORERR(I)) Q:I'>0  W !?18," =>"_ORERR(I)
  Q +Y

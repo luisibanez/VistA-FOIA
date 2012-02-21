@@ -1,6 +1,5 @@
-MAGJEX2 ;;WIRMFO/JHC Rad. Workstation RPC calls;[ 02/25/2000  4:40 PM ] ; 09 Jun 2003  2:58 PM
- ;;3.0;IMAGING;**51,18,76**;Jun 22, 2007;Build 19
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+MAGJEX2 ;;WIRMFO/JHC Rad. Workstation RPC calls;[ 02/25/2000  4:40 PM ]
+ ;;3.0;IMAGING;;Mar 01, 2002
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -34,22 +33,23 @@ PREFETCH ; Entry point from HL7 processing, to initiate prefetch at
  N RET S RET=""
  I '$P($G(^MAG(2006.69,1,0)),U,5) G PREFQ          ; Prefetch disabled
  I '($G(RADFN)&$G(RADTI)&$G(RACNI)&'$G(RACANC)) G PREFQ ; Required vars
+ N MAGJOB D MAGJOB^MAGJUTL3
  D PRIOR1(.RET,"P"_U_RADFN_U_RADTI_U_RACNI)
 PREFQ ; W !,"End PRE-FETCH RET=" N JHC R JHC ZW RET
  Q
  ;
 PRIOR1(MAGGRY,DATA) ; review all exams for a patient to find "related" exams
- ; This ep also called as subroutine from routing software (P51)
  ; MAGGRY - return array of exams to PreFetch, or Auto-send to RAD W/S
  ; DATA:  - input params for the Current Exam
  ;   1) ACTION = P -- Pre-fetch Exams (from Jukebox to Magnetic Disk)
- ;             = A -- Auto-route priors
+ ;             = A -- Auto-Display Exams
  ;   2) RADFN  = Case pointers to Rad/Nuc Med Patient file 
  ;   3) RADTI  =  ""        ""         ""          ""
  ;   4) RACNI  =  ""        ""         ""          ""
  ;   5) RARPT  - Case pointer to ^RARPT global
  ;
- N $ETRAP,$ESTACK S $ETRAP="D ERR^MAGJEX2"
+ I $$NEWERR^%ZTER N $ETRAP,$ESTACK S $ETRAP="D ERR^MAGJEX2"
+ E  S X="ERR^MAGJEX2",@^%ZOSF("TRAP")
  K MAGGRY
  N RADFN,RADTI,RACNI,RARPT,RADATA
  N DAYCASE,DIQUIET,ACTION,CPT,HDR,MAGDFN,MAGDTI,MAGCNI,MAGRET,MAGRACNT
@@ -60,7 +60,6 @@ PRIOR1(MAGGRY,DATA) ; review all exams for a patient to find "related" exams
  I MAGDFN,MAGDTI,MAGCNI
  E  S MAGGRY(0)="0^Request Contains Invalid Case Pointer ("_DATA_")" G PRIOR1Z
  S DIQUIET=1 D DT^DICRW
- N MAGJOB D MAGJOBNC^MAGJUTL3
  S HDR=$S(ACTION="P":"Pre-fetch",ACTION="A":"Auto-Display",1:"???")_" Prior Exams for CASE: "
  I '$D(^DPT(MAGDFN,0)) S MAGGRY(0)="0^Request Contains Invalid Patient Pointer ("_MAGDFN_")" G PRIOR1Z
  I $D(^RADPT(MAGDFN,"DT",MAGDTI,"P",MAGCNI))
@@ -86,7 +85,7 @@ SRCH(RADFN) ; Traverse all exams for a patient, up to limits of age & total
  N BEGDT,LIMYRS,LIMEXAMS,X
  S X=$G(^MAG(2006.69,1,0))
  S LIMYRS=+$P(X,U,14),LIMEXAMS=+$P(X,U,15)
- S:'LIMYRS LIMYRS=7 S:'LIMEXAMS LIMEXAMS=50 ; default limit # Exams
+ S:'LIMYRS LIMYRS=10 S:'LIMEXAMS LIMEXAMS=100 ; default limit # Exams
  S BEGDT=($E(DT,1,3)-LIMYRS)_$E(DT,4,7)
  I BEGDT<2950101 S BEGDT=2950101 ; 2 yrs prior to earliest VistaPACS
  S MAGRACNT=1 D GETEXAM3^MAGJUTL1(RADFN,BEGDT,"",.MAGRACNT,.MAGRET,"",LIMEXAMS)
@@ -136,13 +135,13 @@ SVMAG2A ; 2A and 2B used by subroutine at tag PRIOR1
  ; ^MAG(2006.65,"B",730,1) =
  ;
  Q:'MAGMATCH
- ; 1  RADFN   RADTI    RACNI   RANME   RASSN    <-- from GETEXAM
- ; 6  RADATE  RADTE    RACN    RAPRC   RARPT
- ; 11 RAST    DAYCASE  RAELOC  RASTP   RASTORD
- ; 16 RADTPRT RACPT    RAIMGTYP
- S MAGDTH=$$FMTH^XLFDT($P(RADATA,U,7),1)
+   ; 1  RADFN   RADTI    RACNI   RANME   RASSN    <-- from GETEXAM
+   ; 6  RADATE  RADTE    RACN    RAPRC   RARPT
+   ; 11 RAST    DAYCASE  RAELOC  RASTP   RASTORD
+   ; 16 RADTPRT RACPT    RAIMGTYP
+ S X=$P(RADATA,U,7) D H^%DTC S MAGDTH=+%H
  S X=$P(RADATA,U,18)
- S RAIMGTYP=$S(X]"":$O(^RA(79.2,"C",X,"")),1:X)
+ S RAIMGTYP=$S(X]"":$O(^RA(79.2,"C",X,"")),1:X) ; <*> chg to Fileman call
  S Y=MAGGRY(0)+1,$P(MAGGRY(0),U)=Y,MAGGRY(Y)=MAGMATCH_U_MAGDTH_U_U_$P(RADATA,U,9)_U_RAIMGTYP_U_RADFN_U_RADTI_U_RACNI_U_RARPT_U_$P(RADATA,U,12)_U_$P(RADATA,U,11)
  Q
  ;
@@ -161,7 +160,8 @@ SVMAG2B ; For exams whose CPTs match, select a subset that are within defined
  . F  S CPT=$O(GO(CPT)) Q:CPT=""  F ICPT=1:1:GO(CPT) D
  .. S CT=CT+1,X=GO(CPT,ICPT),RARPT=$P(X,U,11)
  .. S MAGGRY(CT)="M08^"_CPT_"|"_$P(X,U,8,11)
- .. I ACTION="P"!(ACTION="A") S Y=$$JBFETCH^MAGJUTL2(RARPT)  ; fetch from jukebox
+ .. I ACTION="P" S Y=$$JBFETCH^MAGJUTL2(RARPT)  ; fetch from jukebox
+ .. E  I ACTION="A"      ; for now, do nothing but return pointers to WS
  . S MAGGRY(0)=CT_"^"_HDR
  E  S MAGGRY(0)="0^No Exams Found for "_HDR
  Q

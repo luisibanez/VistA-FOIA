@@ -1,5 +1,5 @@
 PXCECCLS ;WASH/BDB - UPDATE ENCOUNTER SC/EI FROM DX SC/EI ;5/18/05 1:31pm
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**124,174,168**;Feb 12, 2004;Build 14
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**124,174**;Feb 12, 2004
  Q
  ;
 VST(PXVIEN) ;
@@ -36,7 +36,7 @@ VST(PXVIEN) ;
  ;                ="" Do not ask the SC/EI questions
  ;       
  ;       Edit flag for SC: SCEF, AO: AOEF, IR: IREF, EC:ECEF, MST: MSTEF, HNC: HNCEF
- ;           , CV: CVEF, SHAD:SHADEF  - Used in Visit File Filing - See ^VSITFLD
+ ;           , CV: CVEF  - Used in Visit File Filing - See ^VSITFLD
  ;           example below          
  ;       VIST("SCEF")=1  SC/EI Classification determined by the DX's - do not ask SC/EI
  ;       VIST("SCEF")=0  SC/EI Classification undetermined by the DX's - ask SC/EI
@@ -59,9 +59,8 @@ VST(PXVIEN) ;
  .I '($P(PXSCEINW,U,5)="1")  S:$P(PXPOV800,U,5)="1" $P(PXSCEINW,U,5)="1" I '($P(PXSCEINW,U,5)<0)  S:$P(PXPOV800,U,5)="" $P(PXSCEINW,U,5)="-1" S:$P(PXPOV800,U,5)="0" $P(PXSCEINW,U,5)="0"
  .I '($P(PXSCEINW,U,6)="1")  S:$P(PXPOV800,U,6)="1" $P(PXSCEINW,U,6)="1" I '($P(PXSCEINW,U,6)<0)  S:$P(PXPOV800,U,6)="" $P(PXSCEINW,U,6)="-1" S:$P(PXPOV800,U,6)="0" $P(PXSCEINW,U,6)="0"
  .I '($P(PXSCEINW,U,7)="1")  S:$P(PXPOV800,U,7)="1" $P(PXSCEINW,U,7)="1" I '($P(PXSCEINW,U,7)<0)  S:$P(PXPOV800,U,7)="" $P(PXSCEINW,U,7)="-1" S:$P(PXPOV800,U,7)="0" $P(PXSCEINW,U,7)="0"
- .I '($P(PXSCEINW,U,8)="1")  S:$P(PXPOV800,U,8)="1" $P(PXSCEINW,U,8)="1" I '($P(PXSCEINW,U,8)<0)  S:$P(PXPOV800,U,8)="" $P(PXSCEINW,U,8)="-1" S:$P(PXPOV800,U,8)="0" $P(PXSCEINW,U,8)="0"
  S VSIT("IEN")=PXVIEN
- S VSIT("SCEF")=0,VSIT("AOEF")=0,VSIT("IREF")=0,VSIT("ECEF")=0,VSIT("MSTEF")=0,VSIT("HNCEF")=0,VSIT("CVEF")=0,VSIT("SHADEF")=0
+ S VSIT("SCEF")=0,VSIT("AOEF")=0,VSIT("IREF")=0,VSIT("ECEF")=0,VSIT("MSTEF")=0,VSIT("HNCEF")=0,VSIT("CVEF")=0
  S:$P(PXSCEINW,U,1)="0"!($P(PXSCEINW,U,1)="1") VSIT("SC")=$P(PXSCEINW,U,1),VSIT("SCEF")=1
  S:$P(PXSCEINW,U,2)="0"!($P(PXSCEINW,U,2)="1") VSIT("AO")=$P(PXSCEINW,U,2),VSIT("AOEF")=1 S:$G(VSIT("SC"))=1 VSIT("AO")="@"
  S:$P(PXSCEINW,U,3)="0"!($P(PXSCEINW,U,3)="1") VSIT("IR")=$P(PXSCEINW,U,3),VSIT("IREF")=1 S:$G(VSIT("SC"))=1 VSIT("IR")="@"
@@ -69,7 +68,6 @@ VST(PXVIEN) ;
  S:$P(PXSCEINW,U,5)="0"!($P(PXSCEINW,U,5)="1") VSIT("MST")=$P(PXSCEINW,U,5),VSIT("MSTEF")=1
  S:$P(PXSCEINW,U,6)="0"!($P(PXSCEINW,U,6)="1") VSIT("HNC")=$P(PXSCEINW,U,6),VSIT("HNCEF")=1
  S:$P(PXSCEINW,U,7)="0"!($P(PXSCEINW,U,7)="1") VSIT("CV")=$P(PXSCEINW,U,7),VSIT("CVEF")=1
- S:$P(PXSCEINW,U,8)="0"!($P(PXSCEINW,U,8)="1") VSIT("SHAD")=$P(PXSCEINW,U,8),VSIT("SHADEF")=1
  D UPD^VSIT
  K ^TMP("PXKENC",$J)
  Q

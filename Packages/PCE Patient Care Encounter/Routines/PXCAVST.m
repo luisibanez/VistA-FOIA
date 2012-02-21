@@ -1,5 +1,5 @@
-PXCAVST ;ISL/dee & LEA/Chylton - Validates data from the PCE Device Interface for the Visit and Providers ;6/6/05
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**14,33,74,111,116,130,168**;Aug 12, 1996;Build 14
+PXCAVST ;ISL/dee & LEA/Chylton - Validates data from the PCE Device Interface for the Visit and Providers ;11/19/96
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**14,33,74,111,116,130**;Aug 12, 1996
  Q
  ;
 ENCOUNT(PXCA,PXCABULD,PXCAERRS,PXCAEVAL) ;
@@ -57,9 +57,6 @@ ENCOUNT(PXCA,PXCABULD,PXCAERRS,PXCAEVAL) ;
  S PXCAITEM=$P(PXCAERR,"^",18)
  I PXCAITEM=-1 S PXCA("ERROR","ENCOUNTER",0,0,18)="CV flag bad^"_$P(PXCAENC,"^",18)
  I PXCAITEM=-2,$P(PXCAENC,"^",11)=1 S PXCA("WARNING","ENCOUNTER",0,0,18)="CV flag must be N/A not YES for this patient^"_$P(PXCAENC,"^",18)
- S PXCAITEM=$P(PXCAERR,"^",19)
- I PXCAITEM=-1 S PXCA("ERROR","ENCOUNTER",0,0,19)="PROJ 112/SHAD flag bad^"_$P(PXCAENC,"^",19)
- I PXCAITEM=-2,$P(PXCAENC,"^",11)=1 S PXCA("WARNING","ENCOUNTER",0,0,19)="PROJ 112/SHAD flag must be N/A not YES for this patient^"_$P(PXCAENC,"^",19)
  S $P(PXCAENC,"^",6,11)=PXCAOUT
  S PXCAITEM=+$P(PXCAENC,"^",13)
  I PXCAITEM D

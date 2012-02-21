@@ -1,5 +1,5 @@
-SDCNP1A ;ALB/LDB - CANCEL APPT. (continued) ; 5/26/05 10:59am
- ;;5.3;Scheduling;**167,340,398,478,517**;Aug 13, 1993;Build 4
+SDCNP1A ;ALB/LDB - CANCEL APPT. (continued) ; 14 MAR 88@13:00
+ ;;5.3;Scheduling;**167,340,398**;Aug 13, 1993
 LOOP S SDCNT1=0 F SDAP=0:0 S SDAP=$O(^UTILITY($J,"SDCNP2","REBK",DFN,SDAP)) Q:SDAP'>0  S SDP1=^(SDAP),S1=$P(SDP1,"^",2),S9=$P(^SC(S1,0),"^") D SDDT Q:X8="^"  D RBK S MAX=1
  Q
 SDDT W !!,"IN ",S9 D:'$D(DT) DT^SDUTL D DT S %DT="AEX",%DT("A")="START REBOOKING FROM WHAT DATE: "_D S %DT(0)=DT D ^%DT K %DT S X8=X Q:$D(DTOUT)!(X="^")  S:X8="" Y=DT G:Y<0 SDDT S SDDT=+Y\1 K X,Y,DIC S X1=SDDT,X2=DT D ^%DTC
@@ -18,20 +18,8 @@ NRBK W !,"NO REBOOKING ALLOWED FOR ",$P(^SC(SC,0),"^") Q
 DT S X1=$P(DT,"."),X2=10 D C^%DTC S Y=X D D^DIQ S D=Y_"//" Q
 PROT S SDPRT=0 I $D(^SC(+I,"SDPROT")),$P(^("SDPROT"),U)="Y",'$D(^SC(+I,"SDPRIV",DUZ)) W !,*7,"Appt. in ",$P(^SC(+I,0),"^")," NOT CANCELLED ",!,"Access to this clinic is restricted to only privileged users!",*7 S SDPRT=1 Q
  Q
- ;SD/517 added new IF statement, changed For loop & added 2 new linetags
-FLEN S (ZPL,SDSP)=""  ;SD/517
- S COV=$S($P(^DPT(DFN,"S",NDT,0),"^",11)=1:" (COLLATERAL) ",1:"") I $D(^SC(SC,"S",NDT)) S ZL=0 F  S ZL=$O(^SC(SC,"S",NDT,1,ZL)) Q:'ZL  D
- .I '$D(^SC(SC,"S",NDT,1,ZL,0)) D FLEN1 Q
- .I +^SC(SC,"S",NDT,1,ZL,0)=DFN S APL=$P(^(0),U,2),SDSP=$P($G(^SC(SC,"S",NDT,1,ZL,"CONS")),U)
- .Q
- ;S COV=$S($P(^DPT(DFN,"S",NDT,0),"^",11)=1:" (COLLATERAL) ",1:"") I $D(^SC(SC,"S",NDT)) F ZL=0:0 S ZL=$O(^SC(SC,"S",NDT,1,ZL)) Q:ZL'>0  I +^(ZL,0)=DFN S APL=$P(^(0),"^",2),SDSP=$P($G(^SC(SC,"S",NDT,1,ZL,"CONS")),U) Q  ;SD/478
+FLEN S COV=$S($P(^DPT(DFN,"S",NDT,0),"^",11)=1:" (COLLATERAL) ",1:"") I $D(^SC(SC,"S",NDT)) F ZL=0:0 S ZL=$O(^SC(SC,"S",NDT,1,ZL)) Q:ZL'>0  I +^(ZL,0)=DFN S APL=$P(^(0),"^",2) Q
  Q
- ;
- ;SD/517 added new linetag to kill any lingering "C" nodes
-FLEN1 Q:'$D(^SC(SC,"S",NDT,1,ZL,"C"))
- S DA(2)=SC,DA(1)=NDT,DA=ZL,DIK="^SC("_DA(2)_",""S"","_DA(1)_",1," D ^DIK
- Q
- ;
 LOOP1 S SDCNT1=0 F L=0:0 S L=$O(^UTILITY($J,"SDCNP",L)) Q:L'>0  I ^(L)["JUST CANCELLED" S $P(SDCL(L),"^")=$P(^(L),"^",2),$P(SDCL(L),"^",2)=$P(^(L),"^")
  K ^UTILITY($J) Q
 SDLET N NDT,GDT

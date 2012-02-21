@@ -1,6 +1,6 @@
-FBPAY ;AISC/DMK,GRR,TET-PATIENT/VENDOR PAYMENT OUTPUT DRIVER ;20/NOV/2006
- ;;3.5;FEE BASIS;**32,69,101**;JAN 30, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+FBPAY ;AISC/DMK,GRR,TET-PATIENT/VENDOR PAYMENT OUTPUT DRIVER ;7/9/2001
+ ;;3.5;FEE BASIS;**32,69**;JAN 30, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
 GETVEN ;select vendor
  K FBX S FBSORT=0 ;FBSORT=1 for patient, = 0 for vendor
  S DIC="^FBAAV(",DIC(0)="AEQMZ",DIC("A")="Select Fee Vendor: " W !! D ^DIC K DIC("A") G EXIT:$D(DTOUT)!($D(DUOUT))!(X=""),GETVEN:Y<0
@@ -9,7 +9,7 @@ GETVET ;select patient
  K FBX S FBSORT=1 ;FBSORT=1 for patient, =0 for vendor
  S DIC="^FBAAA("
  S DIC(0)="AEQMNZ",DIC("A")="Select Fee Patient: " W !! D ^DIC K DIC("A") G EXIT:$D(DTOUT)!($D(DUOUT))!(X=""),GETVET:Y<0
- S FBIEN=+Y,FBNAME=Y(0,0),FBID=$$SSNL4^FBAAUTL($$SSN^FBAAUTL(FBIEN))
+ S FBIEN=+Y,FBNAME=Y(0,0),FBID=$$SSN^FBAAUTL(FBIEN)
 DATE ;select date range
  D DATE^FBAAUTL I FBPOP G GETVET:FBSORT,GETVEN
  S FBBDATE=BEGDATE,FBEDATE=ENDDATE

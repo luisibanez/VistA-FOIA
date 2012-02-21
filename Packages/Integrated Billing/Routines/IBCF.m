@@ -1,16 +1,18 @@
-IBCF ;ALB/RLW - task 1500/UB printing ;12-JUN-92
- ;;2.0;INTEGRATED BILLING;**33,63,52,121,51,137,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCF ;ALB/RLW - task HCFA 1500 ;12-JUN-92
+ ;;2.0;INTEGRATED BILLING;**33,63,52,121,51,137**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN1 ; call appropriate print routine for the claim form type to be printed
  K IBRESUB
  ;
 EN1X ; Entrypoint for reprint (IBRESUB will be defined)
  N IBF,IB,IBFORM,IBJ
- S IB=$$FT^IBCU3(IBIFN)    ; form type ien (2 or 3)
- S IBFT=$$FTN^IBCU3(IB)    ; form type name
- S IBF=$P($G(^IBE(353,+IB,2)),U,8)
+ S IB=$$FT^IBCU3(IBIFN),IBFT=$$FTN^IBCU3(IB),IBF=$P($G(^IBE(353,+IB,2)),U,8)
  S:IBF="" IBF=IB ;Forces the use of the output formatter to print bills
+ ;I IBFT["UB-82" D ^IBCF1 G END
+ ;I IBF="" D  G END
+ I IBFT["UB-92",$$ISRX^IBCEF1(IBIFN) D ^IBCF3 Q
+ ;.D ^IBCF2,EN3
  D ENFMT(IBIFN,IB,IBF,,$G(IBRESUB))
 END K IBFT,IBRESUB
  Q
@@ -42,7 +44,7 @@ EN4 ;queue bills, IBIFN must be defined
  S IBAR("OKAY")=1
  Q
  ;
-EN5 ;queue 1500 Rx Addendum to Follow-up (AR) printer, IBIFN must be defined - no longer used
+EN5 ;queue HCFA 1500 Rx Addendum to Follow-up (AR) printer, IBIFN must be defined - no longer used
  Q:'$D(^DGCR(399,+$G(IBIFN),0))  I '$D(^IBA(362.4,"AIFN"_+IBIFN)),'$D(^IBA(362.5,"AIFN"_+IBIFN)) Q
  Q:$$FT^IBCU3(IBIFN)'=2
  N IBFT S IBFT=$$FNT^IBCU3("BILL ADDENDUM") Q:'IBFT  S (IBFORM1,ZTDESC)="BILL ADDENDUM FOR "_$P(^DGCR(399,+IBIFN,0),U,1)
@@ -62,7 +64,7 @@ ENFMT(IBIFN,IB,IBF,ZTIO,IBRESUB) ; Use formatter to print bill IBIFN
  . S IBDA=$$LAST364^IBCEF4(IBIFN)
  . I IBDA D UPDEDI^IBCEM(IBDA,"P")
  K ^TMP("IBQONE",$J)
- I IBFT'=3 D EN3
+ D:$$FTN^IBCU3(IBFT)'["UB-92" EN3
  Q
  ;
 FORM ;

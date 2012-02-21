@@ -1,5 +1,5 @@
-PXRMMST ; SLC/PKR - Routines for dealing with MST. ;12/23/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,17**;Feb 04, 2005;Build 102
+PXRMMST ; SLC/PKR - Routines for dealing with MST. ;01/28/2005
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;Use of DGMSTAPI supported by DBIA #2716.
  ;====================================================
 GSYINFO(TYPE) ;Return the Clinical Reminders MST synchronization date
@@ -17,8 +17,7 @@ QUE ;Queue the MST synchronization job.
  S MINDT=$$NOW^XLFDT
  W !,"Queue the Clinical Reminders MST synchronization."
  S DIR("A",1)="Enter the date and time you want the job to start."
- S DIR("A",2)="It must be after "_$$FMTE^XLFDT(MINDT,"5Z")
- S DIR("A")="Start the task at: "
+ S DIR("A")="It must be after "_$$FMTE^XLFDT(MINDT,"5Z")_" "
  S DIR(0)="DAU"_U_MINDT_"::RSX"
  D ^DIR
  I $D(DIROUT)!$D(DIRUT) Q
@@ -51,7 +50,7 @@ STATUS(DFN,TEST,DATE,VALUE,TEXT) ;Computed finding for checking a
  S TEMP=$$GETSTAT^DGMSTAPI(DFN)
  S IEN=$P(TEMP,U,1)
  I IEN=-1 D  Q
- . S TEST=0,VALUE="",DATE=$$NOW^PXRMDATE
+ . S TEST=0,VALUE="",DATE=DT
  I IEN=0 D  Q
  . S TEST=0
  . S VALUE=$P(TEMP,U,2)
@@ -181,11 +180,11 @@ UPDATE(DFN,VISIT,SOURCE,STCODE,TYPE) ;Make an update to the MST History file.
  .. S NAME=$P(@TEMP,U,1)
  .. S ^TMP("PXRMXMZ",$J,14,0)="Data type = "_FN
  .. S ^TMP("PXRMXMZ",$J,15,0)="Name = "_NAME
- .. D SEND^PXRMMSG("PXRMXMZ",XMSUB)
+ .. D SEND^PXRMMSG(XMSUB)
  Q UPDSTAT
  ;
  ;====================================================
-UPDPAT(EVENT,DFN,VISIT,VFL) ;Update the MST history file for a single patient
+UPDPAT(DFN,VISIT,VFL) ;Update the MST history file for a single patient
  ;using term mappings. Called from DATACHG^PXRMPINF which is invoked
  ;by the protocol PXK VISIT DATA EVENT.
  N AFTER,BEFORE,DGBL,SP,STCODE,SIEN,SOURCE
@@ -199,17 +198,17 @@ UPDPAT(EVENT,DFN,VISIT,VFL) ;Update the MST history file for a single patient
  .. S DGBL=$P(VFL(VF),U,1)
  .. I '$D(^PXRMD(811.5,TERMIEN,20,"E",DGBL)) Q
  .. S SIEN=""
- .. F  S SIEN=$O(^XTMP(EVENT,VISIT,VF,SIEN)) Q:SIEN=""  D
- ... S AFTER=$G(^XTMP(EVENT,VISIT,VF,SIEN,0,"AFTER"))
- ... S BEFORE=$G(^XTMP(EVENT,VISIT,VF,SIEN,0,"BEFORE"))
+ .. F  S SIEN=$O(^TMP("PXKCO",$J,VISIT,VF,SIEN)) Q:SIEN=""  D
+ ... S AFTER=$G(^TMP("PXKCO",$J,VISIT,VF,SIEN,0,"AFTER"))
+ ... S BEFORE=$G(^TMP("PXKCO",$J,VISIT,VF,SIEN,0,"BEFORE"))
  ... I AFTER=BEFORE Q
  ... S SP=$P(AFTER,U,1)
  ... I SP="" Q
  ... I '$D(^PXRMD(811.5,TERMIEN,20,"E",DGBL,SP)) Q
  ... S SOURCE=SIEN_";^"_$P(VFL(VF),U,2)
  ...;The status code depends on the term name.
- ... S STCODE=$$STCODE^PXRMMST(TERM)
- ... S TEMP=$$UPDATE^PXRMMST(DFN,VISIT,SOURCE,STCODE,"PROTOCOL")
+ ... S STCODE=$$STCODE(TERM)
+ ... S TEMP=$$UPDATE(DFN,VISIT,SOURCE,STCODE,"PROTOCOL")
  Q
  ;
  ;====================================================
@@ -230,7 +229,7 @@ UPDSTAT(NUMUPD,START) ;Update the MST history file using term mappings.
  . S TERMIEN=$O(^PXRMD(811.5,"B",TERM,""))
  . I TERMIEN="" Q
  . D TERM^PXRMLDR(TERMIEN,.TERMARR)
- . D EVALPL^PXRMTERL(.FINDPA,.TERMARR,INDEX)
+ . D EVALPL^PXRMTERM(.FINDPA,.TERMARR,INDEX)
  . S DFN=0
  . F  S DFN=+$O(^TMP($J,INDEX,1,DFN)) Q:DFN=0  D
  .. S ITEM=""

@@ -1,6 +1,5 @@
-MAGDRA2 ;WOIFO/LB - Routine for DICOM fix ; 08 Feb 2011 10:22 AM
- ;;3.0;IMAGING;**10,11,51,54,49**;Mar 19, 2002;Build 2033;Apr 07, 2011
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDRA2 ;WOIFO/LB -Routine for DICOM fix  [ 06/20/2001 08:56 ]
+ ;;3.0;IMAGING;**10,11**;14-April-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDRA2 ;WOIFO/LB - Routine for DICOM fix ; 08 Feb 2011 10:22 AM
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -16,8 +16,8 @@ MAGDRA2 ;WOIFO/LB - Routine for DICOM fix ; 08 Feb 2011 10:22 AM
  ;; +---------------------------------------------------------------+
  ;;
  Q
- ; Routine to create the MAGDY variable needed by MAGDLB1 routine when
- ; manually correcting DICOM FIX files.
+ ;Routine to create the MAGDY variable needed by MAGDLB1 routine when
+ ;mannually correcting DICOM FIX files. 
 EN ;
  ; MAGDY variable to be created during this execution.
  N MAGBEG,MAGEND,MAGDFN,MAGOUT,MAGX,MAGXX,INFO,MAGNME,MAGSSN
@@ -35,15 +35,12 @@ READ ;
  . S INFO=$$PTINFO Q:$D(MAGERR)
  . S MAGNME=$P(INFO,"^"),MAGSSN=$P(INFO,"^",2)
  . K ^TMP($J,"RAE1")  ;Re-established by EN1^RA07PC1 -DBIA available
- . ; Set the beginning and ending date.
+ . ;set the begining and ending date.
  . D EN1^RAO7PC1(MAGDFN,MAGBEG,MAGEND,500)
  . D:$D(^TMP($J,"RAE1")) LOOP^MAGDRA1
- . Q
  E  D  G:MAGX'="^" READ
  . W !,"No Radiology information found for the supplied answer.",$C(7)
- . Q
  Q
- ;
 PTINFO() ;
  N INFO,MAGOUT
  I '$D(MAGDFN) Q ""
@@ -52,21 +49,9 @@ PTINFO() ;
  I $D(MAGOUT) D  Q INFO
  . S INFO=$G(MAGOUT(2,MAGDFN_",",.01,"E"))
  . S INFO=INFO_"^"_$G(MAGOUT(2,MAGDFN_",",.09,"E"))
- . Q
  Q ""
- ;
-LCASE(MAGDT,MAGCASE) ; return the accession number
- N ACNUMB,ARESULT
- S ACNUMB=$TR($TR($$FMTE^XLFDT(MAGDT,"2FD")," ","0"),"/","")_"-"_MAGCASE
- I $$USESSAN^RAHLRU1(),$$ACCFIND^RAAPI(ACNUMB,.ARESULT)>0 D  ; ICR 5600
- . ; lookup site-specific accession number
- . N ACNUMB1,RADFN,RADTI,RACNI
- . S RADFN=$P(ARESULT(1),"^",1),RADTI=$P(ARESULT(1),"^",2)
- . S RACNI=$P(ARESULT(1),"^",3)
- . S ACNUMB1=$$GET1^DIQ(70.03,(RACNI_","_RADTI_","_RADFN),31)
- . I ACNUMB1'="" S ACNUMB=ACNUMB1
- . Q
- Q ACNUMB
+LCASE(MAGDT,MAGCASE) ;
+ Q $TR($TR($$FMTE^XLFDT(MAGDT,"2FD")," ","0"),"/","")_"-"_MAGCASE
  ;
 IMG(MAGRPT) ;
  N INFO,MAGOUT,MAGERR
@@ -75,10 +60,8 @@ IMG(MAGRPT) ;
  I $D(MAGERR) Q ""
  I $D(MAGOUT(74.02005)) Q " i"
  Q ""
- ;
 PROC(MAGPRC) ;
  Q $$FIND1^DIC(71,,"XB",MAGPRC)
- ;
 ONE ;
  ;MAGDFN,MAGX variables expected from EN
  I 'MAGDFN,'+MAGX Q
@@ -87,10 +70,13 @@ ONE ;
  N PP,PSET,RAENTRY,RAMEMLOW,RAPRTSET,RIEN,STAT,X,X1,X2,XX
  N RARPT,RADFN,RADTI,RACNI ;<--Variables needed for EN1^RAUTL20
  ; RAUTL20 used to retrieve if case is part of a print set.
+ ;Q:'MAGDFN!'+$G(MAGX)
  S MAGDFN=$P(MAGX,"~"),INFO=$$PTINFO
  S MAGNME=$P(INFO,"^"),MAGSSN=$P(INFO,"^",2)
  S RIEN=$P(MAGX,"~",2)_","_$P(MAGX,"~",1)
- S BEG=9999999.9999-$P(MAGX,"~",2),END=$$FMADD^XLFDT(BEG,2)
+ ;S MAGDFN=$P(MAGX,"~")
+ S X1=9999999.9999-$P(MAGX,"~",2),X2=+2 D C^%DTC
+ S END=X,BEG=9999999.9999-$P(MAGX,"~",2)
  K ^TMP($J,"RAE1")
  D EN1^RAO7PC1(MAGDFN,BEG,END,20)
  S RAENTRY=$P(MAGX,"~",2)_"-"_$P(MAGX,"~",3)
@@ -105,7 +91,7 @@ ONE ;
  S (MAGDTI,RADTI)=$P(RAENTRY,"-")
  S (MAGCNI,RACNI)=$P(RAENTRY,"-",2),RADFN=MAGDFN
  S MAGCASE=$$LCASE(CDATE,CASE),MAGPIEN=$$PROC(MAGPRC)
- ; RADTI, RADFN, RACNI variables needed for EN1^RAUTL20
+ ; RADTI, RADFN, RACNI variables needed for EN1^RAULT20
  D EN1^RAUTL20
  S (PSET,MAGPSET)=""
  S PSET=$S(RAMEMLOW:"+",RAPRTSET:".",1:"")
@@ -128,10 +114,8 @@ ONE ;
  W !,"Exam status: ",MAGEXST," "," ",$G(MAGPST)
  D MAGDY
  Q
- ;
 MAGDY ;
  S MAGDY=MAGDFN_"^"_MAGNME_"^"_MAGSSN_"^"_MAGCASE_"^"_MAGPRC_"^"_MAGDTI
  S MAGDY=MAGDY_"^"_MAGCNI_"^"_MAGPIEN_"^"_$G(MAGPST)_"^"
  K MAGNME,MAGSSN,MAGCASE,MAGPRC,MAGDTI,MAGCNI,MAGPIEN,MAPST
  Q
- ;

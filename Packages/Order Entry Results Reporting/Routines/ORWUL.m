@@ -1,5 +1,5 @@
-ORWUL ; SLC/KCM/JLI - Listview Selection ;1/25/02  14:09 [2/4/02 12:23pm] 2/27/06
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,117,131,132,164,215,245**;Dec 17, 1997;Build 2
+ORWUL ; SLC/KCM/JLI - Listview Selection ;1/25/02  14:09 [2/4/02 12:23pm] 5/31/05 4:15PM
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,117,131,132,164,215**;Dec 17, 1997
  ;
 QV4DG(VAL,DGRP) ; return the quick order list, given a display group name
  N NM
@@ -143,17 +143,11 @@ QVSAVE(LVW,X,QLST)       ; Save a quick order list
  S DIC="^ORD(101.44,",DIC(0)="L",DLAYGO=101.44,LVW=0
  D ^DIC Q:'Y
  S LVW=+Y,SEQ=0
- I $D(^ORD(101.44,LVW,10)) D  ; KILL "C" XREF
- . N IDX,QOIEN S IDX=0
- . F  S IDX=$O(^ORD(101.44,LVW,10,IDX)) Q:'IDX  D
- . . S QOIEN=$P(^ORD(101.44,LVW,10,IDX,0),U)
- . . K ^ORD(101.44,"C",QOIEN,LVW,IDX)
  K ^ORD(101.44,LVW,10)
  S ^ORD(101.44,LVW,10,0)="^101.441PA"
  S I=0  F  S I=$O(QLST(I)) Q:'I  D
  . S SEQ=SEQ+1,^ORD(101.44,LVW,10,SEQ,0)=QLST(I)
  . S ^ORD(101.44,LVW,10,"C",$$UP^XLFSTR($P(QLST(I),U,2)),SEQ)=""
- . S ^ORD(101.44,"C",+QLST(I),LVW,SEQ)=""
  S ^ORD(101.44,LVW,10,0)="^101.441PA^"_SEQ_U_SEQ
  Q
 MVRX ; move pharmacy quick orders into 101.44

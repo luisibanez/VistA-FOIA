@@ -1,9 +1,9 @@
 IBCEF73 ;WOIFO/SS - FORMATTER AND EXTRACTOR SPECIFIC BILL FUNCTIONS ;8/6/03 10:56am
- ;;2.0;INTEGRATED BILLING;**232,320,358,349,377**;21-MAR-94;Build 23
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**232**;21-MAR-94
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;check qualifier
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
  ;IBPROV - function in #399 (1-referring, 2-operating,etc)
  ;IBTYPE - "C"-current insurance, "O"-other insurance
  ;IBVAL - value to check
@@ -31,7 +31,7 @@ CHSEC(IBFRM,IBPROV,IBTYPE,IBVAL) ;
  ;Filter invalid qualifier entries for records SUB1,SUB2,OP6,OP7,OP3
  ; Rebuild the IBXSAVE("PROVINF" or IBXSAVE("PROVINF_FAC" array with
  ;  only ids that have valid qualifiers
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
  ;IBREC record ID whose ids are being filtered (SUB1,SUB2,etc)
  ;IBFAC - 1 if facility check, 0 if attending/rendering check
  ;IBTYPE - "C"-current insurance, "O"-other insurance
@@ -56,7 +56,7 @@ CHCKSUB(IBFRM,IBREC,IBFAC,IBTYPE,IBXSAVE) ;
  Q
  ;
  ; Check if valid qualifier
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
  ;IBREC record ID whose ids are being filtered (SUB1,SUB2,etc)
  ;IBVAL - value to check
 CHSUB(IBFRM,IBREC,IBVAL) ;
@@ -69,92 +69,92 @@ CHSUB(IBFRM,IBREC,IBVAL) ;
  Q:$G(IBSTR)="" 1  ;if "" always return 1
  Q IBSTR[("^"_IBVAL_"^")
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 OPR2(IBFRM) ;
  Q:IBFRM=1 "^0B^1A^1B^1C^1D^1G^1H^EI^G2^LU^N5^SY^X5^"
  Q:IBFRM=2 "^0B^1B^1C^1D^1G^1H^EI^G2^LU^N5^SY^X5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 OP1(IBFRM) ;
  Q:IBFRM=1 "^1A^1B^1C^1D^1G^1H^EI^G2^LU^N5^"
  Q:IBFRM=2 "^1B^1C^1D^EI^G2^LU^N5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 OPR3(IBFRM) ;
  Q:IBFRM=1 "^0B^1A^1B^1C^1D^1G^1H^EI^G2^LU^N5^SY^X5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 OP2(IBFRM) ;
  Q:IBFRM=1 "^1A^1B^1C^1D^1G^1H^EI^G2^LU^N5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 SUB1(IBFRM) ;
  Q:IBFRM=1 "^0B^1A^1B^1C^1D^1G^1H^EI^G2^LU^N5^SY^X5^"
- Q:IBFRM=2 "^0B^1A^1B^1C^1D^1G^1H^EI^G2^LU^N5^U3^SY^X5^"
+ Q:IBFRM=2 "^0B^X^1B^1C^1D^1G^1H^EI^G2^LU^N5^TJ^X4^U3^SY^X5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 OPR4(IBFRM) ;
  Q:IBFRM=1 "^0B^1A^1B^1C^1D^1G^1H^EI^G2^LU^N5^SY^X5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 OP9(IBFRM) ;
  Q:IBFRM=1 "^1A^1B^1C^1D^1G^1H^EI^G2^LU^N5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 SUB2(IBFRM) ;
- Q:IBFRM=1 "^0B^1A^1B^1C^1G^1H^1J^EI^FH^G2^G5^LU^N5^X5^TJ^B3^BQ^SY^U3^"
- Q:IBFRM=2 "^0B^X4^1A^1B^1C^1G^1H^G2^LU^X5^TJ^B3^BQ^SY^U3^"
+ Q:IBFRM=1 "^0B^1A^1B^1C^1D^1G^1H^1J^EI^FH^G2^G5^LU^N5^X5^"
+ Q:IBFRM=2 "^0B^X4^1A^1B^1C^1D^1G^1H^G2^LU^X5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 OP3(IBFRM) ;
- Q:IBFRM=1 "^1B^1C^EI^G2^LU^N5^"
+ Q:IBFRM=1 "^1B^1C^1D^EI^G2^LU^N5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 OPR5(IBFRM) ;
  Q:IBFRM=2 "^0B^1B^1C^1D^1G^1H^EI^G2^LU^N5^SY^X5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 OPR8(IBFRM) ;
  Q:IBFRM=2 "^0B^1B^1C^1D^1G^1H^EI^G2^LU^N5^SY^X5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 OP4(IBFRM) ;
  Q:IBFRM=2 "^1B^1C^1D^EI^G2^LU^N5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 OP8(IBFRM) ;
  Q:IBFRM=2 "^1B^1C^1D^EI^G2^N5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 OP6(IBFRM) ;
- Q:IBFRM=2 "^1A^1B^1C^G2^LU^N5^"
+ Q:IBFRM=2 "^X^1B^1C^1D^EI^G2^LU^N5^"
  Q ""
  ;
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 OP7(IBFRM) ;
- Q:IBFRM=2 "^1A^1B^1C^G2^LU^N5^"
+ Q:IBFRM=2 "^X^1B^1C^1D^G2^LU^N5^"
  Q ""
  ;
  ;check qualifier for PRV1
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
  ;IBVAL - value to check
 CHCKPRV1(IBFRM,IBVAL) ;
  I IBFRM=0 Q:$$CHPRV1(1,IBVAL) 1  Q $$CHPRV1(2,IBVAL)
  Q $$CHPRV1(IBFRM,IBVAL)
- ;IBFRM 0-both, 1=UB,2=1500
+ ;IBFRM 0-both, 1=UB92,2=HCFA 1500
 CHPRV1(IBFRM,IBVAL) ;
  N IBSTR S IBSTR=""
  S IBSTR=$$PRV1(IBFRM)
@@ -173,7 +173,7 @@ PTSELF ;This tag is for the CI2 segment. If the IBXSAVE("IADR") is empty
  N IBZ
  D F^IBCEF("N-ALL INSURED PT RELATION","IBZ",,IBXIEN)
  S IBZ=$G(IBZ(+$$COBN^IBCEF(IBXIEN)))
- S IBZ=$$PRELCNV^IBCNSP1(IBZ,1)
+ S IBZ=$$RELATION^IBCEFG1(IBZ)
  I IBZ'="18" S IBXDATA="" Q
  N IBZ D F^IBCEF("N-PATIENT STREET ADDRESS 1-3","IBZ",,IBXIEN)
  S IBXDATA="18"
@@ -186,7 +186,7 @@ NOPUNCT(X,SPACE,EXC) ; Strip punctuation from data in X
  N PUNCT,Z
  S PUNCT=".,-+(){}[]\/><:;?|=_*&%$#@!~`^'"""
  I $G(SPACE) S PUNCT=PUNCT_" "
- I $G(EXC)'="" S PUNCT=$TR(PUNCT,EXC)
+ I $G(EXC)'="" F Z=1:1:$L(EXC) S PUNCT=$P(PUNCT,$E(EXC,Z))_$P(PUNCT,$E(EXC,Z),U,2)
  N L S L=""
  F  S L=$O(X(L)) Q:L=""  D
  . S X(L)=$TR(X(L),PUNCT)
@@ -225,14 +225,7 @@ TAX3559(IBPROV) ;
  F IB2=1:1 S IB3559=$O(^IBA(355.9,"B",IBPROV,IB3559)) Q:IB3559=""!IBQFL  D
  . S IBIDTYP=+$P($G(^IBA(355.9,IB3559,0)),"^",6) ;provider ID type, ptr to #355.97
  . S IBIDTYP=$P($G(^IBE(355.97,IBIDTYP,0)),"^",3)
- . S:IBIDTYP="EI" IBID=$P($G(^IBA(355.9,IB3559,0)),"^",7),IBQFL=1
- ; if nothing found yet, look in file 355.93 for Facility Default ID
- I IBID="",IBPROV["IBA(355.93" D
- .N IB0,IBFID,IBQ
- .S IB0=$G(^IBA(355.93,+IBPROV,0)) Q:IB0=""!($P(IB0,U,2)'=1)  ; not a facility - bail out
- .S IBFID=$P(IB0,U,9) Q:IBFID=""  ; no default id on file - bail out
- .S IBQ=$P(IB0,U,13) I +IBQ>0,$P($G(^IBE(355.97,IBQ,0)),U,3)=24 S IBID=IBFID
- .Q
+ . S:IBIDTYP=24 IBID=$P($G(^IBA(355.9,IB3559,0)),"^",7),IBQFL=1
  Q $$NOPUNCT^IBCEF(IBID)
  ;
  ;IBFULL-full name

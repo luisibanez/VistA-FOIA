@@ -1,134 +1,115 @@
 BPSECA8 ;BHAM ISC/FCS/DRS/VA/DLF - construct a claim reversal ;05/17/04
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5,10**;JUN 2004;Build 27
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
  Q
- ; REVERSE - The way we build the claim reversal is to take the
- ; source data from the original claim (CLAIMIEN) and position therein (POS).
+ ; The way we build the claim reversal is to take the source data
+ ; from the original claim (IEN) and position therein (RX).
+ ; $$ returns pointer to 9002313.02 of the new entry.
  ;
- ; Remember, you have two 401 fields - one in header, one in prescription.
+ ; Future:  want to use new database server calls to create the
+ ; 9002313.02 entry.  It would be soooo much cleaner.
  ;
- ; 5.1 Updates
+ ; Remember, you have two 401 fields - one in header, one in prescript.
+ ;
+ ;IHS/SD/lwj 08/15/02 NCPDP 5.1 changes
  ; There are new fields to consider in the 5.1 reversal process, in
- ; addition to a new value for the transaction code (B2)
+ ; addition to a new value for the transaction code (noe B2 as opposed
+ ; to 11 in 3.2).
+ ; Changes made as needed.
  ;
- ; Input
- ;   IEN59  - Transaction number
- ; Returns REVIEN of the reversal claim created
+ ;IHS/SD/lwj 10/23/02 NCPDP 5.1 changes
+ ; New code added to account for a mixed reversal.  A mixed reversal is
+ ; a claim that was created in 3.x format & needs to be reversed in 5.1
+ ; format.  This requires field reformatting.
  ;
-REVERSE(IEN59) ; function, return reversal IEN or zero on failure, from BPSOSRB
- Q:$G(IEN59)="" 0  ; required
+REVERSE(IEN,RX) ;EP - from BPSOS6D, BPSOSC2
+ ; IEN=original claim, RX = prescription # subscript therein
+ ; returns IEN of the reversal claim created
  ;
- N BPS,BPSFORM,C,CLAIM,CLAIMIEN,DA,DIC,DIE,DIQ,DLAYGO,DR,I,L,POS,REVIEN,RXMULT,TMP,UERETVAL
- N VERSION,FLD402,X,Y,COB,REC,FN,FDA,MSG,IENS
+ ; extract needed data
+ N VARX S VARX=0
+ I '$P($G(^BPS(9002313.99,1,"SITE TYPE")),"^",1) S VARX=1  ;VA;08/02/03
+ N CLAIM,RXMULT S CLAIM=9002313.02,RXMULT=9002313.0201 ; file #s
+ N DIC,DR,DA,DIQ,TMP,I,X
+ ; This field list is repeated below.
+ S DIC=CLAIM
  ;
- S CLAIM=9002313.02,RXMULT=9002313.0201
+ ;IHS/SD/lwj 8/15/02 NCPDP 5.1 new fields need to be used
+ S DR="**"
+ S DA=IEN
+ S DIQ="TMP",DIQ(0)="I"
+ D GETS^DIQ(CLAIM,IEN,DR,DIQ(0),DIQ)
+ S IEN=IEN_","   ;tack on the comma
  ;
- ; Needed for Turn-Around Stats - Do NOT delete/alter!!
- D LOG^BPSOSL(IEN59,$T(+0)_"-Gathering claim information")
+ ;IHS/SD/lwj 10/23/02 NCPDP 5.1 changes
+ ; check for a mixed claim (3.x claim - 5.1 reversal)-reformat if needed
  ;
- ; Get Claim and multiple POS
- S CLAIMIEN=$P(^BPST(IEN59,0),U,4)
- I CLAIMIEN="" Q 0
- S POS=$O(^BPSC(CLAIMIEN,400,0))
- I POS="" Q 0
+ D:$G(TMP(CLAIM,IEN,102,"I"))[3!($G(VARX)) CKVERS  ;VA;8/2/03
  ;
- ; Get reversal payer sheet.  If missing, quit
- S BPSFORM=$$GET1^DIQ(9002313.59902,"1,"_IEN59_",","902.19","I")
- I BPSFORM="" Q 0
+ ;IHS/SD/lwj 10/23/02 end mixed claim check
  ;
- ; Get payer sheet version
- S VERSION=$P(^BPSF(9002313.92,BPSFORM,1),"^",2)
- I VERSION="" S VERSION="D0"
- ;
- ; Get data from original claim request
- S DR="**",DIQ="TMP",DIQ(0)="I"
- D GETS^DIQ(CLAIM,CLAIMIEN,DR,DIQ(0),DIQ)
- ;
- ; Update CLAIMIEN to match CLAIMIEN format in TMP
- S CLAIMIEN=CLAIMIEN_","
- ;
- ; Execute special code in reversal payer sheets
- D REFORM^BPSOSHR(BPSFORM,CLAIMIEN,POS)
- ;
- ; Create a new claim record and use function to get the Claim ID
-R2 S DIC=CLAIM,DIC(0)="LX",DLAYGO=CLAIM
- S X=$$CLAIMID^BPSECX1(IEN59)
- I X="" Q 0
- D ^DIC
- S REVIEN=+Y
- I REVIEN<1 Q 0
- ;
- ; Needed for Turn-Around Stats - Do NOT delete/alter!!
- D LOG^BPSOSL(IEN59,$T(+0)_"-Created claim ID "_X_" ("_REVIEN_")")
- ;
- ; Create a new transaction multiple for the claim
-R4 S DIC="^BPSC("_REVIEN_",400,",DIC(0)="LX"
+ ; Create a new 9002313.02 record
+ ; 7/29/2005-Use function to get unique ID.  Note that we are passing the IEN for the billing
+ ;   payer sheet, but it should not matter as the BIN will be the same for the billing and
+ ;   reversal
+ N DIC,X,DLAYGO,REVIEN,Y,UERETVAL
+R2 S DIC=9002313.02,DIC(0)="LX"
+ S X=$$CLAIMID^BPSECX1($G(TMP(CLAIM,IEN,.02,"I")),"P"),DLAYGO=CLAIM
+ D ^DIC S REVIEN=+Y I REVIEN<1 D  G:UERETVAL R2
+ . S UERETVAL=$$IMPOSS^BPSOSUE("FM,P",,"call to ^DIC",,,$T(+0))
+R4 ; create a new prescription multiple therein
+ S DIC="^BPSC("_REVIEN_",400,",DIC(0)="LX"
  S DIC("P")=$P(^DD(CLAIM,400,0),U,2)
- S DA(1)=REVIEN,DLAYGO=RXMULT,X=1
- D ^DIC
- I +Y'=1 D  G:UERETVAL R4
+ S DA(1)=REVIEN,DLAYGO=RXMULT
+ S X=1 D ^DIC I +Y'=1 D  G:UERETVAL R4
  . S UERETVAL=$$IMPOSS^BPSOSUE("FM,P",,"call to ^DIC","for multiple",,$T(+0))
+ ; set data values
+ N DIE
+ S DIE=CLAIM,DA=REVIEN
+ S TMP(CLAIM,IEN,103,"I")=11 ; change transaction code to REVERSAL
  ;
- ; Update claim with new values
- S DIE=CLAIM,DA=REVIEN,DR="",C=0
- F I=.03,.04,1.01,1.04,101,104,110,201,202,301,302,304,305,310,311,331,332,359,401 D
- .S C=C+1,$P(DR,";",C)=I_"////"_$G(TMP(CLAIM,CLAIMIEN,I,"I"))
- ;
- ; Add fields that do not come from the claim
- ;   Payer sheet is the reversal sheet, Created On is current date/time
- ;   Transaction Code is B2 and Transaction Count is 1
- S DR=DR_";.02////"_BPSFORM_";.06////"_$$NOWFM^BPSOSU1_";102////"_VERSION_";103////B2;109////1"
+ ;IHS/SD/lwj 8/15/02 NCPDP 5.1 changes
+ ; if the version is 5.1, the transaction code needs to be B2 not 11
+ ; following line added
+ S:$G(TMP(CLAIM,IEN,102,"I"))[5 TMP(CLAIM,IEN,103,"I")="B2"
+ ; Must agree with field list above.
+ ;IHS/SD/lwj 8/15/02 NCPDP 5.1 new fields need to be used
+ S DR="" N I
+ F I=.02,.03,1.01,1.02,1.03,101,102,103,104,109,110,201,202,302,304,305,310,311,331,332,401 D
+ .S DR=DR_I_"////"_$G(TMP(CLAIM,IEN,I,"I"))_";"
+ ; Transmit flag - it's 2 for POS and Created On fields
+ S DR=DR_".04////2;.06////"_$$NOWFM^BPSOSU1()
  D ^DIE
- ;
- ; Convert the 402-D2 (Prescription/Service Ref Number) to the proper length based on the NCPDP version
- S FLD402=$G(TMP(RXMULT,POS_","_CLAIMIEN,402,"I")),L=$S(VERSION=51:6,1:11)
- S TMP(RXMULT,POS_","_CLAIMIEN,402,"I")=$E(FLD402,1,2)_$E($E(FLD402,3,99)+1000000000000,13-L,13)
- ;
- ; Update transaction multiple with values
- S DIE="^BPSC("_REVIEN_",400,",DA(1)=REVIEN,DA=1,DR="",C=0
- F I=.03,.04,.05,147,308,337,401,402,403,407,418,430,436,438,455 D
- .S C=C+1,$P(DR,";",C)=I_"////"_$G(TMP(RXMULT,POS_","_CLAIMIEN,I,"I"))
+ S DIE="^BPSC("_REVIEN_",400,"
+ S DA(1)=REVIEN,DA=1,DR=""
+ ; Must agree with field list above
+ ;IHS/SD/lwj 8/15/02 NCPDP 5.1 new fields need to be used
+ F I=.05,308,401,402,403,407,418,420,436,438,439,440,441,455 D
+ .S DR=DR_I_"////"_$G(TMP(RXMULT,RX_","_IEN,I,"I"))_";"
+ S DR=$E(DR,1,$L(DR)-1) ; get rid of extra trailing ";"
  D ^DIE
- ;
- ; Add Submission Clarification Code to the reversal record
- ; Note that this is only valid for version 5.1 and 5.1 is a single-value
- ;   field, so we only need the first occurrence
- I VERSION=51,$G(^BPSC(+CLAIMIEN,400,POS,354.01,1,1))]"" D
- . K FDA,MSG,IENS
- . S FN=9002313.02354,IENS="+1,"_POS_","_REVIEN_",",IENS(1)=1
- . S FDA(FN,IENS,.01)=1
- . S FDA(FN,IENS,420)=^BPSC(+CLAIMIEN,400,POS,354.01,1,1)
- . D UPDATE^DIE("","FDA","IENS","MSG")
- . I '$D(MSG) S $P(^BPSC(REVIEN,400,POS,350),U,4)="NX"_$$NFF^BPSECFM(1,1)
- . I $D(MSG) D
- .. D LOG^BPSOSL(IEN59,$T(+0)_"-Clarification fields did not file")
- .. D LOG^BPSOSL(IEN59,"REC="_REC)
- .. D LOG^BPSOSL(IEN59,"MSG Array:")
- .. D LOGARRAY^BPSOSL(IEN59,"MSG")
- .. D LOG^BPSOSL(IEN59,"IENS Array:")
- .. D LOGARRAY^BPSOSL(IEN59,"IENS")
- .. D LOG^BPSOSL(IEN59,"FDA Array:")
- .. D LOGARRAY^BPSOSL(IEN59,"FDA")
- ;
- ; Create COB multiple if it exists in the claim record
- S COB=0
- F  S COB=$O(^BPSC(+CLAIMIEN,400,POS,337,COB)) Q:'COB  D
- . S REC=$G(^BPSC(+CLAIMIEN,400,POS,337,COB,0))
- . I $P(REC,U,1)=""!($P(REC,U,2)="") Q
- . K FDA,MSG,IENS
- . S FN=9002313.0401,IENS="+1,"_POS_","_REVIEN_",",IENS(1)=COB
- . S FDA(FN,IENS,.01)=$P(REC,U,1)
- . S FDA(FN,IENS,338)=$P(REC,U,2)
- . D UPDATE^DIE("","FDA","IENS","MSG")
- . I $D(MSG) D
- .. D LOG^BPSOSL(IEN59,$T(+0)_"-COB fields did not file, COB="_COB)
- .. D LOG^BPSOSL(IEN59,"REC="_REC)
- .. D LOG^BPSOSL(IEN59,"MSG Array:")
- .. D LOGARRAY^BPSOSL(IEN59,"MSG")
- .. D LOG^BPSOSL(IEN59,"IENS Array:")
- .. D LOGARRAY^BPSOSL(IEN59,"IENS")
- .. D LOG^BPSOSL(IEN59,"FDA Array:")
- .. D LOGARRAY^BPSOSL(IEN59,"FDA")
  ;
  Q REVIEN
  ;
+CKVERS ;check the version of the current format - if it's 5.1 then we've hit a
+ ; "mixed claim."  (Originally created in 3.2 - reverse in 5.1)
+ ;
+ N BPSINS,BPSFORM,BPSVER,BPSCFRM
+ S (BPSINS,BPSFORM,BPSVER,BPSCFRM)=""
+ ;
+ S BPSINS=$G(TMP(9002313.02,IEN,.02,"I"))
+ Q:BPSINS=""
+ ;
+ I '$G(VARX) S BPSCFRM=$P($G(^BPSEI(BPSINS,100)),U)  ;claim format
+ E  S BPSCFRM=$G(TMP(CLAIM,IEN,.02,"I"))  ;VA;8/2/03
+ Q:BPSCFRM=""
+ ;
+ I '$G(VARX) S BPSFORM=$P($G(^BPSF(9002313.92,BPSCFRM,"REVERSAL")),U)
+ S BPSFORM=$$GET1^DIQ(9002313.59902,"1,"_IEN59_",","902.19","I")  ;VA;10/22/04
+ Q:BPSFORM=""
+ ;
+ S BPSVER=$P($G(^BPSF(9002313.92,BPSFORM,1)),U,2)
+ I BPSVER[5 D
+ . S TMP(9002313.02,IEN,102,"I")=51
+ . D REFORM^BPSOSHR(BPSFORM)
+ ;
+ Q

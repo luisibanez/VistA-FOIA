@@ -1,5 +1,5 @@
 TIULV ; SLC/JER - Visit/Movement related library ; 4/18/03
- ;;1.0;TEXT INTEGRATION UTILITIES;**7,30,55,45,52,148,156,152,113,200**;Jun 20, 1997
+ ;;1.0;TEXT INTEGRATION UTILITIES;**7,30,55,45,52,148,156,152,113**;Jun 20, 1997
 PATPN(TIUY,DFN) ; Get minimum demographics for PN Print
  N VADM,VAIP,VAIN,VA,VAPA
  D OERR^VADPT
@@ -124,6 +124,6 @@ CURRENT(TIUY,DFN) ; Get current INPATIENT data
  . N DIC,DIQ,DR,DA
  . S DIC=4,DR=".01",DA=+$G(DUZ(2)),DIQ="TIUDIV1"
  . D EN^DIQ1
- . ;TIU*1*152 changed TIUDIV1(4,DUZ(2),.01) to $G(TIUDIV1(4,$G(DUZ(2)),.01)) ; TIU*1*200 Added + to 2nd piece and + to $G(DUZ(2))
- . S TIUY("DIV")=+$G(DUZ(2))_U_+$G(TIUDIV1(4,+$G(DUZ(2)),.01))
+ . ;TIU*1*152 changed TIUDIV1(4,DUZ(2),.01) to $G(TIUDIV1(4,$G(DUZ(2)),.01))
+ . S TIUY("DIV")=+$G(DUZ(2))_U_$G(TIUDIV1(4,$G(DUZ(2)),.01))
  Q

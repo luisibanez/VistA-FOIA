@@ -1,5 +1,5 @@
-HBHCR19A ;LR VAMC(IRMS)/MJT-HBHC file 632 rpt, DX info by date range, sorted by DX category, then pt name, includes: name, last four, DX (code & text), w/category subtotals & grand total, calls HBHCR19B & DX^HBHCUTL3;  ; 12/21/05 3:39pm
- ;;1.0;HOSPITAL BASED HOME CARE;**8,14,22**;NOV 01, 1993;Build 2
+HBHCR19A ;LR VAMC(IRMS)/MJT- HBHC rpt, file 632, Diagnosis info by date range, sorted by DX category, then by patient name, includes: name, SSN, DX (code & text), with category subtotals & grand total, calls HBHCR19B & DX^HBHCUTL3 ; Aug 2000
+ ;;1.0;HOSPITAL BASED HOME CARE;**8,14**;NOV 01, 1993
  D START^HBHCUTL
  G:(HBHCBEG1=-1)!(HBHCEND1=-1) EXIT
  K ^TMP($J)
@@ -51,6 +51,5 @@ DX ; Process Diagnosis (DX), HBHCDFN must be defined prior to call, returns code
  S HBHCI=0 F  S HBHCI=$O(HBHCDX(HBHCI)) Q:HBHCI'>0  S HBHCDX="HBHCDX("_HBHCI_")" D:$D(HBHCFLAG) SET I '$D(HBHCFLAG) D:$D(^TMP($J,"B",$P(@HBHCDX,HBHCSP2))) SET
  Q
 SET ; Set ^TMP node
- ; HBH*1*22 shortens SSN to Last 4 only for display; following full SSN left intact since used as subscript
  S ^TMP("HBHC",$J,$P(@HBHCDX,"."),$E($P(HBHCDPT0,U),1,24),$E($P(HBHCDPT0,U,9),1,3)_"-"_$E($P(HBHCDPT0,U,9),4,5)_"-"_$E($P(HBHCDPT0,U,9),6,9),@HBHCDX)=""
  Q

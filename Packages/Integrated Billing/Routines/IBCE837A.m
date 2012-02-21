@@ -1,6 +1,5 @@
 IBCE837A ;ALB/TMP - OUTPUT FOR 837 TRANSMISSION - CONTINUED ;8/6/03 10:50am
- ;;2.0;INTEGRATED BILLING;**137,191,211,232,296,377**;21-MAR-94;Build 23
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,191,211,232,296**;21-MAR-94
  ;
 UPD(MSGNUM,BATCH,CNT,BILLS,DESC,IBBTYP,IBINS) ; Upd current batch + bills w/new status
  ;MSGNUM = mail msg # for batch
@@ -29,17 +28,6 @@ UPD(MSGNUM,BATCH,CNT,BILLS,DESC,IBBTYP,IBINS) ; Upd current batch + bills w/new 
  I IBTXTEST'=2 S IBIEN=0 F  S IBIEN=$O(BILLS(IBIEN)) Q:'IBIEN  D  ;Update each bill
  .S DA=IBIEN,DIE="^IBA(364,",DR=".02////"_IBBATCH_";.03///P;.04///NOW" D ^DIE
  .S IBIFN=+$G(^IBA(364,IBIEN,0))
- . ;
- . ; If this claim has just been retransmitted, set the .06 field for the previous transmission entry
- . N PRVTXI,PRVTXD
- . S PRVTXI=$O(^IBA(364,"B",IBIFN,IBIEN),-1)      ; previous transmission for this claim
- . I PRVTXI D
- .. S PRVTXD=$G(^IBA(364,PRVTXI,0))
- .. I '$F(".R.E.","."_$P(PRVTXD,U,3)_".") Q                 ; prev trans must have status of "R" or "E"
- .. I $P(PRVTXD,U,7,8)'=$P($G(^IBA(364,IBIEN,0)),U,7,8) Q   ; test bill and COB must be the same
- .. S DA=PRVTXI,DIE=364,DR=".06///"_IBBATCH D ^DIE          ; update the resubmit batch number
- .. Q
- . ;
  .Q:$D(^TMP("IBRESUBMIT",$J))!($P($G(^DGCR(399,IBIFN,0)),U,13)=4)!(+$$TXMT^IBCEF4(IBIEN)=2)
  .S IBMRA=$$NEEDMRA^IBEFUNC(IBIFN)
  .I IBMRA="C",$P($G(^DGCR(399,IBIFN,0)),U,13)=2 S IBMRA=1

@@ -1,8 +1,8 @@
-MHV7B0 ;WAS/GPM - HL7 MESSAGE BUILDER FOR MFN^Z01 ; 1/21/08 5:18pm
- ;;1.0;My HealtheVet;**2**;Aug 23, 2005;Build 22
+MHV7B0 ;WAS/GPM - HL7 MESSAGE BUILDER FOR MFN^Z01 ; [8/22/05 6:21pm]
+ ;;1.0;My HealtheVet;;Aug 23, 2005
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
-MFNZ01(MSGROOT,ADM,ERR,DATAROOT,LEN,HL) ;Build MFN^Z01
+MFNZ01(MSGROOT,ADM,ERR,DATAROOT,HL) ;Build MFN^Z01
  ;
  ;  Input:
  ;   MSGROOT - (required) Global root of message
@@ -10,19 +10,16 @@ MFNZ01(MSGROOT,ADM,ERR,DATAROOT,LEN,HL) ;Build MFN^Z01
  ;       ERR - (Not used) For compatibility with MHV7T
  ;  DATAROOT - (Not used) For compatibility with MHV7T
  ;        HL - (required) Array of HL package variables
- ;
  ;  Output:
  ;       MFN^Z01 message in MSGROOT
  ;          MSH,MFI,MFE,ZHV
- ;       LEN - Length of formatted message
  ;
  N CNT
- D LOG^MHVUL2("MFN-Z01 BUILDER","BEGIN","S","TRACE")
+ S CNT=0
  K @MSGROOT
- S CNT=1,@MSGROOT@(CNT)=$$MFI(.HL),LEN=$L(@MSGROOT@(CNT))
- S CNT=CNT+1,@MSGROOT@(CNT)=$$MFE(.ADM,.HL),LEN=LEN+$L(@MSGROOT@(CNT))
- S CNT=CNT+1,@MSGROOT@(CNT)=$$ZHV(.ADM,.HL),LEN=LEN+$L(@MSGROOT@(CNT))
- D LOG^MHVUL2("MFN-Z01 BUILDER","END","S","TRACE")
+ S CNT=CNT+1,@MSGROOT@(CNT)=$$MFI(.HL)
+ S CNT=CNT+1,@MSGROOT@(CNT)=$$MFE(.ADM,.HL)
+ S CNT=CNT+1,@MSGROOT@(CNT)=$$ZHV(.ADM,.HL)
  Q
  ;
 MFI(HL) ;build MFI segment

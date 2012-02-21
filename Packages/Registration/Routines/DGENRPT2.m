@@ -1,5 +1,5 @@
-DGENRPT2 ;ALB/GAH - EGT Preliminary Detailed Impact Report ; 10/10/2005
- ;;5.3;Registration;**232,306,417,456,491,513,568,725**;Aug 13,1993;Build 12
+DGENRPT2 ;ALB/DW,LBD - EGT Preliminary Detailed Impact Report ; 02/17/2004
+ ;;5.3;Registration;**232,306,417,456,491,513,568**;Aug 13,1993
  ;
  ;
 ENPT ;Preliminary Detailed Report selected.
@@ -119,7 +119,7 @@ WRD ;Get the patient WARD.
 FAP1 ;Get the patient FUTURE APPOINTMENTS.
  N J,POP,ADT S (X,ADT)="",POP=0,J=0
  K ^UTILITY("VASD",$J)
- S X=$$FAPCHK(DFN) Q:X'=""
+ I $D(^TMP($J,"SDAMA",101)) S X="Appt. DB Unavail." Q
  D BLDUTL^DGENRPT5(DFN)
  F  S J=$O(^UTILITY("VASD",$J,J)) Q:J=""!POP  D
  . S X=$P($G(^UTILITY("VASD",$J,J,"E")),U,2),X=$E(X,1,20)
@@ -135,13 +135,11 @@ FAP1 ;Get the patient FUTURE APPOINTMENTS.
 FAP0 ;See if the patient has future appointment.
  S X="NO"
  K ^UTILITY("VASD",$J)
- S X=$$FAPCHK(DFN) Q:X'=""
+ I $D(^TMP($J,"SDAMA",101)) S X="Appt. DB Unavail." Q
  D BLDUTL^DGENRPT5(DFN)
  I $G(^UTILITY("VASD",$J,1,"I"))'="" S X="YES"
  Q
  ;
-FAPCHK(DFN) ;
- Q $G(^TMP($J,"SDAMA",DFN,"ERROR"))
 PCPVD ;Get the patient PC PROVIDER.
  ;;Site must use PCMM module.
  S X=""
@@ -191,5 +189,5 @@ END ;At the end of the display.
  ;
 EXIT ;Clean up upon exit of the routine.
  D KVA^VADPT
- K ^TMP($J,"BY2"),^TMP($J,"CNT2"),^TMP($J,"SDAMA")
+ K ^TMP($J,"BY2"),^TMP($J,"CNT2")
  Q

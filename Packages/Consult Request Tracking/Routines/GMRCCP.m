@@ -1,5 +1,5 @@
 GMRCCP ;SLC/JFR - utilities for clinical procedures; 10/07/04 15:24
- ;;3.0;CONSULT/REQUEST TRACKING;**17,25,37,55**;DEC 27, 1997;Build 4
+ ;;3.0;CONSULT/REQUEST TRACKING;**17,25,37**;DEC 27, 1997
  ; 
  ; This routine invokes IAs #3378,#3468
  ;
@@ -151,7 +151,7 @@ CPINTERP(GMRCTIU,GMRCUSER) ;is user an interpreter for TIU doc GMRCTIU
  S GMRCSRV=$P(^GMR(123,+GMRCDA,0),U,5)
  I 'GMRCSRV Q 0 ;no service, can't tell if interpreter
  S GMRCINT=+$$VALID^GMRCAU(GMRCSRV,,GMRCUSER) ;get upd authority
- Q $S(GMRCINT=1:1,GMRCINT=2:1,GMRCINT=4:1,1:0) ;1=unrstrctd (upd) user, 2=upd user, 4=adm & upd user
+ Q $S(GMRCINT=2:1,GMRCINT=4:1,1:0) ;2=upd user, 4=adm & upd user
  ;
 CPPAT(GMRCDA,GMRCDFN) ;is patient object of given request?
  ; Input:

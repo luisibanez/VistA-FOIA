@@ -1,5 +1,5 @@
 PSGOEF ;BIR/CML3-FINISH ORDERS ENTERED THROUGH OE/RR ;14 May 98 / 2:17 PM
- ;;5.0; INPATIENT MEDICATIONS ;**7,30,29,35,39,47,50,56,80,116,110,111,133,153,134,222,113,181**;16 DEC 97;Build 190
+ ;;5.0; INPATIENT MEDICATIONS ;**7,30,29,35,39,47,50,56,80,116,110,111,133,153**;16 DEC 97
  ;
  ; Reference to ^PS(55 is supported by DBIA 2191
  ; Reference to ^PSDRUG( is supported by DBIA 2192
@@ -9,8 +9,7 @@ START ;
  I '$D(^PS(53.1,+PSGORD)) W $C(7),!?3,"Cannot find this pending order (#",+PSGORD,")." Q
  D NOW^%DTC S PSGDT=+$E(%,1,12) K PSGFDX,PSGEFN,PSGOEEF,PSGOES,PSGONF,PSGRDTX S PSGOES=1,(PSGOEF,PSGOEEF)=0,PSGOEEG=3
  I $D(PSJTUD) S PSGDO=$P($G(^PS(53.1,+PSGORD,.3)),U),(PSGPDRG,PSGPD)=PSJCOI,(PSGPDRGN,PSGPDN)=$$OINAME^PSJLMUTL(PSGPD)
- I $P($G(^PS(53.1,+PSGORD,0)),U,24)'="R" S X=PSGSCH D EN^PSGORS0 D
- . S:($D(X)&($P($G(^PS(53.1,+PSGORD,2)),"^",5)="")&($P($G(^PS(53.1,+PSGORD,0)),"^",24)="N")) PSGAT=PSGS0Y
+ I $P($G(^PS(53.1,+PSGORD,0)),U,24)'="R" S X=PSGSCH D EN^PSGORS0 S:$D(X) PSGAT=PSGS0Y D
  . NEW PSJDOX,PSJDOSE,PSJPIECE,PSJUNIT,PSJX,X
  . S X=$G(^PS(53.1,+PSGORD,1,1,0)) Q:'+X
  . D DOSE^PSSORPH(.PSJDOX,+X,"U")
@@ -54,65 +53,20 @@ START ;
  Q
 FINISH ;
  ; force display of second screen if CPRS order checks exist
- N NSFF,PSGOEF39,PSGEDTOI S NSFF=1 K PSJNSS,PSGEDTOI,PSGOEER
+ N NSFF,PSGOEF39 S NSFF=1 K PSJNSS
  I $G(PSGORD),$D(PSGRDTX(+PSGORD)) D  K PSGRDTX
- . ;PSJOCDSC stores the default start & stop date ^ cal start & stop date (use in dosing calculation for duration)
- . ;for some reasons PSGSD & PSGFD are reset to the cal dates if order has duration defined
- . S PSJOCDSC("CX","PSGSD",+PSGORD)=$G(PSGSD)_U_$G(PSGRDTX(+PSGORD,"PSGRSD"))
- . S PSJOCDSC("CX","PSGFD",+PSGORD)=$G(PSGFD)_U_$G(PSGRDTX(+PSGORD,"PSGRFD"))
  . S:$G(PSGRDTX(+PSGORD,"PSGRSD")) PSGSD=PSGRDTX(+PSGORD,"PSGRSD")
  . S:$G(PSGRDTX(+PSGORD,"PSGRFD")) PSGFD=$S($G(PSGRDTX(+PSGORD,"PSGRFD")):PSGRDTX(+PSGORD,"PSGRFD"),1:$G(PSGNEFD))
  N PSJCOM S PSJCOM=+$P($G(^PS(53.1,+PSGORD,.2)),"^",8)
- ; 
- ; PSJ*5*222
- ; PSJCT1 is a counter variable.  Every piece of a complex order calls PSGOEF.
- ; The only time this code is to look for overlapping admin times is when the
- ; first part of a complex order is being finished.  This variable will keep track
- ; of how many "parts" of the complex order have been checked.
- ; 
- ; Also, since the user can select multiple complex orders to finish, like selecting
- ; orders 1-2 or 1-3 from the profile, PSJCT1A will keep track of whether the parent
- ; order number is the same as the first parent order number selected for finishing.
- ; Since the PSJCT1 counter variable will still be set if multiple complex orders
- ; are selected, PSJCT1 will be re-set to 1 if the parent complex order number (PSJCT1A) is
- ; not equal to the original parent order number (PSJCOM).
- ; 
- S PSJCT1=$G(PSJCT1)+1
- I PSJCT1=1 S PSJCT1A=PSJCOM
- I $G(PSJCT1A)'=PSJCOM S PSJCT1=1,PSJCT1A=PSJCOM
- ; End of flag setting for PSJ*5*222
- ;PRE UAT group requested to not show the second screen since FDB OC has more text and provider override reason appears after 2nd screen 
- ;I $O(^PS(53.1,+PSGORD,12,0))!$O(^PS(53.1,+PSGORD,10,0)) D
- ;.Q:$G(PSJLMX)=1  ; there's no second screen to display
- ;.S VALMBG=16 D RE^VALM4,PAUSE^VALM1
+ I $O(^PS(53.1,+PSGORD,12,0))!$O(^PS(53.1,+PSGORD,10,0)) D
+ .Q:$G(PSJLMX)=1  ; there's no second screen to display
+ .S VALMBG=16 D RE^VALM4,PAUSE^VALM1
  D FULL^VALM1
- I '$D(IOINORM)!('$D(IOINHI)) S X="IORVOFF;IORVON;IOINHI;IOINORM" D ENDR^%ZISS
- I $G(PSJCOM)'="",$G(PSJCT1)=1 D
- . D OVERLAP^PSGOEF2 I $G(PSJOVRLP)=1 D
- . . N X,X1,DIR
- . . W !!,"**WARNING**"
- . . W !,"The highlighted admin times for these portions of this complex order overlap.",!!
- . . S (X,X1)="" F  S X=$O(^TMP("PSJATOVR",$J,X)) Q:X=""  D
- . . . S X1=$G(^TMP("PSJATOVR",$J,X))
- . . . W $S($P(X1,"^",4)=1:IORVON,1:""),"Part "_X,IORVOFF," has a schedule of "_$P(X1,"^",2)_" and admin time(s) of "
- . . . W $S($P(X1,"^",4)=1:IORVON,1:""),$P(X1,"^",3),IORVOFF
- . . . W !
- . . . W $S($G(PSJOVR("CONJ",X))="A":"AND",$G(PSJOVR("CONJ",X))="T":"THEN",1:""),!
- . . W !,"Please ensure the schedules and administration times are appropriate.",!
- . . S DIR(0)="EA",DIR("A")="Press Return to continue..." D ^DIR W !
- K ^TMP("PSJATOVR",$J)
  I $G(PSJPROT)=3,'$D(PSJTUD),'$$ENIVUD^PSGOEF1(PSGORD) Q
- I $G(PSGOSCH)]"" D  S:$G(PSGS0XT)'="" $P(^PS(53.1,+PSGORD,2),"^",6)=PSGS0XT
- .N PSGOES,PSGS0Y,PSGSCH S X=PSGOSCH K:$G(PSJTUD) NSFF D ENOS^PSGS0
- .I '($G(PSGORD)["P"&($P($G(^PS(53.1,+PSGORD,0)),"^",24)="R")) I $G(X)]""&$G(PSGS0Y) S:$G(PSGAT)="" PSGAT=PSGS0Y
- .I $G(PSJNSS) S PSGOSCH="" K PSJNSS
- .I $G(PSGORD)["P",$G(PSGAT),$G(PSGS0Y),($G(PSGOSCH)]"") I PSGAT'=PSGS0Y D
- ..S PSGNSTAT=1 W $C(7),!!,"PLEASE NOTE:  This order's admin times (",PSGAT,")"
- ..W !?13," do not match the ward times (",PSGS0Y,")"
- ..W !?13," for this administration schedule (",PSGOSCH,")",!
- ..S DIR(0)="EA",DIR("A")="Press Return to continue..." D ^DIR K DIR  W !
- I $G(PSGS0XT)="" S $P(^PS(53.1,+PSGORD,2),"^",6)=$S($P($G(ZZND),"^",3)'="":$P(ZZND,"^",3),1:"")
  S CHK=0 S:$P($G(^PS(53.1,+PSGORD,0)),U,24)'="R" PSGSI=$$ENPC^PSJUTL("U",+PSJSYSP,180,PSGSI)
+ I $G(PSGOSCH)]"" D  S:$G(PSGS0XT)'<0 $P(^PS(53.1,+PSGORD,2),"^",6)=PSGS0XT
+ .N PSGOES,PSGS0Y,PSGSCH S X=PSGOSCH K:$G(PSJTUD) NSFF D ENOS^PSGS0 I '($G(PSGORD)["P"&($P($G(^PS(53.1,+PSGORD,0)),"^",24)="R")) I $G(X)]""&$G(PSGS0Y) S PSGAT=PSGS0Y
+ .I $G(PSJNSS) S PSGOSCH="" K PSJNSS
  I '$G(PSJTUD),$G(PSJNSS),($G(PSGOSCH)]"") D NSSCONT^PSGS0(PSGOSCH,PSGS0XT) K PSJNSS S PSGOSCH=""
  S PSGOEFF=PSGOSCH=""+('$O(^PS(53.45,PSJSYSP,2,0))*10)
  I PSGOEFF S X=$S(PSGOEFF#2:" a SCHEDULE",1:"")_$S(PSGOEFF=11:" and",1:"")_$S(PSGOEFF>9:" at least one DISPENSE DRUG",1:"")
@@ -143,14 +97,6 @@ FINISH ;
  .K DIR S DIR(0)="FOA",DIR("A")="Invalid Schedule" D ^DIR K DIR
  I $G(PSGS0XT)="D",'$G(PSGS0Y),'$G(PSGAT),((",P,R,")'[(","_$G(PSGST)_",")) D  S PSGOEEF(39)="" K PSJACEPT
  .K DIR S DIR(0)="FOA",DIR("A")="   WARNING - Admin times are required for DAY OF WEEK schedules  " D ^DIR K DIR
- ;***PSJ*5*113
- I $G(PSGAT)="",(PSGST="C"!(PSGST="R")) D
- .I $G(PSGS0XT) Q:$$ODD^PSGS0(PSGS0XT)
- .Q:$$PRNOK^PSGS0($G(PSGSCH))
- .Q:($P($G(ZZND),"^",5)'="C")
- .K PSJACEPT
- .K DIR S DIR(0)="FOA",DIR("A")="  WARNING - Admin times are required for CONTINUOUS orders " D ^DIR K DIR
- ;***
  I '$G(PSJACEPT) D ABORTACC Q
  I $G(PSJRNF),$G(^PS(53.1,+PSGORD,4)) D
  . W $C(7),!!,"ACCEPTING THIS ORDER WILL CHANGE THE STATUS TO ACTIVE."
@@ -158,11 +104,6 @@ FINISH ;
  . S DIR("?")="or ""Y"" to continue with the Activation process." D ^DIR S:'Y Y=-1 K DIR
  I $G(PSJRNF),$G(Y)=-1 S PSJACEPT=0 D ABORTACC Q
  I $G(PSJRNF),$G(Y)=1 S PSGOEAV=1
- I $G(PSGEDTOI) D OC^PSJOE1
- I $S($G(PSGORQF):0,$G(PSGEDTOI):0,$G(PSGOEER)["109^PSGOE8":1,$G(PSGOEER)["3^PSGOE8":1,$G(PSGOEER)["26^PSGOE8":1,$G(PSGOEER)["10^PSGOE81":1,$G(PSGOEER)["25^PSGOE81":1,1:0) D
- . NEW PSJDD S PSJDD=+$$DD53P45^PSJMISC()
- . D:$G(PSJDD) IN^PSJOCDS($G(PSGORD),"UD",PSJDD)
- I $G(PSGORQF) S PSGOEENO=0,PSJACEPT=0
  I PSGOEENO S PSJNOO=$$ENNOO^PSJUTL5("E"),PSJACEPT=$S(PSJNOO<0:0,1:1)
 ACCEPT ;
  S VALMBCK=$S($G(PSJACEPT):"Q",1:"R")
@@ -175,11 +116,9 @@ BYPASS ;
  S PSGCANFL=1
  ;
 DONE ;
- K CHK,DA,DIE,DR,DRG,MSG,Q1,Q2,PSGNSTAT,PSGEDTOI,PSGOEER
- K PSJOVR
+ K CHK,DA,DIE,DR,DRG,MSG,Q1,Q2 ;PSGND,PSGOEE,PSGOEEF,PSGOEEND,PSGOEEG,PSGOEF,PSGOEFF,PSGOES,PSGOPD,PSGOPDN,PSGOPR,PSGOSCH,PSGPDRG,PSGDRGN,PSG0XT,PSGS0Y,OSGSD,Q1,Q2
  Q
 ABORTACC ; Abort Accept process.
- K PSJCT1,PSJOVR,PSJOVRLP,PSJCT1A
  D ABORT^PSGOEE K PSGOEEF D GETUD^PSJLMGUD(PSGP,PSGORD),^PSGOEF,ENSFE^PSGOEE0(PSGP,PSGORD),INIT^PSJLMUDE(PSGP,PSGORD) S VALMBCK="R",PSGSD=PSGNESD,PSGFD=PSGNEFD Q
  ;
  ;

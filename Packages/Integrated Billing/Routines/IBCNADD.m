@@ -1,30 +1,15 @@
 IBCNADD ;ALB/AAS - ADDRESS RETRIEVAL ENGINE FOR FILE 399 ; 29-AUG-93
- ;;2.0;INTEGRATED BILLING;**52,80,377**;21-MAR-94;Build 23
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,80**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
-ADD(DA,IBCOB) ; -- Retrieve correct billing address for a bill, mailing address of Bill Payer
+ADD(DA) ; -- Retrive correct billing address for a bill, mailing address of Bill Payer
  ;    assumes that new policy field points to valid ins. policy
- ;    DA = ien to file 399
- ;    IBCOB = payer sequence PST or 123 (optional)
- ;
  N X,Y,I,J,IB01,IB02,IBTYP,DFN,IBCNS,IBCDFN,IBCNT,IBAGAIN,IBFND,IBBILLTY,IBCHRGTY
  S IB02=""
  S DFN=$P($G(^DGCR(399,DA,0)),"^",2)
+ S IBCNS=+$P($G(^DGCR(399,DA,"MP")),U,1) G:'IBCNS MAINQ
+ S IBCDFN=$P($G(^DGCR(399,DA,"MP")),"^",2) I IBCDFN S IBCNS=+$G(^DPT(+DFN,.312,+IBCDFN,0))
  S IBBILLTY=$P($G(^DGCR(399,DA,0)),"^",5),IBCHRGTY=$P($$CHGTYPE^IBCU(DA),"^;",1)
- ;
- S IBCNS=+$P($G(^DGCR(399,DA,"MP")),U,1)
- S IBCDFN=$P($G(^DGCR(399,DA,"MP")),U,2)
- ;
- ; If a specific payer sequence was passed in, get the ins. company and the policy ptr
- ; No address returned for Medicare
- I $G(IBCOB)'="" D  I $$MCRWNR^IBEFUNC(IBCNS) G MAINQ
- . S IBCOB=$TR(IBCOB,"PST","123")
- . S IBCNS=+$P($G(^DGCR(399,DA,"I"_IBCOB)),U,1)
- . S IBCDFN=+$P($G(^DGCR(399,DA,"M")),U,IBCOB+11)
- . Q
- ;
- I 'IBCNS G MAINQ
- I IBCDFN S IBCNS=+$G(^DPT(+DFN,.312,+IBCDFN,0))
  I '$D(^DIC(36,+IBCNS,0)) G MAINQ
  ;
  ; -- if send bill to employer and state is filled in use this

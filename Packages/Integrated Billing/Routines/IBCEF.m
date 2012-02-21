@@ -1,6 +1,5 @@
 IBCEF ;ALB/TMP - FORMATTER SPECIFIC BILL FUNCTIONS ;22-JAN-96
- ;;2.0;INTEGRATED BILLING;**52,80,51,137,288,296,361,371**;21-MAR-94;Build 57
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,80,51,137,288,296**;21-MAR-94
  ;
  ;IBIFN = bill ien throughout this routine
 COB(IBIFN) ; Bill seq
@@ -25,41 +24,35 @@ POLICY(IBIFN,IBPC,IBCOBN) ; Return raw data from policy info on bill
  I $G(IBPC) S IBI=$P(IBI,U,IBPC)
 POLICYQ Q IBI
  ;
-INSADDR(IBIFN,IBCOB) ; Return insured's address in 7 pieces:
+INSADDR(IBIFN,IBCOB) ; Return insured's addr in 7 pcs:
  ; ALL STREET ADDRESSES^CITY^STATE ABBREVIATION^ZIP^STREET ADDRESS 1^
  ;  STREET ADDRESS 2^STREET ADDRESS 3
  ; IBIFN = bill ien
  ; IBCOB = bill designation (P)rimary, (S)econdary, (T)ertiary
  ;          or 1-2-3. If not defined or null, return current
- ; If insured is patient or spouse, take from patient file top level
- ;   fields, then if top-level street addresses are blank and policy
- ;   level fields are not, use policy level
- ; If insured is other than patient/spouse, use policy level fields only
+ ; If insured is patient or spouse, take from pt file top level
+ ;   flds, then if top-level street addresses blank and policy
+ ;   level flds are not, use policy level
+ ; If insured other than pt/spouse, use policy level flds only
  N A,B,IBADDR,IBI,DFN,VAPA,VATEST
  S:$G(IBCOB)="" IBCOB=""
  I 'IBCOB S IBCOB=$$COBN(IBIFN,$G(IBCOB))
- S IBI=+$$POLICY(IBIFN,16,IBCOB)     ; pt relationship to insured
+ S IBI=+$$POLICY(IBIFN,16,IBCOB)
  S DFN=+$P($G(^DGCR(399,IBIFN,0)),U,2)
  I $S('IBI:1,1:"12"'[IBI) S IBADDR="" G INSADDQ
- ; insured's address (patient/spouse) same as patient's
+ ; insureds addr (pt/spouse) same as pt's
  S VATEST("ADD",9)=+$G(^DGCR(399,IBIFN,"U")),VATEST("ADD",10)=+$P($G(^("U")),U,2)
  D ADD^VADPT
  S IBADDR=VAPA(1)_" "_VAPA(2)_" "_VAPA(3)_U_VAPA(4)_U_$P($G(^DIC(5,+VAPA(5),0)),U,2)_U_VAPA(6)_U_VAPA(1)_U_VAPA(2)_U_VAPA(3)
 INSADDQ S A=$P($G(^DGCR(399,IBIFN,"M")),U,(11+IBCOB))
  S A=$G(^DPT(DFN,.312,+A,3))
- I $TR($P(IBADDR,U)," ")="" D PI3
- I IBI=2,$$NOPUNCT($P(A,U,6,10),1)'="" D PI3
+ I $TR($P(IBADDR,U)," ")="" D
+ .S $P(IBADDR,U)=$P(A,U,6)_" "_$P(A,U,7),$P(IBADDR,U,5,6)=$P(A,U,6,7)
+ .F B=2,4 S $P(IBADDR,U,B)=$P(A,U,B+6)
+ .S $P(IBADDR,U,3)=$P($G(^DIC(5,+$P(A,U,9),0)),U,2)
  Q IBADDR
  ;
-PI3 ; build IBADDR string from patient insurance 3 node data
- S $P(IBADDR,U,1)=$P(A,U,6)_" "_$P(A,U,7)
- S $P(IBADDR,U,5,6)=$P(A,U,6,7)
- F B=2,4 S $P(IBADDR,U,B)=$P(A,U,B+6)
- S $P(IBADDR,U,3)=$P($G(^DIC(5,+$P(A,U,9),0)),U,2)
- S $P(IBADDR,U,7)=""   ; no street address 3 in file 2.312
- Q
- ;
-PTADDR(IBIFN,ELE) ;Return part of patient's permanent address
+PTADDR(IBIFN,ELE) ;Return part of pt's permanent addr
  ;IBIFN = bill ien
  ;ELE = subscript in ^UTILITY("VAPA", array for element needed
  ;
@@ -69,7 +62,7 @@ PTADDR(IBIFN,ELE) ;Return part of patient's permanent address
  .D ADD^VADPT
  Q $P($G(^UTILITY("VAPA",$J,ELE)),U)
  ;
-PTDEM(IBIFN,ELE,PC) ;Return part of patient's demographics
+PTDEM(IBIFN,ELE,PC) ;Return part of pt's demograpics
  ;IBIFN = bill ien
  ;ELE = subscript in ^UTILITY("VADM" array for demographic element needed
  ;PC = pc of string at subscript ELE to be returned
@@ -95,27 +88,26 @@ INSDEM(IBIFN,IBCOB) ; Return insured's demographics in 6 pieces:
  ; IBIFN = bill ien
  ; IBCOB = bill designation (P)rimary (default), (S)econdary, (T)ertiary
  ;          or 1,2,3 ... if not defined or null, return current
- ; If insured is patient/spouse, take from patient file top level
- ;   fields, then if top-level are blank and policy level aren't,
+ ; If insured is patient/spouse, take from pt file top level
+ ;   flds, then if top-level are blank and policy level aren't,
  ;   use policy level
- ; If insured other than patient/spouse, use policy level fields only
+ ; If insured other than pt/spouse, use policy level flds only
  N A,B,IBDEM,IBI,DFN,VADM
  S:$G(IBCOB)="" IBCOB=""
  S:'IBCOB IBCOB=$$COBN(IBIFN,IBCOB)
  S IBI=$$WHOSINS(IBIFN,IBCOB)
  S DFN=+$P($G(^DGCR(399,IBIFN,0)),U,2)
  I $S('IBI:1,1:"12"'[IBI) S IBDEM="" G INSDEM1
- ; If it gets here, assume insured is patient/spouse
+ ; If it gets here, assume insured is pt/spouse
  S A=$$PTDEM(IBIFN,0),A=$$PTADDR(IBIFN,0)
  F A=2,3,5 S VADM(A)=$P($G(^UTILITY("VADM",$J,A)),U)
  S VAPA(8)=$P($G(^UTILITY("VAPA",$J,8)),U)
  I VADM(5)="",'VADM(3),VAPA(8)="" S IBDEM="" G INSDEM1
+ S:"MF"'[VADM(5) VADM(5)="" S $P(IBDEM,U,2)=$S(IBI=1:VADM(5),1:$S(VADM(5)="M":"F",VADM(5)="F":"M",1:""))
  S $P(IBDEM,U,3)=VAPA(8),$P(IBDEM,U,6)=VADM(2)
  I IBI=1,VADM(3) S $P(IBDEM,U)=VADM(3) ;Patient's own policy only
 INSDEM1 S A=$P($G(^DGCR(399,IBIFN,"M")),U,(11+IBCOB))
  S A=$G(^DPT(DFN,.312,+A,3))
- S:"MF"'[$G(VADM(5)) VADM(5)=""
- S $P(IBDEM,U,2)=$S(IBI=1:VADM(5),1:$P(A,U,12))
  S $P(IBDEM,U,4,5)=$P(A,U,2)_U_$P(A,U,3)
  S:'$P(IBDEM,U) $P(IBDEM,U)=$P(A,U)
  S:$P(IBDEM,U,3)="" $P(IBDEM,U,3)=$P(A,U,11)
@@ -156,10 +148,10 @@ EMPSTAT(IBIFN,WHOSE) ;Return employment status
  I STAT="" S STAT=9
  Q STAT
  ;
-INPAT(IBIFN,OUT) ; Determine if bill is inpatient
+INPAT(IBIFN,OUT) ; Determine if bill is inpt
  ; OUT = optional - if 1, return output value based on 
- ;  inpatient/outpatient from UB-04 type of bill field
- ; Return 1 if inpatient, 0 if not inpatient or can't be determined
+ ;  in/outpt from UB92 type of bill fld
+ ; Return 1 if inpt, 0 if not inpt or can't be determined
  N INPT,CODE,CODE0,IB0
  S IB0=$G(^DGCR(399,IBIFN,0))
  S OUT=+$G(OUT),CODE=+$P(IB0,U,5)
@@ -175,7 +167,7 @@ INPAT(IBIFN,OUT) ; Determine if bill is inpatient
  Q $S(INPT:INPT'>2,1:0)
  ;
 INSPRF(IBIFN) ; Function to determine if bill is prof or inst
- ; Return 1 if institutional (UB-04) claim, 0 if professional (CMS-1500) claim
+ ; Return 1 if inst (UB92), 0 if prof (1500)
  N A
  S A=$G(^DGCR(399,IBIFN,0))
  I $P(A,U,27)="" S $P(A,U,27)=$S($P(A,U,19)=3:1,1:0)
@@ -216,13 +208,13 @@ FQ S IBXARRY=$S(IBXHOLD="IBXDATA":"IBXDATA",1:""_IBXRET_"")
  S:'($D(@IBXARRY)#2) @IBXARRY=""
  Q
  ;
-SERVDT(IBIFN,LENGTH,FORMAT) ; Return default service date for 
- ; outpatient/UB-04 lines or X12-837 institutional lines
- ; LENGTH = null/8 for 8 digit date, 6 for 6 digit date
+SERVDT(IBIFN,LENGTH,FORMAT) ; Return default service dt for 
+ ; outpt/UB92 lines or X12-837 inst lines
+ ; LENGTH = null/8 for 8 digit dt, 6 for 6 digit dt
  ; FORMAT = 1 = X12 format (YYYYMMDD), 2 = FM internal (NNNNNNN),
  ;          0 = external (MMDDYY or MMDDYYYY)
  N IBZ
- G:$$INPAT^IBCEF(IBIFN,1)!($$FT^IBCEF(IBIFN)'=3) SERVDTQ ;Inpatient claim or billed on a CMS-1500
+ G:$$INPAT^IBCEF(IBIFN,1)!($$FT^IBCEF(IBIFN)'=3) SERVDTQ ;Inpatient claim or billed on a HCFA 1500
  S LENGTH=$G(LENGTH),FORMAT=$G(FORMAT)
  D F("N-STATEMENT COVERS FROM DATE","IBZ",,IBIFN)
  I '$G(IBZ)!(FORMAT=2) G SERVDTQ
@@ -234,7 +226,7 @@ SERVDTQ Q $G(IBZ)
  ;
 NOPUNCT(X,SPACE,EXC) ; Strip punctuation from data in X
  ; SPACE = flag if 1 strip SPACES
- ; EXC = list of punctuation not to strip
+ ; EXC = list of punct not to strip
  ;
  N PUNCT,Z
  S PUNCT=".,-+(){}[]\/><:;?|=_*&%$#@!~`^'"""

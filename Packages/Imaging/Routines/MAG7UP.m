@@ -1,5 +1,5 @@
-MAG7UP ;WOIFO/MLH - Imaging - HL7 - utilities - break out message into a parse tree ; 06/03/2005  12:05
- ;;3.0;IMAGING;**11,51**;26-August-2005
+MAG7UP ;WOIFO/MLH - Imaging - HL7 - utilities - break out message into a parse tree ; 04/09/2004  13:27
+ ;;3.0;IMAGING;**11**;14-April-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -15,17 +15,18 @@ MAG7UP ;WOIFO/MLH - Imaging - HL7 - utilities - break out message into a parse t
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;
  Q
  ;
 PARSE(XMSG,XTREE) ; break the HL7 message lines into a parse tree
  ;
  ; INPUT:  The single-dimensional array of message lines
- ;
+ ; 
  ; OUTPUT:  The parse tree, in the structure
  ;   @XTREE@(NSEG,0)                    segment name
  ;   @XTREE@(NSEG,NFLD,NREP,NCMP,NSCM)  element data
  ;   @XTREE@("B",SEGID,NSEG)          null
- ;
+ ;   
  N I,J,K,L,M,X,Z ; --------------------- scratch vars
  N IMSG ; ------------------------------ message array index
  N ISUBSEG ; --------------------------- index of continuation data for long segs
@@ -110,19 +111,19 @@ PROCFLD(XTREE,XNSEG,XNFLD,XFLD) ; process a field
  S SG=@XTREE@(XNSEG,0)
  ; Per DICOM meeting 2004-02-24, reaffirmed that data may need to be
  ; retrieved above the subcomponent level, and that those data will
- ; need to be de-escaped because the receiving application won't have
+ ; need to be deescaped because the receiving application won't have
  ; access to the delimiters from the original message.
  S @XTREE@(XNSEG,XNFLD)=$$DEESC(XFLD)
  ;
  ; Break out to the lowest delimiter level too.  This is not strictly an
  ; HL7 parse because it does not take actual HL7 (or realm constraining)
  ; data types into account.
- ;
+ ; 
  F NREP=1:1:$L(XFLD,URS) S REP=$P(XFLD,URS,NREP) I REP]"" D
  . F NCMP=1:1:$L(REP,UCS) S CMP=$P(REP,UCS,NCMP) I CMP]"" D
  . . ; Per DICOM meeting 2004-02-24, reaffirmed that data may need to be
  . . ; retrieved above the subcomponent level, and that those data will
- . . ; need to be de-escaped because the receiving application won't have
+ . . ; need to be deescaped because the receiving application won't have
  . . ; access to the delimiters from the original message.
  . . S @XTREE@(XNSEG,XNFLD,NREP,NCMP)=$$DEESC(CMP)
  . . F NSCM=1:1:$L(CMP,USS) S SCM=$P(CMP,USS,NSCM) I SCM]"" D
@@ -138,7 +139,7 @@ DEESC(XSCM) ; replace escape sequences with delimiter characters
  ;
  ; expects:  UFSESC, UCSESC, URSESC, UECESC, USSESC
  ;                delimiter escape sequences
- ;
+ ; 
  ; function return:  element data after replacement
  ;
  N HIT ; need another pass after each hit

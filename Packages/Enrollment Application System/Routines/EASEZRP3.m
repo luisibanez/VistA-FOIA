@@ -1,14 +1,12 @@
-EASEZRP3 ;ALB/AMA - Print 1010EZR, Cont. ; 8/1/08 1:28pm
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**57,70**;Mar 15, 2001;Build 26
+EASEZRP3 ;ALB/AMA - Print 1010EZR, Cont.
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**57**;Mar 15, 2001
  ;
  Q
  ;
-EN(EALNE,EAINFO,EASDG) ; Entry point to print Page 3, called from EN^EASEZRPF
+EN(EALNE,EAINFO) ; Entry point to print Page 3, called from EN^EASEZRPF
  ;  Input
  ;     EALNE  - Array of line formats for output
  ;     EAINFO - Application Data array, see SETUP^EASEZRPF
- ;     EASDG  - Flag variable to signify request to print from DG options
- ;
  N EASIGN,EASD
  ;
  I $$GET1^DIQ(712,EAINFO("EASAPP")_",",4)]"" D
@@ -27,8 +25,7 @@ EN(EALNE,EAINFO,EASDG) ; Entry point to print Page 3, called from EN^EASEZRPF
  ;
 NET ;  Print SECTION IX - PREVIOUS CALENDAR YEAR NET WORTH
  ;
- I $G(EASDG),+@EASD@(999) W !!?2,"SECTION IX - PREVIOUS CALENDAR YEAR NET WORTH  (INCOME YEAR:  ",@EASD@(999),")  (Use a separate sheet for additional dependents)"
- E  W !!?38,"SECTION IX - PREVIOUS CALENDAR YEAR NET WORTH  (Use a separate sheet for additional dependents)"
+ W !?18,"SECTION IX - PREVIOUS CALENDAR YEAR NET WORTH  (Use a separate sheet for additional dependents)"
  W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
  ;
  W !?78,"|",?84,"VETERAN",?96,"|",?102,"SPOUSE",?114,"|",?120,"CHILD 1"

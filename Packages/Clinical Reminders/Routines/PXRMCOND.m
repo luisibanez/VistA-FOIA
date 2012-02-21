@@ -1,5 +1,5 @@
-PXRMCOND ; SLC/PKR - Routines for evaluating conditions. ;06/01/2007
- ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
+PXRMCOND ; SLC/PKR - Routines for evaluating conditions. ;11/01/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;============================================================
 CASESEN(X,DA,FILENUM) ;
@@ -78,8 +78,7 @@ SCPAR(FINDPA,CASESEN,COND,UCIFS,ICOND,VSLIST) ;Set the Condition parameters.
  N CONDS
  S CONDS=$G(FINDPA(3))
  S COND=$P(CONDS,U,1)
- ;Even if there is no condition UCIFS could be used for status search.
- S UCIFS=$P(CONDS,U,3)
+ S UCIFS=$S(COND="":0,1:$P(CONDS,U,3))
  I COND="" Q
  S CASESEN=$P(CONDS,U,2)
  I CASESEN="" S CASESEN=1

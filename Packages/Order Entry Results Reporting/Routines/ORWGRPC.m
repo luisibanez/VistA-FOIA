@@ -1,14 +1,9 @@
 ORWGRPC ; SLC/STAFF - Graph RPC ;3/9/06  13:59
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**215,243**;Dec 17, 1997;Build 242
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**215**;Dec 17, 1997
  ;
 ALLITEMS(ITEMS,DFN) ; RPC - get all items of data on patient (procedures, tests, codes,..)
  D ALLITEMS^ORWGAPI("ORWGRPC",DFN)
  S ITEMS=$NA(^TMP("ORWGRPC",$J))
- Q
- ;
-ALLVIEWS(DATA,VIEW,USER) ; RPC - get all graph views
- D ALLVIEWS^ORWGAPI("ORWGRPC",+$G(VIEW),+$G(USER))
- S DATA=$NA(^TMP("ORWGRPC",$J))
  Q
  ;
 CLASS(DATA,TYPE) ; RPC - get classifications
@@ -16,11 +11,6 @@ CLASS(DATA,TYPE) ; RPC - get classifications
  S DATA=$NA(^TMP("ORWGRPC",$J))
  Q
  ;
-DATEDATA(DATA,OLDEST,NEWEST,TYPEITEM,DFN) ; RPC - get data for an item on patient in date range
- D DATEDATA^ORWGAPI("ORWGRPC",OLDEST,NEWEST,TYPEITEM,DFN)
- S DATA=$NA(^TMP("ORWGRPC",$J))
- Q
- ; 
 DATEITEM(DATA,OLDEST,NEWEST,FNUM,DFN) ; RPC - get patient items in date range for a type
  D DATEITEM^ORWGAPI("ORWGRPC",OLDEST,NEWEST,FNUM,DFN)
  S DATA=$NA(^TMP("ORWGRPC",$J))
@@ -41,22 +31,6 @@ DETAILS(ITEMS,DFN,DATE1,DATE2,TYPE,COMP) ; RPC - get report for type of data for
  S ITEMS=$NA(^TMP("ORWGRPC",$J))
  Q
  ;
-FASTDATA(DATA,DFN) ; RPC - get all data (non-lab) set up on patient
- D FASTDATA^ORWGAPI(.DATA,DFN)
- Q
- ;
-FASTITEM(ITEMS,DFN) ; RPC - get all items set up on patient
- D FASTITEM^ORWGAPI(.ITEMS,DFN)
- Q
- ;
-FASTLABS(DATA,DFN) ; RPC - get all lab data set up on patient
- D FASTLABS^ORWGAPI(.DATA,DFN)
- Q
- ;
-FASTTASK(STATUS,DFN,OLDDFN) ; set up all data and items on patient
- D FASTTASK^ORWGAPI(.STATUS,DFN,$G(OLDDFN))
- Q
- ;
 GETDATES(DATA,REPORTID) ; RPC - get graph date range
  D GETDATES^ORWGAPI("ORWGRPC",$G(REPORTID))
  S DATA=$NA(^TMP("ORWGRPC",$J))
@@ -72,12 +46,13 @@ GETSIZE(DATA) ; RPC - get graph positions and sizes
  S DATA=$NA(^TMP("ORWGRPC",$J))
  Q
  ;
-GETVIEWS(DATA,ALL,PUBLIC,EXT,USER) ; RPC - get graph views
- D GETVIEWS^ORWGAPI("ORWGRPC",ALL,+$G(PUBLIC),+$G(EXT),+$G(USER))
+GETVIEWS(DATA,ALL,PUBLIC,EXT) ; RPC - get graph views
+ D GETVIEWS^ORWGAPI("ORWGRPC",ALL,+$G(PUBLIC),+$G(EXT))
  S DATA=$NA(^TMP("ORWGRPC",$J))
  Q
  ;
 ITEMDATA(DATA,ITEM,START,DFN) ; RPC - get data of an item on patient (glucose results)
+ S ITEM=$$UP^ORWGAPIX(ITEM)
  D ITEMDATA^ORWGAPI("ORWGRPC",ITEM,START,DFN)
  S DATA=$NA(^TMP("ORWGRPC",$J))
  Q
@@ -116,11 +91,6 @@ SETVIEWS(ERR,NAME,PUBLIC,VAL) ; RPC - set a graph view
  ;
 TAX(DATA,ALL,REMTAX) ; RPC - get reminder taxonomies
  D TAX^ORWGAPI("ORWGRPC",+$G(ALL),.REMTAX)
- S DATA=$NA(^TMP("ORWGRPC",$J))
- Q
- ;
-TESTING(DATA) ; RPC - cache data
- D TESTING^ORWGAPI("ORWGRPC")
  S DATA=$NA(^TMP("ORWGRPC",$J))
  Q
  ;

@@ -1,5 +1,5 @@
-PXRMLIST ; SLC/PKR/PJH - Clinical Reminders list functions. ;07/17/2007
- ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
+PXRMLIST ; SLC/PKR/PJH - Clinical Reminders list functions. ;10/04/2000
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;Used in the reminder exchange utility for building lists of
  ;reminders, Exchange File entries, etc.
  ;=======================================================
@@ -10,16 +10,17 @@ FRDEF(NAME,PNAME) ;Format the reminder name and print name.
  Q TEMP
  ;
  ;=======================================================
-FMT(NUMBER,NAME,SOURCE,DATE,FMTSTR,NL,OUTPUT) ;Format  entry number, name,
- ;source, and date packed for LM display.
- N TEMP,TSOURCE
- S TEMP=NUMBER_U_NAME
+FRE(NUMBER,NAME,SOURCE,DATE) ;Format  entry number, name, source,
+ ;and date packed.
+ N TEMP,TNAME,TSOURCE
+ S TEMP=$$RJ^XLFSTR(NUMBER,4," ")
+ S TNAME=$E(NAME,1,27)
+ S TEMP=TEMP_"  "_$$LJ^XLFSTR(TNAME,29," ")
  S TSOURCE=$E($P(SOURCE,",",1),1,12)_"@"_$E($P(SOURCE," at ",2),1,12)
- S TEMP=TEMP_U_TSOURCE
+ S TEMP=TEMP_$$LJ^XLFSTR(TSOURCE,23," ")
  S DATE=$$FMTE^XLFDT(DATE,"5Z")
- S TEMP=TEMP_U_DATE
- D COLFMT^PXRMTEXT(FMTSTR,TEMP," ",.NL,.OUTPUT)
- Q
+ S TEMP=TEMP_"  "_$$LJ^XLFSTR(DATE,30," ")
+ Q TEMP
  ;
  ;=======================================================
 LIST ;Print a list of location lists.
@@ -73,24 +74,20 @@ RDEF(DEFLIST,ARO) ;Build a list of the name and print name of all
  Q
  ;
  ;=======================================================
-REXL(RLIST) ;Build a list of exchange repository entries.
- N DATE,EXIEN,FMTSTR,IND,NAME,NL,NUM,OUTPUT,SOURCE,STR
+RE(RLIST,IEN) ;Build a list of repository entries.
+ N DATE,IND,NAME,SOURCE
  ;Build the list in alphabetical order.
- S FMTSTR=$$LMFMTSTR^PXRMTEXT(.VALMDDF,"RLLL")
- S (NUM,VALMCNT)=0
+ S VALMCNT=0
  S NAME=""
  F  S NAME=$O(^PXD(811.8,"B",NAME)) Q:NAME=""  D
  . S DATE=""
  . F  S DATE=$O(^PXD(811.8,"B",NAME,DATE)) Q:DATE=""  D
- .. S EXIEN=$O(^PXD(811.8,"B",NAME,DATE,""))
- .. S SOURCE=$P(^PXD(811.8,EXIEN,0),U,2)
- .. S NUM=NUM+1
- .. S ^TMP(RLIST,$J,"SEL",NUM)=EXIEN
- .. D FMT(NUM,NAME,SOURCE,DATE,FMTSTR,.NL,.OUTPUT)
- .. F IND=1:1:NL D
- ... S VALMCNT=VALMCNT+1,^TMP(RLIST,$J,VALMCNT,0)=OUTPUT(IND)
- ... S ^TMP(RLIST,$J,"IDX",VALMCNT,NUM)=""
- S ^TMP(RLIST,$J,"VALMCNT")=VALMCNT
+ .. S IND=$O(^PXD(811.8,"B",NAME,DATE,""))
+ .. S SOURCE=$P(^PXD(811.8,IND,0),U,2)
+ .. S VALMCNT=VALMCNT+1
+ .. S RLIST(VALMCNT,0)=$$FRE(VALMCNT,NAME,SOURCE,DATE)
+ .. S IEN(VALMCNT)=IND
+ S RLIST("VALMCNT")=VALMCNT
  Q
  ;
  ;=======================================================

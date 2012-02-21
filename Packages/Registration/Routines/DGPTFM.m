@@ -1,5 +1,5 @@
 DGPTFM ;ALB/MTC - PTF OP-PRO-DIAG ;7/22/05 9:18am
- ;;5.3;Registration;**510,517,590,594,606,635,683,696,664**;Aug 13, 1993;Build 15
+ ;;5.3;Registration;**510,517,590,594,606,635,683**;Aug 13, 1993
  K M,S,M1,M2,M3,S1,S2,PS2,SDCLY,^TMP("PTF",$J)
 GET S I=0 F I1=1:1 S I=$O(^DGPT(PTF,"M",I)) Q:'I  S (M3(I1),M(I1))=^(I,0) I $D(^DGPT(PTF,"M",I,"P")) S $P(M(I1),U,20)=^("P")
  K MT D ORDER^DGPTF K MT D GETVAR^DGPTFM6,CL^SDCO21(DFN,$P(^DGPT(PTF,0),U,2),"",.SDCLY),MOB^DGPTFM2
@@ -12,7 +12,7 @@ WD1 S N=$$ICDDX^ICDCODE(+L,$$GETDATE^ICDGTDRG(PTF)),L2=$S(N:$P(N,U,2,99),1:""),M
  W:L3 ! S:L3 L3=0 W ?L1*40,$J(M2,3)," ",$J(L4,7)," ",$E($P(L2,U,3),1,25) K ^UTILITY($J,"M2",M2) S ^UTILITY($J,"M2",M2)=+M(J+L1)_U_J1 Q
 WD2 N Z3
  X:NL "W ! S NL=0" W ?L5*40,"Move #",+L6 S Z=M(L6),Z3=M3(L6) W:+Z=1 " D/C" S Y=$P(Z,U,10)\1 D D^DGPTUTL W " ",Y," "
- W " <",$S($P(Z3,U,18)=1:"",1:"N"),"SC"_$S($P(Z3,U,26)="Y":",AO",1:"")_$S($P(Z3,U,27)="Y":",IR",1:"")_$S($P(Z3,U,28)="Y":",SWAC",1:"")_$S($P(Z3,U,32)="Y":",SHAD",1:"")_">"
+ W " <",$S($P(Z3,U,18)=1:"",1:"N"),"SC"_$S($P(Z3,U,26)="Y":",AO",1:"")_$S($P(Z3,U,27)="Y":",IR",1:"")_$S($P(Z3,U,28)="Y":",EC",1:"")_">"
  I $D(^DIC(42.4,+$P(Z,U,2),0)) D
  . I $P(^DIC(42.4,+$P(Z,U,2),0),U,2)'="" W $E($P(^DIC(42.4,+$P(Z,U,2),0),U,2),1,10)
  . E  W $E($P(^(0),U,1),1,10)
@@ -63,10 +63,11 @@ CKSCI(IEN)      ;print SCI for each Diagnosis code
  N DGINFO Q:'$D(XREF(IEN))
  S DGINFO=$G(^DGICD9(46.1,(XREF(IEN)),0)),CKSCI=0
  I 'DGINFO Q
- F I=3,7,1,2,4,5,6,8 I $D(SDCLY(I)) S L=$S(I=3:8,I<4:8+I,1:7+I) D
+ F I=3,7,1,2,4:1:6 I $D(SDCLY(I)) S L=$S(I=3:8,I<4:8+I,1:7+I) D
  .W ?45 S M=1,CKSCI=CKSCI+1
- .W $P("Treated for AO Condition^Treated for IR Condition^Treated for SC Condition^Exposed to SW Asia Conditions^Treatment for MST^Treatment for Head/Neck CA^Related to Combat^Treatment for SHAD Condition",U,I)
- .W ":",$S($P(DGINFO,U,($S(I<3:I+2,I=3:2,1:I+1))):"YES",1:"NO"),!
+ .W $P("Treated for AO Condition^Treated for IR Condition^Treated for SC Condition^Exposed to Envir Contaminants^Treatment for MST^Treatment for Head/Neck CA^Related to Combat",U,I)
+ .I I'=7 W ":",$S($P(DGINFO,U,($S(I<3:I+2,I=3:2,1:I+1))):"YES",1:"NO"),!
+ .I I=7 W ":",$S($P(DGINFO,U,8)="Y":"YES",1:"NO"),!
  Q  ;CKSCI
  ;
 NPR S ST=1,PROC=$S($D(^DGPT(PTF,"401P")):^("401P"),1:"") D WR G PRO

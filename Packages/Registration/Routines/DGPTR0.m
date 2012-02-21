@@ -1,5 +1,5 @@
 DGPTR0 ;MJK/JS/ADL - PTF TRANSMISSION ; 9/26/05 6:44pm
- ;;5.3;Registration;**114,247,338,342,510,524,565,678,729,664**;Aug 13, 1993;Build 15
+ ;;5.3;Registration;**114,247,338,342,510,524,565,678**;Aug 13, 1993
  ;;ADL;Update for CSV Project;;Mar 27, 2003
  ; -- setup control data
  ; ssn
@@ -53,12 +53,10 @@ DGPTR0 ;MJK/JS/ADL - PTF TRANSMISSION ; 9/26/05 6:44pm
  ;Combat Vet
  S X=$$CVEDT^DGCV(+DG0,$P(DG0,"^",2)) S Y=Y_$S((+X)>0:1,1:0)
  S X=$P(X,"^",2)_"       " S Y=Y_$E(X,4,5)_$E(X,6,7)_$E(X,2,3)
- ;Project 112/SHAD
- S X=$$SHAD^SDCO22(+DG0) S Y=Y_$S((+X)>0:1,1:0)
+ ;Project 112/SHAD - send null till DG/664 is released
+ S Y=Y_" " ;S X=$$SHAD^SDCO22(+DG0) S Y=Y_$S((+X)>0:1,1:0)
  ;Emergency Response Indicator
- S X=$$EMGRES^DGUTL(+DG0) S Y=Y_$S("^K^"[(U_X_U):X,1:" ")
- ;Country Code
- S X=$$GET1^DIQ(779.004,$P(DG11,U,10)_",",.01),Z=1,L=3 D ENTER
+ S X=$$EMGRES^DGUTL(+DG0) S Y=Y_$S("^K^"[X:X,1:" ")
  D FILL^DGPTR2,SAVE
  I T1 S Y=$E(Y,1,52)_" "_$E(Y,54,125)
  ;
@@ -83,8 +81,6 @@ SUR S I=$O(^DGPT(J,"S",I)) G 501:'I S DGSUR=^(I,0),DGAUX=$S($D(^DGPT(J,"S",I,300
  ;-- att phy
  S Y=Y_"         "
  ;-- additional ptf question
- ;send null, if disch date>inactive date. DG/729
- I +$P($G(^DIC(45.88,1,0)),U,3) S DGAUX=$S((+$G(^DGPT(J,70))<$P(^DIC(45.88,1,0),U,3)):DGAUX,1:"")
  S Y=Y_$E($P(DGAUX,U)_" ")
  K DGAUX
  D FILL^DGPTR2,SAVE G SUR

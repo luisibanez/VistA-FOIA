@@ -1,5 +1,5 @@
 MAGJRT ;WIRMFO/JHC VistaRad RPC calls for Demand Routing ; 13 Jan 2004  11:00 AM
- ;;3.0;IMAGING;**9,22,11,18**;Mar 07, 2006
+ ;;3.0;IMAGING;**9,22,11**;14-April-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -48,7 +48,7 @@ RTREQ(MAGGRY,DATA) ; RPC: MAGJ ROUTE REQUEST
  ;
  N $ETRAP,$ESTACK S $ETRAP="D ERR^MAGJRT"
  N RARPT,RADFN,RADTI,RACNI
- N DAYCASE,REPLY,CT,MAGS,STARTNOD,DATAOUT,RADATA,MAGSTRT,MAGEND,NEXAM,DIQUIET
+ N DAYCASE,REPLY,CT,MAGS,STARTNOD,DATAOUT,RADATA,MAGSTRT,MAGEND,NEXAM
  N IDATA,NOGO
  S DIQUIET=1 D DT^DICRW
  S CT=0,NEXAM=0,DATAOUT="",DAYCASE=""
@@ -123,11 +123,11 @@ RTLOCS1(RET,OK) ; return:
  I $D(MAGJOB("KEYS","MAGJ DEMAND ROUTE")) D
  . N T S T=0
  . F  S T=$O(^MAG(2005.2,T)) Q:'T  S X=$G(^(T,0)) I X]"" D
- .. Q:'$P(X,U,9)  ; Not a routable location
- .. Q:'$P(X,U,6)  ; OPERATIONAL STATUS not On-Line
- .. Q:'($P(X,U,7)="MAG")  ; Storage Type not Magnetic
- .. S X=$P(X,U),OK=OK+1
- .. S RET=RET+1,RET(RET)=T_U_X
+ . . Q:'$P(X,U,9)  ; Not a routable location
+ . . Q:'$P(X,U,6)  ; OPERATIONAL STATUS not On-Line
+ . . Q:'($P(X,U,7)="MAG")  ; Storage Type not Magnetic
+ . . S X=$P(X,U),OK=OK+1
+ . . S RET=RET+1,RET(RET)=T_U_X
  ; dicom destinations: assume that all are "active"
  I $D(MAGJOB("KEYS","MAGJ DEMAND ROUTE DICOM")) D
  . N DCM
@@ -178,7 +178,7 @@ RTEXAM(MAGGRY,DATA) ; RPC: MAGJ ROUTE EXAMS
  ;
  N $ETRAP,$ESTACK S $ETRAP="D ERR^MAGJRT"
  N IEXAM,RTLOC,RTPRI,RARPT,IDATA,REPLY,CT,MAGS,STARTNOD,NEXAM,NOGO
- N IMAG,MAGLST,MAGIEN,RTTYP,DIQUIET
+ N IMAG,MAGLST,MAGIEN,RTTYP
  S DIQUIET=1 D DT^DICRW
  K NOGO S NOGO(0)=0  ; array for reply for exams unable to process
  S MAGLST="MAGJROUTE",CT=0,STARTNOD=0,NEXAM=0

@@ -1,56 +1,52 @@
-XUS2 ;SF/RWF - TO CHECK OR RETURN USER ATTRIBUTES ;11/29/2006
- ;;8.0;KERNEL;**59,180,313,419,437**;Jul 10, 1995;Build 2
+XUS2 ;SF/RWF - TO CHECK OR RETURN USER ATTRIBUTES ;07/15/2003  12:20
+ ;;8.0;KERNEL;**59,180,313**;Jul 10, 1995
+ G XUS2^XUVERIFY ;All check or return user attributes moved to XUVERIFY
+USER G USER^XUVERIFY
+EDIT G EDIT^XUVERIFY
  Q
  ;
 ACCED ; ACCESS CODE EDIT from DD
- I "Nn"[$E(X,1) S X="" Q
+ N DIR,DIR0,XUAUTO I "Nn"[$E(X,1) S X="" Q
  I "Yy"'[$E(X,1) K X Q
- N DIR,DIR0,XUAUTO,XUK
  S XUAUTO=($P($G(^XTV(8989.3,1,3)),U,1)="y"),XUH=""
-AC1 D CLR,AAUTO:XUAUTO,AASK:'XUAUTO G OUT:$D(DIRUT) D REASK G OUT:$D(DIRUT),AC1:'XUK D CLR,AST(XUH)
+AC1 D CLR,AUTO:XUAUTO,AASK:'XUAUTO G OUT:$D(DIRUT) D REASK G OUT:$D(DIRUT),AC1:'XUK D CLR,AST(XUH)
  G OUT
  ;
-AASK ;Ask for Access code
- N X,XUU,XUEX X ^%ZOSF("EOFF")
- S XUEX=0
- F  D AASK1 Q:XUEX!($D(DIRUT))
- Q
- ;
-AASK1 ;
- W "Enter a new ACCESS CODE <Hidden>: " D GET Q:$D(DIRUT)
- I X="@" D DEL D:Y'=1 DIRUT S XUH="",XUEX=1 Q
- I X[$C(34)!(X[";")!(X["^")!(X[":")!(X'?.UNP)!($L(X)>20)!($L(X)<6)!(X="MAIL-BOX") D CLR W $C(7),$$AVHLPTXT(1) D AHELP Q
- I 'XUAUTO,((X?6.20A)!(X?6.20N)) D CLR W $C(7),$$AVHLPTXT(1),! Q
+AASK N X,XUU X ^%ZOSF("EOFF")
+AASK1 W "Enter a new ACCESS CODE <Hidden>: " D GET Q:$D(DIRUT)
+ I X="@" D DEL G:Y'=1 DIRUT S XUH="" Q
+ I X[$C(34)!(X[";")!(X["^")!(X[":")!(X'?.UNP)!($L(X)>20)!($L(X)<6)!(X="MAIL-BOX") D CLR W *7,$$AVHLPTXT(1) D AHELP G AASK1
+ I 'XUAUTO,((X?6.20A)!(X?6.20N)) D CLR W *7,"ACCESS CODE must be a mix of alpha and numerics.",! G AASK1
  S XUU=X,X=$$EN^XUSHSH(X),XUH=X,XMB(1)=$O(^VA(200,"A",XUH,0)) I XMB(1),XMB(1)'=DA S XMB="XUS ACCESS CODE VIOLATION",XMB(1)=$P(^VA(200,XMB(1),0),"^"),XMDUN="Security" D ^XMB
- I $D(^VA(200,"AOLD",XUH))!$D(^VA(200,"A",XUH)) D CLR W $C(7),"This has been used previously as an ACCESS CODE.",! Q
- S XUEX=1 ;Now we can quit
+ I $D(^VA(200,"AOLD",XUH))!$D(^VA(200,"A",XUH)) D CLR W *7,"This has been used previously as an ACCESS CODE.",! G AASK1
  Q
  ;
 REASK S XUK=1 Q:XUH=""  D CLR X ^%ZOSF("EOFF")
- F XUK=3:-1:1 W "Please re-type the new code to show that I have it right: " D GET G:$D(DIRUT) DIRUT D ^XUSHSH Q:(XUH=X)  D CLR W "This doesn't match.  Try again!",!,$C(7)
+ F XUK=3:-1:1 W "Please re-type the new code to show that I have it right: " D GET G:$D(DIRUT) DIRUT D ^XUSHSH Q:(XUH=X)  D CLR W "This doesn't match.  Try again!",!,*7
  S:XUH'=X XUK=0
  Q
  ;
 AST(XUH) ;Change ACCESS CODE and index.
  W "OK, Access code has been changed!"
+ ;S XUU=$P(^VA(200,DA,0),"^",3),$P(^VA(200,DA,0),"^",3)=XUH
+ ;I XUU]"" F XUI=0:0 S X=XUU S XUI=$O(^DD(200,2,1,XUI)) Q:XUI'>0  X ^(XUI,2)
+ ;I XUH]"" F XUI=0:0 S X=XUH S XUI=$O(^DD(200,2,1,XUI)) Q:XUI'>0  X ^(XUI,1)
  N FDA,IEN,ERR
  S IEN=DA_","
  S FDA(200,IEN,2)=XUH D FILE^DIE("","FDA","ERR")
- W !,"The VERIFY CODE has been deleted as a security measure.",!,"You will need to enter a new VERIFY code so the user can sign-on.",$C(7)
- D VST("",1)
+ W !,"The VERIFY CODE has been deleted as a security measure.",!,"The user will have to enter a new one the next time they sign-on.",*7 D VST("",1)
  I $D(^XMB(3.7,DA,0))[0 S Y=DA D NEW^XM ;Make sure has a Mailbox
  Q
  ;
 GET ;Get the user input and convert case.
- S X=$$ACCEPT^XUS I (X["^")!('$L(X)) D DIRUT
+ S X=$$ACCEPT^XUS Q:X="@"  G:(X["^")!('$L(X)) DIRUT
  S X=$$UP^XLFSTR(X)
  Q
  ;
 DIRUT S DIRUT=1
  Q
  ;
-CLR ;New line or Clear screenman area
- I '$D(DDS) W ! Q
+CLR I '$D(DDS) W ! Q
  N DX,DY
  D CLRMSG^DDS S DX=0,DY=DDSHBX+1 X IOXY
  Q
@@ -59,24 +55,19 @@ NEWCODE D REASK I XUK W !,"OK, remember this code for next time!"
  G OUT
  ;
 CVC ;From XUS1
- N DA,X
- S DA=DUZ,X="Y"
- W !,"You must change your VERIFY CODE at this time."
- ;Fall into next code
+ W !,"You must change your VERIFY CODE at this time." S DA=DUZ,X="Y"
 VERED ; VERIFY CODE EDIT From DD
- N DIR,DIR0,XUAUTO
- I "Nn"[$E(X,1) S X="" Q
+ N DIR,DIR0 I "Nn"[$E(X,1) S X="" Q
  I "Yy"'[$E(X,1) K X Q
- S XUH="",XUAUTO=($P($G(^XTV(8989.3,1,3)),U,3)="y") S:DUZ=DA XUAUTO="n" ;Auto only for admin
-VC1 D CLR,VASK:'XUAUTO,VAUTO:XUAUTO G OUT:$D(DIRUT) D REASK G OUT:$D(DIRUT),VC1:'XUK D CLR,VST(XUH,1)
+ S XUH=""
+VC1 D CLR,VASK G OUT:$D(DIRUT) D REASK G OUT:$D(DIRUT),VC1:'XUK D CLR,VST(XUH,1)
  D CALL^XUSERP(DA,2)
  G OUT
  ;
-VASK ;Ask for Verify Code
- N X,XUU X ^%ZOSF("EOFF") G:'$$CHKCUR() DIRUT D CLR
+VASK N X,XUU X ^%ZOSF("EOFF") G:'$$CHKCUR() DIRUT D CLR
 VASK1 W "Enter a new VERIFY CODE: " D GET Q:$D(DIRUT)
  I '$D(XUNC),(X="@") D DEL G:Y'=1 DIRUT S XUH="" Q
- D CLR S XUU=X,X=$$EN^XUSHSH(X),XUH=X,Y=$$VCHK(XUU,XUH) I +Y W $C(7),$P(Y,U,2,9),! D:+Y=1 VHELP G VASK1
+ D CLR S XUU=X,X=$$EN^XUSHSH(X),XUH=X,Y=$$VCHK(XUU,XUH) I +Y W *7,$P(Y,U,2,9),! D:+Y=1 VHELP G VASK1
  Q
  ;
 VCHK(S,EC) ;Call with String and Encripted versions
@@ -91,8 +82,10 @@ VCHK(S,EC) ;Call with String and Encripted versions
  I S[$P(NA,"^")!(S[$P(NA,"^",2)) Q "6^Name cannot be part of code."
  Q 0
  ;
-VST(XUH,%) ;
- W:$L(XUH)&% !,"OK, Verify code has been changed!"
+VST(XUH,%) W:$L(XUH)&% !,"OK, Verify code has been changed!"
+ ;S XUU=$P($G(^VA(200,DA,.1)),U,2) S $P(^VA(200,DA,.1),"^",1,2)=$H_"^"_XUH
+ ;I XUU]"" F XUI=0:0 S X=XUU S XUI=$O(^DD(200,11,1,XUI)) Q:XUI'>0  X ^(XUI,2)
+ ;I XUH]"" F XUI=0:0 S X=XUH S XUI=$O(^DD(200,11,1,XUI)) Q:XUI'>0  X ^(XUI,1)
  N FDA,IEN,ERR S IEN=DA_","
  S:XUH="" XUH="@" ;11.2 get triggerd
  S FDA(200,IEN,11)=XUH D FILE^DIE("","FDA","ERR")
@@ -100,18 +93,19 @@ VST(XUH,%) ;
  S:DA=DUZ DUZ("NEWCODE")=XUH Q
  ;
 DEL ;
- X ^%ZOSF("EON") W $C(7) S DIR(0)="Y",DIR("A")="Sure you want to delete" D ^DIR I Y'=1 W:$X>55 !?9 W $C(7),"  <Nothing Deleted>"
+ X ^%ZOSF("EON") W "@",*7 S DIR(0)="Y",DIR("A")="Sure you want to delete" D ^DIR I Y'=1 W:$X>55 !?9 W *7,"  <Nothing Deleted>"
  Q
  ;
-AAUTO ;Auto-get Access codes
- N XUK,Y
- X ^%ZOSF("EON") F XUK=1:1:3 D AGEN Q:(Y=1)!($D(DIRUT))
+AUTO ;
+ X ^%ZOSF("EON") F XUK=1:1:3 D GEN Q:(Y=1)!($D(DIRUT))
+ K DIR
  Q
  ;
-AGEN ;Generate a ACCESS code
- S XUU=$$AC^XUS4 S (X,XUH)=$$EN^XUSHSH(XUU) I $D(^VA(200,"A",X))!$D(^VA(200,"AOLD",X)) G AGEN
+GEN ;Generate a ACCESS code
+ S XUU=$$AC^XUS4 S X=$$EN^XUSHSH(XUU),XUH=X I $D(^VA(200,"A",X))!$D(^VA(200,"AOLD",X)) G GEN
  D CLR W "The new ACCESS CODE is: ",XUU,"   This is ",XUK," of 3 tries."
- D YN
+YN S Y=1 Q:XUK=3  S DIR(0)="YA",DIR("A")=" Do you want to keep this one? ",DIR("B")="YES",DIR("?",1)="If you don't like this code, we can auto-generate another.",DIR("?")="Remember you only get 3 tries!"
+ D ^DIR Q:(Y=1)!$D(DIRUT)  D CLR W:XUK=2 "O.K. You'll have to keep the next one!",!
  Q
  ;
 AHELP S XUU=$$AC^XUS4 S X=$$EN^XUSHSH(XUU) I $D(^VA(200,"A",X))!$D(^VA(200,"AOLD",X)) G AHELP
@@ -120,25 +114,6 @@ AHELP S XUU=$$AC^XUS4 S X=$$EN^XUSHSH(XUU) I $D(^VA(200,"A",X))!$D(^VA(200,"AOLD
  ;
 VHELP S XUU=$$VC^XUS4 S X=$$EN^XUSHSH(XUU) I ($P($G(^VA(200,DA,0)),U,3)=X)!$D(^VA(200,DA,"VOLD",X)) G VHELP
  W !,"Here is an example of an acceptable Verify Code: ",XUU,!
- Q
- ;
-VAUTO ;Auto-get Access codes
- N XUK
- X ^%ZOSF("EON") F XUK=1:1:3 D VGEN Q:(Y=1)!($D(DIRUT))
- Q
- ;
-VGEN ;Generate a VERIFY code
- S XUU=$$VC^XUS4 S (X,XUH)=$$EN^XUSHSH(XUU) I ($P($G(^VA(200,DA,0)),U,3)=X)!$D(^VA(200,DA,"VOLD",X)) G VGEN
- D CLR W "The new VERIFY CODE is: ",XUU,"   This is ",XUK," of 3 tries."
- D YN
- Q
-YN ;Ask if want to keep
- N DIR
- S Y=1,DIR(0)="YA",DIR("A")=" Do you want to keep this one? ",DIR("B")="YES",DIR("?",1)="If you don't like this code, we can auto-generate another.",DIR("?")="Remember you only get 3 tries!"
- S:XUK=3 DIR("A")="This is your final choice. "_DIR("A")
- D ^DIR Q:(Y=1)!$D(DIRUT)  I XUK=2 W !,"O.K. You'll have to keep the next one!",! H 2
- I (XUK=3)&(Y'=1) W !,"Lets stop and you can try later." H 3 D DIRUT
- D CLR
  Q
  ;
 OUT ;
@@ -168,7 +143,3 @@ BRCVC(XV1,XV2) ;Broker change VC, return 0 if good, '1^msg' if bad.
 AVHLPTXT(%) ;
  Q "Enter "_$S($G(%):"6-20",1:"8-20")_" characters mixed alphanumeric and punctuation (except '^', ';', ':')."
  ;
- ;Left over code, Don't think it is called anymore.
- G XUS2^XUVERIFY ;All check or return user attributes moved to XUVERIFY
-USER G USER^XUVERIFY
-EDIT G EDIT^XUVERIFY

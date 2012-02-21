@@ -1,10 +1,10 @@
-SROCODE ;BIR/MAM - SET UP FLAG FOR ANESTHESIA AGENTS ;01/30/08
- ;;3.0; Surgery ;**72,41,114,151,166**;24 Jun 93;Build 6
+SROCODE ;B'HAM ISC/MAM - SET UP FLAG FOR ANESTHESIA AGENTS ; [ 05/06/98   7:14 AM ]
+ ;;3.0; Surgery ;**72,41,114,151**;24 Jun 93
  ;
  ; Reference to ENS^PSSGIU supported by DBIA #895
+ ; Reference to ^PSS50 supported by DBIA #4533
  ;
-1 N SRTEST S SRTEST=50,SRTEST(0)="AEQSZ",SRTEST("A")="Enter the name of the drug you wish to flag: "
- D DIC^PSSDI(50,"SR",.SRTEST) G:+Y<1 DONE S SROIUDA=+Y,SROIRX=$P(Y,"^",2),SROIUX="S^SURGERY" D SROIU
+1 W !! K DIR S DIR(0)="P^50:QEAM",DIR("A")="Enter the name of the drug you wish to flag" D ^DIR G:Y<1 DONE S SROIUDA=+Y,SROIRX=$P(Y,"^",2),SROIUX="S^SURGERY" D SROIU
  G 1
 SROIU Q:'$D(SROIUDA)!'$D(SROIUX)  Q:SROIUX'?1E1"^"1.E
  N SRRX D DATA^PSS50(SROIUDA,,,,,"SRRX") S SRRX=$G(^TMP($J,"SRRX",SROIUDA,63)) D

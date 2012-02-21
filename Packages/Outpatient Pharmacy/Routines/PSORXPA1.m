@@ -1,5 +1,5 @@
 PSORXPA1 ;BIR/SAB - listman partial prescriptions ;07/14/93
- ;;7.0;OUTPATIENT PHARMACY;**11,27,56,77,130,152,181,174,287**;DEC 1997;Build 77
+ ;;7.0;OUTPATIENT PHARMACY;**11,27,56,77,130,152,181,174**;DEC 1997
  ;External references L,UL, PSOL, and PSOUL^PSSLOCK supported by DBIA 2789
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^DD(52 supported by DBIA 999
@@ -13,8 +13,6 @@ PSORXPA1 ;BIR/SAB - listman partial prescriptions ;07/14/93
  I '$G(RXPR($P(PSOLST(ORN),"^",2))) S RX=$P(PSOLST(ORN),"^",2) D VALID^PSORXRP1 I $G(QFLG) S VALMBCK="",VALMSG="A New Label has been requested already!" K QFLG,RX D ULK Q
  D FULL^VALM1 I '$D(PSOPAR) D ^PSOLSET D:'$D(PSOPAR) ULK G:'$D(PSOPAR) KL
  S DA=$P(PSOLST(ORN),"^",2),RX0=^PSRX(DA,0),J=DA,RX2=$G(^(2)),R3=$G(^(3)) S:'$G(BBFLG) BBRX(1)=""
- N PSORF,PSOTRIC D TRIC^PSORXL1(DA) I PSOTRIC&($$STATUS^PSOBPSUT(DA,PSORF)'["PAYABLE") D  Q
- . S VALMBCK="",VALMSG="Partial cannot be filled on Tricare non-payable Rx."
  I +$P($G(^PSRX(DA,2)),"^",6)<DT D
  .S:$P($G(^PSRX(DA,"STA")),"^")<12 $P(^PSRX(DA,"STA"),"^")=11
  .S COMM="Medication Expired on "_$E($P(^PSRX(DA,2),"^",6),4,5)_"/"_$E($P(^(2),"^",6),6,7)_"/"_$E($P(^(2),"^",6),2,3)

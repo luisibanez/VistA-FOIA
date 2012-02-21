@@ -1,6 +1,6 @@
-PRCPUINV ;WISC/RFJ/DGL-inventory point selection ; 9/20/06 11:04am
-V ;;5.1;IFCAP;**1,98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPUINV ;WISC/RFJ/DGL-inventory point selection ; 10.14.99
+V ;;5.1;IFCAP;**1**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
@@ -65,9 +65,8 @@ KILL(INVPT) ;  update all pointers when deleting an inventory point
  I DATA K ^PRCP(445,"AI",DATA,INVPT)
  ;  remove x-ref on inventory points
  S %=0 F  S %=$O(^PRCP(445,INVPT,2,%)) Q:'%  K ^PRCP(445,"AB",%,INVPT,%)
- ;  remove x-ref on inventory,ODI users ("AJ" (ODI) from PRC*5.1*98)
+ ;  remove x-ref on inventory users
  S %=0 F  S %=$O(^PRCP(445,INVPT,4,%)) Q:'%  K ^PRCP(445,"AD",%,INVPT,%)
- S %=0 F  S %=$O(^PRCP(445,INVPT,9,%)) Q:'%  K ^PRCP(445,"AJ",%,INVPT,%)
  ;  remove x-ref on items
  S %=0 F  S %=$O(^PRCP(445,INVPT,1,%)) Q:'%  D
  . K ^PRCP(445,"AE",%,INVPT,%)

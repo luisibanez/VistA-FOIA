@@ -1,32 +1,32 @@
-PSUVIT1 ;BIR/RDC - VITALS & IMMUNIZATION EXTRACT; 24 DEC 2003 ; 1/12/09 12:07pm
- ;;4.0;PHARMACY BENEFITS MANAGEMENT;**11,15**;MARCH, 2005;Build 2
+PSUVIT1 ;BIR/RDC - VITALS & IMMUNIZATION EXTRACT; 24 DEC 2003
+ ;;4.0;PHARMACY BENEFITS MANAGEMENT;;MARCH, 2005
  ;
  ;DBIA's
  ;References to file #4       - the INSTITUTION file
- ;  DBIA 10090 for: the STATION field  - #99
+ ;  DBIA 10090 for:	the STATION field  - #99
  ;
  ;References to file #120.5    - the GMRV VITAL MEASUREMENT file
- ;  DBIA 1381 for:   the DATE/TIME VITALS TAKEN field - #.01
- ;                   the VITAL TYPE field #.03
- ;                   the RATE field #1.2
- ;                   the QUALIFIER field #5
+ ;  DBIA 1381 for:	the DATE/TIME VITALS TAKEN field - #.01
+ ;  			the VITAL TYPE field #.03
+ ;  			the RATE field #1.2
+ ;  			the QUALIFIER field #5
  ;
  ;References to file #120.51- the GMRV VITAL TYPE file
- ;       DBIA 1382 for: the NAME field - #.01
+ ;       DBIA 1382 for:	the NAME field - #.01
  ;
  ;References to file #120.52 - the GMRV VITAL QUALIFIER file
- ;       DBIA 4504 for: the QUALIFIER field #.01
+ ;       DBIA 4504 for: 	the QUALIFIER field #.01
  ;
  ;References to file #9000010.11 - the V IMMUNIZATION file
- ;       DBIA 4567 for: the EVENT DATE AND TIME field #1202
- ;                      the IMMUNIZATION field #.01
+ ;       DBIA 4567 for:	the EVENT DATE AND TIME field #1202
+ ;       		the IMMUNIZATION field #.01
  ;
  ;References to file #2   - the PATIENT file
- ;       DBIA 10035 for:  the SOCIAL SECURITY NUMBER field #.09
- ;       DBIA 3504 for: the TEST PATIENT INDICATOR field #.6
+ ;       DBIA 10035 for:	the SOCIAL SECURITY NUMBER field #.09
+ ;       DBIA 3504 for:	the TEST PATIENT INDICATOR field #.6
  ;
  ;References to file #9999999.14 - the IMMUNIZATION file
- ;       DBIA 2454 for: the NAME field #.01
+ ;       DBIA 2454 for:	the NAME field #.01
  ;
 EN ;ENtry POINT - Routine control module
  ;
@@ -71,31 +71,20 @@ VITALS ; EXTRACT VITAL DATA
  N PSUDATE,PSUV,PSUQ,PSUVREC,PSUPTREC,PSUPTPTR,PSUVPTR,PSUQPTR
  N PSURTYPE,PSUSSN,PSUICN,PSUVTYPE,PSUVRATE,PSUVUNIT
  N Z,QQ,PSUVQ1,PSUVQ2,PSUVQ3,PSUVQ4,PSUVLIST,PSUVMSG
- N PSULN,PSUTXT
  ;
  S PSUVLIST="""BLOOD PRESSURE"",""HEIGHT"",""WEIGHT"",""PAIN"",""PULSE"",""PULSE OXIMETRY"""
  ;
  ;                          ** Loop through date index for valid dates **
  S PSUDATE=SDATE
- ;PSU*4*11 Added null ptr notification.
- S PSUTXT(1)="The following IEN(s) have a null pointer in the PATIENT (#2) field of"
- S PSUTXT(2)="the GMRV VITAL MEASUREMENT file (#120.5).  Please notify your IRM and"
- S PSUTXT(3)="submit a remedy ticket for help in evaluating the record."
- S PSULN=3
  F  S PSUDATE=$O(^GMR(120.5,"B",PSUDATE)) Q:PSUDATE>EDATE!('PSUDATE)  D
  . S PSUV=""                      ; ** loop thru vitals for each date **
  . F  S PSUV=$O(^GMR(120.5,"B",PSUDATE,PSUV)) Q:PSUV=""  D
  .. Q:$P($D(^GMR(120.5,PSUV,2)),U)  ;** quit if vital entered in error **
  .. S PSUVREC=$G(^GMR(120.5,PSUV,0)) Q:'PSUVREC
  .. S PSUPTPTR=$P(PSUVREC,U,2)    ; ** point to PATIENT **
- .. I PSUPTPTR="" D  Q            ; ** quit if no patient pointer **
- ... S PSULN=PSULN+1
- ... S PSUTXT(PSULN)=PSUV
  .. Q:$G(^DPT(PSUPTPTR,0))=""     ; ** quit if no patient record **
  .. S PSUPTREC=^DPT(PSUPTPTR,0)   ; ** get patient record **
  .. S PSUSSN=$P(PSUPTREC,U,9)     ; ** get SSN
- .. ;PSU*4*15
- .. Q:'PSUSSN                     ; ** Quit if no SSN **
  .. Q:$E(PSUSSN,1,5)="00000"      ; ** quit if invalid patient **
  .. Q:$P(PSUPTREC,U,21)=1
  .. Q:$P(PSUVREC,U,3)=""          ; ** quit if no pointer **
@@ -124,12 +113,6 @@ VITALS ; EXTRACT VITAL DATA
  .. S PSUVMSG=$TR(PSUVMSG,Z,U)
  .. ; ** S PSUVTMP(PSUSSN,PSUVTYPE)=PSUVMSG
  .. S ^XTMP("PSU_"_PSUJOB,"PSUVI","TMP",PSUSSN,PSUVTYPE)=PSUVMSG
- ;PSU*4*11 Send null ptr notifications to PBM group.
- I PSULN>3 D
- . S XMTEXT="PSUTXT(",XMY("G.PSU PBM")=""
- . S XMSUB="** PBM vitals extract detected null patient pointer(s) **"
- . S XMDUZ="Pharmacy Benefits Management Package"
- . N DIFROM D ^XMD
  Q
  ;               ** end of vital extract **
 VITALS2 ; LOAD SORTED ARRAY INTO ^XTMP

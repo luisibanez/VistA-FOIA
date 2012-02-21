@@ -1,5 +1,5 @@
-IVMLDEM6 ;ALB/KCL/BRM/PHH/CKN - IVM DEMOGRAPHIC UPLOAD FILE ADDRESS ; 2/15/07 3:10pm
- ;;2.0;INCOME VERIFICATION MATCH;**10,58,73,79,108,106,105,124,115**; 21-OCT-94;Build 28
+IVMLDEM6 ;ALB/KCL/BRM/PHH - IVM DEMOGRAPHIC UPLOAD FILE ADDRESS ; 03/17/2006
+ ;;2.0;INCOME VERIFICATION MATCH;**10,58,73,79,108,106**; 21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
@@ -21,7 +21,7 @@ ADDR(DFN,IVMDA2,IVMDA1,IVMDA,IVMPPICK) ; - function to check if uploadable field
  ;                      0 if not an address field
  ;
  ;
- N IVMFLAG,IVMI,IVMJ,IVMNODE,IVMPTR,Y,IVMAFLD,IVMAVAL
+ N IVMFLAG,IVMI,IVMJ,IVMNODE,IVMPTR,Y
  ;
  ; - initialize flags
  S IVMFLAG=0
@@ -58,7 +58,6 @@ ASK I '$D(^IVM(301.92,"AD",+IVMPTR)) G ADDRQ
 LOOP ;
  N DGPRIOR D GETPRIOR^DGADDUTL(DFN,.DGPRIOR)
  ;
- I IVMPPICK'=2 D EN^DGCLEAR(DFN,"PERM") ;Deleting existing address before updating
  ; - loop thru fields in ^IVM(301.92,"AD" x-ref
  S IVMI=0 F  S IVMI=$O(^IVM(301.92,"AD",IVMI)) Q:IVMI']""  D
  .S IVMJ=0 F  S IVMJ=$O(^IVM(301.5,IVMDA2,"IN",IVMDA1,"DEM","B",IVMI,IVMJ)) Q:IVMJ']""  D
@@ -72,9 +71,6 @@ LOOP ;
  ..; - check if not residence phone number and only phone selected to upload
  ..Q:(IVMPPICK=2&(+IVMNODE'=$O(^IVM(301.92,"B","PHONE NUMBER [RESIDENCE]",0))))
  ..;
- ..;Store Address change Date/time, source and site in ^TMP to file at the end of process.
- ..S IVMAFLD=$P($G(^IVM(301.92,+IVMNODE,0)),"^",5),IVMAVAL=$P(IVMNODE,"^",2)
- ..I ((IVMAFLD=.118)!(IVMAFLD=.119)!(IVMAFLD=.12)) S ^TMP($J,"CHANGE UPDATE",IVMAFLD)=IVMAVAL
  ..; - perform any necessary address field manipulation and
  ..;   load addr field rec'd from IVM into DHCP (#2) file
  ..D UPLOAD(+DFN,$P($G(^IVM(301.92,+IVMNODE,0)),"^",5),$P(IVMNODE,"^",2)) S IVMFLAG=1
@@ -82,7 +78,6 @@ LOOP ;
  ..; - remove entry from (#301.511) sub-file
  ..D DELENT^IVMLDEMU(IVMDA2,IVMDA1,IVMJ)
  ;
- D ADDRCHNG^IVMPREC6(DFN) ;Update Address change date/time,source,site if necessary
  I IVMFLAG W "completed.",! D
  .N DGCURR
  .D GETUPDTS^DGADDUTL(DFN,.DGCURR)
@@ -110,7 +105,6 @@ UPLOAD(DFN,IVMFIELD,IVMVALUE) ; - file address fields received from IVM
  ;
  ;
  ; - update specified address field in the Patient (#2) file
- N DIE,DA,DR
  S DIE="^DPT(",DA=DFN,DR=IVMFIELD_"////^S X=IVMVALUE"
  D ^DIE K DA,DIE,DR
  ;
@@ -118,11 +112,26 @@ UPLOAD(DFN,IVMFIELD,IVMVALUE) ; - file address fields received from IVM
  ;   (trigger x-ref does not fire with 4 slash stuff)
  I IVMFIELD=.119,IVMVALUE'="VAMC" S FDA(2,+DFN_",",.12)="@" D UPDATE^DIE("E","FDA")
  ;
+ ; - delete the Bad Address Indicator field
+ I $$BADADR^DGUTL3(DFN) D DELBAI^DGUTL3(DFN)
  Q
  ;
  ;
 PHONE ; - ask user to delete phone # [Residence] from Patient (#2) file
- D PHONE^IVMPREC9 ;Moved this tag to IVMPREC9 due to routine size limit.
+ D FULL^VALM1
+ W ! S DIR("A")="Is it okay to delete the patient's Phone Number [Residence]"
+ W ! S DIR("A",1)="The patient's address has been updated and the phone number"
+ S DIR("A",2)="remains on file."
+ S DIR("A",3)=" "
+ S DIR("A",4)="Patient Name: "_$P($$PT^IVMUFNC4(+DFN),"^")_" ("_$P($$PT^IVMUFNC4(+DFN),"^",3)_")"
+ S DIR("A",5)="Phone Number [Residence]: "_$P($G(^DPT(+DFN,.13)),"^")
+ S DIR("A",6)=" "
+ S DIR("?",1)="Enter 'YES' to delete the patient's Phone Number [Residence] that is"
+ S DIR("?",2)="currently on file.  Enter 'NO' to quit without deleting the patient's"
+ S DIR("?")="Phone Number [Residence]."
+ S DIR(0)="Y",DIR("B")="NO"
+ D ^DIR K DIR
+ S:Y $P(^DPT(DFN,.13),"^")="" W !!,"Patient's Phone Number [Residence] has ",$S(Y:"",1:"not "),"been deleted."
  Q
  ;
 ASK1 ; - phone selected to be uploaded - address fields not selected
@@ -154,19 +163,16 @@ AUTOADDR(DFN,IVMPPICK,NOUPDT) ;
  ;
  ;
  ;
- N IVMFLAG,IVMI,IVMJ,IVMNODE,IVMPTR,Y,IVMAFLD,IVMAVAL,DELFLG
+ N IVMFLAG,IVMI,IVMJ,IVMNODE,IVMPTR,Y
  ;
  ; - initialize flags
- S IVMFLAG=0,DELFLG=1
+ S IVMFLAG=0
  S:'$G(NOUPDT) NOUPDT=0
  ;
  ; - check for required parameters
  Q:'$G(DFN) IVMFLAG
  ;
  N DGPRIOR D GETPRIOR^DGADDUTL(DFN,.DGPRIOR)
- ; Set the flag to don't auto-update if there is an active Prescription record and the Bad Address Indicator is null
- I ('NOUPDT),$$PHARM(+DFN),'$$BADADR^DGUTL3(+DFN) S DELFLG=0
- I 'NOUPDT,DELFLG D EN^DGCLEAR(DFN,"PERM") ;Deleting existing address before updating
  ;
  S IVMDA2=$G(IVM3015)
  Q:'$G(IVMDA2) IVMFLAG
@@ -186,13 +192,10 @@ AUTOADDR(DFN,IVMPPICK,NOUPDT) ;
  ..;
  ..; don't auto-update if there is an active Prescription record and
  ..; the Bad Address Indicator is null
- ..I 'DELFLG D DEMBULL^IVMPREC6 Q
- ..;Store Address change Date/time, source and site in ^TMP to file at the end of process.
- ..S IVMAFLD=$P($G(^IVM(301.92,+IVMNODE,0)),"^",5),IVMAVAL=$P(IVMNODE,"^",2)
- ..I 'NOUPDT,((IVMAFLD=.118)!(IVMAFLD=.119)!(IVMAFLD=.12)) S ^TMP($J,"CHANGE UPDATE",IVMAFLD)=IVMAVAL
+ ..I ('NOUPDT),$$PHARM(+DFN),'$$BADADR^DGUTL3(+DFN) D DEMBULL^IVMPREC6 Q
  ..;
  ..; - load addr field rec'd from IVM into DHCP (#2) file
- ..I 'NOUPDT D UPLOAD(+DFN,IVMAFLD,IVMAVAL) S IVMFLAG=1
+ ..I 'NOUPDT D UPLOAD(+DFN,$P($G(^IVM(301.92,+IVMNODE,0)),"^",5),$P(IVMNODE,"^",2)) S IVMFLAG=1
  ..;
  ..; - remove entry from (#301.511) sub-file
  ..D DELENT^IVMLDEMU(IVMDA2,IVMDA1,IVMJ)
@@ -200,7 +203,6 @@ AUTOADDR(DFN,IVMPPICK,NOUPDT) ;
  ..;   segment
  ..I '$$DEMO^IVMLDEM5(IVMDA2,IVMDA1,0),'$$DEMO^IVMLDEM5(IVMDA2,IVMDA1,1) D
  ...D DELETE^IVMLDEM5(IVMDA2,IVMDA1," ") ; Dummy up name parameter
- D ADDRCHNG^IVMPREC6(DFN) ;Update Address change date/time,source,site if necessary
  I IVMFLAG D
  .N DGCURR
  .D GETUPDTS^DGADDUTL(DFN,.DGCURR)

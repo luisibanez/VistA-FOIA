@@ -1,6 +1,6 @@
-DINIT00G ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS ;21FEB2005
- ;;22.0;VA FileMan;**144**;Mar 30, 1999;Build 5
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DINIT00G ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS ; 3/30/99  10:41:48
+ ;;22.0;VA FileMan;;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) S @X=Y
 Q Q
  ;;^UTILITY(U,$J,.84,8008,2,1,0)
@@ -11,34 +11,6 @@ Q Q
  ;;=DIP^EN1
  ;;^UTILITY(U,$J,.84,8008,5,2,0)
  ;;=DIS^ENS
- ;;^UTILITY(U,$J,.84,8004.1,0)
- ;;=8004.1^3^^13^HELP FOR ONE SEARCH CRITERION ('A')
- ;;^UTILITY(U,$J,.84,8004.1,2,0)
- ;;=^.844^3^3^3050131^^
- ;;^UTILITY(U,$J,.84,8004.1,2,1,0)
- ;;=To search on the condition you have just typed, hit 'Enter'.
- ;;^UTILITY(U,$J,.84,8004.1,2,2,0)
- ;;=To search for the NEGATIVE of the condition,
- ;;^UTILITY(U,$J,.84,8004.1,2,3,0)
- ;;=type "'A".  The "'" character means "negation".
- ;;^UTILITY(U,$J,.84,8004.1,5,0)
- ;;=^.841^1^1
- ;;^UTILITY(U,$J,.84,8004.1,5,1,0)
- ;;=DIS0^BAD+1
- ;;^UTILITY(U,$J,.84,8004.2,0)
- ;;=8004.2^3^^13^HELP AFTER 'IF: ' FOR MULTIPLE CONDITIONS
- ;;^UTILITY(U,$J,.84,8004.2,2,0)
- ;;=^^3^3^3050131^
- ;;^UTILITY(U,$J,.84,8004.2,2,1,0)
- ;;=To 'AND' Condition 'A' with Condition 'B', type 'A&B'.
- ;;^UTILITY(U,$J,.84,8004.2,2,2,0)
- ;;=To 'OR' Condition 'A' with Condition 'B', type 'A',
- ;;^UTILITY(U,$J,.84,8004.2,2,3,0)
- ;;=and then type 'B' at the next "OR:" prompt.
- ;;^UTILITY(U,$J,.84,8004.2,5,0)
- ;;=^.841^1^1
- ;;^UTILITY(U,$J,.84,8004.2,5,1,0)
- ;;=DIS0^BAD+1
  ;;^UTILITY(U,$J,.84,8009,0)
  ;;=8009^2^^5
  ;;^UTILITY(U,$J,.84,8009,1,0)

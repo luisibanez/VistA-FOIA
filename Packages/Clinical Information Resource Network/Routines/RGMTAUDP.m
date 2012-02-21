@@ -1,5 +1,5 @@
 RGMTAUDP ;BIR/CML,PTD-MPI/PD AUDIT File Print of Patient Data ;01/06/99
- ;;1.0;CLINICAL INFO RESOURCE NETWORK;**19,30,46**;30 Apr 99
+ ;;1.0;CLINICAL INFO RESOURCE NETWORK;**19,30**;30 Apr 99
  ;Reference to ^DD(2 supported by IA #2695.
  ;Reference to ^DIA(2 and data derived from the AUDIT file (#1.1)
  ;supported by IA #2097 and #2602.
@@ -73,7 +73,6 @@ ASKUSER ;Ask if data is wanted only a specific user
 DEV W !!,"The right margin for this report is 80.",!!
  I ANS2="A" S IOP="Q" W "Because you selected ALL patients, you MUST queue this report.",!!
  S ZTSAVE("RGBDT")="",ZTSAVE("RGEDT")="",ZTSAVE("ANS2")="",ZTSAVE("FLD(")="",ZTSAVE("PAT(")="",%ZIS("B")=""
- S ZTSAVE("USERSCRN")=""
  D EN^XUTMDEVQ("START^RGMTAUDP","MPI/PD - Print AUDIT File Data from the PATIENT file",.ZTSAVE,.%ZIS) I 'POP Q
  W !,"NO DEVICE SELECTED OR REPORT PRINTED!!"
  S QFLG=1 G QUIT

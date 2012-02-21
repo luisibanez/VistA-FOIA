@@ -1,6 +1,6 @@
 ORDV01 ; slc/dcm - OE/RR Report Extracts ;10/8/03  11:18
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**109,160,180,208,215,274**;Dec 17, 1997;Build 20
-HSQUERY(ROOT,ORDFN,ID,ORALPHA,OROMEGA,ORDTRNG,REMOTE,ORMAX,ORFHIE) ; -- Query to Health Summary Reports
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**109,160,180,208,215**;Dec 17, 1997
+HSQUERY(ROOT,ORDFN,ID,ORALPHA,OROMEGA,ORDTRNG,REMOTE,ORMAX,ORFHIE)     ; -- Query to Health Summary Reports
  N OUT,ORDBEG,ORDEND,OREXT
  Q:'$L($G(ID))
  I '$L($P(ID,";",2)),$P(ID,";",3),$L($T(HSTYPE^ORWRP1))&($L($T(GCPR^OMGCOAS1))),$L($G(ORFHIE)) D  Q  ;Call if FHIE station 200
@@ -19,7 +19,7 @@ HSQUERY(ROOT,ORDFN,ID,ORALPHA,OROMEGA,ORDTRNG,REMOTE,ORMAX,ORFHIE) ; -- Query to
  S OUT=OUT_"(.ROOT,ORALPHA,OROMEGA,ORMAX,ORDBEG,ORDEND,OREXT)"
  D @OUT
  Q
-ADR(ROOT,ORALPHA,OROMEGA,ORMAX,ORDBEG,ORDEND,OREXT) ;adverse/reaction allergies
+ADR(ROOT,ORALPHA,OROMEGA,ORMAX,ORDBEG,ORDEND,OREXT)     ;adverse/reaction allergies
  ;External calls to ^GMRADPT, file 120.8
  ;Date ranges and Max Occurances are not supported by ^GMTADPT, but Max Occ is enforced in following FOR loop
  ;
@@ -48,7 +48,6 @@ ADR(ROOT,ORALPHA,OROMEGA,ORMAX,ORDBEG,ORDEND,OREXT) ;adverse/reaction allergies
  . S ^TMP("ORDATA",$J,ORI,"WP",3)="3^"_@DIQ@(120.8,DA,3.1) ;Allergy Type
  . S ^TMP("ORDATA",$J,ORI,"WP",4)="4^"_$$DATEMMM^ORDVU(@DIQ@(120.8,DA,20)) ;Verification Date/Time
  . S ^TMP("ORDATA",$J,ORI,"WP",5)="5^"_@DIQ@(120.8,DA,6) ;Observed/Historical
- . S ^TMP("ORDATA",$J,ORI,"WP",7)="7^"_DA ;Allergy IEN
  . S C1="",CTR=0
  . F I=1:1:10 K ARAY,ERR S CDT=$$GET1^DIQ(120.826,I_","_DA_",",".01","I") I $L(CDT) D
  .. S LINE(CDT)=$$GET1^DIQ(120.826,I_","_DA_",","1")_"^"_$$GET1^DIQ(120.826,I_","_DA_",","1.5")
@@ -60,7 +59,7 @@ ADR(ROOT,ORALPHA,OROMEGA,ORMAX,ORDBEG,ORDEND,OREXT) ;adverse/reaction allergies
  . D SPMRG^ORDVU("LINE1(""C"")","^TMP(""ORDATA"","_$J_","_ORI_",""WP"",6)",6) ;Comment
  S ROOT=$NA(^TMP("ORDATA",$J))
  Q
-ADRZ(ROOT,ORALPHA,OROMEGA,ORMAX,ORDBEG,ORDEND,OREXT) ;adverse/reaction allergies (Old extract - not used)
+ADRZ(ROOT,ORALPHA,OROMEGA,ORMAX,ORDBEG,ORDEND,OREXT)     ;adverse/reaction allergies (Old extract - not used)
  ;External calls to ^GMTADPT, file 120.8
  ;Date ranges and Max Occurances are not supported by ^GMTADPT, but Max Occ is enforced in following FOR loop
  N ORI,D0,ARR,GMRA,GMRAL,ALLRG,ORSITE,SITE,GO

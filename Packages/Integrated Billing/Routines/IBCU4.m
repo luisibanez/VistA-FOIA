@@ -1,6 +1,6 @@
-IBCU4 ;ALB/AAS - BILLING UTILITY ROUTINE (CONTINUED) ;12-FEB-90
- ;;2.0;INTEGRATED BILLING;**109,122,137,245,349,371,399**;21-MAR-94;Build 8
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCU4 ;ALB/AAS - BILLING UTILITY ROUTINE (CONTINUED) ; 12-FEB-90
+ ;;2.0;INTEGRATED BILLING;**109,122,137,245**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO DGCRU4
  ;
@@ -46,17 +46,10 @@ OTDAT ; Input transform for Other Care Start Date (399,48,.02)
  I ('$G(DA(1)))!('$G(X)) Q
  N IBX S IBX=$G(^DGCR(399,DA(1),"U"))
  I +X<+IBX W !,?4,"Can Not Precede Bill Start Date!",!,*7 K X Q
- I +X>(+$P(IBX,U,2)+1) W !,?4,"Can not be after Bill End Date!",!,*7 K X Q
+ I +X>+$P(IBX,U,2) W !,?4,"Can not be after Bill End Date!",!,*7 K X Q
  Q
  ;
-CHDAT ; Input transform for chiropractics-related dates (399/245,246,247)
- ; Make sure that date entered is not after end date of the bill
- Q:'$D(X)
- N IBX,Y
- S IBX=$P($G(^DGCR(399,+DA,"U")),U,2)
- I IBX="" W !?4,*7,"No end date of the bill on file - can't enter chiropractics-related dates " K X Q
- I X>+IBX S Y=IBX D DD^%DT W !,?4,*7,"This date can not be after the end date of the claim ("_Y_") " K X Q
- Q
+ ;
  ;
 TO ;151 pseudo input x-form
  I +X_.9<IBIDS(.03) W !?4,"Cannot precede the 'EVENT DATE'!",*7 K X Q
@@ -94,11 +87,11 @@ PROCDT ;  - find first and last dates of procedures
  . Q
  Q
  ;
-TOBIN(Y,DA) ; Screen for UB-04 bill classification based on UB-04 location of care
- ; Y = internal value of code for field .25 (UB-04 BILL CLASSIFICATION)
+TOBIN(Y,DA) ; Screen for UB92 bill classification based on UB92 location of care
+ ; Y = internal value of code for field .25 (UB BILL CLASSIFICATION)
  ; DA = bill ien in file 399
  N IB0
- S IB0=$P($G(^DGCR(399,DA,0)),U,24) ; Get UB-04 LOCATION OF CARE value
+ S IB0=$P($G(^DGCR(399,DA,0)),U,24) ; Get UB92 LOCATION OF CARE value
  Q $S('IB0:0,(","_$P($G(^DGCR(399.1,+Y,0)),U,24)_",")'[(","_IB0_","):0,1:1)
  ;
 TRIG05(X,D0) ; Trigger executed on field .05 of file 399 to set field .25
@@ -111,7 +104,7 @@ TRIG05(X,D0) ; Trigger executed on field .05 of file 399 to set field .25
  I LOC'="" F  S Z=$O(^DGCR(399.1,"C",X,Z)) Q:'Z  S Z0=$P($G(^DGCR(399.1,Z,0)),U,23,24) I +Z0,(","_$P(Z0,U,2)_",")[(","_LOC_",") S IEN=Z Q
  Q IEN
  ;
-TOB(IBIFN,POS) ;Function returns the 3 digit type of bill from UB-04
+TOB(IBIFN,POS) ;Function returns the 3 digit type of bill from UB92
  ;  fields or the position (1-3) as determined by POS (optional)
  N Z
  S Z=$P($G(^DGCR(399,IBIFN,0)),U,24,26),Z=$P(Z,U)_$P($G(^DGCR(399.1,+$P(Z,U,2),0)),U,2)_$P(Z,U,3)

@@ -1,6 +1,5 @@
 RCXVDEQ ;DAOU/ALA-AR Data Extract Queue Trigger ;02-JUL-03
- ;;4.5;Accounts Receivable;**201,228,240,243,232**;Mar 20, 1995
- ;*****240 change in this routine for test sites only****
+ ;;4.5;Accounts Receivable;**201,228,240,243**;Mar 20, 1995
  ;
  ;**Program Description**
  ;  This program will log a record who meets the
@@ -40,7 +39,7 @@ FIL(RCXVBTY) ;  File the record into the AR Data Queue File (#348.4)
  I '$$GET1^DIQ(342,"1,",20.04,"I") Q
  ;
  ;  Input Parameter
- ;    RCXVBTY = Batch Type (H=Historical, D=Daily, C=Current Fiscal Year, A=Active,E=FY05 DATA,I=CoPay Patient Data)
+ ;    RCXVBTY = Batch Type (H=Historical, D=Daily, C=Current Fiscal Year, A=Active,E=FY05 DATA)
  ;    RCXVBLN = Bill IEN
  ;
  N FDA,RCXVCURB,RCVXBNM,RCVXBMX
@@ -67,14 +66,13 @@ BTC K ^TMP("RCXVA",$J)
  S RCVXBMX=$P($G(^RC(342,1,20)),U,5) ; Max. # of record per batch
  ;  OR if the number of records in batch exceeds the
  ;  maximum number of records per batch --> create new batch
- ;  change in line below for patch 240
  I (RCVXBNM>RCVXBMX)!(RCVXBNM=RCVXBMX)!(RCXVBST="T")!(RCXVBST="C") D NBT G BTC:RCXQFL=1
  ;
 CON ;  Continue with updating the AR Data Queue file
  S RCXVDA=$S($G(RCXVCURB)'=0:RCXVCURB,1:RCXVDA)
  ;
  ;  If the Batch Type is 'R', quit
- I RCXVBTY="R"!(RCXVBTY="I") Q
+ I RCXVBTY="R" Q
  ;
  ;  If this bill number already exists in this batch, quit
  I $D(^RCXV(RCXVDA,1,RCXVBLN)) Q

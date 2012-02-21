@@ -1,5 +1,5 @@
 IBAMTED ;ALB/CPM,GN,PHH,EG - MEANS TEST EVENT DRIVER INTERFACE ; 11/30/05 1:48pm
- ;;2.0;INTEGRATED BILLING;**15,255,269,321,312**;21-MAR-94
+ ;;2.0;INTEGRATED BILLING;**15,255,269,321**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;IB*2*269 add IVM converted RX Copay Test update calls to a new API.
@@ -22,8 +22,6 @@ IBAMTED ;ALB/CPM,GN,PHH,EG - MEANS TEST EVENT DRIVER INTERFACE ; 11/30/05 1:48pm
  . Q
  ;
  ; -- end medication copayment exemption processing
- ;
- Q:+$$SWSTAT^IBBAPI()                                        ;IB*2.0*312
  ;
  ; Quit if supported variables are unavailable.
  Q:'$D(DFN)!('$D(DGMTA))!('$D(DGMTP))!('$D(DUZ))!('$D(DGMTINF))!('$D(DGMTACT))

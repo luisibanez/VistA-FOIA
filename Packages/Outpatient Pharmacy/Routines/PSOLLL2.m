@@ -1,7 +1,6 @@
 PSOLLL2 ;BIR/JLC-LASER LABEL ;11/19/02
- ;;7.0;OUTPATIENT PHARMACY;**120,138,141,161,200**;DEC 1997;Build 7
+ ;;7.0;OUTPATIENT PHARMACY;**120,138,141,161**;DEC 1997
  ;
- ;Reference to $$ECMEON^BPSUTIL supported by DBIA 4410
 L1 I $G(PSOIO("PFDI"))]"" X PSOIO("PFDI")
  I '$G(PFF) D
  .N PGY
@@ -32,14 +31,8 @@ L1 I $G(PSOIO("PFDI"))]"" X PSOIO("PFDI")
  S PSOY=PSOY-PSOYI,PSOX=Q(1)+Q(4)*300+OPSOX,T=" "_$G(PSDU)_"       "_$G(PPHYS) D PRINT(T)
  I $G(PSOIO("PFDT"))]"" X PSOIO("PFDT")
  S T=DRUG D PRINT(T)
-L11 ;
- N NDCTEXT
- S NDCTEXT="NDC/MFR_______________"
- I $$ECMEON^BPSUTIL($$RXSITE^PSOBPSUT(RX,RXF)) S NDCTEXT="NDC "_$$GETNDC^PSONDCUT(RX,RXF)
- S OPSOX=PSOX,T=NDCTEXT D PRINT(T)
- S T="Lot# ___________________" D STRT^PSOLLU1("SIG2",T,.L)
- S PSOY=PSOY-PSOYI,PSOX=L(XFONT+2)*300+OPSOX,T="Lot# _____________________" D PRINT(T)
-L12 S PSOX=OPSOX,T="Tech___________________    RPh _____________________" D PRINT(T)
+L11 S T="Mfr ___________________ Lot# _______________________" D PRINT(T)
+L12 S T="Tech__________________ RPh _______________________" D PRINT(T)
  S PSOFONT=PSOTFONT
  S T="Routing: "_$S("W"[$E(MW):MW,PS55=2:"DO NOT MAIL",1:MW_" MAIL")_"    Days supply: "_$G(DAYS)_"     Cap: "_$S('PSCAP:"SAFETY",1:"") D PRINT(T)
  I PSCAP D

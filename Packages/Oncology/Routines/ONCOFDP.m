@@ -1,5 +1,5 @@
 ONCOFDP ;Hines OIFO/GWB - FOLLOW DEAD PATIENTS ;07/12/00
- ;;2.11;ONCOLOGY;**1,5,16,22,25,26,47**;Mar 07, 1995;Build 19
+ ;;2.11;ONCOLOGY;**1,5,16,22,25,26**;Mar 07, 1995
 DEAD ;Death information
  K DXS,DIOT S D0=ONCOD0,DIR("A")=" Edit Data",DIR("B")="Y",DIR(0)="Y"
  D ^ONCOXDI,^DIR G ED:Y,RC:'Y,EX
@@ -17,8 +17,6 @@ RC W !!,"First Recurrence Information..."
  .S ACCNO=$P(^ONCO(165.5,XD1,0),U,5),SEQNO=$P(^ONCO(165.5,XD1,0),U,6)
  .W !!,"Primary: ",$E(ACCNO,1,4),"-",$E(ACCNO,5,9),"/",SEQNO,"  ",TOP,!
  .S DIE="^ONCO(165.5,",DA=XD1,DR="71;D CHECK^ONCOFDP;70;@1" D ^DIE I $D(Y) S UPOUT="Y"
- D CHKCHG^ONCOAIF
- ;
 DC ;Delete Contacts
  Q:'$D(^ONCO(160,"APC",ONCOD0))
 H W @IOF,!!!?15,"--------------DELETE PATIENT'S CONTACTS---------------"

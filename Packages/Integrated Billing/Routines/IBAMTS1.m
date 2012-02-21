@@ -1,6 +1,6 @@
 IBAMTS1 ;ALB/CPM - PROCESS NEW OUTPATIENT ENCOUNTERS ; 22-JUL-93
- ;;2.0;INTEGRATED BILLING;**20,52,132,153,166,156,167,247,339**;21-MAR-94;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**20,52,132,153,166,156,167,247**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 NEW ; Appointment fully processed - prepare a new charge.
  ;
@@ -21,7 +21,7 @@ NEW ; Appointment fully processed - prepare a new charge.
  ; - perform batch of edits
  I '$$CHKS G NEWQ
  ;
- ; - quit if AO/IR/SWA/MST/HNC/CV/SHAD exposure is indicated, or SC related
+ ; - quit if AO/IR/EC/MST/HNC/CV exposure is indicated, or SC related
  D CLSF(0,.IBCLSF)
  I IBCLSF[1 G NEWQ
  ;
@@ -131,7 +131,7 @@ CLSF(IBUPD,Y) ; Examine classification questions.
  ;  Input:   IBUPD  --  0 if event just checked out
  ;                      1 if event is being updated
  ;               Y  --  array to place output
- ;  Output:  indicators returned as  ao^ir^sc^swa^mst^hnc^cv^shad [1|yes, 0|no]
+ ;  Output:  indicators returned as  ao^ir^sc^ec^mst^hnc^CV [1|yes, 0|no]
  ;             if IBUPD=0, Y is returned as a single string
  ;             if IBUPD=1, Y("BEFORE"),Y("AFTER") are defined.
  N X,ZA,ZB S:'$G(IBUPD) Y="" S:$G(IBUPD) (Y("BEFORE"),Y("AFTER"))=""

@@ -1,29 +1,20 @@
 PSOORED6 ;BIR/SAB - edit orders from backdoor ;03/06/96
- ;;7.0;OUTPATIENT PHARMACY;**78,104,117,133,143,219,148,247,268,260,269,251**;DEC 1997;Build 202
+ ;;7.0;OUTPATIENT PHARMACY;**78,104,117,133,143,219,148**;DEC 1997
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External reference ^PS(50.606 supported by DBIA 2174
- ;External reference to $$DS^PSSDSAPI supported by DBIA 5424
+ ;Reference to $$DIVNCPDP^BPSBUTL supported by IA 4719
 DRG ;select drug
  S PSORX("EDIT")=1,RX0HLD=RX0
  S PSODRUG("IEN")=$S($G(PSODRUG("IEN"))]"":PSODRUG("IEN"),1:$P(RX0,"^",6)),PSODRUG("NAME")=$S($G(PSODRUG("NAME"))]"":PSODRUG("NAME"),1:$P(^PSDRUG($P(RX0,"^",6),0),"^"))
  D ^PSODRG I PSODRUG("IEN")=$P(RX0,"^",6) K PSORXED("FLD",6)
  D:PSODRUG("IEN")'=$P(RX0,"^",6)  I $G(PSORX("DFLG")) K PSORXED("FLD",6) S PSORXED("DFLG")=1 Q
- .S ^TMP("PSORXBO",$J,RX0,0)=1
  .D POST^PSODRG
  .I '$O(^PSRX(PSORXED("IRXN"),1,0)) S PSORXED("FLD",17)=$G(PSODRUG("COST"))
  .I $G(PSORX("DFLG")) K PSORXED("FLD",6),PSODRUG,PSOOIFLG,PSOSIGFL,VALMSG Q
- .D KV S DIR(0)="Y",DIR("B")="YES"
- .S DIR("A",1)="You have changed the dispense drug from"
- .S DIR("A",2)=$P(^PSDRUG($P(PSORXED("RX0"),"^",6),0),"^")_" to "_$P(^PSDRUG(PSODRUG("IEN"),0),"^")_"."
- .I $P($G(^PSRX(PSORXED("IRXN"),"SIG")),"^",2),$O(^PSRX(PSORXED("IRXN"),"SIG1",0)) S DIR("A",3)="" D
- ..F I=0:0 S I=$O(^PSRX(PSORXED("IRXN"),"SIG1",I)) Q:'I  S DIR("A",3+I)=$S(I=1:"Current SIG: ",1:"")_$G(^PSRX(PSORXED("IRXN"),"SIG1",I,0))
- .S DIR("A")="Do You want to Edit the SIG"
+ .D KV S DIR(0)="Y",DIR("B")="NO",DIR("A",1)="You have changed the dispense drug from",DIR("A",2)=$P(^PSDRUG($P(PSORXED("RX0"),"^",6),0),"^")_" to "_$P(^PSDRUG(PSODRUG("IEN"),0),"^")_".",DIR("A")="Do You want to Edit the SIG"
  .D ^DIR K DIR I $D(DIRUT) S PSORX("DFLG")=1 D M1
- .Q:$D(DIRUT)
- .I 'Y D  D DOLST^PSOORED3 D:$$DS^PSSDSAPI DCHK1^PSODOSUT Q
- .. I '$G(PSORXED("ENT")) F  S I=$O(PSORXED("DOSE",I)) Q:'I  S PSORXED("ENT")=$G(PSORXED("ENT"))+1
- .. S ENT=1
+ .Q:$D(DIRUT)!('Y)
  .S PSOREEDQ=1 D DOLST^PSOORED3,DOSE^PSOORED3 K PSOREEDQ
  .I '$O(PSORXED("DOSE",0)) S PSORX("DFLG")=1 Q
  .D:$G(PSOSIGFL) M2
@@ -56,23 +47,19 @@ PSOI ;select orderable item
  W !!,"Current Orderable Item: "_$P(^PS(50.7,PSOI,0),"^")_" "_$P(^PS(50.606,$P(^(0),"^",2),0),"^")
  S DIC("B")=$P(^PS(50.7,PSOI,0),"^"),DIC="^PS(50.7,",DIC(0)="AEMQZ"
  S DIC("S")="I '$P(^PS(50.7,+Y,0),""^"",4)!($P(^(0),""^"",4)'<DT) N PSOF,PSOL S (PSOF,PSOL)=0 F  S PSOL=$O(^PSDRUG(""ASP"",+Y,PSOL)) Q:PSOF!'PSOL  "
- S DIC("S")=DIC("S")_"I $P($G(^PSDRUG(PSOL,2)),U,3)[""O"",'$G(^(""I""))!($G(^(""I""))'<DT) S PSOF=1"
- S D="B^C" D MIX^DIC1 I "^"[X S PSORXED("DFLG")=1 Q
+ S DIC("S")=DIC("S")_"I $P($G(^PSDRUG(PSOL,2)),U,3)[""O"",'$G(^(""I""))!($G(^(""I""))'<DT) S PSOF=1" D ^DIC I "^"[X S PSORXED("DFLG")=1 Q
  G:Y<1 PSOI Q:PSOI=+Y
  S PSODRUG("OI")=+Y,PSODRUG("OIN")=Y(0,0) K DIC
  I PSOI'=PSODRUG("OI") W !!,"New Orderable Item selected. This edit will create a new prescription!",! D  K PSHOLDD Q
- .D PAUSE^VALM1 I ($D(DTOUT))!($D(DUOUT))!($G(DIRUT)) S PSORX("DFLG")=1 D M1 Q
- .D M2
+ .D PAUSE^VALM1,M2
  .S PSHOLDD=$G(PSODRUG("IEN")) K PSODRUG("IEN"),PSODRUG("NAME") S PSODRUG("DEA")="",(PSOOIFLG,PSOSIGFL)=1
  .D DREN^PSOORNW2
  .I $G(PSHOLDD),$G(PSODRUG("IEN")),$G(PSHOLDD)'=$G(PSODRUG("IEN")) D  Q:$G(PSORX("DFLG"))
+ ..D FULL^VALM1,POST^PSODRG S VALMBCK="R"
  ..I $G(PSORX("DFLG")) K PSODRUG S PSODRUG("IEN")=$G(PSHOLDD),PSODRUG("NAME")=$P($G(^PSDRUG(PSODRUG("IEN"),0)),"^") K PSOOIFLG,PSOSIGFL S VALMSG=""
  .I '$G(PSODRUG("IEN")) W !!,"DRUG NAME REQUIRED!" D 2^PSOORNW1
  .I '$G(PSODRUG("IEN")) K PSORXED("FLD"),INDEL,^TMP($J,"INS1"),PSOSIGFL,VALMSG S PSORXED("DFLG")=1,VALMSG="Dispense Drug NOT Selected!" Q
- .D FULL^VALM1,POST^PSODRG S VALMBCK="R"
- .I PSORX("DFLG") K PSORXED("FLD"),INDEL,^TMP($J,"INS1"),PSOSIGFL,VALMSG Q
- .D KV S DIR(0)="Y",DIR("B")="NO",DIR("A",1)="You have changed the Orderable Item from"
- .S DIR("A",2)=$P(^PS(50.7,PSOI,0),"^")_" "_$P(^PS(50.606,$P(^PS(50.7,PSOI,0),"^",2),0),"^")_" to "_PSODRUG("OIN")_" "_$P(^PS(50.606,$P(^PS(50.7,PSODRUG("OI"),0),"^",2),0),"^"),DIR("A")="Do You want to Edit the SIG"
+ .D KV S DIR(0)="Y",DIR("B")="NO",DIR("A",1)="You have changed the Orderable Item from",DIR("A",2)=$P(^PS(50.7,PSOI,0),"^")_" to "_PSODRUG("OIN")_".",DIR("A")="Do You want to Edit the SIG"
  .D ^DIR K DIR I $D(DIRUT) K PSODRUG("OIN"),PSOOIFLG,PSOSIGFL S PSODRUG("OI")=PSOI,VALMSG="",PSORX("DFLG")=1 Q
  .I 'Y S PSORX("DFLG")=1 Q
  .S PSOREEDQ=1 D DOLST^PSOORED3,DOSE^PSOORED3 K PSOREEDQ
@@ -120,16 +107,23 @@ UPDATE ;add new data to file
  ...S ^PSRX(DA,"INS1",1,0)=PSORXED("SIG",1)
  ..D DOLST^PSOORED3 K:PSORXED("FLD",114)="@" PSORXED("SIG") D EN^PSOFSIG(.PSORXED),UPDSIG^PSOORED3
  .I FLD=27 D  Q
- ..I PSORXED("FLD",27)'=$$GETNDC^PSONDCUT(DA,0) D
- ...S CHGNDC=1
- ...D RXACT^PSOBPSU2(DA,0,"NDC changed from "_$$GETNDC^PSONDCUT(DA,0)_" to "_PSORXED("FLD",27)_".","E")
+ ..I PSORXED("FLD",27)'=$$GETNDC^PSONDCUT(DA,0) S CHGNDC=1
  ..D SAVNDC^PSONDCUT(DA,0,PSORXED("FLD",27),0,1)
  .I FLD=81 D SAVDAW^PSODAWUT(DA,0,PSORXED("FLD",81)) Q
  .S DR=FLD_"////"_PSORXED("FLD",FLD) D ^DIE
  .I FLD=4 D UDPROV^PSOOREDT Q
  ;
  ; - Re-submitting Rx to ECME due to edits
- D RESUB^PSOORED7
+ N CHANGED S CHANGED=$$CHANGED(PSORXED("IRXN"),.FLDS)
+ I CHANGED D
+ . N RX S RX=PSORXED("IRXN") Q:'RX
+ . I $P(CHANGED,"^",2),'$$ECMEON^BPSUTIL($$RXSITE^PSOBPSUT(RX,0)) D  Q
+ . . D REVERSE^PSOBPSU1(RX,0,"DC",99,"RX DIVISION CHANGED",1)
+ . I $$SUBMIT^PSOBPSUT(RX,0,1) D
+ . . I '$P(CHANGED,"^",2),$$STATUS^PSOBPSUT(RX,0)="" Q
+ . . D ECMESND^PSOBPSU1(RX,0,,"ED",$$GETNDC^PSONDCUT(RX,0),,$S($P(CHANGED,"^",2):"RX DIVISION CHANGED",1:"RX EDITED"),,+$G(CHGNDC))
+ . . ;- Checking/Handling DUR/79 Rejects
+ . . I $$FIND^PSOREJUT(RX,0) S X=$$HDLG^PSOREJU1(RX,0,"79,88","ED","IOQ","I")
  ;
  I $G(INSDEL) K ^PSRX(DA,"INS"),^PSRX(DA,"INS1") D DOLST^PSOORED3 K PSORXED("SIG") D EN^PSOFSIG(.PSORXED),UPDSIG^PSOORED3 G UPDX
  I $O(^TMP($J,"INS1",0)) D
@@ -164,6 +158,17 @@ UPD1 ;
  .S HENT=HENT+1
  F I=0:0 S I=$O(PSORXED("DOSE",I)) Q:'I  S SENT=$G(SENT)+1
  Q
+ ;
+CHANGED(RX,PRIOR) ; - Check if fields have changed and should for 3rd Party Claim resubmission
+ ;Input:  (r) RX    - Rx IEN
+ ;        (r) PRIOR - Array with fields
+ ;Output:  CHANGED  - 0 - Not changed / 1 - Original Rx field changed ^ Rx Division changed (1 - YES)
+ N CHANGED,SAVED
+ S CHANGED=0 D GETS^DIQ(52,RX_",","4;7;8;20;22;27;81","I","SAVED")
+ F I=4,7,8,22,27,81 D  I CHANGED Q
+ . I $G(PRIOR(52,RX_",",I,"I"))'=$G(SAVED(52,RX_",",I,"I")) S CHANGED=1 Q
+ I $$DIVNCPDP^BPSBUTL(+$G(PRIOR(52,RX_",",20,"I")))'=$$DIVNCPDP^BPSBUTL(+$G(SAVED(52,RX_",",20,"I"))) S CHANGED="1^1"
+ Q CHANGED
  ;
 M1 D M1^PSOOREDX
  Q

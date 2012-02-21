@@ -1,5 +1,5 @@
 PSOCPBK2 ;BIR/EJW,GN-Tally Automated-release refill copay cont. ;8/10/05 12:03pm
- ;;7.0;OUTPATIENT PHARMACY;**215,303**;DEC 1997;Build 19
+ ;;7.0;OUTPATIENT PHARMACY;**215**;DEC 1997
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^IBAM(354.7 supported by DBIA 3877
  ;External reference to $$PROD^XUPROD(1) supported by DBIA 4440
@@ -67,10 +67,11 @@ COPAYREL ; Recheck copay status at release
  ;
  ; check Rx patient status
  I $P(^PSRX(RXP,0),"^",3)'="",$P($G(^PS(53,$P(^PSRX(RXP,0),"^",3),0)),"^",7)=1 S PSOCHG=0 Q
- ; see if drug is nutritional supplement, investigational or supply
+ ; see if drug is investigational or supply
  N DRG,DRGTYP
  S DRG=+$P(^PSRX(RXP,0),"^",6),DRGTYP=$P($G(^PSDRUG(DRG,0)),"^",3)
- I DRGTYP["I"!(DRGTYP["S")!(DRGTYP["N") S PSOCHG=0 Q
+ I DRGTYP["I" S PSOCHG=0 Q
+ I DRGTYP["S" S PSOCHG=0 Q
  K PSOTG,CHKXTYPE
  I +$G(^PSRX(RXP,"IBQ")) D XTYPE1^PSOCP1
  I $G(^PSRX(RXP,"IBQ"))["1" S PSOCHG=0 Q

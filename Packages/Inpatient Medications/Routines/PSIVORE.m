@@ -1,5 +1,5 @@
-PSIVORE ;BIR/PR,MLM-ORDER ENTRY ; 4/1/08 2:37pm
- ;;5.0; INPATIENT MEDICATIONS ;**18,29,50,56,58,81,110,127,133,157,203,213,181**;16 DEC 97;Build 190
+PSIVORE ;BIR/PR,MLM-ORDER ENTRY ;25 Nov 98 / 3:34 PM
+ ;;5.0; INPATIENT MEDICATIONS ;**18,29,50,56,58,81,110,127,133**;16 DEC 97
  ;
  ; Reference to ^PS(55 is supported by DBIA 2191
  ; Reference to ^ORX2 is supported by DBIA #867
@@ -70,9 +70,6 @@ OK ;Print example label, run order through checker, ask if it is ok.
  D ^PSIVCHK I $D(DUOUT) S X="^" G DOA
  I ERR=1 S X="N" G BAD
  W ! D ^PSIVORLB K PSIVEXAM S Y=P(2) W !,"Start date: " X ^DD("DD") W $P(Y,"@")," ",$P(Y,"@",2),?30," Stop date: " S Y=P(3) X ^DD("DD") W $P(Y,"@")," ",$P(Y,"@",2),!
- ;PSJ*5*157 EFD for IVs
- D EFDIV^PSJUTL($G(ZZND))
- D:'$G(PSGORQF) IN^PSJOCDS($G(ON55),"IV","") Q:$G(PSGORQF)
  W:$G(PSIVCHG) !,"*** This change will cause a new order to be created. ***"
  I '$G(PSIVCOPY) G:PSIVAC["R" OK1 S X="Is this O.K.: ^"_$S(ERR:"NO",1:"YES")_"^^NO"_$S(ERR'=1:",YES",1:"") D ENQ^PSIV
  S PSJIVBD=1 ;var use to indicate order enter from back door
@@ -99,7 +96,7 @@ CAL ;Calculate doses.
 EN ;Update schedule interval P(15) only on continuous orders.
  ;This includes Hyp/Adm/Continuous Syringes/Chemos =>P(5)=0
  Q:'$D(DFN)!('$D(ON55))  Q:$P(^PS(55,DFN,"IV",+ON55,0),U,4)="P"!($P(^(0),U,5))!($P(^(0),U,23)="P")
- D SPSOL S XXX=$P(^PS(55,DFN,"IV",+ON55,0),U,8) G:'SPSOL ENQ I XXX?1N.N.1".".N1" ml/hr"!(XXX?1"0."1N1" ml/hr") S P(15)=$S('XXX:0,1:SPSOL\XXX*60+(SPSOL#XXX/XXX*60+.5)\1),$P(^PS(55,DFN,"IV",+ON55,0),U,15)=P(15) G ENQ
+ D SPSOL S XXX=$P(^PS(55,DFN,"IV",+ON55,0),U,8) G:'SPSOL ENQ I XXX?1N.N.1"."1N.N1" ml/hr" S P(15)=$S('XXX:0,1:SPSOL\XXX*60+(SPSOL#XXX/XXX*60+.5)\1),$P(^PS(55,DFN,"IV",+ON55,0),U,15)=P(15) G ENQ
  S P(15)=$S('$P(XXX,"@",2):0,1:1440/$P(XXX,"@",2)\1),$P(^PS(55,DFN,"IV",+ON55,0),U,15)=P(15)
 ENQ K SPSOL,XXX Q
 SPSOL S SPSOL=0 F XXX=0:0 S XXX=$O(^PS(55,DFN,"IV",+ON55,"SOL",XXX)) Q:'XXX  S SPSOL=SPSOL+$P(^(XXX,0),U,2)
@@ -109,7 +106,7 @@ ENIN ;Entry for Combined IV/UD order entry. Called by PSJOE0.
  W !
  N PSJOUT S (DONE,FLAG)=0,PSIVAC="PN"
 ENIN1 ;
- N DA,DIR,PSJOE,PSJPCAF,PSJSYSL,WSCHADM,PSJALLGY S:$G(VAIN(4)) WSCHADM=VAIN(4)
+ N DA,DIR,PSJOE,PSJPCAF,PSJSYSL,WSCHADM S:$G(VAIN(4)) WSCHADM=VAIN(4)
  K P,PSIVCHG,PSJCOM
  S PSJOE=1,DIR(0)="55.01,.04O",DIR("A")="Select IV TYPE" D ^DIR
  I X]"",X'="^",$P("^PROFILE",X)="" S PSJOEPF=X Q

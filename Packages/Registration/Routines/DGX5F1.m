@@ -1,4 +1,4 @@
-DGX5F1 ; ;06/08/09
+DGX5F1 ; ;02/13/06
  D DE G BEGIN
 DE S DIE="^DGPT(D0,""M"",",DIC=DIE,DP=45.02,DL=2,DIEL=1,DU="" K DG,DE,DB Q:$O(^DGPT(D0,"M",DA,""))=""
  I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,2) S:%]"" DE(5)=% S %=$P(%Z,U,3) S:%]"" DE(8)=% S %=$P(%Z,U,4) S:%]"" DE(11)=% S %=$P(%Z,U,5) S:%]"" DE(25)=% S %=$P(%Z,U,6) S:%]"" DE(29)=% S %=$P(%Z,U,10) S:%]"" DE(2)=% S %=$P(%Z,U,18) S:%]"" DE(16)=%,DE(19)=%
@@ -71,18 +71,18 @@ X2 S %DT="ETX" D ^%DT S X=Y K:Y<1 X I $D(X) X $S(X<$P(^DGPT(DA(1),0),U,2):"W !,"
 4 D:$D(DG)>9 F^DIE17,DE S Y=U,DQ=4 D X4 D:$D(DIEFIRE)#2 FIREREC^DIE17 G A:$D(Y)[0,A:Y=U S X=Y,DIC(0)="F",DW=DQ G OUT^DIE17
 X4 S DGNFLD="@15"
  Q
-5 D:$D(DG)>9 F^DIE17,DE S DQ=5,DW="0;2",DV="*P42.4'X",DU="",DLB="LOSING SPECIALTY",DIFLD=2
+5 D:$D(DG)>9 F^DIE17,DE S DQ=5,DW="0;2",DV="*P42.4'",DU="",DLB="LOSING SPECIALTY",DIFLD=2
  S DE(DW)="C5^DGX5F1"
  S DU="DIC(42.4,"
  G RE
 C5 G C5S:$D(DE(5))[0 K DB
  S X=DE(5),DIC=DIE
- K DIV S DIV=X,D0=DA(1),DIV(0)=D0,D1=DA,DIV(1)=D1 S Y(1)=$S($D(^DGPT(D0,"M",D1,0)):^(0),1:"") S X=$P(Y(1),U,16),X=X S DIU=X K Y S X="" S DIH=$G(^DGPT(DIV(0),"M",DIV(1),0)),DIV=X S $P(^(0),U,16)=DIV,DIH=45.02,DIG=16 D ^DICR
+ K DIV S DIV=X,D0=DA(1),DIV(0)=D0,D1=DA,DIV(1)=D1 S Y(1)=$S($D(^DGPT(D0,"M",D1,0)):^(0),1:"") S X=$P(Y(1),U,16),X=X S DIU=X K Y S X="" X ^DD(45.02,2,1,1,2.4)
 C5S S X="" G:DG(DQ)=X C5F1 K DB
  S X=DG(DQ),DIC=DIE
  K DIV S DIV=X,D0=DA(1),DIV(0)=D0,D1=DA,DIV(1)=D1 S Y(1)=$S($D(^DGPT(D0,"M",D1,0)):^(0),1:"") S X=$P(Y(1),U,16),X=X S DIU=X K Y X ^DD(45.02,2,1,1,1.1) X ^DD(45.02,2,1,1,1.4)
 C5F1 Q
-X5 S DIC("S")="I $G(DA)=1!($$ACTIVE^DGACT(42.4,+Y,$S($P(^DGPT(DA(1),""M"",DA,0),U,10):$P(^(0),U,10),1:$P(^DGPT(DA(1),0),U,2))))" D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X
+X5 S DIC("S")="I $$ACTIVE^DGACT(42.4,+Y,$S($P(^DGPT(DA(1),""M"",DA,0),U,10):$P(^(0),U,10),1:$P(^DGPT(DA(1),0),U,2)))" D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X
  Q
  ;
 6 S DQ=7 ;@15

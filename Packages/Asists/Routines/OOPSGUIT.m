@@ -1,5 +1,5 @@
 OOPSGUIT ;WIOFO/LLH-RPC Rtn for Type of Incident rpt ;11/5/01 
- ;;2.0;ASISTS;**4,7,11,15**;Jun 03, 2002;Build 9
+ ;;2.0;ASISTS;**4,7,11**;Jun 03, 2002
  ;
 ENT(RESULTS,TRPT,CSTAT,STDT,ENDDT,LTNTT,STAT,PSTAT) ;
  N DATA,CNT,CS,CS1,EDATE,OOPS,LOST,LP,SDATE,TOT,RPTTY
@@ -141,8 +141,7 @@ ACCID(RESULTS,INPUT,CALL) ; Print Accident Report Status report - get data
  ..S (ARR,CASE,PERSON,SSN1,DOI,INC,CAT,WCP,EMP,SUP,SUPER,SAF,SP)=""
  ..S CASE=$$GET1^DIQ(2260,IEN,.01),SUPER=$$GET1^DIQ(2260,IEN,53)
  ..S (PERSON,SSN1)=""
- ..;V2_P15 - changed the SSN display for privacy act concerns
- ..I CALL'="Union" S PERSON=$E($$GET1^DIQ(2260,IEN,1),1,30),SSN1="xxx-xx-"_$E($$GET1^DIQ(2260,IEN,5),8,12)
+ ..I CALL'="Union" S PERSON=$E($$GET1^DIQ(2260,IEN,1),1,30),SSN1=$$GET1^DIQ(2260,IEN,5)
  ..S INC=$$GET1^DIQ(2260,IEN,52,"I"),DOI=$$GET1^DIQ(2260,IEN,4)
  ..S CAT=$$GET1^DIQ(2260,IEN,2,"I")
  ..; patch 4 llh - get case status title

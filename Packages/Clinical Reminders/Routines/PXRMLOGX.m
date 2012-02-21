@@ -1,5 +1,5 @@
-PXRMLOGX ; SLC/PKR - Clinical Reminders logic cross-reference routines. ;08/29/2005
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMLOGX ; SLC/PKR - Clinical Reminders logic cross-reference routines. ;11/24/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;==================
 BLDAFL(IEN,KI,NODEP) ;Build a list of findings that can change the
@@ -197,7 +197,7 @@ CPPCLS(IEN,X) ;Copy the user input Patient Cohort Logic string to the
  I $G(DIUTIL)="VERIFY FIELDS" Q
  ;Do not execute as part of exchange.
  I $G(PXRMEXCH) Q
- S ^PXD(811.9,IEN,31)=X
+ S ^PXD(811.9,IEN,31)=$$REPFUN^PXRMLOGF(X)
  ;Get the list of findings.
  N FLIST,IND,NUM,OK,OPER,STACK,STARTCHK,T1,T2
  S STARTCHK=$S($D(^PXD(811.9,IEN,25)):100,1:150)

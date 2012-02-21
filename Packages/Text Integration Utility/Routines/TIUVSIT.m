@@ -1,5 +1,5 @@
-TIUVSIT ; SLC/JER - Interactive Visit look-up; 28-OCT-2003 [1/27/05 12:35pm]
- ;;1.0;TEXT INTEGRATION UTILITIES;**39,91,107,117,179,190**;Jun 20, 1997;Build 1
+TIUVSIT ; SLC/JER - Interactive Visit look-up; 28-OCT-2003 [9/14/04 10:59am]
+ ;;1.0;TEXT INTEGRATION UTILITIES;**39,91,107,117,179**;Jun 20, 1997
 ENPN(TIUY,DFN,ALLOWNEW) ; Entry point for Progress Notes
  N DIRUT,DUOUT,DTOUT,TIULOC,TIUINOUT
  I +$G(DFN)'>0 Q
@@ -18,11 +18,9 @@ AGN K ^TMP("TIUVN",$J),^TMP("TIUVDT",$J),^TMP("TIUVNI",$J),^TMP("TIUNOT",$J),^TM
  S:+$G(DFN)'>0 DFN=+$$PATIENT^TIULA($G(TIUSSN)) I +DFN'>0 S TIUOUT=1 Q
  S TIUOCC=$G(TIUOCC,20)
  S TIUARR("FLDS")="1;2"
- S TIUARR(1)=2000000,TIUARR(4)=DFN,TIUARR("MAX")=1
+ S TIUARR(1)=2000000,TIUARR(4)=DFN
  S TIUAPPTS=$$SDAPI^SDAMA301(.TIUARR)
  K ^TMP($J,"SDAMA301")
- I TIUAPPTS=-1 D  Q
- . W !!,"Could not retrieve patient information due to a problem with the database.",!,"Please contact IRM"
  I '$G(TIUAPPTS),(+TIUMODE'>0) Q
  ; No appointments
  I '$G(TIUAPPTS),(+TIUMODE>0) D  I +$G(TIUX)'>0 Q
@@ -95,6 +93,7 @@ BREAK ; Handle prompting
  I +LETNEW'>0,(X=""),'$D(^TMP("TIUVN",$J,TIUII+1)) S (TIUER,TIUOUT)=1 Q
  I +LETNEW,$S(X="N":1,X="NEW":1,X=""&'$D(^TMP("TIUVN",$J,TIUII+1)):1,1:0) D ADD(DFN,.TIUX,$S(X="N":0,X="NEW":0,1:1),.TIUSDC) I +$G(TIUX)'>0 S (TIUER,TIUOUT)=1 Q
  I $S(X="":1,X="N":1,X="NEW":1,1:0) Q
+ I X=" ",$D(^DISV(DUZ,"^DPT("_DFN_",""S"",")) S TIUX=^("^DPT("_DFN_",""S"",") I $D(^TMP("TIUVDT",$J,+TIUX)) S TIUOK=^(+TIUX) Q
  I X'=+X!'$D(^TMP("TIUVN",$J,+X)) W !!,$C(7),"INVALID RESPONSE",! G BREAK
  S TIUOK=X
  Q
@@ -109,9 +108,6 @@ MORE ; Modify date range, list more visits
  Q
 FUTURE ; Get future appointments
  D GETAPPT^TIUVSIT1(DFN,$G(TIULOC),$G(TIUOCC),$G(TIULDT),"",.TIULAST,$G(TIUVDT),1)
- I $D(^TMP("TIUVERR",$J)) D
- . W !!,$G(^TMP("TIUVERR",$J)),!
- . I $D(^TMP("TIUVERR",$J,115)) W ^TMP("TIUVERR",$J,115),!
  I $P(+$G(^TMP("TIUVNI",$J,1)),".")'>+$$NOW^XLFDT D
  . W !!,"No Future Appointments found...",!
  E  I $P(+$G(^TMP("TIUVNI",$J,1)),".")'>$$FMADD^XLFDT(DT,1) D

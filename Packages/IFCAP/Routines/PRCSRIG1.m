@@ -1,6 +1,6 @@
 PRCSRIG1 ;WISC/SAW/KMB/LJP/SC-GENERATE REQUESTS FROM REPETITIVE ITEM LIST FILE (CON'T) ;3-3-93/14:30 ; 3/31/05 3:48pm
-V ;;5.1;IFCAP;**13,81,101,110**;Oct 20, 2000;Build 7
- ;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;5.1;IFCAP;**13,81**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;PRC*5.1*81, RIL that originated thru DynaMed is NOT allowed to be
  ;RE-USED for generating 2237(s),hence removed this prompt for DM
@@ -26,18 +26,18 @@ V ;;5.1;IFCAP;**13,81,101,110**;Oct 20, 2000;Build 7
  ;the item, from the Rep. Item List. Starting here, loop
  ;thru the vendor to get the items ordered from that vendor,
  ;using PRCSRI for the item.
- S (PRCSV1,PRCSTC)="",(PRCSCT,PRCSCT(1),PRCSIT,BFLAG)=0
- F PRCSRIJ=0:1 S PRCSV1=$O(^TMP($J,410.3,PRCSRID0,1,"AC",PRCSV1)) Q:PRCSV1=""!(BFLAG=1)  S PRCSCT=PRCSCT+1,PRCSCT(1)=PRCSCT(1)+1 D:'PRCSRIJ HDRG D ITEMG^PRCSRIG2
+ S (PRCSV1,PRCSTC)="",(PRCSCT,PRCSCT(1),PRCSIT)=0
+ F PRCSRIJ=0:1 S PRCSV1=$O(^TMP($J,410.3,PRCSRID0,1,"AC",PRCSV1)) Q:PRCSV1=""  S PRCSCT=PRCSCT+1,PRCSCT(1)=PRCSCT(1)+1 D:'PRCSRIJ HDRG D ITEMG^PRCSRIG2
  I 'PRCSRIJ W !,"Items have not yet been entered for Repetitive Item List # ",PRCSNO G CLS
  D:IOSL-$Y<3 HOLD,HDRG W !!,"Total no. of requests generated: ",PRCSCT,"    Total no. of items (all requests): ",PRCSIT,!,"Total committed (estimated) cost (all requests) : ","$"_$J(PRCSTC,0,2)
 SV ;
  I (IO'=IO(0))!($D(ZTQUEUED)) D ^%ZISC
+ G EXIT:$D(ZTQUEUED)
  ;patch *81 -DynaMed trx. is not allowed to be re-used
  N PRCVSY,PRCVID
  S PRCVSY=$$GET^XPAR("SYS","PRCV COTS INVENTORY",1,"Q")
  I PRCVSY=1 S PRCVID=$$ITDMID(PRCSRID0)
  I PRCVSY=1,PRCVID=1 G CHK1
- G EXIT:$D(ZTQUEUED)
  U IO(0) S %=2 W !,"Do you wish to re-use this list " D YN^DICN G:%=1 JMP G:%=0 SV
 CHK1 I PRCSCT=PRCSCT(1) S DIK="^PRCS(410.3,",DA=PRCSRID0 D ^DIK G CLS
 JMP D RLR^PRCSUT1

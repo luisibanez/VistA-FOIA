@@ -1,5 +1,5 @@
 EASEZU4 ;ALB/jap - Utilities for 1010EZ Processing ;10/25/00  08:08
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**51,70**;Mar 15, 2001;Build 26
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**51**;Mar 15, 2001
  ;
 PRT1010 ;print 10-10EZ form with data
  ;
@@ -19,9 +19,9 @@ PRT1010 ;print 10-10EZ form with data
  ;if printed, update processing status if necessary; can be printed multiple times
  S PRTDATE=$P(^EAS(712,EASAPP,2),U,3)
  I 'PRTDATE,$G(TASK) D
- . D SETDATE^EASEZU2(EASAPP,"PRT") S EASPSTAT="PRT"
- . ;rebuild selection list since this application is removed from list
- . D BLD^EASEZLM,HDR2^EASEZL1
+ .D SETDATE^EASEZU2(EASAPP,"PRT") S EASPSTAT="PRT"
+ .;rebuild selection list since this application is removed from list
+ .D BLD^EASEZLM,HDR2^EASEZL1
  S VALMBCK="R"
  D PAUSE^VALM1
  Q
@@ -71,10 +71,10 @@ FILE ;file 10-10EZ 'accepted' data to VistA Patient database
  ;rebuild selection list since this application is removed from list
  S VALMBCK="R"
  I $D(ZTSK) D
- . D SETDATE^EASEZU2(EASAPP,"FIL")
- . S EASPSTAT="FIL"
- . S $P(^EAS(712,EASAPP,2),U,11)=ZTSK
- . D BLD^EASEZLM S VALMBCK="Q"
+ .D SETDATE^EASEZU2(EASAPP,"FIL")
+ .S EASPSTAT="FIL"
+ .S $P(^EAS(712,EASAPP,2),U,11)=ZTSK
+ .D BLD^EASEZLM S VALMBCK="Q"
  Q
  ;
 CLOSE ;close/inactivate the Application
@@ -107,46 +107,37 @@ FILE2 ;
  S ZTSAVE("EASAPP")=""
  D ^%ZTLOAD
  I $D(ZTSK) D
- . ;update processing status
- . W !,"10-10EZ data is being filed as a background job."
- . W !,"Task #: ",ZTSK,!
- . K DIR D PAUSE^VALM1
+ .;update processing status
+ .W !,"10-10EZ data is being filed as a background job."
+ .W !,"Task #: ",ZTSK,!
+ .K DIR D PAUSE^VALM1
  Q
  ;
 SUPPRESS(EASAPP,DATAKEY,TYPE,VERSION) ;alb/cmf/51
- ;EASAPP = file 712 ien
- ;DATAKEY = file 711/.1
- ;TYPE = 0:display[default], 1:file, 2:accept
- ;VERSION = version # of an application
- ;
- ;RETURN VALUE = 1 if node should not be displayed, filed, or accepted
- ;               0, otherwise
- ;
- N FLAG,CHKKEY
+ ;return 1 if node should not be displayed, filed, or accepted
+ ;easapp = file 712 ien
+ ;datakey = file 711/.1
+ ;type = 0:display[default], 1:file, 2:accept
+ N FLAG
  Q:$G(EASAPP)="" 0
  Q:$G(DATAKEY)="" 0
  S:$G(VERSION)="" VERSION=$$VERSION(EASAPP)
  Q:+VERSION<6 0
  S FLAG=0
- ;EAS*1.0*70 -- added CHKKEY and up-arrows around datakeys below
- S CHKKEY="^"_DATAKEY_"^"
  S TYPE=$S($G(TYPE)=1:1,$G(TYPE)=2:2,1:0)
  I TYPE=0 D  Q FLAG
- . I "^I;18A.^I;18B.^I;18C.^I;18D.^"[CHKKEY S FLAG=1 Q   ;obs
- . I "^IIC;1.1^IIC;1.2^IIC;1.3^"[CHKKEY S FLAG=1 Q       ;obs
- . I "^I;1A.5^IIC;3.^I;14D1.^"[CHKKEY S FLAG=1 Q         ;obs
- . I "^I;14C.^I;14D.^I;14D2.^I;14H.^"[CHKKEY S FLAG=1 Q  ;obs
- . I "^IIE;1.^IIE;2.^IIE;3.^"[CHKKEY S FLAG=1 Q          ;print only
- . ;EAS*1.0*70 - until added to the web form,
- . ;only print and file APPLICANT COUNTRY
- . I "^I;9H.^"[CHKKEY S FLAG=1 Q
- . Q
+ .I "^I;18A.^I;18B.^I;18C.^I;18D.^"[DATAKEY S FLAG=1 Q   ;obs
+ .I "^IIC;1.1^IIC;1.2^IIC;1.3^"[DATAKEY S FLAG=1 Q       ;obs
+ .I "^I;1A.5^IIC;3.^I;14D1.^I;17.^"[DATAKEY S FLAG=1 Q   ;obs
+ .I "^I;14C.^I;14D.^I;14D2.^I;14H.^"[DATAKEY S FLAG=1 Q  ;obs
+ .I "^IIE;1.^IIE;2.^IIE;3.^"[DATAKEY S FLAG=1 Q          ;print only
+ .Q
  I TYPE=1 D  Q FLAG
- . I "^I;14D.^I;14D1.^I;14D2.^"[CHKKEY S FLAG=1 Q    ;obs
- . I "^IIC;1.1^IIC;1.2^IIC;1.3^"[CHKKEY S FLAG=1 Q   ;obs
- . I "^IIE;1.^IIE;2.^IIE;3.^"[CHKKEY S FLAG=1 Q      ;print only
- . I "^IIC;1.6^IIC;2.3^IIC;3.3^"[CHKKEY S FLAG=1 Q   ;disp only
- . Q
+ .I "^I;14D.^I;14D1.^I;14D2.^"[DATAKEY S FLAG=1 Q        ;obs
+ .I "^IIC;1.1^IIC;1.2^IIC;1.3^"[DATAKEY S FLAG=1 Q       ;obs
+ .I "^IIE;1.^IIE;2.^IIE;3.^"[DATAKEY S FLAG=1 Q          ;print only
+ .I "^IIC;1.6^IIC;2.3^IIC;3.3^"[DATAKEY S FLAG=1 Q       ;disp only
+ .Q
  ;
  Q FLAG
  ;

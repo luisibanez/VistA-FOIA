@@ -1,5 +1,5 @@
-PSJDPT ;BIR/JLC - CENTRALIZED PATIENT LOOKUP FOR IPM ; 7/2/08 3:47pm
- ;;5.0; INPATIENT MEDICATIONS ;**53,124,166,160,198**;16 DEC 97;Build 7
+PSJDPT ;BIR/JLC - CENTRALIZED PATIENT LOOKUP FOR IPM ; 07 Nov 00
+ ;;5.0; INPATIENT MEDICATIONS ;**53,124,166**;16 DEC 97
  ;
  ; Reference to ^DPT is supported by DBIA 10035
  ; Reference to ^DGSEC4 is supported by DBIA 3027
@@ -9,16 +9,9 @@ PSJDPT ;BIR/JLC - CENTRALIZED PATIENT LOOKUP FOR IPM ; 7/2/08 3:47pm
  ; Reference to ^DPTLK1 is supported by DBIA 3266
  ; Reference to DISPPRF^DGPFAPI is supported by DBIA 4563
  ; Reference to GETACT^DGPFAPI is supported by DBIA 3860
- ; Reference to ^ORRDI1 is supported by DBIA 4659.
- ; Reference to ^XTMP("ORRDI" is supported by DBIA 4660.
  ;
 EN ; MAIN ENTRY POINT FOR PATIENT LOOKUP
  K DIC S DIC="^DPT(",DIC("W")="D DPT^PSJDPT",DIC(0)="QEMZ" D ^DPTLK K DIC
- I $$BADADR^DGUTL3(+Y) H 2
- N Y
- D
- . ;PSJ*5.0*198;GMZ;Don't print remote data msg on view profile only menu options
- . I $T(HAVEHDR^ORRDI1)]"",$$HAVEHDR^ORRDI1,$D(^XTMP("ORRDI","OUTAGE INFO","DOWN")),'$G(PSJNODIS) W !,"Remote data not available - Only local order checks processed." D PAUSE^PSJLMUT1
  Q
 CHK(Y,DISP,PAUSE) N RESULT,RES,CHKY,PSGTEMP
  S DISP=$G(DISP),PAUSE=$G(PAUSE)

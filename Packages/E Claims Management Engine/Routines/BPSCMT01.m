@@ -1,6 +1,6 @@
 BPSCMT01 ;BHAM ISC/SS - ECME ADD/VIEW COMMENTS ;05-APR-05
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5**;JUN 2004;Build 45
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;USER SCREEN
  Q
  ;
@@ -18,6 +18,11 @@ ADD ;entry point for Add option in Add/View screen
  ;BPLMIND - passed by ref - current patient(/insurance) index ( to make 1, 2,etc)
  ;BPDRIND - passed by ref - current claim level index ( to make .1, .2, .10,... .20,... )
  ;BPPREV - to store previous data to update patient summary line
+ ;TMP structure gives on the screen:
+ ;^TMP("BPSCMT",$J,"VALM","LMIND",1,0,DFN,0,0)=
+ ;^TMP("BPSCMT",$J,"VALM",1,0)=1   BUMSTEAD,CHARLE (5444)/100-234-2345 *done* FINISHED
+ ;on the screen:
+ ;1   BUMSTEAD,CHARLE      (5444)   /100-234-2345 *done* FINISHED
 MKPATELM(BPLINE,BPTMP,BPDFN,BPSINSUR,BPLMIND,BPDRIND,BPPREV) ;*/
  N BPSSTR,BPLNS,BPSTAT
  ;PATIENT SUMMARY level
@@ -62,7 +67,6 @@ MKCLMELM(BPLINE,BPTMP,BP59,BPDFN,BPSINSUR,BPLMIND,BPDRIND,BPPREV) ;*/
  . D SAVEARR^BPSSCR02(BPTMP,BPLMIND,BPDRIND,BPDFN,BP59,BPLINE,BPSSTR,BPSINSUR)
  . S BPLINE=BPLINE+1
  . N BPARR,X
- . ;use ADDINF^BPSSCR03 to get comments
  . S BPLNS=$$ADDINF^BPSSCR03(BP59,.BPARR,74,"C")
  . F X=1:1:BPLNS D
  . . I $G(BPARR(X))="" Q
@@ -122,21 +126,3 @@ INSITEM(BPSFILE,BPIEN,BPVAL01) ;*/
  I $D(BPER) D BMES^XPDUTL(BPER("DIERR",1,"TEXT",1))
  Q
  ;
- ;Function to return username data from NEW PERSON file VA(200)
- ; Parameter
- ;  BPSDUZ - IEN of NEW PERSON file
- ;  
- ; Returns
- ;  Username in format of Lastname, Firstname MI
-USERNAM(BPSDUZ) ; Return username from NEW PERSON file
- N BPSNMI,BPSNMO
- I '$G(BPSDUZ) Q ""
- S BPSNMI=$$VA200NM^BPSJUTL(+BPSDUZ,"")
- I $G(BPSNMI)="" Q ""
- Q:$P(BPSNMI,U)="" ""
- S BPSNMO=$P(BPSNMI,U)
- Q:$P(BPSNMI,U,2)="" BPSNMO
- S BPSNMO=BPSNMO_", "_$P(BPSNMI,U,2)
- Q:$P(BPSNMI,U,3)="" BPSNMO
- S BPSNMO=BPSNMO_" "_$E($P(BPSNMI,U,3),1)
- Q BPSNMO

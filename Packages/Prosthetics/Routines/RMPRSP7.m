@@ -1,11 +1,9 @@
 RMPRSP7 ;HIN/RVD-PRINT 2319 WITHOUT SUSPENSE LINK ;3/17/03  08:13
- ;;3.0;PROSTHETICS;**62,69,77,135**;Feb 09, 1996;Build 12
+ ;;3.0;PROSTHETICS;**62,69,77**;Feb 09, 1996
  ;RVD 8/27/01 patch #62 - PCE data print
  ;RVD 4/9/02 patch #69 -  Disregard Historical data
  ;RVD 3/17/02 patch #77 - Fixed For Loop to include all PT 2319 records
  ;                        that are not linked
- ;RGB 3/22/07 patch 135 - Modified code to check issues in 660 against file 668 suspense records
- ;                        in addition to current check of complete flag in issue record.
  ;
  D DIV4^RMPRSIT I $D(Y),(Y<0) Q
  ; Prompt for Start Date
@@ -47,10 +45,7 @@ BUILD ;build a tmp global.
  .S RM10=$G(^RMPR(660,RJ,10))
  .Q:($P(RM0,U,13)=13)!($P(RM0,U,15)="*")
  .Q:($P(RM10,U,14)>0)!($P(RM0,U,10)'=RMPR("STA"))
- .;FILTER SHIPPING CHARGES AND DDC TRANSACTIONS
- .Q:($P(RM0,U,17)'="")!($P(RM0,U,13)=16)
- .S RMIE68=$O(^RMPR(668,"F",RJ,0))
- .I RMIE68,$D(^RMPR(668,RMIE68,10,"B",RJ)) Q
+ .Q:$P(RM0,U,17)'=""
  .I $P(RM0,U,10)=RS D
  ..S RMDFN=$P(RM0,U,2)
  ..S RMITIEN=$P(RM0,U,6)

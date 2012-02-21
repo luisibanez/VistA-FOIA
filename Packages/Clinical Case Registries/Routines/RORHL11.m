@@ -1,8 +1,9 @@
-RORHL11 ;HOIFO/BH,SG - HL7 CYTOPATHOLOGY DATA: OBR,OBX ; 3/13/06 9:24am
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORHL11 ;HOIFO/BH,SG - HL7 CYTOPATHOLOGY DATA: OBR,OBX ; 8/26/05 12:28pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
+ ; #2503         LRDFN^LR7OR1 (controlled)
  ; #4344         $$CYPATH^LA7UTL02 (controlled)
  ;
  Q

@@ -1,5 +1,5 @@
 SDAMN ;ALB/MJK - No-Show Appt Action ; 2/4/92
- ;;5.3;Scheduling;**478**;Aug 13, 1993
+ ;;5.3;Scheduling;;Aug 13, 1993
  ;
 EN ; -- protocol SDAM APPT NO-SHOW entry pt
  ; input:  VALMY := array entries
@@ -16,7 +16,7 @@ EN ; -- protocol SDAM APPT NO-SHOW entry pt
  .Q:'$$CHK
  .S SDSTOP=$$NS(DFN,SDT,SDCL,SDTIME,.SDNSACT)
  .S SDSTA=$$STATUS^SDAM1(DFN,SDT,SDCL,$G(^DPT(DFN,"S",SDT,0))) ; after status
- .I 'SDNSACT,'$$UPD(SDSTB,SDSTA,SDAT,$G(CNSTLNK)) S SDNSACT=2
+ .I 'SDNSACT,'$$UPD(SDSTB,SDSTA,SDAT) S SDNSACT=2
  ; values for SDNSACT :   0 = no re-build
  ;                        1 = re-build because of re-book
  ;                        2 = re-build because after not for list
@@ -47,16 +47,13 @@ CHK() ; -- check if status of appt permits no-show
  I 'SDOK W !!,*7,X K VALMY(SDI) D PAUSE^VALM1
  Q SDOK
  ;
-UPD(BEFORE,AFTER,SDAT,CNST) ; can just the 1 display line be changed w/o re-build
+UPD(BEFORE,AFTER,SDAT) ; can just the 1 display line be changed w/o re-build
  ; input:   BEFORE := before status info in $$STATUS format
  ;           AFTER := after     "     "   "     "      "
  ;            SDAT := selected VALMY entry's data
- ;            CNST := consult status (null, consult link ien)
  N Y S Y=0
  I +BEFORE=+AFTER S Y=1 G UPDQ
  I $D(SDAMLIST(+AFTER)) S Y=1 I $D(SDAMLIST("SCR")) X SDAMLIST("SCR") S Y=$T
  I 'Y,$P(SDAMLIST,U)="ALL" S Y=1
- I Y D
- . S ^TMP("SDAM",$J,+SDAT,0)=$$SETFLD^VALM1($P(AFTER,";",3),^TMP("SDAM",$J,+SDAT,0),"STAT")
- . I '$G(CNST) S ^TMP("SDAM",$J,+SDAT,0)=$$SETFLD^VALM1("    ",^TMP("SDAM",$J,+SDAT,0),"CONSULT")
+ I Y S ^TMP("SDAM",$J,+SDAT,0)=$$SETFLD^VALM1($P(AFTER,";",3),^TMP("SDAM",$J,+SDAT,0),"STAT")
 UPDQ Q Y

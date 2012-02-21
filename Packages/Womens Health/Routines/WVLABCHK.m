@@ -1,5 +1,5 @@
 WVLABCHK ;HIOFO/FT-IS LAB TEST A PAP SMEAR? ;10/25/04  10:23
- ;;1.0;WOMEN'S HEALTH;**16,23**;Sep 30, 1998;Build 5
+ ;;1.0;WOMEN'S HEALTH;**16**;Sep 30, 1998
  ;
  ; This routine uses the following IAs:
  ;   #525 - ^LR references      (controlled)
@@ -7,7 +7,6 @@ WVLABCHK ;HIOFO/FT-IS LAB TEST A PAP SMEAR? ;10/25/04  10:23
  ; #10103 - ^XLFDT calls        (supported)
  ; #10063 - ^%ZTLOAD            (supported)
  ; #10141 - ^XPDUTL             (supported)
- ; #10035 - ^DPT                (supported)
  ;
  ; This routine supports the following IAs:
  ; CREATE - 4525
@@ -132,7 +131,7 @@ ADD ; Add pap smear to FILE 790.1
  D NEW2^WVPROC(WVDFN,WVPIEN,WVDATE,WVDR,"","",.WVERR)
  Q:'Y
  I $$PATCH^XPDUTL("OR*3.0*210") D
- .D CPRS^WVSNOMED(70,WVDFN,"",WVPROV,"Pap Smear results available.",WVLRSS_U_WVLABAN_U_WVLRI)
+ .D CPRS^WVSNOMED(70,WVDFN,"",WVPROV,"Pap Smear results available.","")
  .D DELETE^WVLABADD(WVIEN)
  .Q 
  Q

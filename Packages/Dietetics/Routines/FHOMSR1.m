@@ -1,14 +1,13 @@
 FHOMSR1 ;Hines OIFO/RTK SPECIAL MEALS REQUEST MEAL  ;4/02/03  15:05
- ;;5.5;DIETETICS;**2,5,11**;Jan 28, 2005;Build 4
+ ;;5.5;DIETETICS;**2**;Jan 28, 2005
  ;
  S (FHORN,FHDIET)="",FHKEY=0,FHMSG1="S"
  D ^FHOMDPA I FHDFN="" Q
  I '$D(^FHPT(FHDFN,0)) W !!,"UNKNOWN SELECTION !" Q
- D SMSTAT^FHOMUTL I FHSTAT="P" D MSG1 Q
+ D SMSTAT^FHOMUTL I FHSTAT="P" D MESSAGE Q
  I $D(^XUSEC("FHAUTH",DUZ)) S FHKEY=1
 LOC ;Prompt for outpatient location
  W ! D OUTLOC^FHOMUTL I FHLOC="" D EXMSG^FHOMUTL Q
- W ! D RMBED^FHOMUTL
 DIET ;Prompt for diet
  D DIETLST^FHOMUTL
  I FHDEF="" W !!,"NO DEFAULT OUTPATIENT DIET SET!!",! Q
@@ -23,7 +22,6 @@ MEAL ;Prompt for meal
  S DIR(0)="SAO^B:Breakfast;N:Noon;E:Evening"
  D ^DIR I $D(DIRUT) D EXMSG^FHOMUTL Q
  I Y'=-1 S FHMEAL=Y
- D CHECKRM I FHRMYES=1 D MSG2 Q
  W ! K DIR S DIR("A")="Is this correct?: ",DIR(0)="YA",DIR("B")="Y"
  D ^DIR
  S CONT=Y I CONT'=1 D EXMSG^FHOMUTL Q
@@ -40,9 +38,9 @@ PRINT ;If user has key allow printing without sending alert to authorizor(s)
  W ! S DIR(0)="YA",DIR("B")="Y",DIR("A")="Print Voucher? " D ^DIR
  Q:$D(DIRUT)  S PRINT=Y I PRINT'=1 Q
  S FHCDT=FHDFN_"^"_FHNOW,FHREQPR=1 D DEV^FHOMSP1 K FHREQPR Q
-ALERT ;Send alert to 15 Authorizors set up in file #119.9 (fields 9-13,40-49)
- K XQA,FHAU15 S FHAU15=$P($G(^FH(119.9,1,0)),U,7,11)_"^"_$P($G(^FH(119.9,1,1)),U,11,20)
- F A=1:1:15 S AB=$P(FHAU15,U,A) I AB'="" S XQA(AB)=""
+ALERT ;Send alert to 5 Authorizors set up in file #119.9 (fields 9-13)
+ K XQA,FHAU15 S FHAU15=$P($G(^FH(119.9,1,0)),U,7,11)
+ F A=1:1:5 S AB=$P(FHAU15,U,A) I AB'="" S XQA(AB)=""
  I '$D(XQA) D
  .W !!?5,"NOTICE: No 'Authorizing Person(s)' defined in site "
  .W !!?5,"parameter (#119.9) file -- NO ALERT SENT",!! Q
@@ -57,29 +55,18 @@ SETNODE ;
  D FILE^DICN I Y=-1 Q
  K DIE S DA(1)=FHDFN,DIE="^FHPT("_DA(1)_",""SM"","
  S DA=+Y,FHDA=DA
- S DR="1////^S X=FHSTAT;2////^S X=FHLOC;2.5////^S X=FHRMBD;3////^S X=FHDIET;3.5////^S X=FHMEAL;4////^S X=DUZ;5////^S X=AUDUZ;6////^S X=AUFHNOW;14////^S X=FHORN"
+ S DR="1////^S X=FHSTAT;2////^S X=FHLOC;3////^S X=FHDIET;3.5////^S X=FHMEAL;4////^S X=DUZ;5////^S X=AUDUZ;6////^S X=AUFHNOW;14////^S X=FHORN"
  D ^DIE
  I FHQEL=0 D ORDEL
  S FHZN=$G(^FHPT(FHDFN,"SM",FHDA,0))
  S FHACT="O",FHOPTY="S",FHOPDT=$P(FHNOW,".",1) D SETSM^FHOMRO2
  Q
-MSG1 ;
- W !!,"This patient already has a pending Special Meal request for "
- S DTP=DT D DTP^FH W DTP," " Q
-MSG2 ;
- W !!,"This patient already has a Recurring Meal ordered for "
- S DTP=DT D DTP^FH W DTP," "
- W $S(FHMEAL="B":"Breakfast",FHMEAL="N":"Noon",1:"Evening") Q
-CHECKRM ; Check if the OP has an existing RM for this date/meal
- S FHRMYES=0
- F FHZ=0:0 S FHZ=$O(^FHPT(FHDFN,"OP","B",DT,FHZ)) Q:FHZ'>0!(FHZ>DT)  D
- .I $P($G(^FHPT(FHDFN,"OP",FHZ,0)),U,4)'=FHMEAL Q
- .I $P($G(^FHPT(FHDFN,"OP",FHZ,0)),U,15)="C" Q
- .S FHRMYES=1
+MESSAGE ;
+ W !!,"THIS PATIENT ALREADY HAS A SPECIAL MEAL REQUEST PENDING"
  Q
 END ;Kill local variables before exiting
- K A,AA,AB,BAG,CCC,CONT,DIC,DIR,ENDL,ENDT,FHDFN,FHDAYS,FHDEF
- K FHDIET,FHDIETS,FHSTAT,FHZ,STDT,STDTIM Q
+ K A,AA,AB,BAG,CCC,CONT,ENDL,ENDT,FHDFN,FHDAYS,FHDEF,FHDIET,FHDIETS
+ K FHSTAT,STDT,STDTIM Q
  ;
 LATE ;
  S FHCOMM=$P($G(^FH(119.6,FHLOC,0)),U,8),FHCOMM1=$G(^FH(119.73,FHCOMM,1))
@@ -92,10 +79,9 @@ TIME S FH3=FH1+2,FHCNT=0 F FHT=FH1:1:FH3 D
  I (FHS'?1N)!(FHS<1)!(FHS>FHCNT) W !!,"Invalid time selection!" D TIME Q
  S FHTIME=FHTM(FHS),X=$E(FHNOW,1,7)_"@"_FHTIME,%DT="XT" D ^%DT S FHTRAY=Y
  D NOW^%DTC I FHTRAY<% W !!,"Cannot order for a time before now!" D TIME Q
- S FHBAG="N" I $P($G(^FH(119.73,FHCOMM,2)),U,10)="Y" D
- . K DIR S DIR(0)="SAO^Y:Yes;N:No",DIR("A")="Bagged Meal? ",DIR("B")="N"
- . D ^DIR I $D(DIRUT) S FHQEL=1 Q
- . S FHBAG=Y
+ K DIR S DIR(0)="SAO^Y:Yes;N:No",DIR("A")="Bagged Meal? ",DIR("B")="N"
+ D ^DIR I $D(DIRUT) S FHQEL=1 Q
+ S FHBAG=Y
  Q
 ORDEL ;
  S DA=FHSM,DA(1)=FHDFN,DIE="^FHPT("_DA(1)_",""SM"","

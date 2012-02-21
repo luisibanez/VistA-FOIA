@@ -1,6 +1,5 @@
 PRSAOTL ; HISC/REL-List OT Requests ;5/24/95  16:28
- ;;4.0;PAID;**34,114**;Sep 21, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;**34**;Sep 21, 1995
 TK ; TimeKeeper Entry
  S PRSTLV=2 G TL
 SUP ; Supervisor Entry
@@ -26,10 +25,7 @@ Q4 Q
 CK W:'CNT !!,"No Overtime or CompTime/CreditHrs Requests found for this period." Q
 LST ; Display Request
  D:$Y>(IOSL-3) HDR Q:QT
- I 'HDR D:$Y>(IOSL-7) HDR Q:QT  S X=$G(^PRSPC(DFN,0)) W !!,$P(X,"^",1) S X=$P(X,"^",9) D
- . I X,PRSTLV=2!(PRSTLV=3) W ?50,$E(X),"XX-XX-",$E(X,6,9)
- . I X,PRSTLV=7 W ?50,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9)
- . S HDR=1
+ I 'HDR D:$Y>(IOSL-7) HDR Q:QT  S X=$G(^PRSPC(DFN,0)) W !!,$P(X,"^",1) S X=$P(X,"^",9) I X W ?50,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9) S HDR=1
 L1 ; List item
  S Z=$G(^PRST(458.2,DA,0)) Q:Z=""  S SCOM=$P($G(^(1)),"^",1),CNT=CNT+1
  S X=$P(Z,"^",3) D DTP W !?3,Y,"   ",$P(Z,"^",6)," Hrs. ",$S($P(Z,"^",5)="CT":"COMP TIME/CREDIT HRS",1:"OVERTIME")

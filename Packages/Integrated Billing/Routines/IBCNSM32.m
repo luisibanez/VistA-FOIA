@@ -1,6 +1,6 @@
-IBCNSM32 ;ALB/AAS - INSURANCE MANAGEMENT - POLICY EDIT ;23-JAN-95
- ;;2.0;INTEGRATED BILLING;**28,40,52,85,103,133,361,371,413**;21-MAR-94;Build 9
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCNSM32 ;ALB/AAS - INSURANCE MANAGEMENT - POLICY EDIT ; 23-JAN-95
+ ;;2.0;INTEGRATED BILLING;**28,40,52,85,103,133**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 PATPOL(IBCDFN) ; -- edit patient specific policy info
  I '$G(IBCDFN) G PATPOLQ
@@ -12,12 +12,14 @@ PATPOL(IBCDFN) ; -- edit patient specific policy info
  I $P(^DIC(36,+$P(^DPT(DFN,.312,IBCDFN,0),"^"),0),"^",5) W !,*7,"WARNING:  This insurance company is INACTIVE!",!
  ;
  N IBAD,IBDIF,DA,DR,DIC,DIE,DGSENFLG S DGSENFLG=1
+ S DIE="^DPT("_DFN_",.312,",DA(1)=DFN,DA=IBCDFN
+ S DR="S IBAD="""";8;@333;3;D FUTURE^IBCNSM31;6;S IBAD=X;K X I '$$VET^IBCNSU1() S Y=""@10"";17///^S X=$P(^DPT(DFN,0),U);16///^S X=""01"""
+ ;S DR="S IBAD="""";8;@333;3;D FUTURE^IBCNSM31;6;S IBAD=X;I IBAD'=""v"" S Y=""@10"";17"_$S($$VET^IBCNSU1():"///^S X="""_$P(^DPT(DFN,0),U,1)_"""",1:"//"_);16///^S X=""01"""
+ S DR=DR_";S Y=""@20"";@10;17;16//^S X=$S(IBAD=""s"":""02"",1:"""");@20;1;3.01;1.09//;I $G(IBREG) S Y=""@99"";.2;4.01;4.02;@99"
+ I $G(IBREG),$D(^XUSEC("IB INSURANCE SUPERVISOR",DUZ)) S DR=".01//;"_DR
  L +^DPT(DFN,.312,+IBCDFN):5 I '$T D LOCKED^IBTRCD1 G PATPOLQ
- ;
- D EDIT^IBCNSP1(DFN,IBCDFN,.IBQUIT)    ; IB*371 edit 2.312 subfile data
- ;
- ; If the 2.312 subfile entry was deleted then unlock and get out
- I '$D(^DPT(DFN,.312,IBCDFN,0)) L -^DPT(DFN,.312,+IBCDFN) G PATPOLQ
+ D ^DIE I $D(Y)!($D(DTOUT)) S IBQUIT=1
+ I '$D(DA) S IBQUIT=1 G PATPOLQ
  ;
  ; -- if the company was changed, change the policy plan
  I $G(IBREG),$G(IBCNS),+$G(^DPT(DFN,.312,IBCDFN,0))'=IBCNS D CHPL
@@ -71,7 +73,7 @@ CHPL ; Change policy plan if the policy company differs from plan company.
  I $O(IBBU(0)) D
  .N IBDAT
  .W !!,"Deleting current Benefits Used... "
- .S IBDAT="" F  S IBDAT=$O(IBBU(IBDAT)) Q:IBDAT=""  D DBU^IBCNSJ(IBBU(IBDAT))
+ .S IBDAT="" F  S IBDA=$O(IBBU(IBDAT)) Q:IBDAT=""  D DBU^IBCNSJ(IBBU(IBDAT))
  ;
  ; - repoint all Insurance Reviews to new company
  I $$IR^IBCNSJ21(DFN,IBCDFN) D

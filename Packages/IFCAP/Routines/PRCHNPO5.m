@@ -1,6 +1,6 @@
 PRCHNPO5 ;WISC/RSD,RHD/DL-INPUT TRANSFORM FOR FILE 440,441,442 ;9/5/00  10:59
-V ;;5.1;IFCAP;**113**;Oct 20, 2000;Build 4
- ;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN1 ;FILE 442, FCP #1
  I '$D(PRCHAMND),$D(^PRCS(410,+$P(^PRC(442,DA,0),U,12),0)),+$P(^(0),"-",4)'=+X W !,"Fund Control Point cannot be changed since 2237 has been selected." K X Q
@@ -16,7 +16,6 @@ EN1 ;FILE 442, FCP #1
  I $D(^PRC(420,PRC("SITE"),1,+Y,2,0)),$P(^(0),U,4)=1,$D(^($P(^(0),U,3),0)),$D(^PRCD(420.1,+^(0),0)) S PRCHN("CC")=$P(^(0)," ",1)
  S PRC("APP")="",X=Z0,PRC("BBFY")=$$BBFY^PRCSUT(PRC("SITE"),PRC("FY"),+X) I PRC("BBFY")="" Q
  S PRC("APP")=$P($$ACC^PRC0C(PRC("SITE"),+X_"^"_PRC("FY")_"^"_PRC("BBFY")),U,11) K Z0,Z1
- I $P($G(^PRC(420,PRC("SITE"),1,+X,0)),U,19)=1 W !,"Sorry, this FCP is inactive!",! K X Q
  Q
  ;
 EN2 ;FILE 442, COST CENTER #2

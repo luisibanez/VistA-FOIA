@@ -1,5 +1,5 @@
-IVMCM1 ;ALB/SEK,BRM,TDM - DCD INCOME TESTS UPLOAD DRIVER ; 2/9/06 1:57pm
- ;;2.0;INCOME VERIFICATION MATCH;**17,49,71,115**;21-OCT-94;Build 28
+IVMCM1 ;ALB/SEK,BRM - DCD INCOME TESTS UPLOAD DRIVER ; 1/24/03
+ ;;2.0;INCOME VERIFICATION MATCH;**17,49,71**;21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; this routine will call routines to upload means/copay/LTC test and
@@ -34,8 +34,6 @@ EN ; this routine will call routines to upload means/copay/LTC test and
  ;            "ZICC",N
  ;            "ZIRC",N
  ;           }
- ;           {"ZDPIS",N}        Inactive Spouse Entries
- ;           {"ZDPIC",N}        Inactive Child Entries
  ;            "ZMT1"
  ;            "ZMT2"
  ;            "ZMT4"
@@ -142,25 +140,6 @@ ADDV21 ; add vet entry to individual annual income file (408.21)
  D EN^IVMCM5
  Q:$D(IVMFERR)
  S DGVIRI=DGIRI ; vet income relation ien
- ;
-ADDINACT ; Process inactive ZDP's (ZDPIS & ZDPID entries)
- N ISEG,ICTR,IVMIDT,X,DA
- F ISEG="ZDPIS","ZDPIC" D  Q:$D(IVMFERR)
- . S ICTR=0
- . F  S ICTR=$O(^TMP($J,"IVMCM",ISEG,ICTR)) Q:(ICTR="")!($D(IVMFERR))  D
- . . S IVMSEG=$G(^TMP($J,"IVMCM",ISEG,ICTR)) Q:IVMSEG=""
- . . S IVMIDT=+$P(IVMSEG,"^",11)        ;dep inactivation date
- . . I $L(IVMIDT)<8 D  Q
- . . . S IVMTEXT(6)="Invalid dependent inactivation date"
- . . . D PROB^IVMCMC(IVMTEXT(6))
- . . . D ERRBULL^IVMPREC7,MAIL^IVMUFNC("DGMT MT/CT UPLOAD ALERTS")
- . . . S IVMFERR=""
- . . S IVMIDT=$$FMDATE^HLFNC(IVMIDT)
- . . D INPIEN^IVMCM2 Q:$D(IVMFERR)           ;add if not in 408.13
- . . I IVMFLG2 D NEWPR^IVMCM3 Q:$D(IVMFERR)  ;add if not in 408.12
- . . S X=IVMIDT                              ;inactivation date
- . . S DA(1)=+DGPRI                          ;dependent 408.12 ien
- . . D INACT1^IVMCM5                         ;inactivate dependent
  ;
 COMPLETE ; complete means test, copay test, or Long Term Care test
  ;

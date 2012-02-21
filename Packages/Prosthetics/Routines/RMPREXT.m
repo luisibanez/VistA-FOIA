@@ -1,19 +1,17 @@
 RMPREXT ;PHX/HNC-DATA EXTRACT FOR Nppd  ;4/20/1995
- ;;3.0;PROSTHETICS;**12,18,24,64,59,103,106,109,113,126,138**;Feb 09, 1996;Build 11
+ ;;3.0;PROSTHETICS;**12,18,24,64,59,103,106,109,113**;Feb 09, 1996
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;DBIA #4599, Vendor file read 38,39,18.3,8.3
  ;
- ;patch 113 - roll back to 5000 lines
+ ;patch 113 - roll back, do not send to austin
+ ;            roll back to 5000 lines
  ;            add count of records to summary message and 
- ;            count by station number to summary total
+ ;               count by station number to summary total
+ ;            summary message to PCM
  ;            add site- to ien, use ~ as data delimiter
+ ;            add ^ as EOL for Austin
  ;            add d1 and d2 flags for EXE parsing tool
- ;
- ;patch 126/hnc - check length, bug in GUI ignores DD field length
- ;
- ;patch 60/hnc - DDC interface, include DDC data fields.
- ;               8/23/2006
  ;
 EN ;extract from 660
  N %ZIS,ZTIO,ZTRTN,ZTSK,ZTDESC
@@ -23,7 +21,7 @@ PR1 ;refresh amis codes
  D ^RMPREXR
 EN1 ;pass dates if needed
  S RMPRSEND=$P(XMRG,"*",5)
- S DIC="^RMPR(660,",DR=".01:100",DIQ(0)="EN"
+ S DIC="^RMPR(660,",DR=".01:83",DIQ(0)="EN"
  S RMPRB=0,RMPRCNT=0,RMPRSUB="B1 ",RMPRRECC=0,COUNT=0
  K ^TMP("RMPR",$J)
  F  S RMPRB=$O(^RMPR(660,"B",RMPRB)) Q:(RMPRB>RMPRDT2)!(RMPRB'>0)  D
@@ -34,27 +32,16 @@ EN1 ;pass dates if needed
  .F  S RMPRA=$O(^RMPR(660,"B",RMPRB,RMPRA)) Q:RMPRA'>0  D
  ..S RMPRRECC=RMPRRECC+1
  ..S DA=RMPRA,DIQ="RMPR"
- ..S DIC="^RMPR(660,",DR=".01:100",DIQ(0)="EN"
- ..D EN^DIQ1
- ..;verify field length
- ..;Brief Description
- ..I $D(RMPR(660,RMPRA,24,"E")) D
- ...I $L(RMPR(660,RMPRA,24,"E"))>60 S RMPR(660,RMPRA,24,"E")=$E(RMPR(660,RMPRA,24,"E"),1,60)
- ..;Deliver To
- ..I $D(RMPR(660,RMPRA,25,"E")) D
- ...I $L(RMPR(660,RMPRA,25,"E"))>30 S RMPR(660,RMPRA,25,"E")=$E(RMPR(660,RMPRA,25,"E"),1,30)
- ..;Remarks
- ..I $D(RMPR(660,RMPRA,16,"E")) D
- ...I $L(RMPR(660,RMPRA,16,"E"))>60 S RMPR(660,RMPRA,16,"E")=$E(RMPR(660,RMPRA,16,"E"),1,60)
- ..D LINECK
- ..;parse array
+ ..S DIC="^RMPR(660,",DR=".01:83",DIQ(0)="EN"
+ ..D EN^DIQ1,LINECK
+ ..;parse array in format needed to send/receive
  ..S RMPRC=0
  ..F  S RMPRC=$O(RMPR(660,RMPRC)) Q:RMPRC'>0  D TMP
  ;clean up before calling mailman
  K DFN,RMPRFLD,RMPRE,RMPRCNT,DFN,RMPRA,RMPRC,DIQ,DIC,DR,DA,RMPRDT1,RMPRDT2
  S XMSUB="B1-F " D MAIL,EXIT
  Q
-LINECK ;check the message line limit (5000)
+LINECK ;check the message line limit (5000);move to austin change to 1800
  I RMPRCNT>5000 S XMSUB=RMPRSUB D MAIL K ^TMP("RMPR",$J) S RMPRCNT=0
  Q
 TMP ;format for mailman ^TMP(namespace,$J,counter)=record,field,value
@@ -70,7 +57,7 @@ TMP ;format for mailman ^TMP(namespace,$J,counter)=record,field,value
  .;get SSN
  .I RMPRFLD=".02" D
  .  .S DFN=$P(^RMPR(660,RMPRC,0),U,2)
- .  .D DEM^VADPT,ADD^VADPT,SVC^VADPT
+ .  .D DEM^VADPT,ADD^VADPT
  .  .S RMPRCNT=RMPRCNT+1,^TMP("RMPR",$J,RMPRCNT)="d2~"_IENSITE_RMPRC_"~644~"_VA("PID")_U
  .  .;DOB int
  .  .I $G(VADM(3)) S RMPRCNT=RMPRCNT+1,^TMP("RMPR",$J,RMPRCNT)="d2~"_IENSITE_RMPRC_"~664.3~"_$P(VADM(3),U,1)_U
@@ -89,11 +76,6 @@ TMP ;format for mailman ^TMP(namespace,$J,counter)=record,field,value
  .  .;city
  .  .I $G(VAPA(4)) S RMPRCNT=RMPRCNT+1,^TMP("RMPR",$J,RMPRCNT)="d2~"_IENSITE_RMPRC_"~664.66~"_VAPA(4)_U
  .  .;requestor service
- .  .;O INDICATOR
- .  .I $P($G(VASV(11)),U,1)>0 S RMPRCNT=RMPRCNT+1,^TMP("RMPR",$J,RMPRCNT)="d2~"_IENSITE_RMPRC_"~664.80~"_$P(VASV(11),U,1)_U
- .  .I $P($G(VASV(12)),U,1)>0 S RMPRCNT=RMPRCNT+1,^TMP("RMPR",$J,RMPRCNT)="d2~"_IENSITE_RMPRC_"~664.81~"_$P(VASV(12),U,1)_U
- .  .I $P($G(VASV(13)),U,1)>0 S RMPRCNT=RMPRCNT+1,^TMP("RMPR",$J,RMPRCNT)="d2~"_IENSITE_RMPRC_"~664.82~"_$P(VASV(13),U,1)_U
- .  .K VASV
  .  .;
  .  .;ICN
  .  .S ICN=$$GETICN^MPIF001(DFN)
@@ -135,12 +117,12 @@ QUE ;TaskMan Queue
  Q
 EXIT ;exit point
  ;send summary msg
- S RMPRM(1)="Message Numbers Created Below, Site^Total Record #:"_U_$P($$SITE^VASITE,U,3)_U_$P($$SITE^VASITE,U,2)_U_RMPRRECC_U
+ S RMPRM(1)="Message Numbers Created Below, Site^Total Record #:"_U_$P($$SITE^VASITE,U,1)_U_$P($$SITE^VASITE,U,2)_U_RMPRRECC_U
  S XMSUB=RMPRSUB_"Summary ",XMTEXT="RMPRM("
  D MAILS
  K ^TMP("RMPR",$J),XMTEXT,XMDUZ,XMY,XMSUB,RMPRM
  ;send message to PCM group to let them know Austin should have all mail.
- S RMPRMM(1)="Site^Total Record # ^ Total Message #:"_U_$P($$SITE^VASITE,U,3)_U_$P($$SITE^VASITE,U,2)_U_RMPRRECC_U_COUNT
+ S RMPRMM(1)="Site^Total Record # ^ Total Message #:"_U_$P($$SITE^VASITE,U,1)_U_$P($$SITE^VASITE,U,2)_U_RMPRRECC_U_COUNT
  S XMTEXT="RMPRMM("
  S XMSUB="NPPD Summary Update From "_$P($$SITE^VASITE,U,2)
  S XMY("VHACOPSASPIPReport@med.va.gov")=""

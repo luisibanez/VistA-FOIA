@@ -1,5 +1,5 @@
-VAFCCCAP ;ALB/CMM/PKE/PHH/EG/GAH OUTPATIENT CAPTURE TEST ; 5/5/05 9:04am
- ;;5.3;Registration;**91,179,553,582,568,585,662,725,744**;Jun 06, 1996;Build 5
+VAFCCCAP ;ALB/CMM/PKE/PHH/EG OUTPATIENT CAPTURE TEST ; 5/5/05 9:04am
+ ;;5.3;Registration;**91,179,553,582,568,585,662**;Jun 06, 1996
  ;
  ;
 CAP ;Only fire if check-in,check-out, add/edit add, add/edit change
@@ -37,7 +37,6 @@ EN ;
  ..I +HLD=-1 S HLD=$$PIVNW^VAFHPIVT(DFN,EVDT,2,PTR)
  ..;S EVENT=$P(HLD,":"),ERR=$$OA08^VAFHCA08(DFN,EVENT,EVDT,PTR,"2,3,4,5,6,7,8,9,11,12,13,14,16,19","2,3,4,5,6,7,8,9,10,11,12,13,14,15","A","A")
  ..;set up call to vafcmsg for out-patient
- ..I +HLD=-1 S ERR=HLD
  ..S EVENT=$P(HLD,":")
  ..I EVENT>0 D SETUP
  ;
@@ -55,7 +54,6 @@ EN ;
  ..I ^TMP("SDEVT",$J,SDHDL,2,"SDOE",HLD,0,"AFTER")'="" D
  ...S DFN=$P(^TMP("SDEVT",$J,SDHDL,2,"SDOE",HLD,0,"AFTER"),"^",2),EVDT=$P(^TMP("SDEVT",$J,SDHDL,2,"SDOE",HLD,0,"AFTER"),"^"),PTR=HLD_";SCE("
  ..I '$D(EVENT) S THLD=$$PIVNW^VAFHPIVT(DFN,EVDT,2,PTR),EVENT=$P(THLD,":")
- ..I +$G(THLD)=-1 S ERR=THLD
  ..I REMOVE="Y" S PTR="@",UP=$$UPDATE^VAFHUTL(+EVENT,EVDT,PTR,1)
  ..;I +EVENT>0 S ERR=$$OA08^VAFHCA08(DFN,EVENT,EVDT,PTR,"2,3,4,5,6,7,8,9,11,12,13,14,16,19","2,3,4,5,6,7,8,9,10,11,12,13,14,15","A","A")
  ..;set up call to vafcmsg for out-patient
@@ -80,6 +78,11 @@ UPPTR(DFN,ADATE) ;
  S DGARRAY(4)=DFN,DGARRAY(1)=ADATE_";"_ADATE,DGARRAY("FLDS")=3,DGARRAY("SORT")="P"
  S DGCOUNT=$$SDAPI^SDAMA301(.DGARRAY)
  ;
+ ;if there is data hanging from the 101 or 
+ ;116 subscript, then it is a valid appointment
+ ;otherwise it is an error eg 01/20/2005
+ I DGCOUNT<0,$D(^TMP($J,"SDAMA301",101))=1 Q PTR
+ I DGCOUNT<0,$D(^TMP($J,"SDAMA301",116))=1 Q PTR
  I DGCOUNT>0 D
  .S SDDATE=0
  .F  S SDDATE=$O(^TMP($J,"SDAMA301",DFN,SDDATE)) Q:'SDDATE  D

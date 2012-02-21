@@ -1,5 +1,5 @@
 GMVRPCHL ;HIOFO/FT-RPC FOR HOSPITAL LOCATION SELECTION ;12/7/05  10:32
- ;;5.0;GEN. MED. REC. - VITALS;**3,22**;Oct 31, 2002;Build 22
+ ;;5.0;GEN. MED. REC. - VITALS;**3**;Oct 31, 2002
  ;
  ; This routine uses the following IAs:
  ;  #1378 - DGPM references        (controlled)
@@ -139,53 +139,4 @@ ADMIT ; return a list of admissions
  ..Q
  .Q
  S @RESULTS@(0)=ILST
- Q
-CLINIC ; Return list of active clinics
- ;     DATA = GMVFROM^GMVMAX^GMVDIR
- ;   Where:
- ;   GMVFROM - Value to begin the search (optional). Default is null (i.e., start
- ;             with the first entry in the B x-ref).
- ;   GMVMAX - Maximum number of entries to return. (optional) Default is 100.
- ;   GMVDIR - Direction of search (optional). 1 means forward and -1 means backwards.
- ;            Default is 1.   
- ; Output
- ;   RESULT(n)=piece1^piece2
- ;   
- ;   where n is a sequential number starting with zero
- ;         piece1 - 44;ien (44, a semi-colon and the entry number)
- ;         piece2 - location name (FILE 44, Field .01)
- ;         
- ;   ex:
- ;   RESULTS(0)=n 
- ;   RESULTS(1)=44;123^TEST CLINIC
- ;   
- ;   If no entries are found, then RESULTS(0)="-1^NO ENTRIES FOUND"
- ;
- N GMVACTIV,GMVCNT,GMVDIR,GMVFROM,GMVIEN,GMVLAST,GMVLOCS,GMVLOOP,GMVMAX,GMVNAME,GMVNODE,GMVX
- S GMVFROM=$P(DATA,U,1),GMVMAX=+$P(DATA,U,2),GMVDIR=$P(DATA,U,3)
- S:'GMVMAX GMVMAX=100
- S GMVDIR=$S(GMVDIR=-1:-1,1:1)
- I GMVFROM]"" D  ;get entry before or after GMVFROM
- .S:GMVDIR=1 GMVLAST=$O(^SC("B",GMVFROM),-1)
- .S:GMVDIR=-1 GMVLAST=$O(^SC("B",GMVFROM))
- .S GMVFROM=$G(GMVLAST)
- .Q
- S GMVCNT=0,GMVNAME=GMVFROM
- F  S GMVNAME=$O(^SC("B",GMVNAME),GMVDIR) Q:GMVNAME=""!(GMVCNT=GMVMAX)  D
- .S GMVIEN=0
- .F  S GMVIEN=$O(^SC("B",GMVNAME,GMVIEN)) Q:'GMVIEN!(GMVCNT=GMVMAX)  D
- ..S GMVNODE=$G(^SC(GMVIEN,0))
- ..Q:$P(GMVNODE,U,1)=""  ;no name
- ..Q:$P(GMVNODE,U,3)'="C"
- ..D  Q  ;clinics
- ...Q:+$G(^SC(GMVIEN,"OOS"))  ;out of service
- ...S GMVACTIV=$G(^SC(GMVIEN,"I"))
- ...I GMVACTIV Q:DT>+GMVACTIV&($P(GMVACTIV,U,2)=""!(DT<$P(GMVACTIV,U,2)))
- ...S GMVCNT=GMVCNT+1
- ...S @RESULTS@(GMVCNT)="44;"_GMVIEN_U_$P(^SC(GMVIEN,0),U)
- ...Q
- ..Q
- .Q
- I GMVCNT=0 S @RESULTS@(0)="-1^NO ENTRIES FOUND"
- I GMVCNT>0 S @RESULTS@(0)=GMVCNT
  Q

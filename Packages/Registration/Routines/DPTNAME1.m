@@ -1,5 +1,5 @@
 DPTNAME1 ;BPOIFO/KEITH - NAME STANDARDIZATION ; 12 Aug 2002@20:20
- ;;5.3;Registration;**244,620,720**;Aug 13, 1993
+ ;;5.3;Registration;**244,620**;Aug 13, 1993
  ;
 NCEVAL(DGC,DGX) ;Evaluate name component entry values
  ;Input: DGC=name component (e.g. FAMILY, GIVEN, etc.)
@@ -48,7 +48,7 @@ PREFIX ;Name prefix help text
  ;
 SUFFIX ;Name suffix help text
  S DGM("LENGTH")="1-10"
- D HTEXT("suffix(es), such as JR, SR, II, or III.",DGM("LENGTH"))
+ D HTEXT("suffix(es), such as JR, SR, II, or II.",DGM("LENGTH"))
  Q
  ;
 DEGREE ;Name degree help text

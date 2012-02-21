@@ -1,14 +1,11 @@
-MHVXRXR ;WAS/GPM - Prescription refill request ; [12/12/07 11:38pm]
- ;;1.0;My HealtheVet;**2**;Aug 23, 2005;Build 22
+MHVXRXR ;WAS/GPM - Prescription refill request ; [8/23/05 12:34am]
+ ;;1.0;My HealtheVet;;Aug 23, 2005
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  Q
  ;
-REQUEST(QRY,ERR,DATAROOT) ; Entry point to request refills
- ; Walks list of prescriptions calling a pharmacy api AP1^PSOPRA to
- ; add the prescription to the internet refill request queue in the
- ; PRESCRIPTION REFILL REQUEST file #52.43.  The status of the api
- ; call is returned in DATAROOT.
+REQUEST(QRY,ERR,DATAROOT) ; Entry point to extract appointment data
+ ; Retrieves requested appointment data and returns it in DATAROOT
  ;
  ;  Integration Agreements:
  ;         3768 : AP1^PSOPRA
@@ -24,7 +21,7 @@ REQUEST(QRY,ERR,DATAROOT) ; Entry point to request refills
  ;
  N CNT,RX,PORDERN,ORDERTM,STATUS,DIV,DFN,U
  ;
- D LOG^MHVUL2("MHVXRXR","BEGIN","S","TRACE")
+ D LOG^MHV7U("MHVXRXR","BEGIN","S",0)
  S U="^"
  S ERR=0
  K @DATAROOT
@@ -40,5 +37,5 @@ REQUEST(QRY,ERR,DATAROOT) ; Entry point to request refills
  . Q
  ;
  S @DATAROOT=CNT-1
- D LOG^MHVUL2("MHVXRXR","END","S","TRACE")
+ D LOG^MHV7U("MHVXRXR","END","S",0)
  Q

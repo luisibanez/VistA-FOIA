@@ -1,5 +1,5 @@
-RORUPD05 ;HCIOFO/SG - REGISTRY UPDATE (MULTITASK) ; 7/6/06 11:09am
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORUPD05 ;HCIOFO/SG - REGISTRY UPDATE (MULTITASK) ; 8/25/05 12:33pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  Q
  ;
@@ -28,7 +28,7 @@ MONITOR() ;
  . . ;--- Skip a subtask that was scheduled but has not started yet
  . . I RC="S"  S TSKCNT=TSKCNT-1  Q
  . . ;--- Skip a running subtask
- . . L +@RORUPDPI@("T",TASK):1  E  Q
+ . . L +@RORUPDPI@("T",TASK):0  E  Q
  . . L -@RORUPDPI@("T",TASK)
  . . ;--- The subtask has crashed
  . . I RC=-60  S EXIT=$$ERROR^RORERR(-60,,,,TASK)  Q
@@ -85,7 +85,7 @@ PROCESS(MAXNTSK) ;
  D XTMPHDR^RORUTL01(SUBSCR,30,"PROCESS-RORUPD05")
  M @RORUPDPI=@OLDPI
  ;--- Indicate that the main task is running
- L +@RORUPDPI@("T",0):7
+ L +@RORUPDPI@("T",0):5
  E  Q $$ERROR^RORERR(-61)
  ;
  ;--- Start the subtasks
@@ -122,7 +122,7 @@ START(TASKTBL) ;
  N CNT,I,ZTDESC,ZTDTH,ZTIO,ZTPRI,ZTRTN,ZTSAVE,ZTSK
  K @RORUPDPI@("T")
  ;--- Do not allow subtasks to proceed before everything is ready
- L +@RORUPDPI@("T"):7
+ L +@RORUPDPI@("T"):5
  E  Q $$ERROR^RORERR(-61)
  ;--- Start the subtasks
  S I=""
@@ -167,7 +167,7 @@ SUBTASK ;
  L +@RORUPDPI@("T",TASK):180
  E  S RC=$$ERROR^RORERR(-61)  Q
  ;--- Check if the main task is running
- L +@RORUPDPI@("T",0):3
+ L +@RORUPDPI@("T",0):0
  I  D
  . ;--- Cleanup if the main task is not running
  . L -@RORUPDPI@("T",0)

@@ -1,5 +1,5 @@
-RORHL7A ;HCIOFO/SG - HL7 UTILITIES ; 4/4/07 1:07pm
- ;;1.5;CLINICAL CASE REGISTRIES;**2**;Feb 17, 2006;Build 6
+RORHL7A ;HCIOFO/SG - HL7 UTILITIES ; 7/29/05 1:35pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  Q
  ;
@@ -83,7 +83,7 @@ ADDSEGF(FIELDS) ;
  S:I>0 FIELDS(1)=I
  ;--- Remove empty trailing fields
  S I=$NA(FIELDS(" "))
- F  S I=$$Q^RORUTL18(I,-1)  Q:I=""  Q:$TR(@I,HLECH)'=""  K @I
+ F  S I=$Q(@I,-1)  Q:I=""  Q:$TR(@I,HLECH)'=""  K @I
  ;--- Initialize construction variables
  S RORBUF=FIELDS(0),I=$L(RORBUF)
  S ROREXT("HL7SIZE")=$G(ROREXT("HL7SIZE"))+I+1

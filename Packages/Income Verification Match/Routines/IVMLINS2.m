@@ -1,5 +1,5 @@
 IVMLINS2 ;ALB/KCL - IVM INSURANCE POLICY PURGE ; 3/23/01 4:36pm
- ;;2.0;INCOME VERIFICATION MATCH;**14,34,111**; 21-OCT-94
+ ;;2.0;INCOME VERIFICATION MATCH;**14,34**; 21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
@@ -7,7 +7,7 @@ ASK ; - ask user to 'T'ransfer or 'P'urge IVM insurance policy
  S DIR(0)="S^1:Transfer IVM Insurance Policy to insurance module;2:Purge IVM Insurance Policy;3:Return to Display Screen"
  S DIR("A")="Select Action",DIR("?")="^D HLP1^IVMLINS2"
  D ^DIR K DIR S IVMACT=Y G:$D(DIRUT)!($D(DUOUT))!(IVMACT=3) IVMQ^IVMLINS3
- I IVMACT[1 D TRANSFER^IVMLINS3(0) Q
+ I IVMACT[1 D TRANSFER^IVMLINS3 Q
  ;
  ;
 PURGE ; - purge IVM insurance information - ask for reason why

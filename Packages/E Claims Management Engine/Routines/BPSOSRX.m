@@ -1,244 +1,241 @@
 BPSOSRX ;BHAM ISC/FCS/DRS/FLS - callable from RPMS pharm ;06/01/2004
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5,7,8,10**;JUN 2004;Build 27
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;
- ; There are three callable entry points:
- ; $$REQST^BPSOSRX     Schedule request
- ; $$STATUS^BPSOSRX    Inquire about a request's status
- ;
- ; reference to ^%ZTLOAD supported by DBIA 10063
- ; reference to NOW^%DTC supported by DBIA 10000
- ; reference to ^%DT supported by DBIA 10003
- ;
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
  Q
  ;
- ; Schedule request
- ; Process all requests - Billing requests (CLAIM), Reversal (UNCLAIM)
- ;                        and Eligibility verification requests
+ ; Also used by other BPSOSR* routines to find transactions
+ ; that need to be submitted to ECME.
+DOCU N I,X F I=0:1 S X=$T(DOCU1+I) Q:X["END OF DOCUMENTATION"  D
+ . W $P(X,";",2,99),!
+ Q
+DOCU1 ; There are only four callable entry points!
+ ; $$CLAIM^BPSOSRX     Submit a claim to ECME
+ ; $$UNCLAIM^BPSOSRX   Reverse a previously submitted claim.   
+ ; $$STATUS^BPSOSRX    Inquire about a claim's status
+ ; SHOWQ^BPSOSRX       Display queue of claims to be processed
  ;
- ; Input: see MKRQST^BPSOSRX3
- ; Return values:
- ;  1^BPS REQUEST ien = accepted for processing
- ;  0^reason = failure (should never happen)
-REQST(BPREQTYP,KEY1,KEY2,MOREDATA,BPCOBIND,IEN59,BILLNDC,BPSKIP) ;
- N BPRETV,BPIEN77,BPIENS78
- S BPSKIP=+$G(BPSKIP)
- D LOG^BPSOSL(IEN59,$T(+0)_"- Start creating request")
- S BPRETV=$$MKINSUR^BPSOSRX2(KEY1,KEY2,.MOREDATA,.BPIENS78)
- I +BPRETV=0 Q BPRETV
- ;create BPS REQUEST records for primary insurer only and populate its IBDATA multiple with the iens of BPS INSURER DATA
- S BPRETV=$$MKRQST^BPSOSRX3(BPREQTYP,KEY1,KEY2,.MOREDATA,.BPIENS78,BPCOBIND,$G(BILLNDC),BPSKIP)
- Q BPRETV
+ ;  The RXI argument is required - a pointer to ^PSRX(*
+ ;  The RXR argument is optional - a pointer to ^PSRX(RXI,1,*
+ ;     If RXR is omitted, the first fill is assumed.
+ ;  Should have MOREDATA("ORIGIN")
+ ;     = undefined - if caller is RPMS Pharmacy package
+ ;     = some assigned value - for all other callers
  ;
- ; $$STATUS(KEY1,KEY2,QUE,BPRQIEN) - Returns the Status of the request
- ; Input
- ;   KEY1 - First key of the request
- ;   KEY2 - Second key of the request
- ;   QUE (optional):  0 - Do not check if a request is on the queue 
- ;         1/null - Check if a request is on the queue
- ;   BPRQIEN (optional) -  the BPS REQUESTS (#9002313.77) IEN
- ;   BPCOB (optional)-the payer sequence (1- Primary, 2 Secondary), if null then 1 (primary) is assumed
+ ; = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+ ; $$CLAIM^BPSOSRX - Submit a claim to ECME
  ;
- ; Returns
- ;    RESULT^LAST UPDATE DATE/TIME^DESCRIPTION^STATUS %
- ;    Returns null if there's no ECME record of this request
+ ;    $$CLAIM^BPSOSRX(RXI,RXR,.MOREDATA)
+ ;    Submit a claim to ECME
+ ;    Use, for example, when a prescription is released.
+ ;    All this does is to put it on a list and start a background job.
+ ;    Return values:
+ ;       1 = accepted for processing
+ ;       0^reason = failure (should never happen)
  ;
- ;    RESULT is either:
- ;      1. IN PROGRESS for incomplete requests
- ;      2. Final status for complete requests.  See comments for
- ;         BPSOSUC for complete list of possible statuses.
- ;      3. SCHEDULED for scheduled (not ACTIVATED yet) requests
- ;         
- ;    LAST UPDATE DATE/TIME is the Fileman date and time of the
- ;         last update to the status of this request.
- ;         
- ;    DESCRIPTION is either:
- ;      1. Incomplete requests will be the status (i.e., Waiting to Start,
- ;         Transmitting)
- ;      2. Completed requests will have the reason that the ECME process
- ;         was aborted if the result is  E OTHER.  Otherwise, it will
- ;         be similar to the RESULT
- ;         
- ;    STATUS % is the completion percentage.  Note that 99 is considered
- ;         complete.
- ;         
- ;    
-STATUS(KEY1,KEY2,QUE,BPRQIEN,BPCOB) ;
- ; Setup needed variables
- N IEN59,SDT,SUBDT,BP59REQ,BPTRTYP,BP59ZERO,BP59REQ
- I '$G(KEY1) Q ""
- I $G(KEY2)="" Q ""
+ ;    Note:  If the claim has already been processed, and it's 
+ ;       resubmitted, then a reversal will be done first,
+ ;       and then the resubmit will be done.   Intervening calls
+ ;       to $$STATUS may show progress of the reversal before
+ ;       the resubmitted claim is processed.
+ ; = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+ ; $$UNCLAIM^BPSOSRX - Reverse a previously submitted claim.   
+ ;     Use, for example, if a prescription has been canceled.
+ ;
+ ;    $$UNCLAIM^BPSOSRX(RXI,RXR,.MOREDATA)
+ ;     Return value = 1 = will submit request for reversal
+ ;                  = 0^reason = failure (should never happen)
+ ;
+ ;     Note:  The reversal will actually be done ONLY if the
+ ;     most recent processing of the claim resulted in something
+ ;     reversible, namely E PAYABLE or E REVERSAL REJECTED
+ ; = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+ ; $$STATUS^BPSOSRX    inquire about a claim's status
+ ;
+ ;    $$STATUS^BPSOSRX(RXI,RXR,SDT,QUE)
+ ;    Parameters
+ ;       RXI and RXR describe above
+ ;       QUE:  0/null - Do not check if a RX/fill is on the queue (opt)
+ ;                  1 - Check if RX/fill is on the queue
+ ;             
+ ;    Returns     Result^Time^Description
+ ;    Returns null  if there's no ECME record of this RXI,RXR.
+ ;
+ ;    Result is either:
+ ;      1. IN PROGRESS for incomplete claims
+ ;      2. Final status for complete claims.  See comments for 
+ ;           BPSOSUC for complete list of possible statuses.
+ ;
+ ;    Time is the Fileman date and time of the last update
+ ;      to the status of this claim.
+ ;
+ ;    Description:
+ ;      For in Progress, it will be the status (i.e., Waiting to Start,
+ ;        Transmitting)
+ ;      For completed claims, it will be lists of current and prior
+ ;        submission (For example, Payable[Previously: Payable].
+ ;        Note that 'Payable' in this case really means submitted.
+ ;        Note that E OTHER may have the reason that the ECME process
+ ;          wa aborted
+ ;
+ ; = = = = = = = = END OF DOCUMENTATION = = = = = = = = =
+ ; = = = Everything below this line is for internal use only
+ ; = = = and subject to sudden unannounced changes!
+ ; = = = Please don't call any of it directly, nor depend on
+ ; = = = any of the techniques used.
+ ; = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+CLAIM(RXI,RXR,MOREDATA)     ;
+ N RETVAL,STAT,TYPE S TYPE="CLAIM"
+ I '$D(RXR) S RXR=0
+ I '$$LOCK("SUBMIT",5) Q 0
+ K ^BPSECP($T(+0),TYPE,RXI,RXR)
+ S ^BPSECP($T(+0),TYPE,RXI,RXR)=$$NOW
+ I $D(MOREDATA) M ^BPSECP($T(+0),TYPE,RXI,RXR,"MOREDATA")=MOREDATA
+ N X,X1,X2
+ S X1=DT,X2=30 D C^%DTC
+ S ^XTMP("BPSOSRX",0)=X_U_DT_U_"ECME SUBMIT DATE FOR A RX AND FILL"
+ S ^XTMP("BPSOSRX",RXI,RXR)=$$NOW
+ D UNLOCK("SUBMIT")
+ D RUNNING()
+ S RETVAL=1
+ Q RETVAL
+ ;
+UNCLAIM(RXI,RXR,MOREDATA) ;
+ N RETVAL,STAT,RESULT,TYPE S TYPE="UNCLAIM"
+ I '$D(RXR) S RXR=0
+ I '$$LOCK("SUBMIT",5) Q 0
+ K ^BPSECP($T(+0),TYPE,RXI,RXR)
+ S ^BPSECP($T(+0),TYPE,RXI,RXR)=$$NOW
+ I $D(MOREDATA) M ^BPSECP($T(+0),TYPE,RXI,RXR,"MOREDATA")=MOREDATA
+ N X,X1,X2
+ S X1=DT,X2=30 D C^%DTC
+ S ^XTMP("BPSOSRX",0)=X_U_DT_U_"ECME SUBMIT DATE FOR A RX AND FILL"
+ S ^XTMP("BPSOSRX",RXI,RXR)=$$NOW
+ D UNLOCK("SUBMIT")
+ D RUNNING()
+ S RETVAL=1
+ Q RETVAL
+ ;
+ ; STATUS - Returns the current status of a RX/Fill
+ ;   For more information, see the top of this routine
+STATUS(RXI,RXR,QUE) ;
+ ;
+ ; Set needed variables
+ N IEN59,SDT,A
+ I '$G(RXI) Q ""
+ I $G(RXR)="" Q ""
  I $G(QUE)="" S QUE=1
+ S IEN59=$$IEN59(RXI,RXR)
+ S SDT=$G(^XTMP("BPSOSRX",RXI,RXR))
  ;
- ;if BPRQIEN then it is called from BPSNCPD1 to display progress to the user. So we need to check queue anyway
- I $G(BPRQIEN)>0 S QUE=1
- ;
- ;default COB = primary
- I +$G(BPCOB)=0 S BPCOB=1
- ;
- ;get IEN of BPS TRANSACTION
- S IEN59=$$IEN59(KEY1,KEY2,BPCOB)
- ;
- ;read zeroth node of the BPS TRANSACTION record
- S BP59ZERO=$G(^BPST(IEN59,0))
- ;
- ;if doesn't have BPS TRANSACTION record AND doesn't have any BPS REQUEST records then
- ;this is an old request OR it is not e-billable - so use the old logic,
- ;which was used before COB patch, so this is for primary claims only.
- I BPCOB=1 I $G(BPRQIEN)="" I BP59ZERO="" I '$D(^BPS(9002313.77,"D",KEY1,KEY2,BPCOB)) Q $$OLDSTAT^BPSOSRX6(KEY1,KEY2,$G(QUE))
- ;
- ;if doesn't have BPS TRANSACTION record (not created yet) AND has BPS REQUEST record(s)
- I BP59ZERO="" Q $$QUESTAT(KEY1,KEY2,BPCOB)
- ;
- ;get transaction type
- S BPTRTYP=$P(BP59ZERO,U,15)
- ;if Transaction type is not defined then this is an OLD request so use the old logic
- ;which was used before COB patch, so this is for primary claims only.
- I BPCOB=1 I $G(BPRQIEN)="" I BPTRTYP="" Q $$OLDSTAT^BPSOSRX6(KEY1,KEY2,$G(QUE))
- ;
- ;get the current BPS REQUEST
- S BP59REQ=$$GETRQST^BPSUTIL2(IEN59)
- I $G(BP59REQ)="" Q $$QUESTAT(KEY1,KEY2,BPCOB)
- ;
- ;get request date/time
- S SDT=$P($G(^BPS(9002313.77,+$G(BP59REQ),6)),U,1) ;REQUEST DATE AND TIME
+ ; ECME record not created
+ I '$D(^BPST(IEN59)) D  Q A
+ . I QUE,SDT S A="IN PROGRESS"_U_SDT_U_$$STATI^BPSOSU(0)_U_-1 Q
+ . I QUE,$D(^BPSECP("BPSOSRX","CLAIM",RXI,RXR)) S A="IN PROGRESS"_U_SDT_U_$$STATI^BPSOSU(0)_U_-1 Q
+ . S A=""
  ;
  ; Loop: Get data, quit if times and status match (no change during gather)
- N A,C,T1,T2,S1,S2
- F  D  I T1=T2,S1=S2 Q
- . S T1=$$LASTUP59^BPSOSRX(IEN59)
- . S S1=$$STATUS59^BPSOSRX(IEN59)
+ N C,T1,T2,S1,S2 F  D  I T1=T2,S1=S2 Q
+ . S T1=$$LASTUP59(RXI,RXR)
+ . S S1=$$STATUS59(RXI,RXR)
  . I S1=99 D  ; completed
- . . S A=$$CATEG^BPSOSUC(IEN59)
- . . S C=$$RESTXT59^BPSOSRX(IEN59)
+ . . S A=$$RESULT59(RXI,RXR)
+ . . S C=$$RESTXT59(RXI,RXR)
  . I S1'=99 D
  . . S A="IN PROGRESS"
- . . S C=$$STATI^BPSOSU($S(S1="":10,1:S1))
- . S T2=$$LASTUP59^BPSOSRX(IEN59)
- . S S2=$$STATUS59^BPSOSRX(IEN59)
+ . . S C=$$STATI^BPSOSU(S1)
+ . S T2=$$LASTUP59(RXI,RXR)
+ . S S2=$$STATUS59(RXI,RXR)
  ;
- ; If the queue parameter is set and the submit date from the queue
- ;   follows the SUBMIT DATE/LAST UPDATE date from BPS TRANSACTION 
- ;   or the request is still on the queue, then change the response
- ;   to IN PROGRESS^Submit Date^WAITING TO START
- S SUBDT=$$SUBMIT59^BPSOSRX(IEN59)
- I SUBDT="" S SUBDT=T1
+ ; If the queue parameter is set and the submit date follows the LAST UPDATE date or the
+ ;   RX/fill is on the queue, then change the response to IN PROGRESS^Submit Date^WAITING TO START 
+ I $G(QUE),SDT>T1!($D(^BPSECP("BPSOSRX","CLAIM",RXI,RXR))) S A="IN PROGRESS",T1=SDT,S1=-1,C=$$STATI^BPSOSU(0)
  ;
- ;if we need to check the queue
- I $G(QUE),$$QUETIME(KEY1,KEY2,BPCOB,1)>SUBDT S A="IN PROGRESS",T1=SDT,S1=-1,C=$$STATI^BPSOSU(0)
- I $G(QUE),$$QUETIME(KEY1,KEY2,BPCOB,0)>SUBDT S A="IN PROGRESS",T1=SDT,S1=-1,C=$$STATI^BPSOSU(0)
- I $G(QUE),$$QUETIME(KEY1,KEY2,BPCOB,2)>SUBDT S A="IN PROGRESS",T1=SDT,S1=-1,C=$$STATI^BPSOSU(0) ;To check IN PROCESS
+ ; When finishing the reversal of a Reversal/Resubmit, display IN PROGRESS
+ I $P($G(^BPST(IEN59,1)),"^",12)=1,S1=99 S A="IN PROGRESS",S1=98,C=$$STATI^BPSOSU(S1)
  ;
  ; Return results
  Q A_U_T1_U_$E(C,1,255-$L(A)-$L(T1)-2)_U_S1
+SHOWQ G SHOWQ^BPSOSR2
  ;
- ;the most current queue status as text
-QUESTAT(KEY1,KEY2,BPCOB) ;
- I $D(^BPS(9002313.77,"D",KEY1,KEY2,BPCOB,2)) Q "IN PROGRESS"_U_$$QUETIME(KEY1,KEY2,BPCOB,2)_U_$$STATI^BPSOSU(-96)_U_-1
- I $D(^BPS(9002313.77,"D",KEY1,KEY2,BPCOB,1)) Q "IN PROGRESS"_U_$$QUETIME(KEY1,KEY2,BPCOB,1)_U_$$STATI^BPSOSU(0)_U_-1
- I $D(^BPS(9002313.77,"D",KEY1,KEY2,BPCOB,0)) Q "IN PROGRESS"_U_$$QUETIME(KEY1,KEY2,BPCOB,0)_U_$$STATI^BPSOSU(-99)_U_-1
- ;if PROCESS FLAG=3,4,5 return null
- Q ""
+ ;    $$EDCLAIM(RXI,RXR,MOREDATA)
+ ;    Invoke the ECME data input screen for this
+ ;    prescription and fill.  Use this if you want the opportunity
+ ;    to edit the claim data - for example, pre-authorization numbers,
+ ;    price overrides, insurance order of billing, etc. 
+ ;    The data entry screen is invoked.  The claim can be submitted
+ ;    or not, at the user's option, by using Screenman <PF1>E or <PF1>Q
  ;
- ;the most current queue status as process flag
-QUECUR(KEY1,KEY2,BPCOB) ;
- I $D(^BPS(9002313.77,"D",KEY1,KEY2,BPCOB,3)) Q 3
- I $D(^BPS(9002313.77,"D",KEY1,KEY2,BPCOB,2)) Q 2
- I $D(^BPS(9002313.77,"D",KEY1,KEY2,BPCOB,1)) Q 1
- I $D(^BPS(9002313.77,"D",KEY1,KEY2,BPCOB,0)) Q 0
- ;if PROCESS FLAG=3,4,5 return null
- Q ""
- ;
- ;the most current queue status as process flag
-QUETIME(KEY1,KEY2,BPCOB,BPROCFL) ;
- N BP77
- S BP77=$O(^BPS(9002313.77,"D",KEY1,KEY2,BPCOB,BPROCFL,0))
- I BP77>0 Q $P($G(^BPS(9002313.77,+BP77,6)),U,1) ;REQUEST DATE AND TIME
- Q ""
- ;
+EDCLAIM(RXI,RXR,MOREDATA)    ;
+ I 1 D IMPOSS^BPSOSUE("P","TI","entry point not available in this release",$P($T(+2),";",3),"EDCLAIM",$T(+0)) Q
+ ; for devel & testing, change above to I 0 and add to code below
+ N RETVAL S RETVAL=1
+ D LOCK
+ D UNLOCK
+ Q RETVAL
+ ;    
 NOW() N %,%H,%I,X D NOW^%DTC Q %
+ ; $$RESULT59 returns result of a finished claim in .59
+ ; Can send RXI and have RXR defaulted
+ ;  PAPER or E PAYABLE or E REJECTED or E CAPTURED or E DUPLICATE
+ ;  or E OTHER (should never happen)
+ ;  or PAPER REVERSAL or E REVERSAL ACCEPTED or E REVERSAL REJECTED
+RESULT59(RXI,RXR) ;EP - BPSOS6D ;  result as defined in CATEG^BPSOSUC
+ N IEN59 I RXI["." S IEN59=RXI
+ E  S:'$D(RXR) RXR=$$RXRDEF(RXI) S IEN59=$$IEN59(RXI,RXR)
+ Q $$CATEG^BPSOSUC(IEN59)
+RESTXT59(RXI,RXR)  ; result text
+ N IEN59 I RXI["." S IEN59=RXI
+ E  S:'$D(RXR) RXR=$$RXRDEF(RXI) S IEN59=$$IEN59(RXI,RXR)
+ Q $P($G(^BPST(IEN59,2)),U,2)
+LASTUP59(RXI,RXR) ;EP - BPSOSR1;  time of last update
+ N IEN59 I RXI["." S IEN59=RXI
+ E  S:'$D(RXR) RXR=$$RXRDEF(RXI) S IEN59=$$IEN59(RXI,RXR)
+ Q $P(^BPST(IEN59,0),U,8)
  ;
- ; RESTXT59 - Return first semi-colon piece of the Result Text (202) field
- ;    from BPS Transaction
-RESTXT59(IEN59) ;
- I '$G(IEN59) Q ""
- Q $P($P($G(^BPST(IEN59,2)),U,2,99),";",1)
+RXRDEF(RXI) ;EP - BPSOSNC
+ Q +$P($G(^PSRX(RXI,1,0)),U,3) ; highest refill #
  ;
- ; LASTUP59 - Return last update date/time from BPS Transactions
-LASTUP59(IEN59) ;
- I '$G(IEN59) Q ""
- Q $P($G(^BPST(IEN59,0)),U,8)
  ;
- ; STATUS59 returns STATUS field from BPS Transaction
- ; Note: 99 means complete
-STATUS59(IEN59) ;
- I '$G(IEN59) Q ""
- Q $P($G(^BPST(IEN59,0)),U,2)
- ;
- ; SUBMIT59 - Return Submit date/time from BPS Transactions (#6) SUBMIT DATE/TIME
-SUBMIT59(IEN59) ;
- I '$G(IEN59) Q ""
- Q $P($G(^BPST(IEN59,0)),U,7)
- ;
- ; Utilities
+ ; Utilties
  ;
  ;  LOCKING:  Just one user of this routine at a time.
- ;  X = "SUBMIT" to interlock the request submission
+ ;  X = "SUBMIT" to interlock the claim submission
  ;  X = "BACKGROUND" to interlock the background job
 LOCK(X,TIMEOUT) ;EP - BPSOSRB
  I $G(TIMEOUT)="" S TIMEOUT=0
- L +^XTMP("BPS-PROC",X):TIMEOUT
- Q $T
- ;
+ L +^BPSECP($T(+0),X):TIMEOUT Q $T
 LOCKNOW(X) ;EP - BPSOSRB
- L +^XTMP("BPS-PROC",X):0
- Q $T
- ;
+ L +^BPSECP($T(+0),X):0 Q $T
 UNLOCK(X) ;EP - BPSOSRB
- L -^XTMP("BPS-PROC",X)
- Q
+ L -^BPSECP($T(+0),X) Q
+LOCK59() L +^BPST:300 Q $T
+UNLOCK59 L -^BPST Q
  ;
-RUNNING() ;
+RUNNING()          ;
  I '$$LOCKNOW("BACKGROUND") Q  ; it is running; don't start another
  D UNLOCK("BACKGROUND") ; it's not running; release our probing lock
  D TASK
  Q
- ;
- ;KEY1 - Either Prescription IEN (#52) or PATIENT IEN (#2)
- ;KEY2 - Either Fill # or Policy Number
- ;       For Policy Number, the value passed in should be 9000 plus
- ;       the policy number
- ;BPCOBIND - COB indicator
-IEN59(KEY1,KEY2,BPCOBIND) ;EP - from BPSOS, BPSOSRB
- I '$G(KEY1) Q ""
- I '$G(KEY2) S KEY2=0 ;If no KEY2, assume RX/Fill and default to Original Fill
- I +$G(BPCOBIND)=0 S BPCOBIND=1 ;default is primary
- I BPCOBIND>3!(BPCOBIND<1) Q ""
- Q KEY1_"."_$TR($J(KEY2,4)," ","0")_+BPCOBIND
- ;
- ;
+IEN59(RXI,RXR) ;EP - from BPSOS,BPSOSNC,BPSOSRB
+ Q RXI_"."_$TR($J(RXR,4)," ","0")_"1"
+ ; 
+ ; $$STATUS59 returns processing status from .59 record
+ ; "" if there's no such claim    note: 99 means complete
+STATUS59(RXI,RXR) ;
+ N IEN59,STAT
+ I RXI["." S IEN59=RXI
+ E  S:'$D(RXR) RXR=$$RXRDEF(RXI) S IEN59=$$IEN59(RXI,RXR)
+ S STAT=$P($G(^BPST(IEN59,0)),U,2)
+ Q STAT
+ ; 
  ; The background job
-TASK N X,Y,%DT
- S X="N",%DT="ST"
- D ^%DT,TASKAT(Y)
- Q
  ;
-TASKAT(ZTDTH) ;
+TASK N X,Y,%DT S X="N",%DT="ST" D ^%DT D TASKAT(Y) Q
+TASKAT(ZTDTH)      ;
  N ZTIO S ZTIO="" ; no device
- N ZTRTN S ZTRTN="BACKGR^BPSOSRB"
- D ^%ZTLOAD
+ N ZTRTN S ZTRTN="BACKGR^BPSOSRB" D ^%ZTLOAD Q
+LASTLOG ; tool for test - find and print most recent log file
+ N X S X=999999999999
+ F  S X=$O(^BPSECP("LOG",X),-1) Q:'X  Q:X#1=.4
+ I 'X W "No log file found",! Q
+ D PRINTLOG^BPSOSL(X)
  Q
- ;
- ;Lock key pair  - So two (or more) requests cannot be processed simultaneously
-LOCKRF(KEY1,KEY2,BPTIMOUT,IEN59,BPSRC) ;EP - BPSOSRB
- N BPRET
- L +^XTMP("BPSOSRX-RX/REF",KEY1,KEY2):+$G(BPTIMOUT)
- S BPRET=$T
- Q BPRET
- ;
- ;UnLock key pair
-UNLCKRF(KEY1,KEY2,IEN59,BPSRC) ;EP - BPSOSRB
- L -^XTMP("BPSOSRX-RX/REF",KEY1,KEY2)
- ;I $G(IEN59)>0 D LOG^BPSOSL(IEN59,$G(BPSRC)_"-Unlock keys: "_KEY1_"/"_KEY2)
- Q
- ;BPSOSRX

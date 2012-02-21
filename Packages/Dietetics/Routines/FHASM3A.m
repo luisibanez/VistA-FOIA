@@ -1,5 +1,5 @@
 FHASM3A ; HISC/REL - Frisancho Standards ;4/5/90  08:09
- ;;5.5;DIETETICS;**8**;Jan 28, 2005;Build 28
+ ;;5.5;DIETETICS;;Jan 28, 2005
  S A=AGE\1 G:A<1 KIL I A<18 S O1=A
  E  S O1=$S(A<25:18,A<30:19,A<35:20,A<40:21,A<45:22,A<50:23,A<55:24,A<60:25,A<65:26,A<70:27,1:28)
  S O2=$S(SEX="F":3,1:1)
@@ -12,8 +12,7 @@ GET S B=$P($T(@M+O2),";;",2),B=$P(B," ",O1)
  S (Z,ZA)=X-B/S S:Z<0 ZA=-Z
  S ZA=$S(ZA<.063:0,ZA<.189:1,ZA<.319:2,ZA<.454:3,ZA<.598:4,ZA<.755:5,ZA<.935:6,ZA<1.15:7,ZA<1.44:8,ZA<1.96:9,1:9.8)*5
  S Z=50+$S(Z'<0:ZA,1:-ZA) Q
-KIL ;before killing variables, set partial nutrition assessment.
- K A,B,M,O1,O2,S,X,Z,ZA Q
+KIL K A,B,M,O1,O2,S,X,Z,ZA Q
 BMI ;;
  ;;17.3 16.2 16 15.7 15.6 15.8 16.0 16.3 16.9 17.7 18.4 18.9 19.5 20.3 20.8 21.9 21.8 23.6 24.9 25.7 25.9 26.2 26.3 26.1 26.2 25.8 25.5 25.3
  ;;2.4 1.3 1.4 1.3 1.5 1.9 1.8 2.2 2.4 2.8 3.6 3.5 3.5 3.3 3.1 3.3 3.5 3.8 4.3 4.2 4 4 4.2 4.2 4.3 3.8 4 4

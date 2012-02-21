@@ -1,5 +1,5 @@
-DGRRLU0 ;alb/GAH - DG Replacement and Rehosting RPC for VADPT ;10/10/05  09:53
- ;;5.3;Registration;**538,725**;Aug 13, 1993;Build 12
+DGRRLU0 ;alb/aas - DG Replacement and Rehosting RPC for VADPT ;10/27/05  09:53
+ ;;5.3;Registration;**538**;Aug 13, 1993
  ;
  SET X="You Can't Enter DGRRLU0 at top of routine!"
  QUIT
@@ -112,7 +112,7 @@ CLINPT2(CLIN,BEGIN,END) ; -- Use scheduling rehosting API from patches SD*5.3*25
  DO GETPLIST^SDAMA202(+CLIN,"1;3;4","R",BEGIN,END,.APPTS)
  ;
  ; -- check number of appointments
- I APPTS<1 K ^TMP($J,"SDAMA202","GETPLIST") Q
+ Q:APPTS<1
  ;
  ; -- check for an error, may need to pass message up.
  I $D(^TMP($J,"SDAMA202","GETPTLIST","ERROR")) QUIT
@@ -123,7 +123,6 @@ CLINPT2(CLIN,BEGIN,END) ; -- Use scheduling rehosting API from patches SD*5.3*25
  .  Q:'$$FILTCHK(+X,SEARCH,VALUE)  ;check if meets search criteria
  .  S APPTDT=$G(^TMP($J,"SDAMA202","GETPLIST",I,1))
  .  S ^TMP("DGPTLKUP",$J,$P(X,"^",2),+X,+APPTDT)=""
- K ^TMP($J,"SDAMA202","GETPLIST")
  QUIT
  ;
 SPECPTS(SPEC) ;Returns a list of patients associated with a specialty

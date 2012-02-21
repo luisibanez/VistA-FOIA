@@ -1,5 +1,5 @@
 IBECUSO ;RLM/DVAMC - TRICARE PHARMACY BILLING OUTPUTS ; 21-AUG-96
- ;;2.0;INTEGRATED BILLING;**52,240,309,347**;21-MAR-94;Build 24
+ ;;2.0;INTEGRATED BILLING;**52,240,309**;21-MAR-94
  ;
 REJ ; Generate the Pharmacy Billing Reject report.
  ;
@@ -24,7 +24,7 @@ REJDQ ; Tasked entry point.
  .S IBR0=$G(^IBA(351.52,IBR,0)),IBR1=$G(^(1))
  .Q:'IBR0
  .;
- .S DFN=$$FILE^IBRXUTL(+IBR0,2),IBRXD=$$RXZERO^IBRXUTL(DFN,+IBR0)
+ .S IBRXD=$G(^PSRX(+IBR0,0)),DFN=$P(IBRXD,"^",2)
  .Q:IBRXD=""
  .S IBFDT=$$FDT($P(IBR0,"^"))
  .;
@@ -96,11 +96,12 @@ TRNDQ ; Tasked entry point.
  S IBC=0 F  S IBC=$O(^IBA(351.5,IBC)) Q:'IBC  D  Q:IBQ
  .S IBCD=$G(^IBA(351.5,IBC,0)),IBCD2=$G(^(2)),IBCD5=$G(^(5)),IBCD6=$G(^(6))
  .Q:'IBCD
- .S IBD=$$FILE^IBRXUTL(+IBCD,101) I IBD="" S IBD=$$FILE^IBRXUTL(+IBCD,22)
+ .;
+ .S IBD=$P($G(^PSRX(+IBCD,3)),"^") I IBD="" S IBD=$P($G(^(2)),"^",2)
  .I IBD<IBBEG Q
  .I IBD>IBEND Q
  .;
- .S IBDPT(0)=$G(^DPT($P(IBCD,"^",2),0)),IBRXD=$$RXZERO^IBRXUTL($P(IBCD,"^",2),+IBCD)
+ .S IBDPT(0)=$G(^DPT($P(IBCD,"^",2),0)),IBRXD=$G(^PSRX(+IBCD,0))
  .S IBFDT=$$FDT($P(IBCD,"^"))
  .;
  .I $Y>(IOSL-5) D PAUSE Q:IBQ  D TRNHDR
@@ -161,11 +162,10 @@ FDT(X) ; Find the Fill Date for the prescription.
  ;  Input:  X  --  1;2   where 1 :> pointer to the rx in file #52, and
  ;                             2 :> pointer to the re-fill in #52.1, or
  ;                                  0 if this is the original fill.
- N IBRXN,Y,DFN S Y=""
+ N Y S Y=""
  I $G(X)="" G FDTQ
- S IBRXN=+X
- I $P(X,";",2) S Y=$$SUBFILE^IBRXUTL(IBRXN,$P(X,";",2),52,.01) G FDTQ
- S DFN=$$FILE^IBRXUTL(IBRXN,2),Z2=$$RXSEC^IBRXUTL(DFN,IBRXN),Z3=$$RX3^IBRXUTL(DFN,IBRXN)
+ I $P(X,";",2) S Y=$P($G(^PSRX(+X,1,$P(X,";",2),0)),"^") G FDTQ
+ S Z2=$G(^PSRX(+X,2)),Z3=$G(^(3))
  S Y=$S($P(Z2,"^",2):$P(Z2,"^",2),+Z3:+Z3,$P(Z2,"^",5):$P(Z2,"^",5),1:"")
 FDTQ Q Y
  ;

@@ -1,5 +1,5 @@
 SDPMUT2 ;BPFO/JRC - Performance Monitors Utilities ; 11/3/03 3:24pm
- ;;5.3;SCHEDULING;**292,322,474**;AUGUST 13, 1993;Build 4
+ ;;5.3;SCHEDULING;**292,322**;AUGUST 13, 1993
  ;
 SCREEN(PTRENC,SCRNARR) ;Screen Outpatient Encounter
  ;Input  : PTRENC - Outpatient Encounter IEN
@@ -20,11 +20,10 @@ SCREEN(PTRENC,SCRNARR) ;Screen Outpatient Encounter
  S CLINIC=$P($G(NODE),U,4)
  I 'CLINIC Q 1
  I $P($G(^SC(CLINIC,0)),U,17)="Y" Q 1
- ;Appointment type must be regular or service connected
- ;service connected added - SD*5.3*474
+ ;Appointment type must be regular
  I $P($G(NODE),U,10) S TYPE=$P($G(^SD(409.1,$P($G(NODE),U,10),0)),U,1)
  I '$D(TYPE) Q 1
- I TYPE'["REGULAR" I TYPE'["SERVICE CONNECTED" Q 1
+ I TYPE'["REGULAR" Q 1
  ;Get primary & secondary stop codes
  S PCODE=+$P(NODE,U,3)
  S CHLD=+$O(^SCE("APAR",PTRENC,0))

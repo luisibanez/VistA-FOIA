@@ -1,6 +1,5 @@
 IBCEFG1 ;ALB/TMP - OUTPUT FORMATTER DATA DEFINITION UTILITIES ;18-JAN-96
- ;;2.0;INTEGRATED BILLING;**52,51,137,181,197,232,288,349,371,377**;21-MAR-94;Build 23
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,51,137,181,197,232,288**;21-MAR-94
  ;
 EDIBILL(IBXFORM,IBXDA,IBINS,IBTYP) ; Find element associated with form fld
  ; IBXFORM = (REQUIRED) actual form being extracted (in file 353)
@@ -85,8 +84,8 @@ NAMEQ Q IBNM
 DOLLAR(AMT) ; Format amount in AMT so it is numeric including cents, without
  ; the decimal and commas.
  N DOLR,CENT
- I AMT'="" S AMT=$TR(AMT,","),DOLR=$P(AMT,"."),CENT=$E($P(AMT,".",2)_"00",1,2),AMT=DOLR_CENT
- Q AMT
+ I AMT'="" S DOLR=$P(AMT,"."),CENT=$E($P(AMT,".",2)_"00",1,2),AMT=DOLR_CENT
+ Q $TR(AMT,",")
  ;
 STATE(CODE) ;Return state code from state pointer
  Q $P($G(^DIC(5,+CODE,0)),U,2)
@@ -94,6 +93,13 @@ STATE(CODE) ;Return state code from state pointer
 SEX(CODE) ;Return the X12 code for sex
  ; CODE = DHCP code for sex
  Q $S(CODE="":"U","MF"[$E(CODE):$E(CODE),1:"U")
+ ;
+RELATION(CODE) ;Return the X12 code for relationship
+ ; CODE = DHCP code for relationship
+ N X12
+ S X12=""
+ S:CODE'="" X12=$P($S(CODE="01":"18^SELF",CODE="02":"01^SPOUSE",CODE="03":"19^NATURAL CHILD",CODE="08":"20^EMPLOYEE",CODE="32":"32^MOTHER",CODE="33":"33^FATHER",CODE="11":"39^ORGAN DONOR",CODE="15":"41^INJURED PLAINTIFF",1:""),U)
+ Q X12
  ;
 EMPLST(CODE) ;Return the X12 code for employment status
  ; CODE = DHCP code for employment status
@@ -120,7 +126,7 @@ FIXLEN(DATA,LEN) ; Create a fixed length field from data DATA length LEN
  Q $E(DATA_$J("",LEN),1,LEN)
  ;
 RCDT(IBXSAVE,IBXDATA,IBDT) ; Format date for multiple revenue code transmission)
- ;IBXSAVE = array containing the extracted service line data for the UB format bill
+ ;IBXSAVE = array containing the extracted service line data for the UB92 format bill
  ;IBXDATA = array returned with service line dates formatted in YYYYMMDD format
  ;IBDT = the default date for the revenue codes on the bill
  N Q,W

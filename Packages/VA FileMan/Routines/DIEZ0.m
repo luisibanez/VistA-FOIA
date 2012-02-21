@@ -1,6 +1,6 @@
-DIEZ0 ;SFISC/GFT-COMPILE INPUT TEMPLATE ;13SEP2004
- ;;22.0;VA FileMan;**159**;Mar 30, 1999;Build 8
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIEZ0 ;SFISC/GFT-COMPILE INPUT TEMPLATE ;12:47 PM  24 Apr 1997
+ ;;22.0;VA FileMan;;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  D L
 DL S DQ=0,DK=0,DQFF=0
 MR S DK=DK+1,DH=$P(DR,";",DK),DI=$P(DH,":",1),(DIEZP,DIEZDUP,DIEZR)="" G:'DI K:DI=0,PB S DPR=$P(DH,"//",2,99),DM=+DI S:DPR]"" DI=$P(DI,"//",1),DH=""
@@ -41,16 +41,16 @@ X D PR,XREF^DIEZ2:DQFF S %=$P(Y,U,5,99),X=$F(%,"%DT=""") I X,DPR?1"/".E S Y=$F(%
  S X=X_% D L I DV["F" S X=" I $D(X),X'?.ANP K X" D L
  S X=" Q" D L S X=" ;" D L G NX
  ;
-PB I DH="" S:'$D(DOV(DL)) DOV(DL)=0 S DOV(DL)=$O(^DIE(DIEZ,"DR",DIER,DP,DOV(DL))) S:DOV(DL)="" DOV(DL)=-1 G UP:DOV(DL)<0 S DR=^(DOV(DL)),DK=0 G MR
+PB I DH="" S:'$D(DOV(DL)) DOV(DL)=0 S DOV(DL)=$O(^DIE(DIEZ,"DR",DL,DP,DOV(DL))) S:DOV(DL)="" DOV(DL)=-1 G UP:DOV(DL)<0 S DR=^(DOV(DL)),DK=0 G MR
  S DQ=DQ+1 I DH?1"@".N S X=DQ_" S DQ="_(DQ+1)_" ;"_DH,^UTILITY($J,"AB",DIEZAB,DH)=DQ_U_DNM_DRN G M
  S X=DQ_" D:$D(DG)>9 F^DIE17,DE S Y=U,DQ="_DQ_" " I "Q"[DH S X=X_"G A" G M
- I DH?1"^".E S F=0,X=X_$P(DH,U,5,999),Q=$P(DH,U,1,3) D L,DRN,QFF^DIEZ2,DIERN^DIEZ2 S X=" S DGO=""^"_DNM_%_""",DC="_Q_" G DIEZ^DIE0",DRN(%)=$P(DH,U,2)_U_DIERN_U_$P(DH,U,3)_U_U_DQ_U_DRN D L S X="R"_DQ_" D DE G A" D L S X=" ;" G M
+ I DH?1"^".E S F=0,X=X_$P(DH,U,5,999),Q=$P(DH,U,1,3) D L,DRN,QFF^DIEZ2 S X=" S DGO=""^"_DNM_%_""",DC="_Q_" G DIEZ^DIE0",DRN(%)=$P(DH,U,2)_U_(DL+1)_U_$P(DH,U,3)_U_U_DQ_U_DRN D L S X="R"_DQ_" D DE G A" D L S X=" ;" G M
  S X=X_"D X"_DQ_" D:$D(DIEFIRE)#2 FIREREC^DIE17 G A:$D(Y)[0,A:Y=U S X=Y,DIC(0)=""F"",DW=DQ G OUT^DIE17" D L S X="X"_DQ_" "_DH D L S X=" Q"
 M D L G MR
  ;
 UP S DQ=DQ+1,X=DQ_" G "_(DL>1)_"^DIE17" D L,^DIEZ1 G:DIEZQ K^DIEZ2 S Y=0
 LV S Y=$O(DRN(Y)) S:Y="" Y=-1 I Y<0 G ^DIEZ2
- S X=DRN(Y) G LV:X=U S DRN=Y,DP=+X,DIER=$P(X,U,2),DL=DIER\1,DIE=U_$P(X,U,3),DIEZL=+$P(X,U,4),DIEZAB=$P(X,U,5)_U_DNM_$P(X,U,6),DR=$S($D(^DIE(DIEZ,"DR",DIER,DP)):^(DP),1:"0:9999999"),DRN(Y)=U D N S:+DR=.01!(DR?1"0:".E) ^(3)=^(3)_"+D G B" G DL
+ S X=DRN(Y) G LV:X=U S DRN=Y,DP=+X,DL=$P(X,U,2),DIE=U_$P(X,U,3),DIEZL=+$P(X,U,4),DIEZAB=$P(X,U,5)_U_DNM_$P(X,U,6),DR=$S($D(^DIE(DIEZ,"DR",DL,DP)):^(DP),1:"0:9999999"),DRN(Y)=U D N S:+DR=.01!(DR?1"0:".E) ^(3)=^(3)_"+D G B" G DL
  ;
 PR ;
  D DU^DIEZ2:DU]"" S X=" G RE" I DW="0;1",DL>1,DQ=1 S X=X_":'D S DQ=2 G 2"

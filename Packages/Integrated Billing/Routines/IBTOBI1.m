@@ -1,6 +1,6 @@
 IBTOBI1 ;ALB/AAS - CLAIMS TRACKING BILLING INFORMATION PRINT ;27-OCT-93
- ;;2.0;INTEGRATED BILLING;**276,377**;21-MAR-94;Build 23
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**276**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 % ;
  F IBTAG="INS","BI","SC","CLIN^IBTOBI4","IR^IBTOBI2","HR^IBTOBI3" D @IBTAG Q:IBQUIT
@@ -45,32 +45,28 @@ BI ; -- print billing information
  Q:$D(IBCTHDR)
  I ($Y+8)>IOSL D HDR^IBTOBI Q:IBQUIT
 BI1 W !,"  Billing Information "
- N IBDGCR,IBDGCRU1,IBDGCRU,IBAMNT,IBD,I,IBIFN,IBLN,IBECME
+ N IBDGCR,IBDGCRU1,IBDGCRU,IBAMNT,IBD,I,IBIFN,IBADD,IBECME
  S IBIFN=+$P(IBTRND,"^",11)
  S IBDGCR=$G(^DGCR(399,IBIFN,0)),IBDGCRU1=$G(^("U1")),IBDGCRU=$G(^("U"))
  S IBECME=$P($P($G(^DGCR(399,IBIFN,"M1")),U,8),";")
  S IBAMNT=$$BILLD^IBTRED1(IBTRN)
- S IBLN=0
- S IBLN=IBLN+1,IBD(IBLN,1)="  Initial Bill: "_$P(IBDGCR,U,1)
+ S IBADD=0
+ S IBD(1,1)="  Initial Bill: "_$P(IBDGCR,"^")
  I IBECME D
- . S IBD(IBLN,1)=IBD(IBLN,1)_"e"
- . S IBLN=IBLN+1,IBD(IBLN,1)="   ECME Number: "_IBECME
- S IBLN=IBLN+1,IBD(IBLN,1)="   Bill Status: "_$E($$EXPAND^IBTRE(399,.13,$P(IBDGCR,U,13)),1,14)
- S IBLN=IBLN+1,IBD(IBLN,1)=" Total Charges: $ "_$J($P(IBAMNT,"^"),8)
- S IBLN=IBLN+1,IBD(IBLN,1)="   Amount Paid: $ "_$J($P(IBAMNT,"^",2),8)
+ . S IBADD=1
+ . S IBD(1,1)=IBD(1,1)_"e"
+ . S IBD(2,1)="   ECME Number: "_IBECME
+ S IBD(2+IBADD,1)="   Bill Status: "_$E($$EXPAND^IBTRE(399,.13,$P(IBDGCR,"^",13)),1,14)
+ S IBD(3+IBADD,1)=" Total Charges: $ "_$J($P(IBAMNT,"^"),8)
+ S IBD(4+IBADD,1)="   Amount Paid: $ "_$J($P(IBAMNT,"^",2),8)
  ;
- I $P(IBTRND,U,19) D
- . S IBLN=IBLN+1,IBD(IBLN,1)="Reason Not Billable: "_$$EXPAND^IBTRE(356,.19,$P(IBTRND,U,19))
- . S IBLN=IBLN+1,IBD(IBLN,1)="Additional Comment: "_$P(IBTRND1,U,8)
- . Q
- ;
- I '$P(IBTRND,U,19),$L($P(IBTRND1,U,8))>0 S IBLN=IBLN+1,IBD(IBLN,1)="Additional Comment: "_$P(IBTRND1,U,8)
+ I $P(IBTRND,"^",19) S IBD(5,1)="Reason Not Billable: "_$$EXPAND^IBTRE(356,.19,$P(IBTRND,"^",19)),IBD(6,1)="Additional Comment: "_$P(IBTRND1,"^",8)
  ;
  S IBD(1,2)="Estimated Recv (Pri): $ "_$J($P(IBTRND,"^",21),8)
  S IBD(2,2)="Estimated Recv (Sec): $ "_$J($P(IBTRND,"^",22),8)
  S IBD(3,2)="Estimated Recv (ter): $ "_$J($P(IBTRND,"^",23),8)
  S IBD(4,2)="  Means Test Charges: $ "_$J($P(IBTRND,"^",28),8)
- ;
+ I $L($P($G(^IBT(356,IBTRN,1)),U,8))>0 S IBD(5,1)="Additional Comment: "_$P($G(^IBT(356,IBTRN,1)),U,8)
  S I=0 F  S I=$O(IBD(I)) Q:'I  W !,$G(IBD(I,1)),?39,$E($G(IBD(I,2)),1,36)
  W:'IBQUIT !,?4,$TR($J(" ",IOM-8)," ","-")
  Q

@@ -1,13 +1,11 @@
-PRCPRCTP ;WISC/RFJ/DST-cost trend analysis (primary)                    ;26 May 93
- ;;5.1;IFCAP;**98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPRCTP ;WISC/RFJ-cost trend analysis (primary)                    ;26 May 93
+ ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
 PRIMARY ;  cost trend analysis for primary
- ;  There is no Cost Trend Analysis for secondary
- N %,%H,%I,DATEEND,DATESTRT,PRCPALLI,PRCPSUMM,X,X1,X2,Y
- N ODI  ; On-Demand Item flag
+ N %,%H,%I,DATEEND,DATESTRT,PRCPALLI,PRCPSUMM,X,Y
  K X S X(1)="The Cost Trend Analysis Report will compute the average item cost for the specified period based on the monthly opening balance last receipt cost."
  S X(2)="It will compare the computed average item cost with the current monthly opening balance average cost and display the percent increase or decrease change."
  S X(3)="The report will sort Primary inventory items by description."
@@ -43,12 +41,9 @@ DQ ;  queue starts here
  .   I $G(ZTQUEUED),$$S^%ZTLOAD S PRCPFLAG=1 W !?10,"<<< TASKMANAGER JOB TERMINATED BY USER >>>" Q
  .   I $Y>(IOSL-6) D:SCREEN P^PRCPUREP Q:$D(PRCPFLAG)  D H
  .   S ITEMDATA=$G(^PRCP(445,PRCP("I"),1,ITEMDA,0))
- .   ; On-Demand Item flag check
- .   S ODI=$$ODITEM^PRCPUX2(PRCP("I"),ITEMDA)
- .   ;
- .   W !!,$E($$DESCR^PRCPUX1(PRCP("I"),ITEMDA),1,33),?35,$J(ITEMDA,6),?42,$S(ODI="Y":"D",1:""),?43,$J($$UNIT^PRCPUX1(PRCP("I"),ITEMDA,"/"),8)
+ .   W !!,$E($$DESCR^PRCPUX1(PRCP("I"),ITEMDA),1,33),?34,$J(ITEMDA,6),$J($$UNIT^PRCPUX1(PRCP("I"),ITEMDA,"/"),10)
  .   S D=$G(^TMP($J,"PRCPRCTP",DESCR,ITEMDA,"TOTAL"))
- .   W $J($P(D,"^"),9,2),$J($P(D,"^",2),10,2),$J($P(D,"^",3),10,2)
+ .   W $J($P(D,"^"),10,2),$J($P(D,"^",2),10,2),$J($P(D,"^",3),10,2)
  .   I $G(PRCPSUMM) Q
  .   S DATE=0 F  D  Q:'DATE!($G(PRCPFLAG))
  .   .   S (DATA,HDR)=""
@@ -64,5 +59,5 @@ Q D ^%ZISC K ^TMP($J,"PRCPRCTP"),^TMP($J,"PRCPURS4")
 H S %=NOW_"  PAGE "_PAGE,PAGE=PAGE+1 I PAGE'=2!(SCREEN) W @IOF
  W $C(13),"COST TREND ANALYSIS FOR: ",$E(PRCP("IN"),1,20),?(80-$L(%)),%
  W !?5,"CUM AVG CALCULATED FROM DATE RANGE: ",DATESDT,"  TO  ",DATEEDT
- S %="",$P(%,"-",81)="" W !,"DESCRIPTION",?38,"IM",?42,"OD",$J("UNIT/IS",9),$J("CUM AVG",9),$J(CURDT,9),$J("%CHANGE",9),!,%
+ S %="",$P(%,"-",81)="" W !,"DESCRIPTION",?38,"MI",$J("UNIT/IS",10),$J("CUM AVG",10),$J(CURDT,10),$J("%CHANGE",10),!,%
  Q

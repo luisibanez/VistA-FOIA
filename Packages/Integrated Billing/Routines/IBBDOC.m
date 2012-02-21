@@ -1,6 +1,6 @@
 IBBDOC ;OAK/ELZ - APIS FOR OTHER PACKAGES FOR PFSS - DOCUMENT ;5-AUG-2004
- ;;2.0;INTEGRATED BILLING;**267,260,286,361,384,404**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**267,260,286**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; Documents the calls to the routine IBBAPI.
  ;
@@ -19,12 +19,9 @@ INSUR ;(DFN,IBDT,IBSTAT,IBR,IBFLDS)
  ;          P = Prescription coverage required (Default is all coverages)
  ;          O = Outpatient coverage required (Default is all coverages)
  ;          I = Inpatient coverage only (Default is all coverages)
- ;          E = e-Pharmacy billable coverage required, i.e. should have 
- ;            Pharmacy coverage and be able to process e-claims (Default 
- ;            is all coverages)
  ;
  ;   IBR    = Array to return insurance information - passed by reference
- ;   IBFLDS = List of fields to return (1-24) in a comma separated list or "*" for all
+ ;   IBFLDS = Lists of fields to return (1-19) in a comma separated list
  ;
  ; --Output:
  ;   -1     = error occurred (error message passed back in
@@ -34,7 +31,7 @@ INSUR ;(DFN,IBDT,IBSTAT,IBR,IBFLDS)
  ;    1     = Insurance found
  ;
  ;
-CIDC  ; (DFN)
+CIDC ; (DFN)
  ; Input:    DFN for the patient in question.
  ; Output:   1 = Ask CIDC questions for the specified patient
  ;           0 = Don't ask CIDC questions for the specified patient
@@ -184,7 +181,7 @@ CHARGE ; (IBBDFN,IBBARFN,IBBCTYPE,IBBUCID,IBBFT1,IBBPR1,IBBDG1,IBBZCL,IBBRXE,IBB
  ;   IBBPR1(16)   - <modifier>;<modifier>;<modifier>;...;
  ;                  each <modifier> is an IEN to file #81.3
  ; IBBDG1   = array for DG1 segment data
- ;   IBBDG1(n,3) - Diagnosis; IEN to file #80
+ ;   IBBDG1(n,3) - DIagnosis; IEN to file #80
  ;   IBBDG1(n,6) - Diagnosis Type; (A=Admitting;W=Working;
  ;                                  D=Discharge;F=Final)
  ; IBBZCL   = array for ZCL segment data

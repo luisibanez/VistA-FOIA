@@ -1,5 +1,5 @@
 PXCEC800 ;ISL/dee,ISA/KWP - Used in editing the 800 node, Service Connected conditions ;12/22/04 1:38pm
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**124,174,168**;Aug 12, 1996;Build 14
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**124,174**;Aug 12, 1996
  ;; ;
  Q
  ;
@@ -12,7 +12,7 @@ GET800 ;Used by the Service Connected Conditions
  . S PXDFN=$P(^AUPNVSIT(PXCEVIEN,0),"^",5)
  . S PXLOC=$P(^AUPNVSIT(PXCEVIEN,0),"^",22)
  . D CLASS^PXBAPI21("",PXDFN,PXAPTDT,PXLOC,"")
- F PXCEINDX=1:1:8 I $G(PXBDATA("ERR",PXCEINDX))=4 S PXOUT=PXBDATA("ERR",PXCEINDX)
+ F PXCEINDX=1:1:7 I $G(PXBDATA("ERR",PXCEINDX))=4 S PXOUT=PXBDATA("ERR",PXCEINDX)
  I $D(PXOUT) S PXCEEND=1 Q  ;for visit and required fields
  S $P(PXCEAFTR(800),"^",1)=$P($G(PXBDATA(3)),"^",2)
  S $P(PXCEAFTR(800),"^",2)=$P($G(PXBDATA(1)),"^",2) S:$P(PXCEAFTR(800),"^",2)="" $P(PXCEAFTR(800),"^",2)="@"
@@ -21,6 +21,5 @@ GET800 ;Used by the Service Connected Conditions
  S $P(PXCEAFTR(800),"^",5)=$P($G(PXBDATA(5)),"^",2)
  S $P(PXCEAFTR(800),"^",6)=$P($G(PXBDATA(6)),"^",2)
  S $P(PXCEAFTR(800),"^",7)=$P($G(PXBDATA(7)),"^",2)
- S $P(PXCEAFTR(800),"^",8)=$P($G(PXBDATA(8)),"^",2)
  Q
  ;

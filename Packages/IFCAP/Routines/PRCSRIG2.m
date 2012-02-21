@@ -1,5 +1,5 @@
 PRCSRIG2 ;SF-ISC/LJP/KMB/BMM-GENERATE REQUESTS FROM REPETITIVE ITEM LIST FILE (CON'T) ; 3/25/05 3:05pm
-V ;;5.1;IFCAP;**13,81,101**;Oct 20, 2000
+V ;;5.1;IFCAP;**13,81**;Oct 20, 2000
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;PRCSRI is the ordered item from the RIL.  PX(3) is
  ;the ordered item from the Item Master File. PRCSV1 is
@@ -15,19 +15,12 @@ V ;;5.1;IFCAP;**13,81,101**;Oct 20, 2000
  ;3/9/05 BMM per PRC*5.1*81, added sub UPDAUD to update the DM Audit
  ;file when a 2237 is created.
  ;
-ITEMG N STOP,PRCVDN,PRCVDTN S (PRCSRI,PRCSCS,STOP)="",(PRCSIT(1),K,BFLAG)=0
+ITEMG N STOP,PRCVDN,PRCVDTN S (PRCSRI,PRCSCS,STOP)="",(PRCSIT(1),K)=0
  S (PRCVDN,PRCVDTN)=""
- F PRCSRIM=0:1 S PRCSRI=$O(^TMP($J,410.3,PRCSRID0,1,"AC",PRCSV1,PRCSRI)) Q:PRCSRI=""  S PRCSIT=PRCSIT+1,PRCSIT(1)=PRCSIT(1)+1 D ITEMG1 D:STOP'=1 ITEMG3 Q:BFLAG  S STOP=""
- D:'BFLAG
- . D:$D(DA) ITEMG2 I $D(PRCSL),PRCSL L
- . D:IOSL-$Y<2 HOLD,HDRG W !!,"  Finished building request.",!,"This request contains ",PRCSIT(1)_$S(PRCSIT(1)=1:" item.",1:" items."),"  The total cost for this request is $",$J(PRCSCS,0,2),! S L="",$P(L,"-",IOM)="-" W L S L=""
- . S PRCSTC=PRCSTC+PRCSCS Q
- D:BFLAG
- . I (PRCSIT>0)  D
- . . S PRCSIT=PRCSIT-1
- . I (PRCSCT>0)  D
- . . S PRCSCT=PRCSCT-1
- Q
+ F PRCSRIM=0:1 S PRCSRI=$O(^TMP($J,410.3,PRCSRID0,1,"AC",PRCSV1,PRCSRI)) Q:PRCSRI=""  S PRCSIT=PRCSIT+1,PRCSIT(1)=PRCSIT(1)+1 D ITEMG1 D:STOP'=1 ITEMG3 S STOP=""
+ D:$D(DA) ITEMG2 I $D(PRCSL),PRCSL L
+ D:IOSL-$Y<2 HOLD,HDRG W !!,"  Finished building request.",!,"This request contains ",PRCSIT(1)_$S(PRCSIT(1)=1:" item.",1:" items."),"  The total cost for this request is $",$J(PRCSCS,0,2),! S L="",$P(L,"-",IOM)="-" W L S L=""
+ S PRCSTC=PRCSTC+PRCSCS Q
  ;
 ITEMG1 S PX=^PRCS(410.3,PRCSRID0,1,PRCSRI,0),PX(3)=$P(PX,"^"),PX(1)=^PRC(441,PX(3),0),X2=$P(PX,"^",5),PX(2)=^PRC(440,X2,0),PRCVDN=$P(PX,"^",7),PRCVDTN=$P(PX,"^",8)
  ; If a discrepancy is found, set STOP=1, skip item
@@ -35,8 +28,7 @@ ITEMG1 S PX=^PRCS(410.3,PRCSRID0,1,PRCSRI,0),PX(3)=$P(PX,"^"),PX(1)=^PRC(441,PX(
  I '$D(^PRC(441,PX(3),2,X2,0)) D:IOSL-$Y<2 HOLD,HDRG W !,$C(7),"WARNING!!! Item # ",PX(3)," is not available from ",$P(PRCSV1,";"),"  (",$P(PRCSV1,";",2),")",!,"This item cannot be processed.",! S PRCSIT=PRCSIT-1,PRCSIT(1)=PRCSIT(1)-1 S STOP=1
  Q
  ;
-ITEMG3 I '$D(Z1)!'$D(Z2)  D DVERR Q
- I 'K S Z=Z1,X=Z2 D EN1^PRCSUT3 G:'X EX S X1=X D EN2^PRCSUT3 G:'$D(X1) EX L +^PRCS(410,DA):15 G:$T=0 EX
+ITEMG3 I 'K S Z=Z1,X=Z2 D EN1^PRCSUT3 G:'X EX S X1=X D EN2^PRCSUT3 G:'$D(X1) EX L +^PRCS(410,DA):15 G:$T=0 EX
  D:IOSL-$Y<7 HOLD,HDRG
  I 'K W !,"A request with Transaction Number ",$P(Y(0),"^")," has been generated.",!!,"The vendor for this request is ",$P(PRCSV1,";"),"  (",$P(PRCSV1,";",2),")",!,"Now entering items for this request."
  ;PRC*5.1*81 update audit file for 2237 creation
@@ -132,21 +124,4 @@ UPDAUD(PRCV2) ;per PRC*5.1*81, update DM Audit file (#414.02) when 2237 is creat
  . . S ^TMP($J,"PRCSRIG2",4,0)="Error text: "_$G(^TMP("DIERR",$J,1,"TEXT",1))
  . . D DMERXMB^PRCVLIC(PRCVTMP,PRCVST,PRCVFCP)
  Q
-DVERR D BLNKON
- W !,"There is an error with the default device defined in file 411.",!,"Please contact IRM before proceeding.",!
- D BLNKOFF
- S BFLAG=1
- Q
  ;
-BLNKON ;if terminal-type exists turn-on blink
- D:$D(IOST(0))
- . S X="IOBON"
- . D ENDR^%ZISS
- . W IOBON
- Q
-BLNKOFF ;if terminal-type exists turn-off blink
- D:$D(IOST(0))
- . S X="IOBOFF"
- . D ENDR^%ZISS
- . W IOBOFF
- Q

@@ -1,5 +1,5 @@
 ORWRP ; ALB/MJK,dcm Report Calls ; 12/05/02 11:03
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**1,10,85,109,132,160,194,227,215,262,243,280**;Dec 17, 1997;Build 85
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**1,10,85,109,132,160,194,227,215**;Dec 17, 1997
  ;
 LABLIST(LST) ; -- report list for labs tab
  ;  RPC: ORWRP LAB REPORT LIST
@@ -47,14 +47,11 @@ GETRPTS(ROOT,EOF) ; -- get report list
  D SETITEM(.ROOT,"$$END")
  Q
 GETHS(ROOT,EOF) ; --get health summary types
- N C,I,IFN,ORHSPARM,ORHSROOT,ORERR,X,T
+ N C,I,ORHSPARM,ORERR
  K ^TMP("ORHSPARM",$J)
  S ORHSROOT="^TMP(""ORHSPARM"",$J)"
  I $$GET^XPAR("ALL","ORWRP HEALTH SUMMARY LIST ALL",1) S I="",C=0 D
- . F  S I=$O(^GMT(142,"B",I)) Q:I=""  S IFN=$O(^(I,0)) Q:'IFN  D
- .. S X=$G(^GMT(142,IFN,0)) Q:'$L(X)
- .. S T=$G(^GMT(142,IFN,"T")),C=C+1,@ORHSROOT@(C)=IFN_"^"_$S($L(T):T,1:$P(X,"^"))_"^^^^^1"
- .. I I="GMTS HS ADHOC OPTION" S @ORHSROOT@(C)="0^GMTS Adhoc Report"
+ . F  S I=$O(^GMT(142,"B",I)) Q:I=""  S C=C+1,@ORHSROOT@(C)=$O(^(I,0))_"^"_I_"^^^^^1" I I="GMTS HS ADHOC OPTION" S @ORHSROOT@(C)="0^GMTS Adhoc Report"
  I '$$GET^XPAR("ALL","ORWRP HEALTH SUMMARY LIST ALL",1) D
  . D:$L($T(GETLIST^GMTSXAL)) GETLIST^GMTSXAL($NA(@ORHSROOT),$G(DUZ),1,.ORERR)
  . Q:$G(ORERR)
@@ -72,12 +69,11 @@ DTLIST ; -- list of date ranges
  ;<number of days>^ <display text>
  ;;S^Date Range...
  ;;0^Today
- ;;7^One Week
- ;;30^One Month
- ;;180^Six Months
- ;;365^One Year
- ;;732^Two Year
- ;;50000^All Results
+ ;;7^One Week Back
+ ;;14^Two Weeks Back
+ ;;30^One Month Back
+ ;;180^Six Months Back
+ ;;365^One Year Back
  ;;$$END
  ;
 SETITEM(ROOT,X) ; -- set item in list
@@ -85,38 +81,33 @@ SETITEM(ROOT,X) ; -- set item in list
  Q
 RPT(ROOT,DFN,RPTID,HSTYPE,DTRANGE,EXAMID,ALPHA,OMEGA) ; -- return report text
  ;ROOT=Output in ^TMP("ORDATA",$J)
- ;DFN=Patient DFN ; ICN for remote sites
- ;RPTID=Unique report ID_";"_Remote ID_"~"_HSComponent for listview (ent;rtn;0;MaxOcc) or text (ent;rtn;#component;MaxOcc)
+ ;DFN=Patient DFN ; ICN for foriegn sites
+ ;RPTID=Unique id for the report_";"_Remote Id_"~"_HSComponent for listview (ent;rtn;0;MaxOcc) or text (ent;rtn;#component;MaxOcc)
  ;HSTYPE=Health Sum Type
  ;DTRANGE=# days back from today
  ;EXAMID=Rad exam ID
- ;ALPHA=Start date
- ;OMEGA=End date
+ ;ALPHA=Start date (lieu of DTRANGE)
+ ;OMEGA=End date (lieu of DTRANGE)
  ;  RPC: ORWRP REPORT TEXT
  ;
- N X,X0,X2,X4,I,J,ENT,RTN,ID,REMOTE,GO,OUT,MAX,SITE,ORFHIE,%ZIS,HSTAG,DIRECT,TAB
+ N X,X0,X2,X4,I,J,ENT,RTN,ID,REMOTE,GO,OUT,MAX,SITE,ORFHIE,%ZIS,HSTAG,DIRECT
  K ^TMP("ORDATA",$J)
- S TAB="R"
- I $E(RPTID,1,2)="L:" S TAB="L",RPTID=$P(RPTID,":",2,999) ;an ID beginning with "L:" forces TAB to LAB - "L:" added in GUI code
  S HSTAG=$P($G(RPTID),"~",2),RPTID=$P($G(RPTID),"~"),ROOT=$NA(^TMP("ORDATA",$J,1)),REMOTE=+$P(RPTID,";",2),RPTID=$P($P(RPTID,";"),":")
  I 'REMOTE S DFN=+DFN ;DFN = DFN;ICN for remote calls
  S I=0,X0="",X2="",X4="",SITE=$$SITE^VASITE,SITE=$P(SITE,"^",2)_";"_$P(SITE,"^",3)
  F  S I=$O(^ORD(101.24,"AC",I)) Q:I=""  S J=0 F  S J=$O(^ORD(101.24,"AC",I,J)) Q:'J  D
- . I $P($G(^ORD(101.24,J,0)),"^",2)=RPTID,$P(^(0),"^",8)=TAB S X0=^(0),X2=$G(^(2)),ORFHIE=$G(^(4)),DIRECT=$P(ORFHIE,"^",4),X4=$P(ORFHIE,"^",2),ORFHIE=$P(ORFHIE,"^",3)
+ . I $P($G(^ORD(101.24,J,0)),"^",2)=RPTID,$P(^(0),"^",8)="R" S X0=^(0),X2=$G(^(2)),ORFHIE=$G(^(4)),DIRECT=$P(ORFHIE,"^",4),X4=$P(ORFHIE,"^",2),ORFHIE=$P(ORFHIE,"^",3)
  I '$L(X0) D NOTYET(.ROOT) Q
  S RTN=$P(X0,"^",5),ENT=$P(X0,"^",6)
  I '$L(RTN)!'$L(ENT) D NOTYET(.ROOT) Q
  I '$L($T(@(ENT_"^"_RTN))) D NOTYET(.ROOT) Q
- ;I $G(ALPHA) S X=ALPHA-$G(OMEGA) D  ;jeh 243
- I $G(ALPHA) D
- . N X1,X2
- . S X=ALPHA
- . S X1=ALPHA,X2=$G(OMEGA) D:X2 ^%DTC ;X returned, # of days diff
+ I $G(ALPHA) S X=ALPHA-$G(OMEGA) D
  . I X<0 S X=X*(-1)
  . I X4,X>X4 S:ALPHA>OMEGA OMEGA=$$FMADD^XLFDT(ALPHA,-X4) S:ALPHA'>OMEGA ALPHA=$$FMADD^XLFDT(OMEGA,-X4) S DTRANGE=""
  I X4,$G(DTRANGE)>X4 S DTRANGE=X4,ALPHA=""
  I $L($G(DTRANGE)),'$G(ALPHA) S ALPHA=$$FMADD^XLFDT(DT,-DTRANGE),OMEGA=DT_".235959"
  I $G(OMEGA),$E(OMEGA,8)'="." S OMEGA=OMEGA_".235959"
+ ;S ID=$G(HSTAG),$P(ID,";",5,8)=SITE_";"_$P(X2,"^",8)_";"_$P(X2,"^",9)
  S ID=$G(HSTAG),$P(ID,";",5,10)=SITE_";"_$P(X2,"^",8)_";"_$P(X2,"^",9)_";"_RPTID_";"_$G(DIRECT) ;HDRHX CHANGE
  I $L($P($G(HSTAG),";",4)) S MAX=$P(HSTAG,";",4)
  I $L($G(HSTYPE)) M ID=HSTYPE

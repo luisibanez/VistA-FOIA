@@ -1,6 +1,6 @@
 RCDMC90 ;WASH IRMFO@ALTOONA,PA/TJK-DMC 90 DAY ;7/17/97 8:13 AM
-V ;;4.5;Accounts Receivable;**45,108,133,121,163,190,192,236,237,229,253**;Mar 20, 1995;Build 9
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;4.5;Accounts Receivable;**45,108,133,121,163,190,192,236,237,229**;Mar 20, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
 ENTER ;Entry point from nightly process
  Q:'$D(RCDOC)
  ;run the interest and admin for newly flagged Katrina Patients.
@@ -107,9 +107,6 @@ PROC(DEBTOR,QUIT) ;PROCESS BILLS FOR A SPECIFIC DEBTOR
  .;Q:$$INSURED^IBCNS1(DFN,$P(B0,U,10))  ;Commented out w/patch *121
  .S X=$P(B0,U,2),X=$S(X=22:1,X=23:1,(X>2)&(X<6):2,X=18:2,X=24:2,X=25:2,X=1:3,X=2:4,(X>26)&(X<30):5,X>29:6,1:"")
  .Q:X=""  K CATYP(X)
- .;Check if bill should be deferred from being sent to DMC if Veteran is
- .;SC 50% to 100% or Receiving VA Pension (Hold Debt to DMC project, sbw)
- .Q:+$$HOLDCHK^RCDMCUT1(BILL,DFN)>0
  .I $P(B6,U,21),$P(B6,U,21)<ESTDT S ESTDT=$P($P(B6,U,21),".")
  .I $P(B12,U,2),PRIN>$P(B12,U,2) S PRIN=$P(B12,U,2)
  .S ^TMP($J,"RCDMC90","BILL",BILL)=$S($P(B12,U):$P(B12,U),1:DT)_U_PRIN_U_INT_U_ADMIN

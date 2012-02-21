@@ -1,6 +1,5 @@
 MAGQE2 ;WOIFO/RMP - Support for MAG Enterprise ; 08/22/2003  13:44
- ;;3.0;IMAGING;**27,29,20,39**;Mar 19, 2002;Build 2010;Mar 08, 2011
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.0;IMAGING;**27,29**;06-January-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGQE2 ;WOIFO/RMP - Support for MAG Enterprise ; 08/22/2003  13:44
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -15,6 +15,17 @@ MAGQE2 ;WOIFO/RMP - Support for MAG Enterprise ; 08/22/2003  13:44
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ Q
+ ;
+MAILSHR ; Shared Mail server code
+ N D,D0,D1,D2,DG,DIC,DICR,DIW,XMID,XMY
+ S XMID=$G(DUZ) S:'XMID XMID=.5
+ S XMY(XMID)=""
+ S XMY("G.MAG SERVER")=""
+ S:$G(MAGDUZ) XMY(MAGDUZ)=""
+ S XMSUB=$E(XMSUB,1,63)
+ D SENDMSG^XMXAPI(XMID,XMSUB,"^TMP($J,""MAGQ"")",.XMY,,.XMZ,)
+ I $G(XMERR) M XMERR=^TMP("XMERR",$J) S $EC=",U13-Cannot send MailMan message,"
  Q
  ;
 AHISU(START,STOP) ;
@@ -26,7 +37,6 @@ ISU ;IMAGING SITE USAGE - SERVER
  I $$CONSOLID^MAGQE5() D
  . S INST="" F  S INST=$O(^MAG(2006.1,"B",INST)) Q:INST=""  D
  . . S PLACE=$O(^MAG(2006.1,"B",INST,"")) Q:'PLACE
- . . Q:($P($G(^MAG(2006.1,PLACE,0)),U)'=INST)  ;Screen Associated Institutions
  . . D ISU1(PLACE,INST)
  . . Q
  . Q
@@ -49,22 +59,20 @@ ISU1(PLACE,INST) ;
  S:$G(ADHOC) ZTSAVE("ADHOC")=1
  S:$D(MAGDUZ) ZTSAVE("MAGDUZ")=MAGDUZ
  D ^%ZTLOAD
- K ZTDTH,ZTRTN,ZTDESC,ZTIO,ZTSAVE
  Q
  ;
 MSG(TXT) N I
- S I=$O(^TMP($J,"MAGQ",PLACE,"SITE_REPORT"," "),-1)+1
- S ^TMP($J,"MAGQ",PLACE,"SITE_REPORT",I)=TXT
+ S I=$O(^TMP($J,"MAGQ"," "),-1)+1,^TMP($J,"MAGQ",I)=TXT
  Q
  ;
-TASK N DM,I,LOC,OCONS,PCNT,REC,VR,XMSUB,Y,X
+TASK N DM,I,LOC,NEW,OCONS,PCNT,REC,VR,XMSUB,Y
  S:'$D(INST) INST=$$KSP^XUPARAM("INST")
  K ^TMP($J,"MAGQ")
  I '$G(START)!'$G(STOP) D
  . S STOP=$$FMADD^XLFDT($$NOW^XLFDT()\100_"01",-1)
  . S START=STOP\100_"01"
  . Q
- S Y=$$NOW^XLFDT,Y=$$FMTE^XLFDT(Y)
+ D NOW^%DTC S Y=% D DD^%DT
  S U="^",LOC=$$GET1^DIQ(4,INST,.01)_"^"_INST
  D MSG("            SITE: "_LOC)
  D MSG("Reporting Period: "_$$FMTE^XLFDT(START\1)_" - "_$$FMTE^XLFDT(STOP\1))
@@ -72,7 +80,6 @@ TASK N DM,I,LOC,OCONS,PCNT,REC,VR,XMSUB,Y,X
  D MSG("          DOMAIN: "_$$KSP^XUPARAM("WHERE"))
  D MSG("    2005 ENTRIES: "_$P($G(^MAG(2005,0)),"^",4))
  D MSG(" 2006.81 ENTRIES: "_$$WSP^MAGQE5(PLACE))
- D MSG(" Production Account: "_$$PROD^XUPROD("1"))
  ; Distribute an array each of the capture and display versions
  D IWSV^MAGQE1(PLACE)
  ; VistaRad version
@@ -86,6 +93,6 @@ TASK N DM,I,LOC,OCONS,PCNT,REC,VR,XMSUB,Y,X
  S X=""
  S:'$G(ADHOC) X=" ("_$P("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec"," ",START\100#100)_" "_(START\10000+1700)_")"
  S XMSUB=$S($G(ADHOC):"Ad Hoc",1:"Monthly")_" Image Site Usage: "_LOC_X
- D MAILSHR^MAGQBUT1(PLACE,"SITE_REPORT",XMSUB)
+ D MAILSHR
  Q
  ;

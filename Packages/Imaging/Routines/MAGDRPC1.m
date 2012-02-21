@@ -1,6 +1,5 @@
-MAGDRPC1 ;WOIFO/EdM - Imaging RPCs ; 27 Jul 2010 6:50 AM
- ;;3.0;IMAGING;**11,30,51,50,54,49**;Mar 19, 2002;Build 2033;Apr 07, 2011
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDRPC1 ;WOIFO/EdM - Imaging RPCs ; 09/03/2004  06:44
+ ;;3.0;IMAGING;**11,30**;16-September-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDRPC1 ;WOIFO/EdM - Imaging RPCs ; 27 Jul 2010 6:50 AM
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -17,36 +17,19 @@ MAGDRPC1 ;WOIFO/EdM - Imaging RPCs ; 27 Jul 2010 6:50 AM
  ;;
  Q
  ;
-GETID(OUT,HOSTNAME) ; RPC = MAG DICOM GET MACHINE ID
- N D0,I,LO,N,UP,X
- S HOSTNAME=$TR($G(HOSTNAME),"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
- I HOSTNAME="" S OUT="-1,No Hostname Specified" Q
- S OUT=$O(^MAGDICOM(2006.5641,"C",HOSTNAME,""))
- Q:OUT>0
- L +^MAGDICOM(2006.5641,0):1E9 ; Background process MUST wait
- S D0=$O(^MAGDICOM(2006.5641," "),-1)+1
- S ^MAGDICOM(2006.5641,D0,0)=D0_"^"_HOSTNAME_"^"_$H
- S ^MAGDICOM(2006.5641,"B",D0,D0)=""
- S ^MAGDICOM(2006.5641,"C",HOSTNAME,D0)=""
- S (N,I,D0)=0 F  S D0=$O(^MAGDICOM(2006.5641,D0)) Q:'D0  S N=N+1,I=D0
- S ^MAGDICOM(2006.5641,0)="DICOM GATEWAY MACHINE ID^2006.5641^"_I_"^"_N
- L -^MAGDICOM(2006.5641,0)
- S OUT=D0
- Q
- ;
 DOMAIN(OUT) ; RPC = MAG DICOM GET DOMAIN
  N X
  I $T(WHERE^XUPARAM)'="" S OUT=$$KSP^XUPARAM("WHERE") Q
  ; The coding standards frown upon the line below,
  ; but it is the best we can do when the line above cannot be used.
- S X=^DD("SITE") S:X'[".DOMAIN.EXT" X=X_".DOMAIN.EXT"
+ S X=^DD("SITE") S:X'[".VA.GOV" X=X_".VA.GOV"
  S OUT=X
  Q
  ;
 INFO(OUT,LOCATION) ; RPC = MAG DICOM ET PHONE HOME
  N FST,N,X
  K OUT
- S FST=$$FMADD^XLFDT(DT,-25)
+ S X1=DT,X2=-25 D C^%DTC S FST=X
  S N=2
  ;
  ; Site-ID
@@ -71,7 +54,7 @@ INFO(OUT,LOCATION) ; RPC = MAG DICOM ET PHONE HOME
  Q
  ;
 STATION(OUT,STATION,VERSION) ; RPC = MAG DICOM WORKSTATION VERSION
- N D0,X
+ N %,D0,%H,%I,X
  I $G(STATION)="" S OUT="-1,No Station Identifier Specified" Q
  ;
  S D0=$O(^MAG(2006.83,"B",STATION,"")) D:'D0
@@ -87,7 +70,8 @@ STATION(OUT,STATION,VERSION) ; RPC = MAG DICOM WORKSTATION VERSION
  . Q
  S $P(^MAG(2006.83,D0,0),"^",3)=VERSION
  S X=$P(^MAG(2006.83,D0,0),"^",2)
- S $P(^MAG(2006.83,D0,0),"^",2)=$$NOW^XLFDT()
+ D NOW^%DTC
+ S $P(^MAG(2006.83,D0,0),"^",2)=%
  S OUT=D0
  Q
  ;
@@ -99,7 +83,7 @@ FMGET(OUT,FILE,D0,FIELD) ; RPC = MAG DICOM FILEMAN GET
 CUTOFF(OUT,D0) ; RPC = MAG DICOM PACS CUTOFF DATE
  ; Retention Period for PACS
  N X
- I '$$CONSOLID^MAGBAPI() D  Q
+ I $E($O(^MAG(2006.1," ")),1)="A" D  Q
  . ; Non-consolidated site
  . I '$D(^MAG(2006.1,"APACS")) S OUT="-2,No PACS Installed" Q
  . ;
@@ -118,7 +102,7 @@ CUTOFF(OUT,D0) ; RPC = MAG DICOM PACS CUTOFF DATE
 MINSPACE(OUT,D0) ; RPC = MAG DICOM PACS MINIMUM SPACE
  ; Minimum Percentage of Free Disk Space
  N X
- I '$$CONSOLID^MAGBAPI() D  Q
+ I $E($O(^MAG(2006.1," ")),1)="A" D  Q
  . ; Non-consolidated site
  . I '$D(^MAG(2006.1,"APACS")) S OUT="-2,No PACS Installed" Q
  . ;
@@ -168,7 +152,7 @@ VALDEST(OUT,NAME) ; RPC = MAG DICOM ROUTE VALID DEST
  I $D(^MAG(2005.2,"B")) D  Q
  . S D0=$O(^MAG(2005.2,"B",NAME,"")) Q:'D0
  . S:$P($G(^MAG(2005.2,D0,0)),"^",9) OUT=D0
- . Q
+ . Q 
  ;
  S D0=""
  S PLACE="" F  S PLACE=$O(^MAG(2005.2,"D",PLACE)) Q:PLACE=""  D  Q:OUT>0
@@ -182,21 +166,15 @@ PAT(OUT,DFN) ; RPC = MAG DICOM GET PATIENT
  K OUT
  I '$G(DFN) S OUT(1)="-1,No Patient Identified" Q
  S N=1,DIQUIET=1
- D DEM^VADPT,VA("DEM","VADM","")
- D ADD^VADPT,VA("ADD","VAPA","")
- D INP^VADPT,VA("INP","VAIN","")
- D SDA^VADPT,VA("SDA","VASD","")
- S X=$$GETICN^MPIF001(DFN) S:X'<0 N=N+1,OUT(N)="ICN^1^"_X
- S N=N+1,OUT(N)="Site-DFN^1^"_$E($P($$NS^XUAF4($$KSP^XUPARAM("INST")),U,2),1,3)_"-"_DFN
+ D DEM^VADPT
+ S I="" F  S I=$O(VADM(I)) Q:I=""  S:VADM(I)'="" N=N+1,OUT(N)="DEM^"_I_"^"_VADM(I)
+ D ADD^VADPT
+ S I="" F  S I=$O(VAPA(I)) Q:I=""  S:VAPA(I)'="" N=N+1,OUT(N)="ADD^"_I_"^"_VAPA(I)
+ D INP^VADPT
+ S I="" F  S I=$O(VAIN(I)) Q:I=""  S:VAIN(I)'="" N=N+1,OUT(N)="INP^"_I_"^"_VAIN(I)
+ D SDA^VADPT
+ S I="" F  S I=$O(VASD(I)) Q:I=""  S:VASD(I)'="" N=N+1,OUT(N)="SDA^"_I_"^"_VASD(I)
  S OUT(1)=N-1
- Q
- ;
-VA(PRE,ARR,SUB) N A,I,X
- S I="" F  S I=$O(@ARR@(I)) Q:I=""  D
- . S A=$NAME(@ARR@(I))
- . S X=$G(@A) S:X'="" N=N+1,OUT(N)=PRE_"^"_SUB_I_"^"_X
- . D:$D(@A)>9 VA(PRE,A,SUB_I_",")
- . Q
  Q
  ;
 RARPTO(OUT,TYPE,D0,F,D1) ; RPC = MAG DICOM GET RAD RPT INFO
@@ -206,15 +184,5 @@ RARPTO(OUT,TYPE,D0,F,D1) ; RPC = MAG DICOM GET RAD RPT INFO
  I TYPE="G1" S OUT=$G(^RARPT(D0,0)) Q
  I TYPE="G2" S OUT=$G(^RARPT(D0,F,D1,0)) Q
  S OUT="-1,Invalid request type ("""_TYPE_""")"
- Q
- ;
-LISTORIG(OUT) ; RPC = MAG GET DICOM XMIT ORIGIN
- N FROM,MSG,N,PRI,RTN
- S N=1,OUT(1)="No entries in transmission queue"
- S FROM="" F  S FROM=$O(^MAGDOUTP(2006.574,"STS",FROM)) Q:FROM=""  D
- . D GETS^DIQ(4,FROM,.01,"","RTN","MSG")
- . S N=N+1,OUT(N)=FROM_"^"_$G(RTN(4,FROM_",",.01))
- . Q
- S:N>1 OUT(1)=N
  Q
  ;

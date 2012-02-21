@@ -1,10 +1,8 @@
 IBCEP0 ;ALB/TMP - Functions for PROVIDER ID MAINTENANCE ;13-DEC-99
- ;;2.0;INTEGRATED BILLING;**137,191,239,232,320,348,349,377**;21-MAR-94;Build 23
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,191,239,232**;21-MAR-94
  ;
 EN ; -- main entry point for IBCE PRV INS ID
  N IBINS,IBDSP,IBSORT,IBPRV ; Variables should be available throughout actions
- K IBFASTXT
  D FULL^VALM1
  D EN^VALM("IBCE PRVINS ID")
  Q
@@ -20,10 +18,7 @@ HDR ; -- header code
  S IBCT=1
  K VALMHDR
  I $G(IBINS) D
- . N PCF,PCDISP
- . S PCF=$P($G(^DIC(36,+IBINS,3)),U,13)
- . S PCDISP=$S(PCF="C":"(Child)",PCF="P":"(Parent)",1:"")
- . S VALMHDR(1)="Insurance Co: "_$P($G(^DIC(36,+IBINS,0)),U)_" "_PCDISP
+ . S VALMHDR(1)="INSURANCE CO: "_$P($G(^DIC(36,+IBINS,0)),U)
  . ; Get performing provider id type for insurance co
  . S IBPPTYP=$$PPTYP(IBINS)
  . ; Get ien of EMC ID from file 355.97
@@ -41,7 +36,6 @@ HDR ; -- header code
  Q
  ;
 INIT ; Initialization
- K ^TMP("IB_EDITED_IDS",$J)  ; This will be to keep track of ID's edited during this session
  D INSID(.IBINS,.IBDSP,.IBSORT)
  I $G(IBDSP)="I",$G(IBSORT) S IBPRV=IBSORT
  I '$G(IBINS) S VALMQUIT=1
@@ -66,28 +60,16 @@ INSID(IBINS,IBDSP,IBSORT) ;
  I $D(DTOUT)!$D(DUOUT)!("DIA"'[Y) S IBOK=0 G INSIDQ
  S IBDSP=Y,IBSORT=""
  I IBDSP="A"!(IBDSP="I") F  D  Q:'IBOK!(IBSORT'="")
- . ;
- . I IBDSP="A" D
- .. S DIR("A")="Display only IDs with a specific ID Qualifier?: "
- .. S DIR("?",1)="Answer Yes to select a specific ID Qualifier by which to display IDs."
- .. S DIR("?")="Answer No to display all IDs."
- .. Q
- . ;
- . I IBDSP="I" D
- .. S DIR("A")="Display IDs for a specific Provider?: "
- .. S DIR("?",1)="Answer Yes to select a specific Provider."
- .. S DIR("?")="Answer No to display all Providers."
- .. Q
- . ;
- . S DIR("B")="NO",DIR(0)="YA"
+ . N Z
+ . S Z=$S(IBDSP="I":"",1:" ID TYPE")
+ . S DIR("A")="DO YOU WANT TO DISPLAY IDS FOR A SPECIFIC PROVIDER"_Z_"?: ",DIR("B")="NO",DIR(0)="YA"
+ . S DIR("?",1)="IF YOU ANSWER YES TO THIS QUESTION, YOU MAY SELECT A SPECIFIC PROVIDER"_Z,DIR("?")="  TO DISPLAY, OTHERWISE, ALL PROVIDER"_Z_"S FOUND WILL BE DISPLAYED"
  . W ! D ^DIR K DIR W !
  . I $D(DTOUT)!$D(DUOUT) S IBOK=0 Q
  . I Y'=1 S IBSORT="ALL" Q
  . ;
  . I IBDSP="A" D  Q
- .. S DIC(0)="AEMQ",DIC="^IBE(355.97,",DIC("S")="I $S('$P(^(0),U,2):1,1:$P(^(0),U,2)=3)"
- .. S DIC("A")="Select type of ID Qualifier: "
- .. D ^DIC K DIC
+ .. S DIC(0)="AEMQ",DIC="^IBE(355.97,",DIC("S")="I $S('$P(^(0),U,2):1,1:$P(^(0),U,2)=3)" D ^DIC K DIC
  .. I Y>0 S IBSORT=+Y Q
  .. I $D(DTOUT)!$D(DUOUT) S IBOK=0
  . ;
@@ -131,7 +113,7 @@ BLD(IBINS,IBDSP,IBSORT) ; Build display for Insurance co level provider ID's
  . F  S IBSRT2=$O(^TMP("IBPRV_INS_SORT",$J,IBSRT1,IBSRT2)) Q:IBSRT2=""  D
  .. I IBOSRT1'=IBSRT1 D
  ... I IBOSRT1'="" S IBLCT=IBLCT+1 D SET^VALM10(IBLCT," ",IBCT+1)
- ... S IBLCT=IBLCT+1 D SET^VALM10(IBLCT,$S(IBDSP'="I":"ID Qualifier",1:"Provider")_": "_$S(IBDSP'="I":$$EXPAND^IBTRE(355.91,.06,IBSRT1),1:$P(IBSRT1,U,2_$S($P(IBSRT2,U,3)["VA(200":" (VA)",1:"(NON-VA)"))),IBCT+1)
+ ... S IBLCT=IBLCT+1 D SET^VALM10(IBLCT,"Provider"_$S(IBDSP'="I":" ID Type",1:"")_": "_$S(IBDSP'="I":$$EXPAND^IBTRE(355.91,.06,IBSRT1),1:$P(IBSRT1,U,2_$S($P(IBSRT2,U,3)["VA(200":" (VA)",1:"(NON-VA)"))),IBCT+1)
  ... S IBOSRT1=IBSRT1
  .. ;
  .. S FT="" F  S FT=$O(^TMP("IBPRV_INS_SORT",$J,IBSRT1,IBSRT2,FT)) Q:FT=""  S CT="" F  S CT=$O(^TMP("IBPRV_INS_SORT",$J,IBSRT1,IBSRT2,FT,CT)) Q:CT=""  D
@@ -141,7 +123,7 @@ BLD(IBINS,IBDSP,IBSORT) ; Build display for Insurance co level provider ID's
  .... I IBDSP'="I" S Z0=Z0_$E($S(IBOSRT2'=IBSRT2:$P(IBSRT2,U,2),1:"")_$J("",20),1,20)
  .... I IBDSP="I" S Z0=Z0_$E($S(IBOSRT2'=IBSRT2:$$EXPAND^IBTRE(355.9,.06,IBSRT2),1:"")_$J("",20),1,20)
  .... S IBOSRT2=IBSRT2
- .... S Z0=Z0_"  "_$S(FT=1:"UB-04",FT=2:"1500 ",1:"BOTH ")_"  "_$E($S(CT=3:"RX",CT=1:"INPT",CT=2:"OUTPT",1:"INPT/OUTPT")_$J("",11),1,11)_"  "_$E($S(CU'="*N/A*":$P($G(^IBA(355.95,+$P($G(^IBA(355.96,+CU,0)),U),0)),U),1:"")_$J("",15),1,15)
+ .... S Z0=Z0_"  "_$S(FT=1:"UB-92",FT=2:"HCFA ",1:"BOTH ")_"  "_$E($S(CT=3:"RX",CT=1:"INPT",CT=2:"OUTPT",1:"INPT/OUTPT")_$J("",11),1,11)_"  "_$E($S(CU'="*N/A*":$P($G(^IBA(355.95,+$P($G(^IBA(355.96,+CU,0)),U),0)),U),1:"")_$J("",15),1,15)
  .... D SET^VALM10(IBLCT,Z0_" "_$P(IB,U),IBCT)
  .... S ^TMP("IBPRV_INS_ID",$J,"ZIDX",IBCT)=Z,^(IBCT,"PRV")=$P(IB,U,2)
  .... I '$D(^TMP("IBPRV_INS_ID",$J,$S(IBDSP="I":"ZXPRV",1:"ZXPTYP"),IBSRT1)) S ^(IBSRT1)=IBLCT-1
@@ -164,8 +146,6 @@ HELP ;
  Q
  ;
 EXIT ;
- K IBFASTXT
- D COPYPROV^IBCEP5A(IBINS)
  K ^TMP("IBPRV_INS_ID",$J)
  D CLEAN^VALM10
  Q
@@ -194,23 +174,3 @@ PPTYP(IBINS) ; Returns the ien of the default performing provider type for
  ;  insurance company IBINS (ien file 36)
  Q +$G(^DIC(36,+IBINS,4))
  ;
-SCREEN(WHICH) ; This screen is used the menu protocol to screen out the ID functions if it is a child ins co
- Q:'$G(DA) 0
- Q:'$G(DA(1)) 0
- N FILE,IENS,FIELD,FLAG,TARGET
- S FILE=101.01,IENS=DA_","_DA(1),FIELD=".01",FLAG="I"
- D GETS^DIQ(FILE,IENS,FIELD,FLAG,"TARGET")
- Q:'$D(TARGET) 0
- N IEN
- S IEN=$G(TARGET(FILE,IENS_",",FIELD,FLAG))
- Q:'+IEN 0
- S FILE=101,FIELD=1,FLAG="E"
- K TARGET
- D GETS^DIQ(FILE,IEN,FIELD,FLAG,"TARGET")
- Q:'$D(TARGET) 0
- I $G(TARGET(FILE,IEN_",",FIELD,FLAG))'[WHICH Q 1
- Q:'$G(IBINS) 0
- N PCF
- S PCF=$P($G(^DIC(36,+IBINS,3)),U,13)
- I PCF="C" Q 0
- Q 1

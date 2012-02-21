@@ -1,8 +1,8 @@
-ECXALAR ;ALB/TMD-LAR Extract Report of Untranslatable Results ; 5/5/11 2:39pm
- ;;3.0;DSS EXTRACTS;**46,51,112,132**;Dec 22, 1997;Build 18
+ECXALAR ;ALB/TMD-LAR Extract Report of Untranslatable Results ; 9/17/02 6:17pm
+ ;;3.0;DSS EXTRACTS;**46,51**;Dec 22, 1997
  ;
 EN ; entry point
- N X,Y,DATE,ECRUN,ECXOPT,ECXDESC,ECXSAVE,ECXTL,ECTHLD,ECSD,ECSD1,ECSTART,ECED,ECEND,ECXERR,QFLG,PG
+ N X,Y,DATE,ECRUN,ECXOPT,ECXDESC,ECXSAVE,ECXTL,ECTHLD,ECSD,ECSD1,ECSTART,ECED,ECEND,ECXERR,QFLG
  S QFLG=0,ECXTL="LAR"
  ; get today's date
  D NOW^%DTC S DATE=X,Y=$E(%,1,12) D DD^%DT S ECRUN=$P(Y,"@") K %DT
@@ -55,15 +55,15 @@ PRINT ; process temp file and print report
  I $D(ZTQUEUED),$$S^%ZTLOAD S ZTSTOP=1 K ZTREQ Q
  S (PG,QFLG,GTOT)=0,$P(LN,"-",80)=""
  D HEADER Q:QFLG
- S COUNT=0,CNT="" F  S CNT=$O(^TMP($J,"ECXALAR2",CNT)) Q:CNT=""!QFLG  S REC=^(CNT) D
+ S COUNT=0,CNT="" F  S CNT=$O(^TMP($J,CNT)) Q:CNT=""!QFLG  S REC=^(CNT) D
  .S ECXDFN=$P(REC,U),ECTC=$P(REC,U,4),ECRS=$P(REC,U,5)
  .S ECFMDT=$P(REC,U,2)_"."_$P(REC,U,3),ECDTM=$$FMTE^XLFDT(ECFMDT,2)
  .S (ECXPNM,ECXSSN)=""
  .K ECXPAT S OK=$$PAT^ECXUTL3(ECXDFN,,"1;",.ECXPAT)
  .I OK S ECXPNM=ECXPAT("NAME"),ECXSSN=ECXPAT("SSN")
- .S ECXTNM=$O(^ECX(727.29,"AC",+$G(ECTC),0)),ECXTNM=$P(^ECX(727.29,+$G(ECXTNM),0),U,3)
+ .S ECXTNM=$P($G(^ECX(727.2,1,1,ECTC,0)),U)
  .I $Y+3>IOSL D HEADER
- .W !,ECXPNM,?5,ECXSSN,?17,ECDTM,?32,$J(ECTC,4),?38,$E(ECXTNM,1,20),?60,$E(ECRS,1,20)
+ .W !,ECXPNM,?6,ECXSSN,?17,ECDTM,?34,ECTC,?40,$E(ECXTNM,1,22),?64,$E(ECRS,1,17)
  .S COUNT=COUNT+1
  Q:QFLG
  I COUNT=0 W !!,?8,"No untranslatable results for this extract"
@@ -83,8 +83,8 @@ HEADER ;header and page control
  W !,ECXTL_" Extract Untranslatable Results Audit Report",?71,"Page: "_PG
  W !,"Start Date: ",ECSTART
  W !,"End Date:   ",ECEND,?49,"Report Run Date:  "_ECRUN
- W !!,"Pat.",?5,"SSN",?17,"Date/Time",?32,"Test",?38,"Test Name",?60,"Result"
- W !,"Name",?17,"Collected",?32,"Code"
+ W !!,"Pat.",?6,"SSN",?17,"Date/Time",?34,"Test",?40,"Test Name",?64,"Result"
+ W !,"Name",?17,"Collected",?34,"Code"
  W !,LN,!
  Q
  ;

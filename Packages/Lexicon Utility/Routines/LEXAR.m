@@ -1,5 +1,5 @@
-LEXAR ;ISA/FJF/KER-Look-up (Interpret User Response) ;11/30/2008
- ;;2.0;LEXICON UTILITY;**3,19,25,55**;Sep 23, 1996;Build 11
+LEXAR ;ISA/FJF/KER-Look-up (Interpret User Response) ; 05/14/2003
+ ;;2.0;LEXICON UTILITY;**3,19,25**;Sep 23, 1996
  ;
  ; User Responses
  ;
@@ -102,7 +102,7 @@ KLST ; Kill Global List
  Q
 KSCH ; Kill Search Variables
  ;      ^TMP("LEXSCH",$J)
- ; PCH 55 - The only way to kill ^TMP("LEXSCH",$J) is exiting LEXA1
+ I +$G(LEX)'=0 K ^TMP("LEXSCH",$J)  ; PCH 3 Do not kill if not found condition exist
  Q
 KARL ; Kill Array List and supporting variables
  ;       LEX("LIST"),LEX("MAT"),LEX("MIN"),LEX("MAX")

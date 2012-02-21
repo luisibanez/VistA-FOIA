@@ -1,6 +1,6 @@
-PRCPRCFP ;WISC/RFJ/DST-conversion factor report (primary, secondary)    ;09 Jun 93
- ;;5.1;IFCAP;**98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPRCFP ;WISC/RFJ-conversion factor report (primary, secondary)    ;09 Jun 93
+ ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
@@ -13,18 +13,12 @@ PRIMARY ;  conversion factor report for primary and secondary
  D GROUPSEL^PRCPURS1(PRCP("I"))
  I '$G(GROUPALL),'$O(^TMP($J,"PRCPURS1","YES",0)) W !,"*** NO GROUP CATEGORIES SELECTED !" D Q Q
  W !,"NOTE:  The report will",$S('$G(GROUPALL):" NOT",1:"")," include items not stored in a group category."
- ; Prompt for On-Demand Item selection, if not warehouse
- N ODIS
- S ODIS=$$ODIPROM^PRCPUX2(0)
- I 'ODIS D Q Q
- ;
  W ! S %ZIS="Q" D ^%ZIS Q:POP  I $D(IO("Q")) D  D ^%ZTLOAD K IO("Q"),ZTSK Q
  .   S ZTDESC="Conversion Factor Report",ZTRTN="DQ^PRCPRCFP"
- .   S ZTSAVE("PRCP*")="",ZTSAVE("GROUPALL")="",ZTSAVE("ODIS")="",ZTSAVE("^TMP($J,""PRCPURS1"",")="",ZTSAVE("ZTREQ")="@"
+ .   S ZTSAVE("PRCP*")="",ZTSAVE("GROUPALL")="",ZTSAVE("^TMP($J,""PRCPURS1"",")="",ZTSAVE("ZTREQ")="@"
  W !!,"<*> please wait <*>"
 DQ ;  queue starts here
  N %,%H,%I,DESCR,GROUP,GROUPNM,ITEMDA,ITEMDATA,NOW,NSN,PAGE,PRCPFLAG,SCREEN,VENDATA,VENNM,X,Y
- N ODI  ; On-Demand Item flag
  K ^TMP($J,"PRCPRCFP")
  S ITEMDA=0 F  S ITEMDA=$O(^PRCP(445,PRCP("I"),1,ITEMDA)) Q:'ITEMDA  D
  .   S ITEMDATA=$G(^PRCP(445,PRCP("I"),1,ITEMDA,0))
@@ -47,16 +41,11 @@ DQ ;  queue starts here
  .   S DESCR="" F  S DESCR=$O(^TMP($J,"PRCPRCFP",GROUP,DESCR)) Q:DESCR=""!($G(PRCPFLAG))  S ITEMDA=0 F  S ITEMDA=$O(^TMP($J,"PRCPRCFP",GROUP,DESCR,ITEMDA)) Q:'ITEMDA!($G(PRCPFLAG))  D
  .   .   I $Y>(IOSL-6) D:SCREEN P^PRCPUREP Q:$D(PRCPFLAG)  D H
  .   .   S ITEMDATA=$G(^PRCP(445,PRCP("I"),1,ITEMDA,0))
- .   .   ; On-Demand Item flag check and display
- .   .   S ODI=$$ODITEM^PRCPUX2(PRCP("I"),ITEMDA)
- .   .   Q:(ODIS=1)&(ODI="Y")
- .   .   Q:(ODIS=2)&(ODI'="Y")
- .   .   ;
- .   .   W !,DESCR,?32,$S(ODI="Y":"D",1:""),?46,ITEMDA,?53,$J(+$P(ITEMDATA,"^",7),8),$J($$UNIT^PRCPUX1(PRCP("I"),ITEMDA,"/"),10)
+ .   .   W !,DESCR,?32,$TR($$NSN^PRCPUX1(ITEMDA),"-"),?46,ITEMDA,?53,$J(+$P(ITEMDATA,"^",7),8),$J($$UNIT^PRCPUX1(PRCP("I"),ITEMDA,"/"),10)
  .   .   S VENNM="" F  S VENNM=$O(^TMP($J,"PRCPRCFP",GROUP,DESCR,ITEMDA,VENNM)) Q:VENNM=""!($G(PRCPFLAG))  S VENDATA=^(VENNM) D
  .   .   .   I $Y>(IOSL-6) D:SCREEN P^PRCPUREP Q:$D(PRCPFLAG)  D H
  .   .   .   S %=$S($P(VENDATA,"^")["PRCP(445":"I#",1:"V#")_+VENDATA
- .   .   .   W !?29,VENNM,?51,$J(%,8),?61,$J($$UNITVAL^PRCPUX1($P(VENDATA,"^",3),$P(VENDATA,"^",2),"/"),10),$J($P(VENDATA,"^",4),9)
+ .   .   .   W !?33,VENNM,?55,%,?61,$J($$UNITVAL^PRCPUX1($P(VENDATA,"^",3),$P(VENDATA,"^",2),"/"),10),$J($P(VENDATA,"^",4),9)
  .   I $G(ZTQUEUED),$$S^%ZTLOAD S PRCPFLAG=1 W !?10,"<<< TASKMANAGER JOB TERMINATED BY USER >>>"
  I '$G(PRCPFLAG) D END^PRCPUREP
 Q D ^%ZISC K ^TMP($J,"PRCPRCFP"),^TMP($J,"PRCPURS1")
@@ -64,8 +53,7 @@ Q D ^%ZISC K ^TMP($J,"PRCPRCFP"),^TMP($J,"PRCPURS1")
  ;
 H S %=NOW_"  PAGE "_PAGE,PAGE=PAGE+1 I PAGE'=2!(SCREEN) W @IOF
  W $C(13),"CONVERSION FACTOR REPORT FOR: ",$E(PRCP("IN"),1,20),?(80-$L(%)),%
- W !,$S(ODIS=2:"ON-DEMAND ITEMS ONLY",ODIS=3:"ALL ITEMS (STANDARD AND ON-DEMAND)",1:"STANDARD ITEMS ONLY")
  S %="",$P(%,"-",81)=""
- W !,"DESCRIPTION",?32,"OD",?46,"IM",$J("QTY OH",13),$J("UNIT/IS",10)
- W !?29,"PROCUREMENT SOURCE",?55,"IV#",?61,$J("UNIT/RE",10),$J("CF",9),!,%
+ W !,"DESCRIPTION",?31,"NSN",?46,"MI",$J("QTY OH",13),$J("UNIT/IS",10)
+ W !?33,"PROCUREMENT SOURCE",?54,"IV#",?61,$J("UNIT/RE",10),$J("CF",9),!,%
  Q

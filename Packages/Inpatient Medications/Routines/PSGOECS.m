@@ -1,5 +1,5 @@
 PSGOECS ;BIR/CML3-CANCEL SELECTED ORDERS ;02 Mar 99 / 9:29 AM
- ;;5.0; INPATIENT MEDICATIONS ;**23,29,44,58,81,110,134,181**;16 DEC 97;Build 190
+ ;;5.0; INPATIENT MEDICATIONS ;**23,29,44,58,81,110**;16 DEC 97
  ;
  ; Reference to FULL^VALM1 is supported by DBIA# 10116.
  ; Reference to ^PS(55 is supported by DBIA# 2191.
@@ -24,20 +24,17 @@ AC ; discontinue active order
  S X=$$DRUGNAME^PSJLMUTL(PSGP,PSGORD)
  I '$P(PSJSYSP0,"^",5) D AM Q
  W !,"...discontinuing ",$P(X,U),"...",! S PSGAL("C")=PSJSYSU*10+4000 D ^PSGAL5
- S PSGALR=20,DIE="^PS(55,"_PSGP_",5,",DR="136////@;28////D;Q;34////"_PSGDT_$S(PSJSYSU:"",1:";49////1"),DP=55.06,$P(^(2),"^",3)=$P(^PS(55,PSGP,5,DA,2),"^",4) D ^DIE S ^PS(55,"AUE",PSGP,DA)=""
+ S PSGALR=20,DIE="^PS(55,"_PSGP_",5,",DR="28////D;Q;34////"_PSGDT_$S(PSJSYSU:"",1:";49////1"),DP=55.06,$P(^(2),"^",3)=$P(^PS(55,PSGP,5,DA,2),"^",4) D ^DIE S ^PS(55,"AUE",PSGP,DA)=""
  D EN1^PSJHL2(PSGP,"OD",PSGORD) S DA(1)=PSGP,DA=+PSGORD
  I PSJSYSL S $P(^PS(55,PSGP,5,DA,7),"^",1,2)=PSGDT_"^D",PSGTOL=2,PSGUOW=DUZ,PSGTOO=1 D ENL^PSGVDS
  Q
  ;
-NC ; discontinue non-verified order
- I $P($G(^PS(53.1,+PSGORD,0)),U,24)="R" S PSJDCTYP=$$PNDRNA^PSGOEC(PSGORD) I $G(PSJDCTYP)'=1 D PNDRN($G(PSJDCTYP)) Q
-NC2 ; Called from PNDRN to discontinue both pending renewal and original order
+NC ; discontinue non-verifed order
  K DA S DA=+PSGORD,X=$G(^PS(53.1,DA,.2)),X=$$DRUGNAME^PSJLMUTL(PSGP,PSGORD)
  I $S($P(PSJSYSP0,"^",5):0,'$D(^PS(53.1,DA,4)):1,1:$P(^(4),"^",7)'=DUZ) D NM Q
  W !,"...discontinuing ",$P(X,U),"...",! S DIE="^PS(53.1,",DR="28////D"_$S(PSJSYSU:"",1:";42////1") D ^DIE
  D EN1^PSJHL2(PSGP,"OC",PSGORD)
  S DA=+PSGORD I PSJSYSL,PSJSYSL<3 S $P(^PS(53.1,DA,7),"^",1,2)=PSGDT_"^D",PSGTOO=2,PSGUOW=DUZ,PSGTOL=2 D ENL^PSGVDS
- I $G(PSJDCTYP) D UNL^PSSLOCK(DFN,PSGORD)
  Q
  ;
 EN ; enter here
@@ -127,14 +124,4 @@ DCCOM ;DC pending/non-verified complex order
  I '$$LOCK^PSJOEA(DFN,PSGORD) W !,"Order # ",PSGOECS2," could not be discontinued.",!,$C(7) HANG 1 Q
  N PSGORD1 S PSGORD1=PSGORD
  N PSJO S PSJO=0 F  S PSJO=$O(^PS(53.1,"ACX",PSGORD1,PSJO)) Q:'PSJO  S PSGORD=PSJO_"P" D NC
- Q
-PNDRN(PSJDCTYP) ; Discontinue both pending renewal and original order
- N TMPORD S TMPORD=$G(PSGORD)
- I PSJDCTYP=2 S PSJDCTYP=1 D NC2 Q:'$G(PSJDCTYP)  D
- .I ($G(PSJNOO)<0) Q
- .N ND5310 S ND5310=$G(^PS(53.1,+PSGORD,0))
- .N PSGORD S PSGORD=$P(ND5310,"^",25) I PSGORD S PSJDCTYP=2 D
- ..I '$$LS^PSSLOCK(DFN,PSGORD) K PSJDCTYP Q
- ..D @$S(PSGORD["U":"AC",PSGORD["V":"SPDCIV^PSIVSPDC",1:"")
- S PSGORD=TMPORD
  Q

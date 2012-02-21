@@ -1,5 +1,5 @@
 LRAPAUSR ;AVAMC/REG/WTY - AUTOPSY SUPPLEMENTARY REPORT;9/14/01
- ;;5.2;LAB SERVICE;**1,173,248,259,317**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**1,173,248,259**;Sep 27, 1994
  ;
  ;Reference to ^DD(63 supported by IA #10155
  ;
@@ -99,8 +99,6 @@ SUPA ;Print supplementary report audit information
  S A2=$S($D(^VA(200,A2,0)):$P(^(0),"^"),1:A2)
  ;If supp rpt is released, display 'signed by' instead of 'typed by'
  D D^LRU W Y,LRSGN,A2,")"
- ;If RELEASE SUPP REPORT MODIFIED set to 1, display "NOT VERIFIED"
- I $P(^LR(LRDFN,84,LRA,0),"^",3) W !,?25,"**-* NOT VERIFIED *-**"
  D:$D(LRQ(9)) SUPM
  Q
 SUPM ;Print previous versions of supplementary reports

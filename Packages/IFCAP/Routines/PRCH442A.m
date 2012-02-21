@@ -1,6 +1,6 @@
 PRCH442A ;WISC/KMB/CR/DXH/DGL-CREATE PURCHASE CARD ORDER FROM RIL ;4/13/00 1:32pm
- ;;5.1;IFCAP;**8,35,26,57,81,106**;Oct 20, 2000
- ;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;5.1;IFCAP;**8,35,26,57,81**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 SETUP ; create 442 entry
  D ENPO^PRCHUTL
@@ -22,9 +22,6 @@ SETUP ; create 442 entry
  . S DIR("A")="Are you sure that you want to cancel ALL DynaMed Orders on this RIL?"
  . D ^DIR
  ;
- I '$G(^PRCS(410.3,XDA,0)) D  S OUTRIL=1 W !!,"Another user has deleted this RIL, Purchase Order will now be deleted.",!! Q
- . S DIK="^PRC(442,",DA=DA
- . D ^DIK
  N PRCHCPD,CP1
  S PDA=DA L +^PRC(442,PDA):15 Q:'$T
  S DIE="^PRC(442,",DR=".5////1"_";"_"1.4////"_APP D ^DIE ;LIT-0400-70331

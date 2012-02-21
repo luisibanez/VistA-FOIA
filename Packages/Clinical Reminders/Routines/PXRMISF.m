@@ -1,17 +1,15 @@
-PXRMISF ; SLC/PKR - Index size estimating scale factor routines. ;11/02/2009
- ;;2.0;CLINICAL REMINDERS;**17**;Feb 04, 2005;Build 102
+PXRMISF ; SLC/PKR - Index size estimating scale factor routines. ;01/12/2005
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;===============================================================
 ERRORMSG(SF) ;Send an error message indicating the estimate could not
  ;be made.
- N FROM,TO,VERSION,XMSUB
+ N VERSION,XMSUB
  S VERSION=$P(SF,U,2)
  S ^TMP("PXRMXMZ",$J,1,0)="Size Estimate for ^PXRMINDX cannot be made!"
  S ^TMP("PXRMXMZ",$J,2,0)=VERSION_" is an unknown system."
  S XMSUB="Size estimate for index global cannot be made"
- S FROM=$$GET1^DIQ(200,DUZ,.01)
- S TO(DUZ)=""
- D SEND^PXRMMSG("PXRMXMZ",XMSUB,.TO,FROM)
+ D SEND^PXRMMSG(XMSUB)
  S ZTREQ="@"
  Q
  ;

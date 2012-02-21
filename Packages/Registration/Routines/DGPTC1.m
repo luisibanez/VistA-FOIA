@@ -1,5 +1,5 @@
 DGPTC1 ;ALN/MJK - Census Record Processing; JAN 27, 2005
- ;;5.3;Registration;**37,413,643,701**;Aug 13, 1993
+ ;;5.3;Registration;**37,413,643**;Aug 13, 1993
  ;
 CEN ; -- determine if PTF rec is current Census rec
  ; input: PTF   := ptf rec #
@@ -14,12 +14,8 @@ CEN ; -- determine if PTF rec is current Census rec
  G CENQ:'$D(^DGPT(PTF,0)) N DFN S DGPTF0=^(0),DFN=+DGPTF0
  ;G CENQ:$P(DGPTF0,U,4)
  D CEN^DGPTUTL I DGCN0=""!(DT'>DGCN0) K DGCN G CENQ
- ;I $P(DGPTF0,U,4) D FEE G CENQ  ;DG*701 reposition line 
- S DGT=$P(DGCN0,U)_".9" I '$P(DGPTF0,U,4) D WARD I 'Y K DGCN G CENQ
- ;if Fee Basis quit if admit > census date or admit < census date if disch
- I $P(DGPTF0,U,4)=1,$P(DGPTF0,U,2)>DGT G CENQ
- I $P(DGPTF0,U,4)=1,+$P($G(^DGPT(PTF,70)),U),$P(DGPTF0,U,2)<DGT G CENQ
- I $P(DGPTF0,U,4)=1 D FEE G CENQ
+ I $P(DGPTF0,U,4) D FEE G CENQ
+ S DGT=$P(DGCN0,U)_".9" D WARD I 'Y K DGCN G CENQ
  S DGCST=0,DGCI=""
  F  S DGCI=$O(^DGPT("ACENSUS",PTF,DGCI)) Q:'DGCI  I $D(^DGPT(DGCI,0)),$P(^(0),U,13)=DGCN S DGCST=$P(^(0),U,6) Q:DGCST'=0  D  Q
  .S DGCI=$$RDGCI(DGCI),DGCST=1

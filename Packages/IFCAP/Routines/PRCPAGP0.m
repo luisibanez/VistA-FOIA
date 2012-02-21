@@ -1,12 +1,12 @@
-PRCPAGP0 ;WISC/RFJ-autogenerate primary or warehouse order               ;11 Dec 92
- ;;5.1;IFCAP;**108**;Oct 20, 2000;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPAGP0 ;WISC/RFJ-autogenerate primary or whse order               ;11 Dec 92
+ ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  D ^PRCPUSEL Q:'$G(PRCP("I"))
  I "PW"'[PRCP("DPTYPE") W !!,"THIS OPTION CAN ONLY BE USED BY A PRIMARY OR WHSE INVENTORY POINT." Q
  N %,G,GROUP,GROUPALL,GROUPNM,PRCPEXIT,PRCPFLAG,PRCPREPN,VENDALL,WHSE,X,Y
  S WHSE=+$O(^PRC(440,"AC","S",0)) I 'WHSE W !!,"WAREHOUSE VENDOR HAS NOT BEEN CREATED IN VENDOR FILE." Q
  ;
- ;  get repetitive item list number
+ ;  get repetitve item list number
  S %="==========  PART 1:  REPETITIVE ITEM LIST NUMBER  ==========" W !!?(80-$L(%)\2),%
  S PRCPREPN=$$GETRIL^PRCPAGPR I PRCPREPN="" Q
  ;
@@ -53,7 +53,7 @@ Q K ^TMP($J,"PRCPAG") Q
  ;
 ALLGRP ;  select all group categories
  K GROUPALL,PRCPFLAG
- S XP="Do you want to select ALL group categories",XH="Enter 'YES' to auto-generate for ALL inventory items selectable by vendor,",XH(1)="enter 'NO' to auto-generate selectable group category items not selectable by"
+ S XP="Do you want to select ALL group categories",XH="Enter 'YES' to auto-generate for ALL inventory items selectable by vendor,",XH(1)="enter 'NO' to auto-generate selectable group category items (not slectable by"
  S XH(2)="vendor, or enter '^' to exit."
  W ! S %=$$YN^PRCPUYN(1)
  I %=2 Q

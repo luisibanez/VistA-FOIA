@@ -1,5 +1,5 @@
 LRBEPEND ;DALOI/JAH/FHS - PENDING PANEL REPORT ;11/26/2005
- ;;5.2;LAB SERVICE;**291,337**;Sep 27, 1994;Build 2
+ ;;5.2;LAB SERVICE;**291**;Sep 27, 1994
  ;
 EN ;Entry point from menu option LRBE PENDREP
  N ZTDESC,ZTIO,ZTRTN,ZTSAVE,ZTSK
@@ -11,7 +11,7 @@ EN ;Entry point from menu option LRBE PENDREP
  W !,"The report will be sent to you as a MailMan message.",!
  D ^%ZTLOAD
  I $G(ZTSK) D
- .W !,"Report queued as Task #: ",ZTSK
+ .W !,"Report queueud as Task #: ",ZTSK
  W !
  Q
  ;
@@ -51,15 +51,14 @@ SET ;Setup background variables for call to BAWRK^LRBEBA
  S LRORDER=$$GET1^DIQ(69.01,LRBEIEN,9.5,"I")
  S LRBEIEN=LRTN_","_LRSN_","_LRODT_","
  S LRBETST=$$GET1^DIQ(69.03,LRBEIEN,.01,"I")
- I LRBETST="" K ^LRO(69,"APP",LRXDT,LRODT,LRSN,LRTN) Q
- S LRAD=+$$GET1^DIQ(69.03,LRBEIEN,2,"I")
- S LRAA=+$$GET1^DIQ(69.03,LRBEIEN,3,"I")
- S LRAN=+$$GET1^DIQ(69.03,LRBEIEN,4,"I")
+ S LRAD=$$GET1^DIQ(69.03,LRBEIEN,2,"I")
+ S LRAA=$$GET1^DIQ(69.03,LRBEIEN,3,"I")
+ S LRAN=$$GET1^DIQ(69.03,LRBEIEN,4,"I")
  S LRUID=$$GET1^DIQ(69.03,LRBEIEN,13,"I")
  S LRBECDT=$$GET1^DIQ(69.03,LRBEIEN,22,"I")
  S LRBEDFN=$$GET1^DIQ(63,LRDFN,.03,"I")
  S LRSS=$$GET1^DIQ(68,LRAA,.02,"I")
- I $G(^LRO(68,LRAA,1,LRAD,1,LRAN,4,LRBETST,0))="" K ^LRO(69,"APP",LRXDT,LRODT,LRSN,LRTN) Q
+ Q:'$G(^LRO(68,LRAA,1,LRAD,1,LRAN,4,LRBETST,0))
  S LRIDT=$P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,3)),U,5)
  S I=$O(^LRO(68,LRAA,1,LRAD,1,LRAN,5,0))
  I I S X=^LRO(68,LRAA,1,LRAD,1,LRAN,5,I,0),LRSPEC=$P(X,U,1),LRSAMP=$P(X,U,2)
@@ -68,7 +67,7 @@ SET ;Setup background variables for call to BAWRK^LRBEBA
  .Q:('$P(^LAB(60,LRBET,0),U,17))
  .S XX=$P($P(^LAB(60,LRBET,0),U,5),";",2)
  .;if null XX, possibly another panel
- .I 'XX D ARRS^LRBEBA5(LRBET,LRBETST) Q
+ .Q:'XX
  .S LRSB(XX)=$G(^LR(LRDFN,LRSS,LRIDT,XX))
  .I LRSB(XX)="" K LRSB(XX) Q
  .I $P(LRSB(XX),U,1)["canc" K LRSB(XX) Q

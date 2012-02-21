@@ -1,5 +1,5 @@
 ONCOCOFA ;Hines OIFO - COMPUTED FIELDS FOR FOLLOW-UP ;6/23/93  09:59
- ;;2.11;ONCOLOGY;**25,44,46**;Mar 07, 1995;Build 39
+ ;;2.11;ONCOLOGY;**25,44**;Mar 07, 1995
  ;
 MTS ;Multiple TUMOR STATUS within FOLLOWUP
  ;Called by FHC^ONCODLF,FHP^ONCODLF
@@ -20,7 +20,7 @@ MTSWLP ;Multiple tumor status write loop - called from MTS if >1 primary
  .S TD1=+$O(^ONCO(165.5,PD0,"TS","B",+FDAT,0))
  .S TS="" S:TD1 TS=$$GETVAL^ONCOU(165.5,PD0,73,TD1,.02)
  .K DOTS S $P(DOTS,".",30-$L(ST))="."
- .W !?2,ST,$G(DOTS),": ",$S(TS="":"Tumor Status not stated",1:TS) W:K=JACT !
+ .W !?2,ST,DOTS,": ",$S(TS="":"Tumor Status not stated",1:TS) W:K=JACT !
  Q
  ;
 EX ;EXIT

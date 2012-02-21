@@ -1,9 +1,7 @@
 ECEFPAT ;ALB/JAM-Enter Event Capture Data Patient Filer ;12 Oct 00
- ;;2.0; EVENT CAPTURE ;**25,32,39,42,47,49,54,65,72,95,76**;8 May 96;Build 6
+ ;;2.0; EVENT CAPTURE ;**25,32,39,42,47,49,54,65,72**;8 May 96
  ;
 FILE ;Used by the RPC broker to file patient encounter in file #721
- ;  Uses Supported IA 1995 - allow access to $$CPT^ICPTCOD
- ;
  ;     Variables passed in
  ;       ECIEN   - IEN of #721, if editing
  ;       ECDEL   - Delete record. 1- YES; 0- 0, null or undefine for NO.
@@ -43,13 +41,9 @@ FILE ;Used by the RPC broker to file patient encounter in file #721
  .S ECVST=$P($G(^ECH(ECIEN,0)),"^",21) I ECVST D
  ..;* Resend all EC records with same Visit file entry to PCE
  ..;* Remove Visit entry from ^ECH( so DELVFILE will complete cleanup
- ..K EC2PCE S ECVAR1=$$FNDVST^ECUTL(ECVST,,.EC2PCE) K ECVAR1
+ ..S ECVAR1=$$FNDVST^ECUTL(ECVST) K ECVAR1
  ..;Set VALQUIET to stop Amb Care validator from broadcasting to screen
- ..N ECPKG,ECSOU
- ..S ECPKG=$O(^DIC(9.4,"B","EVENT CAPTURE",0)),ECSOU="EVENT CAPTURE DATA"
- ..S VALQUIET=1,ECVV=$$DELVFILE^PXAPI("ALL",ECVST,ECPKG,ECSOU) K ECVST,VALQUIET
- ..;- Send to PCE task
- ..D PCETASK^ECPCEU(.EC2PCE) K EC2PCE
+ ..S VALQUIET=1,ECVV=$$DELVFILE^PXAPI("ALL",ECVST) K ECVST,VALQUIET
  .S DA=ECIEN,DIK="^ECH(" D ^DIK K DA,DIK,ECVV
  .S ^TMP($J,"ECMSG",1)="1^Procedure Deleted"
  I '$D(ECPRV) S ^TMP($J,"ECMSG",1)="0^No provider present" Q
@@ -65,9 +59,6 @@ FILE ;Used by the RPC broker to file patient encounter in file #721
  .S ^TMP($J,"ECMSG",1)=ECRES_" Clinic MUST be corrected before filing."
  Q:ECERR  I ECFLG D NEWIEN
  S ECCPT=$S(ECP["ICPT":+ECP,1:$P($G(^EC(725,+ECP,0)),U,5))
- ;validate CPT value and handle HCPCS name to IEN conversion (HD223010)
- S ECCPT=+$$CPT^ICPTCOD(ECCPT)
- S ECCPT=$S(+ECCPT>0:ECCPT,1:0)
  K DA,DR,DIE S DIE="^ECH(",(DA,ECFN)=ECIEN K ECIEN
  S DR=".01////"_ECFN_";1////"_ECDFN_";3////"_ECL_";4////"_ECS
  S DR=DR_";5////"_ECM_";6////"_ECD_";7////"_+ECC_";9////"_ECVOL
@@ -116,9 +107,9 @@ FILE ;Used by the RPC broker to file patient encounter in file #721
  . K PXUPD,ECDXY,ECDXX,DXS,DXSIEN,DIC,DXCDE,DA,DD,DO
  I $D(DTOUT) D RECDEL,MSG Q
  S DA=ECFN
- ;File classification AO^IR^SC^EC^MST^HNC^CV^SHAD
+ ;File classification AO^IR^SC^EC^MST^HNC^CV
  I $G(ECLASS)'="" D
- . S CLSTR="21^22^24^23^35^39^40^41",DR=""
+ . S CLSTR="21^22^24^23^35^39^40",DR=""
  . F ECX=1:1:$L(CLSTR,"^") D
  . . S DR=DR_$P(CLSTR,U,ECX)_"////"_$P(ECLASS,U,ECX)_";"
  . S DR=$E(DR,1,($L(DR)-1)) D ^DIE
@@ -137,7 +128,7 @@ PCE ; format PCE data to send
  ;
 NEWIEN ;Create new IEN in file #721
  N DIC,DA,DD,DO,ECRN
-RLCK L +^ECH(0):60 S ECRN=$P(^ECH(0),"^",3)+1
+RLCK L +^ECH(0) S ECRN=$P(^ECH(0),"^",3)+1
  I $D(^ECH(ECRN)) S $P(^ECH(0),"^",3)=$P(^(0),"^",3)+1 L -^ECH(0) G RLCK
  L -^ECH(0) S DIC(0)="L",DIC="^ECH(",X=ECRN
  D FILE^DICN S ECIEN=+Y

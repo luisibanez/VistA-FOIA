@@ -1,10 +1,8 @@
 PSDESTO ;BIR/BJW-Add CS Non-Inv Drug to Holding file ; 28 Feb 98
- ;;3.0; CONTROLLED SUBSTANCES ;**8,32,66,69**;13 Feb 97;Build 13
+ ;;3.0; CONTROLLED SUBSTANCES ;**8,32**;13 Feb 97
  ;**Y2K compliance**;display 4 digit year on va forms
- ;References to ^PSD(58.86, supported by DBIA4472
- ;
  I '$D(PSDSITE) D ^PSDSET Q:'$D(PSDSITE)
- I '$D(^XUSEC("PSJ RPHARM",DUZ)),'$D(^XUSEC("PSD TECH ADV",DUZ)) W !!,"Please contact your Pharmacy Coordinator for access to",!,"destroy Controlled Substances.",!!,"PSJ RPHARM or PSD TECH ADV security key required.",! G END
+ I '$D(^XUSEC("PSJ RPHARM",DUZ)) W !!,"Please contact your Pharmacy Coordinator for access to",!,"destroy Controlled Substances.",!!,"PSJ RPHARM security key required.",! G END
  S PSDUZ=DUZ D NOW^%DTC S PSDT=+$E(%,1,12)
  W !!,?5,"NOTE: This Holding for Destruction transaction WILL NOT update your",!,?5,"Controlled Substances inventory balance.",!!
 ASKD ;ask disp location
@@ -40,7 +38,7 @@ ASKY ;ask ok to continue
  D ^DIR K DIR I $D(DIRUT) D MSG G END
  I 'Y W !!,"Select a new CS drug to place on hold for destruction",!! G DRUG
  W !!,"Creating an entry in the Destructions file..."
- F  L +^PSD(58.86,0):$S($G(DILOCKTM)>0:DILOCKTM,1:3) I  Q
+ F  L +^PSD(58.86,0):0 I  Q
  ;Field 14 added for E3R# 3771,Fld 18 added 7/27/95
 FIND S PSDHLD=$P(^PSD(58.86,0),"^",3)+1 I $D(^PSD(58.86,PSDHLD)) S $P(^PSD(58.86,0),"^",3)=PSDHLD G FIND
  K DA,DIC,DLAYGO S (DIC,DLAYGO)=58.86,DIC(0)="L",(X,DINUM)=PSDHLD D ^DIC K DIC,DLAYGO

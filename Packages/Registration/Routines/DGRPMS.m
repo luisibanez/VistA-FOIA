@@ -1,23 +1,12 @@
-DGRPMS ;ALB/BRM,LBD - MILITARY SERVICE APIS ; 8/15/08 11:36am
- ;;5.3;Registration;**451,626,646,673,689,688**;Aug 13, 1993;Build 29
+DGRPMS ;ALB/BRM,LBD - MILITARY SERVICE APIS ; 1/24/05 8:44am
+ ;;5.3;Registration;**451,626,646**;Aug 13, 1993
  ;
-VALCON1(DFN,IEN,CDATE,FRTO) ; Valid conflict input for OIF/OEF/UNKNOWN OEF/OIF?
- ; Need to send the ien of the multiple as well as the DFN and
- ; determine the specific conflict area
- N Z
- S Z=$P("OIF^OEF^UNK",U,+$G(^DPT(DFN,.3215,+IEN,0)))
- ;Q:Z="UNK" 1  ; Never need to check this - only entered through HEC
- Q $$VALCON(DFN,Z_"-"_IEN,CDATE,FRTO)
- ;
-VALCON(DFN,CNFLCT,CDATE,FRTO,OEIFAIL) ;is this a valid conflict input?
+VALCON(DFN,CNFLCT,CDATE,FRTO) ;is this a valid conflict input?
  ;
  ;INPUT:
  ;      FRTO - 0=FRDT 1=TODT  (defaults to FRDT if FRTO="")
- ;OUTPUT:
- ;      OEIFAIL = 1 for not within MSE for OIF/OEF data (pass by ref)
  ;
- N RTN,X,Y,FRDT,TODT,CNFLCTV,IGNORE,COMPOW,MSG,DTCHK,CNFLCT2,OEFOIF
- S OEIFAIL=0
+ N RTN,X,Y,FRDT,TODT,CNFLCTV,IGNORE,COMPOW,MSG,DTCHK,CNFLCT2
  Q:'$D(DFN) "0^INVALID PATIENT"
  Q:'$D(^DPT(DFN)) "0^INVALID PATIENT"
  Q:'$$VALID^DGRPDT(.CDATE) "0^INVALID DATE"
@@ -36,14 +25,10 @@ VALCON(DFN,CNFLCT,CDATE,FRTO,OEIFAIL) ;is this a valid conflict input?
  ;
  S MSG=$S('$G(COMPOW):"Conflict",$G(COMPOW)=2:"POW",1:"Combat")
  I FRDT,TODT,'$$B4^DGRPDT(FRDT,TODT,0) D MSG((MSG_" From Date is not Before "_MSG_" To Date"),2,1) Q "0^"_MSG_" From Date is not Before "_MSG_" To Date"
- S IGNORE=$S('$P(CNFLCT,"-",2):$P($P($T(@($P(CNFLCT,"-"))),";;",2),"^",FRTO+1),1:"")
+ S IGNORE=$P($P($T(@(CNFLCT)),";;",2),"^",FRTO+1)
  S:$G(COMPOW) IGNORE=$P($P($T(@(CNFLCT2)),";;",2),"^",FRTO+1)
- ; 
- ; Check for overlaps and dates w/in MSE's, except for POW DG*5.3*688
- S RTN=1
- I $G(COMPOW)'=2 D
- . S OEFOIF=$S($P(CNFLCT,"-",2):$P(CNFLCT,"-",2)_U_CNFLCT,1:""),RTN=$$COVRLP2^DGRPDT(DFN,FRDT,TODT,IGNORE,.OEFOIF)
- . I 'RTN,$G(OEFOIF),$G(OEFOIF(1)) S OEIFAIL=1
+ I $G(COMPOW)=2 S RTN=$$OVRLPCHK^DGRPDT(DFN,FRDT,TODT,-1,IGNORE)
+ E  S RTN=$$COVRLP2^DGRPDT(DFN,FRDT,TODT,IGNORE)
  Q:RTN RTN
  D MSG($P(RTN,"^",2),2,1)
  Q RTN
@@ -84,46 +69,18 @@ BRANCH(DGCOMBR) ;branches of service that require WWII service dates
  Q:BRANCH="F.SCOUTS OLD" 1
  Q 0
  ;
-VALCOMP(DFN,CODE,DGEPI) ; Verify component is consistent with the corresponding
- ;  branch of service  Also, branch of service must be entered before
- ;  component.
- ;  ACTIVATED NATIONAL GUARD (G) only valid for ARMY or AIR FORCE branch
- ;  ACTIVATED RESERVE (V) only valid for ARMY, AIR FORCE, MARINES, NAVY
- ;                    or COAST GUARD branch
- ; DFN = ien of patient in file 2
- ; DGEPI = episode # to check (1=LAST, 2=NTL, 3=NNTL)
- ; CODE = the component code
- ; OUTPUT: 1 if valid component
- ;         0 if invalid component or branch of serv missing
- N Z
- S Z=+$P($G(^DPT(DFN,.32)),U,DGEPI*5)
- I 'Z Q 0  ; Require bos
- I CODE="R" Q 1  ; Regular is valid for all
- Q:Z=1!(Z=2) 1  ; Army (1)/air force (2) valid for guard and reserves
- ; reserves also include navy (3), marines (4), coast guard (5)
- I CODE="V" Q $S(Z>2&(Z<6):1,1:0)
- ;
- Q 0
- ;
 GETDT(DFN,CNFLCT,FRTO) ; get from date, to date, or location from patient file
  ;
- N CFLDS,CFLD,CNF1,CNF2,RTN1,IENS,FILE
+ N CFLDS,CFLD,RTN1
  Q:'$D(DFN) ""
  Q:'$D(^DPT(DFN)) ""
  Q:$G(CNFLCT)="" ""
  S:$G(FRTO)="" FRTO=0
- S CNF1=$P(CNFLCT,"-"),CNF2=+$P(CNFLCT,"-",2)
- ; OEF/OIF/ UNKNOWN OEF/OIF data without a supplied entry in the
- ;   multiple cannot be retrieved  OEF-1 indicates an OEF location
- ;   stored at the '1' subscript of the .3215 multiple
- I "^OEF^OIF^UNK^"[(U_CNF1_U),'CNF2 Q ""
- S CFLDS=$P($T(@(CNF1)),";;",2) Q:CFLDS']"" ""
+ S CFLDS=$P($T(@(CNFLCT)),";;",2) Q:CFLDS']"" ""
  S CFLD=$S('FRTO:$P(CFLDS,"^",2),FRTO=1:$P(CFLDS,"^"),1:$P(CFLDS,"^",3))
  Q:'CFLD ""
- S IENS=DFN_",",FILE=2
- S:CNF2 IENS=CNF2_","_IENS,FILE=2.3215 ; For OIF/OEF, must set ref to multiple
- S RTN1=$$GET1^DIQ(FILE,IENS,CFLD,"I")
- I FRTO=4 S RTN1=RTN1_"^"_$$EXTERNAL^DILFD(FILE,CFLD,"",RTN1)
+ S RTN1=$$GET1^DIQ(2,DFN_",",CFLD,"I")
+ I FRTO=4 S RTN1=RTN1_"^"_$$EXTERNAL^DILFD(2,CFLD,"",RTN1)
  Q RTN1
  ;
 WWII(DFN,TODT,FLD) ; was this patient in WWII?
@@ -226,9 +183,6 @@ PAN ;;.3228^.3229
 GULF ;;.322011^.322012
 SOM ;;.322017^.322018
 YUG ;;.32202^.322021
-OEF ;;.02^.03
-OIF ;;.02^.03
-UNK ;;.02^.03
  ;;
  ;;  **BELOW VALUES ARE USED FOR MSE CHECKS - DO NOT REMOVE ***
  ;; ENTRY DATE^SEPERATION DATE

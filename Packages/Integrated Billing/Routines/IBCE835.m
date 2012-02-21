@@ -1,7 +1,5 @@
-IBCE835 ;ALB/TMP/PJH - 835 EDI EXPLANATION OF BENEFITS MSG PROCESSING ; 7/15/10 4:40pm
- ;;2.0;INTEGRATED BILLING;**137,135,155,377,431**;21-MAR-94;Build 106
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;
+IBCE835 ;ALB/TMP - 835 EDI EXPLANATION OF BENEFITS MSG PROCESSING ;19-JAN-99
+ ;;2.0;INTEGRATED BILLING;**137,135,155**;21-MAR-94
  Q
  ;
  ; MESSAGE HEADER DATA STRING =
@@ -70,29 +68,24 @@ HDR(IBCLNO,IBD) ;Process header data
  ;
  I '$D(^TMP("IBMSG",$J,"CLAIM",IBBILL)) D HDR(IBBILL,.IBD) ;Process header data if not already done for claim
  ;
+ I $P(IBD,U,7)="Y"!($P(IBD,U,8)="Y") D  ;New patient name or id reported
+ . ;
+ . ; Alert to EDI mail group that name or ID has changed
+ . N XQA,XQAMSG
+ . S XQA("G.IB EDI")=""
+ . S XQAMSG="EOB for bill # "_IBBILL_" indicates a new name or id exists for patient"
+ . D SETUP^XQALERT
+ . ;
+ . S IBD("LINE")=$G(IBD("LINE"))+1
+ . I $P(IBD,U,7)="Y" S ^TMP("IBMSG",$J,"CLAIM",IBBILL,IBD("LINE"))="New patient name: "_$P(IBD,U,3)_","_$P(IBD,U,4)_" "_$P(IBD,U,5)_"  "
+ . I $P(IBD,U,8)="Y" S ^TMP("IBMSG",$J,"CLAIM",IBBILL,IBD("LINE"))=$G(^TMP("IBMSG",$J,"CLAIM",IBBILL,IBD("LINE")))_"New patient id: "_$P(IBD,U,6)
+ ;
  I $P(IBD,U,9) D  ;Statement dates
  . S IBD("LINE")=$G(IBD("LINE"))+1
  . S ^TMP("IBMSG",$J,"CLAIM",IBBILL,IBD("LINE"))="Statement Dates: "_$$DATE^IBCE277($P(IBD,U,9))_" - "_$$DATE^IBCE277($P(IBD,U,10))
  ;
  S ^TMP("IBMSG",$J,"CLAIM",IBBILL,"D",5,1)="##RAW DATA: "_IBD
  S ^TMP("IBMSG",$J,"CLAIM",IBBILL,"D1",1,5)="##RAW DATA: "_IBD
- Q
- ;
-6(IBD) ; Process 06 record type for corrected name and/or ID# - IB*2*377 - 1/14/08
- NEW IBCLM,Z
- S IBCLM=$$GETCLM^IBCE277($P(IBD,U,2))
- Q:IBCLM=""
- I '$D(^TMP("IBMSG",$J,"CLAIM",IBCLM)) D HDR(IBCLM,.IBD)   ;Process header data if not already done for claim
- ;
- S Z=$G(IBD("LINE"))
- I $P(IBD,U,3)'="" S Z=Z+1,^TMP("IBMSG",$J,"CLAIM",IBCLM,Z)="Corrected Patient Last Name: "_$P(IBD,U,3)
- I $P(IBD,U,4)'="" S Z=Z+1,^TMP("IBMSG",$J,"CLAIM",IBCLM,Z)="Corrected Patient First Name: "_$P(IBD,U,4)
- I $P(IBD,U,5)'="" S Z=Z+1,^TMP("IBMSG",$J,"CLAIM",IBCLM,Z)="Corrected Patient Middle Name: "_$P(IBD,U,5)
- I $P(IBD,U,6)'="" S Z=Z+1,^TMP("IBMSG",$J,"CLAIM",IBCLM,Z)="Corrected Patient ID#: "_$P(IBD,U,6)
- S IBD("LINE")=Z
- ;
- S ^TMP("IBMSG",$J,"CLAIM",IBCLM,"D",6,1)="##RAW DATA: "_IBD
- S ^TMP("IBMSG",$J,"CLAIM",IBCLM,"D1",1,6)="##RAW DATA: "_IBD
  Q
  ;
 10(IBD) ; Process claim status data
@@ -123,7 +116,7 @@ HDR(IBCLNO,IBD) ;Process header data
  . S CT=CT+1,LINE(CT)="CLAIM STATUS: "_$P(IBD,U,7)_" (OTHER)"
  ;
  I $P(IBD,U,8)'="" D  ;Crossed over info
- . S CT=CT+1,LINE(CT)="Crossed over to: "_$P(IBD,U,9)_"  "_$P(IBD,U,8)
+ . S LINE(CT)=LINE(CT)_"  Crossed over to: "_$P(IBD,U,9)_"  "_$P(IBD,U,8)
  ;
  I CT D
  . S L=$G(IBD("LINE")),Z=0
@@ -191,18 +184,6 @@ HDR(IBCLNO,IBD) ;Process header data
  D 45^IBCE835A(.IBD)
  Q
  ;
-11(IBD) ; Process claim status rendering provider data segment
- D XX(.IBD,11)
- Q
- ;
-12(IBD) ; Process claim status corrected priority payer data segment
- D XX(.IBD,12)
- Q
- ;
-13(IBD) ; Process claim status other subscriber data segment
- D XX(.IBD,13)
- Q
- ;
 17(IBD) ; Process claim contact data segment
  D XX(.IBD,17)
  Q
@@ -221,10 +202,6 @@ HDR(IBCLNO,IBD) ;Process header data
  ;
 42(IBD) ; Process service line data (part 3)
  D XX(.IBD,42)
- Q
- ;
-46(IBD) ; Process Adjustment Policy Reference segment
- D 46^IBCE835A(.IBD)
  Q
  ;
 99(IBD) ; Process trailer record for non-MRA EOB

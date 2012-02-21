@@ -1,6 +1,6 @@
-IBCNSP3 ;ALB/AAS - INSURANCE MANAGEMENT EDIT ;06-JUL-93
- ;;2.0;INTEGRATED BILLING;**28,52,85,251,371**;21-MAR-94;Build 57
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCNSP3 ;ALB/AAS - INSURANCE MANAGEMENT EDIT ; 06-JUL-93
+ ;;2.0;INTEGRATED BILLING;**28,52,85,251**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 % G ^IBCNSM4
  ;
@@ -11,7 +11,6 @@ SAVEPT(DFN,DA) ; -- Save the global before editing
  S ^TMP($J,"IBCNSPT",2.312,DFN,+DA,2)=$G(^DPT(DFN,.312,+DA,2))
  S ^TMP($J,"IBCNSPT",2.312,DFN,+DA,3)=$G(^DPT(DFN,.312,+DA,3))
  S ^TMP($J,"IBCNSPT",2.312,DFN,+DA,4)=$G(^DPT(DFN,.312,+DA,4))
- S ^TMP($J,"IBCNSPT",2.312,DFN,+DA,5)=$G(^DPT(DFN,.312,+DA,5))
  Q
  ;
 COMPPT(DFN,DA) ; -- Compare before editing with globals
@@ -21,7 +20,6 @@ COMPPT(DFN,DA) ; -- Compare before editing with globals
  I $G(^DPT(DFN,.312,+DA,2))'=$G(^TMP($J,"IBCNSPT",2.312,DFN,+DA,2)) S IBDIF=1 G COMPPTQ
  I $G(^DPT(DFN,.312,+DA,3))'=$G(^TMP($J,"IBCNSPT",2.312,DFN,+DA,3)) S IBDIF=1 G COMPPTQ
  I $G(^DPT(DFN,.312,+DA,4))'=$G(^TMP($J,"IBCNSPT",2.312,DFN,+DA,4)) S IBDIF=1 G COMPPTQ
- I $G(^DPT(DFN,.312,+DA,5))'=$G(^TMP($J,"IBCNSPT",2.312,DFN,+DA,5)) S IBDIF=1 G COMPPTQ
  ;
 COMPPTQ I IBDIF D:'$D(IBCOVP) COVERED^IBCNSM31(DFN,$P($G(^DPT(DFN,.31)),"^",11))
  Q

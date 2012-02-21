@@ -1,12 +1,11 @@
 PSGOER ;BIR/CML3-RENEW A SINGLE ORDER ;07 MAR 96 / 1:23 PM
- ;;5.0; INPATIENT MEDICATIONS ;**11,30,29,35,70,58,95,110,111,133,141,198,181**;16 DEC 97;Build 190
+ ;;5.0; INPATIENT MEDICATIONS ;**11,30,29,35,70,58,95,110,111,133,141**;16 DEC 97
  ;
  ; Reference to ^PS(51.1 supported by DBIA 2177.
  ; Reference to ^PS(55 supported by DBIA 2191.
  ; Reference to ^PSSLOCK is supported by DBIA 2789.
  ; Reference to ^PSBAPIPM is supported by DBIA 3564.
  ; Reference to ^PS(59.7 is supported by DBIA 2181.
- ; Reference to ^PSDRUG( is supported by DBIA 2192.
  ;
  ; renew a single order
  I $G(PSJCOM) D ^PSJCOMR Q
@@ -41,14 +40,12 @@ EXTEND ; extend stop date on renewal order
  N DUOUT,PSJABT,PSGDRG,PSJREN,PSGOREAS S PSGDRG=$P($G(^PS(55,PSGP,5,+PSGORD,1,1,0)),"^"),PSJREN=1
  I $G(PSGST)="O" N ACT S ACT=$$EN^PSBAPIPM(PSGP,PSGORD) I $P(ACT,"^",2),($P(ACT,"^",3)="G") I $P(ACT,"^",2)>$P($G(^PS(55,PSGP,5,+PSGORD,2)),"^",2) D  Q
  . W !!?5,"THIS ONE-TIME ORDER HAS ALREADY BEEN GIVEN AND CANNOT BE RENEWED",! S (DIRUT,PSGORQF)=1 D READ
- ;D OC55
- ;Q:$D(PSGORQF)  ; quit if not to continue
+ D OC55
+ Q:$D(PSGORQF)  ; quit if not to continue
  D NOW^%DTC S PSGDT=%,PSGND4=$G(^PS(55,PSGP,5,+PSGORD,4)) I '$P(PSJSYSP0,"^",3) D MARK Q
  S PSGWLL=$S('$P(PSJSYSW0,"^",4):0,1:+$G(^PS(55,PSGP,5.1))),PSGOEE="R" K PSGOEOS
  K ^PS(53.45,PSJSYSP,1),^(2) D MOVE(3,1),MOVE(1,2)
  D DATE^PSGOER0(PSGP,PSGORD,PSGDT) I ($G(X)="^")!'$D(PSGFOK(106))!$G(DUOUT) D DONE,ABORT^PSGOEE S VALMBCK="R",COMQUIT=1 Q
- ;D OC55
- ;I $G(PSGORQF) D DONE,ABORT^PSGOEE S VALMBCK="R",COMQUIT=1 Q
 SPEED ;
  I +$G(PSJSYSU)=3 D EN^PSGPEN(PSGORD)
  Q:$G(DUOUT)
@@ -69,22 +66,11 @@ MOVE(X,Y) ; Move comments/dispense drugs from 55 to 53.45.
  S:Q ^PS(53.45,Y,0)="^53.450"_Y_"P^"_Q_U_Q
  Q
 OC55 ;* Order checks for Speed finish and regular finish
- ;PSJ*5*181 - no longer use (OC will be triggered from OC^PSGOER0)
- Q
-NEWOC55 ;
- N INTERVEN,PSJDDI,PSJIREQ,PSJRXREQ,PSJPDRG,PSJDD,PSJDD0,PSJALLGY
+ N INTERVEN,PSJDDI,PSJIREQ,PSJRXREQ,PSJPDRG
  S Y=1,(PSJIREQ,PSJRXREQ,INTERVEN,X)=""
- F PSGDDI=0:0 S PSGDDI=$O(^PS(55,PSGP,5,+PSGORD,1,PSGDDI)) Q:'+PSGDDI  D
- . S PSJDD0=$G(^PS(55,PSGP,5,+PSGORD,1,PSGDDI,0))
- . S PSJX=$P(PSJDD0,U,3) I PSJX]"",(PSJX'>$G(PSGDT)) Q
- . S PSJDD=+PSJDD0
- . S PSJX=$S('$D(^PSDRUG(+PSJDD,0)):1,$P($G(^(2)),U,3)'["U":1,$G(^("I"))="":0,1:^("I")'>$G(PSGDT))
- . Q:PSJX
- . S PSJALLGY(PSJDD)=""
- S PSJDD=$O(PSJALLGY(0))
- I '+PSJDD W !!,"No active dispense drug was found" D PAUSE^PSJLMUT1 Q
- K PSGORQF D ENDDC^PSGSICHK(PSGP,PSJDD)
- D:'$G(PSGORQF) IN^PSJOCDS(PSGORD,"UD",PSJDD) Q:$G(PSGORQF)
+ K PSGORQF D ENDDC^PSGSICHK(PSGP,+$G(^PS(55,PSGP,5,+PSGORD,1,1,0)))
+ I '$D(PSGORQF) K PSGORQF,^TMP($J,"DI") D
+ . F PSGDDI=1:0 S PSGDDI=$O(^PS(55,PSGP,5,+PSGORD,1,PSGDDI)) Q:'PSGDDI  S PSJDD=+$G(^PS(55,PSGP,5,+PSGORD,1,PSGDDI,0)) K PSJPDRG D IVSOL^PSGSICHK
  Q
 UPDREN(PSGORD,RNWDT,PSGOEPR,PSGOFD,PSJNOO,RDUZ) ; update renewed order
  N DR,DA,DIC,DIE,DD,DO,PSGRZERO,PSGRFOUR,PSGOORD
@@ -95,8 +81,7 @@ UPDREN(PSGORD,RNWDT,PSGOEPR,PSGOFD,PSJNOO,RDUZ) ; update renewed order
  K DR,DA,DIC,DIE,DD,DO S DIC="^PS(55,"_PSGP_",5,"_+PSGORD_",14,",DIC(0)="L",DIC("P")="55.6114DA",ND14=$G(@(DIC_"0)")),DINUM=$P(ND14,"^",3)+1,DA(2)=PSGP,DA(1)=+PSGORD D
  . S DIC("DR")=".01////"_$G(RNWDT)_";1////"_$S($G(RDUZ):RDUZ,1:$G(DUZ))_";2////"_$G(PSGOEPR)_";3////"_$G(PSGOFD)_";4////"_+PSGOEORD,X=$G(RNWDT) D FILE^DICN
  K DR,DA,DIC,DIE,DD,DO S DA(1)=PSGP,DA=+PSGORD,DIE="^PS(55,"_PSGP_",5,",DR="28////A;105////@;107////@"
- ;PSJ*5*198
- S PSGRFOUR="^PS(55,"_PSGP_",5,"_+PSGORD_",4)",PSGRFOUR=@PSGRFOUR I $P(PSGRFOUR,"^",2)<RNWDT S DR=DR_";16////@;17////@" I $G(PSJORD)["P",+PSJSYSU=1 S DR=DR_";18////@;19////@"
+ S PSGRFOUR="^PS(55,"_PSGP_",5,"_+PSGORD_",0)",PSGRFOUR=@PSGRFOUR I $P(PSGRFOUR,"^",2)<RNWDT S DR=DR_";16////@;17////@"
  I '$G(PSJSPEED) I $G(PSGAT)]"",$G(PSGAT)'=$P($G(@(DIE_+PSGORD_",2)")),"^",5) S DR=DR_";41////"_PSGAT
  D ^DIE
  Q
@@ -119,7 +104,7 @@ EXPOE(DFN,PSJORDER,EXPDT) ; expire old Orders File entry
 EXPIRED(PSJX,PSJY) ;
  ; INPUT 
  ;       PSJX - Pharmacy Patient, pointer to ^PS(55
- ;       PSJY - Inpatient Order Number(appended with "V" or "U")
+ ;       PSJY - Inpatient Order Number, pointer to IV or UD multiple of Pharmacy Patient file (appended with "V" or "U")
  ; OUTPUT
  ;   0  -  Order has not exceeded the Expired Time Limit 
  ;   1  -  Order has exceeded the Expired Time Limit

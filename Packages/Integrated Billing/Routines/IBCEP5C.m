@@ -1,6 +1,5 @@
 IBCEP5C ;ALB/TMP - EDI UTILITIES for provider ID ;02-NOV-00
- ;;2.0;INTEGRATED BILLING;**137,239,232,320,348,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,239,232**;21-MAR-94
  ;
 COMBOK(IBFILE,IBDAT,IBALL,IBF) ; Generic ask if conflict, should id rec still
  ;  be added?
@@ -29,8 +28,8 @@ COMBOK(IBFILE,IBDAT,IBALL,IBF) ; Generic ask if conflict, should id rec still
  .. I $P(X0,U,IBD)'=IBD(IBD),"12"[$P(X0,U,IBD),($P(X0,U,IBDD)=Z(IBDD)!($P(X0,U,IBDD)=0)!(Z(IBDD)=0&(IBD(IBD)=0))) S X1($P(X0,U,IBD))=X1 Q
  .. I IBD(IBD)=0,Z(IBDD)=0 S X1(0)=X1
  . S X0=0 F  S X0=$O(X1(X0)) Q:X0=""  D
- .. S IBSPEC=$S($G(IBSPEC)'="":IBSPEC_"  ",1:"")_$P($S(IBD=4:"UB-04^CMS-1500",1:"INPT^OUTPT"),U,X0)_" ONLY"
- . I $D(X1(0)) S IBSPEC=$S($G(IBSPEC)'="":IBSPEC_"  ",1:"")_$S(IBD=4:"BOTH UB-04 and CMS-1500 form type  AND  BOTH INPT and OUTPT care type",1:"BOTH INPT and OUTPT care type  AND  BOTH UB-04 and CMS-1500 form type")
+ .. S IBSPEC=$S($G(IBSPEC)'="":IBSPEC_"  ",1:"")_$P($S(IBD=4:"UB92^HCFA 1500",1:"INPT^OUTPT"),U,X0)_" ONLY"
+ . I $D(X1(0)) S IBSPEC=$S($G(IBSPEC)'="":IBSPEC_"  ",1:"")_$S(IBD=4:"BOTH UB92 and HCFA 1500 form type  AND  BOTH INPT and OUTPT care type",1:"BOTH INPT and OUTPT care type  AND  BOTH UB92 and HCFA 1500 form type")
  . ;
  I 'IBALL D
  . N X0,X1
@@ -42,7 +41,7 @@ COMBOK(IBFILE,IBDAT,IBALL,IBF) ; Generic ask if conflict, should id rec still
  I $D(IBSPEC) D
  . N X0,X1,TEXT,IBWHAT
  . S IBWHAT=$S(IBFILE=355.9:$S($G(IBF):"INS CO AND PROVIDER",1:"PROVIDER"),1:"INSURANCE CO")
- . S X0=$S($D(IBD(4)):"UB-04^CMS-1500",1:"INPT^OUTPT")
+ . S X0=$S($D(IBD(4)):"UB-92^HCFA 1500",1:"INPT^OUTPT")
  . S X1=$S($D(IBD(4)):"FORM TYPE",1:"CARE TYPE")
  . S DIR(0)="YA"
  . S TEXT(1)="WARNING ... POTENTIAL CONFLICT DETECTED!!"
@@ -103,12 +102,7 @@ DEL(IBFILE,IBDA,IBF) ; Delete prov specific ID's
  S DIR(0)="YA"
  W ! D ^DIR K DIR W !
  I Y'=1 G DELQ
- I IBDA>0 D
- . I IBFILE=355.91!(IBFILE=355.9&($P($G(^IBA(IBFILE,IBDA,0)),U)["VA(200,")) D
- .. N NEXTONE S NEXTONE=$$NEXTONE^IBCEP5A()
- .. S ^TMP("IB_EDITED_IDS",$J,NEXTONE)=IBDA_U_"DEL"_U_IBFILE_U_IBDA
- .. S ^TMP("IB_EDITED_IDS",$J,NEXTONE,0)=$G(^IBA(IBFILE,IBDA,0))
- . S DA=IBDA,DIK="^IBA("_IBFILE_"," D ^DIK
+ I IBDA>0 S DA=IBDA,DIK="^IBA("_IBFILE_"," D ^DIK
 DELQ L -^IBA(IBFILE,IBDA)
  Q
  ;

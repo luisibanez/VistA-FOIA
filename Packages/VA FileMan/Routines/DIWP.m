@@ -1,26 +1,6 @@
-DIWP ;SFISC/GFT-ASSEMBLE WP LINE ;10JUN2005
- ;;22.0;VA FileMan;**46,152**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
- ;The DIWF variable contains a string of one-letter codes to control W-P output.
- ;"|" in DIWF means that "|"-windows are not to be evaluated, but are to be printed as
- ;     they stand.
- ;"X" means eXactly line-for-line, with "||" printed as "||"
- ;"W" in DIWF means that formatted text will be written out to
- ;     the current device as it is assembled.
- ;"N" means NOWRAP-- text is assembled line-for-line
- ;"R" means text will be assembled Right-justified
- ;"D" means text will be double-spaced
- ;"L" means internal line numbers appear at the left margin
- ;"C" followed by a number will cause formatting of text in a column
- ;     width specified by the number.
- ;"I" followed by a number will cause text to be indented that number
- ;     of columns.
- ;"?" means that, if user's terminal is available, "|"-windows that cannot
- ;     be evaluated will be asked from the user's terminal.
- ;"B" followed by number causes new page when output gets within that
- ;   number of lines from the bottom of the page (as defined by IOSL).
- ;   
- ;DIWTC is a Boolean -- Are we printing out in LINE MODE?
+DIWP ;SFISC/GFT-ASSEMBLE WP LINE ;12:15 PM  5 Jun 2000
+ ;;22.0;VA FileMan;**46**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  S:'$L(X) X=" "
  S DIWTC=X[($C(124)_"TAB") S:'$D(DN) DN=1
 LN S:'$D(DIWF) DIWF="" S:'DIWTC DIWTC=DIWF["N" S DIWX=X,DIW=$C(124),I=$P(DIWF,"C",2) I I S DIWR=DIWL+I-1
@@ -28,8 +8,7 @@ LN S:'$D(DIWF) DIWF="" S:'DIWTC DIWTC=DIWF["N" S DIWX=X,DIW=$C(124),I=$P(DIWF,"C
  S I=^(DIWL),DIWI=^(DIWL,I,0) I DIWI="" D DIWI G Z
  D NEW:DIWTC
 Z S Z=X?.P!DIWTC I X?1" ".E!Z S DIWTC=1 D NEW:DIWI]"" S DIWTC=Z
-DIW ;from RCR+5^DIWW
- I DIWF["X" S DIWTC=1,X=DIWX,DIWX="" D C G D ;**DI*22*152**  Leave line unaltered
+DIW ;
  S X=$P(DIWX,DIW,1) D C:X]"" S X=$P(DIWX,DIW,1),DIWX=$P(DIWX,DIW,2,999) G D:DIWX="" I $D(DIWP),X'?.E1" " D ST
  S X=$P(DIWX,DIW,1) I $P(X,"TAB",1)="" D TAB G N
  I X="TOP" D PUT S ^("X")="S DIFF=1 X:$D(^UTILITY($J,1)) ^(1)" D NEW G N

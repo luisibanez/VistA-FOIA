@@ -1,13 +1,10 @@
-PRSATIM ;HISC/REL - Time Input Conversion ;01/21/05
- ;;4.0;PAID;**69,70,71,93,100**;Sep 21, 1995;Build 3
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRSATIM ;HISC/REL-Time Input Conversion ;10/17/01
+ ;;4.0;PAID;**69,70,71**;Sep 21, 1995
  S X=$TR(X,"adimnop","ADIMNOP")
- S X=$S(X="M":"MID",X="N":"NOON",1:X)
  I X?1"12".A S X=$S(X="12M":"MID",X="12N":"NOON",1:X)
  I X?1.A S X=$S(X["MID":2400,X["NOON":1200,1:"")
  S:$E(X,$L(X))="M" X=$E(X,1,$L(X)-1) S X1=$E(X,$L(X)) I X1?1U,"AP"'[X1 G ERR
  S X1=$P(X,":",2) I X1'="",X1'?2N1.2U G ERR
- I $L(X)>7 G ERR
  I X'?4N,$S($L(+X)<3:+X,1:+X\100)>12 G ERR
  S X=$P(X,":",1)_$P(X,":",2),X1=X
  G:X?4N A I X'?1.4N1.2U G ERR

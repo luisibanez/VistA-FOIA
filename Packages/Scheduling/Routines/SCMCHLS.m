@@ -1,5 +1,5 @@
-SCMCHLS ;BPOI/DJB - PCMM HL7 Segment Utils;12/13/99
- ;;5.3;Scheduling;**177,210,212,293,515,524**;08/13/93;Build 29
+SCMCHLS ;BP/DJB - PCMM HL7 Segment Utils ; 12/13/99 12:40pm
+ ;;5.3;Scheduling;**177,210,212,293**;AUG 13, 1993
  ;
  ;Ref rtn: SCDXMSG1
  ;
@@ -16,8 +16,7 @@ BLDZPC ;Build ZPC segment
  ;djb/bp Patch 210. Sequentially number multiple ZPC segments.
  ;new code begin
  S SCSEQ=$G(SCSEQ)+1 ;Increment ZPC sequence number.
- ; S VAFZPC=$$ZPC^SCMCHLZ("",ID,DATA,SCSEQ)
- S VAFZPC=$$ZPC^SCMCHLZ("",.ID,.DATA,SCSEQ)
+ S VAFZPC=$$ZPC^SCMCHLZ("",ID,DATA,SCSEQ)
  ;new code end
  ;old code begin
  ;S VAFZPC=$$ZPC^SCMCHLZ("",ID,DATA)
@@ -34,9 +33,7 @@ CPYPID ;Copy PID segment
  M @XMITARRY@(SUB,SEGNAME,1)=VAFPID
  Q
 CPYZPC ;Copy ZPC segment
- ; PATCH 515 DLL USE ORIG TRIG 
- ; old code = M @XMITARRY@($P(ID,"-",1),"ZPC",ID)=VAFZPC
- M @XMITARRY@(SUB,"ZPC",ID)=VAFZPC  ; og/sd/524
+ M @XMITARRY@($P(ID,"-",1),"ZPC",ID)=VAFZPC
  Q
  ;
  ;--> Delete HL7 segment variables

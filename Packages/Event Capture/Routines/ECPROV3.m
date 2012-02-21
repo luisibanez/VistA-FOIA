@@ -1,5 +1,5 @@
-ECPROV3 ;BIR/MAM,JPW - Event Capture Provider Summary (cont'd) ;1 Jul 2008
- ;;2.0; EVENT CAPTURE ;**5,8,18,29,47,56,63,72,95**;8 May 96;Build 26
+ECPROV3 ;BIR/MAM,JPW-Event Capture Provider Summary (cont'd) ;7 May 96
+ ;;2.0; EVENT CAPTURE ;**5,8,18,29,47,56,63,72**;8 May 96
  ; This routine is used when printing the report for
  ; all ACCESSIBLE DSS Units
  ;JAM/3/7/03, This routine now combines ECPROV3, ECPROV4 and ECPROV5
@@ -19,19 +19,18 @@ PRINT ;Changes below were made by VMP to correct NOIS ATG-1003-32545
  .I 'ECPRV D CATS Q
  . S ECDN="" D NOUNIT F I=0:0 S ECDN=$O(^TMP($J,ECLN,ECDN)) Q:ECDN=""!(ECOUT)  D CATS
  K ECPNAM
- D FOOTER  ;print footer on last page
  Q
 CATS ; continue looping
  I $O(^TMP($J,ECLN,ECDN,""))']"" D PAGE W !!!,?12,"NO PROCEDURES" S ECPG=1 Q
- D PAGE Q:ECOUT  S ECPG=1,ECUN=0 F I=0:0 S ECUN=$O(^TMP($J,ECLN,ECDN,ECUN)) Q:ECUN=""!(ECOUT)  S ECINZ="^"_$O(^(ECUN,0)) D:$Y+10>IOSL PAGE Q:ECOUT  D PRO
+ D PAGE Q:ECOUT  S ECPG=1,ECUN=0 F I=0:0 S ECUN=$O(^TMP($J,ECLN,ECDN,ECUN)) Q:ECUN=""!(ECOUT)  S ECINZ="^"_$O(^(ECUN,0)) D:$Y+7>IOSL PAGE Q:ECOUT  D PRO
  Q
-PRO I $Y+13>IOSL D PAGE I ECOUT Q
+PRO I $Y+10>IOSL D PAGE I ECOUT Q
  W !!,ECUN S ECCN=0 F I=0:0 S ECCN=$O(^TMP($J,ECINZ,ECCN)) D:ECCN="" TOTP Q:ECCN=""!(ECOUT)  D MORE
  Q
 MORE ;
  ;ALB/ESD - Loop through to get procedure reason and print
  W !,?3,ECCN S ECPN=0,(ECPRSN,ECPI)=""
- F  S ECPN=$O(^TMP($J,ECINZ,ECCN,ECPN)) Q:ECPN=""!(ECOUT)  S ECUSER=1 D:$Y+10>IOSL PAGE Q:ECOUT  K ECUSER F  S ECPRSN=$O(^TMP($J,ECINZ,ECCN,ECPN,ECPRSN)) Q:ECPRSN=""!(ECOUT)  DO
+ F  S ECPN=$O(^TMP($J,ECINZ,ECCN,ECPN)) Q:ECPN=""!(ECOUT)  S ECUSER=1 D:$Y+7>IOSL PAGE Q:ECOUT  K ECUSER F  S ECPRSN=$O(^TMP($J,ECINZ,ECCN,ECPN,ECPRSN)) Q:ECPRSN=""!(ECOUT)  DO
  .S ECCPT=$S($P(ECPN,"~",3)="I":$P(ECPN,"~",2),1:$P($G(^EC(725,$P(ECPN,"~",2),0)),"^",5))
  .I ECCPT'="" D
  ..;Changes made by VMP to correct NOIS ATG-1003-32545
@@ -54,7 +53,7 @@ MORE ;
  ..S MODESC=$P(MODI,"^",3) I MODESC="" S MODESC="UNKNOWN"
  ..S MODAMT=^TMP($J,ECINZ,ECCN,ECPN,ECPRSN,"MOD",IEN)
  ..W !?10,"- ",MOD," ",MODESC," (",MODAMT,")"
- ..I ($Y+6)>IOSL D PAGE
+ ..I ($Y+3)>IOSL D PAGE
  .K MODESC,MOD,IEN,MODAMT,MODI,EC725
  Q
 LOC S (ECDFN,ECOUT,^TMP($J,ECLN))=0
@@ -117,7 +116,6 @@ UTL ; set ^TMP($J,"ECPROV"
  . S ^TMP($J,ECINZ,ECCN,ECPN,ECPRSN,"MOD",MOD)=$G(^TMP($J,ECINZ,ECCN,ECPN,ECPRSN,"MOD",MOD))+ECV
  Q
 PAGE ; end of page
- D:$D(ECPG) FOOTER
  I $D(ECPG),$E(IOST,1,2)="C-" W !!,"Press <RET> to continue, or ^ to quit  " R X:DTIME I '$T!(X="^") S ECOUT=1 Q
 HDR ; print heading
  W:$Y @IOF W !!,?49,"EVENT CAPTURE PROVIDER SUMMARY",!,?49,"FROM "_$P(ECDATE,"^")_"  TO "_$P(ECDATE,"^",2),!,?49,"Run Date : ",ECRDT
@@ -128,11 +126,6 @@ HDR ; print heading
  W !!,"Location: "_ECLN,! W:ECDN]"" "DSS Unit: "_ECDN
  I ECPRV,$D(ECUSER) W !!,ECUN,!,ECCN
  Q
-FOOTER ;print page footer
- W !!?4,"Volume totals may represent days, minutes, numbers of procedures"
- W !?4,"and/or a combination of these."
- Q
- ;
 TOTP Q:ECOUT  W !,?105,"------",!,"Total Procedures for "_ECUN,?105,$J(^TMP($J,ECLN,ECDN,ECUN),6)
  Q
 UNIT ; set units

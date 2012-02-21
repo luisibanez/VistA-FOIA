@@ -1,5 +1,5 @@
 IBJDIPR ;ALB/HMC - PERCENTAGE OF PATIENTS PREREGISTERED REPORT ;10-MAY-2004
- ;;2.0;INTEGRATED BILLING;**272,305**;21-MAR-1994
+ ;;2.0;INTEGRATED BILLING;**272**;21-MAR-1994
  ;
 EN ; - Option entry point.
  ;
@@ -68,7 +68,7 @@ DQ ; - Tasked entry point.
  . S ^TMP("IBJDIPR1",$J,"DGPRECA",DGNAM_U_X)=X ;index sorted by name
  . S DGPREC=DGPREC+1
  ;
- ;Get eligibility exclusions and eligibility name from ^DIC(8 dbia 427
+ ;Get eligibility exclusions and eligiblity name from ^DIC(8 dbia 427
  ;
  S X="" F  S X=$O(^DG(43,1,"DGPREE","B",X)) Q:X=""  D
  . S DGNAM=$P($G(^DIC(8,X,0)),U,1) I DGNAM="" Q
@@ -77,10 +77,10 @@ DQ ; - Tasked entry point.
  . S DGPREE=DGPREE+1
  ;
  ; - Find outpatients treated within the user-specified date range.
- D OUTPT("",IBBDT,IBEDT,"S:IBQ SDSTOP=1 I 'IBQ,$$ENCHK^IBJDI5(Y0) D ENC^IBJDIPR(Y0)","Percentage of Patients Pre-registered",.IBQ,"IBJDIPR",.IBQUERY)
+ D OUTPT("",IBBDT,IBEDT,"S:IBQ SDSTOP=1 I 'IBQ,$$ENCHK^IBJDI5(Y0) D ENC^IBJDIPR(Y0)","Percentage of Patients Preregistered",.IBQ,"IBJDIPR",.IBQUERY)
  D CLOSE^IBSDU(.IBQUERY),CLOSE^IBSDU(.IBQUERY1) I IBQ G ENQ
  ;
- ;Find pre-registered patients
+ ;Find pre-registrationed patients
  ;Use file 41.41 (^DGS), Pre-registration audit file
  ;dbia 4425
  ;
@@ -95,8 +95,6 @@ DQ ; - Tasked entry point.
  . S IB("PRE")=IB("PRE")+1 ;pre-registered
  ;
  ; - Print the reports.
- ; QUIT if this is a electronic transmission to the ARC -IB patch 305
- Q:$G(IBARFLAG)
  S (IBQ,IBPAG)=0 D NOW^%DTC S IBRUN=$$DAT2^IBOUTL(%)
  I 'IBQ D SUM,PAUSE
 ENQ K ^TMP("IBJDIPR",$J),^TMP("IBJDIPR1",$J)
@@ -132,7 +130,7 @@ OUTPT(DFN,IBBDT,IBEDT,IBCBK,IBMSG,IBQ,IBSUBSCR,IBQUERY,IBDIR) ;
  S IBDIR=$S($G(IBDIR)="":"",1:"BACKWARD")
  ;
  ;ibsdu will use ^SD(409.1), Standard encounter query, to process
- ;file 409.68 (^SCE) - dbia402 for outpatient encounter data.
+ ;file 409.68 (^SCE) - dbia402 for oupatient encounter data.
  ;
  D SCAN^IBSDU($S($G(DFN):"PATIENT/DATE",1:"DATE/TIME"),.IBVAL,IBFILTER,IBCBK,0,.IBQUERY,IBDIR) K ^TMP("DIERR",$J)
  Q
@@ -143,7 +141,7 @@ ENC(IBOED) ; - Encounter extract.
  S DFN=+$P(IBOED,U,2) I 'DFN Q
  ;Check exclusions
  I $P(IBOED,U,4)]"",$D(^TMP("IBJDIPR1",$J,"DGPREC",$P(IBOED,U,4))) Q  ;Clinic exclusion
- I $P(IBOED,U,13)]"",$D(^TMP("IBJDIPR1",$J,"DGPREE",$P(IBOED,U,13))) Q  ;Eligibility exclusion
+ I $P(IBOED,U,13)]"",$D(^TMP("IBJDIPR1",$J,"DGPREE",$P(IBOED,U,13))) Q  ;Eligibility exculsion
  D PROC(DFN,IBOED) ; Process patient.
  Q
  ;
@@ -206,7 +204,7 @@ HEAD ; - Report Header
  W !?10,"Listing of all Exclusions: ",!
  I $G(DGEE) W !!?10,"Eligibility Exclusions",!?9,$$DASH(24),!
  I $G(DGEC) W !!?10,"Clinic Exclusions",!?9,$$DASH(19),!
- S IBQ=$$STOP^IBOUTL("Percentage of Patients Pre-registered")
+ S IBQ=$$STOP^IBOUTL("Percentage of Patients Preregistered")
  Q
  ;
 DASH(X) ; - Return a dashed line.
@@ -229,15 +227,6 @@ THLP ; - 'Pre-Registration time frame (days)' prompt
 EHLP ; - 'Detailed list of Exclusions' prompt
  ;
  W !!,"Select '<CR>' to print only the number of eligibility and clinic exclusions."
- W !!?11,"'Y' to print list of all eligibility and clinic exclusions."
+ W !!?11,"'Y' to print list of all elibibility and clinic exclusions."
  W !?11,"'^' to quit."
  Q
-IBAR(IBBDT,IBEDT) ;Entry point for Vista IB AR data to ARC
- ;patch 305 - called by IBRFN4
- N IBPRF,IBEXC,IBARFLAG,IB,IBPERC,IBARDATA
- S IBPRF=180,IBEXC=0,IBARFLAG=1
- D DQ
- I 'IB("TOT") S IBPERC=0 G IBARD
- S IBPERC=IB("PRE")/IB("TOT")*100,IBPERC=$FN(IBPERC,"",2)
-IBARD S IBARDATA=IB("TOT")_U_IB("PRE")_U_IBPERC_U_IB("PAST")_U_IB("NEVR")
- Q IBARDATA

@@ -1,5 +1,5 @@
-IVMUFNC ;ALB/MLI/PHH/SCK,TDM - IVM GENERIC FUNCTIONS ; 6/30/08 4:11pm
- ;;2.0;INCOME VERIFICATION MATCH;**3,11,17,34,95,94,115**;21-OCT-94;Build 28
+IVMUFNC ;ALB/MLI/PHH/SCK - IVM GENERIC FUNCTIONS ; 10/15/2004 1:10pm
+ ;;2.0;INCOME VERIFICATION MATCH;**3,11,17,34,95,94**;21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; This routine contains generic calls for use throughout IVM
@@ -186,7 +186,6 @@ GETPAT(DFN,IVMPAT) ;
  ;      "SSN"  - patient Social Security Number
  ;      "DOB"  - patient date of birth (FM format)
  ;      "SEX"  - patient sex
- ;      "ICN"  - patient ICN
  ;
  N IVMNODE
  Q:'$G(DFN) 0
@@ -201,7 +200,6 @@ GETPAT(DFN,IVMPAT) ;
  S IVMPAT("SEX")=$P(IVMNODE,"^",2)
  S IVMPAT("DOB")=$P(IVMNODE,"^",3)
  S IVMPAT("SSN")=$P(IVMNODE,"^",9)
- S IVMPAT("ICN")=$$GETICN^MPIF001(DFN)
  Q 1
  ;
 LOOKUP(SSN,DOB,SEX,ERROR) ;
@@ -219,7 +217,6 @@ LOOKUP(SSN,DOB,SEX,ERROR) ;
  ;
  N DFN,NODE
  ;
- I $G(SSN)="" S ERROR="INVALID SSN" Q 0
  S DFN=$O(^DPT("SSN",SSN,0))
  I 'DFN S ERROR="SSN NOT FOUND" Q 0
  I $O(^DPT("SSN",SSN,DFN)) S ERROR="MULTIPLE PATIENTS MATCHING SSN" Q 0
@@ -228,40 +225,3 @@ LOOKUP(SSN,DOB,SEX,ERROR) ;
  I $E($P(NODE,"^",3),1,3)'=$E(DOB,1,3) S ERROR="DOB DOES NOT MATCH" Q 0
  I $E($P(NODE,"^",3),4,5),$E($P(NODE,"^",3),4,5)'=$E(DOB,4,5) S ERROR="DOB DOES NOT MATCH" Q 0
  Q DFN
- ;
-MATCH(DFN,ICN,DOB,SEX,CFLG,ERROR) ;
- ;Description: This function will try to match the patient based on
- ;the identifying information provided. The function will be
- ;successful only if the patient is found matching the identifiers
- ;provided.
- ;
- ;Inputs:
- ;  DFN  - patient DFN
- ;  ICN  - patient ICN
- ;  DOB  - patient date of birth (FM format)
- ;  SEX  - patient sex
- ;  CFLG - Compare Flag (Default="IDS", I=ICN, D=DOB, S=Sex)
- ;Outputs:
- ;  Function Value: 1 - patient matched successfully, 0 - otherwise
- ;  ERROR - if unsuccessful, an error message is returned (optional, pass by reference)
- N NODE
- I $G(DFN)="" S ERROR="INVALID DFN" Q 0
- I $G(CFLG)="" S CFLG="IDS"
- S NODE=$G(^DPT(DFN,0)) I NODE="" S ERROR="DFN NOT FOUND" Q 0
- I CFLG["I",$$GETICN^MPIF001(DFN)'=$G(ICN) S ERROR="ICN DOES NOT MATCH" Q 0
- I CFLG["S",$P(NODE,"^",2)'=$G(SEX) S ERROR="SEX DOES NOT MATCH" Q 0
- I CFLG["D",$E($P(NODE,"^",3),1,3)'=$E($G(DOB),1,3) S ERROR="DOB DOES NOT MATCH" Q 0
- I CFLG["D",$E($P(NODE,"^",3),4,5),$E($P(NODE,"^",3),4,5)'=$E($G(DOB),4,5) S ERROR="DOB DOES NOT MATCH" Q 0
- Q 1
-PARSPID3(PID3,PID3ARY) ;
- ;Description: This function will parse seq 3 of PID segment
- ;Input :   PID3  -  Array for seq. 3 of PID segment
- ;Output:   PID3ARY("NI") -  Value - ICN
- ;          PID3ARY("PI") -  Value - DFN
- I $D(PID3(3)) D
- .I $O(PID3(3,"")) D  Q
- ..S COMP=0 F  S COMP=$O(PID3(3,COMP)) Q:COMP=""  D
- ...I $P(PID3(3,COMP),$E(HLECH),5)="PI" S PID3ARY("PI")=$P(PID3(3,COMP),$E(HLECH))
- ...I $P(PID3(3,COMP),$E(HLECH),5)="NI" S PID3ARY("NI")=$P(PID3(3,COMP),$E(HLECH))
- .I $P(PID3(3),$E(HLECH),5)="PI" S PID3ARY("PI")=$P(PID3(3),$E(HLECH))
- Q

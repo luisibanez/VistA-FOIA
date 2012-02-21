@@ -1,12 +1,12 @@
-ECXMOV ;ALB/JAP,BIR/DMA,PTD-Transfer and Discharge Extract ; 4/7/10 10:54am
- ;;3.0;DSS EXTRACTS;**8,24,33,39,41,42,46,65,84,107,105,128,127**;Dec 22, 1997;Build 36
+ECXMOV ;ALB/JAP,BIR/DMA,PTD-Transfer and Discharge Extract ; 8/19/05 9:13am
+ ;;3.0;DSS EXTRACTS;**8,24,33,39,41,42,46,65,84**;Dec 22, 1997
 BEG ;entry point from option
  D SETUP I ECFILE="" Q
  D ^ECXTRAC,^ECXKILL
  Q
  ;
 START ; start package specific extract
- N ECXDSC,W,WTO,X1,X2,X,ECXDPRPC,ECXDAPPC,ECDIS
+ N ECXDSC,W,WTO,X1,X2,X,ECXDPRPC,ECXDAPPC
  K ECXDD D FIELD^DID(405,.19,,"SPECIFIER","ECXDD")
  S ECPRO=$E(+$P(ECXDD("SPECIFIER"),"P",2)) K ECXDD
  S ECED=ECED+.3,QFLG=0
@@ -21,8 +21,8 @@ START ; start package specific extract
  ...S ECTM=$$ECXTIME^ECXUTL(ECD)
  ...S WTO=$P(EC,U,6),ECXWTO=$P($G(^DIC(42,+WTO,44)),U)
  ...;
- ...;reset EC to admission movement and hold discharge movement ECX*128
- ...S ECCA=$P(EC,U,14),EC=$G(^DGPM(ECCA,0)),ECA=$P(EC,U) I EC="" D MAIL(ECDA) S QFLG=1 Q
+ ...;reset EC to admission movement
+ ...S ECCA=$P(EC,U,14),EC=^DGPM(ECCA,0),ECA=$P(EC,U)
  ...;
  ...;if date of previous xfer movement is greater than admit date,
  ...;then reset EC to that previous xfer movement
@@ -59,15 +59,12 @@ START ; start package specific extract
  ...I ECM=3 D
  ....S ECXDSC=$$PRIMARY^ECXUTL2(ECXDFN,ECD)
  ....S ECXDPCT=$P(ECXDSC,U),ECXDPR=$P(ECXDSC,U,2),ECXDAPR=$P(ECXDSC,U,5),ECXDPRPC=$P(ECXDSC,U,3),ECXDAPPC=$P(ECXDSC,U,6)
- ....S ECDAPRNP=$P(ECXDSC,U,7),ECDPRNPI=$P(ECXDSC,U,4)
  ...;
  ...;Get production division ;p-46
  ...N ECXPDIV S ECXPDIV=$$GETDIV^ECXDEPT(ECXFAC) ;p-46 
  ...;- Observation patient indicator (YES/NO)
  ...S ECXOBS=$$OBSPAT^ECXUTL4(ECXA,ECXTS)
- ...; 
- ... ; ******* - PATCH 127, ADD PATCAT CODE ********
- ...S ECXPATCAT=$$PATCAT^ECXUTL(ECXDFN)
+ ...;
  ...;- If no encounter number, don't file record
  ...S ECXENC=$$ENCNUM^ECXUTL4(ECXA,ECXSSN,ECA,,ECXTS,ECXOBS,ECHEAD,,)
  ...D:ECXENC'="" FILE
@@ -85,7 +82,7 @@ FILE ;file the extract record
  ;encounter num ECXENC^disch prim prov ECXDPR^disch PC team ECXDPCT^
  ;disch assoc prim prov ECXDAPR^production division ECXPDIV
  ;^disch prov person class ECXDPRPC^disch assoc prov pe-
- ;rson person class^disch assoc pc prov npi ECDAPRNP^discharge pc provider npi ECDPRNPI
+ ;rson person class
  N DA,DIK
  S EC7=$O(^ECX(ECFILE,999999999),-1),EC7=EC7+1
  S ECODE=EC7_U_EC23_U_ECXFAC_U_ECXDFN_U_ECXSSN_U_ECXPNM_U_ECXA_U
@@ -96,8 +93,6 @@ FILE ;file the extract record
  S ECODE1=ECXMPI_U_ECXDSSD_U_ECXDOM_U_ECXOBS_U_ECXENC_U_ECXDPR_U
  S ECODE1=ECODE1_ECXDPCT_U_ECXDAPR_U_ECXPDIV ;p-46 added ECXPDIV
  I ECXLOGIC>2005 S ECODE1=ECODE1_U_ECXDPRPC_U_ECXDAPPC
- I ECXLOGIC>2007 S ECODE1=ECODE1_U_$G(ECDAPRNP)_U_$G(ECDPRNPI)
- I ECXLOGIC>2010 S ECODE1=ECODE1_U_ECXPATCAT ;P-127 ADDED PATCAT
  S ^ECX(ECFILE,EC7,0)=ECODE,^ECX(ECFILE,EC7,1)=ECODE1,ECRN=ECRN+1
  S DA=EC7,DIK="^ECX("_ECFILE_"," D IX1^DIK K DIK,DA
  I $D(ZTQUEUED),$$S^%ZTLOAD S QFLG=1
@@ -110,22 +105,3 @@ SETUP ;Set required input for ECXTRAC
  ;
 QUE ; entry point for the background requeuing handled by ECXTAUTO
  D SETUP,QUE^ECXTAUTO,^ECXKILL Q
-MAIL(ECXDA) ; 
- ; Created to send a message pointing to a bad record ECX*128
- ; Input - ECXDA is the PATIENT MOVEMENT (#405) record number for the discharge that has no admission 
- ; associated with it.  ECX*128
- N XMSUB,XMTEXT,XMY,MSGTEXT,LINENUM
- ;;Setup necessary variables to send the message
- S XMSUB="Movement Record Error - Please Fix"
- S XMTEXT="MSGTEXT("
- S XMY("G.DSS-MOVS@"_^XMB("NETNAME"))=""
- ;;Create the message to be sent
- S LINENUM=1
- S MSGTEXT(LINENUM)="The Transfer and Discharge Extract did not complete due to the error below"
- S LINENUM=LINENUM+1,MSGTEXT(LINENUM)="",LINENUM=LINENUM+1
- S MSGTEXT(LINENUM)="Discharge movement record "_ECXDA_" does not have an admission movement associated with it."
- S LINENUM=LINENUM+1,MSGTEXT(LINENUM)="",LINENUM=LINENUM+1
- S MSGTEXT(LINENUM)="This record needs to be fixed and the extract needs to be run again."
- S LINENUM=LINENUM+1,MSGTEXT(LINENUM)=""
- D ^XMD
- Q

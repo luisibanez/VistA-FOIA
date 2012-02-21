@@ -1,6 +1,5 @@
 BPSOSU8 ;BHAM ISC/FCS/DRS/FLS - utilities ;06/01/2004
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5**;JUN 2004;Build 45
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
  ;*** Collection of FSI UTILITIES ***
  ;
  ;EOPQ(LINES,PARAM,Xcode) - Return 0 to continue, 1 to quit.
@@ -17,9 +16,9 @@ BPSOSU8 ;BHAM ISC/FCS/DRS/FLS - utilities ;06/01/2004
  ;======================================================================
 EOPQ(LINESBOT,PARAM,EOPXCODE) ;EP -
  ; IN: LINESBOT = (optional) # of LINES from bottom (IOSL) before
- ;               determining what to do next.  I this is a CRT, we
- ;               will ask user whether to continue; for printers, just
- ;               continue.  DEFAULT=6
+ ;                determining what to do next.  I this is a CRT, we
+ ;                will ask user whether to continue; for printers, just
+ ;                continue.  DEFAULT=6
  ;     PARAM    = List of parameter codes (each may occur):
  ;                "M" - Will display "-- More --" at bottom.
  ;     EOPXCODE = xecutable code that will occur if this is the
@@ -60,21 +59,19 @@ ENDRPT() ;EP - end of report.  Pause until user presses return (or timeout)
  Q Y
  ;===================================================================
 DEVICE(DEV,RTN,TITLE,MULTI) ;EP
- ;Select an output device.
+ ;Select an output device.  Return 1 if successful, 0 if not.
  ;No parameters are required.  DEV can be set alone, or if queuing
- ;  set to variables needed for queuing.
- ;   DEV   - DEFAULT device, "HOME" if undefined.
- ;   RTN   - Routine name if queuing is selected.
- ;   TITLE - Description for the task log if queuing is selected.
- ;   MULTI - I then ask NUMBER OF COPIES, which sets the variable
- ;           DCOPIES that the calling routine should use.
- ;Return 1 if successful, 0 if not.  Also returns DCOPIES to number of
- ;  copies if MULTI parameter is set.
+ ;set to variables needed for queuing.
+ ;DEV   - DEFAULT device, "HOME" if undefined.
+ ;RTN   - Routine name if queuing is selected.
+ ;TITLE - Description for the task log if queuing is selected.
+ ;MULTI - I set then ask NUMBER OF COPIES.  This sets the variable
+ ;        DCOPIES that the calling routine should use.
  ;Examples: Q:'$$DEVICE^ABSBUU01("STANDARD")
  ;
  ;       Q:'$$DEVICE^ABSBUU01("PC;132;66","EN^WSHLC","CORRECTION LIST")
  ;       note: D ^%ZISC to close the device after printing is done.
- N I,Y,%ZIS,POP,ZTRTN,ZTIO,ZTDESC,ZTSAVE,ZTQUEUED,PAGE
+ N I,Y
  W !!
  S ZTSAVE("PAGE")=""
  I $D(RTN) S %ZIS="QM" ; Ask if queuing is allowed only if RTN is set.
@@ -124,8 +121,7 @@ HEADER(PROGRAM,TITLE1,TITLE2,RUNTIME,NOFF,UL) ;
  ;    UL (opt) - is flag to print a 1-IOSL dashes after the header.
  ; DEFAULT is no-underline.  S UL to 1 to print the underline.
  ;
- ; Note: PAGE is assumed to exist even though it is not passed in
- N X,N
+ N X
  S $Y=0,PAGE=$G(PAGE)
  I $E(IOST,1)="C"!($E(IOST,1)="P"&(PAGE>0)) I '$D(NOFF) W @IOF
  S PAGE=PAGE+1

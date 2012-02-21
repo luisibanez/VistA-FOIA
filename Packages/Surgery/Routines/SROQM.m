@@ -1,13 +1,12 @@
-SROQM ;BIR/ADM - QUARTERLY REPORT (CONTINUED) ;03/22/06
- ;;3.0; Surgery ;**62,82,95,123,126,129,153**; Jun 93;Build 11
+SROQM ;B'HAM ISC/ADM - QUARTERLY REPORT (CONTINUED) ; [ 07/20/04  9:59 AM ]
+ ;;3.0; Surgery ;**62,82,95,123,126,129**; Jun 93
  ;** NOTICE: This routine is part of an implementation of a nationally
  ;**         controlled procedure. Local modifications to this routine
  ;**         are prohibited.
  ;
  S (SRCNT,SRPAGE)=1 K ^TMP("SRMSG",$J) D HDR Q:SRSOUT  D ^SROQM0,HDR Q:SRSOUT  D ^SROQM1 Q:SRSOUT  F I=1:1:3 D BLANK
- D HDR,ENSURE,HAIR^SROQM1 K XMY
- S X=$$ACTIVE^XUSER(DUZ) I '+X S XMDUZ=.5
- S XMSUB="QUARTERLY REPORT - SURGICAL SERVICE"
+ D HDR,ENSURE K XMY
+ S XMSUB="QUARTERLY REPORT - SURGICAL SERVICE",XMDUZ="SURGERY DATA MANAGER"
  S XMY("G.SR-QUARTERLY@"_SRD)=""
  S XMTEXT="^TMP(""SRMSG"",$J," N I D ^XMD
  K XMDUZ,XMY,^TMP("SRMSG",$J)

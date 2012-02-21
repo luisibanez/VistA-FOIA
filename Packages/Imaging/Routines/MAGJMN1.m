@@ -1,6 +1,5 @@
-MAGJMN1 ;WIRMFO/JHC VRad Maint functions ; 2-Jul-2010 6:21 PM
- ;;3.0;IMAGING;**16,9,22,18,65,76,101,90,115**;Mar 19, 2002;Build 1912;Dec 17, 2010
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGJMN1 ;WIRMFO/JHC VRad Maint functions ; 29 Jul 2003  4:02 PM
+ ;;3.0;IMAGING;**16,9,22**;Jul 29, 2003
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGJMN1 ;WIRMFO/JHC VRad Maint functions ; 2-Jul-2010 6:21 PM
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -15,9 +15,6 @@ MAGJMN1 ;WIRMFO/JHC VRad Maint functions ; 2-Jul-2010 6:21 PM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
-ENVCHK ; "Environment Check" for KIDS Install
- N MAGJKIDS S MAGJKIDS=1
- D BGCSTOP
  Q
  ;
 SVRLIST ;
@@ -32,7 +29,7 @@ SVRLIST ;
  D ^DIE I '$D(DA) G SVRLIST
  D ENSRCH
  D BLDDEF(MAGIEN)
- S $P(^MAG(2006.631,MAGIEN,0),U,5)=$$NOW^XLFDT()
+ D NOW^%DTC S $P(^MAG(2006.631,MAGIEN,0),U,5)=%
  W !!,"List Definition complete!" R X:2
  G SVRLIST
  Q
@@ -69,7 +66,7 @@ ENSRCH ; Invoke Search for 2006.631 def'n
  S DIC=2006.634 D EN^DIS  ; call Fman Search Logic routine. It will store search logic in ^DIBT
  ; 2006.634 is intentional--don't change this!
  I '$G(DIARI) W !!," Search logic NOT updated" D  Q
- . Q:'$D(@GREF@(5,1))  ; if no logic had existed, quit
+ . Q:'$D(@GREF@(5,1))  ; if no logic had existed before, quit
  . S X=$$YN("Do you want to DELETE the search logic?","NO")
  . I X="Y" K @GREF@(3) K ^(4),^(5) W " -- Deleted!"
  K @GREF@(3) K ^(4),^(5)
@@ -78,11 +75,11 @@ ENSRCH ; Invoke Search for 2006.631 def'n
  S T=0 F  S T=$O(@GLIN@(FNOD,T)) Q:T=""  S X=^(T),CT=CT+1,@GREF@(TNOD,T)=X
  S @GREF@(TNOD,0)=CT
  S FNOD="DL",TNOD=4,CT=0  ; "DL" data--copy depends on storage scheme in DIBT:
- ;Zero node null -- straight copy
- ; Else 1) either only one condition is defined;
- ; or, 2) the zero-node condition is ANDed with all defined conditions
- ;  Case 2: Var A -- Pre-pend zero node, then dup zero node
- ;            Var B -- Pre-pend zero node
+ ; Zero node null -- straight copy
+ ;  Else 1) either only one condition is defined; 
+ ;   or, 2) the zero-node condition is ANDed with all defined conditions
+ ;     Case 2: Var A -- Pre-pend zero node, then dup zero node
+ ;             Var B -- Pre-pend zero node
  S NCOND=+$G(@GLIN@(FNOD))
  I $G(@GLIN@(FNOD,0))]"" S NODE0=^(0) D
  . S T=0 F  S T=$O(@GLIN@(FNOD,T)) Q:T=""  S X=^(T) I X]"" S CT=CT+1,@GREF@(TNOD,CT)=NODE0_X
@@ -90,26 +87,23 @@ ENSRCH ; Invoke Search for 2006.631 def'n
  E  D
  . S T=0 F  S T=$O(@GLIN@(FNOD,T)) Q:T=""  S X=^(T) I X]"" S CT=CT+1,@GREF@(TNOD,CT)=X
  S @GREF@(TNOD,0)=CT
- ; readable text--straight copy
+ ; Human-readable text--straight copy
  S TNOD=5,T=0 F  S T=$O(@GLIN@("O",T)) Q:T=""  S @GREF@(TNOD,T)=^(T,0)
  Q
  ;
 BLDDEF(LSTID) ; build DEF nodes for Column/Sort defs
- N X,QX,SS,STR,LSTHDR,T,T0,T8,T6,HASCASE,XT,HASDATE,HASNIMG,HASPRIO,HASLOCK,LISTYPE
- S SS=0,HASCASE=0,HASDATE=0,HASNIMG=0,HASPRIO=0,HASLOCK=0
- S LISTYPE=$P($G(^MAG(2006.631,LSTID,0)),U,3)
+ N QX,SS,STR,LSTHDR,T,T0,T6,HASCASE S SS=0,HASCASE=0
  ; columns/hdrs: Order in T array by the Relative Column Order
  F  S SS=$O(^MAG(2006.631,LSTID,1,SS)) D  Q:'SS
- . I 'SS D  Q
- . . I 'HASCASE S X=1 D BLDDEF2(X)  ; Force CASE#
- . . I 'HASDATE S X=7 D BLDDEF2(X)  ; DATE/TIME
- . . I 'HASNIMG S X=9 D BLDDEF2(X)  ; NUMBER IMAGES
- . . Q:LISTYPE'="U"  ; force below only if for an Unread list
- . . I 'HASLOCK S X=2 D BLDDEF2(X)  ; EXAM LOCK IND.
- . . I 'HASPRIO S X=5 D BLDDEF2(X)  ; PRIORITY
+ . I 'SS Q:HASCASE
+ . I  S X=1  ; * FORCE list to always contain CASE # (Field #1)
  . E  S X=^MAG(2006.631,LSTID,1,SS,0)
- . D BLDDEF2(X)
- ; go thru T to build ordered field sequence for output columns
+ . S X=+X_$S($P(X,U,2):";"_+$P(X,U,2),1:"")
+ . I 'HASCASE S HASCASE=(+X=1)
+ . S T0=^MAG(2006.63,+X,0),T6=+$P(T0,U,6) S:'T6 T6=99
+ . S T8=$P(T0,U,8) I T8]"" S T8="~"_T8
+ . S T(T6,+X)=X_U_$S($P(T0,U,3)]"":$P(T0,U,3),1:$P(T0,U,2))_T8
+ ; Now, go thru T to build ordered field sequence for output columns
  S QX="T",STR="",LSTHDR=""
  F  S QX=$Q(@QX) Q:QX=""  S X=@QX D
  . S STR=STR_$S(STR="":"",1:U)_$P(X,U)
@@ -121,33 +115,12 @@ BLDDEF(LSTID) ; build DEF nodes for Column/Sort defs
  . S X=+X_$S($P(X,U,2):"-",1:"")
  . S STR=STR_$S(STR="":"",1:U)_X
  S ^MAG(2006.631,LSTID,"DEF",2)=STR
- S $P(^MAG(2006.631,LSTID,"DEF",0),U)=$$NOW^XLFDT()
- Q
- ;
-BLDDEF2(X) ;
- S X=+X_$S($P(X,U,2):";"_+$P(X,U,2),1:"")
- I 'HASCASE S HASCASE=(+X=1)
- I 'HASDATE S HASDATE=(+X=7)
- I 'HASNIMG S HASNIMG=(+X=9)
- I 'HASLOCK S HASLOCK=(+X=2)
- I 'HASPRIO S HASPRIO=(+X=5)
- S T0=^MAG(2006.63,+X,0),T6=+$P(T0,U,6) S:'T6 T6=99
- S T8=$P(T0,U,8) I T8]"" S T8="~"_T8
- S XT=$S($P(T0,U,3)]"":$P(T0,U,3),1:$P(T0,U,2))_T8
- S $P(XT,"~",3)=+X
- S T(T6,+X)=X_U_XT
+ D NOW^%DTC S $P(^MAG(2006.631,LSTID,"DEF",0),U)=%
  Q
  ;
 PRE ; init 2006.63 prior to KIDS install
  N DIK,DA S DIK="^MAG(2006.63,",DA=0 F  S DA=$O(@(DIK_DA_")")) Q:'DA  D ^DIK
  Q
- ;
-POSTINST ; Patch installation inits, etc.
- D BLDALL ; update list definitions
- D BGCSTRT ; re-start background compile
- D POST ; install message, etc.
- Q
- ;
 BLDALL ; Create "DEF" nodes, Button labels List Def'ns
  ; Updates all lists after s/w update list defs are installed
  N SS,LSTDAT,LSTNUM,BUTTON,LSTTYP
@@ -158,10 +131,45 @@ BLDALL ; Create "DEF" nodes, Button labels List Def'ns
  . I BUTTON="",(LSTTYP]"") D   ; Create Button Labels if needed
  . . S BUTTON=$S(LSTTYP="U":"Unread #",LSTTYP="R":"Recent #",LSTTYP="A":"All Active #",LSTTYP="P":"Pending #",1:"List #")_LSTNUM
  . . S $P(^MAG(2006.631,SS,0),U,7)=BUTTON
+ . ; Next line deletes a defunct system entry from the file
+ . I LSTNUM=9991 S LSTNAM=$P(LSTDAT,U) I LSTNAM="All Exams by Priority, Date/Time" D
+ . . N DA,DIK S DIK="^MAG(2006.631,",DA=SS D ^DIK
+ D POST
  Q
  ;
 POST ; Install msg
- D INS^MAGQBUT4(XPDNM,DUZ,$$NOW^XLFDT,XPDA)
+ I $T(AHOPT^MAGQE5)'=""
+ E  Q  ; Mag Ent Rtn not here
+ N FIRST,LAST
+ D REMTASK^MAGQE4
+ D STTASK^MAGQE4
+ D INS(XPDNM,DUZ,$$NOW^XLFDT,XPDA)
+ Q
+INS(XP,DUZ,DATE,IDA) ;
+ N CT,T,COM,DDATE,ST,T
+ D GETENV^%ZOSV
+ K ^TMP($J,"MAGQ")
+ S T=0
+ S T=T+1,^TMP($J,"MAGQ",T)="PACKAGE INSTALL"
+ S T=T+1,^TMP($J,"MAGQ",T)="SITE: "_$$KSP^XUPARAM("WHERE")
+ S T=T+1,^TMP($J,"MAGQ",T)="PACKAGE: "_XP
+ S T=T+1,^TMP($J,"MAGQ",T)="Version: "_$$VER^XPDUTL(XP)
+ S ST=$$GET1^DIQ(9.7,IDA,11,"I")
+ S T=T+1,^TMP($J,"MAGQ",T)="Start time: "_$$FMTE^XLFDT(ST)
+ S CT=$$GET1^DIQ(9.7,IDA,17,"I") S:+CT'=CT CT=$$NOW^XLFDT
+ S T=T+1,^TMP($J,"MAGQ",T)="Completion time: "_$$FMTE^XLFDT(CT)
+ S T=T+1,^TMP($J,"MAGQ",T)="Run time: "_$$FMDIFF^XLFDT(CT,ST,3)
+ S T=T+1,^TMP($J,"MAGQ",T)="Environment: "_Y
+ S COM=$$GET1^DIQ(9.7,IDA,6,"I")
+ S T=T+1,^TMP($J,"MAGQ",T)="FILE COMMENT: "_COM
+ S T=T+1,^TMP($J,"MAGQ",T)="DATE: "_DATE
+ S T=T+1,^TMP($J,"MAGQ",T)="Installed by: "_$$GET1^DIQ(9.7,IDA,9,"E")
+ S T=T+1,^TMP($J,"MAGQ",T)="Install Name: "_$$GET1^DIQ(9.7,IDA,.01,"E")
+ S DDATE=$$GET1^DIQ(9.7,IDA,51,"I")
+ S T=T+1,^TMP($J,"MAGQ",T)="Distribution Date: "_$$FMTE^XLFDT(DDATE)
+ S XMSUB=XP_" INSTALLATION"
+ D MAILSHR^MAGQE2
+ K ^TMP($J,"MAGQ")
  Q
  ;
 YN(MSG,DFLT) ; get Yes/No reply
@@ -201,38 +209,8 @@ VRSIT ;
  S DIE=2006.69,DA=+Y,DR=".01:3.99;4.1:20"
  D ^DIE
  K DIC,DA,DR,DIE,DLAYGO
- N PLACE S DA=""
- S PLACE=$$PLACE^MAGBAPI(+$G(DUZ(2)))
- S:PLACE DA=PLACE
- I DA D
- . W !!,"Editing VistARad Timeout for division #",DUZ(2),!
- . S DIE=2006.1,DR="123" D ^DIE
- K DA,DR,DIE
  Q
  ;
- ;+++++ OPTION: MAGJ E/E DEFAULT USER PROFILES
- ;
- ; FileMan ^DIE call to enter/edit IMAGING SITE PARAMETERS File (#2006.1),
- ;   fields #202: DEFAULT VISTARAD USERPREF RAD and
- ;          #203: DEFAULT VISTARAD USERPREF NON.
- ; 
- ; These fields point to entries in the MAGJ USER DATA File (#2006.68), and
- ;   allow the VistARad client to initialize new VistARad users to the settings
- ;   held by the appropriate default user type ("Radiologist", "Non-rad'ist").
- ;
-EEPRO ;
- ;
- ;--- Get IEN of IMAGING SITE PARAMETERS File.
- N FIELD,SITEPIEN S SITEPIEN=+$$IMGSIT^MAGJUTL1(DUZ(2),1)
- F FIELD=202,203 D
- . ;
- . ;--- Report field being edited.
- . N PROMPT S PROMPT=$S(FIELD=202:"RADIOLOGIST",FIELD=203:"NON-RADIOLOGIST")
- . W !!,"Editing default "_PROMPT_" profile ...",!
- . N DA,DIE,DR
- . S DIE=2006.1,DR=FIELD,DA=SITEPIEN D ^DIE
- . Q
- Q
 EEPREF ;
  W @IOF,!!?10,"Enter/Edit VistARad Prefetch Logic",!!
  N MAGIEN
@@ -245,7 +223,7 @@ EEPREF ;
  Q
 INPREF ; Inquire VRad PreFetch
  W @IOF,!!?10,"Inquire VistARad Prefetch Logic",!!
- N MAGIEN,BY,FR,TO
+ N MAGIEN
  S DIC=2006.65,DIC(0)="AMEQ"
  D ^DIC I Y=-1 K DIC Q
  S DA=+Y,(FR,TO)=$P(Y,U,2),MAGIEN=DA,L=0
@@ -255,42 +233,9 @@ INPREF ; Inquire VRad PreFetch
  G INPREF
  Q
 PRPREF ;Print VRad Prefetch
- N BY
  W !! S DIC=2006.65,L=0,BY="[MAGJ PRIOR SORT]"
  D EN1^DIP
  R !,"Enter RETURN to continue: ",X:DTIME W !
- Q
- ;
-BGCSTOP ; Stop Background Compile program
- N MAGCSTRT,GO,NTRY,RETRY,X
- S MAGCSTRT=0,GO=1
- S X=$G(^MAG(2006.69,1,0))
- I X]"",+$P(X,U,8) D  ; Background compile switch; skip if already false
- . S ^MAG(2006.69,"BGSTOP")=X ; save current settings for restore later
- . S MAGCSTRT=1
- . S $P(X,U,8)=0
- . S ^MAG(2006.69,1,0)=X  ; disable compile
- . W !!,*7,"Wait for Background Compile program to stop;"
- . W !,"     this might take up to a few minutes."
- . S NTRY=60
- . F I=1:1:NTRY W "." L +^XTMP("MAGJ2","BKGND2","RUN"):3 I  Q  ; process maintains lock while running
- . I  D
- . . L -^XTMP("MAGJ2","BKGND2","RUN")
- . . W !!,"Background Compile Stopped"
- . . I +$G(MAGJKIDS) W "; proceeding with install.",! H 2
- . E  D
- . . S X=$$YN("Background Compile NOT Stopped -- Try again?","Y")
- . . S RETRY=("Y"[X),GO=0
- . . S ^MAG(2006.69,1,0)=^MAG(2006.69,"BGSTOP") K ^MAG(2006.69,"BGSTOP")
- I 'GO G BGCSTOP:RETRY
- I 'GO,+$G(MAGJKIDS) W !!,*7," * * * Exiting out of patch installation * * * ",! H 3 S XPDQUIT=1
- Q
-BGCSTRT ; re-enable Background Compile
- I $D(^MAG(2006.69,"BGSTOP")) S X=^("BGSTOP") W " ... Enabling background compile ."
- E  Q
- S ^MAG(2006.69,1,0)=X
- K ^MAG(2006.69,"BGSTOP")
- W !!,"Background Compile Enabled.",! H 3
  Q
  ;
 END ;

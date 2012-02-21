@@ -1,6 +1,6 @@
 IBTUBO2 ;ALB/AAS - UNBILLED AMOUNTS - GENERATE UNBILLED REPORTS ;03 Aug 2004  8:21 AM
- ;;2.0;INTEGRATED BILLING;**19,31,32,91,123,159,192,155,309,347,437**;21-MAR-94;Build 11
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**19,31,32,91,123,159,192,155,309**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 INPT(DGPM) ; - Check if inpatient episode has bills or final bill; if not,
  ;   ^TMP($J,"IBTUB-INPT",NAME@@DFN,DATE,IBX)=bill status
@@ -70,10 +70,10 @@ RX(IBRX) ; - Check if prescription has been billed; if not,
  N IBDATA,IBDAY,IBDRX,IBFL,IBFLG,IBOFD,IBNAME,IBND,IBNO,IBNCF,RX,X,RXDT,IBMRA,IBCO
  ;
  ; - Be sure prescription has an RX#.
- S IBND=$$RXZERO^IBRXUTL(DFN,IBRX),IBNO=$P(IBND,U) G:IBNO="" RXQ
+ S IBND=$G(^PSRX(IBRX,0)),IBNO=$P(IBND,U) G:IBNO="" RXQ
  ;
  ; - Retrieve the Prescription Original Fill Date
- S IBOFD=$$FILE^IBRXUTL(IBRX,22)\1
+ S IBOFD=$P($G(^PSRX(IBRX,2)),"^",2)\1
  ;
  S IBDAY=$E(IBDT,1,7),IBDRX=IBDAY_"@@"_IBNO,IBNAME=$P($G(^DPT(DFN,0)),U)
  ;
@@ -101,32 +101,7 @@ RX(IBRX) ; - Check if prescription has been billed; if not,
 RX1 ; - Calculate unbilled amounts.
  S:'IBMRA IBUNB("PRESCRP")=IBUNB("PRESCRP")+1
  I IBMRA S IBUNB("PRESCRP-MRA")=IBUNB("PRESCRP-MRA")+1
- ;
- ; Patch 437 update to call charge master with enough information
- ; to lookup actual cost of prescription 
- ;
- N IBBI,IBRSNEW,IBQTY,IBCOST,IBRFNUM,IBSUBND,IBFEE
- ;
- ; check charge master for the type of billing--VA Cost or not
- S IBBI=$$EVNTITM^IBCRU3(+IBRT,3,"PRESCRIPTION FILL",IBDAY,.IBRSNEW)
- ;
- I IBBI["VA COST" D
- .;  if this is a refill look up the refill info for cost and quantity
- .  S IBRFNUM=$$RFLNUM^IBRXUTL(IBRX,IBDAY,"")
- .  I IBRFNUM>0 D
- ..    S IBSUBND=$$ZEROSUB^IBRXUTL(DFN,IBRX,IBRFNUM)
- ..    S IBQTY=$P($G(IBSUBND),U,4)
- ..    S IBCOST=$P($G(IBSUBND),U,11)
- .;
- .;  if this was an original fill use the Rx info already in IBND
- .  I $G(IBQTY)'>0 S IBQTY=$P($G(IBND),U,7)
- .  I $G(IBCOST)'>0 S IBCOST=$P($G(IBND),U,17)
- .;
- .  S IBRSNEW=+$O(IBRSNEW($P(IBBI,";"),0))
- .  S IBCO=$J($$RATECHG^IBCRCC(+IBRSNEW,IBQTY*IBCOST,IBDAY,.IBFEE),0,2)
- E  D
- .  S IBCO=$$BICOST^IBCRCI(IBRT,3,IBDAY,"PRESCRIPTION FILL")
- ;
+ S IBCO=$$BICOST^IBCRCI(IBRT,3,IBDAY,"PRESCRIPTION FILL")
  S:'IBMRA IBUNB("UNBILRX")=IBUNB("UNBILRX")+IBCO
  I IBMRA S IBUNB("UNBILRX-MRA")=IBUNB("UNBILRX-MRA")+IBCO
  I $G(IBXTRACT) D  ; For DM extract.
@@ -135,7 +110,7 @@ RX1 ; - Calculate unbilled amounts.
  ;
  ; - Set global for report.
  D ZERO^IBRXUTL(+$P(IBND,U,6))
- I $S($G(IBINMRA):1,1:'IBMRA) S ^TMP($J,"IBTUB-RX",IBNAME_"@@"_DFN,IBDRX,IBX)=IBNCF_U_$P($G(^VA(200,+$P(IBND,U,4),0)),U)_U_$$FILE^IBRXUTL(IBRX,22)_U_U_IBFLG_U_$G(^TMP($J,"IBDRUG",+$P(IBND,U,6),.01))
+ I $S($G(IBINMRA):1,1:'IBMRA) S ^TMP($J,"IBTUB-RX",IBNAME_"@@"_DFN,IBDRX,IBX)=IBNCF_U_$P($G(^VA(200,+$P(IBND,U,4),0)),U)_U_$P($G(^PSRX(IBRX,2)),U,2)_U_U_IBFLG_U_$G(^TMP($J,"IBDRUG",+$P(IBND,U,6),.01))
  I IBMRA,$G(IBINMRA) S ^TMP($J,"IBTUB-RX_MRA",IBNAME_"@@"_DFN,IBDRX,IBX)=1
  K ^TMP($J,"IBDRUG")
  ;

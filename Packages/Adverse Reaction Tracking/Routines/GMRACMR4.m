@@ -1,8 +1,8 @@
-GMRACMR4 ;HIRMFO/WAA-PATIENT NOT ASKED ABOUT ALLERGIES ;10/1/92
- ;;4.0;Adverse Reaction Tracking;**33**;Mar 29, 1996;Build 5
+GMRACMR4 ;HIRMFO/WAA-PATIENT NOT ASKED ABOUT ALLERGIES ; 10/1/92
+ ;;4.0;Adverse Reaction Tracking;;Mar 29, 1996
 EN1 ;This is the main entry point for this program
  D EN1^GMRACMR G:GMRAOUT EXIT
-DEV ; *** Select output device, force queuing
+DEV ; *** Select output device, force queueing
  S GMRAZIS=""
  S:GMRASEL'="1," GMRAZIS="Q"
  W !! D DEV^GMRAUTL I POP S GMRAOUT=1 G EXIT
@@ -30,7 +30,6 @@ PRINT ;PRINT THE DATE
  .W !!,?10,$S(GMRA="W":"WARD",GMRA="M":"MODULE",GMRA="C":"CLINIC",1:"UNKNOWN"),": ",$P(^SC(GMRAX,0),U)
  .S GMRACNT=0
  .S GMRADATE=0 F  S GMRADATE=$O(^TMP($J,"GMRAWC",GMRAX,GMRADATE))  Q:GMRADATE=""  S (GMRAFLG,GMRADFN)=0 F  S GMRADFN=$O(^TMP($J,"GMRAWC",GMRAX,GMRADATE,GMRADFN)) Q:GMRADFN<1  D  Q:GMRAOUT
- ..Q:'$$PRDTST^GMRAUTL1(GMRADFN)  ;GMRA*4*33 Exclude test patient from report if production or legacy environment.
  ..S GMRAI=0 F  S GMRAI=$O(^GMR(120.8,"B",GMRADFN,GMRAI)) Q:GMRAI<1  D  Q:GMRAOUT
  ...Q:'$D(^GMR(120.8,GMRAI,0))  Q:$P($G(^GMR(120.86,GMRADFN,0)),U,2)'=1
  ...Q:$D(^GMR(120.8,GMRAI,"ER"))

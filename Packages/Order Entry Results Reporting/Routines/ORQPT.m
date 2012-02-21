@@ -1,5 +1,5 @@
-ORQPT ; SLC/MKB - Patient Selection ; 4/18/07 7:20am
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**52,82,85,215,243**;Dec 17, 1997;Build 242
+ORQPT ; SLC/MKB - Patient Selection ;3/16/05  08:28
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**52,82,85,215**;Dec 17, 1997
  ;
  ; Ref. to ^UTILITY via IA 10061
  ; SLC/PKS - 3/2000: Modified to deal with "Combinations."
@@ -192,6 +192,8 @@ SLCT1 ; -- may enter here with DFN from FIND
  . W !!,"Press <return> to continue ..."
  . R X:DTIME
 SLCT2 ; -- convert patient's orders, if not already done
+ S ORCNV=$$OTF^OR3CONV(+ORVP) Q:'ORCNV  I ORCNV>0 W !,"DONE" H 1 Q
+ I ORCNV<0 W $C(7),!!,$P(ORCNV,U,2) H 2 S VALMBCK="R" Q
  Q
  ;
 OK(DATE) ; -- Patient is deceased; ok to continue?

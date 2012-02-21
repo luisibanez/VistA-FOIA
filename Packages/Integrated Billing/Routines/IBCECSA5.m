@@ -1,6 +1,6 @@
 IBCECSA5 ;ALB/CXW - VIEW EOB SCREEN ;01-OCT-1999
- ;;2.0;INTEGRATED BILLING;**137,135,263,280,155,349**;21-MAR-1994;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,135,263,280,155**;21-MAR-1994
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; -- main entry point for VIEW EOB
  N VALMCNT,VALMBG,VALMHDR
@@ -129,9 +129,9 @@ MRALLA S IB=$$SETSTR^VALM1("LINE LEVEL ADJUSTMENTS:","",1,50)
  ;
  ; look up all billed data
  N IBZDATA,IBFORM,IBX2,IBX3,IBREC2,IBREC3,IBTX,IBT,IBRC,IBZ,IBTXL
- S IBFORM=0                             ; cms-1500
- I $$FT^IBCEF(+IBREC)=3 S IBFORM=1      ; UB-04
- D F^IBCEF("N-"_$S(IBFORM:"UB-04",1:"HCFA 1500")_" SERVICE LINE (EDI)","IBZDATA",,+IBREC)
+ S IBFORM=0                             ; hcfa-1500
+ I $$FT^IBCEF(+IBREC)=3 S IBFORM=1      ; ub92
+ D F^IBCEF("N-"_$S(IBFORM:"UB92",1:"HCFA 1500")_" SERVICE LINE (EDI)","IBZDATA",,+IBREC)
  ;
  S IBX=0 F  S IBX=$O(^IBM(361.1,IBCNT,15,IBX)) Q:IBX<1  S IBREC1=^IBM(361.1,IBCNT,15,IBX,0) D
  . NEW RVL

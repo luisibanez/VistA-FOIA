@@ -1,6 +1,5 @@
 PRSADP1 ; HISC/REL,WIRMFO/JAH - Display Employee T&A Data ;AUG 07, 1997
- ;;4.0;PAID;**22,114**;Sep 21, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;**22**;Sep 21, 1995
  W:$E(IOST,1,2)="C-" @IOF W !?26,"VA TIME & ATTENDANCE SYSTEM"
  W !?23,"EMPLOYEE TIME AND ATTENDANCE DATA" D HDR
  W !!,?7,"Date",?21,"Scheduled Tour",?46,"Tour Exceptions"
@@ -47,10 +46,7 @@ S2 ; Set Worked Array
  .Q
 S3 Q
 HDR ; Display Employee Data
- S C0=^PRSPC(DFN,0) W !!,$P(C0,"^",1) S X=$P(C0,"^",9)
- I '$G(PRSTLV)!($G(PRSTLV)=1) W ?65,"XXX-XX-",$E(X,6,9)
- I $G(PRSTLV)=2!($G(PRSTLV)=3) W ?65,$E(X),"XX-XX-",$E(X,6,9)
- I $G(PRSTLV)=7 W ?65,$E(X,1,3)_"-"_$E(X,4,5)_"-"_$E(X,6,9)
+ S C0=^PRSPC(DFN,0) W !!,$P(C0,"^",1) S X=$P(C0,"^",9) W ?65,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9)
  W !!,"Station: ",$P(C0,"^",7),?30,"Normal Hours: ",$J($P(C0,"^",16),3),?65,"Duty Basis:",?77,$P(C0,"^",10)
  W !,"T&L:     ",$P(C0,"^",8),?30,"Pay Plan:",?46,$P(C0,"^",21),?65,"Comp/Flex:",?77,$S(PPE'="":$P($G(^PRST(458,PPI,"E",DFN,0)),"^",6),1:$P($G(^PRSPC(DFN,1)),"^",7))
  W ! W:PPE'="" "Pay Per: ",PPE W ?65,"FLSA:",?77,$P(C0,"^",12) Q

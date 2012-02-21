@@ -1,6 +1,6 @@
 FBCH78A ;AISC/DMK-PRINT 7078 CONTINUED FROM FBCHP78 ;06FEB89
- ;;3.5;FEE BASIS;**103**;JAN 30, 1995;Build 19
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.5;FEE BASIS;;JAN 30, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
 HED W:'$G(FBPG) @IOF K:$G(FBPG) FBPG W UL,!,?5,"Department of Veterans Affairs",?58,"AUTHORIZATION AND INVOICE FOR MEDICAL AND HOSPITAL SERVICES",!,UL,!
  Q
 BOT W !,"SPECIAL PROVISIONS: Acceptance of this authorization to render service is governed by the following:",!!
@@ -12,11 +12,6 @@ BOT W !,"SPECIAL PROVISIONS: Acceptance of this authorization to render service 
  W ?3,"office with a brief explanation.",!
  W !,"5. A copy of the Operative Report will be forwarded to the Authorizing station within one week following any major",!,?3,"surgery.",!
  W !,"6. A copy of the hospital summary will be forwarded to the authorizing station within ten work days following the ",!,?3,"release of the patient from the hospital.",!
- W !,"7. When submitting claims for payment you must include the NPI and Taxonomy Code of the rendering practitioner,"
- W !,?3,"and the NPI and Taxonomy Code of your organization.  If, under the HIPAA NPI Final Rule"
- W !,?3,"[http://www.cms.hhs.gov/NationalProvIdentStand], your organization is an ""atypical"" provider furnishing services such"
- W !,?3,"as taxi, home and vehicle modifications, insect control, habilitation, and respite services and is therefore"
- W !,?3,"ineligible for an NPI, it is important that you indicate ""Ineligible for NPI"" on your claim form.",!
  W UL,!,?16,"All questions relating to this authorization should be referred to the issuing VA Office",!,UL,!,"VA Form 10-7078" Q
  ;
 FISCAL ;SETS THE FISCAL SYMBOL BLOCK FOR 7078

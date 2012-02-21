@@ -1,5 +1,5 @@
 MPIFRES ;SF/CMC-LOCAL AND MISSING ICN RESOLUTION ;JUL 13, 1998
- ;;1.0; MASTER PATIENT INDEX VISTA ;**1,7,10,15,17,21,26,28,33,35,43,39,52**;30 Apr 99;Build 7
+ ;;1.0; MASTER PATIENT INDEX VISTA ;**1,7,10,15,17,21,26,28,33,35,43**;30 Apr 99
  ;
  ; Integration Agreements Utilized:
  ;  EXC, START and STOP^RGHLLOG - #2796
@@ -55,23 +55,18 @@ SEND ;ready to send
  K ^TMP("HLS",$J)
  Q
 MAKE ;
- N LOCAL,MPIIT,TICN,STOP,X,Y,%,%H,%I,TODAY,SITE,XX,SDT,NDT
+ N LOCAL,MPIIT,TICN,STOP,X,Y,%,%H,%I,TODAY,SITE,XX
  S LOCAL="",MPIIT=0,MPIFRES="",SITE=$P($$SITE^VASITE(),"^",3)
  D NOW^%DTC S TODAY=X
  ;local ICNs
  F  S MPIIT=$O(^DPT("AICNL",1,MPIIT)) Q:MPIIT=""  D
  .; LINE BELOW ADDED FOR PATCH 26 TO CLEANUP AICNL X-REF WHEN LEFT AROUND
  .I $E($$GETICN^MPIF001(MPIIT),1,3)'=SITE S XX=$$SETLOC^MPIF001(MPIIT,0) K ^DPT("AICNL",1,MPIIT) Q
- .;Q:+$G(^DPT("AICNL",1,MPIIT))=1 **39 changing check
+ .Q:+$G(^DPT("AICNL",1,MPIIT))=1
+ .; ^ only send patient to MPI for Local ICN resolution 1 time
  .Q:+$G(^DPT("AICNL",1,MPIIT))=2&($P($G(^DPT("AICNL",1,MPIIT)),"^",2)=TODAY)
  .; ^ check if A28 failed to get ICN back and should now be sent up
  .; DON'T send if is the 2^today **35
- .S SDT=$P($G(^DPT("AICNL",1,MPIIT)),"^",2)
- .N X1,X2 K X S X1=SDT,X2=2 D C^%DTC S NDT=X ;**39 FIGURE 2 DAYS FROM NOW
- .Q:+$G(^DPT("AICNL",1,MPIIT))=1&(SDT=TODAY)
- .; **39 ^ if send up today don't send again
- .Q:+$G(^DPT("AICNL",1,MPIIT))=1&(NDT>TODAY)
- .;**39 ^ only send patient to MPI for Local ICN resolution 1 time UNLESS its day 3 since it was sent
  .;I $D(^RGHL7(991.1,"ADFN",218,MPIIT)) S ^DPT("AICNL",1,MPIIT)="1^"_TODAY Q
  .; ^ checking if potential match exception **43 REMOVE CHECK ON POTENTIAL MATCH EXCEPTIONS
  .D MAKE3
@@ -82,7 +77,7 @@ MAKE ;
  .I $D(^DPT(MPIIT,-9)) K ^DPT("AMPIMIS",MPIIT) Q  ;**43 CHECK IF MERGED PATIENT AND CLEANUP CROSS REFERENCE
  .S TICN=+$$GETICN^MPIF001(MPIIT)
  .I TICN<0 L +^DPT(MPIIT):5 I '$T Q  ;**35
- .L -^DPT(MPIIT) ;**35 **52 UNLOCK WHAT IS LOCKED ABOVE
+ .L -^DPT(MPIIT,0) ;**35
  .;**35 If don't have ICN yet, try to lock if can't get lock skip record - still creating patient.
  .I TICN<0,'$D(STOP) D MAKE3
  .I TICN>0 K ^DPT("AMPIMIS",MPIIT)

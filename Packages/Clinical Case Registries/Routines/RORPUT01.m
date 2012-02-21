@@ -1,5 +1,5 @@
-RORPUT01 ;HCIOFO/SG - EDIT LOINC AND DRUG CODE MULTIPLES ; 5/19/06 11:48am
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORPUT01 ;HCIOFO/SG - EDIT LOINC AND DRUG CODE MULTIPLES ; 9/29/03 3:29pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  Q
  ;
@@ -27,24 +27,6 @@ ADD(REGIEN,SUBFILE,LSTREF) ;
  . . D UPDATE^DIE(,"RORFDA",,"RORMSG")
  . . S:$G(DIERR) RC=$$DBS^RORERR("RORMSG",-9,,,SUBFILE,IENS)
  Q RC
- ;
- ;***** RESTORES THE CDC DEFINITION
- ;
- ; Return Values:
- ;       <0  Error code
- ;        0  Ok
- ;
-CDCDEF() ;
- N RC,RESULTS,RORBUF
- D BMES^RORKIDS("Restoring the CDC definition...")
- ;--- Restore the definition from the transport global
- M RORBUF=@XPDGREF@("RORCDCDEF")
- S RORBUF="HIV CDC Form Template"
- D SETPARM^RORRP038(.RESULTS,"ICRCDCDEF","PKG",.RORBUF)
- Q:$G(RESULTS(0))<0 +RESULTS(0)
- ;--- Success
- D MES^RORKIDS("The definition has been restored successfully.")
- Q 0
  ;
  ;***** COMPILES THE 'NEXT' LOGIC
  ;
@@ -83,6 +65,72 @@ COMPNEXT(PARAM) ;
  . S NEXT="S BUF=$P("""_";;"_$P(PARAM,",",1,N)_""",U,TLI)"
  ;--- Invalid parameter
  Q $$ERROR^RORERR(-88,,,,"List of Codes",PARAM)
+ ;
+ ;***** ADDS ITEMS TO 'DRUG THERAPY LIST' MULTIPLE OF FILE #798.1
+ ;
+ ; [RORREG]      Registry IEN and registry name separated by the '^'
+ ;               (RegistryIEN^RegistryName).
+ ;
+ ; [RORDRGAD]    Either a list of National Drug Codes separated by
+ ;               commas or a full reference (TAG^ROUTINE) to a
+ ;               routine label after which the list is located.
+ ;
+ ;               All spaces are removed from the lines of the list.
+ ;               See the $$COMPNEXT^RORPUT01 function for more
+ ;               details.
+ ;
+ ; If some of these parameters are omitted or equal to an empty
+ ; strings, their values must be defined as the RORPARM("KIDS")
+ ; sub-nodes of the same name.
+ ;
+ ; Return Values:
+ ;       <0  Error code
+ ;        0  Ok
+ ;
+DRUGADD(RORREG,RORDRGAD) ;
+ N RC
+ D BMES^RORKIDS("Adding new items to the drug list...")
+ ;--- Get the parameters
+ S:'$G(RORREG) RORREG=$$PARAM^RORKIDS("RORREG")
+ S:$G(RORDRGAD)="" RORDRGAD=$$PARAM^RORKIDS("RORDRGAD")
+ ;--- Update the multiple
+ S RC=$$ADD(+RORREG,798.117,RORDRGAD)  Q:RC<0 RC
+ ;--- Success
+ D MES^RORKIDS("The drug list has been updated successfully.")
+ Q 0
+ ;
+ ;***** REMOVES ITEMS FROM 'DRUG THERAPY LIST' MULTIPLE OF FILE #798.1
+ ;
+ ; [RORREG]      Registry IEN and registry name separated by the '^'
+ ;               (RegistryIEN^RegistryName).
+ ;
+ ; [RORDRGAD]    Either a list of National Drug Codes separated by
+ ;               commas or a full reference (TAG^ROUTINE) to a
+ ;               routine label after which the list is located.
+ ;
+ ;               All spaces are removed from the lines of the list.
+ ;               See the $$COMPNEXT^RORPUT01 function for more
+ ;               details.
+ ;
+ ; If some of these parameters are omitted or equal to an empty
+ ; strings, their values must be defined as the RORPARM("KIDS")
+ ; sub-nodes of the same name.
+ ;
+ ; Return Values:
+ ;       <0  Error code
+ ;        0  Ok
+ ;
+DRUGREM(RORREG,RORDRGRM) ;
+ N RC
+ D BMES^RORKIDS("Removing obsolete items from the drug list...")
+ ;--- Get the parameters
+ S:'$G(RORREG) RORREG=$$PARAM^RORKIDS("RORREG")
+ S:$G(RORDRGRM)="" RORDRGRM=$$PARAM^RORKIDS("RORDRGRM")
+ ;--- Update the multiple
+ S RC=$$REMOVE(+RORREG,798.117,RORDRGRM)  Q:RC<0 RC
+ ;--- Success
+ D MES^RORKIDS("The drug list has been updated successfully.")
+ Q 0
  ;
  ;***** ADDS ITEMS TO 'EXTRACTED RESULT' MULTIPLE OF FILE #798.1
  ;

@@ -1,6 +1,6 @@
-DIETED ;SFISC/GFT SCREEN-EDIT AN INPUT TEMPLATE ;22MAY2006
- ;;22.0;VA FileMan;**111,159**;Mar 30, 1999;Build 8
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIETED ;SFISC/GFT SCREEN-EDIT AN INPUT TEMPLATE ;07:04 PM  15 Jul 2002
+ ;;22.0;VA FileMan;**111**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  N DIC,DIET,DRK,DIETED,I,J,DDSCHG
  S DIC=.402,DIC(0)="AEQ" D ^DIC Q:Y<1
  S DIET=+Y D E
@@ -29,63 +29,54 @@ KL K ^TMP("DIETED",$J)
  M ^UTILITY("DIETED",$J)=DR
  Q
  ;
-GET(DIETA,DIT) ;put displayable template into @DIETA
- N DIAO,DIETREL,DIETAD,DB,DIAT,I,J,L,DIAR,DIAB
+GET(DIETA) ;put displayable template into @DIETA
+ N DIAO,DIETREL,DIETAD,DB,DIAT,I,J,L
  K @DIETA
- I '$D(DIT) S DIT=$NA(^DIE(DIET))
- S (DR,DIAT)="",(DIETAD,L,DIAO,DB,DIAR)=0,F=-1
- S J(0)=$P(@DIT@(0),U,4)
- M DI=^("DIAB") S DI=J(0)
+ S DR="",(DIETAD,L,DIAO,DB)=0,F=-1
+ S (DI,J(0))=$P(^DIE(DIET,0),U,4)
+ M DI=^("DIAB")
  D DOWN
 1 S Y=$P(DIAT,";",DB) I "Q"[Y G NDB:Y="" S DB=DB+1 G 1
  S %=+Y I Y?.NP,$P(Y,":",2),Y'["/" S Y=+Y_"-"_$P(Y,":",2),%=""
- I %_"T~"=Y!(%_"t~"=Y),$P($G(^DD(DI,%,0)),U,2) S Y=% ;HWH-1103-40934 -- ignore TITLE of MULTIPLE
- S DIETREL="",DIAB=$G(DI(DB,DIAR-1,DI,DIAO)) E  S:Y?1"^".E DIETREL=Y S:DIAB]"" Y=DIAB
+ S DIETREL="" I $D(DI(DB,F,DI,DIAO)) S:Y?1"^".E DIETREL=Y S Y=DI(DB,F,DI,DIAO),%=+Y
  I Y?1"]".E S Y=$E(Y,2,999)
- I DIAB="",%,$D(^DD(DI,%,0)) S Y=$P(^(0),U)_$P(Y,%,2,999)
- S DB=DB+1,DIETAD=DIETAD+1,@DIETA@(DIETAD)=$J("",F*3)_Y I DIETREL]"" D  G 1 ;Put it in!
- .S L=L\100+1*100,(J(L),DI)=$P(DIETREL,U,2) D DOWN ;Relational jump
- I % S %=+$P($G(^DD(DI,%,0)),U,2) I %,$P($G(^DD(%,.01,0)),U,2)'["W" S L=L+1,(J(L),DI)=% D DOWN ;Down to a multiple
+ I %,$D(^DD(DI,%,0)) S Y=$P(^(0),U)_$P(Y,%,2,999)
+ S DB=DB+1,DIETAD=DIETAD+1,@DIETA@(DIETAD)=$J("",F*3)_Y I DIETREL]"" D  G 1
+ .S L=L\100+1*100,(J(L),DI)=$P(DIETREL,U,2) D DOWN
+ I % S %=+$P($G(^DD(DI,%,0)),U,2) I %,$P($G(^DD(%,.01,0)),U,2)'["W" S L=L+1,(J(L),DI)=% D DOWN
  I Y="ALL" G UP
  G 1
+DOWN S F=F+1,DB(F)=DB,DB=1,DIAO(F)=DIAO,DIAO=0
+DIAT S DIAT=$G(^DIE(DIET,"DR",F+1,DI),"ALL") Q
  ;
-DOWN S F=F+1,DIAR(F)=DIAR,DIAR=DIAR+1,%=$P(DIAT,";",DB) S:%?1"^"1.NP DB=DB+1,DIAR=$P(%,U,2)
- S DB(F)=DB,DB=1,DIAO(F)=DIAO,DIAO=0
-DIAT S DIAT=$G(@DIT@("DR",DIAR,DI),"ALL") Q
- ;
-NDB I DIAO'<0 S DIAO=DIAO+1 I $D(@DIT@("DR",DIAR,DI,DIAO)) S DIAT=^(DIAO),DB=1 G 1
+NDB I DIAO'<0 S DIAO=DIAO+1 I $D(^DIE(DIET,"DR",F+1,DI,DIAO)) S DIAT=^(DIAO),DB=1 G 1
  S DIAO=-1
 UP Q:'F  K I(L),J(L) S L=$O(J(L),-1)
- S DIAR=DIAR(F),DB=DB(F),DIAO=DIAO(F),DI=J(L),DIAT=$S(DIAO<0:"",DIAO:@DIT@("DR",DIAR,J(L),DIAO),1:$G(@DIT@("DR",DIAR,DI))),F=F-1 G 1
- ;
- ;
- ;
+ S DB=DB(F),DIAO=DIAO(F),DI=J(L),DIAT=$S(DIAO<0:"",DIAO:^DIE(DIET,"DR",F,J(L),DIAO),1:$G(^DIE(DIET,"DR",F,DI))),F=F-1 G 1
  ;
 PROCESS(DIETA) ;puts nodes into ^UTILITY("DIETED")
- N DIAB,LINE,DXS,L,DIAP,DIETSL,DQI,DIETSAVE,DIETAB,ERR,DIAR
- K DR S F=0,(DI,J(0))=DRK,I(0)=^DIC(J(0),0,"GL"),DIAP="",(L,DIETAB)=0,DXS=1,DIAR=1
+ N DIAB,LINE,DXS,L,DIAP,DIETSL,DQI,DIETSAVE,DIETAB,ERR
+ K DR S F=0,(DI,J(0))=DRK,I(0)=^DIC(J(0),0,"GL"),DIAP="",(L,DIETAB)=0,DXS=1
  F LINE=1:1 Q:'$D(@DIETA@(LINE))  K ERR S X=^(LINE) D
  .I X?1"^".E S LINE=999999999 K DR Q
  .D LINE(X)
  .I $D(ERR) W "LINE ",LINE S DIETEDER(LINE)=ERR,LINE=-LINE Q  ;stop if we find one error
  I LINE<0 W " ERROR!"
  Q
- ;
 LINE(X) ;Process one LINE from the screen
- N D,DIC,DICMX,DV,DATE,Y,DICOMPX,DICOMP,DRR
+ N D,DIC,DICMX,DV,DATE,Y,DICOMPX,DICOMP
  F D=$L(X):-1:1 Q:$A(X,D)>32  S X=$E(X,1,D-1)
  F D=0:1 Q:$A(X)-32  S X=$E(X,2,999) ;strip off 'D' leading spaces
  Q:X=""
-OUT I D<DIETAB,L K I(L),J(L) S L=$O(J(L),-1),DIAP=DIAP(F),DIAR=DIAR(F),DIETAB=$G(DIETAB(F),D),F=F-1,DI=J(L) G OUT ;out-dentation means go up a level (or more)
+ I D<DIETAB,L K I(L),J(L) S L=$O(J(L),-1),DIAP=DIAP(F),F=F-1,DI=J(L) ;out-dentation means go up a level
  S DIETAB=D
  I X?1"@"1.N S Y=X G DR
-ALL D DICS^DIA I X="ALL" D  Q
- .S ^UTILITY("DIETEDIAB",$J,1,DIAR-1,DI,DIAP\1000)=X
- .N D,DA,DG D RANGE^DIA1
+ D DICS^DIA I X="ALL" D  Q
+ .N D,DA,DG S ^UTILITY("DIETEDIAB",$J,1,F,DI,DIAP\1000)=X,%=DI D A^DIA1 ;  'ALL' fields
  S DV="",J=$P(X,"-",2) I +J=J,$P(X,"-")=+X,J>X D  G X:Y="",DR
  .N D,DA,DG S D(F)=J D RANGE^DIA1 S Y=DA
 SEMIC I X[";" S Y=X,X=$P(X,";") D  G X:'$D(Y) S DIAB=Y
- .F %=2:1:$L(Y,";") S D=$P(Y,";",%),D=$S(D="DUP":"d",D="REQ":"R","""R""d"""[D:"",$A(D)=34:$E(D,2,$F(D,"""",2)-2),D="T":D,1:""),DV=D_$C(126)_DV I $A(D)>45&($A(D)<58)!(D[":")!(D="") K Y Q
+ .F %=2:1:$L(Y,";") S D=$P(Y,";",%),D=$S(D="DUP":"d",D="REQ":"R","""R""d"""[D:"",$A(D)=34:$E(D,2,$F(D,"""",2)-2),1:D),DV=D_$C(126)_DV I $A(D)>45&($A(D)<58)!(D[":")!(D="") K Y Q
 DIC S DIC(0)="OZ",DIC="^DD(DI," D ^DIC
  I Y>0 S Y=+Y_DV D DR S %=+$P(Y(0),U,2) D:%  Q
  .I $P($G(^DD(+%,.01,0)),U,2)["W" Q
@@ -97,12 +88,10 @@ X S ERR=1 Q
  ;
 L I $D(X)>1  M DR(99,DXS)=X S DXS=DXS+1
  S %=-1,L=$S(Y>L:+Y,1:L\100+1*100),Y=U_DP_U_U_X_" S X=$S(D(0)>0:D(0),1:"""")" K X
- D DR S DI=+DP D D
- Q
+ D DR,D
+ S DI=+DP Q
  ;
-D N % S F=F+1,DIAR(F)=DIAR F %=F+1:.01 Q:'$D(DR(%,DI))
- S:%["." @DRR=@DRR_U_%_";",DIAP=DIAP+1 S DIAR=%
- S DIAP(F)=DIAP,DIAP=0,DIETAB(F)=DIETAB Q
+D S F=F+1,DIAP(F)=DIAP,DIAP=0 Q
  ;
 DEF S X=DIETSAVE D  S X=$P(DIETSAVE,DIETSL),DV=DV_DIETSL_DP G X:DV[";",DIC ;as in DEF^DIA3
  .S X="DA,DV,DWLC,0)=X" F J=L:-1 Q:I(J)[U  S X="DA("_(L-J+1)_"),"_I(J)_","_X
@@ -117,14 +106,14 @@ XEC .I $D(X),Y["m" S DIC("S")="S %=$P(^(0),U,2) I %,$D(^DD(+%,.01,0)),$P(^(0),U,
  .Q
  ;
 DR ;takes 'Y' and puts it into 'DR' array
- N %,B
- S (DRR,B)=$NA(DR(DIAR,DI)),%=$O(@DRR@(""),-1)
- I % S DRR=$NA(@DRR@(%))
- I '$D(@DRR) S @DRR="",DIAP=0
- I $L(Y)+$L(@DRR)>230 S DRR=$NA(@B@(%+1)),DIAP=DIAP\1000+1*1000,@DRR=""
- S @DRR=@DRR_Y_";"
+ N %,N,B
+ S (N,B)=$NA(DR(F+1,DI)),%=$O(@N@(""),-1)
+ I % S N=$NA(@N@(%))
+ I '$D(@N) S @N="",DIAP=0
+ I $L(Y)+$L(@N)>230 S N=$NA(@B@(%+1)),DIAP=DIAP\1000+1*1000,@N=""
+ S @N=@N_Y_";"
  S DIAP=DIAP+1
-DIAB I $D(DIAB) S ^UTILITY("DIETEDIAB",$J,DIAP#1000,DIAR-1,DI,DIAP\1000)=DIAB K DIAB
+DIAB I $D(DIAB) S ^UTILITY("DIETEDIAB",$J,DIAP#1000,F,DI,DIAP\1000)=DIAB K DIAB
  Q
  ;
 PUT ;save template

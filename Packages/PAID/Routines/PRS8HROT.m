@@ -1,6 +1,5 @@
-PRS8HROT ;JAH/WCIOFO-Calc time over 8/day &/or 40/week ;07/14/2008
- ;;4.0;PAID;**29,42,52,102,117**;Sep 21, 1995;Build 32
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRS8HROT ;JAH/WCIOFO-Calc time over 8/day &/or 40/week ;02/03/06
+ ;;4.0;PAID;**29,42,52,102**;Sep 21, 1995
  ;
 OVER840 ;
  ;     If overtime coded & either holiday worked or holiday excused
@@ -12,7 +11,7 @@ OVER840 ;
  ;
  I HT>32 D G8^PRS8HRSV Q:X
  ;
- I "1235nHMLSWNARUXYVJFGDZq"[VAL,NH>319 Q
+ I "1235nHMLSWNARUXYVJFGD"[VAL,NH>319 Q
  ;
  ;     If Baylor Plan
  ;
@@ -43,4 +42,17 @@ OVER840 ;
  D CHK^PRS8HRSV
  ;
  ;-------------------------------------------------------------------
+ Q
+NORMHRS ;
+ ; IF part-time employee AND time is LWOP or Non-Pay AND employee has OT
+ ; THEN decrement OT and try to post time as Unscheduled Regular (UN/US).
+ ;
+ I FLX="C" S X=32 D CHK^PRS8HRSV Q:X
+ ;
+ I HT'>32 S X=32 D CHK^PRS8HRSV Q:X
+ ;
+ ; if pt-doctor don't do G8
+ I HT>32,TYP'["Pd" D G8^PRS8HRSV Q:"^16^17^18^"[("^"_X_"^")
+ ;
+ S X=32 D CHK^PRS8HRSV
  Q

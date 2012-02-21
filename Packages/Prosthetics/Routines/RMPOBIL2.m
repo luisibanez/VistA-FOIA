@@ -1,5 +1,5 @@
 RMPOBIL2 ;EDS/MDB - HOME OXYGEN BILLING TRANSACTIONS ;7/28/98
- ;;3.0;PROSTHETICS;**29,44,46,50,110,165**;Feb 09, 1996;Build 4
+ ;;3.0;PROSTHETICS;**29,44,46,50**;Feb 09, 1996
  ; ODJ patch 50 - Fix crashes reported in NOIS LIT-0600-70930
  Q
 2319 ; SHOW PAGE 8 OF 2319
@@ -160,14 +160,12 @@ BIIL ;Build detail line
  S SUSP=SUSP+$G(TMP(10,"E")),CIEN=CIEN+1
  Q
 DII ; Display item info array
- ; Patch RMPR*3.0*165 removes 910 total line and replaces with FCP breakout for those FCPs now associated with HO billing.
  Q:'$G(IEN)
- N RMPOFCP,RMPOSITE S RMPOFCP=0,RMPOSITE=$P($G(^RMPR(669.9,RMPOXITE,0)),U,2)
  W ! F I=0:1:IEN W !,ITM(I)
  W !!,"TOTAL COST",?72,$J(TOT,6,2),!
- F  S RMPOFCP=$O(TOT(RMPOFCP)) Q:RMPOFCP=""  D
- . W !,"Total ",$P($G(^PRC(420,RMPOSITE,1,RMPOFCP,0)),U)," Charges:",?72,$J(+$G(TOT(RMPOFCP)),6,2)
- W !
+ W !,"Total 910 Charges:",?72,$J(+$G(TOT(910)),6,2),!
+ W !,"Total Station FCP Charges:",?72,$J(TOT-$G(TOT(910)),6,2),!
+ W:SUSP !,"Total Suspended Charges:",?72,$J(SUSP,6,2),!
  Q
 ITEMO() ; Select action (A/E/D/Z)
  K DIR
@@ -221,7 +219,7 @@ SACK S DR="10;S Z3=X" D ^DIE Q:$$EQUIT
  F  D  Q:(FCP>0)!QUIT
  . S FCP=$P($$GETFCP^RMPOBILU(DFCP),U,2) Q:$$QUIT
  . I FCP<0!(FCP="") W $C(7)_"REQUIRED FIELD!"
- I FCP>0 S DR="3R///"_FCP_";13R;14" D ^DIE Q:$$EQUIT
+ I FCP>0 S DR="3R///"_FCP_";13;14" D ^DIE Q:$$EQUIT
  Q
 ITEMZ ; Zero an item
  K DR D SDICE

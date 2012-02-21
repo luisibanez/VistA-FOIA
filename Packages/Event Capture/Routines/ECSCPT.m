@@ -1,5 +1,5 @@
-ECSCPT ;ALB/JAM - Event Code Screen With CPT Codes ; 8 Nov 07
- ;;2.0; EVENT CAPTURE ;**72,92,95**;8 May 96;Build 26
+ECSCPT ;ALB/JAM,-Event Code Screen With CPT Codes ;22 Jul 05
+ ;;2.0; EVENT CAPTURE ;**72**;8 May 96
 LOC K ECL S EC1=0 D ^ECL S:$D(LOC(2)) EC1=1 K LOC I '$D(ECL) S ECOUT=1 G END
 UNIT ;set var and sel dss unit
  S ECJLP=0
@@ -38,19 +38,13 @@ ECCPT ;CPT Codes to display
 DEV W !! K IOP,POP,IO("Q"),%ZIS,ZTSK
  S %ZIS="QM",%ZIS("A")="Select Device:  " D ^%ZIS I POP S ECOUT=1 G END
  I $D(IO("Q")) K IO("Q") D  G END
- .S ZTDESC="CATEGORY AND PROCEDURE SUMMARY",ZTRTN="START^ECSCPT",ZTIO=ION
+ .S ZTDESC="CATEGORY AND PROCEDURE SUMMARY",ZTRTN="START^ECSCPT1",ZTIO=ION
  .D SAVE,^%ZTLOAD,HOME^%ZIS K ZTSK
  U IO
 START ;
- N ECI  ;generic index
- N ECL  ;location IEN
- N ECLN  ;location name
  S %H=$H D YX^%DTC S ECRDT=Y
  S ECOUT=0,ECPG=1
- S ECI=0
- F  S ECI=$O(ECLOC(ECI)) Q:'ECI  D
- . S ECL=$P(ECLOC(ECI),U),ECLN=$P(ECLOC(ECI),U,2)
- . D ^ECSCPT1
+ D ^ECSCPT1
 CLEAR I $E(IOST,1,2)'="C-" G END
  G:ECOUT END
  I ECPG W !!!!!,"Press <RET> to continue  " R X:DTIME I '$T!(X="^") S ECOUT=1 G END

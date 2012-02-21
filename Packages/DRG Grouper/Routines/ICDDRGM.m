@@ -1,11 +1,11 @@
 ICDDRGM ;ALB/GRR/EG/ADL - GROUPER DRIVER ; 10/23/00 11:45am
- ;;18.0;DRG Grouper;**7,36**;Oct 20, 2000;Build 14
+ ;;18.0;DRG Grouper;**7**;Oct 20, 2000
  ;;ADL;Add Date prompt and passing of effective date for DRG CSV project
  ;;ADL;Update DIC("S") code to screen using new function calls
  ;;ADL;Update to access DRG file using new API for CSV Project
  S U="^",DT=$$DT^XLFDT W !!?11,"DRG Grouper    Version ","18.0",!! ;$$VERSION^XPDUTL("ICD"),!!
 PAT D KILL ; clean up old variables
- S ICDQU=0 K ICDEXP,SEX,ICDDX,ICDSURG
+ S ICDQU=0 K ICDEXP,SEX,ICDDX
  D EFFDATE G KILL:$D(DUOUT),OUT:$D(DTOUT)
  S DIR(0)="Y",DIR("A")="DRGs for Registered PATIENTS  (Y/N)",DIR("B")="YES"
  S DIR("?")="Enter 'Yes' if the patient has been previously registered, enter 'No' for other patient, or '^' to quit."
@@ -21,9 +21,9 @@ CD K DIC S CC=0,DIC="^ICD9(",DIC(0)="AEQMZ",DIC("A")="Enter Primary diagnosis: "
  F ICDNSD=2:1 S DIC="^ICD9(",DIC(0)="AEQMZ",DIC("A")="Enter SECONDARY diagnosis: ",DIC("S")="I $$ISVALID^ICDGTDRG(+Y,ICDDATE,9)" D ^DIC K DIC Q:X=""!(X[U)!(Y'>0)  G:$D(DTOUT) OUT S ICDDX(ICDNSD)=+Y
  G Q:X[U
 OP S DIC("S")="I $$ISVALID^ICDGTDRG(+Y,ICDDATE,0)" K ICDPRC
- W ! F ICDNOR=1:1 S DIC="^ICD0(",DIC(0)="AEQMZ",DIC("A")="Enter Operation/Procedure: " D ^DIC Q:X=""!(X[U)!(Y'>0)  G:$D(DTOUT) OUT S ICDPRC(ICDNOR)=+Y,ICDSURG(ICDNOR)=X
+ W ! F ICDNOR=1:1 S DIC="^ICD0(",DIC(0)="AEQMZ",DIC("A")="Enter Operation/Procedure: " D ^DIC Q:X=""!(X[U)!(Y'>0)  G:$D(DTOUT) OUT S ICDPRC(ICDNOR)=+Y
  K DIC G Q:X["^"
- D ^ICDDRG
+ D ^ICDDRG S:ICDDRG=470 ICDRTC=470 K ICDEXP,SEX,ICDDX I ICDRTC'=0 G ERROR
  D WRT G PAT0
 WRT S ICDDRG(0)=$$DRG^ICDGTDRG(+ICDDRG,ICDDATE)  ;  new CSV code
  W !!?9,"Effective Date: ","   ",ICDDSP
@@ -32,10 +32,7 @@ WRT S ICDDRG(0)=$$DRG^ICDGTDRG(+ICDDRG,ICDDATE)  ;  new CSV code
  W !?12," Low day(s): ",$J($P(ICDDRG(0),"^",3),6),?39,"Local low day(s): ",$J($P(ICDDRG(0),"^",9),6)
  W !?13," High days: ",$J($P(ICDDRG(0),"^",4),6),?40,"Local High days: ",$J($P(ICDDRG(0),"^",10),6)
  ;W !!,"DRG: ",ICDDRG,"-" F I=0:0 S I=$N(^ICD(ICDDRG,1,I)) Q:I'>0  W ?10,$P(^(I,0),U,1),!
- ;W !!,"DRG: ",ICDDRG,"-" F I=0:0 S I=$O(^ICD(ICDDRG,1,I)) Q:(I="")!(I'?.N)  W ?10,$P(^(I,0),U,1),!
- N ICDXD,ICDGDX,ICDGI
- S ICDXD=$$DRGD^ICDGTDRG(ICDDRG,"ICDGDX",,ICDDATE),ICDGI=0
- W !!,"DRG: ",ICDDRG,"-" F  S ICDGI=$O(ICDGDX(ICDGI)) Q:'+ICDGI  Q:ICDGDX(ICDGI)=" "  W ?10,ICDGDX(ICDGI),!
+ W !!,"DRG: ",ICDDRG,"-" F I=0:0 S I=$O(^ICD(ICDDRG,1,I)) Q:(I="")!(I'?.N)  W ?10,$P(^(I,0),U,1),!
  Q
 ERROR D WRT
  I ICDRTC<5 W !!,"Invalid ",$S(ICDRTC=1:"Principal Diagnosis",ICDRTC=2:"Operation/Procedure",ICDRTC=3:"Age",ICDRTC=4:"Sex",1:"") G PAT0
@@ -43,6 +40,7 @@ ERROR D WRT
  I ICDRTC=6 W !!,"Grouper needs to know if patient was transferred to an acute care facility!" G PAT0
  I ICDRTC=7 W !!,"Grouper needs to know if patient was discharged against medical advice!" G PAT0
  I ICDRTC=8 W !!,"Patient assigned newborn diagnosis code.  Check diagnosis!" G PAT0
+ I ICDRTC=470 W !!,"Grouping function error - contact IRMFO"
  G PAT0
 KILL K DIC,DFN,DUOUT,DTOUT,ICDNOR,ICDDX,ICDPRC,ICDEXP,ICDTRS,ICDDMS,ICDDRG,ICDMDC,ICDO24,ICDP24,ICDP25,ICDRTC,ICDPT,ICDQU,ICDNSD,ICDNMDC
  K ICDMAJ,ICDS25,ICDSEX,AGE,DOB,CC,HICDRG,ICD,ICDCC3,ICDJ,ICDJJ,ICDL39,ICDFZ,ICDDT,ICDDSP

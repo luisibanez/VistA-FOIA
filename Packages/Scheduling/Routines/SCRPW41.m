@@ -1,10 +1,9 @@
 SCRPW41 ;RENO/KEITH - Veterans Without Activity Since a Specified Date Range ; 5/25/2004
- ;;5.3;Scheduling;**144,375,358**;AUG 13, 1993
+ ;;5.3;Scheduling;**144,375**;AUG 13, 1993
  N DIR,%DT K SD
  D TITL^SCRPW50("Veterans Without Activity Since a Specified Date Range")
  W !!,"This report will return a list of veterans that are not deceased who had",!,"activity during a date range specified by the user, and have not been seen"
- W !,"since.  Activity is determined by an examination of Fee Basis, inpatient and",!,"outpatient care (including future appointments).  Once the scheduling"
- W !,"replacement application has been implemented at your site, this report will",!,"no longer be accurate."
+ W !,"since.  Activity is determined by an examination of Fee Basis, inpatient and",!,"outpatient care (including future appointments)."
  D SUBT^SCRPW50("**** Date Range Selection ****")
  W ! S %DT="AEPX",%DT("A")="Beginning date: " D ^%DT G:Y<1 EXIT^SCRPW42 S SD("BDT")=Y X ^DD("DD") S SD("PBDT")=Y
 EDT S %DT("A")="   Ending date: " W ! D ^%DT G:Y<1 EXIT^SCRPW42

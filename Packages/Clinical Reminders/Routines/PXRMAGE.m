@@ -1,5 +1,6 @@
-PXRMAGE ; SLC/PKR - Utilities for age calculations. ;10/07/2005
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMAGE ; SLC/PKR - Utilities for age calculations. ;10/29/2003
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
+ ;
  ;===========================================
 AGE(DOB,DOD,DATE) ;Given a date of birth, date of death, and a date
  ;return the age on that date. If the date of death is not null the
@@ -36,11 +37,12 @@ FMTAGE(MINAGE,MAXAGE) ;Format the minimum age and maximum age for display.
  ;
  ;===========================================
 FMTFREQ(FREQ) ;Format the frequency for display.
- N FREQT,STR
- S STR="Frequency: "
- S FREQT=$$FREQ^PXRMPTD2(FREQ)
- I FREQ=-1 Q STR_FREQT
- Q STR_"Due every "_FREQT
+ ;This is based on FREQ^PXRMPT.
+ N STR
+ I +FREQ=0 S STR=FREQ_" - Not Indicated" Q STR
+ I FREQ?1"99Y" S STR="99Y - Once"
+ E  S STR=+FREQ_($S(FREQ["D":" day",FREQ["M":" month",FREQ["Y":" year",1:""))_$S(+FREQ>1:"s",1:"")
+ Q STR
  ;
  ;===========================================
 MMF(DEFARR,PXRMPDEM,MINAGE,MAXAGE,FREQ,FIEVAL) ;Set the baseline minimum age,
@@ -49,7 +51,8 @@ MMF(DEFARR,PXRMPDEM,MINAGE,MAXAGE,FREQ,FIEVAL) ;Set the baseline minimum age,
  N FR,IC,INDEX,MATCH,MAXA,MINA,NAR,TEMP
  ;Initialize MINAGE, MAXAGE, and FREQ.
  S (MINAGE,MAXAGE,FREQ)=""
- S (IC,NAR)=0
+ S IC=0
+ S NAR=0
  F  S IC=$O(DEFARR(7,IC)) Q:+IC=0  D
  . S NAR=NAR+1
  . S TEMP=DEFARR(7,IC,0)
@@ -61,7 +64,7 @@ MMF(DEFARR,PXRMPDEM,MINAGE,MAXAGE,FREQ,FIEVAL) ;Set the baseline minimum age,
  I NAR=0 Q
  ;
  ;Make sure that none of the age ranges overlap.
- I $D(PXRMDEBG),$$OVERLAP(NAR,.MINA,.MAXA) Q
+ I $$OVERLAP(NAR,.MINA,.MAXA) Q
  ;
  ;Look for an age range match.
  S FREQ=-1
@@ -79,7 +82,7 @@ MMF(DEFARR,PXRMPDEM,MINAGE,MAXAGE,FREQ,FIEVAL) ;Set the baseline minimum age,
 OVERLAP(NAR,MINA,MAXA) ;Check age ranges for overlap.  Return an error message
  ;if an overlap is found.
  I NAR'>1 Q 0
- N IC,IN,JC,MAXI,MAXJ,MINI,MINJ,OVRLAP,TEXT
+ N IC,IN,JC,MAXI,MAXJ,MINI,MINJ,OVRLAP
  S OVRLAP=0
  F IC=1:1:NAR-1 D
  . S MAXI=MAXA(IC)
@@ -96,28 +99,7 @@ OVERLAP(NAR,MINA,MAXA) ;Check age ranges for overlap.  Return an error message
  .. I (MAXJ'<MINI)&(MAXJ'>MAXI) S IN=1
  .. I IN D
  ... S OVRLAP=OVRLAP+1
- ... S TEXT=MINA(IC)_" to "_MAXA(IC)_" and "_MINA(JC)_" to "_MAXA(JC)
- ... I $D(PXRMPID) S ^TMP(PXRMPID,$J,PXRMITEM,"FERROR","AGE OVERLAP",OVRLAP)=TEXT
- ... E  S ^TMP($J,"OVERLAP",OVRLAP)=TEXT
+ ... S ^TMP(PXRMPID,$J,PXRMITEM,"FERROR","AGE OVERLAP",OVRLAP)=MINA(IC)_" to "_MAXA(IC)_" and "_MINA(JC)_" to "_MAXA(JC)
  I OVRLAP>1 S OVRLAP=1
  Q OVRLAP
- ;
- ;===========================================
-OVLAP() ;Check age ranges for overlap. Called from definition editor after
- ;input of baseline frequency/age ranges.
- N IC,NAR,MAXA,MINA,OVERLAP,TEMP
- S (IC,NAR)=0
- F  S IC=$O(^PXD(811.9,DA,7,IC)) Q:+IC=0  D
- . S NAR=NAR+1
- . S TEMP=^PXD(811.9,DA,7,IC,0)
- . S MINA(NAR)=$P(TEMP,U,2)
- . S MAXA(NAR)=$P(TEMP,U,3)
- S OVERLAP=$$OVERLAP^PXRMAGE(NAR,.MINA,.MAXA)
- I OVERLAP D
- . W !,"Error - the following age ranges overlap:"
- . S IC=0
- . F  S IC=$O(^TMP($J,"OVERLAP",IC)) Q:IC=""  W !,?2,^TMP($J,"OVERLAP",IC)
- . K ^TMP($J,"OVERLAP")
- . W !,"Please correct this problem."
- Q OVERLAP
  ;

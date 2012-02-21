@@ -1,6 +1,5 @@
-SDAMA304 ;BPOIFO/ACS-Filter API Apply Filters ; 6/21/05 1:50pm
- ;;5.3;Scheduling;**301,347,508**;13 Aug 1993
- ;PER VHA DIRECTIVE 2004-038, DO NOT MODIFY THIS ROUTINE
+SDAMA304 ;BPOIFO/ACS-Filter API Apply Filters ; 8/10/04 2:29pm
+ ;;5.3;Scheduling;**301,347**;13 Aug 1993
  ;
  ;*****************************************************************
  ;              CHANGE LOG
@@ -12,7 +11,7 @@ SDAMA304 ;BPOIFO/ACS-Filter API Apply Filters ; 6/21/05 1:50pm
  ;                        MADE (FIELD #16) AND 2 NEW FIELDS TO RETURN:
  ;                        1) AUTO-REBOOKED APPT DATE/TIME (FIELD #24)
  ;                        2) NO-SHOW/CANCEL APPT DATE/TIME (FIELD #25)
- ;02/22/07  SD*5.3*508    SEE SDAMA301 FOR CHANGE LIST
+ ;
  ;*****************************************************************
  ;
  ;*****************************************************************
@@ -60,14 +59,6 @@ PMATCH(SDARRAY,SDMATCH) ;Apply ^DPT-related filters
  . S SDDV(3)=SDSTAT
  . I ((";"_$G(SDARRAY(3))_";")'[(";"_SDDV(3)_";")) S SDMATCH=0
  Q:'SDMATCH
- ;Encounter Exists (DEPRECATED 11/10/06 JFW)
- ;I SDFLTR(12) D
- ;.;get appointment encounter information
- ;.S SDDV(12)=$P($G(SDARRAY("DPT0")),"^",20)
- ;.;compare encounter information to filter value
- ;.;      Y AND NULL match or N and NOT NULL match
- ;.I (((SDARRAY("ENCTR")["Y")&(SDDV(12)']""))!((SDARRAY("ENCTR")["N")&(SDDV(12)]""))) D
- ;..S SDMATCH=0
  ;Date Appointment Made
  I SDFLTR(16) D
  .;get date appointment made from specific appt

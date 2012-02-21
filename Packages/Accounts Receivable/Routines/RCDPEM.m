@@ -1,5 +1,5 @@
-RCDPEM ;ALB/TMK/PJH - POST EFT, ERA MATCHING TO EFT ; 5/31/11 6:15pm
- ;;4.5;Accounts Receivable;**173,255,269**;Mar 20, 1995;Build 113
+RCDPEM ;ALB/TMK - POST EFT, ERA MATCHING TO EFT ;05-NOV-02
+ ;;4.5;Accounts Receivable;**173**;Mar 20, 1995
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ; IA 4050 covers call to SPL1^IBCEOBAR
  Q
@@ -24,7 +24,7 @@ EN ; Post EFT deposits, auto-match EFT's and ERA's
  ; Post deposits for any unposted EFTs in file 344.3
  ; 'Unposted' EFTs have a 0 in AMOUNT POSTED field
  S ^TMP($J,"RCTOT","EFT_DEP")=0
- S RCZ=0 F  S RCZ=$O(^RCY(344.3,"APOST",0,RCZ)) Q:'RCZ  S RC0=$G(^RCY(344.3,RCZ,0))  I RC0'="",$P(RC0,U,8),($E($P(RC0,U,6),1,3)="469")!($E($P(RC0,U,6),1,3)="569") D
+ S RCZ=0 F  S RCZ=$O(^RCY(344.3,"APOST",0,RCZ)) Q:'RCZ  S RC0=$G(^RCY(344.3,RCZ,0))  I RC0'="",$E($P(RC0,U,6),1,3)="469",$P(RC0,U,8) D
  . S ^TMP($J,"RCTOT","EFT_DEP")=^TMP($J,"RCTOT","EFT_DEP")+1
  . ; Verify check sums
  . S RCSUM=$$CHKSUM^RCDPESR3(RCZ)
@@ -153,7 +153,7 @@ DET(RCZ,RCR,RECTDA1,RCTRANDA) ; Store receipt detail
  S RCZ0=$G(^RCY(344.49,RCZ,1,RCR,0))
  S DR="",RCUP=+$O(^RCY(344.49,RCZ,1,"B",+RCZ0/1,0)),RCUP=$G(^RCY(344.49,RCZ,1,RCUP,0))
  I $P(RCZ0,U,7) S DR=".09////^S X="_+$P(RCZ0,U,7)_"_$C(59)_""PRCA(430,"";"
- S DR=DR_".04////"_(+$P(RCZ0,U,3))_";.27////"_RCR_";"
+ S DR=DR_".04////"_(+$P(RCZ0,U,3))_";"_$S($P(RC0,U,4)'="":".13////"_$P(RC0,U,4)_";",1:"")_".27////"_RCR_";"
  I $P(RC0,U,5)'="" S DR=DR_".1////"_$P(RC0,U,5)_";"
  I $P(RC0,U,6)'="" S DR=DR_".08////"_$P(RC0,U,6)_";"
  S RCCOM=$P(RCZ0,U,10)

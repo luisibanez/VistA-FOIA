@@ -1,5 +1,5 @@
-SDUTL2 ;ALB/CAW - Misc. utilities ; 6/28/07 11:48am
- ;;5.3;Scheduling;**20,71,132,149,175,193,220,258,380,516**;Aug 13, 1993;Build 3
+SDUTL2 ;ALB/CAW - Misc. utilities ; 7/12/00 1:05pm
+ ;;5.3;Scheduling;**20,71,132,149,175,193,220,258,380**;Aug 13, 1993
  ;
  ;
 FYNUNK(SD) ; return YES, NO, UNKNOWN
@@ -61,29 +61,14 @@ SCREEN(Y,SDDT) ; -- screen called when entering a provider in the
  ;         SDDT = today's date
  ; OUTPUT: 1 to select; 0 to not select
  ;
- ; begin patch *516*
- ; DBIA #2349 - ACTIVE PROVIDER will be used for validation.
- ; The INACTIVE DATE (#53.4) field will no longer be used.
- ; New input selection logic...
- ;   The TERMINATION DATE (#9.2) and the PERSON CLASS (#8932.1) fields
- ;   will be used to determine if selection is active in the
- ;   NEW PERSON (#200) file for a given date.
- ;
- ;S:'+$G(SDDT) SDDT=DT I '+$G(Y) Q 0
- ;N SDINACT,SDT,SDY S SDY=0
+ S:'+$G(SDDT) SDDT=DT I '+$G(Y) Q 0
+ N SDINACT,SDT,SDY S SDY=0
  ; check if provider active
- ;S SDINACT=$G(^VA(200,+Y,"PS"))
- ;Q:'$S(SDINACT']"":1,'+$P(SDINACT,"^",4):1,DT<+$P(SDINACT,"^",4):1,1:0) SDY
- ;S SDT=+$P($G(^VA(200,+Y,0)),U,11)
- ;Q:$S('SDT:0,(SDT<DT):1,1:0) 0
- ;I $$GET^XUA4A72(Y,SDDT)>0 S SDY=1
- ;
- I '+$G(Y) Q 0
- N SDY
- S:'+$G(SDDT) SDDT=DT
- S SDY=0,SDDT=$P(SDDT,".")
- I $$ACTIVPRV^PXAPI(+Y,SDDT) S SDY=1  ;DBIA #2349
- ; end patch *516*
+ S SDINACT=$G(^VA(200,+Y,"PS"))
+ Q:'$S(SDINACT']"":1,'+$P(SDINACT,"^",4):1,DT<+$P(SDINACT,"^",4):1,1:0) SDY
+ S SDT=+$P($G(^VA(200,+Y,0)),U,11)
+ Q:$S('SDT:0,(SDT<DT):1,1:0) 0
+ I $$GET^XUA4A72(Y,SDDT)>0 S SDY=1
  Q SDY
  ;
 HELP(SDDT) ; -- executable help called when entering a provider in the

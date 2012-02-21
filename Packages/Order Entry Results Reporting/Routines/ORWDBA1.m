@@ -1,5 +1,5 @@
 ORWDBA1 ;; SLC OIFO/DKK/GSS - Order Dialogs Billing Awareness;[10/21/03 3:16pm]
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**190,195,229,215,243**;Dec 17, 1997;Build 242
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**190,195,229,215**;Dec 17, 1997
  ;
  ; External References
  ;   DBIA    406  CL^SDCO21 - call to determine Treatment Factors
@@ -7,7 +7,7 @@ ORWDBA1 ;; SLC OIFO/DKK/GSS - Order Dialogs Billing Awareness;[10/21/03 3:16pm]
  ;Ref to ^DIC(9.4 - DBIA ___
  ;BA refers to Billing Awareness Project
  ;CIDC refers to Clinical Indicator Data Capture (same project 3/10/2004)
- ;Treatment Factors (TxF) refer to SC,AO,IR,EC,MST,HNC,CV,SHD
+ ;Treatment Factors (TxF) refer to SC,AO,IR,EC,MST,HNC,CV
  ;
 GETORDX(Y,ORIEN) ; Retrieve Diagnoses for an order - RPC
  ; Input:
@@ -67,10 +67,7 @@ CPLSTBA(TEST,PTIFN,ORIFNS) ; set-up SC/TFs for BA
  ;  PSO     =  Outpt Pharmacy (#112) - Outpt Pharmacy (orig. Co-Pay)
  ;  RA      =  Radiology/Nuclear Medicine (#31) - Radiology
  ;
- S ORPKG(+$O(^DIC(9.4,"C","PSO",0)))=1
- ; See ISWITCH^ORWDBA7 for insurance/Ed switch, i.e., $$CIDC^IBBAPI
- ; Also check provider switch via 'OR BILLING AWARENESS BY USER'
- I $$BASTAT&$$CIDC^IBBAPI(DFN)&$$GET^XPAR(DUZ_";VA(200,","OR BILLING AWARENESS BY USER",1,"Q") F I=1:1 S ORPKG=$P("GMRC;LR;RA",";",I) Q:ORPKG=""  D
+ F I=1:1 S ORPKG=$P("GMRC;LR;PSO;RA",";",I) Q:ORPKG=""  D
  . S ORPKG(+$O(^DIC(9.4,"C",ORPKG,0)))=1  ; ^DIC(9.4) is package file
  ;
  ; get Treatment Factors (TxF) for patient
@@ -79,9 +76,7 @@ CPLSTBA(TEST,PTIFN,ORIFNS) ; set-up SC/TFs for BA
  ; set TxF's if order is for a package for which BA data is collected
  F  S ORI=$O(ORLST(ORI)) Q:'ORI  S ORD=+ORLST(ORI) D
  . I $G(^OR(100,ORD,0))="" Q
- . I $P($G(^OR(100,ORD,0)),U,14)="" Q
  . I $D(TEST(ORD))!'$D(ORPKG($P($G(^OR(100,ORD,0)),U,14))) Q
- . I $E($P(ORIFNS(ORI),";",2))>1 Q  ;canceled order (2) & ? (3)
  . S TEST(ORD)=ORLST(ORI)_DR
  Q
  ;
@@ -96,9 +91,9 @@ SCPRE(DR,DFN) ; Dialog validation, to ask BA questions
  S (CPNODE,DR,ORX,TF)="",CT=0,X="T"
  ; Call API to acquire Treatment Factors in force
  D NOW^%DTC,CL^SDCO21(DFN,%,"",.ORSDCARY)  ;DBIA 406
- ; Retrved array order: AO,IR,SC,EC,MST,HNC,CV,SHD e.g., ORSDCARY(3) for SC
- ; Convert to ^OR/CPRS GUI order: SC,MST,AO,IR,EC,HNC,CV,SHD
- F I=3,5,1,2,4,6,7,8 S TF=0,CT=CT+1 S:$D(ORSDCARY(I)) TF=1 S $P(CPNODE,U,CT)=TF
+ ; Retrved array order: AO,IR,SC,EC,MST,HNC,CV, e.g., ORSDCARY(3) for SC
+ ; Convert to ^OR/CPRS GUI order: SC,MST,AO,IR,EC,HNC,CV
+ F I=3,5,1,2,4,6,7 S TF=0,CT=CT+1 S:$D(ORSDCARY(I)) TF=1 S $P(CPNODE,U,CT)=TF
  ;
  S X=$S($P(CPNODE,U)=1:"SC",1:""),DR=$S($L(X):DR_U_X,1:DR)
  S X=$S($P(CPNODE,U,2)=1:"MST",1:""),DR=$S($L(X):DR_U_X,1:DR)
@@ -107,9 +102,8 @@ SCPRE(DR,DFN) ; Dialog validation, to ask BA questions
  S X=$S($P(CPNODE,U,5)=1:"EC",1:""),DR=$S($L(X):DR_U_X,1:DR)
  S X=$S($P(CPNODE,U,6)=1:"HNC",1:""),DR=$S($L(X):DR_U_X,1:DR)
  S X=$S($P(CPNODE,U,7)=1:"CV",1:""),DR=$S($L(X):DR_U_X,1:DR)
- S X=$S($P(CPNODE,U,8)=1:"SHD",1:""),DR=$S($L(X):DR_U_X,1:DR)
  ;
- ; TxF's for patient (TxF's include SC,AO,IR,EC,MST,HNC,CV,SHD) where
+ ; TxF's for patient (TxF's include SC,AO,IR,EC,MST,HNC,CV) where
  ;  SC      =  Service Connected
  ;  AO      =  Agent Orange
  ;  IR      =  Ionizing Radiation
@@ -117,18 +111,15 @@ SCPRE(DR,DFN) ; Dialog validation, to ask BA questions
  ;  MST     =  Military Sexual Trauma
  ;  HNC     =  Head and Neck Cancer
  ;  CV      =  Combat Veteran
- ;  SHD     =  Shipboard Disability
- F I="SC","AO","IR","EC","MST","HNC","CV","SHD" D
+ F I="SC","AO","IR","EC","MST","HNC","CV" D
  . I $D(ORX(I)) S DR=DR_U_I_$S($L(ORX(I)):";"_ORX(I),1:"")
  Q
  ;
 ORPKGTYP(Y,ORLST) ; Build BA supported packages array
  ; GMRC=Prosthetics, LR=Lab, PSO=Pharmacy, RA=Radiology
  N OIREC,OIV,OIVN
- ;
  F I=1:1 S ORPKG=$P("GMRC;LR;PSO;RA",";",I) Q:ORPKG=""  D
  . S ORPKG(+$O(^DIC(9.4,"C",ORPKG,0)))=ORPKG  ; ^DIC(9.4) is package file
- ;
  S GMRCPROS=+$O(^DIC(9.4,"C","GMRC",0))
  ; see if order is for a package which BA supports
  D ORPKG1(.Y,.ORLST)
@@ -181,9 +172,9 @@ RCVORCI(Y,DIAG) ;Receive order related Clinical Indicators & Diagnoses from GUI
  . I ORIEN'?1N.N S Y=0 Q
  . K ^OR(100,ORIEN,5.1) ;Clear currently stored diagnosis for rewrite
  . ; Data from Delphi format: ORIEN;11CNNNCNN^exDx1^exDx2^exDx3^exDx4
- . ; Convert 8 Tx Factors
- . S SCI=$$TFGUIGBL($RE($E($RE($P(DIAG(ODN),U)),1,8)))
- . S ^OR(100,ORIEN,5.2)=SCI  ;Store TFs (SC,MST,AO,IR,EC,HNC,CV,SHD)
+ . ; Convert 7 Tx Factors
+ . S SCI=$$TFGUIGBL($RE($E($RE($P(DIAG(ODN),U)),1,7)))
+ . S ^OR(100,ORIEN,5.2)=SCI  ;Store TFs (SC,MST,AO,IR,EC..)
  . ; Get order date for CSV/CTD/HIPAA
  . S ORFMDAT=$$ORFMDAT^ORWDBA3(ORIEN)
  . ; Go through the diagnoses entered
@@ -202,18 +193,18 @@ TFSTGS ; Set Treatment Factor strings sequence order
  ; TFGUI is order of TxFs to/from GUI
  ; TFTBL is order of TxFs for table SD008 (used in ZCL segment)
  ; NOTE: change examples in TFGUIGBL and TFGBLGUI if order changed
- S TFGBL="SC^MST^AO^IR^EC^HNC^CV^SHD"
- S TFGUI="SC^AO^IR^EC^MST^HNC^CV^SHD"
- S TFTBL="AO^IR^SC^EC^MST^HNC^CV^SHD"
+ S TFGBL="SC^MST^AO^IR^EC^HNC^CV"
+ S TFGUI="SC^AO^IR^EC^MST^HNC^CV"
+ S TFTBL="AO^IR^SC^EC^MST^HNC^CV"
  Q
  ;
 TFGUIGBL(GUI) ;Convert Treatment Factors from GUI to Global order & format
  ;
  ; Input:  GUI in CNU?NCU: C=checked, N=not checked, U=unchecked
- ; Output: GBL in 1^^^0^?^1^0^ (global) format (reordered for storage)
+ ; Output: GBL in 1^^^0^?^1^0 (global) format (reordered for storage)
  ;
  N GBL,J,NTF,TF,TFGBL,TFGUI,TFTBL
- S GBL="",NTF=8  ;NTF=# of Treatment Factors (TxF)
+ S GBL="",NTF=7  ;NTF=# of Treatment Factors (TxF)
  ;I $L(GUI)'=NTF Q -1  ;invalid # of TxF
  ; Get Treatment Factor sequence order strings
  D TFSTGS
@@ -225,11 +216,11 @@ TFGUIGBL(GUI) ;Convert Treatment Factors from GUI to Global order & format
  ;
 TFGBLGUI(GBL) ;Convert Treatment Factors from Global to GUI order & format
  ;
- ; Input:  GBL in 1^0^1^1^^0^?^ (global) format
+ ; Input:  GBL in 1^0^1^1^^0^? (global) format
  ; Output: GUI in CCCNUU? (GUI) format (also reordered)
  ;
  N GUI,J,NTF,TF,TFGBL,TFGUI,TFTBL
- S GUI="",NTF=8  ;NCI=# of TxF
+ S GUI="",NTF=7  ;NCI=# of TxF
  ; Get Treatment Factor sequence order strings
  D TFSTGS
  ; Convert from GUI to GBL format and sequence

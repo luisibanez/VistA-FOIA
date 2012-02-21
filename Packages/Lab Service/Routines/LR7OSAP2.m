@@ -1,10 +1,10 @@
-LR7OSAP2 ;ISL/RAB/WTY/KLL - Silent Routine for autopsy report;3/28/2002
- ;;5.2;LAB SERVICE;**230,256,259,317,365**;Sep 27, 1994;Build 9
+LR7OSAP2 ;ISL/RAB/WTY/KLL -Silent Routine for autopsy report;3/28/2002
+ ;;5.2;LAB SERVICE;**230,256,259**;Sep 27, 1994
  ;
  ;Reference  to ^DD(63 supported by IA #999
  ;
 EN(LRDFN) ;
- N CCNT,GIOM,XPOS,LR,LRSS,X,I,LRAU,LRS,VERIFIED,LRTEXT,LRPTR,X2
+ N CCNT,GIOM,XPOS,LR,LRSS,X,I,LRAU,LRS,VERIFIED,LRTEXT,LRPTR
  S XPOS=0,(LRS(5),LR("M"),CCNT)=1,LRSS="AU",GIOM=80
  D EN^LRUA,^LRAPU
  S X=$S($D(^LRO(69.2,+Y,0)):^(0),1:""),LRAU(3)=$P(X,"^",3),LRAU(4)=$P(X,"^",4)
@@ -18,14 +18,6 @@ EN(LRDFN) ;
  I +$G(LRPTR) D  Q
  .D MAIN^LR7OSAP3(LRPTR)
  D ZZ,LINE
- I $D(^LR(LRDFN,84)) D
- .D LN
- .S LRTEXT="SUPPLEMENTARY REPORT HAS BEEN ADDED"
- .S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(14,CCNT,"*+* "_LRTEXT_" *+*")
- .D LN
- .S LRTEXT="REFER TO BOTTOM OF REPORT"
- .S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(19,CCNT,"*+* "_LRTEXT_" *+*")
- .D LN
  I $D(^LR(LRDFN,81)) D 
  . D LN
  . S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(XPOS,CCNT,LRAU(3))
@@ -35,12 +27,9 @@ EN(LRDFN) ;
  . S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(XPOS,CCNT,LRAU(4))
  . D F(82)
  I $O(^LR(LRDFN,84,0)) D
- . S I=0 F  S I=$O(^LR(LRDFN,84,I)) Q:'I  S X=^(I,0) D
- .. ;Don't print supp date and text if supp has not been released
- .. S X1=$P(X,"^",1),X2=$P(X,"^",2)
- .. Q:'X2
+ . S I=0 F  S I=$O(^LR(LRDFN,84,I)) Q:'I  S X=+^(I,0) D
  .. D LINE,LN
- .. S LRTEXT="SUPPLEMENTARY REPORT DATE: "_$$FMTE^XLFDT(X1,"1P")
+ .. S LRTEXT="SUPPLEMENTARY REPORT DATE: "_$$FMTE^XLFDT(X,"1P")
  .. S ^TMP("LRC",$J,GCNT,0)=LRTEXT
  .. I $O(^LR(LRDFN,84,I,2,0)) D MODSR
  .. D WRAP^LR7OSAP1("^LR("_LRDFN_",84,"_I_",1)",79)
@@ -62,18 +51,16 @@ MODSR ;Modified Autopsy Supplementary Report Audit Info
  F  S LRSP1=$O(^LR(LRDFN,84,I,2,LRSP1)) Q:'LRSP1  D
  .S LRSP2=LRSP1
  Q:'$D(^LR(LRDFN,84,I,2,LRSP2,0))
- S LRS2=^LR(LRDFN,84,I,2,LRSP2,0),Y=+LRS2,LRS2A=$P(LRS2,"^",2),LRSGN=" typed by "
+ S LRS2=^(0),Y=+LRS2,LRS2A=$P(LRS2,"^",2),LRSGN=" typed by "
  ;If supp rpt is released, display 'signed by' instead of 'typed by'
  I $P(LRS2,"^",3) S Y=$P(LRS2,"^",4),LRS2A=$P(LRS2,"^",3),LRSGN=" signed by "
  S LRS2A=$S($D(^VA(200,LRS2A,0)):$P(^(0),"^"),1:LRS2A)
  D D^LRU
  S LRR1=Y,LRR2=LRS2A
+ ;S LRIENS=LRSP2_","_LRIENS
+ ;S LRR1=$$GET1^DIQ(LRFILE,LRIENS,.01)
+ ;S LRR2=$$GET1^DIQ(LRFILE,LRIENS,.02)
  S ^(0)=^TMP("LRC",$J,GCNT,0)_LRR1_LRSGN_LRR2_")"
- ;If RELEASED SUPP REPORT MODIFIED set to 1, display "NOT VERIFIED"
- I $P(^LR(LRDFN,84,I,0),"^",3) D
- .D LN
- .S LRTEXT="NOT VERIFIED"
- .S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(25,CCNT,"**-* "_LRTEXT_" *-**")
  Q
 LN ;Increment the counter
  S GCNT=GCNT+1,CCNT=1
@@ -147,13 +134,12 @@ WT ;
 ZZ ;;
  D LN
  N OUT,X,LRLLOC,DA,A,B,C,LR,Y
- S:$G(PNM)="" PNM=$P(^DPT(DFN,0),U) ;DBIA #10035
  S OUT=$$S^LR7OS(XPOS,CCNT,"Acc #")_$$S^LR7OS(9,CCNT,"Date/time Died")_$$S^LR7OS(27,CCNT,"Age")_$$S^LR7OS(33,CCNT,"AUTOPSY DATA")_$$S^LR7OS(53,CCNT,"Date/time of Autopsy"),^TMP("LRC",$J,GCNT,0)=OUT
  S X=^LR(LRDFN,"AU"),LRLLOC=$P(X,"^",8),DA=LRDFN
  D D^LRAUAW
  S Y=LR(63,12)
  D D^LRU,LN
- S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(XPOS,CCNT,($P(X,"^",6)_" "_Y))_$$S^LR7OS(26,CCNT,$J($P(X,"^",9),3))_$$S^LR7OS(33,CCNT,$G(PNM))
+ S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(XPOS,CCNT,($P(X,"^",6)_" "_Y))_$$S^LR7OS(26,CCNT,$J($P(X,"^",9),3))_$$S^LR7OS(33,CCNT,PNM)
  S Y=+X
  D D^LRU
  I Y'[1700 S ^(0)=^TMP("LRC",$J,GCNT,0)_$$S^LR7OS(53,CCNT,Y)

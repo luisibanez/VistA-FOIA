@@ -1,5 +1,5 @@
-LA7VIN5A ;DALOI/JMC - Process Incoming UI Msgs, continued ;May 29, 2008
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,67,72,66**;Sep 27, 1994;Build 30
+LA7VIN5A ;DALOI/JMC - Process Incoming UI Msgs, continued ; Jan 12, 2004
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,67,72**;Sep 27, 1994
  ; This routine is a continuation of LA7VIN5.
  ; It is performs processing of fields in OBX segments.
  Q
@@ -10,7 +10,7 @@ XFORM ; Transform the result based on fields 12,13,14,16,17 in the Chem Test
  N LA7I
  S LA7XFORM=LA76241(2)
  ;
- ; get PARAM 1 overrides
+ ; get PARAM 1 overides
  I $D(LA7XFORM(1)),LA7XFORM(1)?1.N S $P(LA7XFORM,"^")=LA7XFORM(1)
  F LA7I=2,3,5,6 I $D(LA7XFORM(LA7I)) S $P(LA7XFORM,"^",LA7I)=LA7XFORM(LA7I)
  ; set up defaults if field was not answered
@@ -55,7 +55,7 @@ CHKDIE ; Check if value to be stored passes input transform of field in DD
  N LA7ERR,LA7Y
  ;
  ; If result is on a LEDI interface (type=10) then don't check result
- ; against FileMan input transform.
+ ; against FileMan input tranform.
  ; VistA sends "canc" as test result when test is cancelled.
  ; DoD sends "PL Canceled" --> change to "canc" for VistA storage.
  I LA7INTYP=10 D  Q
@@ -113,17 +113,12 @@ PRDID(LA7PRDID,LA7SFAC,LA7CS) ; Process/Store Producer's ID
  ;            LA7SFAC = sending facility
  ;              LA7CS = component encoding character
  ;
- ; Remove units/reference ranges when Lab UI interface
- ; so file #60 settings always used
- I $G(LA7INTYP)=1 S $P(^LAH(LA7LWL,1,LA7ISQN,LA76304),"^",5)="" Q
- ;
  N LA74,LA7I,LA7X,LA7Y
  ;
  S LA7X=$P(LA7PRDID,LA7CS,2),LA74=""
  ;
  F LA7I=1,4 D  Q:LA74
  . I $P(LA7PRDID,LA7CS,LA7I+2)="99VA4" S LA74=$$LKUP^XUAF4($P(LA7PRDID,LA7CS,LA7I))
- . I 'LA74,$P(LA7PRDID,LA7CS,LA7I+2)?1(1"L-CL",1"CLIA",1"99VACLIA") S LA74=$$IDX^XUAF4("CLIA",$P(LA7PRDID,LA7CS,LA7I))
  . I 'LA74 S LA74=$$LKUP^XUAF4($P(LA7PRDID,LA7CS,LA7I+1))
  . I 'LA74 S LA74=$$FINDSITE^LA7VHLU2($P(LA7PRDID,LA7CS),1,1)
  . I 'LA74 S LA74=$$FINDSITE^LA7VHLU2($P(LA7SFAC,LA7CS),1,1)
@@ -146,7 +141,6 @@ PRDID(LA7PRDID,LA7SFAC,LA7CS) ; Process/Store Producer's ID
 REFRNG(LA7X) ; Process/Store References Range.
  ; Call with LA7X = reference range to store.
  ;
- Q:$G(LA7INTYP)=1
  N LA7Y,X,Y
  ;
  ; Check if site does not want to store reference ranges on POC test.
@@ -190,7 +184,6 @@ ABFLAG(LA7X) ; Process/Store Abnormal Flags.
  ; Converts flag to interpretation based on HL7 Table 0078.
  ; If no match store code instead of interpretation
  ;
- Q:LA7INTYP=1
  N I,LA7I,LA7Y,X
  ;
  ; Store abnormal flags in LAH global with results.

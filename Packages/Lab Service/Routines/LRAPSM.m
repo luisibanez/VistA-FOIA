@@ -1,5 +1,5 @@
 LRAPSM ;AVAMC/REG - SNOMED SEARCH ;8/14/95  09:49
- ;;5.2;LAB SERVICE;**72,253,355,362**;Sep 27, 1994;Build 11
+ ;;5.2;LAB SERVICE;**72,253,355**;Sep 27, 1994
  S IOP="HOME" D ^%ZIS W @IOF,!?20,LRO(68)," search by ",S(7)," code"
  S (LR,LR(1),LR(2),LR(3))=0
 TP K A("B") W !!,"TOPOGRAPHY (Organ/Tissue)",!?5,"Select 1 or more characters of the code",!?5 R "For all sites type 'ALL' : ",X:DTIME Q:X=""!(X[U)  I X["ALL" S S(2)="ALL"
@@ -32,7 +32,9 @@ M F M=0:0 S M=$O(^LR(LRDFN,LRSS,LRI,2,T,V,M)) Q:'M  S X=^(M,0),LR(8)=+X,LRM=$P(X
 E F E=0:0 S E=$O(^LR(LRDFN,LRSS,LRI,2,T,V,M,1,E)) Q:'E  S LR(8)=+^(E,0) D MX
  Q
 MX Q:'$D(^LAB(LRSN,LR(8),0))  S W=^(0) I $D(LRO),LRO]"",LRO'=LRM Q
- I LRN="ALL" S:'$D(^TMP($J,H(2),LRAN,LR(7),0)) ^(0)=LR(5) S ^($S($P(W,"^",2)'="":$P(W,"^",2),1:"99999999"))=$P(W,"^")_"^"_LRM G PRT
+ I LRN="ALL" I '$D(^TMP($J,H(2),LRAN,LR(7),0)) S ^TMP($J,H(2),LRAN,LR(7),0)=LR(5) D  G PRT
+ . I $P(W,"^",2)'="" S ^TMP($J,H(2),LRAN,LR(7),$P(W,"^",2))=$P(W,"^")_"^"_LRM Q
+ . S ^TMP($J,H(2),LRAN,LR(7),"99999999")=$P(W,"^")_"^"_LRM
  S X=$P(W,"^",2),Y=0 F Z=1:1 S Y=$O(LRN(Y)) Q:Y=""  S Y(1)=LRM(Y),Y(2)=LRN(Y) D Y I I S:'$D(^TMP($J,H(2),LRAN,LR(7),0)) ^(0)=LR(5) S ^(X)=$P(W,"^")_"^"_LRM
  Q:'$D(^TMP($J,H(2),LRAN))
 PRT S X=^LR(LRDFN,0),(LRDPF,LR(14))=$P(X,"^",2),LRPF=^DIC(LR(14),0,"GL"),DFN=$P(X,"^",3) Q:'$D(@(LRPF_DFN_",0)"))

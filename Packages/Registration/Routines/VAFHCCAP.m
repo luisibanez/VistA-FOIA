@@ -1,5 +1,5 @@
-VAFHCCAP ;ALB/CMM/PHH/EG/GAH OUTPATIENT CAPTURE TEST ; 10/18/06
- ;;5.3;Registration;**91,582,568,585,725**;Jun 06, 1996;Build 12
+VAFHCCAP ;ALB/CMM/PHH/EG OUTPATIENT CAPTURE TEST ; 1/20/05 1:21pm
+ ;;5.3;Registration;**91,582,568,585**;Jun 06, 1996
  ;
 CAP ;
  ;Only fire if check-in,check-out, add/edit add, add/edit change
@@ -76,6 +76,11 @@ UPPTR(DFN,ADATE) ;
  S DGARRAY(4)=DFN,DGARRAY(1)=ADATE_";"_ADATE,DGARRAY("FLDS")=3,DGARRAY("SORT")="P"
  S DGCOUNT=$$SDAPI^SDAMA301(.DGARRAY)
  ;
+ ;if there is data hanging from the 101 or 116
+ ;subscript, then it is a valid appointment
+ ;otherwise, it is an error eg 01/20/2005
+ I DGCOUNT<0,$D(^TMP($J,"SDAMA301",101))=1 Q PTR
+ I DGCOUNT<0,$D(^TMP($J,"SDAMA301",116))=1 Q PTR
  I DGCOUNT>0 D
  .S SDDATE=0
  .F  S SDDATE=$O(^TMP($J,"SDAMA301",DFN,SDDATE)) Q:'SDDATE  D

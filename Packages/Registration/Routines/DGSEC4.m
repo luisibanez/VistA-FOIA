@@ -1,5 +1,5 @@
 DGSEC4 ;ALB/MM,JAP - Utilities for record access & sensitive record processing;10/6/99 ; 10/26/05 12:46pm
- ;;5.3;Registration;**249,281,391,471,684,699**;Aug 13, 1993
+ ;;5.3;Registration;**249,281,391,471,684**;Aug 13, 1993
  ;
  ;Line tags OWNREC & SENS moved from DGSEC in DG*5.3*249 when DGSEC 
  ;reached the maximum routine size.
@@ -97,8 +97,6 @@ OWNREC(DGREC,DFN,DGDUZ,DGMSG,DGNEWPT,DGPTSSN) ;Determine if user accessing his/h
  I $D(^XUSEC("DG RECORD ACCESS",DGDUZ)) Q
  I $G(DGMSG)="" S DGMSG=1
  N DGNPERR
- ; quit if user is a proxy user, i.e., not a real person
- I $$ACTIVE^XUSAP(DGDUZ),$$USERTYPE^XUSAP(DGDUZ,"CONNECTOR PROXY")!($$USERTYPE^XUSAP(DGDUZ,"APPLICATION PROXY")) Q
  S DGNPSSN=$$GET1^DIQ(200,DGDUZ_",",9,"I","","DGNPERR")
  I 'DGNPSSN D  Q
  .S DGREC(1)=2
@@ -189,7 +187,6 @@ PRIV ;Privacy Act statement for DGSENS array
  S DGSENS(8)="* Accessing this patient is tracked, and your station Security Officer  *"
  S DGSENS(9)="* will contact you for your justification.                              *"
  I $G(DDS)="" S DGSENS(10)=DGLNE
- Q
 EMPL(DFN,DGCHELIG) ;Does patient have any eligibility codes equal to
  ;                EMPLOYEE
  ;Input:

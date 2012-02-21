@@ -1,22 +1,16 @@
-IBTRKR2 ;ALB/AAS - ADD/TRACK SCHEDULED ADMISSION ;9-AUG-93
- ;;2.0;INTEGRATED BILLING;**43,62,214,312**;21-MAR-94
+IBTRKR2 ;ALB/AAS - ADD/TRACK SCHEDULED ADMISSION ; 9-AUG-93
+ ;;2.0;INTEGRATED BILLING;**43,62,214**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 % ;
 EN ; -- add scheduled admissions to claims tracking file
  N I,J,X,Y,IBTRKR,IBI,IBJ,DFN,IBDATA
- N IBSWINFO S IBSWINFO=$$SWSTAT^IBBAPI()                   ;IB*2.0*312
  S IBTRKR=$G(^IBE(350.9,1,6))
  G:'$P(IBTRKR,"^",2) ENQ ; inpatient tracking off
  S:'$G(IBTSBDT) IBTSBDT=$$FMADD^XLFDT(DT,-3)-.1
  S:'$G(IBTSEDT) IBTSEDT=$$FMADD^XLFDT(DT,7)+.9
  I IBTSBDT<+IBTRKR S IBTSBDT=+IBTRKR-.1 ; start date can't be before ct start date
- S IBI=IBTSBDT-.0001
- F  S IBI=$O(^DGS(41.1,"C",IBI)) Q:'IBI!(IBI>IBTSEDT)  S IBJ="" F  S IBJ=$O(^DGS(41.1,"C",IBI,IBJ)) Q:'IBJ  D
- .;
- .;Do NOT PROCESS on VistA if IBI/Sched DT>=Switch Eff Dt  ;CCR-930
- .I +IBSWINFO,(IBI+1)>$P(IBSWINFO,"^",2) Q                 ;IB*2.0*312
- .;
+ S IBI=IBTSBDT-.0001 F  S IBI=$O(^DGS(41.1,"C",IBI)) Q:'IBI!(IBI>IBTSEDT)  S IBJ="" F  S IBJ=$O(^DGS(41.1,"C",IBI,IBJ)) Q:'IBJ  D
  .S IBDATA=$G(^DGS(41.1,IBJ,0))
  .S DFN=+IBDATA
  .Q:'DFN  ;  no patient

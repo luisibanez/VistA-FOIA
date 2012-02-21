@@ -1,5 +1,5 @@
-OCXOZ0Z ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
+OCXOZ0Z ;SLC/RJS,CLA - Order Check Scan ;OCT 20,2005 at 22:40
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221**;Dec 17,1997
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
  ; ***************************************************************

@@ -1,10 +1,9 @@
-PRCPRUSE ;WISC/RFJ,DWA,VAC-usage demand item report  ; 10/19/06 9:53am
-V ;;5.1;IFCAP;**1,27,84,98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPRUSE ;WISC/RFJ,DWA-usage demand item report  ;18 Sep 91
+V ;;5.1;IFCAP;**1,27,84**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  D ^PRCPUSEL Q:'$G(PRCP("I"))
  ;
  N DATEEND,DATEENDD,DATESTRD,DATESTRT,DIR,GROUPALL,PRCPALLI,PRCPEND,PRCPSTRT,TOTALDAY,X,X1,X2,Y
- N ODIFLG,ODITEM,REORDER,PRCPSORT
  ;
  K X S X(1)="The Usage Demand Item Report will show the quantity of items used within a specified date period."
  D DISPLAY^PRCPUX2(40,79,.X)
@@ -21,7 +20,7 @@ V ;;5.1;IFCAP;**1,27,84,98**;Oct 20, 2000;Build 37
  W !?5,"-- TOTAL NUMBER OF DAYS: ",TOTALDAY
  ;
  ;  item(s)
- K X S X(1)="Select specific items to display."
+ K X S X(1)="Select the items to display."
  D DISPLAY^PRCPUX2(2,40,.X)
  D ITEMSEL^PRCPURS4
  I '$G(PRCPALLI),'$O(^TMP($J,"PRCPURS4","")) Q
@@ -38,19 +37,19 @@ V ;;5.1;IFCAP;**1,27,84,98**;Oct 20, 2000;Build 37
  .   K X S X(1)="Select the Group Categories to display" D DISPLAY^PRCPUX2(2,40,.X)
  .   D GROUPSEL^PRCPURS1(PRCP("I"))
  ;
-SORT S ODIFLG=3
- I PRCP("DPTYPE")'="W" D
- .Q:$G(PRCPALLI)=""
- .S ODIFLG=$$ODIPROM^PRCPUX2(0)
- Q:ODIFLG=0
- S PRCPSORT=$$SRTPRMP^PRCPUX2(0)
- Q:PRCPSORT=0
+SORT K X S X(1)="Select the order in which you want the item information to appear."
+ D DISPLAY^PRCPUX2(2,40,.X)
+ S DIR(0)="S^1:ITEM DESCRIPTION;2:ITEM NUMBER"
+ S DIR("A")="Sort by"
+ S DIR("B")="ITEM DESCRIPTION"
+ D ^DIR K DIR
+ I Y'=1,Y'=2 Q
+ S PRCPSORT=+Y
  ;
 QUEUE S %ZIS="Q" D ^%ZIS Q:POP  I $D(IO("Q")) D  Q
  .   S ZTDESC="Usage Demand Item Report",ZTRTN="DQ^PRCPRUSE"
- .   S ZTSAVE("^TMP($J,""PRCPURS4"",")="",ZTSAVE("^TMP($J,""PRCPURS1"",")="",ZTSAVE(ODIFLG)=""
+ .   S ZTSAVE("^TMP($J,""PRCPURS4"",")="",ZTSAVE("^TMP($J,""PRCPURS1"",")=""
  .   S ZTSAVE("DATE*")="",ZTSAVE("GROUP*")="",ZTSAVE("PRCP*")="",ZTSAVE("TOTALDAY")="",ZTSAVE("ZTREQ")="@"
- .   S ZTSAVE("O*")=""
  .   D ^%ZTLOAD
  W !!,"<*> please wait <*>"
  ;

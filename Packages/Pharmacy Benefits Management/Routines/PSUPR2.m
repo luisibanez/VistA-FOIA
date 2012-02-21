@@ -1,5 +1,5 @@
-PSUPR2 ;BIR/PDW - Procurement extract from file 58.811 ; 1/10/11 7:20am
- ;;4.0;PHARMACY BENEFITS MANAGEMENT;**13,18**;MARCH, 2005;Build 7
+PSUPR2 ;BIR/PDW - Procurement extract from file 58.811 ;20 AUG 1999
+ ;;4.0;PHARMACY BENEFITS MANAGEMENT;;MARCH, 2005
  ;DBIAs
  ; Reference to file #58.811 supported by DBIA 2521
  ; Reference to file #51.5   supported by DBIA 1931
@@ -50,8 +50,6 @@ INVOICE ;EP process an invoice within an order
  S PSURDT=PSUINV(8)
  S PSUIVNUM=PSUINV(.01)
  ;
- ;*18 Clear out Division for each invoice.
- S PSUDIV=""
  I $G(PSUINV(4)) D DIV
  I $L(PSUDIV) S PSUDIVI=""
  E  S PSUDIV=PSUSNDR,PSUDIVI="H"
@@ -128,11 +126,9 @@ ITEM ;EP  process one item within the invoice
  ;
  I '$D(PSUADJ),'PSUIT(9999) S PSUIT(9999)="" ; per Lina
  ;
- ;PSU*4*13 Comment out To prevent XINDEX from complaining about
- ; ^PSUPR7 (CoreFLS remnance)
  ;Create "RECORDS" global for CoreFLS data
- ;I $D(PSUFLSFG) S PSUA="" D
- ;.F  S PSUA=$O(^XTMP(PSUPRSUB,"PSUFLS",PSUA)) Q:PSUA=""  D SIMPL^PSUPR7
+ I $D(PSUFLSFG) S PSUA="" D
+ .F  S PSUA=$O(^XTMP(PSUPRSUB,"PSUFLS",PSUA)) Q:PSUA=""  D SIMPL^PSUPR7
  ;
  ;   Construct record and store into ^XTMP(PSUPRSUB,"RECORDS",PSUDIV,LC)
  S PSUR=$$RECORD()
@@ -232,9 +228,8 @@ MAP1 ;MAP continued. This subroutine takes the IEN from file 58.8 and looks
  .D GETM^PSUTL(59.7,1,"90.03*^.01;.02;.03","MAPLOC")
  .S PSUDA=0
  .F  S PSUDA=$O(MAPLOC(PSUDA)) Q:PSUDA=""  D
- ..;PSU*4*13 Correct Problm DA Pharm Report
- ..I $G(MAPLOC(PSUDA,.02))'="" K DAPH(PSUDA)
- ..I $G(MAPLOC(PSUDA,.03))'="" K DAPH(PSUDA)
+ ..I $G(MAPLOC(PSUDA,.02))'="" K NAOU(PSUDA)
+ ..I $G(MAPLOC(PSUDA,.03))'="" K NAOU(PSUDA)
  M ^XTMP(PSUARSUB,"DAPH")=DAPH      ;only unmapped DA PHARM locations.
  Q
  ;

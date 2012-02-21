@@ -1,5 +1,5 @@
 RMPORMB ;HIN/RVD - Home Oxygen Monthly Billing Report ;12/13/99
- ;;3.0;PROSTHETICS;**29,43,44,49,55,159**;Feb 09, 1996;Build 2
+ ;;3.0;PROSTHETICS;**29,43,44,49,55**;Feb 09, 1996
  ;ODJ - 5/17/00 - fix FCP problem (patch 49)
  ;      5/25/00 - fix crash if FCP in ^RMPO(665.72) and not ^RMPR(669.9)
  ;      5/31/00 - fix crash if FCP is null
@@ -17,7 +17,7 @@ FROM ; Get billing month
  ; specify start/end site & bill month
  D MONTH^RMPOBIL0() Q:'$D(RMPODATE)!QUIT
 DEV S %ZIS="MQ" K IOP D ^%ZIS G:POP EXIT I '$D(IO("Q")) U IO G PROC
- K IO("Q") S ZTDESC="HOME OXYGEN MONTHLY BILLING",ZTRTN="PROC^RMPORMB",ZTIO=ION,ZTSAVE("RMPODATE")="",ZTSAVE("RMPO(""STA"")")="",ZTSAVE("RMPOXITE")=""
+ K IO("Q") S ZTDESC="HOME OXYGEN MONTHLY BILLING",ZTRTN="PROC^RMPORMB",ZTIO=IO,ZTSAVE("RMPODATE")="",ZTSAVE("RMPO(""STA"")")="",ZTSAVE("RMPOXITE")=""
  S ZTSAVE("RMPO(""NAME"")")=""
  D ^%ZTLOAD W:$D(ZTSK) !,"REQUEST QUEUED!" H 1 G EXIT
 PROC ;

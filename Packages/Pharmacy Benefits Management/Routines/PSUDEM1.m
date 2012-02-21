@@ -1,5 +1,5 @@
 PSUDEM1 ;BIR/DAM - Patient Demographics Extract ; 20 DEC 2001
- ;;4.0;PHARMACY BENEFITS MANAGEMENT;**12**;MARCH, 2005;Build 19
+ ;;4.0;PHARMACY BENEFITS MANAGEMENT;;MARCH, 2005
  ;
  ;DBIA's
  ; Reference to file #27.11  supported by DBIA 2462
@@ -37,8 +37,7 @@ HL7 ;This is the Patient Demographics extract that runs only when
  ;the PSU PBM [AUTO] option is executed.  It captures demographic
  ;information ONLY on new or updated patient.
  ;
- ; *** PSU*4.0*12 - BAJ -- added QUIT if NULL
- F  S PSUSDT=$O(^PSUDEM("B",PSUSDT)) Q:PSUSDT=""  Q:PSUSDT>PSUEDT  D
+ F  S PSUSDT=$O(^PSUDEM("B",PSUSDT)) Q:PSUSDT>PSUEDT  D
  . S I=""
  . S I=$O(^PSUDEM("B",PSUSDT,I)) Q:I=""
  . S DFN=$P(^PSUDEM(I,0),U,2)

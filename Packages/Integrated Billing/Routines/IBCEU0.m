@@ -1,6 +1,5 @@
 IBCEU0 ;ALB/TMP - EDI UTILITIES ;02-OCT-96
- ;;2.0;INTEGRATED BILLING;**137,197,155,296,349,417,432**;21-MAR-94;Build 192
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,197,155,296**;21-MAR-94
  ;
 NOTECHG(IBDA,IBNTEXT) ; Enter who/when review stat change was entered
  ; IBDA = ien of entry in file 361.1
@@ -129,22 +128,19 @@ PRINTUPD(IBTEXT,IBDA) ; If the status message indicates claim was printed
 MCRPAY(IBIFN) ; Calculate MRA total for the bill IBIFN
  N IBPAY,Q,Z0
  S IBPAY=0
- ;include eligible bill for process
- ; 432 - added MRA flag to IBCEU1 to not always screen out non-MRA's
- S Q=0 F  S Q=$O(^IBM(361.1,"B",IBIFN,Q)) Q:'Q  I $$EOBELIG^IBCEU1(Q,1) S IBPAY=IBPAY+$P($G(^IBM(361.1,Q,1)),U,1)
+ S Q=0 F  S Q=$O(^IBM(361.1,"B",IBIFN,Q)) Q:'Q  S Z0=$G(^IBM(361.1,Q,0)) I $P(Z0,U,4)=1 S IBPAY=IBPAY+$G(^(1))
  Q IBPAY
  ;
-PREOBTOT(IBIFN,IBMRANOT) ; Function - Calculates Patient Responsibility Amount
+PREOBTOT(IBIFN) ; Function - Calculates Patient Responsibility Amount
  ; Input:  IBIFN - ien of Bill Number (ien of file 399)
- ;         IBMRANOT - flag to indicate that this is NOT and MRA
  ; Output Function returns: Patient Responsibility Amount for all EOB's for bill
  ;
  N FRMTYP,IBPTRES
  S IBPTRES=0
- ; Form Type 2=CMS-1500; 3=UB-04
+ ; Form Type 2=HCFA 1500; 3=UB92
  S FRMTYP=$$FT^IBCEF(IBIFN)
  ;
- ; For bills w/CMS-1500 Form Type, total up Pt Resp amount from top
+ ; For bills w/HCFA 1500 Form Type, total up Pt Resp amount from top
  ; level of EOB (field 1.02) for All MRA type EOB's on file for that
  ; bill (IBIFN)
  ;  
@@ -153,20 +149,17 @@ PREOBTOT(IBIFN,IBMRANOT) ; Function - Calculates Patient Responsibility Amount
  . S (IBEOB,IBPRTOT,IBPTRES)=0
  . F  S IBEOB=$O(^IBM(361.1,"B",IBIFN,IBEOB)) Q:'IBEOB  D  ;
  . . S EOBREC=$G(^IBM(361.1,IBEOB,0)),EOBREC1=$G(^(1))
- .. ; IB*2.0*432 allow for non-MRA's
- . . I $G(IBMRANOT)'=1,$P(EOBREC,U,4)'=1 Q  ;make sure it's an MRA
- . . Q:$D(^IBM(361.1,IBEOB,"ERR"))  ;no filing error
+ . . I $P(EOBREC,U,4)'=1 Q  ;make sure it's an MRA
  . . ; Total up Pt Resp Amounts on all valid MRA's
  . . S IBPTRES=IBPTRES+$P(EOBREC1,U,2)
  ;
- ; For bills w/UB-04 Form Type, loop through all EOB's and sum up amounts
+ ; For bills w/UB92 Form Type, loop through all EOB's and sum up amounts
  ; on both Line level and on Claim level
  N EOBADJ,IBEOB,LNLVL
  S IBEOB=0
  F  S IBEOB=$O(^IBM(361.1,"B",IBIFN,IBEOB)) Q:'IBEOB  D  ;
- . ; IB*2.0*432 allow for non-MRA's
- . I $G(IBMRANOT)'=1,$P($G(^IBM(361.1,IBEOB,0)),U,4)'=1 Q    ; must be an MRA
- . Q:$D(^IBM(361.1,IBEOB,"ERR"))  ; no filing error
+ . I $P($G(^IBM(361.1,IBEOB,0)),U,4)'=1 Q    ; must be an MRA
+ . ;
  . ; get claim level adjustments
  . K EOBADJ M EOBADJ=^IBM(361.1,IBEOB,10)
  . S IBPTRES=IBPTRES+$$CALCPR(.EOBADJ)

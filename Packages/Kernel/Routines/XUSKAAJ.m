@@ -1,5 +1,5 @@
-XUSKAAJ ;; kec/oak - KAAJEE Utilities ;08/24/2006
- ;;8.0;KERNEL;**329,430**;Jul 10, 1995;Build 1
+XUSKAAJ ;; kec/oak - KAAJEE Utilities ;09/09/2005  752191.803993
+ ;;8.0;KERNEL;**329**;Jul 10, 1995
  ;;
  QUIT
  ;
@@ -59,7 +59,6 @@ USERINFO(RET,CLIENTIP,SERVERNM) ; called by XUS KAAJEE GET USER INFO rpc
  ; get parent facility station#
  S XUPARENT=$$PRNT^XUAF4(RET(9))
  S RET(10)=$S(($P(XUPARENT,U)<1):XUPARENT,1:$$STA^XUAF4($P(XUPARENT,U)))
- S:'$L(RET(10)) RET(10)="^"
  ;
  ; get the computer system station#
  S RET(11)=$$STA^XUAF4($$KSP^XUPARAM("INST"))

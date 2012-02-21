@@ -1,5 +1,5 @@
 ORWCIRN ; slc/dcm,REV - Functions for GUI CIRN ACTIONS ;22-NOV-1999 07:27:24
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,101,109,132,141,160,208,239,215,243**;October 28, 1997;Build 242
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,101,109,132,141,160,208,239,215**;October 28, 1997
  ;
 FACLIST(ORY,ORDFN) ; Return list of remote facilities for patient
  ;Check to see if CIRN PD/MPI installed
@@ -45,7 +45,13 @@ RESTRICT(ORY,PATID) ;Check for sensitive patient
 CHKLNK(ORY) ;Check for active HL7 TCP link on local system
  S ORY=$$STAT^HLCSLM
  Q
-WEBADDR(ORY,PATID) ;Get VistaWeb Address
+VISTAWEB(ORY)   ;Check VistaWeb Parameter
+ S ORY=+$$GET^XPAR("ALL","ORWRP VISTAWEB",1,"I")
+ Q
+WEBCH(ORY,ORVALUE)      ;Change value of ORWRP VISTAWEB parameter
+ D PUT^XPAR(DUZ_";VA(200,","ORWRP VISTAWEB",1,ORVALUE)
+ Q
+WEBADDR(ORY,PATID)      ;Get VistaWeb Address
  S ORY=$$GET^XPAR("ALL","ORWRP VISTAWEB ADDRESS",1,"I")
  I ORY="" S ORY="https://vistaweb.med.va.gov" Q
  I ORY="https://vistaweb.med.va.gov" Q
@@ -54,6 +60,6 @@ WEBADDR(ORY,PATID) ;Get VistaWeb Address
 AUTORDV(ORY) ;Get parameter value for ORWRP CIRN AUTOMATIC
  S ORY=+$$GET^XPAR("ALL","ORWRP CIRN AUTOMATIC",1,"I")
  Q
-HDRON(ORY) ;Get parameter value for ORWRP HDR ON
+HDRON(ORY)      ;Get parameter value for ORWRP HDR ON
  S ORY=+$$GET^XPAR("ALL","ORWRP HDR ON",1,"I")
  Q

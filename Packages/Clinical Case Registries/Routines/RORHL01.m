@@ -1,13 +1,14 @@
-RORHL01 ;HOIFO/CRT - HL7 PATIENT DATA: PID,ZSP,ZRD ; 6/19/06 2:08pm
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORHL01 ;HOIFO/CRT - HL7 PATIENT DATA: PID,ZSP,ZRD ; 7/29/05 2:05pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
  ; #263          $$EN^VAFHLPID (controlled)
- ; #3630         BLDPID^VAFCQRY (controlled)
- ; #4535         EN^VAFHLZRD (private)
- ; #4536         $$EN^VAFHLZSP (private)
+ ; #3630         BLDPID^VAFCQRY (controlled) ??? - have to subscribe
  ; #10035        Read access to the PATIENT file (supported)
+ ;
+ ; #???          $$EN^VAFHLZSP
+ ; #???          EN^VAFHLZRD
  ;
  Q
  ;

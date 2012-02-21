@@ -1,5 +1,5 @@
-ECXPROCT ;ALB/GTS - ProstheticS Cost by PSAS HCPC Report DSS ; 12/15/06 3:55pm
- ;;3.0;DSS EXTRACTS;**71,100**;Dec 22, 1997;Build 2
+ECXPROCT ;ALB/GTS - ProstheticS Cost by PSAS HCPC Report DSS ; 11/22/04 3:55pm
+ ;;3.0;DSS EXTRACTS;**71**;Dec 22, 1997
  ;
 EN ;entry point from option
  ;Initialize varables
@@ -63,8 +63,7 @@ GETDATA ;Get data
  ..S ECXQTY=$P(ECX0,U,7),ECXUOFI=$P(ECX0,U,8),ECXCOST=$P(ECX0,U,16)
  ..;Resolve external values for PSAS HCPC
  ..K DIC S DIC="^RMPR(661.1,",DIC(0)="NZ",X=ECXPHCPC D ^DIC
- ..;S ECXPHCPC=$P($G(Y(0)),U,1)
- ..S ECXPHCPC=$E($P($G(Y(0)),U,1),1,5)
+ ..S ECXPHCPC=$P($G(Y(0)),U,1)
  ..;Resolve external values for HCPC
  ..K DIC S DIC="^ICPT(",DIC(0)="NZ",X=ECXHCPC D ^DIC
  ..S ECXHCPC=$P($G(Y(0)),U,1)

@@ -1,8 +1,8 @@
-PXRMG2R1 ;SLC/JVS -GEC #2 REPORT #1  ;7/14/05  08:12
- ;;2.0;CLINICAL REMINDERS;**2,4**;Feb 04, 2005;Build 21
+PXRMG2R1 ;SLC/JVS -GEC #2 REPORT #1  ;2/13/05  20:06
+ ;;2.0;CLINICAL REMINDERS;**2**;Feb 04, 2005
  Q
 EN ;Entry Point for Local Report
- N NAME,ARY,SSN,CRITER,DATE,DATEF,NAME2,PAGE
+ N NAME,ARY,SSN,CRITER,DATE,DATEF,NAME2
  N CRP1,CRP2,CRP3,CRP4,CRP5,CNT,PROG
  S (CRP1,CRP2,CRP3,CRP4,CRP5)=""
  D EN^PXRMG2E2
@@ -53,7 +53,7 @@ EN ;Entry Point for Local Report
  Q
  ;========================================================
 ENP ;Entry Point for Local Report
- N NAME,ARY,SSN,CRITER,DATE,DATEF,PAGE
+ N NAME,ARY,SSN,CRITER,DATE,DATEF
  N CRP1,CRP2,CRP3,CRP4,CRP5,CNT,PROG
  S (CRP1,CRP2,CRP3,CRP4,CRP5)=""
  D EN^PXRMG2E2
@@ -80,9 +80,9 @@ ENP ;Entry Point for Local Report
  ....I CRITER[3 S CRP4="X"
  ....I CRITER[4 S CRP5="X"
  ....S PROG=$O(@ARY@(NAME,SSN,DATE,CRITER,""))
- ....W !,$S($D(XYZ):NAME2,1:NAME),?25,SSN,?32,PROG,?39,CRP1,?42,CRP2,?45,CRP3,?48,CRP4,?51,CRP5,?54,$P(DATEF,"@",1),?65,$S(CRP1="X":"Not Met",1:"") D PAGE^PXRMGECZ
+ ....W !,$S($D(XYZ):NAME2,1:NAME),?25,SSN,?32,PROG,?39,CRP1,?42,CRP2,?45,CRP3,?48,CRP4,?51,CRP5,?54,$P(DATEF,"@",1),?65,$S(CRP1="X":"Not Met",1:"")
  ....S (CRP1,CRP2,CRP3,CRP4,CRP5)=""
- I CNT=0 W !,"     < NO PATIENT DATA FOUND >",! D PAGE^PXRMGECZ
+ I CNT=0 W !,"     < NO PATIENT DATA FOUND >",!
  W !
  W !,"Criteria"
  W !,"0: Not eligible under any criteria."

@@ -1,5 +1,5 @@
 TIUALRT ; SLC/JER,AJB - Notify Author and Attending. ; Mar 17, 2003
- ;;1.0;TEXT INTEGRATION UTILITIES;**21,84,79,88,58,61,151,158,175,221,227**;Jun 20, 1997;Build 15
+ ;;1.0;TEXT INTEGRATION UTILITIES;**21,84,79,88,58,61,151,158,175**;Jun 20, 1997
 SEND(DA,OVERDUE) ; Generate "available for signature" alert
  N TIU0,TIU12,TIU13,TIU14,TIU15,TIUESNR,TIUPNM,TIUECSNR,TIUSIG,TIUDPRM
  N TIUCOSG,TIUEDT,TIUSSN,TIU,TIUTYP,XQA,XQAKILL,XQAMSG,XQAROU,XQAID
@@ -15,8 +15,6 @@ SEND(DA,OVERDUE) ; Generate "available for signature" alert
  ; per NOIS DUR-0101-32087
  ; I +$$ISADDNDM^TIULC1(DA),($P($G(^TIU(8925,+$P(TIU0,U,6),0)),U,5)<7) Q
  I '+$P(TIUPRM1,U,7)!(+$P(TIU12,U)<+$P(TIUPRM1,U,7)) Q
- ;VMP/ELR  PATCH 221  DO NOT SEND ALERTS FOR RETRACTED DOCUMENTS
- I +$P(TIU0,U,5)=15 Q
  ; If third party alert from TIUALFUN **158**
  I $D(TIUTMP("THIRD PARTY ALERTS")) G THIRD
  ; If document is completed, jump to additional signers
@@ -57,8 +55,7 @@ SEND(DA,OVERDUE) ; Generate "available for signature" alert
  . I '+$P(TIUDPRM(0),U,20),'+$G(TIUSIG),+$P(TIUDPRM(0),U,4) Q  ; **84,112/151**
  . S XQA(TIUECSNR)="",ECSNRFLG=1 ; **151**
 ADDSNR ; Send addendum alerts, check for additional signers
- ;VMP/ELR PATCH 221  DO NOT SEND AMENDMENT ALERT IF CAUSED BY A DELINQUENT ADDITIONAL SIGNER
- I +$$ISADDNDM^TIULC1(DA),$G(TIUADDL)'=1 D SENDADD(DA)
+ I +$$ISADDNDM^TIULC1(DA) D SENDADD(DA)
  ; If additional signers have been designated, alert them too
  I +$O(^TIU(8925.7,"B",DA,0)),(+$P(TIU0,U,5)>5) D
  . N TIUXTRA,TIUI D XTRASGNR^TIULG(.TIUXTRA,DA) Q:+$D(TIUXTRA)'>9
@@ -143,8 +140,7 @@ SENDADD(DA) ; Generates "Addendum added" alert
  ; Not entered by Expected Signer: SET Expected Signer as recipient
  I TIUESNR'=TIUTRAN,$D(^VA(200,+TIUESNR,0)) S XQA(TIUESNR)=""
  ; Not entered by Expected Cosigner: SET Expected Cosigner as recipient
- ; VMP/RJT - *227 - If user is the expected cosigner, do not send alert
- I +TIUECSNR>0,(TIUECSNR'=DUZ),(TIUECSNR'=TIUTRAN),$D(^VA(200,+TIUECSNR,0)) S XQA(TIUECSNR)=""
+ I +TIUECSNR>0,(TIUECSNR'=TIUTRAN),$D(^VA(200,+TIUECSNR,0)) S XQA(TIUECSNR)=""
  Q:$D(XQA)'>9
  S XQAID="TIUADD"_+DA,XQADATA=+DA_U,XQAROU="ACTADD^TIUALRT"
  S XQAMSG=TIUPNM_" ("_TIUSSN_"): ADDENDUM to "_TIUTITLE_" of "_TIUDATE_" by "_TIUESNM

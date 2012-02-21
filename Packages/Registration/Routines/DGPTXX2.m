@@ -1,11 +1,5 @@
-DGPTXX2 ; COMPILED XREF FOR FILE #45 ; 04/23/09
+DGPTXX2 ; COMPILED XREF FOR FILE #45 ; 04/10/06
  ; 
- I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
- . K X1,X2 M X1=X,X2=X
- . S:$D(DIKIL) (X2,X2(1),X2(2),X2(3),X2(4),X2(5))=""
- . D KDGPT9D^DGPTDDCR(.X,.DA,"D SD9")
-CR12 S DIXR=443
- K X
  S DIKZ(0)=$G(^DGPT(DA,0))
  S X(1)=$P(DIKZ(0),U,1)
  S X(2)=$P(DIKZ(0),U,2)

@@ -1,9 +1,6 @@
-IBNCPDP3 ;OAK/ELZ - STORES NDC/AWP UPDATES ;11/14/07  13:18
- ;;2.0;INTEGRATED BILLING;**223,276,342,363,383,384,411,435**;21-MAR-94;Build 27
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;
- ; Reference to ^PRCASER1 supported by IA# 593
- ; Reference to BPS RESPONSES file (#9002313.03) supported by IA# 4813
+IBNCPDP3 ;OAK/ELZ - STORES NDC/AWP UPDATES ;20-JUN-2003
+ ;;2.0;INTEGRATED BILLING;**223,276**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
 UPAWP(IBNDC,IBAWP,IBADT) ; updates AWP prices for NDCs
@@ -14,7 +11,7 @@ UPAWP(IBNDC,IBAWP,IBADT) ; updates AWP prices for NDCs
  S IBCS=$P($G(^IBE(350.9,1,9)),"^",12)
  I 'IBCS Q "0^Unable to find Charge Set"
  ;
- S IBNDC=$$NDC^IBNCPNB(IBNDC)
+ S IBNDC=$$NDC^IBNCPDPU(IBNDC)
  ;
  S IBITEM=+$$ADDBI^IBCREF("NDC",IBNDC) I IBITEM Q "0^Unable to add item"
  ;
@@ -23,16 +20,63 @@ UPAWP(IBNDC,IBAWP,IBADT) ; updates AWP prices for NDCs
  Q 1
  ;
  ;
+REJECT(DFN,IBD) ; used to process rejected claims
+ ; if ct turned on, need to make sure on file.
+ ; nothing else to do with this here.
+ ;
+ N IBADT,IBTRKR,IBTRKRN,IBRXN,IBFIL,IBEABD,IBY,IBLOCK,IBDUZ,IBRXTYP
+ S IBDUZ=.5
+ S IBY=1,IBLOCK=0
+ ;
+ S IBADT=+$G(IBD("FILL DATE")) I 'IBADT S IBY="0^No fill date" G REJQ
+ S IBRXN=+$G(IBD("PRESCRIPTION")) I 'IBRXN S IBY="0^No Rx IEN" G REJQ
+ S IBFIL=+$G(IBD("FILL NUMBER"),-1) I IBFIL<0 S IBY="0^No fill number" G REJQ
+ S IBD("BCID")=IBD("CLAIMID")_";"_IBADT
+ L +^DGCR(399,"AG",IBD("BCID")):15 E  S IBY="0^Cannot lock ECME number" G REJQ
+ S IBLOCK=1
+ ;
+ ; -- claims tracking info
+ S IBTRKR=$G(^IBE(350.9,1,6))
+ ; date can't be before parameters
+ S $P(IBTRKR,"^")=$S('$P(IBTRKR,"^",4):0,+IBTRKR&(IBADT<+IBTRKR):0,1:IBADT)
+ S IBTRKRN=+$O(^IBT(356,"ARXFL",IBRXN,IBFIL,0))
+ ;
+ I $D(IBD("CLOSE REASON")),'$D(IBD("DROP TO PAPER")) S IBD("DROP TO PAPER")=""
+ ;
+ I IBTRKRN,$G(IBD("CLOSE REASON")) D  S IBY=1 G REJQ
+ . N IBCR,IBCC,IBPAP,IBRELC
+ . S IBCR=IBD("CLOSE REASON")
+ . S IBPAP=IBD("DROP TO PAPER")
+ . S IBRELC=$G(IBD("RELEASE COPAY"))
+ . S IBCC=$G(IBD("CLOSE COMMENT"))
+ . D NONBR^IBNCPNB(DFN,IBRXN,IBFIL,IBADT,IBCR,IBPAP,IBRELC,IBCC)
+ ;
+ ; if in CT already - set EABD+60 if still there.
+ I IBTRKRN,$P(^IBT(356,IBTRKRN,0),"^",17) D  S IBY=1 G REJQ
+ . N IBLOCK
+ . L +^IBT(356,IBTRKRN):10 S IBLOCK=$T
+ . S IBEABD=$$EABD^IBTUTL($O(^IBE(356.6,"AC",4,0)),IBADT)
+ . S:'IBEABD IBEABD=DT
+ . S IBEABD=$$FMADD^XLFDT(IBEABD,60)
+ . S DIE="^IBT(356,",DA=IBTRKRN,DR=".17////^S X=IBEABD"
+ . D ^DIE
+ . I IBLOCK L -^IBT(356,IBTRKRN)
+ ;
+ S IBY=1 ; OK
+ ;
+REJQ ;
+ D LOG^IBNCPDP2("REJECT",IBY)
+ I IBLOCK L -^DGCR(399,"AG",IBD("BCID"))
+ Q IBY
  ;
  ;
 REVERSE(DFN,IBD,IBAUTO) ;process reversed claims
  N IBIFN,I,IB,IBIL,IBCHG,IBCRES,IBY,X,Y,DA,DIE,DR,IBADT,IBLOCK,IBLDT
- N IBNOW,IBDUZ,IBCR,IBRELC,IBCC,IBPAP,IBRXN,IBFIL,IBRTS,IBARES,IBUSR
- N IBLGL,IBLDT
+ N IBNOW,IBDUZ,IBCR,IBRELC,IBCC,IBPAP,IBRXN,IBFIL,IBRTS,IBARES
  S IBDUZ=.5
+ ;
  S IBLOCK=0
  ; find bill number
- I 'DFN S IBY="0^No patient" G REVQ
  I '$L($G(IBD("CLAIMID"))) S IBY="0^Missing ECME Number" G REVQ
  S IBADT=+$G(IBD("FILL DATE")) I 'IBADT S IBY="0^Missing Fill Date" G REVQ
  S IBRXN=+$G(IBD("PRESCRIPTION")) I 'IBRXN S IBY="0^No Rx IEN" G REVQ
@@ -41,20 +85,17 @@ REVERSE(DFN,IBD,IBAUTO) ;process reversed claims
  . S IBY="0^REVERSAL rejected by payer"
  . S IBRTS=$$RTS(IBD("REVERSAL REASON"))
  ;
- D CANC^IBNCPDP6(IBRXN_";"_IBFIL) ; cancel 1st party charge for Tricare
- ;
- S IBD("BCID")=$$BCID^IBNCPDP4(IBD("CLAIMID"),IBADT)
+ S IBD("BCID")=(+IBD("CLAIMID"))_";"_IBADT ; BC ID Number
  L +^DGCR(399,"AG",IBD("BCID")):15 E  S IBY="0^Cannot lock ECME number" G REVQ
  S IBLOCK=1
- S IBUSR=$S(+$G(IBD("USER"))=0:DUZ,1:IBD("USER"))
- S IBLDT=$$FMADD^XLFDT(DT,1) F  S IBLGL=$O(^XTMP("IBNCPLDT"_IBLDT),-1),IBLDT=$E(IBLGL,9,15) Q:IBLDT<$$FMADD^XLFDT(DT,-3)!(IBLGL'["IBNCPLDT")  I $D(^XTMP(IBLGL,IBD("BCID"))) S ^(IBD("BCID"))="" Q
- S IBIFN=$$MATCH^IBNCPDP2(IBD("BCID"),$G(IBD("RXCOB")))
+ I $D(^DGCR(399,"AG",IBD("BCID"))) S ^(IBD("BCID"))=""
+ S IBIFN=$$MATCH^IBNCPDP2(IBD("BCID"))
  I $D(IBD("CLOSE REASON")),'$D(IBD("DROP TO PAPER")) S IBD("DROP TO PAPER")=""
  S IBCR=+$G(IBD("CLOSE REASON"))
  S IBPAP=$G(IBD("DROP TO PAPER"))
  S IBRELC=$G(IBD("RELEASE COPAY"))
  S IBCC=$G(IBD("CLOSE COMMENT"))
- D NONBR^IBNCPNB(DFN,IBRXN,IBFIL,IBADT,IBCR,IBPAP,IBRELC,IBCC,IBUSR)
+ D NONBR^IBNCPNB(DFN,IBRXN,IBFIL,IBADT,IBCR,IBPAP,IBRELC,IBCC)
  I 'IBIFN S IBY="0^"_$S(IBPAP:"Dropped to paper",IBCR>1:"Set non-billable reason in CT",1:"Cannot find the bill to reverse") G REVQ
  ;
  F I=0,"S" S IB(I)=$G(^DGCR(399,IBIFN,I))
@@ -80,21 +121,18 @@ REVERSE(DFN,IBD,IBAUTO) ;process reversed claims
  I IBDUZ'=DUZ D  ; set the real user
  . N IBI,IBT S IBI=18,IBT(399,IBIFN_",",IBI)=IBDUZ D FILE^DIE("","IBT")
  ;
-REVQ ; perform end of job tasks
+REVQ ;
+ I IBY=1,$G(IBIFN) S IBY=+IBIFN
  D LOG^IBNCPDP2($S($G(IBAUTO)=1:"AUTO REVERSE",$G(IBAUTO)=2:"BILL CANCELLED",1:"REVERSE"),IBY)
  I IBLOCK L -^DGCR(399,"AG",IBD("BCID"))
- I IBY=1,$G(IBIFN) S IBY=+IBIFN
  Q IBY
  ;
 RTS(IBRR) ; Return to Stock processing on Released Rx
  ; input - IBRR = reversal reason
- ;         IBCRSN = passed in by reference
  ; output - 0 = reversal not due to a Rx RETURN TO STOCK or Rx DELETE
  ;          1 = reversal due to a Rx RETURN TO STOCK or Rx DELETE
- ;          IBCRSN = charge removal reason
- N IBTRKRN,IBLOCK2,IBCMT,DA,DIE,DR
- ;
  I IBRR'="RX RETURNED TO STOCK"&(IBRR'="RX DELETED") Q 0
+ N IBTRKRN,IBLOCK2,IBCMT,DA,DIE,DR
  S IBTRKRN=+$O(^IBT(356,"ARXFL",IBRXN,IBFIL,0))
  I 'IBTRKRN Q 0  ; CT record does not exist
  I '$P($G(^IBT(356,IBTRKRN,0)),U,11) Q 0  ; BILL does not exist
@@ -113,7 +151,8 @@ BULL ; Generate a bulletin if there is an error in cancelling the claim.
  S XMSUB=$E($P(IBPT,"^"),1,14)_"  "_$P(IBPT,"^",3)_" - ERROR ENCOUNTERED"
  S XMDUZ="INTEGRATED BILLING PACKAGE",XMTEXT="IBT("
  S XMY(IBDUZ)=""
- S XMY("G.IBCNR EPHARM")=""
+ S IBGRP=$P($G(^XMB(3.8,+$P($G(^IBE(350.9,1,1)),"^",7),0)),"^")
+ I IBGRP]"" S XMY("G."_IBGRP_"@"_^XMB("NETNAME"))=""
  ;
  S IBT(1)="An error occurred while cancelling the Pharmacy claim from ECME"
  S IBT(2)="fiscal intermediary for the following patient:"
@@ -133,7 +172,7 @@ BULL ; Generate a bulletin if there is an error in cancelling the claim.
 GETRSN(DFN,IBRXN,IBFIL) ;
  ; retrieve charge removal reason from file 354.71
  ; input - DFN,IBRXN=Rx ien,IBFIL=fill number
- ; output - charge removal reason
+ ; output - charge removal reason 
  N IBDT,IBDA,IBXRSN,IBRXFIL,IB0
  S (IBDT,IBDA)=0,IBXRSN=""
  S IBRXFIL=$S('IBFIL:IBRXN,1:IBRXN_";"_IBFIL)
@@ -144,89 +183,5 @@ GETRSN(DFN,IBRXN,IBFIL) ;
  . . S IBXRSN=$$GET1^DIQ(354.71,IBDA_",",.19)
  S:IBXRSN']"" IBXRSN="CHARGE REMOVAL REASON NOT FOUND"
  Q "Reversal Rej, no pymt due<>"_IBXRSN
- ;
-ELIG(DFN,IBD) ; process an Eligibility response
- N IBRES,ERACT,IDUZ,IBFDA,BPRIEN,IBUSR,IBCDFN,IBPL,IBERR,EPHSRC,INSIEN,BUDA,PTDA,PLDA,ICDA,BUFF,BPSR,ZR,BPRSUB,BPRGRP,IBNCPDPELIG
- S IBRES=""
- I '$G(DFN) S IBRES="0^No patient - ELIG response" G ELIGX
- S BPRIEN=+$G(IBD("RESPIEN"))     ; response file ien
- S IBUSR=+$G(IBD("USER"))         ; DUZ of user
- S IBCDFN=+$G(IBD("POLICY"))      ; pt. ins. policy subfile 2.312 ien
- S IBPL=+$G(IBD("PLAN"))          ; plan 355.3 ien
- ;
- ; data integrity checks
- I 'BPRIEN S IBRES="0^No BPS RESPONSES file ien" G ELIGX
- I '$D(^BPSR(BPRIEN,0)) S IBRES="0^No BPS RESPONSES file data exists for this ien" G ELIGX
- S ZR=BPRIEN_","
- D GETS^DIQ(9002313.03,ZR,"103;301;302","IEN","BPSR")
- I $G(BPSR(9002313.03,ZR,103,"E"))'="E1" S IBRES="0^BPS Response is not an E1 Transaction Code" G ELIGX
- I 'IBCDFN S IBRES="0^No pt. policy ien" G ELIGX
- I '$D(^DPT(DFN,.312,IBCDFN,0)) S IBRES="0^Pt. insurance policy data not found" G ELIGX
- I +$P($G(^DPT(DFN,.312,IBCDFN,0)),U,18)'=IBPL S IBRES="0^Mismatch on plan ien" G ELIGX
- ;
- ; build a buffer entry based primarily on the ins. policy in the pt. file
- K IBERR
- S IDUZ=IBUSR
- S IBNCPDPELIG=1   ; special variable indicating to eIV where the buffer entry is coming from
- D PT^IBCNEBF(DFN,IBCDFN,"","",1,.IBERR)     ; build and add buffer entry
- I $G(IBERR)'="" S IBRES="0^"_IBERR G ELIGX
- I '$G(IBFDA) S IBRES="0^No Buffer entry was created" G ELIGX
- I '$D(^IBA(355.33,IBFDA,0)) S IBRES="0^Buffer entry doesn't exist" G ELIGX
- S EPHSRC=+$O(^IBE(355.12,"C","E-PHARMACY",0))    ; source of information
- I 'EPHSRC S IBRES="0^Cannot find e-Pharmacy Source of Information in dictionary" G ELIGX
- S INSIEN=+$P($G(^DPT(DFN,.312,IBCDFN,0)),U,1)
- I 'INSIEN S IBRES="0^Insurance Company pointer not there" G ELIGX
- ;
- ; complete the buffer entry
- S BUDA=+IBFDA_","              ; IENS for the buffer entry
- S PTDA=IBCDFN_","_DFN_","      ; IENS for the pt. ins. policy subfile entry 2.312
- S PLDA=IBPL_","                ; IENS for the plan entry 355.3
- S ICDA=INSIEN_","              ; IENS for the insurance company entry 36
- ;
- S BUFF(355.33,BUDA,60.1)=$$GET1^DIQ(2.312,PTDA,4.01,"I")
- S BUFF(355.33,BUDA,60.11)=$$GET1^DIQ(2.312,PTDA,4.02,"I")
- ;
- S BUFF(355.33,BUDA,40.01)=$$GET1^DIQ(355.3,PLDA,.02,"I")
- S BUFF(355.33,BUDA,40.04)=$$GET1^DIQ(355.3,PLDA,.05,"I")
- S BUFF(355.33,BUDA,40.05)=$$GET1^DIQ(355.3,PLDA,.06,"I")
- S BUFF(355.33,BUDA,40.06)=$$GET1^DIQ(355.3,PLDA,.12,"I")
- S BUFF(355.33,BUDA,40.07)=$$GET1^DIQ(355.3,PLDA,.07,"I")
- S BUFF(355.33,BUDA,40.08)=$$GET1^DIQ(355.3,PLDA,.08,"I")
- S BUFF(355.33,BUDA,40.09)=$$GET1^DIQ(355.3,PLDA,.09,"I")
- S BUFF(355.33,BUDA,40.1)=$$GET1^DIQ(355.3,PLDA,6.02,"I")
- S BUFF(355.33,BUDA,40.11)=$$GET1^DIQ(355.3,PLDA,6.03,"I")
- ;
- S BUFF(355.33,BUDA,20.02)=$$GET1^DIQ(36,ICDA,.131,"I")
- S BUFF(355.33,BUDA,20.05)=$$GET1^DIQ(36,ICDA,1,"I")
- S BUFF(355.33,BUDA,21.01)=$$GET1^DIQ(36,ICDA,.111,"I")
- S BUFF(355.33,BUDA,21.02)=$$GET1^DIQ(36,ICDA,.112,"I")
- S BUFF(355.33,BUDA,21.03)=$$GET1^DIQ(36,ICDA,.113,"I")
- S BUFF(355.33,BUDA,21.04)=$$GET1^DIQ(36,ICDA,.114,"I")
- S BUFF(355.33,BUDA,21.05)=$$GET1^DIQ(36,ICDA,.115,"I")
- S BUFF(355.33,BUDA,21.06)=$$GET1^DIQ(36,ICDA,.116,"I")
- ;
- ; update buffer entry with some additional information
- S BUFF(355.33,BUDA,.03)=EPHSRC      ; source of info
- S BUFF(355.33,BUDA,.12)=""          ; make sure eIV related fields are blank
- S BUFF(355.33,BUDA,.13)=""
- S BUFF(355.33,BUDA,.14)=""
- S BUFF(355.33,BUDA,.15)=""
- S BUFF(355.33,BUDA,.17)=BPRIEN      ; BPS response file ien
- ;
- ; update buffer entry with data pulled from BPS response file
- ; only 2 fields are applicable here:  group# and cardholder ID
- ;
- S BPRSUB=$G(BPSR(9002313.03,ZR,302,"E"))         ; subscriber/cardholder ID
- I BPRSUB'="" S BUFF(355.33,BUDA,60.04)=BPRSUB    ; update buffer if field exists
- ;
- S BPRGRP=$G(BPSR(9002313.03,ZR,301,"E"))         ; group number
- I BPRGRP'="" S BUFF(355.33,BUDA,40.03)=BPRGRP    ; update buffer if field exists
- ;
- D FILE^DIE(,"BUFF")
- ;
- S IBRES=1  ; all good
- ;
-ELIGX ;
- Q IBRES
  ;
  ;IBNCPDP3

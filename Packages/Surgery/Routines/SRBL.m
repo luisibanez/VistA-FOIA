@@ -1,5 +1,5 @@
 SRBL ;BIR/ADM - BLOOD PRODUCT VERIFICATION FOR VBECS ;09/01/05
- ;;3.0; Surgery ;**148,168**;24 Jun 93;Build 5
+ ;;3.0; Surgery ;**148**;24 Jun 93
  ; 
  ; Reference to AVUNIT^VBECA1B supported by DBIA #4629
  ;
@@ -27,8 +27,7 @@ LIST W ! S Y=^TMP("SRBL",$J,0),Z=$P(Y,"^",7),SRSSN=$E(Z,1,3)_"-"_$E(Z,4,5)_"-"_$
 MATCH ; retrieve matching units from list of available units
  S (SRIDT,SRMATCH)=0 F  S SRIDT=$O(^TMP("SRBL",$J,SRIDT)) Q:'SRIDT  D
  .S X=^TMP("SRBL",$J,SRIDT)
- .I $P(X,"^",3)=SRUID!($P(X,"^",12)=SRUID) S SRMATCH=SRMATCH+1,SRBL(SRMATCH)=X W !,"Eye Readable ID: ",$P(X,"^",3),!
- ;RLM Match either scanned or eye-readable label
+ .I $P(X,"^",3)=SRUID S SRMATCH=SRMATCH+1,SRBL(SRMATCH)=X
  Q
 CODA ; interpret Codabar barcodes used to label the Unit ID of blood component
  I $$ISBTUID(.X) S SRUID=X Q

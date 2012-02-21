@@ -1,5 +1,5 @@
 RMPR4P21 ;PHX/HNC,RVD -PRINT PURCHASE CARD ORDER ;3/1/1996
- ;;3.0;PROSTHETICS;**3,15,19,26,55,90,132,133,139,153**;Feb 09, 1996;Build 10
+ ;;3.0;PROSTHETICS;**3,15,19,26,55,90**;Feb 09, 1996
  ;
  ; ODJ - patch 55 - 1/29/01 - replace hard code mail route symbol 121
  ;                            with extrinsic call to read site param.
@@ -30,9 +30,7 @@ PRT ;ENTRY POINT TO PRINT
  S RDUZ=$P(R664(0),U,9),RDUZ=$P(^VA(200,RDUZ,0),U,1),DFN=$P(R664(0),U,2),RTN=$P(R664(0),U,7),CP=$P(R664(0),U,6),RMPRPAGE=2
  D ADD^VADPT,DEM^VADPT,ELIG^VADPT
  W:$Y>0 @IOF W ?20,"OMB Number 2900-0188",?50,"PO#: ",$P($G(^RMPR(664,RMPRA,4)),U,5)
- W !,"By receiving this purchase order you agree to take appropriate measures to"
- W !,"secure the information and ensure the confidentiality of the patient information"
- W !,"is maintained. ORIGINAL PO AND INVOICE MUST BE SUBMITTED TO THE VAMC BELOW"
+ W !!?7,"***ORIGINAL COPY AND COMMERCIAL INVOICE MUST BE SUBMITTED***",!?15,"TO THE VAMC PROSTHETIC ACTIVITY LISTED BELOW"
 HDR ;PRINT HEADER FOR 2421 ADDRESS INFO
  S (RMPRT,RMPRB)="",$P(RMPRT,"_",IOM)="",$P(RMPRB,"-",IOM)="" W !,RMPRT,!,"Department of Veterans Affairs"_"|"_"Prosthetic Authorization for Items or Services",!,RMPRB
  W !,"1. Name and Address of Vendor",?40,"2. Name and Address of VA Facility"
@@ -62,17 +60,14 @@ HDR ;PRINT HEADER FOR 2421 ADDRESS INFO
  I VAPA(2)="" W ?5,VAPA(4)_","_$P(VAPA(5),U,2)_" "_VAPA(6),?40,$E(RMPRB,1,40),!,?40,"9. Authority For Issuance  CFR 17.115",!,?5,VAPA(8),?43,"CHARGE MEDICAL APPROPRIATION"
  I VAPA(2)'="" W ?5,VAPA(2),?40,$E(RMPRB,1,40),!,?5,VAPA(4)_","_$P(VAPA(5),U,2)_" "_VAPA(6),?40,"9. Authority For Issuance  CFR 17.115",!,?5,VAPA(8),?43,"CHARGE MEDICAL APPROPRIATION"
  W !,RMPRB
- ;Remove claim number print in *139 since it held SSN at times
- ;Remove field 8.ID # print in *153 which held last 4 digits of SSN 
- W !,"7. Claim Number",?40,"8. ID #:",!,RMPRB,!,"10. Statistical Data",?30,"11. FOB Point",?46,"12. Discount",?61,"13. Delivery Time"
+ W !,"7. Claim Number"_" "_VAEL(7),?40,"8. ID #:"_" "_$P($P(VADM(2),U,2),"-",3),!,RMPRB,!,"10. Statistical Data",?30,"11. FOB Point",?46,"12. Discount",?61,"13. Delivery Time"
  S R664("E")=$O(R664(1,0)),CAT=$P(R664(1,R664("E"),0),U,10)
  S RMPRCAT=$S(CAT=1:"SC/OP",CAT=2:"SC/IP",CAT=3:"NSC/IP",CAT=4:"NSC/OP",1:"")
  S SPE=$P(R664(1,R664("E"),0),U,11)
  S RMPRSCAT=$S(SPE=1:"SPECIAL LEGISLATION",SPE=2:"A&A",SPE=3:"PHC",SPE=4:"ELIGIBILITY REFORM",1:"")
  W !,RMPRCAT_" "_RMPRSCAT S:+$P(R664(0),U,10) RMPRFOB=$P(R664(0),U,10) W ?34,$S($D(RMPRFOB):"ORIGIN",1:"DEST"),?49,"% " I $D(R664(2)) W $P(R664(2),U,6)
  I $D(R664(3)) W ?66,$P(R664(3),U,3)_" Days"
- W !,?30,$E(RMPRB,1,50),!,?30,"14. Delivery To: " W:$D(R664(3)) $P(R664(3),U)
- W !,?36,"Attention: "_$P(R664(3),U,4) W !,RMPRB
+ W !,?30,$E(RMPRB,1,50),!,?30,"14. Delivery To: " W:$D(R664(3)) $P(R664(3),U) W !,RMPRB
 HDR1 ;HEADER FOR 10-2421
  W !?17,"15. DESCRIPTION OF ITEMS OR SERVICES AUTHORIZED",!,RMPRB,!,"ITEM NUMBER",?23,"DESCRIPTION",?50,"QUANTITY",?60,"UNIT",?66,"UNIT",?73,"AMOUNT",!,?50,"ORDERED",?66,"PRICE",!,RMPRB Q:$D(RMPRMOR)
  D ^RMPR4P22 D:'$D(RMPRMOR1) CON^RMPR4P22

@@ -1,5 +1,5 @@
-PXRMFF ;SLC/PKR - Clinical Reminders function finding evaluation. ;03/17/2008
- ;;2.0;CLINICAL REMINDERS;**4,6,11**;Feb 04, 2005;Build 39
+PXRMFF ;SLC/PKR - Clinical Reminders function finding evaluation. ;12/01/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;===========================================
 EVAL(DFN,DEFARR,FIEVAL) ;Evaluate function findings.
  N FFIND,FFN,FILIST,FN,FUN,FUNIND,FUNN,FVALUE,JND
@@ -26,18 +26,9 @@ EVAL(DFN,DEFARR,FIEVAL) ;Evaluate function findings.
  . S LOGIC=$S(LOGIC'="":LOGIC,1:0)
  . I @LOGIC
  . S FIEVAL(FFN)=$T
- . S FIEVAL(FFN,"NUMBER")=$P(FFN,"FF",2)
+ . S FIEVAL(FFN,"NAME")=$G(DEFARR(25,FFN,40))
+ . S FIEVAL(FFN,"VALUE")=$S($P($G(DEFARR(25,FFN,5,0)),U,4)=1:FN(1),1:FIEVAL(FFN))
  . S FIEVAL(FFN,"FINDING")=$G(FUN)_";PXRMD(802.4,"
- . I $G(PXRMDEBG) D
- .. N IND,FSTRING
- .. S IND="",FSTRING=DEFARR(25,FFN,10)
- .. I $D(PXRMAGE) S FSTRING=$$STRREP^PXRMUTIL(FSTRING,"PXRMAGE",PXRMAGE)
- .. I $D(PXRMDOB) S FSTRING=$$STRREP^PXRMUTIL(FSTRING,"PXRMDOB",PXRMDOB)
- .. I $D(PXRMDOD) S FSTRING=$$STRREP^PXRMUTIL(FSTRING,"PXRMDOD",PXRMDOD)
- .. I $D(PXRMLAD) S FSTRING=$$STRREP^PXRMUTIL(FSTRING,"PXRMLAD",PXRMLAD)
- .. I $D(PXRMSEX) S FSTRING=$$STRREP^PXRMUTIL(FSTRING,"PXRMSEX",PXRMSEX)
- .. F  S IND=$O(FN(IND)) Q:IND=""  S FSTRING=$$STRREP^PXRMUTIL(FSTRING,"FN("_IND_")",FN(IND))
- .. S ^TMP("PXRMFFDEB",$J,FFN,"DETAIL")=FIEVAL(FFN)_U_DEFARR(25,FFN,3)_U_FSTRING
  Q
  ;
  ;===========================================
@@ -79,7 +70,7 @@ EVALPL(DEFARR,FFIND,PLIST) ;Build a list of patients based on a function
  . D GENTERM^PXRMPLST(FINDPA(0),IND,.TERMARR)
  . S LNAME(IND)="PXRMFF"_IND
  . K ^TMP($J,LNAME(IND))
- . D EVALPL^PXRMTERL(.FINDPA,.TERMARR,LNAME(IND))
+ . D EVALPL^PXRMTERM(.FINDPA,.TERMARR,LNAME(IND))
  .;Get rid of the false part of the list.
  . K ^TMP($J,LNAME(IND),0)
  .;Build a complete list of patients.
@@ -132,6 +123,11 @@ MHVOUT(INDENT,IFIEVAL,NLINES,TEXT) ;Produce the MHV output.
  ;
  ;===========================================
 OUTPUT(INDENT,IFIEVAL,NLINES,TEXT) ;Produce the clinical
- ;maintenance output. None currently defined.
+ ;maintenance output.
+ N PNAME
+ S PNAME=$G(IFIEVAL("NAME"))
+ I PNAME="" Q
+ S NLINES=NLINES+1
+ S TEXT(NLINES)=$$INSCHR^PXRMEXLC(INDENT," ")_PNAME
  Q
  ;

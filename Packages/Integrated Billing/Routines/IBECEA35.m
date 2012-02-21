@@ -1,6 +1,6 @@
 IBECEA35 ;ALB/CPM - Cancel/Edit/Add... TRICARE Support ; 09-AUG-96
- ;;2.0;INTEGRATED BILLING;**52,240,361**;21-MAR-94;Build 9
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,240**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 CUS ; Process all TRICARE copayment charges.
  ;
@@ -54,7 +54,7 @@ DISP(DFN,INS) ; Display TRICARE beneficiary insurance information.
  I '$G(INS) W *7,!!,"Please note that this patient does not have active TRICARE coverage!",! G DISPQ
  ;
  N IBINS,IBINS3,IBPLAN,IBS S IBS=0
- S IBINS=$G(^DPT(DFN,.312,INS,0)),IBINS3=$G(^(3))
+ S IBINS=$G(^DPT(DFN,.312,IBCS,0)),IBINS3=$G(^(3))
  S IBPLAN=$G(^IBA(355.3,+$P(IBINS,"^",18),0))
  W !!," TRICARE coverage for ",$P($G(^DPT(DFN,0)),"^"),":"
  W !!," Insured Person: ",$E($P(IBINS,"^",17),1,20)

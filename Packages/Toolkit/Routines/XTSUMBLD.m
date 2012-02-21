@@ -1,5 +1,5 @@
-XTSUMBLD ;SF/RWF - BUILD PACKAGE INTEG ROUTINE ; 3/21/06 2:50MP
- ;;7.3;TOOLKIT;**11,20,66,70,94,100**;Apr 25, 1995;Build 4
+XTSUMBLD ;SF/RWF - BUILD PACKAGE INTEG ROUTINE ; [8/3/05 4:45am]
+ ;;7.3;TOOLKIT;**11,20,66,70,94**;Apr 25, 1995
 A ;
  K ^UTILITY($J),DIR D MSG
  S DIR(0)="SM^P:Package;B:Build",DIR("A")="Build from" D ^DIR K DIR Q:X[U
@@ -78,23 +78,6 @@ CHECK1 ;New CheckSum logic
  W !,"New CheckSum CHECK1^XTSUMBLD:"
  N XUCHFLG S XUCHFLG=1 D CHECK
  Q
- ;
-CHCKSUM ;
- W !,"This option determines the current Old (CHECK^XTSUMBLD) or New (CHECK1^XTSUMBLD) logic checksum of selected routine(s)."
- N OON
- S OON=$$ASKOON Q:OON<1  ;Return 1 or 2
- I OON=1 D CHECK
- I OON=2 D CHECK1
- Q
- ;
-ASKOON() ;
- ;Ask if user wants old/new checksum
- ;Return 1 or 2.
- N DIR,DIOUT
- S DIR(0)="S^1:Old;2:New",DIR("A")="New or Old Checksums",DIR("B")="New"
- D ^DIR
- I $D(DIRUT) S Y=-1
- Q Y
 ROU ;;
  ;; ;ISC/XTSUMBLD KERNEL - Package checksum checker ;
  ;; ;;0.0;

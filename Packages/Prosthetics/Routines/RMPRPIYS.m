@@ -1,5 +1,5 @@
 RMPRPIYS ;HINCIO/ODJ - RC - PIP Receive Stock ;10/8/02  13:11
- ;;3.0;PROSTHETICS;**61,108,128,161**;Feb 09, 1996;Build 2
+ ;;3.0;PROSTHETICS;**61,108**;Feb 09, 1996
  Q
  ;
  ;***** PB - Print Bar Code labels
@@ -140,12 +140,10 @@ BARCH W "If you have access to a bar code scanner, use it to scan the item bar c
  ;
  ;***** SCAN - scan bar code and set up stock issue vars.
  ;             (to be called by RMPRPIYI (too big))
-SCAN K RMPR7,RMPR7I,RMPR1,RMPR1I,RMPR11,RMPR11I,RMPR6,RMDAHC,RMITQTY
+SCAN K RMPR7,RMPR7I,RMPR1,RMPR1I,RMPR11,RMPR11I,RMPR6,RMDAHC
 SCAN1 D BARC(.RMPRBARC,.RMPREXC)
  I RMPREXC'="" S RMPRBARC="" G SCANX
  I RMPRBARC="" G SCANX
- ;*161 added check to insure barcode scan or manual entry was valid HCPCS item entry
- I $P(RMPRBARC,"-")="" W !,"** No HCPCS Selected due to null HCPCS entered..." G SCAN
  S RMPRBARC=$$UPCASE(RMPRBARC)
  ;
  ; If we get a good bar code then populate all the fields and go
@@ -227,7 +225,6 @@ SCAN1 D BARC(.RMPRBARC,.RMPREXC)
  S RMPR11("LOCATION")=RMLOC,RMPR11("STATION")=RMPRSTN
  I '$G(RMPR11("LOCATION")) S RMUBA=RMPR7("QUANTITY")
  S:'$G(RMUBA) RMUBA=$$BAL^RMPRPIX7(.RMPR11)
- S RMITQTY=RMPR7("QUANTITY")
  K RMPR5
  S RMPR5("IEN")=RMLOC
  S RMPRUCST=RMPR7("VALUE")/RMPR7("QUANTITY")

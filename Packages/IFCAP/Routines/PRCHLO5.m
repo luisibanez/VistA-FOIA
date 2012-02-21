@@ -1,6 +1,6 @@
-PRCHLO5 ;WOIFO/DAP/RLL-manual run for procurement reports  ; 10/16/06 2:12pm
-V ;;5.1;IFCAP;**83,98,139**;Oct 20, 2000;Build 16
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCHLO5 ;WOIFO/DAP/RLL-manual run for procurement reports  ; 12/22/05 12:04pm
+V ;;5.1;IFCAP;**83**;Oct 20,2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 ENT ;This routine tasks out the execution of the procurement extract 
  ;reports associated with PRC*5.1*83 (CLRS).
@@ -15,34 +15,46 @@ ENT ;This routine tasks out the execution of the procurement extract
  S PRCHPRO=ZTSK
  ;Calls mail group message generation and screen display with success
  ;or exception notification
- I $D(PRCHPRO)[0 S PRCPMSG(1)="A task could not be created for the CLO Procurement Reports - please contact IRM." W ! D EN^DDIOL(PRCPMSG(1)) D MAIL^PRCHLO4A Q
+ I $D(PRCHPRO)[0 S PRCPMSG(1)="A task could not be created for the CLO Procurement Reports - please contact IRM." W ! D EN^DDIOL(PRCPMSG(1)) D MAIL Q
  ; 
  S PRCPMSG(1)="Task # "_PRCHPRO_" entered for Procurement Reports."
  W !
  D EN^DDIOL(PRCPMSG(1))
- ;
- ;*98 Modified to move MAIL and MAILFTP tags to routine PRCHLO4A
- ;
- D MAIL^PRCHLO4A
+ D MAIL
  ;
  Q
 PRCPCMP ; Notification of completion of building Procurement Report Data
  N PRCPMSG
  S PRCPMSG(1)="PO Procurement Data extract complete."
  D EN^DDIOL(PRCPMSG(1))
- D MAIL^PRCHLO4A
+ D MAIL^PRCHLO5
  Q
  ;
-PRCPTST ; Notification of termination of building Procurement Report Data due to test system task origin (added in PRC*5.1*139)
- N PRCPMSG
- S PRCPMSG(1)="PO Procurement Data extract TERMINATED due to running on TEST system."
- D EN^DDIOL(PRCPMSG(1))
- D MAIL^PRCHLO4A
- K ^TMP($J),^TMP("PRCHLOG",$J)
+MAIL ;Builds mail messages to a defined mail group to notify users of the
+ ;success or failure of the TaskMan scheduling for the CLO Procurement
+ ;Reports
+ ;
+ N XMDUZ,XMMG,XMSUB,XMTEXT,XMY,XMZ
+ S XMSUB="CLO Procurement Report Status for "_$$HTE^XLFDT($H)
+ S XMDUZ="Clinical Logistics Report Server"
+ S XMTEXT="PRCPMSG("
+ S XMY("G.PRCPLO CLRS NOTIFICATIONS")=""
+ ;
+ D ^XMD
  Q
  ;
+MAILFTP ; Builds mail messages to a defined mail group to notify users of
+ ; the success or failue of issues pertaining to FTP Transfer and
+ ; file permissions/protections associated with VMS Directories
+ ;
+ N XMDUZ,XMMG,XMSUB,XMTEXT,XMY,XMZ
+ S XMSUB="CLO Environment Check & Data Transfer for OS / FTP , "_$$HTE^XLFDT($H)
+ S XMDUZ="Clinical Logistics Report Server"
+ S XMTEXT="PRCPMSG("
+ S XMY("G.PRCPLO CLRS NOTIFICATIONS")=""
+ D ^XMD
+ Q
 RUNEXT ; Run extract reports for PO Activity
- I '$$PROD^XUPROD() G PRCPTST  ;Check added in patch PRC*139 to not execute on test systems
  N CLRSERR,CLRSTST1  ; error flag for exception handling,tst entry pt.
  ; CLRSERR will be set for the following conditions:
  ; 0 - Success, status message for completion is sent.
@@ -81,7 +93,7 @@ TSTMSG ; This entry point is used to test the messaging framework
  . S PRCPMSG(15)=" "
  . S PRCPMSG(16)="Please confirm all steps have been performed"
  . S PRCPMSG(17)="according to the pre installation instructions for patch PRC*5.1*83."
- . D MAILFTP^PRCHLO4A
+ . D MAILFTP^PRCHLO5
  . Q
  ; Begin to build files
  I CLRSERR=0 D INIT^PRCHLO
@@ -93,20 +105,20 @@ TSTMSG ; This entry point is used to test the messaging framework
  I CLRSERR=1  D
  . N PRCPMSG  ; error building ^TMP($J)
  . S PRCPMSG(1)="Error, No Data for PO Activity Files, contact IRM"
- . D MAILFTP^PRCHLO4A
+ . D MAILFTP^PRCHLO5
  . Q
-CRFILE ; Create .txt file to confirm write privileges to directory
+CRFILE ; Create .txt file to confirm write priveldges to directory
  I CLRSERR=0 D TSTF^PRCHLO4  ; will return CLRSERR=2 on error
  I CLRSERR=0 D CLRSFIL^PRCHLO4
  I CLRSERR=2  D
  . N PRCPMSG
  . S PRCPMSG(1)="Error, Problem with FTP File Creation, contact IRM"
- . D MAILFTP^PRCHLO4A
+ . D MAILFTP^PRCHLO5
  . Q
  I CLRSERR=0  D
  . N PRCPMSG
  . S PRCPMSG(1)="Built PO Activity Extracts and GIP Extracts for transfer"
- . D MAILFTP^PRCHLO4A
+ . D MAILFTP^PRCHLO5
  . Q
  I CKOS["VMS"  D
  . I CLRSERR=0 D CRTCOM^PRCHLO4
@@ -119,7 +131,7 @@ CRFILE ; Create .txt file to confirm write privileges to directory
  . S PRCPMSG(1)="Error encountered when attempting to run CLO PO"
  . S PRCPMSG(2)="activity reports due to other CLRS extracts in"
  . S PRCPMSG(3)="progress. Please try again later."
- . D MAILFTP^PRCHLO4A
+ . D MAILFTP^PRCHLO5
  . Q
  I $D(CLRSTST1)  D  ; test point to generate message 3
  . Q:CLRSTST1'=3
@@ -130,7 +142,7 @@ CRFILE ; Create .txt file to confirm write privileges to directory
  . N PRCPMSG
  . S PRCPMSG(1)="Error, problem creating SETUP file for FTP Transfer, contact IRM."
  . S PRCPMSG(2)="The Report Server may be unavailable for processing."
- . D MAILFTP^PRCHLO4A
+ . D MAILFTP^PRCHLO5
  . Q
  I CLRSERR=0  D
  . N PRCPMSG,FILEDIR
@@ -158,7 +170,7 @@ CRFILE ; Create .txt file to confirm write privileges to directory
  . S PRCPMSG(21)="where xxx is your station ID#. The logfile is"
  . S PRCPMSG(22)="located in the following directory: "_FILEDIR
  . S PRCPMSG(23)=" "
- . D MAILFTP^PRCHLO4A
+ . D MAILFTP^PRCHLO5
  . Q
  I CKOS["VMS"  D
  . I CLRSERR=0  D
@@ -183,7 +195,7 @@ CRFILE ; Create .txt file to confirm write privileges to directory
  . S PRCPMSG(4)="xxx is your station number. The logfile is located"
  . S PRCPMSG(5)="the FTP directory "_FILEDIR
  . S PRCPMSG(6)=" "
- . D MAILFTP^PRCHLO4A
+ . D MAILFTP^PRCHLO5
  . Q
  I CLRSERR=0  D
  . N PRCPMSG,FILEDIR

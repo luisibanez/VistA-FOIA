@@ -1,5 +1,5 @@
 SDAMOCP ;IOFO BAY PINES/TEH - Print for Cancelled Statistics;4/15/92
- ;;5.3;Scheduling;**487**;Aug 13, 1993
+ ;;5.3;Scheduling;**389**;Aug 13, 1993
  ;
 HDR ;Report Header
  ;

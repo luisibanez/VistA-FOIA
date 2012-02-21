@@ -1,8 +1,7 @@
-RCDPBTLM ;WISC/RFJ - bill transactions List Manager top routine ;1 Jun 99
- ;;4.5;Accounts Receivable;**114,148,153,168,169,198,247,271**;Mar 20, 1995;Build 29
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+RCDPBTLM ;WISC/RFJ-bill transactions listmanager top routine ;1 Jun 99
+ ;;4.5;Accounts Receivable;**114,148,153,168,169,198**;Mar 20, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
- ; Reference to $$REC^IBRFN supported by DBIA 2031
  ;
  ;  called from menu option (19)
  ;
@@ -25,9 +24,9 @@ INIT ;  initialization for list manager list
  ;  fast exit
  I $G(RCDPFXIT) S VALMQUIT=1 Q
  ;
- ;  set the List Manager line number
+ ;  set the listmanager line number
  S RCLINE=0
- ;  set the List Manager transaction number
+ ;  set the listmanager transaction number
  S RCTRAN=0
  ;
  ;  get transactions and balance for bill
@@ -112,14 +111,6 @@ SELBILL() ;  select a bill
  ;  returns -1 for timeout or ^, 0 for no selection, or ien of bill
  N %,%Y,C,DIC,DTOUT,DUOUT,RCBEFLUP,X,Y
  N DPTNOFZY,DPTNOFZK S (DPTNOFZY,DPTNOFZK)=1
- N RCY,DIR,DIRUT
- ; allow user to get the record using bill# or ECME#
- S DIR("A")="Select (B)ILL or (E)CME#: "
- S DIR(0)="SA^B:BILL NUMBER;E:ECME#"
- S DIR("B")="B"
- D ^DIR K DIR I $D(DIRUT) Q 0
- S RCY=Y
- I RCY="E" Q $$SELECME
  S DIC="^PRCA(430,",DIC(0)="QEAM",DIC("A")="Select BILL: "
  S DIC("W")="D DICW^RCBEUBI1"
  ;  special lookup on input
@@ -186,19 +177,3 @@ TRANVALU(TRANDA) ;  return the transaction value as displayed (with + or - sign)
  .   S AMTDISP=" ($"_$J($P(VALUE,"^")+$P(VALUE,"^",2)+$P(VALUE,"^",3)+$P(VALUE,"^",4)+$P(VALUE,"^",5),0,2)_")"
  .   S VALUE=""
  Q $G(AMTDISP)_"^"_VALUE
- ;
-SELECME() ;
- ; function takes the user input of the ECME # to return a valid ien of file 430
- ; if an invalid ECME is evaluated then the process keeps asking the user for ECME #
- ; until a valid ECME# is entered or until the user enters a "^" or null value
- ; output - returns the IEN of the record entry in the ACCOUNT RECEIVABLE file (#430) or "??"
- N RCECME,RCBILL,DIR,DIRUT,Y
- S DIR(0)="FO^1:12^I X'?1.12N W !!,""Cannot contain alpha characters"" K X"
- S DIR("A")="Select ECME#"
-RET D ^DIR I $D(DIRUT) Q 0
- S RCECME=$S(+Y>0:Y,1:0)
- S RCBILL=$$REC^IBRFN(RCECME)    ; IA 2031
- I RCBILL<0 W !!,"??" G RET
- E  W !!,$P($G(^PRCA(430,+RCBILL,0)),"^")," "
- Q RCBILL
- ;RCDPBTLM

@@ -1,6 +1,5 @@
 IBJDF41 ;ALB/RB - FIRST PARTY FOLLOW-UP REPORT (COMPILE) ;15-APR-00
- ;;2.0;INTEGRATED BILLING;**123,159,204,356**;21-MAR-94
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**123,159,204**;21-MAR-94
  ;
 ST ; - Tasked entry point.
  K IB,IBCAT,^TMP("IBJDF4",$J) S IBQ=0
@@ -187,7 +186,7 @@ SREF(RFT,DAT,STS,DEF,IDX) ; Set the "referred to" information on the
  ;       DAT: Date it was referred/established
  ;       STS: Receivable status (16-Active,19-Suspended)
  ;       DEF: Repayment Plan in Default? (1 - YES, 0 - NO)
- ;       IDX: Subscript to be set in the Temporary global ^TMP
+ ;       IDX: Suscript to be set in the Temporary global ^TMP
  ;Output: IDX: Subscript set in the Temporary global ^TMP
  ;
  N SREF,IDX1
@@ -209,7 +208,7 @@ COM ; - Get bill comments.
  I 'IBIDX,'$G(IBEXCEL) D
  . S IBFLG=0,IBIDX=$O(^TMP("IBJDF4",$J,IBPAT,0,"C",IB0,""),-1)+1
  ;
- S DAT=0,IBA1=$S(IBSH1="M":999999999,1:0)
+ S DAT=0,IBA1=$S(IBSH1="M":9999999,1:0)
  F  S IBA1=$S(IBSH1="M":$O(^PRCA(433,"C",IBA,IBA1),-1),1:$O(^PRCA(433,"C",IBA,IBA1))) Q:'IBA1  D  I IBSH1="M",DAT Q
  . S IBC=$G(^PRCA(433,IBA1,1)) Q:'IBC
  . I $G(IBSH2),$$FMDIFF^XLFDT(DT,+IBC)>IBSH2 Q  ; Comment age not minimum.

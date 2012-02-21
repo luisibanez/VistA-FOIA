@@ -1,6 +1,6 @@
-DINIT0F5 ;SFISC/MKO-DATA FOR FORM AND BLOCK FILES ;9APR2007
- ;;22.0;VA FileMan;**76,152**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DINIT0F5 ;SFISC/MKO-DATA FOR FORM AND BLOCK FILES ;05:51 PM  23 Mar 2001
+ ;;22.0;VA FileMan;**76**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  F I=1:2 S X=$T(ENTRY+I) G:X="" ^DINIT0F6 S Y=$E($T(ENTRY+I+1),5,999),X=$E(X,4,999),@X=Y
  Q
 ENTRY ;
@@ -143,17 +143,17 @@ ENTRY ;
  ;;^DIST(.404,.00105,0)
  ;;=DICATT5^1
  ;;^DIST(.404,.00105,40,0)
- ;;=^.4044I^2^2
+ ;;=^.4044I^1^1
  ;;^DIST(.404,.00105,40,1,0)
  ;;=75^SHALL THIS TEXT NORMALLY APPEAR IN WORD-WRAP MODE^2^^WORD-WRAP
  ;;^DIST(.404,.00105,40,1,2)
- ;;=2,53^3^2,2
+ ;;=2,56^3^2,5
  ;;^DIST(.404,.00105,40,1,3)
  ;;=!M
  ;;^DIST(.404,.00105,40,1,3.1)
  ;;=S Y=$E("YN",DICATT2["L"+1)
  ;;^DIST(.404,.00105,40,1,12)
- ;;=S DICATTMN="",DICATT2N="W"_$TR($G(DICATT2N),"WL")_$E("L",'X)
+ ;;=S DICATTMN="" S:'X DICATT2N="WL" I DUZ(0)="@",DICATT4="" S DDSSTACK=4
  ;;^DIST(.404,.00105,40,1,20)
  ;;=Y
  ;;^DIST(.404,.00105,40,1,21,0)
@@ -166,28 +166,6 @@ ENTRY ;
  ;;=Answer 'NO' if the text should normally be printed out line-for-line as
  ;;^DIST(.404,.00105,40,1,21,4,0)
  ;;=it was entered.
- ;;^DIST(.404,.00105,40,2,0)
- ;;=76^SHALL "|" CHARACTERS IN THIS TEXT BE TREATED LIKE ANY OTHER CHARACTERS^2^^"|"
- ;;^DIST(.404,.00105,40,2,2)
- ;;=3,74^3^3,2
- ;;^DIST(.404,.00105,40,2,3)
- ;;=!M
- ;;^DIST(.404,.00105,40,2,3.1)
- ;;=S Y=$S(DICATT2["X"!(DICATT2["x")!(DICATT2=""):"Y",1:"N")
- ;;^DIST(.404,.00105,40,2,12)
- ;;=S DICATTMN="",DICATT2N="W"_$TR($G(DICATT2N),"WxX")_$E("x",X>0) I DUZ(0)="@",DICATT4="" S DDSSTACK=4
- ;;^DIST(.404,.00105,40,2,20)
- ;;=Y
- ;;^DIST(.404,.00105,40,2,21,0)
- ;;=^^4^4^2981120
- ;;^DIST(.404,.00105,40,2,21,1,0)
- ;;=Answer 'YES' if the internally-stored text may have "|" characters in it 
- ;;^DIST(.404,.00105,40,2,21,2,0)
- ;;=(such as HL7 messages) that need to display exactly as they are stored.
- ;;^DIST(.404,.00105,40,2,21,3,0)
- ;;=Answer 'NO' if the internal text should normally be printed out with
- ;;^DIST(.404,.00105,40,2,21,4,0)
- ;;=anything that is delimited by "|" characters interpreted as variable. 
  ;;^DIST(.404,.00106,0)
  ;;=DICATT6^1
  ;;^DIST(.404,.00106,40,0)

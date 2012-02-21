@@ -1,5 +1,5 @@
 MPIFA24 ;BPOFO/CMC-A24 PROCESSING ROUTINE ;18 Mar 02
- ;;1.0; MASTER PATIENT INDEX VISTA ;**22,24,27,31,25,41,39,48,52**;30 Apr 99;Build 7
+ ;;1.0; MASTER PATIENT INDEX VISTA ;**22,24,27,31,25,41**;30 Apr 99
  ;
  ; Integration Agreements Utilized:
  ;  START, EXC, STOP^RGHLLOG - #2796
@@ -47,17 +47,12 @@ A24 ;
  .. ;add CMOR site to TF list if it did not already exist
  .. I CMOR'=0 D FILE^VAFCTFU(DFN,CMOR,1)
  .; trigger A31 to MPI incase there have been edits since the ICN was created -- tasked off
- .; **39 DON'T TASK OFF A31 IF MOVING FROM ONE NATIONAL ICN TO A DIFFERENT NATIONAL ICN
- .I ARRY("ICN",1)=ARRY("ICN",2) D
- ..S ZTRTN="TA31^MPIFA31B",ZTDESC="A31 triggered from A24 for DFN "_DFN ;**39 added DFN to text
- ..S ZTSAVE("DFN")=DFN,ZTIO="",ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT,0,0,1,0)
- ..D ^%ZTLOAD
- .I ARRY("ICN",1)'=ARRY("ICN",2) D RESEX^MPIFDUP(DFN,2) ;**48
+ .S ZTRTN="TA31^MPIFA31B",ZTDESC="A31 triggered from A24"
+ .S ZTSAVE("DFN")=DFN,ZTIO="",ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT,0,0,1,0)
+ .D ^%ZTLOAD
  .K ZTRTN,ZTDESC,ZTIO,ZTSAVE,ZTDTH,ZTREQ
  ;
- N AA S AA="AA"
- I $G(ERR)'>0,$P($G(ERR),"^",2)["is already in use for pt DFN" S AA="AE" ;**52 MPIC_1681/1753
- S HLA("HLA",1)="MSA"_HL("FS")_AA_HL("FS")_HL("MID")_HL("FS")_$S(+$G(ERR)'>0:$P(ERR,"^",2),1:"")
+ S HLA("HLA",1)="MSA"_HL("FS")_"AA"_HL("FS")_HL("MID")_HL("FS")_$S(+$G(ERR)'>0:$P(ERR,"^",2),1:"")
  S $P(HLA("HLA",1),HL("FS"),7)="ICN="_ARRY("ICN",1)
  D LINK^HLUTIL3(ARRY("SITE"),.LINK) S IEN=$O(LINK(0)),HLL("LINKS",1)="^"_LINK(IEN)
  D GENACK^HLMA1(HL("EID"),HLMTIENS,HL("EIDS"),"LM",1,.MPIFRSLT,"",.HL)

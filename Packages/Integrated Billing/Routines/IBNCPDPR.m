@@ -1,14 +1,15 @@
-IBNCPDPR ;WOIFO/SS - ECME RELEASE CHARGES ON HOLD ;3/6/08  16:23
- ;;2.0;INTEGRATED BILLING;**276,347,384**;21-MAR-94;Build 74
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+IBNCPDPR ;WOIFO/SS - ECME RELEASE CHARGES ON HOLD ;JUNE 08 2005
+ ;;2.0;INTEGRATED BILLING;**276**;21-MAR-94
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;==========
  ;version of "IB MT RELEASE CHARGES" option (^IBREL) without PATIENT prompt
  ;(patient is selected from the User Screen)
- ;designed to use from ECME User Screen (IA #) in order to access Release
+ ;designed to use from ECME User Screen (IA #) in order to access Release 
  ;copay functionality from ECME
  ;
 RELH(DFN,IBRXIEN,IBREFL,IBMODE) ;
+ Q:$$PFSSON^IBNCPDPI()  ;quit if PFSS is ON
  K IBA,PRCABN,BPX,IBI,IBCNT,IB350
  S IB350=0
  S IBI=0 F IBNUM=1:1 S IBI=$O(^IB("AH",DFN,IBI)) Q:'IBI  S IBA(IBNUM)=IBI
@@ -37,7 +38,7 @@ ASK ;stub for  ASK
  Q
  ;
  ;the following code was borrowed from IBRREL without changes.
- ;This was done to avoid code changes in the original code and
+ ;This was done to avoid code changes in the original code and 
  ;re-testing it in IB package
  ; - display header and list charges
 RESUME W !!,"The following IB Actions ",$S($D(PRCABN):"associated with this bill",1:"for this patient")," are ON HOLD:" D HDR
@@ -78,9 +79,8 @@ LST ; Display individual IB Action.
  N IBND,IBND1,IBRXN,IBRX,IBRF,IBRDT,IENS
  S IBND=$G(^IB(IBN,0)),IBND1=$G(^IB(IBN,1)),(IBRXN,IBRX,IBRF,IBRDT)=0
  I $P(IBND,"^",4)["52:" S IBRXN=$P($P(IBND,"^",4),":",2),IBRX=$P($P(IBND,"^",8),"-"),IBRF=$P($P(IBND,"^",4),":",3)
- I $P(IBND,"^",4)["52:"  D
- .I IBRF>0 S IENS=+IBRF,IBRDT=$$SUBFILE^IBRXUTL(+IBRXN,+IENS,52,.01)
- .E  S IENS=+IBRXN,IBRDT=$$FILE^IBRXUTL(+IENS,22)
+ I IBRF>0 S IENS=+IBRF_","_+IBRXN_",",IBRDT=$$GET1^DIQ(52.1,IENS,.01,"I")
+ E  S IENS=+IBRXN_",",IBRDT=$$GET1^DIQ(52,IENS,22,"I")
  W !?1,$J(IBNUM,2),?7,$J(+IBND,9)
  W ?18,$S(IBRXN>0:"Rx #: "_IBRX_$S(IBRF>0:"("_IBRF_")",1:""),1:$P($G(^IBE(350.1,+$P(IBND,"^",3),0)),"^",8))
  W ?42,$P($P(IBND,"^",11),"-",2)

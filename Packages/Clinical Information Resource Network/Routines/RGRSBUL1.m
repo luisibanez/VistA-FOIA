@@ -1,6 +1,5 @@
 RGRSBUL1 ;ALB/RJS,CML-RGRSTEXT BULLETIN ROUTINE (PART 2) ;07/24/98
- ;;1.0;CLINICAL INFO RESOURCE NETWORK;**1,3,19,52**;30 Apr 99;Build 2
- ;
+ ;;1.0;CLINICAL INFO RESOURCE NETWORK;**1,3,19**;30 Apr 99
 SSNBULL(DFN,ARRAY,NAME,SSN,ICN,CMOR) ;
  ;Entry point generates a bulletin to the RG CIRN DEMOGRAPHIC
  ;ISSUES mail group about an SSN change for a given patient.
@@ -88,8 +87,6 @@ SENSTIVE(DFN,ARRAY,NAME) ;FIRES WHEN PT. IS FLAGGED AS SENSITIVE AT ANOTHER SITE
  D BULL2^RGRSBULL("Remote Sensitivity Indicated","RGRSTEXT(")
  Q
  ;
- ;MPIC_772 - **52; Commented out Remote Date of Death Indicated module.
- ;Only RGADTP2 and RGRSPT called this module; and both have been commented out.
 RMTDOD(DFN,ARRAY,NAME,RDOD,LDOD) ;Fires when patient has a Date of Death at another site
  ;Entry point generates a bulletin to the RG CIRN DEMOGRAPHIC
  ;ISSUES mail group when a given patient has a Date of Death at
@@ -104,24 +101,24 @@ RMTDOD(DFN,ARRAY,NAME,RDOD,LDOD) ;Fires when patient has a Date of Death at anot
  ;  LDOD  - Date of Death at local site
  ;  CMOR  - Coordinating Master of Record
  ;
- ;Q:($G(ARRAY)="")!($G(DFN)="")
- ;Q:(RDOD=LDOD)  ;If remote DOD and local DOD same, QUIT
- ;N CMOR
- ;S CMOR=$$CMOR2^MPIF001(DFN) I $P(CMOR,"^")<0 S CMOR="not assigned"
- ;N RGRSTEXT
- ;S RGRSTEXT(1)="The MPI/PD Package has received a message from:"
- ;S RGRSTEXT(2)=$$INST(@ARRAY@("SENDING SITE"))
- ;S RGRSTEXT(3)="   "
- ;S RGRSTEXT(4)="This message indicates that patient "_NAME
- ;I 'LDOD S RGRSTEXT(5)="has a date of death at the other facility but not at your facility." G RMTMSG
- ;I LDOD,(LDOD'=RDOD) S RGRSTEXT(5)="has a different date of death at the other facility than at your facility."
-RMTMSG ;S RGRSTEXT(6)="  "
- ;S RGRSTEXT(7)="Remote Patient SSN: "_$S(@ARRAY@("SSN")="":"Not Available",1:@ARRAY@("SSN"))
- ;S RGRSTEXT(8)="Date of Death from other facility:  "_$$FMTE^XLFDT(RDOD)
- ;I LDOD,(LDOD'=RDOD) S RGRSTEXT(9)="Date of Death at your facility:  "_$$FMTE^XLFDT(LDOD)
- ;S RGRSTEXT(10)="  "
- ;S RGRSTEXT(11)="CMOR site: "_CMOR
- ;D BULL2^RGRSBULL("Remote Date of Death Indicated","RGRSTEXT(")
+ Q:($G(ARRAY)="")!($G(DFN)="")
+ Q:(RDOD=LDOD)  ;If remote DOD and local DOD same, QUIT
+ N CMOR
+ S CMOR=$$CMOR2^MPIF001(DFN) I $P(CMOR,"^")<0 S CMOR="not assigned"
+ N RGRSTEXT
+ S RGRSTEXT(1)="The MPI/PD Package has received a message from:"
+ S RGRSTEXT(2)=$$INST(@ARRAY@("SENDING SITE"))
+ S RGRSTEXT(3)="   "
+ S RGRSTEXT(4)="This message indicates that patient "_NAME
+ I 'LDOD S RGRSTEXT(5)="has a date of death at the other facility but not at your facility." G RMTMSG
+ I LDOD,(LDOD'=RDOD) S RGRSTEXT(5)="has a different date of death at the other facility than at your facility."
+RMTMSG S RGRSTEXT(6)="  "
+ S RGRSTEXT(7)="Remote Patient SSN: "_$S(@ARRAY@("SSN")="":"Not Available",1:@ARRAY@("SSN"))
+ S RGRSTEXT(8)="Date of Death from other facility:  "_$$FMTE^XLFDT(RDOD)
+ I LDOD,(LDOD'=RDOD) S RGRSTEXT(9)="Date of Death at your facility:  "_$$FMTE^XLFDT(LDOD)
+ S RGRSTEXT(10)="  "
+ S RGRSTEXT(11)="CMOR site: "_CMOR
+ D BULL2^RGRSBULL("Remote Date of Death Indicated","RGRSTEXT(")
  Q
  ;
 INST(SITENUM) ;

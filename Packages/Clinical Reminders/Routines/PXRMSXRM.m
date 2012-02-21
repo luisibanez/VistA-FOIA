@@ -1,5 +1,5 @@
-PXRMSXRM ; SLC/PKR - Main driver for building indexes. ;11/02/2009
- ;;2.0;CLINICAL REMINDERS;**6,17**;Feb 04, 2005;Build 102
+PXRMSXRM ; SLC/PKR - Main driver for building indexes. ;12/20/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;==========================================
 ADDERROR(GLOBAL,IDEN,NERROR) ;Add to the error list.
@@ -21,7 +21,7 @@ ASKTASK() ;See if this should be tasked.
  ;==========================================
 COMMSG(GLOBAL,START,END,NE,NERROR) ;Send a MailMan message providing
  ;notification that the indexing completed.
- N FROM,MGIEN,MGROUP,TO,XMSUB
+ N XMSUB
  K ^TMP("PXRMXMZ",$J)
  S XMSUB="Index for global "_GLOBAL_" sucessfully built"
  S ^TMP("PXRMXMZ",$J,1,0)="Build of Clinical Reminders index for global "_GLOBAL_" completed."
@@ -30,13 +30,7 @@ COMMSG(GLOBAL,START,END,NE,NERROR) ;Send a MailMan message providing
  S ^TMP("PXRMXMZ",$J,4,0)=$$ETIME(START,END)
  S ^TMP("PXRMXMZ",$J,5,0)=NERROR_" errors were encountered."
  I NERROR>0 S ^TMP("PXRMXMZ",$J,6,0)="Another MailMan message will contain the error information."
- S FROM=$$GET1^DIQ(200,DUZ,.01)
- S TO(DUZ)=""
- S MGIEN=$G(^PXRM(800,1,"MGFE"))
- I MGIEN'="" D
- . S MGROUP="G."_$$GET1^DIQ(3.8,MGIEN,.01)
- . S TO(MGROUP)=""
- D SEND^PXRMMSG("PXRMXMZ",XMSUB,.TO,FROM)
+ D SEND^PXRMMSG(XMSUB)
  Q
  ;
  ;==========================================
@@ -49,7 +43,7 @@ DETIME(START,END) ;Write out the elapsed time.
  ;
  ;==========================================
 ERRMSG(NERROR,GLOBAL) ;If there were errors send an error message.
- N END,FROM,IND,MAXERR,MGIEN,MGROUP,NE,TO,XMSUB
+ N END,IND,MAXERR,NE,XMSUB
  I NERROR=0 Q
  ;Return the last MAXERR errors
  S MAXERR=+$G(^PXRM(800,1,"MIERR"))
@@ -61,13 +55,7 @@ ERRMSG(NERROR,GLOBAL) ;If there were errors send an error message.
  I END=MAXERR S ^TMP("PXRMXMZ",$J,MAXERR+1,0)="GLOBAL: "_GLOBAL_"- Maximum number of errors reached, will not report any more."
  K ^TMP("PXRMERROR",$J)
  S XMSUB="CLINICAL REMINDER INDEX BUILD ERROR(S) FOR GLOBAL "_GLOBAL
- S FROM=$$GET1^DIQ(200,DUZ,.01)
- S TO(DUZ)=""
- S MGIEN=$G(^PXRM(800,1,"MGFE"))
- I MGIEN'="" D
- . S MGROUP="G."_$$GET1^DIQ(3.8,MGIEN,.01)
- . S TO(MGROUP)=""
- D SEND^PXRMMSG("PXRMXMZ",XMSUB,.TO,FROM)
+ D SEND^PXRMMSG(XMSUB)
  Q
  ;
  ;==========================================
@@ -92,7 +80,6 @@ INDEX ;Driver for building the various indexes.
  S ROUTINE(100)="INDEX^ORPXRM"  ;DBIA #4498
  S ROUTINE(120.5)="VITALS^GMVPXRM"  ;DBIA #3647
  S ROUTINE(601.2)="INDEX^YTPXRM" ;DBIA #4523
- S ROUTINE(601.84)="INDEX^YTQPXRM" ;DBIA #5055
  S ROUTINE(9000011)="INDEX^GMPLPXRM" ;DBIA #4516
  S ROUTINE(9000010.07)="VPOV^PXPXRMI2" ;DBIA #4520
  S ROUTINE(9000010.11)="VIMM^PXPXRMI1" ;DBIA #4519
@@ -126,27 +113,26 @@ RUNNOW(LIST,GBL,ROUTINE) ;Run the routines now.
  ;
  ;==========================================
 SEL(LIST,GBL) ;Select global list
- N ALIST,DIR,DIROUT,DIRUT,DTOUT,DUOUT,INUM,X,Y
- S INUM=1,ALIST(INUM)="  "_INUM_" - LABORATORY TEST (CH, Anatomic Path, Micro)",GBL(INUM)=63
- S INUM=INUM+1,ALIST(INUM)="  "_INUM_" - MENTAL HEALTH",GBL(INUM)=601.2
- S INUM=INUM+1,ALIST(INUM)="  "_INUM_" - MENTAL HEALTH (MHA3)",GBL(INUM)=601.84
- S INUM=INUM+1,ALIST(INUM)="  "_INUM_" - ORDER",GBL(INUM)=100
- S INUM=INUM+1,ALIST(INUM)="  "_INUM_" - PTF",GBL(INUM)=45
- S INUM=INUM+1,ALIST(INUM)="  "_INUM_" - PHARMACY PATIENT",GBL(INUM)=55
- S INUM=INUM+1,ALIST(INUM)="  "_INUM_" - PRESCRIPTION",GBL(INUM)=52
- S INUM=INUM+1,ALIST(INUM)="  "_INUM_" - PROBLEM LIST",GBL(INUM)=9000011
- S INUM=INUM+1,ALIST(INUM)="  "_INUM_" - RADIOLOGY",GBL(INUM)=70
- S INUM=INUM+1,ALIST(INUM)=" "_INUM_" - V CPT",GBL(INUM)=9000010.18
- S INUM=INUM+1,ALIST(INUM)=" "_INUM_" - V EXAM",GBL(INUM)=9000010.13
- S INUM=INUM+1,ALIST(INUM)=" "_INUM_" - V HEALTH FACTORS",GBL(INUM)=9000010.23
- S INUM=INUM+1,ALIST(INUM)=" "_INUM_" - V IMMUNIZATION",GBL(INUM)=9000010.11
- S INUM=INUM+1,ALIST(INUM)=" "_INUM_" - V PATIENT ED",GBL(INUM)=9000010.16
- S INUM=INUM+1,ALIST(INUM)=" "_INUM_" - V POV",GBL(INUM)=9000010.07
- S INUM=INUM+1,ALIST(INUM)=" "_INUM_" - V SKIN TEST",GBL(INUM)=9000010.12
- S INUM=INUM+1,ALIST(INUM)=" "_INUM_" - VITAL MEASUREMENT",GBL(INUM)=120.5
+ N ALIST,DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
+ S ALIST(1)="  1 - LABORATORY TEST (CH, Anatomic Path, Micro)",GBL(1)=63
+ S ALIST(2)="  2 - MENTAL HEALTH",GBL(2)=601.2
+ S ALIST(3)="  3 - ORDER",GBL(3)=100
+ S ALIST(4)="  4 - PTF",GBL(4)=45
+ S ALIST(5)="  5 - PHARMACY PATIENT",GBL(5)=55
+ S ALIST(6)="  6 - PRESCRIPTION",GBL(6)=52
+ S ALIST(7)="  7 - PROBLEM LIST",GBL(7)=9000011
+ S ALIST(8)="  8 - RADIOLOGY",GBL(8)=70
+ S ALIST(9)="  9 - V CPT",GBL(9)=9000010.18
+ S ALIST(10)=" 10 - V EXAM",GBL(10)=9000010.13
+ S ALIST(11)=" 11 - V HEALTH FACTORS",GBL(11)=9000010.23
+ S ALIST(12)=" 12 - V IMMUNIZATION",GBL(12)=9000010.11
+ S ALIST(13)=" 13 - V PATIENT ED",GBL(13)=9000010.16
+ S ALIST(14)=" 14 - V POV",GBL(14)=9000010.07
+ S ALIST(15)=" 15 - V SKIN TEST",GBL(15)=9000010.12
+ S ALIST(16)=" 16 - VITAL MEASUREMENT",GBL(16)=120.5
  M DIR("A")=ALIST
  S DIR("A")="Enter your list"
- S DIR(0)="LO^1:"_INUM
+ S DIR(0)="LO^1:16"
  D ^DIR
  I $D(DIROUT)!$D(DIRUT) S LIST="" Q
  I $D(DUOUT)!$D(DTOUT) S LIST="" Q

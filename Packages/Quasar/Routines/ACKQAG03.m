@@ -1,17 +1,12 @@
-ACKQAG03        ;DALC/PJU - SEND AUDIOGRAM DATA TO DALC ;2/09/07
- ;;3.0;QUASAR AUDIOMETRIC MODULE;**3,12,13**;11/01/02;Build 24
- ;  IA# 10018 [Supported] call to ^DIE to enter date sent & msg # into 509850.9 
- ;  IA# 2701  [Supported] call to GETICN^MPIF001 - to get the ICN
- ;  IA# 10070 [Supported] call to EN1^XMD - add message text & send
- ;  IA# 2732  [Supported] call to CHKLINES^XMXSEC1 check message length
- ;  IA# 2240  [Supported] call to ENCRYP^XUSRB1 to encrypt SSN
- ;   
+ACKQAG03        ;DDC/PJU - SEND AUDIOGRAM DATA TO DDC ;5/13/05
+ ;;3.0;QUASAR AUDIOMETRIC MODULE;**3,12**;11/01/02
+ ;See ACKQAG.TXT for descriptions
 START(RESULT,DFN,IEN,ACKQSTNU,ACKQUSNM,ACKQUSSR) ;  
  ;(DFN & IEN are required)
  N ACKQER,ACKQERR,ACKQFA,ACKQHSSN,ACKQMSG,ACKQRMI,ACKQVT,SSN,ST,ICN
  K ACKQARR S ACKQARR(0)=""
  N XMTEXT,XMDUZ,XMRESTR,XMY,XMSUB
- ;check for existence and get
+ ;cK for existance and get
  S ACKQFA=$$ACKEXIST^ACKQAG05()
  I 'ACKQFA S ACKQER=$$ERRTEXT(1) G END
  S ACKQRMI=$$DFNIN^ACKQAG05(DFN)
@@ -41,16 +36,16 @@ C S SSN=$P($G(ACKQARR(1)),U,4)
  .S ACKQER="Message too long for network. Limit "_XMRESTR("NONET")
  D EN1^XMD ;add text and send
  ;notify user with tracking details
- ;S XMSUB="AUDIOGRAM DATA SENT"
- ;S XMY(DUZ)="",XMDUZ="AUDIOGRAM PKG"
- ;D XMZ^XMA2 ;gets XMZ
- ;K ACKQARR
- ;S ACKQARR(1)="Message sent to DDC is number: "_ACKQMSG
- ;S ACKQARR(2)="Sent on: "_$$FMTE^XLFDT(DT)_" for patient:"_$P($G(^DPT(DFN,0)),U,1)
- ;S ACKQARR(3)="Data sent is from AUDIOMETRIC EXAM file entry number: "_ACKQRMI
- ;S XMTEXT="ACKQARR("
- ;D EN1^XMD ;add text and send
- ;put the date sent to DALC and the msg number into the Audiogram Data file
+ S XMSUB="AUDIOGRAM DATA SENT"
+ S XMY(DUZ)="",XMDUZ="AUDIOGRAM PKG"
+ D XMZ^XMA2 ;gets XMZ
+ K ACKQARR
+ S ACKQARR(1)="Message sent to DDC is number: "_ACKQMSG
+ S ACKQARR(2)="Sent on: "_$$FMTE^XLFDT(DT)_" for patient:"_$P($G(^DPT(DFN,0)),U,1)
+ S ACKQARR(3)="Data sent is from AUDIOMETRIC EXAM file entry number: "_ACKQRMI
+ S XMTEXT="ACKQARR("
+ D EN1^XMD ;add text and send
+ ;put the date sent to DDC and the msg number into the Audiogram Data file
  S DIE="^ACK(509850.9,",DA=ACKQRMI
  I $P($G(^ACK(509850.9,ACKQRMI,0)),U,12) D  ;already sent 1 time
  .S DR=".15////"_DT_";.13////"_ACKQMSG_";.16////"_DUZ

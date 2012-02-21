@@ -1,5 +1,5 @@
-FBPCR671 ;AISC/DMK,TET-CH/CNH POTENTIAL COST RECOVERY PRINT ;07/18/2006
- ;;3.5;FEE BASIS;**4,48,55,69,76,98**;JAN 30, 1995;Build 54
+FBPCR671 ;AISC/DMK,TET-CH/CNH POTENTIAL COST RECOVERY PRINT ;5/12/1999
+ ;;3.5;FEE BASIS;**4,48,55,69,76**;JAN 30, 1995
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
 PRINT ;print data from tmp global
  I FBPG>1&(($Y+12)>IOSL) D HDR Q:FBOUT
@@ -28,8 +28,7 @@ PRINT ;print data from tmp global
  ..;
  ..I +$O(^TMP($J,"FB",FBPSF,FBPT,FBPI,FBVI,FBDT,FBI,"A",0)) D  Q:FBOUT  W !,FBDASH1
  ...S (FBOV,FBCNT)=0,FBSL=7 D SHA Q:FBOUT
- ...F  S FBCNT=$O(^TMP($J,"FB",FBPSF,FBPT,FBPI,FBVI,FBDT,FBI,"A",FBCNT)) Q:'FBCNT  S FBDATA=^(FBCNT),FBV=$P(FBDATA,U,11)_";"_$P(FBDATA,U,12) D  D WRT Q:FBOUT
- ....N FBXX S FBXX=$O(^FBAAV("C",$P(FBDATA,U,12),"")) S $P(FBV,";",2)=$P(FBV,";",2)_"/"_$S(FBXX="":"**********",$P($G(^FBAAV(FBXX,3)),U,2)]"":$P(^FBAAV(FBXX,3),U,2),1:"**********")
+ ...F  S FBCNT=$O(^TMP($J,"FB",FBPSF,FBPT,FBPI,FBVI,FBDT,FBI,"A",FBCNT)) Q:'FBCNT  S FBDATA=^(FBCNT),FBV=$P(FBDATA,U,11)_";"_$P(FBDATA,U,12) D WRT Q:FBOUT
  Q
 WRT ;write ancillary info
  N FBCATC,FBINS,FBADJ I ($Y+4)>IOSL D PAGE Q:FBOUT  D SHA,SHA2
@@ -72,8 +71,7 @@ HDR1 W !!?(IOM-(13+$L(FBXPROG))/2),"FEE PROGRAM: ",FBXPROG
  Q
 SH ;subheader - vendor, prints when name changed
  I ($Y+7)>IOSL D HDR Q:FBOUT
- W !!,"Vendor: ",$P(FBVI,";"),?41,"Vendor ID: ",$P($P(FBVI,";",2),"/",1)
- W !?20,"Fee Basis Billing Provider NPI: ",$P(FBVI,"/",2)
+ W !!,"Vendor: ",$P(FBVI,";"),?41,"Vendor ID: ",$P(FBVI,";",2)
  Q
 SHA ;ancillary subheader
  I ($Y+16)>IOSL D PAGE Q:FBOUT
@@ -85,7 +83,7 @@ SHA1 ;subheader for ancillary data
 SHA2 ;subheader for vendor name
  I ($Y+9)>IOSL D HDR Q:FBOUT  D SH,SHA
  I FBOV'=FBV S FBOV=FBV
- W !!,"Vendor: ",$P(FBV,";"),?41,"Vendor ID/NPI: ",$P(FBV,";",2)
+ W !!,"Vendor: ",$P(FBV,";"),?41,"Vendor ID: ",$P(FBV,";",2)
  Q
 CR ;read for display
  Q:'FBPG  S DIR(0)="E" W ! D ^DIR K DIR S:$D(DUOUT)!($D(DTOUT)) FBOUT=1

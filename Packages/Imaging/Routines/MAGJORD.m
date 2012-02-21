@@ -1,5 +1,5 @@
 MAGJORD ;WIRMFO/JHC-Display Rad Exam Order info ; 29 Jul 2003  10:02 AM
- ;;3.0;IMAGING;**16,22,18**;Mar 07, 2006
+ ;;3.0;IMAGING;**16,22**;Jul 29, 2003
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -40,7 +40,7 @@ ORD(MAGRPTY,DATA) ; Radiology Order Display
  S RADATA=$G(^TMP($J,"MAGRAEX",1,1)),XX=$G(^(2)),HDR=""
  S COMPLIC=$P(XX,U,4)      ;  Complications text
  F I=4,12,9 S HDR=HDR_$P(RADATA,U,I)_"   " ; PtName, Case #, Procedure
- I REQONLY D CKINTEG^MAGJRPT(.REPLY,RADFN,RADTI,RACNI,RARPT,RADATA) I REPLY]"" S REPLY="0^7~"_REPLY G ORDZ  ; Database integrity problems
+ I REQONLY D CKINTEG^MAGJLST1(.REPLY,RADFN,RADTI,RACNI,RARPT,RADATA) I REPLY]"" S REPLY="0^7~"_REPLY G ORDZ  ; Database integrity problems
  S RAX="",RAPGE=0 D ^RAORD5
  D:IO'=IO(0) ^%ZISC
  S @MAGRPTY@(1)="REQ: "_HDR

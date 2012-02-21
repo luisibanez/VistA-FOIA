@@ -1,13 +1,10 @@
 FHASP1 ; HISC/REL/JH - Nutrition Profile (cont) ;5/2/01  10:14
- ;;5.5;DIETETICS;**8,9**;Jan 28, 2005;Build 7
+ ;;5.5;DIETETICS;;Jan 28, 2005
  ;
- I '$G(FHET) S X="T-365",%DT="XT" D ^%DT S FHET=Y K %DT
- S DTP=FHET D DTP^FH S FHENDATE=DTP
- S N1=0
- W !!?22,"Dietetic Encounters since ",FHENDATE
- F FHET=FHET:0 S FHET=$O(^FHEN("AP",DFN,FHET)) Q:FHET<1!(ANS="^")  F ASN=0:0 S ASN=$O(^FHEN("AP",DFN,FHET,ASN)) Q:ASN<1  D:$Y'<S1 HF^FHASP Q:ANS="^"  D LST
+ S X1=DT,X2=-1095 D C^%DTC S DTE=X,N1=0 W !!?22,"Dietetic Encounters Last Three Years"
+ F DTE=DTE:0 S DTE=$O(^FHEN("AP",DFN,DTE)) Q:DTE<1!(ANS="^")  F ASN=0:0 S ASN=$O(^FHEN("AP",DFN,DTE,ASN)) Q:ASN<1  D:$Y'<S1 HF^FHASP Q:ANS="^"  D LST
  Q:ANS="^"
- I 'N1 W !!?5,"No Encounters recorded since ",FHENDATE
+ I 'N1 W !!?5,"No Encounters recorded last three years."
  S FHZ115="P"_DFN D CHECK^FHOMDPA I FHDFN="" Q
  S FADM=$O(^FHPT(FHDFN,"A",""),-1) S FADM=$S($G(ADM):$G(ADM),FADM:FADM,1:"") G:FADM="" F1
  D:$Y'<(S1-6) HF^FHASP Q:ANS="^"  W !!?28,$S($G(ADM):"Current",1:"Last")," Admission Monitors" S N1=0
@@ -62,7 +59,7 @@ P0 I X1'="" W ?12 S X=X1 D P1 S X1=X
 P1 I $L(X)<34 W X S X="" Q
  F KK=35:-1:1 Q:$E(X,KK-1,KK)=", "
  W $E(X,1,KK-2) S X=$E(X,KK+1,999) Q
-SP Q:'$P(X,U)  S M1=$P(X,"^",2) S:M1="A"!(M1="") M1="BNE" S Z=$G(^FH(115.2,+X,0)) Q:$P(Z,U)=""!($P(Z,U,2)="")  S L1=$P(Z,"^",1),KK=$P(Z,"^",2),M="",DAS=$P(X,"^",4)
+SP Q:'$P(X,U)  S M1=$P(X,"^",2) S:M1="A" M1="BNE" S Z=$G(^FH(115.2,+X,0)) Q:$P(Z,U)=""!($P(Z,U,2)="")  S L1=$P(Z,"^",1),KK=$P(Z,"^",2),M="",DAS=$P(X,"^",4)
  I KK="L" S Q=$P(X,"^",3),L1=$S(Q:Q,1:1)_" "_L1
  I M1="BNE" S M="1~All Meals" G SP1
  S Z1=$E(M1,1) I Z1'="" S M=$S(Z1="B":"2~Break",Z1="N":"3~Noon",1:"4~Even")

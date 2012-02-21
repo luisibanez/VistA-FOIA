@@ -1,5 +1,5 @@
 VAFCPID ;ALB/MLI,PKE-Create generic PID segment ; 21 Nov 2002  3:13 PM
- ;;5.3;Registration;**91,149,190,415,508,749**;Aug 13, 1993;Build 10
+ ;;5.3;Registration;**91,149,190,415,508**;Aug 13, 1993
  ;
  ; This routine returns the HL7 defined PID segment with its
  ; mappings to DHCP PATIENT file fields.
@@ -20,7 +20,7 @@ EN(DFN,VAFSTR,VAFNUM) ; returns PID segment
  ; WARNING: This routine makes external calls to VADPT.  Non-namespaced
  ;          variables may be altered.
  ;
- N I,VAFY,VA,VADM,X,X1,Y,OUTPUT,DGNAME,DGMMN,VAPA ; calls VADPT...have to NEW
+ N I,VAFY,VA,VADM,X,X1,Y,OUTPUT,DGNAME,VAPA ; calls VADPT...have to NEW
  S VAFSTR=$G(VAFSTR) ; if not defined, just return required fields
  S DFN=$G(DFN)
  I DFN']"" G QUIT
@@ -40,9 +40,7 @@ EN(DFN,VAFSTR,VAFNUM) ; returns PID segment
  S DGNAME("FILE")=2,DGNAME("IENS")=DFN,DGNAME("FIELD")=.01
  S X=$$HLNAME^XLFNAME(.DGNAME,"",$E(HLECH)),VAFY(5)=$S(X]"":X,1:HLQ)
  ;Mother's maiden name (#6)
- I VAFSTR[",6," D
- .S DGMMN("FILE")=2,DGMMN("IENS")=DFN,DGMMN("FIELD")=.2403
- .S X=$$HLNAME^XLFNAME(.DGMMN,"",$E(HLECH)),VAFY(6)=$S(X]"":X,1:HLQ)
+ I VAFSTR[",6," S X=$P($G(^DPT(DFN,.24)),"^",3),VAFY(6)=$S(X]"":X,1:HLQ)
  ;Date of birth (#7)
  I VAFSTR[",7," S VAFY(7)=$$HLDATE^HLFNC(+VADM(3))
  ;Sex (#8)

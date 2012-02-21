@@ -1,6 +1,5 @@
-XPDIA3 ;SFISC/RWF - Install Pre/Post Actions for Kernel files cont. ;6/22/06  09:13
- ;;8.0;KERNEL;**201,302,393,498**;Jul 10, 1995;Build 13
- ;Per VHA Directive 2004-038, this routine should not be modified.
+XPDIA3 ;SFISC/RWF - Install Pre/Post Actions for Kernel files cont. ;09/22/2003  10:01
+ ;;8.0;KERNEL;**201,302**;Jul 10, 1995
  Q
  ;^XTMP("XPDI",,XPDA,"KRN",XPDFILE,OLDA) is the global root
  ;XPDNM=package name, XPDA=ien in ^XPD(9.6,
@@ -8,7 +7,7 @@ XPDIA3 ;SFISC/RWF - Install Pre/Post Actions for Kernel files cont. ;6/22/06  09
  ;
 PAR0F2 ;PARAMETER file 8989.5: post.  This is a fake entry called from the post of file 8989.51
  ;Now load any entries from 8989.5
- N XP1,XP2,XP3,DIK,OLDA,DA,ERR,PN,PE,PT,ROOT
+ N XP1,XP2,DIK,OLDA,DA,ERR,PN,PE,ROOT
  S XP1=$O(^XTMP("XPDI",XPDA,"PKG",0)) ;Get the package
  Q:'XP1  S PN=$G(^XTMP("XPDI",XPDA,"PKG",XP1,0))
  S PE=$$FIND1^DIC(9.4,,"MX",$P(PN,U,2)) ;Get the IEN of the package
@@ -23,14 +22,9 @@ PAR0F2 ;PARAMETER file 8989.5: post.  This is a fake entry called from the post 
  . ;Otherwise Add the zero node, See that we have a IEN
  . I DA'>0 D ADDPAR($P(XP1,U),$P(XP1,U,2),$P(XP1,U,3)) S DA=$$LKPAR($P(XP1,U),$P(XP1,U,2),$P(XP1,U,3))
  . Q:'DA  ;don't have a entry
- . ;Merge the date ;with IHS fix
- . M ^XTV(8989.5,DA)=^XTMP("XPDI",XPDA,"KRN",8989.5,OLDA)
+ . ;Merge the date
+ . M ^XTV(8989.5,DA)=^XTMP("XPDI",XPDA,"KRN",OLDA)
  . S ^XTV(8989.5,DA,0)=XP1 ;zero node with new pointers
- . ;Get Definition and check if Data Type is pointer, then get pointed to global ref.
- . S PT=$G(^XTV(8989.51,+$P(XP1,U,2),1)) D:$P(PT,U)="P"
- . . S XP3=$G(^XTV(8989.5,DA,1)),PT=$P(PT,U,2)
- . . S:PT $P(XP3,U)=$$FIND1^DIC(PT,"","X",$P(XP3,U)) ;resolve pointer value
- . . S:$P(XP3,U) ^XTV(8989.5,DA,1)=XP3
  . ;X-ref it
  . S DIK="^XTV(8989.5," D IX1^DIK
  Q

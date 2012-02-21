@@ -1,5 +1,5 @@
 DPTLK ;ALB/RMO,RTK - MAS Patient Look-up Main Routine ; 3/22/05 4:19pm
- ;;5.3;Registration;**32,72,93,73,136,157,197,232,265,277,223,327,244,513,528,541,576,600,485,633,629,647,769**;Aug 13, 1993;Build 2
+ ;;5.3;Registration;**32,72,93,73,136,157,197,232,265,277,223,327,244,513,528,541,576,600,485,633,629,647**;Aug 13, 1993
  ;
  ; mods made for magstripe read 12/96 - JFP
  ;
@@ -96,16 +96,14 @@ CHKDFN ; --
  .I $D(DDS) D CLRMSG^DDS S DX=0,DY=DDSHBX+1 X DDXY
  ;
  ; check for other patients in "BS5" xref on Patient file
- ;I '$G(DICR),DPTDFN>0,DIC(0)["E",$$BS5^DPTLK5(+DPTDFN) D  G ASKPAT:DIC(0)["A"&(%'=1),QK:DPTDFN<0
- I DPTDFN>0,DIC(0)["E",$$BS5^DPTLK5(+DPTDFN) D  G ASKPAT:DIC(0)["A"&(%'=1),QK:DPTDFN<0  ;*TEST*
+ I '$G(DICR),DPTDFN>0,DIC(0)["E",$$BS5^DPTLK5(+DPTDFN) D  G ASKPAT:DIC(0)["A"&(%'=1),QK:DPTDFN<0
  .N DPTZERO,DPTLSNME,DPTSSN S DPTZERO=$G(^DPT(+DPTDFN,0)),DPTLSNME=$P($P(DPTZERO,U),","),DPTSSN=$E($P(DPTZERO,U,9),6,9)
  .W $C(7),!!,"There is more than one patient whose last name is '",DPTLSNME,"' and"
  .W !,"whose social security number ends with '",DPTSSN,"'."
  .W !,"Are you sure you wish to continue (Y/N)" S %=0 D YN^DICN
  .I %'=1 S DPTDFN=-1
  ;
- ;I '$G(DICR),DPTDFN>0 S Y=DPTDFN D ^DGSEC S DPTDFN=Y G ASKPAT:DIC(0)["A"&(DPTDFN<0),QK:DPTDFN<0
- I DPTDFN>0,DIC(0)["E" S Y=DPTDFN D ^DGSEC S DPTDFN=Y G ASKPAT:DIC(0)["A"&(DPTDFN<0),QK:DPTDFN<0 S DPTBTDT=1
+ I '$G(DICR),DPTDFN>0 S Y=DPTDFN D ^DGSEC S DPTDFN=Y G ASKPAT:DIC(0)["A"&(DPTDFN<0),QK:DPTDFN<0
  S DPTX=DPTX_$P(DPTS(DPTDFN),U,2),DPTDFN=DPTDFN_U_$P(^DPT(DPTDFN,0),U)
  ;
 Q ; -- 
@@ -135,7 +133,6 @@ Q ; --
  ;
 Q1 ; -- Clean up variables
  K D,DIC("W"),DO,DPTCNT,DPTDFN,DPTIFNS,DPTIX,DPTS
- K:'$G(DICR) DPTBTDT  ; IF DICR LEAVE FOR DGSEC TO HANDLE
  K DPTSAVX,DPTSEL,DPTSZ,DPTX
  ;
  K:$D(IATA) IATA

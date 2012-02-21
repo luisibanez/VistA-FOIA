@@ -1,11 +1,10 @@
-PSOCSTM ;BHAM ISC/SAB - monthly rx cost compilation ;7/10/06 4:36pm
- ;;7.0;OUTPATIENT PHARMACY;**4,17,19,28,89,212,246**;DEC 1997;Build 12
+PSOCSTM ;BHAM ISC/SAB - monthly rx cost compilation ;9/14/05 1:13pm
+ ;;7.0;OUTPATIENT PHARMACY;**4,17,19,28,89,212**;DEC 1997
  ;External Ref. to ^PS(55 DBIA# 2228
  ;External Ref. to ^DPT DBIA# 10035
  ;External Ref. to ^PSDRUG DBIA# 221
  ;
- ;*212 don't allow this request, if monthly compile is running
- ;*246 alter SRCH1 For loop to not init to numeric values
+ ;PSO*212 don't allow this request, if monthly compile is running
  ;
  Q:$$MTHLCK(1)            ;get lock, quit if already locked    PSO*212
  K BDT,EDT W !!,"**** Date Range Selection ****" S LATE=$E(DT,1,5)_"00"
@@ -32,15 +31,10 @@ Q K ^TMP($J),%DT,A,B,BDT,COST,DATA,DATA1,DATA2,DRG,DFN,EDT,I,II,LATE,ML,OR,PAST,
  L -^PSOCSTM                                    ;unlock month end flag
  Q
  ;
-SRCH1 D INI
- ;refill
- S PSDT1=PSDT                                ;*246
- F  S PSDT1=$O(^PSRX("AL",PSDT1)) Q:($E(PSDT1,1,7)<PSDT)!($E(PSDT1,1,7)>PSDTX)  D
+SRCH1 D INI F PSDT1=PSDT:0:PSDTX S PSDT1=$O(^PSRX("AL",PSDT1)) Q:'PSDT1!($E(PSDT1,1,7)>PSDTX)  D
  .S CDT=$P(PSDT1,".") F RXN=0:0 S RXN=$O(^PSRX("AL",PSDT1,RXN)) Q:'RXN  S RXF="" F  S RXF=$O(^PSRX("AL",PSDT1,RXN,RXF)) Q:RXF=""  D CHK
  .S NDT=$O(^PSRX("AL",PSDT1)) D:$P(NDT,".")'=CDT VST
- ;partial fill
- S PSDT1=PSDT                                ;*246
- F  S PSDT1=$O(^PSRX("AM",PSDT1)) Q:($E(PSDT1,1,7)<PSDT)!($E(PSDT1,1,7)>PSDTX)  D
+ F PSDT1=PSDT:0:PSDTX S PSDT1=$O(^PSRX("AM",PSDT1)) Q:'PSDT1!($E(PSDT1,1,7)>PSDTX)  D
  .S CDT=$P(PSDT1,"."),RXN=0 F  S RXN=$O(^PSRX("AM",PSDT1,RXN)) Q:'RXN  S RXF=0 F  S RXF=$O(^PSRX("AM",PSDT1,RXN,RXF)) Q:RXF=""  S PAR=1 D CHK
  .S NDT=$O(^PSRX("AM",PSDT1)) D:$P(NDT,".")'=CDT VST K PAR
  Q

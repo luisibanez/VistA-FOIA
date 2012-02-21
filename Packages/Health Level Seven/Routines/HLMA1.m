@@ -1,6 +1,5 @@
-HLMA1 ;AISC/SAW-Message Administration Module (Cont'd) ;09/13/2006
- ;;1.6;HEALTH LEVEL SEVEN;**19,43,91,109,108,133**;Oct 13, 1995;Build 13
- ;Per VHA Directive 2004-038, this routine should not be modified.
+HLMA1 ;AISC/SAW-Message Administration Module (Cont'd) ;04/06/99  10:56
+ ;;1.6;HEALTH LEVEL SEVEN;**19,43,91,109,108**;Oct 13, 1995
 GENACK(HLEID,HLMTIENS,HLEIDS,HLARYTYP,HLFORMAT,HLRESLTA,HLMTIENA,HLP) ;
  ;Entry point to generate an acknowledgement message
  ;
@@ -32,8 +31,6 @@ GENACK(HLEID,HLMTIENS,HLEIDS,HLARYTYP,HLFORMAT,HLRESLTA,HLMTIENA,HLP) ;
  ;
  ;
  ;HLRESLTA is to return the results and should not be initially defined
- N HLRESLT
- S HLRESLT=""
  K HLRESLTA
  ;
  ;Check for required parameters
@@ -70,5 +67,5 @@ GENACK(HLEID,HLMTIENS,HLEIDS,HLARYTYP,HLFORMAT,HLRESLTA,HLMTIENA,HLP) ;
  D STATUS^HLTF0(HLMTIENA,$S($P(HLRESLTA,"^",2):4,1:3),$S($P(HLRESLTA,"^",2):$P(HLRESLTA,"^",2),1:""),$S($P(HLRESLTA,"^",2):$P(HLRESLTA,"^",3),1:""))
  ;Execute exit action for subscriber protocol
  X:HLEXROU]"" HLEXROU
-EXIT K HLDTA,HLDT1A,HLMIDA,HLENROU,HLEXROU
+EXIT K HLDTA,HLDT1A,HLMIDA,HLENROU,HLEXROU,HLRESLT
  Q

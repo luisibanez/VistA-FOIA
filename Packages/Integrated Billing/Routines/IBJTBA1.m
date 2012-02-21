@@ -1,6 +1,6 @@
 IBJTBA1 ;ALB/TMK - TPJI BILL CHARGE INFO SCREEN ;01-MAR-1995
- ;;2.0;INTEGRATED BILLING;**135,265,155,349,417**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**135,265,155**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 SHEOB(IBI,IBSPL,IBEOBCT,IBCTOF) ; Format EOB called from IBJTBA
  ; IBSPL = 0 if EOB represents one bill's payment
@@ -19,9 +19,8 @@ SHEOB(IBI,IBSPL,IBEOBCT,IBCTOF) ; Format EOB called from IBJTBA
  S IBST=$$EXPAND^IBTRE(361.1,.16,+IBST)
  S IBM1=$G(^IBM(361.1,IBI,1))
  ;
- S IBPT=$P(IBM1,U,2)   ; patient responsibility 1.02 fiel
- I $P(IBM,U,4),$D(^IBM(361.1,IBI,"ERR")) S IBPT=0  ; filing error
- ; If MRA & UB, then calculate patient responsiblity value
+ S IBPT=$P(IBM1,U,2)   ; patient responsibility 1.02 field
+ ; If MRA & UB92, then calculate patient responsiblity value
  I $P(IBM,U,4),$$FT^IBCEF(+$P(IBM,U,1))=3 S IBPT=$$PTRESPI^IBCECOB1(IBI)
  ;
  S IBCA=$P(IBM1,U)

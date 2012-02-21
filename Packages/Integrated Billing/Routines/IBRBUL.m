@@ -1,6 +1,6 @@
 IBRBUL ;ALB/CJM-MEANS TEST HOLD CHARGE BULLETIN ;02-MAR-92
- ;;2.0;INTEGRATED BILLING;**70,95,121,153,195,347**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**70,95,121,153,195**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ; This bulletin is sent even if the local site has chosen not to hold
  ; Means Test charges. In that case, IBHOLDP should be set = 0.
  ; requires: IBDD() = internal node in patient file of valid ins.
@@ -59,9 +59,8 @@ CHRG ; gets charge data and sets up charge lines
  S FR=$$DAT1^IBOUTL($S($P(IBX,"^",14)'="":($P(IBX,"^",14)),1:$P(IBND1,"^",2)))
  S TO=$$DAT1^IBOUTL($S($P(IBX,"^",15)'="":($P(IBX,"^",15)),1:$P(IBND1,"^",2)))
  I $P(IBX,"^",4)["52:" S IBRXN=$P($P(IBX,"^",4),":",2),IBRX=$P($P(IBX,"^",8),"-"),IBRF=$P($P(IBX,"^",4),":",3)
- I $P(IBX,"^",4)["52:"  D
- .I IBRF>0 S IENS=+IBRF,IBRDT=$$SUBFILE^IBRXUTL(+IBRXN,IENS,52,.01)
- .E  S IENS=+IBRXN,IBRDT=$$FILE^IBRXUTL(IENS,22)
+ I IBRF>0 S IENS=+IBRF_","_+IBRXN_",",IBRDT=$$GET1^DIQ(52.1,IENS,.01,"I")
+ E  S IENS=+IBRXN_",",IBRDT=$$GET1^DIQ(52,IENS,22,"I")
  S TP=$P(IBX,"^",3) S:TP TP=$P($G(^IBE(350.1,TP,0)),"^",3) S:TP TP=$P($$CATN^PRCAFN(TP),"^",2)
  D ADDLN("Type: "_$$PR(TP,28)_" Amount : $"_+$P(IBX,"^",7))
  D ADDLN("From: "_$$PR(FR,28)_" To     : "_TO)

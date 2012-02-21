@@ -1,6 +1,6 @@
 IBCRBC1 ;ALB/ARH - RATES: BILL CALCULATION BILLABLE EVENTS ; 22 MAY 96
- ;;2.0;INTEGRATED BILLING;**52,80,106,138,51,148,245,270,370**;21-MAR-94;Build 5
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,80,106,138,51,148,245,270**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; For each type of Billable Event, search for items on the bill and calculate the charges
  ;  1) search the bill for items of the billable event type
@@ -114,7 +114,7 @@ CPT(IBIFN,RS,CS) ; Determine charges for PROCEDURE billable events
  ; - the Default Rx CPT should not be billed the CPT charge, instead the Rx is charged
  ;
  N IBX,IBBLITEM,IBCHGMTH,IBBR,IBBDIV,IBIDRC,IBCPTARR,IBCPT,IBCPTFN,IBEVDT,IBMOD,IBDIV,IBTYPE,IBCMPNT
- N IBPPRV,IBBS,IBCLIN,IBOE,IBSAVE,IBUNIT,IBCPTRX,IBMODS I '$G(IBIFN)!'$G(CS) Q
+ N IBPPRV,IBBS,IBCLIN,IBOE,IBSAVE,IBUNIT,IBCPTRX I '$G(IBIFN)!'$G(CS) Q
  ;
  D CPT^IBCRBG1(IBIFN,.IBCPTARR) Q:'IBCPTARR
  ;
@@ -130,7 +130,7 @@ CPT(IBIFN,RS,CS) ; Determine charges for PROCEDURE billable events
  I IBBLITEM=2 D  ; cpt/count/minutes/miles/hours
  . S IBCPT=0 F  S IBCPT=$O(IBCPTARR(IBCPT)) Q:'IBCPT  D
  .. S IBCPTFN=0 F  S IBCPTFN=$O(IBCPTARR(IBCPT,IBCPTFN)) Q:'IBCPTFN  D
- ... S IBX=IBCPTARR(IBCPT,IBCPTFN),IBEVDT=$P(IBX,U,1),(IBMOD,IBMODS)=$P(IBX,U,2)
+ ... S IBX=IBCPTARR(IBCPT,IBCPTFN),IBEVDT=$P(IBX,U,1),IBMOD=$P(IBX,U,2)
  ... S IBDIV=$P(IBX,U,3),IBPPRV=$P(IBX,U,4),IBCLIN=$P(IBX,U,5),IBOE=$P(IBX,U,6)
  ... ;
  ... I '$$CHGOTH^IBCRBC2(IBIFN,RS,IBEVDT) Q
@@ -145,7 +145,7 @@ CPT(IBIFN,RS,CS) ; Determine charges for PROCEDURE billable events
  ... I $$CSDV^IBCRU3(CS,IBDIV,IBBDIV)<0 Q  ; check division
  ... I +IBMOD S IBMOD=$P($$CPTMOD^IBCRCU1(CS,IBCPT,IBMOD,IBEVDT),",",1) ; check CPT-MODs for billable combination
  ... ;
- ... S IBSAVE="1^"_IBCPT_U_IBDIV_U_IBTYPE_U_IBCPTFN_U_IBCMPNT_U_IBBS_U_IBPPRV_U_IBCLIN_U_IBOE_U_IBMODS
+ ... S IBSAVE="1^"_IBCPT_U_IBDIV_U_IBTYPE_U_IBCPTFN_U_IBCMPNT_U_IBBS_U_IBPPRV_U_IBCLIN_U_IBOE
  ... D BITMCHG^IBCRBC2(RS,CS,IBCPT,IBEVDT,IBUNIT,IBMOD,"",IBIDRC,IBSAVE)
  K ^TMP($J,"IBCRC-INDT")
  Q

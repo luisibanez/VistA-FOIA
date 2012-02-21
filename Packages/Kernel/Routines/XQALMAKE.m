@@ -1,5 +1,5 @@
-XQALMAKE ;ISC-SF.SEA/JLI- HIGH LEVEL SETUP ALERT ;4/9/07  14:03
- ;;8.0;KERNEL;**443**;Jul 10, 1995;Build 4
+XQALMAKE ;ISC-SF.SEA/JLI- HIGH LEVEL SETUP ALERT ;9/23/94  13:28
+ ;;8.0;KERNEL;;Jul 10, 1995
  ;;
 ENTRY ;
  W !!,"ALERT GENERATOR"
@@ -10,7 +10,6 @@ ASKOPT S DIR(0)="Y",DIR("A")="Do you want to transfer control to an option when 
 ASKROU S DIR(0)="Y",DIR("A")="Do you want to transfer control to a routine when the alert is selected" D ^DIR K DIR G:'Y SETIT
  R !,"Enter ROUTINE name or ENTRY^ROUTINE name: ",X:DTIME S:'$T X=U G:X=U EXIT G:X="" ASKROU S XQAROU=X S X=$S(X'[U:X,1:$P(X,U,2)) G:X="" ASKROU X ^%ZOSF("TEST") I 'Y W !,"Routine '",X,"' not present" G ASKROU
 SETIT ;
- I '$D(XQAROU),'$D(XQAOPT) S DIR(0)="Y",DIR("A")="Do you want to make a long text info only alert" D ^DIR K DIR I Y D LONGTEXT
  W !!,"As currently entered, this alert will display the following text:",!!,XQAMSG
  W !!,"The alert is currently to be delivered to:" S XQAX="" F I=1:1 S XQAX=$O(XQA(XQAX)) Q:XQAX=""  S X=$S(XQAX>0:$P(^VA(200,XQAX,0),U),1:XQAX) W:(I#2) ! W:'(I#2) ?40 W X
  W:$D(XQAROU) !!,"On selection of the alert, the user will run the routine ",XQAROU W:$D(XQAOPT) !!,"On selection of the alert, the user will be taken to the",!,"the option ",XQAOPT W !!
@@ -31,9 +30,4 @@ LOOP1 K XQA R !,"Enter a User name or G.mailgroup",!,"as recipient of the Alert:
  K:X[U XQA Q
 SETONE ;
  S XQALDIC=$S("g.G."[$E(X,1,2):3.8,1:200),X=$S(XQALDIC=3.8:$E(X,3,$L(X)),1:X),DIC=XQALDIC,DIC(0)="EMQ" D ^DIC Q:Y'>0  S X=$S(XQALDIC=3.8:"G."_$P(Y,U,2),1:+Y),XQA(X)=""
- Q
- ;
-LONGTEXT ;
- W !,"Enter .EXIT  to terminate input",!
- S COUNT="" F  R X:DTIME Q:X=".EXIT"  S COUNT=COUNT+1,XQATEXT(COUNT)=X W !
  Q

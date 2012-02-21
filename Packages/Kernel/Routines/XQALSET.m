@@ -1,5 +1,5 @@
-XQALSET ;ISC-SF.SEA/JLI - SETUP ALERTS ;4/10/07  14:06
- ;;8.0;KERNEL;**1,6,65,75,114,125,173,207,285,443**;Jul 10, 1995;Build 4
+XQALSET ;ISC-SF.SEA/JLI - SETUP ALERTS ;6/24/04  13:46
+ ;;8.0;KERNEL;**1,6,65,75,114,125,173,207,285**;Jul 10, 1995
  ;;
  Q
  ; Original entry point - throw away return value since no value expected
@@ -7,7 +7,7 @@ SETUP ;
  N I S I=$$SETUP1() K XQALERR
  Q
  ;
-SETUP1() ; .SR Returns a string beginning with 1 if successful, 0 if not successful, the second piece is the IEN in the Alert Tracking File and the third piece is the value of XQAID.
+SETUP1() ; .SR Returns a string beginning with 1 if successful, 0 if not successful, the second piece is the IEN in the Alert Tracking File and the third piece is the value of XQAID. 
  ; If not successful XQALERR is defined and contains reason for failure.
  K XQALERR
  I $O(XQA(0))="" S XQALERR="No recipient list in XQA array" Q 0
@@ -22,7 +22,6 @@ NOW S XQX=$$NOW^XLFDT()
  ;
 REENT() ; Entry for forwarding, etc.
  N RETVAL S RETVAL=1
- K ^TMP("XQAGROUP",$J) ; P443 - clear location for storage of groups processed
  N XQADATIM,XQALIST,XQALIST1,XQNRECIP S XQNRECIP=0 S XQADATIM=$$NOW^XLFDT()
  S XQALIN1=$S($D(XQAID)#2:XQAID,1:"")_U_$E(XQAMSG,1,80)_"^1^"_$S(XQAOPT1=U:"D",1:"R")_U_$S($D(XQACTMSG):$E(XQACTMSG,1,40),1:"")_U_XQAOPT1
  S:$D(XQACNDEL) $P(XQALIN1,U,9)=1 S:$D(XQASURO) $P(XQALIN1,U,12)=XQASURO S:$D(XQASUPV) $P(XQALIN1,U,13)=XQASUPV S:$D(XQAREVUE) $P(XQALIN1,U,14)=XQAREVUE
@@ -59,7 +58,7 @@ LOOP ;
  L +^XTV(8992,XQJ):10 S XQXI=XQX S:'$D(^XTV(8992,XQJ,"XQA",0)) ^(0)="^8992.01DA^"
 REP I $D(^XTV(8992,XQJ,"XQA",XQXI,0)) S XQXI=XQXI+.00000001 G REP
  S ^XTV(8992,XQJ,"XQA",XQXI,0)=XQALIN S:$D(XQALIN1) ^(1)=XQALIN1 S:$D(XQAGUID)!$D(XQADFN) ^(3)=$G(XQAGUID)_U_$G(XQADFN) S:$D(XQARESET) ^(2)=XQAUSER_U_XQX_U_$G(XQACOMNT) S ^(0)=$P(^XTV(8992,XQJ,"XQA",0),U,1,2)_U_XQXI_U_($P(^(0),U,4)+1)
- I $D(XQATEXT) S:($D(XQATEXT)#2) XQATEXT(.1)=XQATEXT D WP^DIE(8992.01,(XQXI_","_XQJ_","),4,"","XQATEXT") ; P443 PUT DATA IN XQATEXT INTO ARRAY
+ I $D(XQATEXT) D WP^DIE(8992.01,(XQXI_","_XQJ_","),4,"","XQATEXT")
  L -^XTV(8992,XQJ)
  K XQA(XQJ) S:XQAID'="" ^XTV(8992,"AXQA",XQAID,XQJ,XQXI)="",^XTV(8992,"AXQAN",XQA1,XQJ,XQXI)=""
  S XQNRECIP=XQNRECIP+1
@@ -110,7 +109,6 @@ WRAP ;
  ;
  I RETVAL S RETVAL=RETVAL_U_$G(XQADA)_U_XQAID
  K:XQAID'="" ^XTV(8992,"AXQA",XQAID,0,0)
- K ^TMP("XQAGROUP",$J) ; P443 - clear global used to track processing of groups
  K XQA,XQALIN,XQALIN1,XQAMSG,XQAID,XQAFLG,XQAOPT,XQAOPT1,XQAROU,XQADATA,XQI,XQX,XQJ,XQK,XQA1,XQACTMSG,XQJ,XQXI,XQAARCH,XQACNDEL,XQAREVUE,XQASUPV,XQASURO,XQATEXT
  Q RETVAL
  ;

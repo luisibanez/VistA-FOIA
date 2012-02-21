@@ -1,5 +1,5 @@
-PXRMDLLA ;SLC/PJH - REMINDER DIALOG LOADER ;04/13/2008
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
+PXRMDLLA ;SLC/PJH - REMINDER DIALOG LOADER ;07/29/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
 FREC(DFIEN,DFTYP) ;Build type 3 record
  N CSARRAY,CSCNT
@@ -24,11 +24,9 @@ FREC(DFIEN,DFTYP) ;Build type 3 record
  .S:DPCE="Q" $P(ORY(OCNT),U,11)=$P($G(^ORD(101.41,DFIEN,0)),U,4)
  .;If mental health check if a GAF score and if MH test is required
  .I DPCE="MH",DFIEN D
- ..;DBIA #5044
- ..I $P($G(^YTT(601.71,DFIEN,0)),U)="GAF" S $P(ORY(OCNT),U,12)=1
+ ..I $P($G(^YTT(601,DFIEN,0)),U)="GAF" S $P(ORY(OCNT),U,12)=1
  ..;Check to see if the MH test is required
- ..S $P(ORY(OCNT),U,13)=+$P($G(^PXRMD(801.41,DITEM,0)),U,18)
- ..I $P(ORY(OCNT),U,13)=2,$$PATCH^XPDUTL("OR*3.0*243")=0 S $P(ORY(OCNT),U,13)=1
+ ..S $P(ORY(OCNT),U,13)=$S($P($G(^PXRMD(801.41,DITEM,0)),U,18)=1:1,1:0)
  Q
  ;
 GUI(IEN) ;Work out prompt type for PCE
@@ -51,7 +49,7 @@ LOAD(DITEM,DCUR,DTTYP) ;Load dialog questions into array
  ;
  S DARRAY("GMRD(120.51,")="VIT"
  S DARRAY("ORD(101.41,")="Q"
- S DARRAY("YTT(601.71,")="MH"
+ S DARRAY("YTT(601,")="MH"
  ;
  S DARRAY("ICD9(")="POV"
  S DARRAY("ICPT(")="CPT"
@@ -146,9 +144,7 @@ PROTH(IEN) ; Additional prompts defined in 801.41
  .;Prompt ien
  .S DIEN=$P($G(^PXRMD(801.41,IEN,10,DSUB,0)),U,2) Q:'DIEN
  .;Ignore disabled components, and those that are not prompts
- .;Q:($P($G(^PXRMD(801.41,DIEN,0)),U,3)]"")!("PF"'[$P($G(^(0)),U,4))
- .I $$ISDISAB^PXRMDLL(DIEN)=1 Q
- .Q:"PF"'[$P($G(^(0)),U,4)
+ .Q:($P($G(^PXRMD(801.41,DIEN,0)),U,3)]"")!("PF"'[$P($G(^(0)),U,4))
  .;Set defaults to null
  .S DDEF="",DEXC="",DREQ="",DSNL=""
  .;Prompt name and GUI process (quit if null)

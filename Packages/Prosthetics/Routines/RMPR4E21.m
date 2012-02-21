@@ -1,5 +1,5 @@
 RMPR4E21 ;PHX/HNC - CLOSE OUT PURCHASE CARD TRANSACTION ;3/1/1996
- ;;3.0;PROSTHETICS;**3,12,26,28,30,34,41,45,62,111,78,114,118,133,137**;Feb 09, 1996;Build 5
+ ;;3.0;PROSTHETICS;**3,12,26,28,30,34,41,45,62,111,78,114,118**;Feb 09, 1996
  ;TH  Patch #78 - 08/04/03 - Add shipment date. Call routine ^RMPR4E23
  ;RVD patch #62 - PCE processing and link to suspense
  ;
@@ -24,7 +24,6 @@ CL K ^TMP($J,"RMPRPCE")
  K %X,%Y S %X="^RMPR(664,RMPRA,",%Y="^TMP("_"""RM"""_",$J,RMPRA," D %XY^%RCR
  S RM(RMPRA,0)=$G(^RMPR(664,RMPRA,0)),RM(RMPRA,2)=$G(^(2)),RM(RMPRA,4)=$G(^(4))
  S RMPER=$P(RM(RMPRA,2),U,6),RMBAN=$P(RM(RMPRA,4),U,2),RMSHI=$P(RM(RMPRA,0),U,11),RMSHIEN=$P(RM(RMPRA,0),U,12)
- S:RMSHI=""!(RMSHI+0=0) RMSHI=0
  ;added by #62
  ;collect all items and previous linkage to suspense.
  I $G(RMSHIEN) S:'$D(^RMPR(660,RMSHIEN,10)) RM60LINK(RMSHIEN)=""
@@ -77,10 +76,10 @@ DS ;**** update shipping cost, % discount and bank authorization ********
  S (RMPERF,RMBANF,RMSHIF)=0
  I $P(^RMPR(664,RMPRA,0),U,11)="",$P(^(0),U,10) S $P(^(0),U,11)=$P(RM(RMPRA,0),U,10)
  S DA=RMPRA,DIE="^RMPR(664,",DR="12;17;26" D ^DIE
- S:+$P(^RMPR(664,RMPRA,0),U,11)=0 $P(^(0),U,11)=0
  I RMPER'=$P(^RMPR(664,RMPRA,2),U,6) S RMPERF=1
  I RMBAN'=$P(^RMPR(664,RMPRA,4),U,2) S RMBANF=1
- I RMSHI'=$P(^RMPR(664,RMPRA,0),U,11)!($P(^(0),U,11)=0&$P(^(0),U,12)) S RMSHIF=1
+ I RMSHI'=$P(^RMPR(664,RMPRA,0),U,11) S RMSHIF=1
+ S:$P(^RMPR(664,RMPRA,0),U,11)="" $P(^(0),U,11)=0
 CHK1 ;delete imcomplete items
  S DIK="^RMPR(664,"_RMPRA_",1,",DA(1)=RMPRA F I=0:0 S I=$O(^RMPR(664,RMPRA,1,I)) Q:I'>0  S RMPRI=$G(^(I,0)) I $P(RMPRI,U,3)=""!($P(RMPRI,U,4)="")!($P(RMPRI,U,5)="") S DA=I D ^DIK
  G L ;go back to select ITEM
@@ -139,11 +138,8 @@ EX ;***reindex record in 664 here
  .;Patch #78 - Get IFCAP Transaction Date and prompt for Shipment Date
  .I DA'="" S SKPSHDT=1 D ^RMPR4E23 K SKPSHDT
 EX1 ;
- I $D(RM60LINK) D
- . F I=0:0 S I=$O(RM60LINK(I)) Q:I'>0  D
- .. I '$D(^RMPR(660,I,0)) K RM60LINK(I)
  ;added by #62
- D:$D(RM68FG)=1 AUTO^RMPRPCEL D:$D(RM68FG)>1 MAN^RMPRPCEL
+ D:RM68FG=1 AUTO^RMPRPCEL D:RM68FG>1 MAN^RMPRPCEL
  ;
  D EXIT
  W !!,"Enter Next Transaction to Close-out, or <RETURN> to continue."

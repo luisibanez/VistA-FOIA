@@ -1,8 +1,8 @@
-ECPAT ;BIR/MAM,JPW - Event Capture Patient Summary ;1 Jul 2008
- ;;2.0; EVENT CAPTURE ;**5,18,47,72,95**;8 May 96;Build 26
+ECPAT ;BIR/MAM,JPW-Event Capture Patient Summary ;26 Feb 96
+ ;;2.0; EVENT CAPTURE ;**5,18,47,72**;8 May 96
 SET ; set ^TMP($J,"ECPAT")
  N ECPXD,EC725
- I $Y+11>IOSL D PAGE I ECOUT Q
+ I $Y+8>IOSL D PAGE I ECOUT Q
  S ECEC=$G(^ECH(ECFN,0))
  S ECL=+$P(ECEC,"^",4),ECC=+$P(ECEC,"^",8),ECP=$P(ECEC,"^",9),ECD=+$P(ECEC,"^",7),ECV=+$P(ECEC,"^",10)
  S ECU=$$GETPPRV^ECPRVMUT(ECFN,.ECUN),ECUN=$S(ECU:"UNKNOWN",1:$P(ECUN,"^",2))
@@ -46,7 +46,7 @@ SET ; set ^TMP($J,"ECPAT")
  .W !!,ECDT,?25,ECCN,?80,ECPN_" ("_ECV_")",!
  .I ECMODF S MD="" D  K MD I ECOUT Q
  ..F  S MD=$O(ECMOD(MD)) Q:MD=""  D  I ECOUT Q
- ...D:$Y+5>IOSL PAGE Q:ECOUT  W ?84,"- ",MD," ",$P(ECMOD(MD),U,3),!
+ ...D:$Y+2>IOSL PAGE Q:ECOUT  W ?84,"- ",MD," ",$P(ECMOD(MD),U,3),!
  .W $E(ECLN,1,22),?25,ECSN,?80,ECMN,!
  .W:$D(ECRY) ECPRSN
  .W ?25,ECON,?80,ECUN
@@ -54,7 +54,7 @@ SET ; set ^TMP($J,"ECPAT")
  .W !!,ECDT,?25,ECPN_" ("_ECV_")",!
  .I ECMODF S MD="" D  K MD I ECOUT Q
  ..F  S MD=$O(ECMOD(MD)) Q:MD=""  D  I ECOUT Q
- ...D:$Y+5>IOSL PAGE Q:ECOUT  W ?29,"- ",MD," ",$P(ECMOD(MD),U,3),!
+ ...D:$Y+2>IOSL PAGE Q:ECOUT  W ?29,"- ",MD," ",$P(ECMOD(MD),U,3),!
  .W $E(ECLN,1,22),?25,ECSN,?80,ECMN,!
  .W:$D(ECRY) ECPRSN
  .W ?25,ECON,?80,ECUN
@@ -72,7 +72,6 @@ SUM ; entry when queued
  U IO S DATE=$O(^ECH("APAT",ECDFN,ECSD)) I 'DATE W:$Y @IOF W !!,"No Data for "_ECPAT_" during the time selected." G END
  S ECFN=+$O(^ECH("APAT",ECDFN,DATE,0)),ECL=+$P(^ECH(ECFN,0),"^",4) D BRO D:$D(ECY) HDR D:$D(ECN) HDR1
  S DATE=ECSD,(ECFN,ECOUT)=0 F I=0:0 S DATE=$O(^ECH("APAT",ECDFN,DATE)) Q:'DATE!(DATE>ECED)!(ECOUT)  F I=0:0 S ECFN=$O(^ECH("APAT",ECDFN,DATE,ECFN)) Q:'ECFN!(ECOUT)  D SET
- D FOOTER  ;for last page
 END I $D(ECGUI) D ^ECKILL Q
  W ! I $D(ECOUT),'ECOUT D
  . I $E(IOST,1,2)="C-" W !!,"Press <RET> to continue  " R X:DTIME
@@ -90,7 +89,6 @@ HDR ; print heading
  W !
  Q
 PAGE ; end of page
- I $G(X)'["?" D FOOTER
  S X="" I $E(IOST,1,2)="C-" W !!,"Press <RET> to continue, or ^ to quit   " R X:DTIME I '$T!(X="^") S ECOUT=1 Q
  I X["?" W !!,"If you want to continue with this report, press <RET>.  Entering an ^ will",!,"exit you from this option." G PAGE
  D:$D(ECY) HDR D:$D(ECN) HDR1
@@ -107,12 +105,6 @@ HDR1 ; print heading without categories
  W ?25,"ORDERING SECTION",?80,"PROVIDER",! F LINE=1:1:132 W "-"
  W !
  Q
- ;
-FOOTER ;print page footer
- W !!?4,"Volume totals may represent days, minutes, numbers of procedures"
- W !?4,"and/or a combination of these."
- Q
- ;
 BRO ;ask prt with category or without
  S ECN=1
  Q

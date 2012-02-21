@@ -1,5 +1,5 @@
-SROPCE1 ;BIR/ADM - ASK SC/EI QUESTIONS FOR PCE AND CROSS REFERENCE LOGIC ;07/24/07
- ;;3.0; Surgery ;**58,105,119,150,152,159**;24 Jun 93;Build 4
+SROPCE1 ;BIR/ADM - ASK SC/EI QUESTIONS FOR PCE AND CROSS REFERENCE LOGIC ;09/12/05 12:01pm
+ ;;3.0; Surgery ;**58,105,119,150,152**;24 Jun 93
  ;
  ; Reference to CL^SDCO21 supported by DBIA #406
  ; Reference to DIS^DGRPDB supported by DBIA #700
@@ -7,7 +7,11 @@ SROPCE1 ;BIR/ADM - ASK SC/EI QUESTIONS FOR PCE AND CROSS REFERENCE LOGIC ;07/24/
  ;
 EN1 I '$P(^SRO(133,SRSITE,0),"^",16) Q
  N SRPDATE,SRSDATE S SRPDATE=$P(^SRO(133,SRSITE,0),"^",17),SRSDATE=$S($D(SRTN):$P(^SRF(SRTN,0),"^",9),$D(SRWLST):$P(^SRO(133.8,SRSS,1,SROFN,0),"^",5),1:DT) I SRPDATE,SRSDATE<SRPDATE Q
- N SRAO,SRDR,SREC,SRELIG,SRIR,SRPERC,SRQ,SRSC,SRCL,SRX,VAEL,VASV,SRCV,SRMST,SRHNC,SRPRJ S SRQ=0
+ N SRAO,SRDR,SREC,SRELIG,SRIR,SRPERC,SRQ,SRSC,SRCL,SRX,VAEL,VASV,SRCV,SRMST,SRHNC,SRPRJ
+ S SRQ=0 D  I SRQ=1 Q
+ .I '$D(SRWLST) Q
+ .I $D(SRWLST),'$P(^SRO(133.8,SRSS,1,SROFN,0),"^",4) Q
+ .S SRQ=1
 CLASS ; build classification array
  S:$D(SRTN) DFN=$P(^SRF(SRTN,0),"^") D CL^SDCO21(DFN,SRSDATE,,.SRCL)
  I '$D(SRCL) W !!,"No classification information is required for this patient.",! K DA,DIE,DR S:$D(SRTN) DA=SRTN,DIE=130,DR=".0155////1" S:$D(SRWLST) DA(1)=SRSS,DA=SROFN,DIE="^SRO(133.8,"_DA(1)_",1,",DR="20////1" D ^DIE G END
@@ -23,7 +27,7 @@ ELIG ; output of eligibility and service connected conditions
  S SREC=SRY(2,DFN,.322013,"I"),SREC=$S(SREC="Y":"YES",1:"NO")
  W @IOF,!,VADM(1)_"  ("_VA("PID")_")       ",$P(VAEL(6),"^",2),!!,"   * * * Eligibility Information and Service Connected Conditions * * *"
  W !!,?5,"Primary Eligibility: "_SRELIG,!,?5,"Combat Vet: "_SRCV,?22,"A/O Exp.: "_SRAO,?39,"M/S Trauma: "_SRMST
- W !,?5,"ION Rad.: "_SRIR,?22,"SWAC: "_SREC,?39,"H/N Cancer: "_SRHNC
+ W !,?5,"ION Rad.: "_SRIR,?22,"Env Contam: "_SREC,?39,"H/N Cancer: "_SRHNC
  W !,?5,"PROJ 112/SHAD: "_SRPRJ
  D DIS^DGRPDB
  W ! F I=1:1:79 W "-"
@@ -52,8 +56,7 @@ SC S DIR("A")="Treatment related to Service Connected condition (Y/N)",DIR(0)=$S
  S SRCL(3)=Y,SRDR=$G(SRDR)_$S($D(SRWLST):"16",1:".016")_"////"_SRCL(3)_";"
  S SRCL(3,"UPDATE")=1
  Q
-CV N SRCVD S SRCVD=$S($D(SRWLST):$P(^SRO(133.8,SRSS,1,SROFN,0),"^",23),1:$P(^SRF(SRTN,0),"^",24)),DIR("B")=$S(SRCVD=0:"NO",1:"YES")
- S DIR("A")="Treatment related to Combat (Y/N)",DIR(0)=$S($D(SRWLST):"133.801,23",1:"130,.024") D ^DIR K DIR I $D(DTOUT)!$D(DUOUT) S SRQ=1 Q
+CV S DIR("A")="Treatment related to Combat (Y/N)",DIR(0)=$S($D(SRWLST):"133.801,23",1:"130,.024") D ^DIR K DIR I $D(DTOUT)!$D(DUOUT) S SRQ=1 Q
  I X=""!(X="@") W !,$C(7),?15,"Enter YES or NO." G CV
  S SRCL(7)=Y,SRDR=SRDR_$S($D(SRWLST):"23",1:".024")_"////"_SRCL(7)_";"
  S SRCL(7,"UPDATE")=1
@@ -68,7 +71,7 @@ IR S DIR("A")="Treatment related to Ionizing Radiation Exposure (Y/N)",DIR(0)=$S
  S SRCL(2)=Y,SRDR=SRDR_$S($D(SRWLST):"18",1:".018")_"////"_SRCL(2)_";"
  S SRCL(2,"UPDATE")=1
  Q
-EC S DIR("A")="Treatment related to SW Asia (Y/N)",DIR(0)=$S($D(SRWLST):"133.801,19",1:"130,.019") D ^DIR K DIR I $D(DTOUT)!$D(DUOUT) S SRQ=1 Q
+EC S DIR("A")="Treatment related to Environmental Contaminant Exposure (Y/N)",DIR(0)=$S($D(SRWLST):"133.801,19",1:"130,.019") D ^DIR K DIR I $D(DTOUT)!$D(DUOUT) S SRQ=1 Q
  I X=""!(X="@") W !,$C(7),?15,"Enter YES or NO." G EC
  S SRCL(4)=Y,SRDR=SRDR_$S($D(SRWLST):"19",1:".019")_"////"_SRCL(4)_";"
  S SRCL(4,"UPDATE")=1

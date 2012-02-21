@@ -1,5 +1,5 @@
 IBCRTN ;ALB/AAS - EDIT BILLS RETURNED FROM AR (NEW) ;23-MAY-90
- ;;2.0;INTEGRATED BILLING;**51,199,303**;21-MAR-94;Build 2
+ ;;2.0;INTEGRATED BILLING;**51,199**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO DGCRTN
@@ -22,7 +22,6 @@ EN2 ;
  ;
 LOOK N DPTNOFZY S DPTNOFZY=1  ;Suppress PATIENT file fuzzy lookups
  S DIC="^DGCR(399,",DIC(0)="AEQMZ",DIC("S")="I $S($P(^(0),U,13)=7:0,+$$RETN^PRCAFN(Y):1,1:0)" D ^DIC K DIC Q:+Y<1
- I $P($G(^DGCR(399.3,+$P(^DGCR(399,+Y,0),U,7),0)),U,10) D NOEDT G LOOK
  S IBIFN=+Y,DFN=$P(Y(0),"^",2)
  L ^DGCR(399,IBIFN):1 I '$T W !,"Already being edited by another user" K IBIFN,DFN Q
  I '$P(^DGCR(399,IBIFN,"S"),"^",9)!('$D(^XUSEC("IB EDIT",DUZ))) Q
@@ -31,7 +30,7 @@ FILE K DD,DO I '$D(^DGCR(399,IBIFN,"R",0)) S ^(0)="^399.046^"
  S DIC(0)="MN",DA(1)=IBIFN,DIC="^DGCR(399,"_DA(1)_",""R"",",DIE=DIC,DIC("DR")=".02////"_DUZ S X="NOW",%DT="T" D ^%DT S X=Y D FILE^DICN G:Y<1 END S DGIFN=+Y
  Q
  ;
-EDIT N DGIFN G RTN:IBAC=6 D ^IBCSCU,^IBCSC1 I '$T K IBIFN Q 
+EDIT N DGIFN G RTN:IBAC=6 D ^IBCSCU,^IBCSC1 I '$T K IBIFN Q
  ;
 RTN I '$D(^XUSEC("IB AUTHORIZE",DUZ))!('$D(IBIFN)) K IBIFN Q
  D EDITS^IBCB2 I IBQUIT K IBIFN Q
@@ -39,10 +38,6 @@ RTN1 W !!,"WANT TO RETURN BILL TO A/R AT THIS TIME" S %=2 D YN^DICN Q:%=1  I %=-
  I '% W !?4,"YES - To set the status to Returned",!?4,"No - To take no action" G RTN1
  Q
  ;
-NOEDT ;*303
- N DIR
- S DIR(0)="EA",DIR("A",1)="",DIR("A",2)="This electronically transmitted bill cannot be selected in this option.",DIR("A",3)="You must use IB COPY AND CANCEL option to edit this claim data.",DIR("A")="Press RETURN to continue " D ^DIR K DIR W !
- Q
  ;store sending data at this point
 SEND S DA(1)=IBIFN,DA=DGIFN,(DIC,DIE)="^DGCR(399,"_DA(1)_",""R"",",DR=".03;.04" D ^DIE
  I '$P(^DGCR(399,IBIFN,"R",DGIFN,0),"^",4) K IBIFN Q

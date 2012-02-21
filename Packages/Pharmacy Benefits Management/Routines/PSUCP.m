@@ -1,10 +1,9 @@
-PSUCP ;BIR/TJH,PDW - PBM CONTROL POINT ; 06/08/07
- ;;4.0;PHARMACY BENEFITS MANAGEMENT;**12**;MARCH, 2005;Build 19
+PSUCP ;BIR/TJH,PDW - PBM CONTROL POINT ;25 AUG 1998
+ ;;4.0;PHARMACY BENEFITS MANAGEMENT;;MARCH, 2005
  ; Reference to File #4    supported by DBIA 10090
  ; Reference to File #4.3  supported by DBIA 10091
  ; Reference to File #40.8 supported by DBIA 2438
  ; Reference to File #59.7 supported by DBIA 2854
- ; move CLEANUP^PSUHL from PSURT1, delete calls to PSUCP3 (PSU*4*12)
 MANUAL ; entry point for manual option
  S PSUALERT=0 D MANUAL^PSUALERT
  I PSUALERT K PSUALERT Q
@@ -17,7 +16,7 @@ MANUAL ; entry point for manual option
  .S DIR(0)="Y",DIR("B")="NO"
  .S DIR("A")="Do you wish to continue"
  .D ^DIR
- D CLEANUP^PSUHL
+ D ^PSUCP3
  S PSUJOB=$J_"_"_$P($H,",",2)
  S ^XTMP("PSUMANL")=""
  D EN^PSUCP1 ; prompt for report choices
@@ -36,10 +35,10 @@ MANUALQ Q
 AUTO ; set variables for Auto-report option and task to background
  S PSUALERT=0 D AUTO^PSUALERT
  I PSUALERT K PSUALERT Q
- I $D(^XTMP("PSU","RUNNING")) D  Q
+ I $G(^XTMP("PSU","RUNNING")) D  Q
  .S XQA(DUZ)="",XQA("G.PSU PBM")="",XQMSG="An ERROR has occurred. Please contact IRM for assistance."
  .S XQAID="PSU",XQAFLG="D" D SETUP^XQALERT
- D CLEANUP^PSUHL
+ D ^PSUCP3         ;Clear trash globals
  S PSUJOB=$J_"_"_$P($H,",",2)
  S ^XTMP("PSU_"_PSUJOB,"PSUFLAG1")=""   ;flag for mail patient summary reports
  S ^XTMP("PSU_"_PSUJOB,"PSUPSUMFLAG")=1         ;Set 'auto' flag
@@ -66,7 +65,7 @@ AUTO ; set variables for Auto-report option and task to background
  D NOW^%DTC S PSUDTH=%
  D ^PSUDBQUE
  K PSUALERT,XQA,XQAID,XQAFLG,XQA,ZTSK
-AUTOQ Q  ; exit from AUTO
+AUTOQ D EXIT Q  ; exit from AUTO
  ;
 RUN ; run each selected module
  L ^XTMP("PSU","RUNNING"):1 I '$T Q

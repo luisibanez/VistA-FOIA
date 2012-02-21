@@ -1,5 +1,5 @@
 PSOCIDC2 ;BIR/LE-continuation of Copay Correction of erroneous billed copays ;11/8/05 12:50pm
- ;;7.0;OUTPATIENT PHARMACY;**226,225**;DEC 1997;Build 29
+ ;;7.0;OUTPATIENT PHARMACY;**226**;DEC 1997
  ;External reference to ^XUSEC supported by DBIA 10076
  ;External reference to IBARX supported by DBIA 125
  ;External reference to $$PROD^XUPROD(1) supported by DBIA 4440
@@ -120,7 +120,7 @@ CHKACT ;check activity log for prev entry
 SETIBQ ; get data from IBQ node, set IBQ node, and 1st piece of IB node
  K PSOANSQ
  N PSONIBQ
- F PSOTYP=1:1:8 D
+ F PSOTYP=1:1:7 D
  . I PSOTYP=1 S PSOANSQ("VEH")=$P(PSOOICD,"^",PSOTYP)
  . I PSOTYP=2 S PSOANSQ("RAD")=$P(PSOOICD,"^",PSOTYP)
  . I PSOTYP=3 S PSOANSQ("SC")=$P(PSOOICD,"^",PSOTYP)
@@ -128,8 +128,7 @@ SETIBQ ; get data from IBQ node, set IBQ node, and 1st piece of IB node
  . I PSOTYP=5 S PSOANSQ("MST")=$P(PSOOICD,"^",PSOTYP)
  . I PSOTYP=6 S PSOANSQ("HNC")=$P(PSOOICD,"^",PSOTYP)
  . I PSOTYP=7 S PSOANSQ("CV")=$P(PSOOICD,"^",PSOTYP)
- . I PSOTYP=8 S PSOANSQ("SHAD")=$P(PSOOICD,"^",PSOTYP)
- S ^PSRX(RXP,"IBQ")=PSOANSQ("SC")_"^"_PSOANSQ("MST")_"^"_PSOANSQ("VEH")_"^"_PSOANSQ("RAD")_"^"_PSOANSQ("PGW")_"^"_PSOANSQ("HNC")_"^"_PSOANSQ("CV")_"^"_PSOANSQ("SHAD")
+ S ^PSRX(RXP,"IBQ")=PSOANSQ("SC")_"^"_PSOANSQ("MST")_"^"_PSOANSQ("VEH")_"^"_PSOANSQ("RAD")_"^"_PSOANSQ("PGW")_"^"_PSOANSQ("HNC")_"^"_PSOANSQ("CV")
  Q
  ;
 ACCUM ; ACCUMULATE TOTALS

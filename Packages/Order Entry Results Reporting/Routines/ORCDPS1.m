@@ -1,5 +1,5 @@
-ORCDPS1 ;SLC/MKB-Pharmacy dialog utilities ; 12/9/2010
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**94,117,141,149,195,215,243,280,337**;Dec 17, 1997;Build 84
+ORCDPS1 ;SLC/MKB-Pharmacy dialog utilities ; 08 May 2002  2:12 PM
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**94,117,141,149,195,215**;Dec 17, 1997
  ;
  ; DBIA 2418   START^PSSJORDF   ^TMP("PSJMR",$J)
  ; DBIA 3166   EN^PSSDIN        ^TMP("PSSDIN",$J)
@@ -12,15 +12,14 @@ EN(TYPE) ; -- entry action for Meds dialogs
  . S ORCAT=$S(ORINPT:"I",1:"O")
  S ORDG=+$O(^ORD(100.98,"B",$S(ORCAT="I":"UD RX",1:"O RX"),0))
  K ^TMP("PSJMR",$J),^TMP("PSJNOUN",$J),^TMP("PSJSCH",$J)
- I $G(ORENEW)!$G(OREWRITE)!$G(OREDIT)!$G(ORXFER) D  Q:$G(ORQUIT)
+ I $G(ORENEW)!$G(OREWRITE)!$D(OREDIT)!$G(ORXFER) D  Q:$G(ORQUIT)
  . I 'ORINPT,ORCAT="I" D  Q:$G(ORQUIT)
  .. N OI S OI=+$O(^OR(100,+$G(ORIFN),.1,"B",0)) Q:OI<1
  .. I '$O(^ORD(101.43,OI,9,"B","IVM RX",0)) S ORQUIT=1 W $C(7),!!,"This order may not be placed at this location!" Q
  . K ORDIALOG($$PTR("START DATE/TIME"),1)
  . K ORDIALOG($$PTR("NOW"),1) Q:ORCAT'="O"
- . N WP S WP=$$PTR("WORD PROCESSING 1")
- . I '$G(ORXFER),'$$DRAFT^ORWDX2($G(ORIFN)) K ORDIALOG(WP,1),^TMP("ORWORD",$J,WP)
- . I $G(OREDIT),'$O(ORDIALOG($$PTR^ORCD("OR GTX INSTRUCTIONS"),0)) K ^TMP("ORWORD",$J)
+ . I $G(OREDIT)!$G(OREWRITE) N PI S PI=$$PTR("PATIENT INSTRUCTIONS") K ORDIALOG(PI,1),^TMP("ORWORD",$J,PI)
+ . I $D(OREDIT),'$O(ORDIALOG($$PTR^ORCD("OR GTX INSTRUCTIONS"),0)) K ^TMP("ORWORD",$J)
  I ORINPT,ORCAT="O" W $C(7),!!,"NOTE: This will create an outpatient prescription for an inpatient!",!
  Q
  ;
@@ -136,9 +135,9 @@ CKSCH ; -- validate schedule [Called from P-S Action]
  N ORX S ORX=ORDIALOG(PROMPT,ORI) Q:ORX=$G(ORESET)  K ORSD
  D EN^PSSGS0(.ORX,$G(ORCAT))
  I $D(ORX) S ORDIALOG(PROMPT,ORI)=ORX D CHANGED("QUANTITY") Q  ;ok
- W $C(7),!,"Enter a standard schedule for administering this medication"
+ W $C(7),!,"Enter a standard administration schedule"
  K DONE I $G(ORCAT)="I" W ".",! Q
- W " or one of your own,",!,"up to 20 characters.",!
+ W " or one of your own,",!,"up to 70 characters and no more than 2 spaces.",!
  Q
  ;
 DEFCONJ ; -- Set default conjuction for previous instance [P-S Action]
@@ -154,16 +153,6 @@ ENCONJ ; -- Get allowable values, if req'd for INST
  S REQD=$S($O(ORDIALOG(P,INST)):1,1:0)
  S ORDIALOG(PROMPT,"A")="And/then"_$S(ORCAT="O":"/except: ",1:": ")
  S $P(ORDIALOG(PROMPT,0),U,2)="A:AND;T:THEN;"_$S(ORCAT="O":"X:EXCEPT;",1:"")
- Q
- ;
-INPCONJ ;
- N LETTER,DUR
- I $G(X)="" Q
- S LETTER=$$UP^XLFSTR($E(X,1))
- I LETTER'="T" Q
- S DUR=$$PTR("DURATION") I '$L($G(ORDIALOG(DUR,INST))) D
- .W !,"A duration is required when using a 'Then' conjunction."
- .K X
  Q
  ;
 DSUP ; -- Get max/default days supply

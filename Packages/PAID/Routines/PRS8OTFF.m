@@ -1,6 +1,5 @@
-PRS8OTFF ;WCIOFO/MGD-OVERTIME/UNSCH FOR CODE R,C FIREFIGHTERS ;01/11/08
- ;;4.0;PAID;**45,54,102,117**;Sep 21, 1995;Build 32
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRS8OTFF ;WIRMFO/MGD-OVERTIME/UNSCH FOR CODE R,C FIREFIGHTERS ;10/24/2005
+ ;;4.0;PAID;**45,54,102**;Sep 21, 1995
  ;
  ;  routine called from PRS8ST when a premium pay indicator for
  ;  a firefighter is R or C.
@@ -71,7 +70,7 @@ WORKCNT(SCHWRK,XTRAWRK,XWRK) ;
  . . S HOLIDAY=$$HOLIDAY(QHRCNT,DAY)
  . . ;
  . . ; INCREMENT SCHEDULED WORK IF ACCOUNTED FOR WITH APPROPRIATE CODE.
- . . I "1SLWAUXYBCFGDJRMVnZq"[QHTCODE!(QHTCODE="O"&(HOLIDAY=2)) D
+ . . I "1SLWAUXYBCFGDJRMVn"[QHTCODE!(QHTCODE="O"&(HOLIDAY=2)) D
  . . . S SCHWRK(WEEK)=SCHWRK(WEEK)+1
  . . ;
  . . ; Increment any unscheduled work or unscheduled CT or OT

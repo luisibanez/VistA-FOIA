@@ -1,5 +1,5 @@
-RORTSK11 ;HCIOFO/SG - REPORT CREATION UTILITIES ; 11/14/06 1:16pm
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORTSK11 ;HCIOFO/SG - REPORT CREATION UTILITIES ; 10/25/05 2:17pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  Q
  ;
@@ -13,6 +13,9 @@ RORTSK11 ;HCIOFO/SG - REPORT CREATION UTILITIES ; 11/14/06 1:16pm
  ;
  ; VALUE         Value of the attribute
  ;
+ ; The value is automatically encoded by this function.
+ ; See the $$XMLENC^RORUTL03 function for more details
+ ;
  ; Return Values:
  ;       <0  Error code
  ;        0  Invalid attribute name
@@ -25,7 +28,7 @@ ADDATTR(TASK,ELMTIEN,NAME,VALUE) ;
  S IENS="?+1,"_(+ELMTIEN)_","_(+TASK)_","
  S (RORIEN(1),RORFDA(798.872,IENS,.01))=$$XEC(NAME)
  I RORIEN(1)'>0  Q:$QUIT 0  Q
- S RORFDA(798.872,IENS,1)=VALUE
+ S RORFDA(798.872,IENS,1)=$$XMLENC^RORUTL03(VALUE)
  D UPDATE^DIE(,"RORFDA","RORIEN","RORMSG")
  I $G(DIERR)  D  Q:$QUIT RC  Q
  . S RC=$$DBS^RORERR("RORMSG",-9,,,798.872,IENS)
@@ -42,8 +45,8 @@ ADDATTR(TASK,ELMTIEN,NAME,VALUE) ;
  ;
  ; [PARENT]      IEN of the parent element
  ;
- ; The text should be properly encoded beforehand (use the
- ; $$XMLENC^RORUTL03 function).
+ ; The text is not encoded by the function. This should be done
+ ; beforehand (use the $$XMLENC^RORUTL03 function).
  ;
  ; Return Values:
  ;       <0  Error code
@@ -79,6 +82,9 @@ ADDTEXT(TASK,NAME,ROR8TXT,PARENT) ;
  ;                 2  Sort as strings
  ;                 3  Sort as numbers
  ;
+ ; The value is automatically encoded by this function.
+ ; See the $$XMLENC^RORUTL03 function for more details
+ ;
  ; Return Values:
  ;       <0  Error code
  ;        0  Invalid element name
@@ -92,7 +98,7 @@ ADDVAL(TASK,NAME,VALUE,PARENT,SORTBY,ID) ;
  I TMP'>0  Q:$QUIT 0  Q
  S RORFDA(798.87,IENS,.02)=+$G(PARENT)
  S:$G(SORTBY) RORFDA(798.87,IENS,.03)=SORTBY
- S:$G(VALUE)'="" RORFDA(798.87,IENS,1)=VALUE
+ S:$G(VALUE)'="" RORFDA(798.87,IENS,1)=$$XMLENC^RORUTL03(VALUE)
  D:$G(ID)'=""
  . S TMP="+2,"_IENS
  . S (RORIEN(2),RORFDA(798.872,TMP,.01))=$$XEC("ID")
@@ -133,6 +139,9 @@ HASCHLD(TASK,ELMTIEN) ;
  ; [IGNORE]      Do not render this element into the resulting XML
  ;               document.
  ;
+ ; The value is automatically encoded by this function.
+ ; See the $$XMLENC^RORUTL03 function for more details
+ ;
  ; Return Values:
  ;       <0  Error code
  ;       >0  IEN of the report element
@@ -144,7 +153,7 @@ UPDVAL(TASK,ELMTIEN,VALUE,SORTBY,IGNORE) ;
  S IENS=(+ELMTIEN)_","_(+TASK)_","
  S:$G(SORTBY) RORFDA(798.87,IENS,.03)=SORTBY
  S RORFDA(798.87,IENS,.04)=$S($G(IGNORE):1,1:"")
- S RORFDA(798.87,IENS,1)=$G(VALUE)
+ S RORFDA(798.87,IENS,1)=$$XMLENC^RORUTL03($G(VALUE))
  D FILE^DIE(,"RORFDA","RORMSG")
  I $G(DIERR)  D  Q:$QUIT RC  Q
  . S RC=$$DBS^RORERR("RORMSG",-9,,,798.87,IENS)

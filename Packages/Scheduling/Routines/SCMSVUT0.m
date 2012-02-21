@@ -1,5 +1,5 @@
 SCMSVUT0 ;ALB/ESD HL7 Segment Validation Utilities ; 7/8/04 5:06pm
- ;;5.3;Scheduling;**44,55,66,132,245,254,293,345,472,441,551,552**;Aug 13, 1993;Build 5
+ ;;5.3;Scheduling;**44,55,66,132,245,254,293,345,472**;Aug 13, 1993
  ;
  ;
 CONVERT(SEG,HLFS,HLQ) ; Convert HLQ ("") to null in segment
@@ -65,39 +65,25 @@ SETPRTY(SDOE) ;Set outpatient provider type in field #.06 of V PROVIDER
  . I +$G(SDPRTYP)>0 D PCLASS^PXAPIOE(SDVPRV)
  Q
  ;
-SETMAR(PIDSEG,HLQ,HLFS,HLECH) ; Set marital status prior to PID segment validation
+SETMAR(PIDSEG,HLQ,HLFS) ; Set marital status prior to PID segment validation
  ;Input:   PIDSEG = Array containing PID segment (pass by reference)
  ;                  PIDSEG = First 245 characters
  ;                  PIDSEG(1..n) = Continuation nodes
  ;            HLQ = HL7 null variable
  ;           HLFS = HL7 field separator
- ;          HLECH = HL7 encoding characters (VAFCQRY1 call)
  ;Output:  Marital status changed from null to "U" (UNKNOWN) prior to
  ;         validation of PID segment and transmittal to AAC
  ;Note: Assumes all input exists and is valid
  ;
  ;Declare variables
- N REBLD,TMPARR,X,TMPARR3,TMPARR5,TMPARR11
+ N REBLD,TMPARR,X
  ;Parse segment
  D SEGPRSE^SCMSVUT5($NA(PIDSEG),"TMPARR",HLFS)
  ;Change marital status (if needed)
  S REBLD=0
  S X=$G(TMPARR(16))
  I ((X="")!(X=HLQ)) S TMPARR(16)="U",REBLD=1
- I $D(HLECH) D  Q  ;from SCDXMSG1 (VAFCQRY call)
- . ;Change religion (if needed)
- . S X=$G(TMPARR(17))
- . I ((X="")!(X=HLQ)) S TMPARR(17)=29
- . ;Rebuild segment (due to VAFCQRY call building seg. array)
- . ;VAFCQRY Seqs 3,5,11 needs to be broken down - too long for rebuild
- . K TMPARR(0),PIDSEG
- . D SEQPRSE^SCMSVUT5($NA(TMPARR(3)),"TMPARR3",HLECH)
- . D SEQPRSE^SCMSVUT5($NA(TMPARR(5)),"TMPARR5",HLECH)
- . D SEQPRSE^SCMSVUT5($NA(TMPARR(11)),"TMPARR11",HLECH)
- . K TMPARR(3) M TMPARR(3)=TMPARR3
- . K TMPARR(5) M TMPARR(5)=TMPARR5
- . K TMPARR(11) M TMPARR(11)=TMPARR11
- . D MAKEIT^VAFHLU("PID",.TMPARR,.PIDSEG,.PIDSEG)
+ ;Rebuild segment (if needed)
  I REBLD K TMPARR(0),PIDSEG D MAKEIT^VAFHLU("PID",.TMPARR,.PIDSEG,.PIDSEG)
  Q
  ;

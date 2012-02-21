@@ -1,6 +1,5 @@
-HLTPCK2 ;SF/RSD - Message Header Validation (TCP Link) ;09/13/2006
- ;;1.6;HEALTH LEVEL SEVEN;**19,59,120,133**;Oct 13, 1995;Build 13
- ;Per VHA Directive 2004-038, this routine should not be modified.
+HLTPCK2 ;SF/RSD - Message Header Validation (TCP Link) ;07/21/2005  17:12
+ ;;1.6;HEALTH LEVEL SEVEN;**19,59,120**;Oct 13, 1995;Build 12
 CHK(HDR,ARY,MSA) ;
  ;Validate Data in Header Segment (MSH, BHS or FHS) of an HL7 Message
  ; through TCP link.
@@ -40,13 +39,9 @@ CHK(HDR,ARY,MSA) ;
  I ECH?.C S ERR="Invalid Encoding Characters" G EXIT
  ;
  ; patch HL*1.6*120 start
- ; patch HL*1.6*133
- ; escape and sub-component characters are optional
- ; I $L(ECH)'=4 S ERR="Invalid Encoding Characters" G EXIT
- I $L(ECH)<1 S ERR="Invalid Encoding Characters" G EXIT
+ I $L(ECH)'=4 S ERR="Invalid Encoding Characters" G EXIT
  S ECH(1)=$E(ECH)
  S ECH(2)=$E(ECH,2)
- S ECH(3)=$E(ECH,3)
  S ECH(4)=$E(ECH,4)
  M ARY("HDR")=HDR
  ;
@@ -80,14 +75,10 @@ CHK(HDR,ARY,MSA) ;
  . ; subcomponent separator
  . S ECH("SUB-COMPONENT")=ECH(2)
  . ; if subcomponent separator is correctly applied
- . ; patch HL*1.6*133
- . ; I X[ECH(4) S ECH("SUB-COMPONENT")=ECH(4)
- . I ECH(4)]"",X[ECH(4) S ECH("SUB-COMPONENT")=ECH(4)
+ . I X[ECH(4) S ECH("SUB-COMPONENT")=ECH(4)
  . ;
  . S ARY("PID")=$P(X,ECH(1),2)
- . ; patch HL*1.6*133
- . ; I ARY("PID")[ECH("SUB-COMPONENT") D
- . I ECH("SUB-COMPONENT")]"",ARY("PID")[ECH("SUB-COMPONENT") D
+ . I ARY("PID")[ECH("SUB-COMPONENT") D
  .. ; 2nd sub-component is Processing mode
  .. S ARY("PMOD")=$P(ARY("PID"),ECH("SUB-COMPONENT"),2)
  .. ; first sub-component is Processing id
@@ -97,17 +88,9 @@ CHK(HDR,ARY,MSA) ;
  . ;
  . S ARY("MTN")=$P(X,ECH(1),3)
  . ; 2nd sub-component is event type
- . ;
- . ; patch HL*1.6*133 start
- . S ARY("ETN")=""
- . ; S ARY("ETN")=$P(ARY("MTN"),ECH("SUB-COMPONENT"),2)
- . I ECH("SUB-COMPONENT")]"" D
- .. S ARY("ETN")=$P(ARY("MTN"),ECH("SUB-COMPONENT"),2)
+ . S ARY("ETN")=$P(ARY("MTN"),ECH("SUB-COMPONENT"),2)
  . ; 1st sub-component is message type
- . ; S ARY("MTN")=$P(ARY("MTN"),ECH("SUB-COMPONENT"))
- . I ECH("SUB-COMPONENT")]"" D
- .. S ARY("MTN")=$P(ARY("MTN"),ECH("SUB-COMPONENT"))
- . ; patch HL*1.6*133 end
+ . S ARY("MTN")=$P(ARY("MTN"),ECH("SUB-COMPONENT"))
  . ;
  . ; S ARY("VER")=$P(X,$E(ECH),4),ARY("ACAT")=$P(X,$E(ECH),5),ARY("APAT")=$P(X,$E(ECH),6)
  . S ARY("VER")=$P(X,ECH(1),4)

@@ -1,5 +1,5 @@
-PSOORUTL ;ISC BHAM/SAB  - updates order status from oerr ;2/25/09 9:47am
- ;;7.0;OUTPATIENT PHARMACY;**14,46,146,132,118,199,223,148,249,274,225,324**;DEC 1997;Build 6
+PSOORUTL ;ISC BHAM/SAB  - updates order status from oerr ;02/22/95
+ ;;7.0;OUTPATIENT PHARMACY;**14,46,146,132,118,199,223,148**;DEC 1997
  ;External reference to EN^ORERR - 2187
  ;External reference to ^PS(55 - 2228
  ;Input variables, poerr("psofilnm")=pharmacy pointer # from OE/RR, poerr("stat")=Order Control status
@@ -15,7 +15,7 @@ EN(POERR) ;
 RXO S III=POERR("PSOFILNM") I $D(^PSRX(III,0)) D  G PEXIT
  .I $G(PDFN),$P($G(^PSRX(III,0)),"^",2),PDFN'=$P(^PSRX(III,0),"^",2) S ORS=1
  S (ORS,PSZORS)=1
-PEXIT I $G(ORS) S POERR("STAT")=$S(POERR("STAT")="CA":"UC",POERR("STAT")="DC":"UD",POERR("STAT")="HD":"UH",1:"UR"),POERR("FILLER")="",POERR("COMM")=$S($G(PSZORS):"Invalid Pharmacy order number",1:"Patient does not match.") K ORS,PSZORS,III Q
+PEXIT I $G(ORS) S POERR("STAT")=$S(POERR("STAT")="CA":"UC",POERR("STAT")="DC":"UD",POERR("STAT")="HD":"UH",1:"UR"),POERR("FILLER")="",POERR("COMM")=$S($G(PSZORS):"Unable to locate order.",1:"Patient does not match.") K ORS,PSZORS,III Q
  S POERR("PHARMST")="" G:POERR("STAT")="HD"!(POERR("STAT")="RL") HD
  S ORS=0 I POERR("PSOFILNM")["S" S DA=+POERR("PSOFILNM") I $D(^PS(52.41,DA,0)) D  G EXIT
  .Q:$P($G(^PS(52.41,DA,0)),"^",3)="RF"
@@ -23,7 +23,7 @@ PEXIT I $G(ORS) S POERR("STAT")=$S(POERR("STAT")="CA":"UC",POERR("STAT")="DC":"U
  .K ^PS(52.41,"AOR",+$P($G(^PS(52.41,DA,0)),"^",2),+$P($G(^PS(52.41,DA,"INI")),"^"),DA)
  .S:$G(POERR("COMM"))']"" POERR("COMM")="Order Canceled by OE/RR before finishing." S ORS=1,$P(^PS(52.41,DA,4),"^")=$G(POERR("COMM"))
  S DA=POERR("PSOFILNM") D:$D(^PSRX(DA,0)) REVERSE^PSOBPSU1(DA,,"DC",7)
- I $D(^PSRX(DA,0)) D  S $P(^PSRX(DA,"STA"),"^")=14,$P(^PSRX(DA,3),"^",5)=DT,$P(^PSRX(DA,3),"^",10)=$P(^PSRX(DA,3),"^") D CHKCMOP^PSOUTL(DA),CAN^PSOTPCAN(DA) G EXIT
+ I $D(^PSRX(DA,0)) D  S $P(^PSRX(DA,"STA"),"^")=14,$P(^PSRX(DA,3),"^",5)=$S($P($G(^PSRX(DA,3)),"^"):$P(^(3),"^"),1:DT) D CAN^PSOTPCAN(DA) G EXIT
  .;cancel/discontinue action
  .S POERR("PLACE")=+$P($G(^PSRX(DA,"OR1")),"^",2),POERR("STAT")=$S(POERR("STAT")="CA":"CR",1:"DR"),POERR("FILLER")=DA_"^R"
  .S:'$D(POERR("COMM")) POERR("COMM")="Prescription DISCONTINUED by OERR"
@@ -103,6 +103,5 @@ ACT ;activity log
  D NOW^%DTC S NOW=%
  S IR=0 F FDA=0:0 S FDA=$O(^PSRX(DA,"A",FDA)) Q:'FDA  S IR=FDA
  S IR=IR+1,^PSRX(DA,"A",0)="^52.3DA^"_IR_"^"_IR
- S RXF=$S(RXF>5:RXF+1,1:RXF)
  S ^PSRX(DA,"A",IR,0)=NOW_"^"_$S(ACT:"U",1:"H")_"^"_POERR("USER")_"^"_RXF_"^"_"RX "_$S('ACT:"placed in a",1:"removed from")_" HOLD status "_$S(+$G(PSUS):"and removed from SUSPENSE ",1:"")_"("_$E(DT,4,5)_"-"_$E(DT,6,7)_"-"_$E(DT,2,3)_") by OERR."
  Q

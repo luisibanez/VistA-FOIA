@@ -1,6 +1,5 @@
-MAGBRTUT ;WOIFO/EdM - Routing Utilities ; 10/30/2008 09:20
- ;;3.0;IMAGING;**9,11,30,51,50,85,54**;03-July-2009;;Build 1424
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGBRTUT ;WOIFO/EdM - Routing Utilities ; 06/08/2004  08:00
+ ;;3.0;IMAGING;**9,11,30**;16-September-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGBRTUT ;WOIFO/EdM - Routing Utilities ; 10/30/2008 09:20
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -37,8 +37,6 @@ SEND(IMAGE,LOC,PRI,MECH,FROM,ID) ; Enter image into Routing Queue
  I MECH=1,'$D(^MAG(2005.2,+$G(LOC))) Q:$Q QQ Q
  I MECH=2,'$D(^MAG(2006.587,+$G(LOC))) Q:$Q QQ Q
  I MECH'=1,MECH'=2 Q:$Q QQ Q
- S:MECH=1 LOC=(+LOC)_";MAG(2005.2,"
- S:MECH=2 LOC=(+LOC)_";MAG(2006.587,"
  ;
  S ORIGIN=$G(FROM) D:'ORIGIN
  . S ORIGIN=$P($G(^MAG(2005,IMAGE,100)),"^",3)
@@ -52,8 +50,8 @@ SEND(IMAGE,LOC,PRI,MECH,FROM,ID) ; Enter image into Routing Queue
  I MECH=2 D  Q:$Q QQ Q
  . ; Stopgap until "native DICOM" storage is supported
  . N APPNAM
- . S APPNAM=$P($G(^MAG(2006.587,+LOC,0)),"^",1)
- . D QUEUE^MAGDRPC3(.QQ,IMAGE,APPNAM,ORIGIN,"","6: Copy to HIPAA Compliant Storage",,PRI)
+ . S APPNAM=$P($G(^MAG(2006.587,LOC,0)),"^",1)
+ . D QUEUE^MAGDRPC3(.QQ,IMAGE,APPNAM,ORIGIN,"","6: Copy to HIPAA Compliant Storage")
  . Q
  ;
  F I=1:1:5 D:$P(FLAG,"^",I)
@@ -78,17 +76,18 @@ SEND(IMAGE,LOC,PRI,MECH,FROM,ID) ; Enter image into Routing Queue
  . . S ^MAGQUEUE(2006.035,"STS",ORIGIN,"WAITING",PRI,LOC,D0)=""
  . . Q
  . ;
- . L +^MAGQUEUE(2006.035,0):1E9 ; Background job MUST wait
+ . L +^MAGQUEUE(2006.035,0)
  . S D0=$O(^MAGQUEUE(2006.035," "),-1)+1
  . S X=$G(^MAGQUEUE(2006.035,0))
- . S $P(X,"^",1,2)="SEND QUEUE^2006.035"
+ . S $P(X,"^",1,2)="IMAGE ROUTING QUEUE^2006.035"
  . S $P(X,"^",3)=D0
  . S $P(X,"^",4)=$P(X,"^",4)+1
  . S ^MAGQUEUE(2006.035,0)=X
  . S X=IMAGE_"^"_LOC_"^"_T_"^"_MECH_"^"_ORIGIN_"^"_ID
  . S:ID'="" ^MAGQUEUE(2006.035,"ID",ID,D0)=""
  . S ^MAGQUEUE(2006.035,D0,0)=X
- . S ^MAGQUEUE(2006.035,D0,1)="WAITING^"_PRI_"^"_$$NOW^XLFDT()
+ . D NOW^%DTC
+ . S ^MAGQUEUE(2006.035,D0,1)="WAITING^"_PRI_"^"_%
  . S ^MAGQUEUE(2006.035,"STS",ORIGIN,"WAITING",PRI,LOC,D0)=""
  . S ^MAGQUEUE(2006.035,"DEST",LOC,"WAITING",IMAGE,T,D0)=""
  . L -^MAGQUEUE(2006.035,0)
@@ -110,78 +109,5 @@ DCMLIST(OUT,LOCATION) N D0,LO,LST,N,NM,X
  . S LO="" F  S LO=$O(LST(NM,LO)) Q:LO=""  S N=N+1,OUT(N)=NM_" ("_LO_")^"_LST(NM,LO)
  . Q
  S OUT(1)=N-1
- Q
- ;
-EVALPU(OUT,UNTIL) ; RPC = MAG DICOM ROUTE EVAL PURGE
- N D0,MORE,N,P1,P4,P5,P6,P7,P8,TIME
- S TIME=$$STAMP($H)+55,N=0,MORE=0
- L +^MAGQUEUE(2006.03,0):1E9 ; Background process must wait
- S D0="" F  S D0=$O(^MAGQUEUE(2006.03,"B","EVAL",D0)) Q:D0=""  D  Q:MORE
- . S X=$G(^MAGQUEUE(2006.03,D0,0))
- . S P4=$P(X,"^",4),P6=$P(X,"^",6)
- . S:P6 P4=-1
- . Q:P4>UNTIL
- . I $$STAMP($H)>TIME S MORE=1 Q
- . S N=N+1,P1=$P(X,"^",1),P5=$P(X,"^",5),P7=$P(X,"^",7),P8=$P(X,"^",8)
- . I P1'="" K ^MAGQUEUE(2006.03,"B",P1,D0)
- . I P5'="" K ^MAGQUEUE(2006.03,"C",P5,D0)
- . I P7'="",P8'="" K ^MAGQUEUE(2006.03,"JD",P7,P8,D0)
- . I P7'="" K ^MAGQUEUE(2006.03,"JX",P7,D0)
- . K ^MAGQUEUE(2006.03,D0)
- . Q
- S X=$G(^MAGQUEUE(2006.03,0))
- S P1=$P(X,"^",4)-N S:P1<1 P1=0 S $P(X,"^",4)=P1
- S $P(X,"^",1,2)="IMAGE BACKGROUND QUEUE^2006.03"
- S ^MAGQUEUE(2006.03,0)=X
- L -^MAGQUEUE(2006.03,0)
- S OUT=N_"^"_MORE
- Q
- ;
-STAMP(H) Q H*86400+$P(H,",",2)
- ;
-RENAME(OUT,OLD,NEW,KEY) ; RPC = MAG DICOM XMIT RENAME GATEWAY
- N D0,ID,LOC,SVC,N,X
- I $G(OLD)="" S OUT="-1,No previous Gateway name specified" Q
- I $G(NEW)="" S OUT="-2,No new Gateway name specified" Q
- S:'$G(KEY) KEY=5
- I KEY'=5,KEY'=6 S OUT="-3,Invalid key specified ("_KEY_")" Q
- ;
- S (N,D0)=0 F  S D0=$O(^MAG(2006.587,D0)) Q:'D0  D
- . S X=$G(^MAG(2006.587,D0,0)),ID=$P(X,"^",KEY) Q:ID'=OLD
- . S N=N+1
- . S $P(X,"^",KEY)=NEW
- . Q:KEY'=5
- . S LOC=$P(X,"^",7),SVC=$P(X,"^",1)
- . I LOC'="",SVC'="" K ^MAG(2006.587,"C",SVC,OLD,LOC,D0)
- . I LOC'="" K ^MAG(2006.587,"D",OLD,LOC,D0)
- . I LOC'="",SVC'="" S ^MAG(2006.587,"C",SVC,NEW,LOC,D0)=""
- . I LOC'="" S ^MAG(2006.587,"D",NEW,LOC,D0)=""
- . Q
- S OUT=N_" entr"_$S(N=1:"y",1:"ies")_" renamed"
- Q
- ;
-REMOVE(OUT,OLD,KEY) ; RPC = MAG DICOM XMIT REMOVE GATEWAY
- N D0,ID,LOC,SVC,N,T,X
- I $G(OLD)="" S OUT="-1,No Gateway name specified" Q
- S:'$G(KEY) KEY=5
- I KEY'=5,KEY'=6 S OUT="-3,Invalid key specified ("_KEY_")" Q
- ;
- L +^MAG(2006.587,0):1E9 ; Background process MUST wait
- S (N,D0)=0 F  S D0=$O(^MAG(2006.587,D0)) Q:'D0  D
- . S X=$G(^MAG(2006.587,D0,0)),ID=$P(X,"^",KEY) Q:ID'=OLD
- . S N=N+1
- . S LOC=$P(X,"^",7),SVC=$P(X,"^",1)
- . I LOC'="",SVC'="" K ^MAG(2006.587,"C",SVC,OLD,LOC,D0)
- . I LOC'="" K ^MAG(2006.587,"D",OLD,LOC,D0)
- . I SVC'="" K ^MAG(2006.587,"B",SVC,D0)
- . K ^MAG(2006.587,D0)
- . Q
- S X=$G(^MAG(2006.587,0))
- S $P(X,"^",1,2)="DICOM TRANSMIT DESTINATION^2006.587"
- S $P(X,"^",3)=$O(^MAG(2006.587," "),-1)
- S T=$P(X,"^",4)-N S:T<1 T="" S $P(X,"^",4)=T
- S ^MAG(2006.587,0)=X
- L -^MAG(2006.587,0)
- S OUT=N_" entr"_$S(N=1:"y",1:"ies")_" removed"
  Q
  ;

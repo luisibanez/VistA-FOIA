@@ -1,5 +1,5 @@
 LR7OSUM1 ;DALOI/dcm - Silent Patient cum cont. ; Mar 11, 2003
- ;;5.2;LAB SERVICE;**121,187,256,286,384**;Sep 27, 1994;Build 2
+ ;;5.2;LAB SERVICE;**121,187,256,286**;Sep 27, 1994
  ;
 LRIDT ; from LR7OSUM
  F  S LRIDT=$O(^LR(LRDFN,"CH",LRIDT)) Q:LRIDT<1!(LRIDT>LROUT)!(CT1>COUNT)  I $D(^(LRIDT,0)) S X=^(0),CT1=CT1+1 D LRIIDT
@@ -147,8 +147,6 @@ CHKUN ; Check units and normals with cumulative report values
  ;
  S @("LRHI="_$S($P(LRX,"^",3)'="":$P(LRX,"^",3),$P(LRX,"^",12)'="":$P(LRX,"^",12),1:""""""))
  I LRLO'=$P(LRTRES,"^",3)!(LRHI'=$P(LRTRES,"^",4)) D
- . ; check to see if these values are numeric and are different because of leading or trailing zeroes
- . I '$$REALDIFF Q
  . I LRFLAG S LRY=LRY_" and"
  . S LRY=LRY_" Normals: "_$P(LRTRES,"^",3)_"-"_$P(LRTRES,"^",4),LRFLAG=1
  ;
@@ -157,24 +155,3 @@ CHKUN ; Check units and normals with cumulative report values
  S L=+$O(^TMP($J,LRDFN,LRMH,LRSH,LRIDT,"TX",9999999),-1),L=L+1
  S LRY=LRY_" ***",^TMP($J,LRDFN,LRMH,LRSH,LRIDT,"TX",L,0)=LRY
  Q
- ;
- ;
-REALDIFF() ;
- ; function to determine if values are numeric and are different
- ; solely because of leading or trailing zeroes
- ;     returns 0 if difference is because of leading/trailing zeroes
- ;     returns 1 if differences are meaningful
- N LRTRESLO,LRTRESHI,DIFF
- S LRTRESLO=$P(LRTRES,"^",3),LRTRESHI=$P(LRTRES,"^",4)
- S DIFF=0
- I LRLO'=LRTRESLO S DIFF=1 D
- . I LRLO?.N!(LRLO?.N1".".N) D
- . . I LRTRESLO?.N!(LRTRESLO?.N1".".N) D
- . . . I +LRLO=+LRTRESLO S DIFF=0
- I DIFF Q 1
- I LRHI'=LRTRESHI S DIFF=1 D
- . I LRHI?.N!(LRHI?.N1".".N) D
- . . I LRTRESHI?.N!(LRTRESHI?.N1".".N) D
- . . . I +LRHI=+LRTRESHI S DIFF=0
- I DIFF Q 1
- Q 0

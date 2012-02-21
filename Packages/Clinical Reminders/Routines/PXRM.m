@@ -1,8 +1,8 @@
-PXRM ; SLC/PKR - Clinical Reminders entry points. ; 10/20/2009
- ;;2.0;CLINICAL REMINDERS;**4,11,12,16**;Feb 04, 2005;Build 119
+PXRM ; SLC/PKR - Clinical Reminders entry points. ; 01/18/2005
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;Entry points in this routine are listed in DBIA #2182.
  ;==========================================================
-MAIN(DFN,PXRMITEM,OUTTYPE,DISC) ;Main driver for clinical reminders.
+MAIN(DFN,PXRMITEM,OUTTYPE,NODISC) ;Main driver for clinical reminders.
  ;INPUT  DFN - Pointer to Patient File (#2)
  ;       PXRMITEM - IEN of reminder to evaluate.
  ;       OUTTYPE - Flag to indicate type of output information.
@@ -14,10 +14,8 @@ MAIN(DFN,PXRMITEM,OUTTYPE,DISC) ;Main driver for clinical reminders.
  ;              HS component)
  ;        10 - MyHealtheVet summary
  ;        11 - MyHealtheVet detailed
- ;        12 - MyHealtheVet combined
- ;        55 - Order check
- ;        DISC - (optional) if this is true then the disclaimer will
- ;             be loaded in ^TMP("PXRM",$J,"DISC").
+ ;        NODISC - (optional) if this is true or not present then the
+ ;                  disclaimer will not be loaded.
  ;
  ;OUTPUT  ^TMP("PXRHM",$J,PXRMITEM,PXRMRNAM)=
  ;              STATUS_U_DUE DATE_U_LAST DONE
@@ -28,9 +26,8 @@ MAIN(DFN,PXRMITEM,OUTTYPE,DISC) ;Main driver for clinical reminders.
  ;        ^TMP("PXRHM",$J,PXRMITEM,PXRMRNAM,"TXT",N)=TEXT
  ;        where N is a number and TEXT is a text string.
  ;
- ;        If DISC is true then the disclaimer will be loaded into
- ;        ^TMP("PXRM",$J,"DISC"). The calling application should
- ;        delete this when it is done.
+ ;        If NODISC is true or not present then the disclaimer will
+ ;        not be loaded into ^TMP("PXRM",$J,"DISC",N).
  ;
  ;        The calling application can display the contents of these
  ;        two ^TMP arrays as it chooses. The caller should also make
@@ -41,7 +38,6 @@ MAIN(DFN,PXRMITEM,OUTTYPE,DISC) ;Main driver for clinical reminders.
  D DEF^PXRMLDR(PXRMITEM,.DEFARR)
  ;
  I $G(NODISC)="" S NODISC=1
- I $D(GMFLAG) S NODISC=0
  D EVAL(DFN,.DEFARR,OUTTYPE,NODISC,.FIEVAL)
  Q
  ;
@@ -57,7 +53,7 @@ EVAL(DFN,DEFARR,OUTTYPE,NODISC,FIEVAL,DATE) ;Reminder evaluation entry
  ;Make sure the reminder exists.
  I $D(DEFARR("DNE")) D NODEF^PXRMERRH(DEFARR("IEN")) Q
  ;PXRMRM is the right margin for output.
- S PXRMRM=80
+ S PXRMRM=70
  S PXRMDATE=$G(DATE)
  S PXRMITEM=DEFARR("IEN")
  S PXRMPID="PXRM"_PXRMITEM_$H
@@ -75,7 +71,6 @@ EVAL(DFN,DEFARR,OUTTYPE,NODISC,FIEVAL,DATE) ;Reminder evaluation entry
  ;Initialize the working array.
  K ^TMP(PXRMPID,$J)
  ;
- N DUE,DUEDATE,FREQ,PCLOGIC,RESDATE,RESLOGIC
  ;Make sure the reminder is active.
  I $P(D00,U,6) D  G OUTPUT
  . S ^TMP(PXRMPID,$J,PXRMITEM,"N/A","INACTIVE")="The reminder "_PXRMRNAM_" was inactivated "_$$FMTE^XLFDT($P(D00,U,7),"5Z")
@@ -89,6 +84,7 @@ EVAL(DFN,DEFARR,OUTTYPE,NODISC,FIEVAL,DATE) ;Reminder evaluation entry
  . S ^TMP(PXRMPID,$J,PXRMITEM,"FERROR","NO ENODE")=""
  ;
  ;Establish the main findings evaluation variables.
+ N DUE,DUEDATE,FREQ,PCLOGIC,RESDATE,RESLOGIC
  S (DUE,DUEDATE,FREQ,RESDATE)=0
  S (PCLOGIC,RESLOGIC)=""
  ;
@@ -110,7 +106,7 @@ EVAL(DFN,DEFARR,OUTTYPE,NODISC,FIEVAL,DATE) ;Reminder evaluation entry
  . S ^TMP(PXRMPID,$J,PXRMITEM,"DEAD")="Patient is deceased."
  ;
  ;If the component is CR and the patient is deceased we are done.
- I OUTTYPE=0,PXRMPDEM("DOD")'="",'$G(PXRMIDOD) G OUTPUT
+ I OUTTYPE=0,PXRMPDEM("DOD")'="" G OUTPUT
  ;
  ;Check for a sex specific reminder.
  N SEXOK
@@ -146,7 +142,6 @@ OUTPUT ;Prepare the final output.
  D OUTPUT^PXRMOUTD(OUTTYPE,.DEFARR,.PXRMPDEM,PCLOGIC,RESLOGIC,DUE,DUEDATE,RESDATE,FREQ,.FIEVAL)
  ;
 EXIT ;Kill the working arrays unless this was a test run.
- K ^TMP($J,"SVC",DFN)
  I $G(PXRMDEBG) D
  . S PXRMID=PXRMPID
  . S FIEVAL("PATIENT AGE")=$G(PXRMPDEM("AGE"))
@@ -155,8 +150,10 @@ EXIT ;Kill the working arrays unless this was a test run.
  . S ^TMP(PXRMPID,$J,PXRMITEM,"REMINDER NAME")=$G(PXRMRNAM)
  E  K ^TMP(PXRMPID,$J)
  ;
- ;I DISC is true load the disclaimer.
- I $G(DISC) D LOAD^PXRMDISC
+ ;I NODISC is true then don't load the disclaimer.
+ I $G(NODISC) Q
+ ;If there is any data in ^TMP("PXRHM",$J) then set up the disclaimer.
+ I $D(^TMP("PXRHM",$J)) D LOAD^PXRMDISC
  Q
  ;
  ;==========================================================

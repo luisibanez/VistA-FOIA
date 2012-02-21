@@ -1,5 +1,5 @@
-EASEZRP1 ;ALB/AMA - Print 1010EZR ; 8/1/08 1:28pm
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**57,70**;Mar 15, 2001;Build 26
+EASEZRP1 ;ALB/AMA - Print 1010EZR
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**57**;Mar 15, 2001
  ;
 EN(EALNE,EAINFO) ;Entry point for VA 10-10EZR, page 1
  ; Called from EN^EASEZRPF
@@ -31,23 +31,12 @@ DEM ; Print VA 10-10EZR Section I, Demographic information
  W !?3,@EASD@(4),?20,"|   ",@EASD@(5),?55,"|   ",@EASD@(7),?95,"|   ",@EASD@(12)
  W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
  ;
- ;EAS*1.0*70 - CHECK FOR FOREIGN ADDRESS
- I $G(@EASD@("9H"))="UNITED STATES" D  I 1  ;Use domestic address field labels
- . W !,"7. PERMANENT ADDRESS (Street)",?42,"|7A. CITY",?66,"|7B. STATE",?105,"|7C. ZIP"
- . W !?3,@EASD@("9A"),?42,"|    ",@EASD@("9B"),?66,"|    ",@EASD@("9C"),?105,"|    ",@EASD@("9D")
- . W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
- . ;
- . W !,"7D. COUNTY",?34,"|7E. HOME TELEPHONE NUMBER (Include area code)",?82,"|7F. E-MAIL ADDRESS"
- . W !?4,@EASD@("9E"),?34,"|    ",@EASD@(10),?82,"|    ",@EASD@("11A")
+ W !,"7. PERMANENT ADDRESS (Street)",?42,"|7A. CITY",?66,"|7B. STATE",?105,"|7C. ZIP"
+ W !?3,@EASD@("9A"),?42,"|    ",@EASD@("9B"),?66,"|    ",@EASD@("9C"),?105,"|    ",@EASD@("9D")
+ W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
  ;
- E  D  ;Use foreign address field labels
- . W !,"7. PERMANENT ADDRESS (Street)",?42,"|7A. CITY",?66,"|7B. PROVINCE",?105,"|7C. POSTAL CODE"
- . W !?3,@EASD@("9A"),?42,"|    ",@EASD@("9B"),?66,"|    ",@EASD@("9F"),?105,"|    ",@EASD@("9G")
- . W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
- . ;
- . W !,"7D. COUNTRY",?34,"|7E. HOME TELEPHONE NUMBER (Include area code)",?82,"|7F. E-MAIL ADDRESS"
- . W !?4,@EASD@("9H"),?34,"|    ",@EASD@(10),?82,"|    ",@EASD@("11A")
- ;
+ W !,"7D. COUNTY",?34,"|7E. HOME TELEPHONE NUMBER (Include area code)",?82,"|7F. E-MAIL ADDRESS"
+ W !?4,@EASD@("9E"),?34,"|    ",@EASD@(10),?82,"|    ",@EASD@("11A")
  W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
  ;
  W !,"7G. CELLULAR TELEPHONE NUMBER (Include area code)",?66,"|7H. PAGER NUMBER (Include area code)"

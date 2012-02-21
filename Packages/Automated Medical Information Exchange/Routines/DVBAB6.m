@@ -1,5 +1,5 @@
-DVBAB6 ;ALB/KLB,SBW - CAPRI PENDING 2507 REQUEST ; 5/MAR/2011
- ;;2.7;AMIE;**35,90,108,168**;Apr 10, 1995;Build 3
+DVBAB6 ;ALB/KLB - CAPRI PENDING 2507 REQUEST ;08/01/00
+ ;;2.7;AMIE;**35,90**;Apr 10, 1995
  ;
 STRT(MSG,DVBCSORT,RSTAT,ERDAYS,OLDAYS,ADIVNUM,ELTYP) ;
  I ADIVNUM'="" S X=$O(^DG(40.8,"C",ADIVNUM,"")) S:X]"" ADIVNUM=X
@@ -16,10 +16,7 @@ HEAD S HEAD="Pending 2507 Requests for "_$S($D(^DVB(396.1,1,0)):$P(^(0),U,1),1:"
  S ^TMP("CAPRI",MSGCNT)="",MSGCNT=MSGCNT+1
 DATA S DFN="" F  S DFN=$O(^DVB(396.3,"B",DFN)) Q:DFN=""  F REQDA=0:0 S REQDA=$O(^DVB(396.3,"B",DFN,REQDA)) Q:REQDA=""  D SORT^DVBAB5
  I DVBCSORT="V" S PNAM="" F  S PNAM=$O(^TMP($J,PNAM)) Q:PNAM=""  F DFN=0:0 S DFN=$O(^TMP($J,PNAM,DFN)) Q:'DFN  F DA(1)=0:0 S DA(1)=$O(^TMP($J,PNAM,DFN,DA(1))) Q:'DA(1)  D PRINT I $D(OUT) S DA(1)=999999999,PNAM="ZZZ",DONE="YES" Q
- I DVBCSORT="R"!(DVBCSORT="A")!(DVBCSORT="S") D
- . S JX="" F  S JX=$O(^TMP($J,JX)) Q:JX=""  D
- .. S PNAM="" F  S PNAM=$O(^TMP($J,JX,PNAM)) Q:PNAM=""  D
- ... F DFN=0:0 S DFN=$O(^TMP($J,JX,PNAM,DFN)) Q:'DFN  D NXT
+ I DVBCSORT="R"!(DVBCSORT="A")!(DVBCSORT="S") S (PNAM,JX)="" F  S JX=$O(^TMP($J,JX)) Q:'JX  F  S PNAM=$O(^TMP($J,JX,PNAM)) Q:PNAM=""  F DFN=0:0 S DFN=$O(^TMP($J,JX,PNAM,DFN)) Q:'DFN  D NXT
  I DVBCCNT>0 S ^TMP("CAPRI",MSGCNT)="Total pending: "_DVBCCNT,DONE="YES"
  ;
 EXIT I NODATA=0 S ^TMP("CAPRI",MSGCNT)="No pending request found for select parameters.",MSG=$NA(^TMP("CAPRI"))
@@ -61,8 +58,7 @@ TST1 S TSTA1=""
  I $D(^DVB(396.4,DA,"CAN")) S TSTA1=$P(^DVB(396.4,DA,"CAN"),U,3)
  I $D(^DVB(396.4,DA,"TRAN")) S X=$P(^DVB(396.4,DA,"TRAN"),U,3)
  S:TSTA1]"" TSTA1=$P(^DVB(396.5,TSTA1,0),U,1)
- S ^TMP("CAPRI",MSGCNT)=$S(PRTNM]"":PRTNM,1:"Missing exam name")
- S ^TMP("CAPRI",MSGCNT)=^TMP("CAPRI",MSGCNT)_$S(TSTA1]"":" - cancelled ("_TSTA1_")",TSTAT="T":" - Transferred",TSTAT]"":" - "_$$EXTERNAL^DILFD(396.4,.04,,TSTAT),TSTAT="":" (Unknown status)",1:"")_"^"
- S MSGCNT=MSGCNT+1
+ S ^TMP("CAPRI",MSGCNT)=$S(PRTNM]"":PRTNM,1:"Missing exam name")_$S(TSTA1]"":" -cancelled ("_TSTA1_")",TSTAT="T":" - Transferred",TSTAT="":" (Unknown status)",1:"")_"^",MSGCNT=MSGCNT+1
  I TSTAT="T" S X=$S($D(^DIC(4.2,+X,0)):$P(^(0),U,1),1:"unknown site") S ^TMP("CAPRI",MSGCNT)=" to "_$P(X,".",1),MSGCNT=MSGCNT+1
+ ;S ^TMP("CAPRI",MSGCNT)=";",MSGCNT=MSGCNT+1
  Q

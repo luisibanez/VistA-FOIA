@@ -1,5 +1,5 @@
-PXRMEXIX ;SLC/PJH - Reminder Dialog Exchange checks. ;10/10/2007
- ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
+PXRMEXIX ;SLC/PJH - Reminder Dialog Exchange checks. ;12/22/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;=====================================================================
  ;
@@ -83,10 +83,9 @@ EXIST(ALL,DNAME,DTYP,INAME) ;
  ...;S CNT=CNT+1,FIRST=0,TEXT(CNT)=DLIT_NAME_" ("_DTYP_")"
  ...S CNT=CNT+1,FIRST=0,TEXT(CNT)=DNAME_" ("_DTYP_")"
  ..S CNT=CNT+1,TEXT(CNT)=""
- S TEXT="Install "_DTYP_" and all components with no further changes: "
+ S TEXT="Install "_DTYP_" and all components with no further changes:"
  ;Give option to install all descendents
  D ASK(.ANS,.TEXT,2) I $G(ANS)="Y" S ALL=1
- I $G(ANS)="N" S ALL=0
  Q
  ;
  ;Check if used by other dialogs
@@ -114,11 +113,11 @@ HLP(CALL) ;
  S DIWF="C75",DIWL=0,DIWR=75
  ;
  I CALL=1 D
- .S HTEXT(1)="Enter 'Yes' to install all sub-components or"
+ .S HTEXT(1)="Enter 'Yes' to if you are installing all sub-components or"
  .S HTEXT(2)="enter 'No' to install only the selected dialog."
  I CALL=2 D
- .S HTEXT(1)="Enter 'Yes' to install without changes."
- .S HTEXT(2)="Enter 'No' to install with changes."
+ .S HTEXT(1)="Enter 'Yes' to if you are installing without changes."
+ .S HTEXT(2)="enter 'No' to install with changes."
  I CALL=3 D
  .S HTEXT(1)="Select IFE to INSTALL reminder or dialog from this exchange"
  .S HTEXT(2)="entry. Select DFE to DELETE this entry from the exchange file. "

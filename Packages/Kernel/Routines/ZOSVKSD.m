@@ -1,5 +1,5 @@
-%ZOSVKSD ;OAK/KAK - Calculate Disk Capacity ;5/9/07  10:36
- ;;8.0;KERNEL;**121,197,268,456**;Jul 26, 2004
+%ZOSVKSD ;OAK/KAK - Calculate Disk Capacity ; 25 Jan 1999 4:23 pm
+ ;;8.0;KERNEL;**121,197,268**;Jul 26, 2004
  ;
  ; This routine will help to calculate disk capacity for
  ; either DSM or Cache system platforms by looking up
@@ -10,18 +10,75 @@ EN(SITENUM,SESSNUM,VOLS,OS) ;-- called by routine SYS+2^KMPSLK
  ; SITENUM = Station number of site
  ; SESSNUM = SAGG session number
  ; VOLS    = Array containing names of monitored volumes
- ; OS      = Type of M platform (CVMS, CWINNT)
+ ; OS      = Type of M platform (DSM, CVMS, CWINNT)
  ;
  ; Returns ^XTMP("KMPS",SITENUM,SESSNUM,"@VOL",vol_name) = vol_size
  ;--------------------------------------------------------------------
  ;
- Q:'$G(SITENUM)
- Q:$G(SESSNUM)=""
- Q:$G(OS)=""
- ;
  D @OS
- ;
  Q
+ ;
+DSM ;--------------------------------------------------------------------
+ ; DSM code
+ ;--------------------------------------------------------------------
+ ;
+ ;-- code from routine %VOLDEF
+ ;
+VOLSET ;
+ D VSSEL(,,"FULL")
+ Q
+ ;
+VSSEL(PAR,VAL,FLAG) ;
+ ; PAR  = "VSNUM","VSNAM", or "DBNAM" (optional)
+ ; VAL  = value of PAR (optional)
+ ; FLAG = shows what to be included for all VOL nodes (optional)
+ ;        "FULL" - includes all volumes 
+ ;
+ S PAR=$G(PAR),VAL=$G(VAL),FLAG=$G(FLAG)
+ N N,QUIT,V,VT,VOL,VOLNAM,VOLTOT
+ ;
+ I '$$SM Q
+ S VOL=$$NVOLSETS-1
+ F V=0:1:VOL S VOL(V)="" I $V($$SMX("VOLSNAM",V)) D
+ .;
+ .; define variable QUIT
+ .I FLAG["FULL" S QUIT=0
+ .;
+ .; point to volume table
+ .S VT=$$VOLTAB(V)
+ .;
+ .; get volume set mount name
+ .S VOL(V)=$V(VT+$ZK(VOLTAB_NAM),-3,3)
+ .;
+ .S VOLNAM=VOL(V),VOLTOT=0
+ .;
+ .; build volume set table
+ .F N=1:1:$V(VT+$ZK(VOLTAB_VOLS)) S VOLTOT=VOLTOT+$$GETVID(VT,N)
+ .D SETNODE(SITENUM,SESSNUM,VOLNAM,VOLTOT)
+ Q
+ ;
+SM(X,S) ;
+ ; start of shared memory
+ I $G(X)="" Q $V($ZK(GLS$SMSTART))
+ I $G(S)="" S S="L"
+ X "S X=$V($ZK(GLS$SMSTART))+$ZK(GLS$"_S_"_"_X_")"
+ Q X
+ ;
+SMX(X,INDEX) ;
+ Q $$SM(X,"AL")+(4*INDEX)
+ ;
+NVOLSETS() ;
+ Q $V($$SM("NVOLSETS"))
+ ;
+VOLTAB(VSNUM) ; pointer to volume table entry
+ Q $$SM+$V($$SMX("VOLTAB",VSNUM))
+ ;
+GETVID(VT,N) ; Get info from volume descriptor for each volume
+ ;
+ ; get number of blocks
+ Q ($V(N-1*8+$ZK(VOLTAB_VDES)+VT))
+ ;
+ ;-- end of code from routine %VOLDEF
  ;
 CVMS ;--------------------------------------------------------------------
  ; Version for Cache for OpenVMS platform
@@ -117,29 +174,3 @@ SETNODE(SITENUM,SESSNUM,VOLNAM,VOLTOT) ;
  ;
  S ^XTMP("KMPS",SITENUM,SESSNUM,"@VOL",VOLNAM)=VOLTOT
  Q
- ;
- ;
-DCMPST(VERSION) ;-
- ;---------------------------------------------------------------------------
- ;---------------------------------------------------------------------------
- Q:$G(VERSION)="" ""
- I VERSION<5.1 D DecomposeStatus^%DM(RC,.MSGLIST,0,"") Q
- E  D DecomposeStatus^%SYS.DATABASE(RC,.MSGLIST,0,"")
- Q
- ;
-GETDIRGL(VERSION) ;-extrinsic function
- ;----------------------------------------------------------------------------
- ; ; set up GLOARRAY array indexed by global name 
- ;----------------------------------------------------------------------------
- Q:$G(VERSION)="" ""
- I VERSION<5.1 Q $$GetDirGlobals^%DM(DIRNAM,.GLOARRAY)
- E  Q $$GetDirGlobals^%SYS.DATABASE(DIRNAM,.GLOARRAY)
- ;
-GLOINTEG(VERSION) ;- extrinsic function
- ;----------------------------------------------------------------------------
- ; check integrity of a single global
- ; will stop if there are more than 999 errors with this global
- ;----------------------------------------------------------------------------
- Q:$G(VERSION)="" ""
- I VERSION<5.1 Q $$CheckGlobalIntegrity^%DM(DIRNAM,GLO,999,.GLOTOTBLKS,.GLOPNTBLKS,.GLOTOTBYTES,.GLOPNTBYTES,.GLOBIGBLKS,.GLOBIGBYTES,.GLOBIGSTRINGS,.DATASIZE)
- E  Q $$CheckGlobalIntegrity^%SYS.DATABASE(DIRNAM,GLO,999,.GLOTOTBLKS,.GLOPNTBLKS,.GLOTOTBYTES,.GLOPNTBYTES,.GLOBIGBLKS,.GLOBIGBYTES,.GLOBIGSTRINGS,.DATASIZE)

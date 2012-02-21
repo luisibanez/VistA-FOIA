@@ -1,5 +1,5 @@
-ECXTRAC ;ALB/GTS,JAP,BIR/DMA,CML-Package Extracts for DSS ; 7/29/07 12:51pm
- ;;3.0;DSS EXTRACTS;**9,8,14,24,30,33,49,84,105**;Dec 22, 1997;Build 70
+ECXTRAC ;ALB/GTS,JAP,BIR/DMA,CML-Package Extracts for DSS ; 5/9/05 10:39am
+ ;;3.0;DSS EXTRACTS;**9,8,14,24,30,33,49,84**;Dec 22, 1997
  ;Date range, queuing and message sending for package extracts
  ;Input
  ;  ECPACK   printed name of package (e.g. Lab, Prescriptions)
@@ -183,14 +183,12 @@ QKILL ;delete records created for any extract stopped at user request
  ;
 CHK2 ;iv extract check - all active iv rooms to have a division
  S EC=0
- D ALL^PSJ59P5(,"??","ECXIV")
- F  S EC=$O(^TMP($J,"ECXIV",EC)) Q:'EC  I '^(EC,19) D  I CHKFLG D EXIT Q
- .S CHKFLG=$S($G(^TMP($J,"ECXIV",EC,19)):1,$G(^(19))>DT:1,1:0)
+ F  S EC=$O(^PS(59.5,EC)) Q:'EC  I '$P(^PS(59.5,EC,0),U,4) D  Q:CHKFLG
+ .S CHKFLG=$S('$G(^PS(59.5,EC,"I")):1,$G(^PS(59.5,EC,"I"))>DT:1,1:0)
  .I CHKFLG D
  ..W !!,"All active IV Rooms in the IV Room file (#59.5) must have a ""DIVISION""",!,"assigned to run this extract!"
  ..W !!,"This information can be entered using the DSS Extract Manager's Maintenance ",!,"option ""Enter/Edit IV Room Division""."
  ..D PAUSE
-EXIT K ^TMP($J,"ECXIV")
  Q
  ;
 PAUSE ;pause screen

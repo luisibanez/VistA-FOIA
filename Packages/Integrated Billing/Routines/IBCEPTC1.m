@@ -1,5 +1,5 @@
 IBCEPTC1 ;ALB/TMK - EDI PREV TRANSMITTED CLAIMS REPORT OUTPUT ;01/20/05
- ;;2.0;INTEGRATED BILLING;**296,320**;21-MAR-94
+ ;;2.0;INTEGRATED BILLING;**296**;21-MAR-94
  ;
 RPT(IBSORT,IBDT1,IBDT2) ; Output transmitted claims report
  ; global ^TMP("IB_PREV_CLAIM",$J,srt1,srt2,ien of entry file 364)=""
@@ -39,7 +39,7 @@ HDR1(IBSORT,IBDATA,IBPAGE,IBSTOP) ; First level report sort headers
  . S Q="Batch Number: "_$P(IBDATA,U,2)_$S('$P(IBDATA,U,4):"",1:"  ** This batch was rejected **")_$S('$P(IBDATA,U,3):"",1:"  ** This batch was a test batch **")
  . W !!,Q W:$G(IBPAGE(0)) $J("",120-$L(Q)),"(Continued)" W !,"Date Last Transmitted: ",$$FMTE^XLFDT(99999999-IBDATA,1)
  . S Z="",$P(Z,"=",133)="" W !,Z
- . W !,"Claim #   Form Type Seq  Status      A/R  Current Payer",$J("",13),"Payer Address",$J("",17),"Other Payer(s)  Patient Name",!
+ . W !,"Claim #   Form  Type   Seq  Status",$J("",11),"Current Payer",$J("",16),"Payer Address",$J("",21),"Other Payer(s)",!
  ;
  I IBSORT=2 D
  . N IBZ,IBIFN
@@ -53,7 +53,7 @@ HDR1(IBSORT,IBDATA,IBPAGE,IBSTOP) ; First level report sort headers
  .. I $L(Q)>119 S Q="" W !
  .. W $J("",120-$L(Q)),"(Continued)"
  . S Z="",$P(Z,"=",133)="" W !,Z
- . W !,"Claim #   Form Type Seq  Status      A/R    Other Payer(s)",$J("",6),"Patient Name",$J("",10),"Last Transmit    Batch Number",!
+ . W !,"Claim #   Form  Type   Seq  Status",$J("",11),"Other Payer(s)",$J("",15),"Date Last Transmitted  Batch Number",!
  ;
  Q
  ;

@@ -1,5 +1,5 @@
-ENEQ4 ;WIRMFO/SAB-PURGE EQUIPMENT INV FILE ;12/28/07  13:54
- ;;7.0;ENGINEERING;**40,87**;Aug 17, 1993;Build 16
+ENEQ4 ;WIRMFO/SAB-PURGE EQUIPMENT INV FILE ;2.25.97
+ ;;7.0;ENGINEERING;**40**;Aug 17, 1993
  ;
 DEL ;Delete Equipment Record entry
  S ENEDNX=$D(^XUSEC("ENEDNX",DUZ))
@@ -35,7 +35,6 @@ DELSEQ ; select equipment record for deletion
  I $P(ENY(0),U,4)="NX",'ENEDNX S ENV(3)="Security key ENEDNX is required to delete NX equipment."
  I $P(ENY(3),U,1)=1 S ENV(4)="USE STATUS is IN USE."
  I $P(ENY(3),U,11)="" S ENV(5)="DISPOSITION DATE is blank."
- I $D(^ENG(6916.3,"B",ENDA)) S ENV(6)="It is linked to an IT Assignment record."
  I $D(ENV) D  G DELSEQ
  . W $C(7),!,"This equipment entry can not be deleted because:"
  . S ENI=0 F  S ENI=$O(ENV(ENI)) Q:'ENI  W !,?2,ENV(ENI)

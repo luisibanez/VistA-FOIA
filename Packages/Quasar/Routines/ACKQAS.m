@@ -1,5 +1,5 @@
 ACKQAS ;AUG/JLTP BIR/PTD HCIOFO/BH-New Clinic Visits ;  04/01/99 
- ;;3.0;QUASAR;**1,10,15**;Feb 11, 2000;Build 2
+ ;;3.0;QUASAR;**1,10**;Feb 11, 2000
  ;Call DEM^VADPT supported by DBIA #10061
  ;
  ;Per VHA Directive 10-93-142, this routine SHOULD NOT be modified.
@@ -208,7 +208,7 @@ STOP ;
  S ACKCSC=""
  I ACKCSC(1)=203 S ACKCSC="A"
  I ACKCSC(1)=204 S ACKCSC="S"
- I ACKCSC="" D
+ I ACKCSC(1)=216 D
  . S ACKCSCP=$$GET1^DIQ(44,ACKCLIN,2503,"I")
  . S ACKCSC(1)=$S('ACKCSCP:0,1:$$GET1^DIQ(40.7,ACKCSCP,1))
  . I ACKCSC(1)=203 S ACKCSC="AT"

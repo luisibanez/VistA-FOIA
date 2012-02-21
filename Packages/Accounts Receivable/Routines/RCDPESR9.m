@@ -1,6 +1,6 @@
-RCDPESR9 ;ALB/TMK,DWA - ERA return file field captions ;09-SEP-2003
- ;;4.5;Accounts Receivable;**173,252,269**;Mar 20, 1995;Build 113
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+RCDPESR9 ;ALB/TMK - ERA return file field captions ;09-SEP-2003
+ ;;4.5;Accounts Receivable;**173**;Mar 20, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; Note: if the 835 flat file changes, make the corresponding changes
  ;       in this routine.
@@ -22,10 +22,8 @@ RCDPESR9 ;ALB/TMK,DWA - ERA return file field captions ;09-SEP-2003
  ;;835^^Last Sequence #
  ;;835^^Contact Information
  ;;835^^Payment Method Code
- ;;835^^Billing Provider NPI
  ;
 01 ;;PAYER CONTACT INFORMATION
- ;;01^^Line Type^S Y=X_" (ERA LEVEL CONTACT DATA)"
  ;;01^^ERA Contact Name
  ;;01^^ERA Contact #1
  ;;01^^ERA Contact #1 Type^S Y=$$EXTERNAL^DILFD(344.4,3.03,,X)
@@ -53,14 +51,6 @@ RCDPESR9 ;ALB/TMK,DWA - ERA return file field captions ;09-SEP-2003
  ;;05^^Statement Start Date^S Y=$$FDT^RCDPESR9(X)
  ;;05^^Statement End Date^S Y=$$FDT^RCDPESR9(X)
  ;
-06 ;;CORECT PATIENT DATA
- ;;06^^Line Type^S Y=X_" (CLAIM LEVEL CORRECT PATIENT DATA)"
- ;;06^^Bill #
- ;;06^^Corrected Patient Last Name
- ;;06^^Corrected Patient First Name
- ;;06^^Corrected Patient Middle Name
- ;;06^^Corrected Patient ID #
- ;
 10 ;;CLAIM STATUS DATA
  ;;10^^Line Type^S Y=X_" (CLAIM LEVEL CLAIM STATUS DATA)"
  ;;10^^Bill #
@@ -77,10 +67,6 @@ RCDPESR9 ;ALB/TMK,DWA - ERA return file field captions ;09-SEP-2003
  ;;10^^DRG Code Used
  ;;10^^DRG Weight Used^S Y=$J($$ZERO^RCDPESR9(X,1)/100,4)
  ;;10^^Discharge Fraction^S Y=$$ZERO^RCDPESR9(X,1)
- ;;10^^Rendering NPI
- ;;10^^Entity Type Qualifier
- ;;10^^Last Name
- ;;10^^First Name
  ;
 15 ;;CLAIM STATUS DATA
  ;;15^^Line Type^S Y=X_" (CLAIM LEVEL CLAIM STATUS DATA (CONTINUED))"
@@ -183,7 +169,7 @@ RCDPESR9 ;ALB/TMK,DWA - ERA return file field captions ;09-SEP-2003
  ;;41^^Allowed Amount^S Y=$$ZERO^RCDPESR9(X,1)
  ;;41^1^Per Diem Amount^S Y=$$ZERO^RCDPESR9(X,1,1)
  ;
-42 ;;SERVICE LINE DATA
+42 ; SERVICE LINE DATA
  ;;42^^Line Type^S Y=X_" (CLAIM LEVEL SERVICE LINE DATA (CONTINUED))"
  ;;42^^Bill #
  ;;42^^Line Item Remark Code

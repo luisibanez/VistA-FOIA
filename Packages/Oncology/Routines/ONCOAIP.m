@@ -1,46 +1,25 @@
-ONCOAIP ;Hines OIFO/GWB - [EE Abstract Edit Primary] ;03/08/11
- ;;2.11;ONCOLOGY;**1,5,6,7,11,13,15,16,18,19,22,24,27,28,32,33,34,35,36,37,38,39,40,42,43,44,45,46,47,48,49,50,51,52,53**;Mar 07, 1995;Build 31
+ONCOAIP ;Hines OIFO/GWB [EE Abstract Edit Primary]; 08/29/01
+ ;;2.11;ONCOLOGY;**1,5,6,7,11,13,15,16,18,19,22,24,27,28,32,33,34,35,36,37,38,39,40,42,43,44,45**;Mar 07, 1995
  ;
 ED ;[EE Abstract Edit Primary]
  W @IOF,!
  S DIC="^ONCO(165.5,",DIC(0)="AEQZM"
  S DIC("A")=" Select primary or patient name: "
  D ^DIC K DIC G EX:Y<0
- S ONCOD0P=+Y
- S ONCOD0=$P(^ONCO(165.5,+Y,0),U,2)
- S ONCONM=$$GET1^DIQ(160,ONCOD0,.01,"E")
- S ONCOEDIT=1
- ;
-EN N CHECKVER
- S ONCOYR=($$TNMED^ONCOU55(ONCOD0P)>3)
- S ABSTAT=$P($G(^ONCO(165.5,ONCOD0P,7)),U,2)
- S CHECKSUM=$P($G(^ONCO(165.5,ONCOD0P,"EDITS")),U,1)
- S CHECKVER=$P($G(^ONCO(165.5,ONCOD0P,"EDITS")),U,2)
- I ABSTAT=3,((CHECKSUM="")!(CHECKVER<12)) D
- .W !,"Recalculating checksum..."
- .S EDITS="NO" S D0=ONCOD0P D NAACCR^ONCGENED K EDITS
- .S CHECKSUM=$$CRC32^ONCSNACR(.ONCDST)
- .S $P(^ONCO(165.5,ONCOD0P,"EDITS"),U,1)=CHECKSUM
- .S $P(^ONCO(165.5,ONCOD0P,"EDITS"),U,2)=EXTVER
+ S ONCOD0P=+Y,ONCOD0=$P(^ONCO(165.5,+Y,0),U,2),ONCOEDIT=1
+EN S ONCOYR=($$TNMED^ONCOU55(ONCOD0P)>3)
  S DIE="^ONCO(165.5,",DA=ONCOD0P,DR="[ONCO ABSTRACT-I]",ONCOL1=0
  L +^ONCO(165.5,DA):0 I $T D ^DIE L -^ONCO(165.5,DA) S ONCOL1=1
  I 'ONCOL1 W !!,"This primary is being edited by another user" H 3 Q:'$D(ONCOEDIT)  K ONCOL1 G ED
- ;I $D(Y) G EN
- S ABSTAT=$P($G(^ONCO(165.5,ONCOD0P,7)),U,2)
- I ABSTAT'=3 D
- .S DIE="^ONCO(165.5,"
- .S DA=ONCOD0P
- .S DR="197///@"
- .D ^DIE
- I ABSTAT=3 D CHANGE^ONCGENED I $G(Y)="@0" G EN
- D FOL^ONCOAI
  K ONCOL1,LYMPHOMA,RFDEF,TFDEF,DFDEF
  I $D(ONCOOUT) Q
  I $D(Y) Q:'$D(ONCOEDIT)  G ED
+ S Y=$P(^ONCO(165.5,D0,0),U,4)
+ I (Y<3)!(Y=5)!(Y=8) K DIR S DIR("A")="Data OK",DIR("B")="YES",DIR(0)="Y" D ^DIR G EN:Y=0
  Q
  ;
 PAIR ;LATERALITY (165.5,28)
- D TOPNAM
+ S TOP=$P($G(^ONCO(165.5,D0,2)),U,1)
  S DATEDX=$P($G(^ONCO(165.5,D0,0)),U,16)
  Q:TOP=""
  I TOP=67342,$P(^ONCO(165.5,D0,2),U,8)="" S $P(^ONCO(165.5,D0,2),U,8)=1 Q
@@ -56,15 +35,15 @@ PAIR ;LATERALITY (165.5,28)
  Q
  ;
 HISTXT ;Stuff TEXT-HISTOLOGY TITLE (165.5,101)
- S HSTI=$$HIST^ONCFUNC(D0,.HSTFLD,.HISTNAM)
+ S HSTI=$$HIST^ONCFUNC(D0)
  S TEXT=HISTNAM
- S:$P($G(^ONCO(165.5,D0,8)),U,2)="" $P(^ONCO(165.5,D0,8),U,2)=$E(TEXT,1,100)
+ S:$P($G(^ONCO(165.5,D0,8)),U,2)="" $P(^ONCO(165.5,D0,8),U,2)=$E(TEXT,1,40)
  K HSTI,TEXT
- D:$P($G(^ONCO(165.5,D0,0)),U,16)>3031231 ^ONCCS2
+ D:$P($G(^ONCO(165.5,D0,0)),U,16)>3031231 ^ONCCSSTF
  Q
  ;
 MEN ;Primary Menu Options
- K DXS,ONCOOUT,DASHES,PATNAM,SITEGP,SSN
+ K DXS,ONCOOUT,DASHES
  S $P(DASHES,"-",80)="-"
  S NODE0=^ONCO(165.5,D0,0)
  S S=$P(NODE0,U,1),SITEGP=$P(^ONCO(164.2,S,0),U,1)
@@ -72,13 +51,17 @@ MEN ;Primary Menu Options
  S SAVED0=D0 S D0=$P(NODE0,U,2) D SSN^ONCOES S SSN=X,D0=SAVED0
  S DATEDX=$P(NODE0,U,16)
  D ^ONCPHC
- S COC=$E($$GET1^DIQ(165.5,D0,.04),1,2)
+ S COC=$P(NODE0,U,4)
  S OSP=$O(^ONCO(160.1,"C",DUZ(2),0))
  I OSP="" S OSP=$O(^ONCO(160.1,0))
+ S EVADS=$P($G(^ONCO(160.1,OSP,2)),U,2)
  S IIN=$P($G(^ONCO(160.1,OSP,1)),U,4)
  S RH=$P($G(^ONCO(160.19,IIN,0)),U,2)
  K OSP
- D TOPNAM
+ S TOP=$P($G(^ONCO(165.5,D0,2)),U,1),TOPCOD="",TOPNAM=""
+ I TOP'="" S TOPNAM=$P(^ONCO(164,TOP,0),U,1),TOPCOD=$P(^ONCO(164,TOP,0),U,2)
+ S SITTAB=79-$L(SITEGP),TOPTAB=79-$L(TOPNAM_" "_TOPCOD)
+ S NOS=TOPTAB-$L(PATNAM),NOS=NOS-1 K SPACES S $P(SPACES," ",NOS)=" "
  W @IOF
  W !,?1,PATNAM,?SITTAB,SITEGP,!,?1,SSN,?TOPTAB,TOPNAM," ",TOPCOD,!,DASHES
  W !,?25,"Primary Menu Options",!,DASHES
@@ -89,23 +72,21 @@ MEN ;Primary Menu Options
  W !?22,"4. First Course of Treatment"
  W !?22,"5. Patient Care Evaluation"
  W !?22,"6. Over-ride Flags"
- W !?22,"7. Case Administration"
  W !!?22,"A  All - Complete Abstract"
  ;
-A K ONCOANS,X,Y
+A K AN,ONCOANS,X,Y
  R !!?25,"Enter option: All//",X:DTIME
  S:X="" (ONCOANS,X)="A"
  G:X["?" HP
  I X=U!'$T S Y="",ONCOOUT=U Q
  I (X="A")!(X="ALL")!(X="all")!(X="All") S ONCOANS="A",Y=1 G Y
- I X="CS",$P($G(^ONCO(165.5,D0,0)),U,16)>3039999 S ONCOANS=3,Y=292 G Y
- S (ONCOANS,Y)=X I X<1!(X>7) W "??" G A
+ S (ONCOANS,Y)=X I X<1!(X>6) W *7,"??" G A
  ;
 Y S Y="@"_Y
  Q
  ;
 HP W !!,?10,"Select 'A' for the complete abstract"
- W !?10,"Select 1-7 for the desired subsection",!
+ W !?10,"Select 1-6 for the desired subsection",!
  G A
  ;
 PAT ;Patient Identification
@@ -129,7 +110,7 @@ EXT S SECTION="Stage of Disease at Diagnosis" D SECTION
  .I (T=67422)&(L'=1)&(H'=91403) S $P(N,U,2)=99,$P(N,U,9)=9   ;Spleen
  .S $P(^ONCO(165.5,D0,2),U,9,17)=N
  .D NOSTAGE
- .S SY="@313"  ;Other Staging System (165.5,39)
+ .S SY="@313"  ;Other Stage
  .I S=65 W !?18,"====> UNKNOWN PRIMARY - No EOD/TNM coding <====" Q
  .W !?18,"====> SYSTEMIC DISEASE - No EOD/TMN coding <===="
  ;
@@ -138,20 +119,18 @@ PSD K DXS,DIOT S D0=ONCOD0P D ^ONCPSD K DXS
  Q
  ;
 NOSTAGE ;No staging
- S $P(^ONCO(165.5,D0,2),U,25)=88   ;37.1 CT
- S $P(^ONCO(165.5,D0,2),U,26)=88   ;37.2 CN
- S $P(^ONCO(165.5,D0,2),U,27)=88   ;37.3 CM
- S $P(^ONCO(165.5,D0,2),U,20)=88   ;38   C Stage Group
- S $P(^ONCO(165.5,D0,3),U,32)=8    ;19   Staged By (C)
- S $P(^ONCO(165.5,D0,7),U,17)="N"  ;69.4 Multimodality Therapy (P)
- S $P(^ONCO(165.5,D0,2.1),U,1)=88  ;85   PT
- S $P(^ONCO(165.5,D0,2.1),U,2)=88  ;86   PN
- S $P(^ONCO(165.5,D0,2.1),U,3)=88  ;87   PM
- S $P(^ONCO(165.5,D0,2.1),U,4)=88  ;88   P Stage Group
- S $P(^ONCO(165.5,D0,2.1),U,5)=8   ;89   Staged By (P)
+ S $P(^ONCO(165.5,D0,2),U,25)=88   ;37.1 Clin T
+ S $P(^ONCO(165.5,D0,2),U,26)=88   ;37.2 Clin N
+ S $P(^ONCO(165.5,D0,2),U,27)=88   ;37.3 Clin M
+ S $P(^ONCO(165.5,D0,2),U,20)=88   ;38   Clin Stage Group
+ S $P(^ONCO(165.5,D0,3),U,32)=8    ;19   Staged By (Clin Stage)
+ S $P(^ONCO(165.5,D0,7),U,17)="N"  ;69.4 Multimodality Therapy (Path)
+ S $P(^ONCO(165.5,D0,2.1),U,1)=88  ;85   Path T
+ S $P(^ONCO(165.5,D0,2.1),U,2)=88  ;86   Path N
+ S $P(^ONCO(165.5,D0,2.1),U,3)=88  ;87   Path M
+ S $P(^ONCO(165.5,D0,2.1),U,4)=88  ;88   Path Stage Group
+ S $P(^ONCO(165.5,D0,2.1),U,5)=8   ;89   Staged By (Path Stage)
  S $P(^ONCO(165.5,D0,2),U,28)="NA" ;38.5 Stage Grouping-AJCC
- S:$P($G(^ONCO(165.5,D0,7)),U,7)="" $P(^ONCO(165.5,D0,7),U,7)="0000000"
- S:$P($G(^ONCO(165.5,D0,7)),U,14)="" $P(^ONCO(165.5,D0,7),U,14)="0000000"
  Q
  ;
 FST S SECTION="First Course of Treatment" D SECTION
@@ -164,7 +143,8 @@ ORF S SECTION="Over-ride Flags" D SECTION
 NTX ;DATE OF NO TREATMENT (165.5,124)
  I '$D(NTDD) S Y="@425" Q
  K NTDD
- W !!?5,"You have entered a DATE OF NO TREATMENT.  All treatment fields"
+ W !
+ W !?5,"You have entered a DATE OF NO TREATMENT.  All treatment fields"
  W !?5,"will be stuffed with the appropriate value indicating no"
  W !?5,"treatment.",!
  K DIR S DIR("A")="Are you sure you want to do this",DIR("B")="No"
@@ -178,7 +158,7 @@ NTX ;DATE OF NO TREATMENT (165.5,124)
  Q
  ;
 RS ;RADIATION/SURGERY SEQUENCE (165.5,51.3)
- Q:$P($G(^ONCO(165.5,D0,3)),U,7)'=""
+ Q:$P(^ONCO(165.5,D0,3),U,7)'=""
  S S=$E($$GET1^DIQ(165.5,D0,58.6,"E"),1,2)
  S SATF=$E($$GET1^DIQ(165.5,D0,58.7,"E"),1,2)
  S SCP=$P($G(^ONCO(165.5,D0,3.1)),U,31)
@@ -218,45 +198,23 @@ RS ;RADIATION/SURGERY SEQUENCE (165.5,51.3)
  Q
  ;
 AB ;Abstract Status
- S SECTION="Case Administration" D SECTION
- N DI,DIC,DR,DA,DIQ,ONC
- S DIC="^ONCO(165.5,"
- S DR="90:92;198;199;155;157.1;236;244"
- S DA=D0,DIQ="ONC" D EN^DIQ1
- S X=ONC(165.5,D0,91) D UCASE^ONCPCI S ONC(165.5,D0,91)=X
- S X=ONC(165.5,D0,157.1) D UCASE^ONCPCI S ONC(165.5,D0,157.1)=X
- W !," Abstract Status.............: ",ONC(165.5,D0,91)
- W:ONC(165.5,D0,236)'="" !," Date Case Initiated.........: ",ONC(165.5,D0,236)
- W:ONC(165.5,D0,244)'="" !," Initiated By................: ",ONC(165.5,D0,244)
- W !," Date of First Contact.......: ",ONC(165.5,D0,155)
- W !," Date Case Completed.........: ",ONC(165.5,D0,90)
- W !," Elapsed Months to Completion: ",ONC(165.5,D0,157.1)
- W !," Abstracted by...............: ",ONC(165.5,D0,92)
- W !," Date Case Last Changed......: ",ONC(165.5,D0,198)
- W !," Case Last Changed by........: ",ONC(165.5,D0,199)
- W !,DASHES
+ S HDL=$L("Abstract Status"),TAB=(80-HDL)\2,TAB=TAB-1
+ W @IOF,DASHES
+ W !,?1,PATNAM,?TAB,"Abstract Status",?SITTAB,SITEGP
+ W !,?1,SSN,?TOPTAB,TOPNAM," ",TOPCOD,!,DASHES
  Q
  ;
 NAN ;NEW ACC #
  K DIR S DIR(0)="N^:"_($E(DT,1,3)+1700),DIR("A")="YEAR of Accession Number: ",DIR("B")=($E(DT,1,3)+1700) W !! D ^DIR Q:(Y=U)!(Y="")
 NA S YR=Y,MR=YR_"0001",XR=999999-((YR+1)_"0000"),NR=$O(^ONCO(165.5,"AF",XR))
- I NR<(990002-MR) W !!?5,"SYSTEM appears out of numbers-looking for unassigned ones" G FND
+ I NR<(990002-MR) W *7,!!?5,"SYSTEM appears out of numbers-looking for unassigned ones" G FND
  I NR>(999999-MR) S NR=""
  S AC=$S(NR="":YR_"0001",1:(1000000-NR)),SEQ="00"
  Q
- ;
 FND ;SEARCH for unused #s
  S NR=YR_"0000",MR=(YR+1)_"0000"
 NR S NR=NR+1 I NR<MR G:$D(^ONCO(165.5,"AA",NR)) NR S AC=NR,SEQ="00" Q
- W !!?10,"OUT of ACCESSION Numbers for 19"_YR S Y=U
- Q
- ;
-TOPNAM ;PRIMARY SITE and PRIMARY SITE CODE for header
- K SITTAB
- S TOP=$P($G(^ONCO(165.5,D0,2)),U,1),TOPCOD="",TOPNAM=""
- I TOP'="" S TOPNAM=$P(^ONCO(164,TOP,0),U,1),TOPCOD=$P(^ONCO(164,TOP,0),U,2)
- S SITTAB=79-$L(SITEGP),TOPTAB=79-$L(TOPNAM_" "_TOPCOD)
- S NOS=TOPTAB-$L(PATNAM),NOS=NOS-1 K SPACES S $P(SPACES," ",NOS)=" "
+ W *7,!!?10,"OUT of ACCESSION Numbers for 19"_YR S Y=U
  Q
  ;
 SECTION S HDL=$L(SECTION),TAB=(80-HDL)\2,TAB=TAB-1
@@ -268,11 +226,5 @@ SECTION S HDL=$L(SECTION),TAB=(80-HDL)\2,TAB=TAB-1
  ;
 EX ;Exit
  D KILL^ONCOAI
- K ABSTAT,AC,C,CHECKSUM,D0,DASHES,DATEDX,DIE,H,HDL,HISTNAM,HSTFLD,IIN
- K L,MR,N,NODE0,NOS,NR,ONCDST,ONCOD0,ONCOD0P,ONCOEDIT,ONCONM,ONCOYR
- K PATNAM,RH,SAVED0,SECTION,SEQ,SITEGP,SITTAB,SSN,SY,T,TAB
- K TOP,TOPCOD,TOPNAM,TOPTAB,TXDT,X,XR,YR
+ K ONCOEDIT
  Q
- ;
-CLEANUP ;Cleanup
- K COC,EXTVER

@@ -1,13 +1,12 @@
 IBAUTL ;ALB/AAS - INTEGRATED BILLING APPLICATION UTILITIES ; 14-FEB-91
- ;;2.0;INTEGRATED BILLING;**93,156,347,429**;21-MAR-94;Build 62
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;2.0;INTEGRATED BILLING;**93,156**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
 COST ;  - find charges for transaction type, when only one
  N IBD,IBN,IB K X1
  S IBD=-(DT+.9) F  S IBD=$O(^IBE(350.2,"AIVDT",DA,IBD)) Q:'IBD  S IBN=0 F  S IBN=$O(^IBE(350.2,"AIVDT",DA,IBD,IBN)) Q:'IBN  S IB=$G(^IBE(350.2,IBN,0)) I IB]"",'$P(IB,"^",5)!($P(IB,"^",5)>DT) S X1=$P(IB,"^",4) G COSTQ
 COSTQ S X1=+$G(X1)
- I $L($G(^IBE(350.2,IBN,20))) X ^(20) I  S X1=X1+$P($G(^IBE(350.2,IBN,0)),"^",6)
  Q
  ;
 FY I $D(X) S IBAFY=$$FY^IBOUTL(X)
@@ -22,7 +21,6 @@ PTL ;  - parent trace logic
  ;
  K Y
  S Y=1 I '+X!'($D(^DIC(+X,0,"GL"))) S Y="-1^IB004" G PTLQ
- I +X=52 G PHAPI
  S IBAGL=^DIC(+X,0,"GL")
  I '$D(@(IBAGL_$P($P(X,";",1),":",2)_",0)")) S Y="-1^IB005" G PTLQ
  ;
@@ -88,28 +86,9 @@ ARPARM N X S X=DT
  D SITE,FY,NOW^%DTC S IBNOW=%
  Q
 BILLNO ;  -get open bill number
- I '$G(IBTOTL) S (IBIL,IBTRAN)="" G BILLQ
+ I '$G(IBTOTL),+$G(^PS(59.7,1,49.99))'<6 S (IBIL,IBTRAN)="" G BILLQ
  S IBARTYP=$S($D(^IBE(350.1,+IBATYP,0)):$P(^(0),"^",3),1:"")
  S X=IBSITE_"^"_IBSERV_"^"_IBARTYP_"^"_DFN_";DPT("_"^"_IBAFY_"^"_$S($D(IBTOTL):IBTOTL,1:0)_"^"_$S($D(IBDUZ):IBDUZ,$D(DUZ):DUZ,1:0)_"^"_$P(IBNOW,".",1) D ^PRCASER I +Y<1 G BILLQ
  S IBIL=$P(Y,"^",2),IBTRAN=$P(Y,"^",3) I IBIL="" S Y="-1^IB011" G BILLQ
  S IBTRAN=$S(IBTRAN>0:IBTRAN,1:"")
 BILLQ Q
- ;
-PHAPI ;
- ;This is alternate code for Parent Trace Logic
- ; to deal with the Pharmacy Encapsulation of Prescription File (#52)
- ;
- N IBRFL,IBXX,IBPT,IBRX,IBY
- S IBXX=X,IBY=1
- S IBRX=$P($P(IBXX,";"),":",2)
- S IBPT=$$FILE^IBRXUTL(IBRX,2),IBY(0)=$$RXZERO^IBRXUTL(IBPT,IBRX) I IBY(0)="" S IBY="-1^IB005" G PHAPIQ
- I $P(IBXX,";",2)="" G PHAPIQ ; original fill being billed
- S IBRFL=$P($P(IBXX,";",2),":",2),IBY(1)=$$ZEROSUB^IBRXUTL(IBPT,IBRX,IBRFL)
- I IBY(1)="" S IBY="-1^IB006" G PHAPIQ
- ;
-PHAPIQ ;
- S:$G(IBY)]"" Y=IBY
- S:$G(IBY(0))]"" Y(0)=IBY(0)
- S:$G(IBY(1))]"" Y(1)=IBY(1)
- Q
- ;

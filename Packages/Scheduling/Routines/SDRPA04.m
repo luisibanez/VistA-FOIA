@@ -1,6 +1,5 @@
-SDRPA04 ;BP-OIFO/ESW - SDRPA00 continuation PAIT - REPAIR  ; 11/2/04 11:47am  ; 5/31/07 5:29pm
- ;;5.3;Scheduling;**376,491**;Aug 13, 1993;Build 53
- ;SD/491 - not to error out while repairing with acks having received
+SDRPA04 ;BP-OIFO/ESW - PAIT - REPAIR  ; 11/2/04 11:47am
+ ;;5.3;Scheduling;**376**;Aug 13, 1993
  Q
 MSGT(CRUNID,SDPEN,SDFIN,SDTOT,SDSTOP) ;create completion messages
  ;CRUNID - current run number
@@ -64,26 +63,25 @@ MSG ;send mail message
  S SDAMX(12)=""
  I $G(SDSTOP) S XMY("VHACIONHD@MED.VA.GOV")="" D  D ^XMD Q
  .S SDAMX(13)="WARNING: TASK STOPPED BY USER, NEEDS TO BE RESTARTED."
- .S SDAMX(14)="Initiate a Remedy ticket TO FOLLOW UP."
- I 'SFF I SDMT>0!(SDB=0) D  D ^XMD K ^TMP("SDDPT",$J) Q
+ .S SDAMX(14)="INITIATE a NOIS TO FOLLOW UP."
+ I 'SFF I SDMT>0!(SDB=0) D  D ^XMD Q
  .I (SDMT-SDMS)=0 D  Q
  ..S SDAMX(13)="SUCCESS: Transmission completed."
- .I (SDMT-SDMS)<SDB!(SDB=1&(SDMT-SDMS)'<SDB)&(SDSTAT'["Shutdown") D  Q
+ .I (SDMT-SDMS)<SDB D  Q
  ..S SDAMX(13)="WARNING: "_(SDMT-SDMS)_" out of "_SDB_" batches still have to be transmitted,"
  ..S SDAMX(14)="please verify with the HL7 System Monitor."
  .S XMY("VHACIONHD@MED.VA.GOV")=""
- .I SDB>0 I (SDMT-SDMS)'<SDB D  Q
+ .I SDMT-SDMS'<SDB D  Q
  ..S XMY("VHACIONHD@MED.VA.GOV")=""
- ..I SDSTAT["Shutdown" D
- ...S SDAMX(13)="SD-PAIT Logical Link has to be started, initiate Remedy ticket for Scheduling PAIT."
- ..E  S SDAMX(13)="Initiate a Remedy ticket for Interface Engine - communication problem."
- I SFF D  D ^XMD K ^TMP("SDDPT",$J) Q
- .S SDAMX(13)="WARNING!!!: Transmission of run#: "_CRUNID_" has been repaired, you may restart."
+ ..I SDSTAT["Shutdown" S SDAMX(13)="SD-PAIT Logical Link has to be started!"
+ ..E  S SDAMX(13)="Initiate a NOIS for VistA Interface Engine - communication problem."
+ I SFF S XMY("VHACIONHD@MED.VA.GOV")="" D  D ^XMD Q
+ .S SDAMX(13)="WARNING!!!: Transmission of run#: "_CRUNID_" has been repaired."
+ .S SDAMX(14)="Please create a NOIS to verify if the problem has been addressed."
  .I SDB>0 I (SDMT-SDMS)'<SDB D
- ..S XMY("VHACIONHD@MED.VA.GOV")=""
- ..I SDSTAT["Shutdown" D  Q
- ...S SDAMX(14)="SD-PAIT Logical Link has to be started, initiate Remedy ticket for Scheduling PAIT."
- ..S SDAMX(14)="Initiate a Remedy ticket for Interface Engine - communication problem."
+ ..S SDAMX(15)="WARNING!!!: Transmission communication problem, please review."
+ ;D ^XMD
+ K ^TMP("SDDPT",$J)
  Q
 CLEAN(CRUNID) ;housekeeping
  ;clean up batches previous to current one by checking for "AE",("S" or "R") xref and
@@ -111,16 +109,16 @@ RPAIT(RUN) ;
  S SDRCNT=$O(^SDWL(409.6,RUN,1,999999999),-1) ;last entry
  I SDEB=0 S SDFE=0 S $P(^SDWL(409.6,RUN,0),U,4)=$P(^SDWL(409.6,RUN-1,0),U,4)
  I +SDEB>0 D
- .S SDFE=SDRCNT+1 F  S SDFE=$O(^SDWL(409.6,RUN,1,SDFE),-1) I $P(^SDWL(409.6,RUN,1,SDFE,0),U,3)'>SDEB&($P(^SDWL(409.6,RUN,1,SDFE,0),U,3)'="") Q  ; SD/491
+ .S SDFE=SDRCNT+1 F  S SDFE=$O(^SDWL(409.6,RUN,1,SDFE),-1) I $P(^SDWL(409.6,RUN,1,SDFE,0),U,3)=SDEB Q  ; last accepted entry
  .N SDLSD1 S SDLSD1=$P(^SDWL(409.6,RUN,1,SDFE,0),U,7) ;retrieve the last used creation date of HL7 created 
  .N SDLSD2 S SDLSD2=$P($G(^SDWL(409.6,RUN,1,SDFE+1,0)),U,7)
  .S SDLSD=$P(SDE,U,4) ; last scanned date
  .I SDLSD="" D
  ..S $P(^SDWL(409.6,RUN,0),U,4)=$S(SDLSD2>SDLSD1:SDLSD1,1:SDLSD1-1)
  .E  S $P(^SDWL(409.6,RUN,0),U,4)=SDLSD-1
- N SDS,DIK F SDS=SDFE+1:1:SDRCNT I $D(^SDWL(409.6,RUN,1,SDS,0)) D EVAL(RUN,SDS) S DIK="^SDWL(409.6,"_RUN_",1,",DA(1)=RUN,DA=SDS D ^DIK
- S SDB=+$P($G(^SDWL(409.6,RUN,2,0)),U,3)
- S NOW=$$NOW^XLFDT,SDFE=5000*SDB
+ N SDS,DIK F SDS=SDFE+1:1:SDRCNT D EVAL(RUN,SDS) S DIK="^SDWL(409.6,"_RUN_",1,",DA(1)=RUN,DA=SDS D ^DIK
+ S SDB=SDFE\5000 I SDFE-(5000*SDB)>0 S SDB=SDB+1
+ S NOW=$$NOW^XLFDT
  S $P(^SDWL(409.6,RUN,0),U,5)=SDFE
  S $P(^SDWL(409.6,RUN,0),U,6)=SDB
  S $P(^SDWL(409.6,RUN,0),U,7)=NOW
@@ -132,7 +130,6 @@ EVAL(RUN,SDS) ;
  ;the previous entry if exists.
  N SDSTR,DFN,SDDT S SDSTR=^SDWL(409.6,RUN,1,SDS,0)
  S DFN=+SDSTR,SDDT=$P(SDSTR,"^",2)
- Q:SDDT=""
  ;find a prior entry SDRUN
  N SDRUN S SDRUN=$O(^SDWL(409.6,"AC",DFN,SDDT,RUN),-1) Q:SDRUN=""
  N SDSQ S SDSQ=$O(^SDWL(409.6,"AC",DFN,SDDT,SDRUN,""))

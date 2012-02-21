@@ -1,6 +1,5 @@
 PRSAOTS ; HISC/REL-Display OT/CT Requests ;8/16/95  14:28
- ;;4.0;PAID;**34,114**;Sep 21, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;**34**;Sep 21, 1995
 DISP ; Display all requests
  S OTS=";"_$P(^DD(458.2,10,0),"^",3),CNT=0 K:NUM R
  F DTI=DTI-.1:0 S DTI=$O(^PRST(458.2,"AD",DFN,DTI)) Q:DTI=""  F DA=0:0 S DA=$O(^PRST(458.2,"AD",DFN,DTI,DA)) Q:DA=""  D LST
@@ -18,4 +17,4 @@ LST ; Display Request
  S Y=$P(Z,"^",7) W:Y'="" !?10,Y W:SCOM'="" !?10,"Supr: ",SCOM Q
 HDR ; Display Header
  W:$E(IOST,1,2)="C-" @IOF W !?26,"VA TIME & ATTENDANCE SYSTEM",!?19,"OVERTIME & COMP TIME/CREDIT HRS REQUESTS"
- S X=$G(^PRSPC(DFN,0)) W !!,$P(X,"^",1) S X=$P(X,"^",9) I X W ?50,$E(X),"XX-XX-",$E(X,6,9) Q
+ S X=$G(^PRSPC(DFN,0)) W !!,$P(X,"^",1) S X=$P(X,"^",9) I X W ?50,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9) Q

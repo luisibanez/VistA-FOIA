@@ -1,8 +1,6 @@
-PRCPRSO1 ;WISC/RFJ/VAC-days of stock on hand report (print)             ; 9/20/06 11:15am
- ;;5.1;IFCAP;**98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
- ;
- ;*98 Modified to show Standard, ODI or Both
+PRCPRSO1 ;WISC/RFJ-days of stock on hand report (print)             ;22 Oct 92
+ ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
@@ -56,12 +54,8 @@ H S %=NOW_"  PAGE "_PAGE,PAGE=PAGE+1 I PAGE'=2!(SCREEN) W @IOF
  S %="",$P(%,"-",81)=""
  W !?5,"USAGE DATE RANGE FROM ",DATESTRD,"  TO  ",DATEENDD,"  (",TOTALDAY," DAYS)"
  W !?5,"ITEMS WITH STOCK ON HAND ",$S(PRCPTYPE=1:"LESS",1:"GREATER")," THAN ",PRCPDAYS," DAYS"
- I PRCP("DPTYPE")'="W" D
- . I ODIFLG=1 W !?5,"REPORT SHOWS STANDARD ITEMS ONLY"
- . I ODIFLG=2 W !?5,"REPORT SHOWS ON-DEMAND ITEMS ONLY"
- . I ODIFLG=3 W !?5,"REPORT SHOWS BOTH STANDARD AND ON-DEMAND ITEMS"
  W !?45,$J("TOTAL",7),$J("DAYS",7),$J("QTY",6),$J("DAYS",6),$J("SELL",9)
  I PRCP("DPTYPE")="W" W !,"NSN",?15,"DESCRIPTION"
  E  W !,"DESCRIPTION"
- W ?31,"IM",$J("UNIT/IS",12),?45,$J("USAGE",7),$J("AVG",7),$J("ONHND",6),$J("LEFT",6),$J("VALUE",9),!,%
+ W ?31,"MI",$J("UNIT/IS",12),?45,$J("USAGE",7),$J("AVG",7),$J("ONHND",6),$J("LEFT",6),$J("VALUE",9),!,%
  Q

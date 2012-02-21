@@ -1,6 +1,6 @@
 BPSRPT4 ;BHAM ISC/BEE - ECME REPORTS (CONT) ;14-FEB-05
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5,7,8,10**;JUN 2004;Build 27
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  Q
  ;
@@ -182,8 +182,8 @@ GETREJ(REJ) ;
  ; Input variable: BPRTYPE -> Report Type (1-7)
  ;
 HEADLN1(BPRTYPE) ;
- I (",1,2,3,4,5,7,8,")[BPRTYPE W !,"PATIENT NAME",?27,"Pt.ID",?35,"RX#",?47,"REF/ECME#"
- I (BPRTYPE=1)!(BPRTYPE=4)!(BPRTYPE=8) D  Q
+ I (",1,2,3,4,5,7,")[BPRTYPE W !,"PATIENT NAME",?27,"Pt.ID",?35,"RX#",?47,"REF/ECME#"
+ I (BPRTYPE=1)!(BPRTYPE=4) D  Q
  . W ?68,"DATE"
  . W ?78,$J("$BILLED",10)
  . W ?97,$J("$INS RESPONSE",13)
@@ -193,9 +193,6 @@ HEADLN1(BPRTYPE) ;
  . W ?68,"DATE"
  . W ?78,"RELEASED ON"
  . W ?91,"RX INFO"
- . W ?109,"RX COB"
- . W ?116,"OPEN/CLOSED"
- . W ?128,"ELIG"
  ;
  I BPRTYPE=3 D  Q
  . W ?68,"DATE"
@@ -203,10 +200,9 @@ HEADLN1(BPRTYPE) ;
  . W ?119,$J("$INS RESPONSE",13)
  ;
  I BPRTYPE=5 D  Q
- . W ?65,"COMPLETED"
- . W ?83,"TRANS TYPE"
- . W ?100,"PAYER RESPONSE"
- . W ?125,"RX COB"
+ . W ?60,"COMPLETED"
+ . W ?78,"TRANS TYPE"
+ . W ?95,"PAYER RESPONSE"
  ;
  I BPRTYPE=6 D  Q
  . W !,?33,$J("AMOUNT",17)
@@ -217,7 +213,6 @@ HEADLN1(BPRTYPE) ;
  I BPRTYPE=7 D  Q
  . W ?65,"RX INFO"
  . W ?87,"DRUG"
- . W ?121,"NDC"
  Q
  ;
  ;Print Header 2 Line 2
@@ -227,11 +222,9 @@ HEADLN1(BPRTYPE) ;
 HEADLN2(BPRTYPE) ;
  I (BPRTYPE=1)!(BPRTYPE=4) D  Q
  . W !,?4,"DRUG"
- . W ?36,"NDC"
- . I BPRTYPE=1 W ?47,"RELEASED ON"
+ . W ?47,"RELEASED ON"
  . W ?68,"RX INFO"
- . I BPRTYPE=4 W ?92,"RX COB"
- . I BPRTYPE=1 W ?115,$J("BILL# RX COB",17)
+ . I BPRTYPE=1 W ?122,$J("BILL#",10)
  ;
  I BPRTYPE=2 D  Q
  . W !,?3,"CARDHOLD.ID"
@@ -243,15 +236,12 @@ HEADLN2(BPRTYPE) ;
  ;
  I BPRTYPE=3 D  Q
  . W !,?4,"DRUG"
- . W ?43,"NDC"
- . W ?68,"RX INFO"
- . W ?88,"RX COB"
+ . W ?54,"RX INFO"
  ;
  I BPRTYPE=5 D  Q
  . W !,?4,"DRUG"
- . W ?32,"NDC"
- . W ?47,"RX INFO"
- . W ?69,"INSURANCE"
+ . W ?38,"RX INFO"
+ . W ?60,"INSURANCE"
  . W ?112,"ELAP TIME IN SECONDS"
  ;
  I BPRTYPE=6 D  Q
@@ -269,14 +259,6 @@ HEADLN2(BPRTYPE) ;
  . W ?41,"CLOSE DATE/TIME"
  . W ?59,"CLOSED BY"
  . W ?87,"CLOSE REASON"
- . W ?121,"RX COB"
- ;
- I BPRTYPE=8 D  Q
- . W !,?2,"DRUG"
- . W ?38,"RX INFO"
- . W ?54,"INS GROUP#"
- . W ?79,"INS GROUP NAME"
- . W ?121,"BILL#"
  Q
  ;
  ;Print Header 2 Line 3
@@ -284,18 +266,8 @@ HEADLN2(BPRTYPE) ;
  ; Input variable: BPRTYPE -> Report Type (1-7)
  ; 
 HEADLN3(BPTYP) ;
- I BPTYP=4 D  Q
- . W !,?6,"RELEASED ON"
- . W ?22,"REVERSAL METHOD/RETURN STATUS/REASON"
- ;
- I BPTYP=8 D  Q
- . W !,?4,"$PROVIDER NETWORK"
- . W ?23,"$BRAND DRUG"
- . W ?38,"$NON-PREF FORM"
- . W ?56,"$BRAND NON-PREF FORM"
- . W ?81,"$COVERAGE GAP"
- . W ?96,"$HEALTH ASST"
- . W ?111,"$SPEND ACCT REMAINING"
+ D:BPTYP=4
+ . W !,?6,"REVERSAL METHOD/RETURN STATUS/REASON"
  Q
  ;
 SELEXCEL() ; - Returns whether to capture data for Excel report.

@@ -1,5 +1,5 @@
-EASEZP62 ;ALB/AMA,ERC - Print 1010EZ, Version 6 or greater, Cont., Page 2 ; 10/19/2000
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**51,60,70**;Mar 15, 2001;Build 26
+EASEZP62 ;ALB/AMA - Print 1010EZ, Version 6 or greater, Cont., Page 2 ; 10/19/2000
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**51,60**;Mar 15, 2001
  ;
  ;This routine copied from EASEZPF2; if the version # of the 1010EZ
  ;application is 6.0 or greater, then this routine will be executed.
@@ -84,12 +84,10 @@ MIL ;  Print out VA 10-10EZ Section IV, Military Service Information
  W !,"2. ANSWER YES OR NO:"
  W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
  ;
- ;DG*5.3*688 - change wording from Environmental Contaminants to SW 
- ;Asia Conditions.
- W !,"  A.  ARE YOU A PURPLE HEART AWARD RECIPIENT?",?58,"| ",@EASD@("14A1"),?64,"|  F. DO YOU NEED CARE OF CONDITIONS POTENTIALLY RELATED TO",?124,"| ",@EASD@("14E")
+ W !,"  A.  ARE YOU A PURPLE HEART AWARD RECIPIENT?",?58,"| ",@EASD@("14A1"),?64,"|  F. WERE YOU EXPOSED TO ENVIRONMENTAL CONTAMINANTS WHILE",?124,"| ",@EASD@("14E")
  W ?131,$C(13) W:EALNE("ULC")="-" ! W $E(EALNE("UL"),1,64)
  ;
- W !,"  B.  ARE YOU A FORMER PRISONER OF WAR?",?58,"| ",@EASD@("14A2"),?64,"|      SERVICE IN SOUTHWEST ASIA?",?124,"|"
+ W !,"  B.  ARE YOU A FORMER PRISONER OF WAR?",?58,"| ",@EASD@("14A2"),?64,"|     SERVING IN SW ASIA DURING THE GULF WAR?",?124,"|"
  W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
  ;
  W !,"  C.  DO YOU HAVE A VA SERVICE-CONNECTED RATING?",?58,"| ",@EASD@("14B"),?64,"|  G. WERE YOU EXPOSED TO AGENT ORANGE WHILE SERVING IN",?124,"| ",@EASD@("14F")

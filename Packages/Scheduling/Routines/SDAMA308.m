@@ -1,5 +1,5 @@
-SDAMA308 ;BPOIFO/JFW-Filter API Appointment Statuses; 5/10/04 8:13am [5/17/04 10:14am]
- ;;5.3;Scheduling;**301,406**;13 Aug 1993
+SDAMA308 ;BPOIFO/JFW-Filter API Appointment Statuses; 2/17/04 3:25pm ; 5/10/04 8:13am [5/17/04 10:14am]
+ ;;5.3;Scheduling;**301**;13 Aug 1993
  ;
  ;**              GET APPOINTMENT STATUS                         **
  ;              - Replaces $$STATUS^SDAM1 -
@@ -9,10 +9,9 @@ SDAMA308 ;BPOIFO/JFW-Filter API Appointment Statuses; 5/10/04 8:13am [5/17/04 10
  ;  DATE      PATCH       DESCRIPTION
  ;--------  ----------    -----------------------------------------
  ;12/04/03  SD*5.3*301    ROUTINE COMPLETED
- ;10/11/06  SD*5.3*406    PRINT STATUS TEXT UPDATED
  ;
  ;*****************************************************************
- ;
+ ;  
 STATUS(DFN,SDT,SDCL,SDSTS,SDCHKIN,SDCHKOUT,SDEIFN) ;Retrieve Appointment Status
  ;
  ;  Input:   DFN      := IFN of Patient
@@ -45,17 +44,13 @@ STATUS(DFN,SDT,SDCL,SDSTS,SDCHKIN,SDCHKOUT,SDEIFN) ;Retrieve Appointment Status
  I SDSTSD["INPATIENT",$S('+VADMVT:1,'$P(^DG(43,1,0),"^",21):0,1:$P($G(^DIC(42,+$P($G(^DGPM(VADMVT,0)),"^",6),0)),"^",3)="D") S SDSTSD=""
  ; Determine Checked In/Out Indicator
  S SDINDCTR=$S(+$G(SDCHKOUT):"CHECKED OUT",+$G(SDCHKIN):"CHECKED IN",SDSTSD]"":"",$G(SDT)>(DT+.2359):"FUTURE",1:"NO ACTION TAKEN") S:SDSTSD="" SDSTSD=SDINDCTR
- I SDSTSD="NO ACTION TAKEN",$P($G(SDT),".")=DT,SDINDCTR'["CHECKED" S SDINDCTR="TODAY"
+ I SDSTSD="NO ACTION TAKEN",$P($G(SDT),".")=DT,SDINDCTR'["CHECKED IN" S SDINDCTR="TODAY"
  I SDSTSD="CHECKED OUT"!(SDSTSD="CHECKED IN"),SDT'<$$REQDT^SDM1A,'$P($G(^SCE(+$G(SDEIFN),0)),"^",7) S SDSTSD="NO ACTION TAKEN"
  ; Determine PRINT STATUS
  S SDPSTS=$S(SDSTSD=SDINDCTR!(SDINDCTR=""):SDSTSD,1:"")
  I SDPSTS="" D
- .I SDSTSD["INPATIENT",$P($G(^SC(SDCL,0)),U,17)'="Y",$P($G(^SCE(+$G(SDEIFN),0)),U,7)="" S SDPSTS=$P(SDSTSD," ")_"/ACT REQ" Q
  .I SDSTSD="NO ACTION TAKEN",SDINDCTR="CHECKED OUT"!(SDINDCTR="CHECKED IN") S SDPSTS="ACT REQ/"_SDINDCTR Q
  .S SDPSTS=$S(SDSTSD="NO ACTION TAKEN":SDSTSD,1:$P(SDSTSD," "))_"/"_SDINDCTR
- I SDSTSD["INPATIENT",SDINDCTR="" D
- .I SDT>(DT+.2359) S SDPSTS=$P(SDSTSD," ")_"/FUTURE" Q
- .S SDPSTS=$P(SDSTSD," ")_"/NO ACT TAKN"
  ;Get Appointment Status IFN
  S SDAMVT=+$O(^SD(409.63,"AC",SDSTSD,0))
  Q SDAMVT_";"_SDSTSD_";"_SDPSTS_";"_$G(SDCHKIN)_";"_$G(SDCHKOUT)_";"_+VADMVT

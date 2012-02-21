@@ -1,25 +1,15 @@
-PRCPRIT1 ;WISC/RFJ/VAC-display item (print) ; 10/27/06 2:01pm
- ;;5.1;IFCAP;**98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
- ;Routine modified to show "D" for On-Demand Item and to correct
- ;   column #IM heading
+PRCPRIT1 ;WISC/RFJ-display item (print);28 Jul 91 [1/19/99 4:25pm]
+ ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
 DQ ;queue comes here
- N %I,D,D0,ITEMDATA,PRCPDA,DATA,DATE,INVNAME,NOW,PAGE,PRCPFLAG,SCREEN,UNIT,X,Y,ODI,X1,X2,MASTDATA
+ N %I,D,D0,ITEMDATA,PRCPDA,DATA,DATE,INVNAME,NOW,PAGE,PRCPFLAG,SCREEN,UNIT,X,Y
  D NOW^%DTC S Y=%,DATE=$E(%,1,7) D DD^%DT S NOW=Y,PAGE=1,SCREEN=$$SCRPAUSE^PRCPUREP,INVNAME=$$INVNAME^PRCPUX1(INVPT) U IO D H
  S MASTDATA=$G(^PRC(441,ITEMDA,0)),ITEMDATA=$G(^PRCP(445,INVPT,1,ITEMDA,0))
  W !,$P(MASTDATA,"^",5),?19,$E($$DESCR^PRCPUX1(INVPT,ITEMDA),1,28),?49,"[#",ITEMDA,"]",?59,$E($$GROUPNM^PRCPEGRP(+$P(ITEMDATA,"^",21)),1,20)
- ; Insert logic to print ODI flag of "D"
- I ODIFLAG="P"  D
- .W !,?8,"ON-DEMAND: "
- .S ODI=""
- .S ODI=$$ODITEM^PRCPUX2(INVPT,ITEMDA)
- .I ODI="Y" W "D"
- .W ?36,"BOC: ",$E($P($G(^PRCD(420.2,+$P(MASTDATA,"^",10),0)),"^"),1,39)
- I ODIFLAG="W" D
- .W ?14,"BOC: ",$E($P($G(^PRCD(420.2,+$P(MASTDATA,"^",10),0)),"^"),1,39)
+ W !?14,"BOC: ",$P($G(^PRCD(420.2,+$P(MASTDATA,"^",10),0)),"^")
  S UNIT=$$UNIT^PRCPUX1(INVPT,ITEMDA," per ") W !?3,"UNIT per ISSUE: ",UNIT
  W !?6,"QTY ON HAND: ",+$P(ITEMDATA,"^",7),?33,"DUE-IN: ",$$GETIN^PRCPUDUE(INVPT,ITEMDA),?60,"DUE-OUT: ",$$GETOUT^PRCPUDUE(INVPT,ITEMDA),!?6,"QTY NON-ISS: ",+$P(ITEMDATA,"^",19)
  I $P(ITEMDATA,"^",26)="Y" W !?19,"** DELETE ITEM WHEN QTY ON HAND REACHES ZERO **"
@@ -62,7 +52,7 @@ Q D ^%ZISC Q
  ;
 H S %=NOW_"  PAGE: "_PAGE,PAGE=PAGE+1 I PAGE'=2!(SCREEN) W @IOF
  W $C(13),"DISPLAY ITEM REPORT FOR ",INVNAME,?(80-$L(%)),%
- S %="",$P(%,"-",81)="" W !,"NSN",?19,"DESCRIPTION",?49,"[IM#]",?59,"GROUP : DESCRIPTION",!,%
+ S %="",$P(%,"-",81)="" W !,"NSN",?19,"DESCRIPTION",?49,"[#MI]",?59,"GROUP : DESCRIPTION",!,%
  Q
  ;
  ;

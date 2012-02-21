@@ -1,5 +1,5 @@
-RMPR5NU ;HIN/RVD-PROS INVENTORY SITE PARAMETERS UTILITY ;2/11/98
- ;;3.0;PROSTHETICS;**33,38,52,61,132**;Feb 09, 1996;Build 13
+RMPR5NU ;HIN/RVD-PROS INVENTORY SITE PARAMETERS UTILITY ;3/8/05  08:08
+ ;;3.0;PROSTHETICS;**33,38,52,61**;Feb 09, 1996
  ;
  ;DBIA #10090 - file #4.
  ; ODJ - patch 52 - 10/17/00 - if a 661.3 record is corrupted with a null
@@ -52,11 +52,10 @@ PROC ;process
  .....S RMLEFT=0
  .....F RMJ=0:0 S RMJ=$O(^TMP($J,"RMPRPIUD",I,J,K,"M",RMI,RMJ)) Q:RMJ'>0  S RM41=^TMP($J,"RMPRPIUD",I,J,K,"M",RMI,RMJ) D
  ......S RMORD=$P(RM41,U,1)
- ......S RMDATO=$P(RM41,U,2),RMRECV=$P(RM41,U,3),RMWDS=""
- ......S:RMRECV RMWDS="  ...received to-date: "_RMRECV
+ ......S RMDATO=$P(RM41,U,2)
  ......;S RMLEF=RMORD-RMREC
  ......;I $G(RMLEF) S RMLEFT=RMLEFT+RMLEF
- ......I $G(RMORD) S ^TMP($J,"RMX",I,RML,RMITEM,"M",RMJ)="   **** Quantity = "_RMORD_" has been ordered for item..."_RMITEM_" on "_RMDATO_RMWDS
+ .....I $G(RMORD) S ^TMP($J,"RMX",I,RML,RMITEM,"M")="   **** Quantity = "_RMORD_" has been ordered for item..."_RMITEM_" on "_RMDATO
  ;
  Q
 MES1 ;
@@ -84,10 +83,7 @@ BUILD S I=""
  .S RMSUBI=RMSUBI+1,RMLO=RMLO_"                    "
  .S RMX(RMSUBI)=$E($P(^DIC(4,RMSTA,0),U,1),1,6)_" "_$E(RMLO,1,16)_" "_$E(RMITEM,1,28)_" "_$E(RMHCPC,1,9)_" "_$J(RML,5)_"      "_$J(RMB,5)
  .;S RMXI(RMSUBI)=RMX(RMSUBI)_"^"_I_"^"_J_"^"_K
- .I $D(^TMP($J,"RMX",I,J,K,"M")) D
- ..S RMJ=0
- ..F  S RMJ=$O(^TMP($J,"RMX",I,J,K,"M",RMJ)) Q:RMJ=""  D
- ...S RMSUBI=RMSUBI+1,RMX(RMSUBI)=^TMP($J,"RMX",I,J,K,"M",RMJ)
+ .I $D(^TMP($J,"RMX",I,J,K,"M")) S RMSUBI=RMSUBI+1,RMX(RMSUBI)=^TMP($J,"RMX",I,J,K,"M")
  Q
  ;
 WRI ;PRINT NOTIFICATION LETTER IN SUPPLY PRINTER. This functionality is not included with this released.

@@ -1,5 +1,5 @@
 RAO7PC1 ;HISC/GJC,SS-Procedure Call utilities. ;12/9/02  08:41
- ;;5.0;Radiology/Nuclear Medicine;**1,16,18,26,36,45,75**;Mar 16, 1998;Build 4
+ ;;5.0;Radiology/Nuclear Medicine;**1,16,18,26,36,45**;Mar 16, 1998
  ;
 EN1(RADFN,RABDT,RAEDT,RAEXN,RACINC) ;
  ;
@@ -88,10 +88,7 @@ EN3(X) ; DBIA#2265 - Return narrative text for exam(s)
  ;
  ; Output:
  ; ^TMP($J,"RAE2",Patient IEN,case IEN,procedure name)=report status^
- ; abnormal alert flag^CPRS Order ien^amended report?
- ; ^TMP($J,"RAE2",Patient IEN,case IEN,procedure name,"CM",n)=contrast
- ; media used during exam (internal)^contrast media used during exam
- ; (external)
+ ; abnormal alert flag^CPRS Order ien^amended?
  ; ^TMP($J,"RAE2",Patient IEN,case IEN,procedure name,"D",n)=diagnostic
  ; code (n=1, this is the primary code)
  ; ^TMP($J,"RAE2",Patient IEN,case IEN,procedure name,"H",n)=clin history
@@ -105,8 +102,9 @@ EN3(X) ; DBIA#2265 - Return narrative text for exam(s)
  ; report entered
  ; ^TMP($J,"RAE2",Patient IEN,case IEN,procedure name,"R",n)=report
  ; (a line of text)
- ; ^TMP($J,"RAE2",Patient IEN,case IEN,procedure name,"RFS")=REASON
- ; FOR STUDY; the reason the study was conducted (a line of text)
+ ; ^TMP($J,"RAE2",Patient IEN,case IEN,procedure name,"CM",n)=contrast
+ ; media used during exam (internal)^contrast media used during exam
+ ; (external)
  ; ^TMP($J,"RAE2",Patient IEN,case IEN,procedure name,"V",n)=verifier IEN
  ; ^signature block name
  ; ^TMP($J,"RAE2",Patient IEN,case IEN,procedure name,"TCOM",1)=techno-

@@ -1,18 +1,13 @@
 MDRPCOR ; HOIFO/DP - Object RPCs (TMDRecordId) ; [01-10-2003 09:14]
- ;;1.0;CLINICAL PROCEDURES;**17,20**;Apr 01, 2004;Build 9
+ ;;1.0;CLINICAL PROCEDURES;;Apr 01, 2004
  ; Description:
  ; This routine manages both the MDVCL components and
  ; the TMDRecordID object
  ;
  ; Integration Agreements:
- ; IA# 2054 [Supported] Call to DILF
- ; IA# 2055 [Supported] Call to DILFD
- ; IA# 2056 [Supported] Call to DIQ
- ; IA# 2263 [Supported] Call to XPAR
- ; IA# 3568 [Subscription] TIUCP call
+ ; IA# 3568 [Private] TIUCP call.
  ; IA# 3266 [Subscription] Calls to DPTLK1
  ; IA# 3267 [Subscription] Call to DPTLK1
- ; IA# 10003 [Supported] Call to %DT
  ; IA# 10104 [Public] Call to XLFSTR
  ;
 CHANGES ; [Procedure] Returns number of changes to save
@@ -88,8 +83,6 @@ GETDATA ; [Procedure] Returns data for a field
  .I $D(^TMP("MDFDA",$J,DD,IENS,FLD)) M ^TMP($J)=^TMP("MDFDA",$J,DD,IENS,FLD)
  .E  S X=$$GET1^DIQ(DD,IENS,FLD,"",$NA(^TMP($J)))
  .S @RESULTS@(0)=+$O(@RESULTS@(""),-1)
- I $$GET1^DID(DD,FLD,"","TYPE")["POINTER"&(DD=703.1)&(FLD=.05) D  Q
- .S @RESULTS@(0)=$$GET1^DIQ(DD,IENS,FLD,"I") Q
  I $D(^TMP("MDFDA",$J,DD,IENS,FLD)) S Y=^(FLD) D  Q
  .I $G(DATA) S @RESULTS@(0)=Y Q  ; Internal Format
  .S @RESULTS@(0)=$$EXTERNAL^DILFD(DD,FLD,"",Y)
@@ -161,7 +154,7 @@ NEWREC ; [Procedure] Create a new record
  Q
  ;
 PTLKUP ; [Procedure] Patient lookup handled separately for security
- D FIND^DIC(2,,"@;.01;.02;.03;.09","MP",DATA,45,"B^BS^BS5^SSN")
+ D FIND^DIC(2,,"@;.01;.02;.03;.09","MP",DATA,45)
  I $P($G(^TMP("DILIST",$J,0)),U,3) D  Q
  .S @RESULTS@(0)="-1^Too many entries found matching '"_DATA_"', please be more specific."
  F MDX=0:0 S MDX=$O(^TMP("DILIST",$J,MDX)) Q:'MDX  D
@@ -211,6 +204,8 @@ RPC(RESULTS,OPTION,DD,IENS,FLD,DATA) ; [Procedure] RPC call tag
  Q
  ;
 SAVEFDA ; [Procedure] Save changes to the VistA database
+ I DD<702!(DD>703.1999) D  Q
+ .S @RESULTS@(0)="-1^Non CLINICAL PROCEDURES DD number space"
  K ^TMP("MDSAVE",$J)
  S MDFDA=$NA(^TMP("MDFDA",$J))
  F  S MDFDA=$Q(@MDFDA) Q:MDFDA=""  Q:$QS(MDFDA,2)'=$J  D
@@ -231,9 +226,6 @@ SAVEFDA ; [Procedure] Save changes to the VistA database
  .D ERROR^MDRPCU($NA(^TMP($J)),.MDERR)
  .M ^TMP("MDFDA",$J)=^TMP("MDSAVE",$J)
  K ^TMP("MDSAVE",$J)
- I DD<702!(DD>703.1999) D  Q
- .S @RESULTS@(0)="-1^Non CLINICAL PROCEDURES DD number space"
- I DD=702.09&(+$$GET^XPAR("SYS","MD DEVICE SURVEY TRANSMISSION",1)) D COL^MDDEVCL
  Q
  ;
 SETFDA ; [Procedure] Validate data and store in FDA

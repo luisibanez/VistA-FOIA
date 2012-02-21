@@ -1,5 +1,5 @@
 SRSUPRQ ;B'HAM ISC/MAM - UPDATE REQUESTED OPERATIONS; [ 08/29/01  9:04 AM ]
- ;;3.0; Surgery ;**7,47,58,67,107,114,100,154**;24 Jun 93
+ ;;3.0; Surgery ;**7,47,58,67,107,114,100**;24 Jun 93
  ;
  ; Reference to ^TMP("CSLSUR1" supported by DBIA #3498
  ;
@@ -14,7 +14,6 @@ OPT S SREQ=1 I $D(SRCASE(2)) D MANY
  Q:$D(SRSCHED)  G:'$D(SRTN) END W !!,"1. Delete",!,"2. Update Request Information",!,"3. Change the Request Date"
 SEL W !!,"Select Number: " R Z:DTIME S:'$T!("^"[Z) SRSOUT=1 G:SRSOUT END S:Z["?" Z=4
  I Z<1!(Z>3)!(+Z\1'=Z) W !!,"If you want to delete this request, enter '1'.  Enter '2' if you only want",!,"to update the general information about this case, or '3' to change the date",!,"that this case is requested for." G SEL
- I $D(^XTMP("SRLOCK-"_SRTN)) D MSG G END
  I Z=1 D DEL G END
  I Z=2 D UPDATE S SRSOUT=1 G END
  I Z=3 D CHANGE^SRSDT
@@ -63,4 +62,3 @@ UPDATE ; update requested operation
 RT ; start RT logging
  I $D(XRTL) S XRTN="SRSUPRQ" D T0^%ZOSV
  Q
-MSG W !!,"This case is currently being edited.",!,"Please try again later...",!! Q

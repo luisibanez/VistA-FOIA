@@ -1,5 +1,5 @@
-ECRRPT ;ALB/JAM - Event Capture Report RPC Broker ; 10 JUL 2008
- ;;2.0; EVENT CAPTURE ;**25,32,41,56,61,82,94,95,108**;8 May 96;Build 3
+ECRRPT ;ALB/JAM;Event Capture Report RPC Broker ;Jan 2, 2001
+ ;;2.0; EVENT CAPTURE ;**25,32,41,56,61**;8 May 96
  ;
 REQCHK(ECV) ;Required data check
  N I,C
@@ -44,8 +44,6 @@ ECPAT ;Patient Summary Report for RPC Call
  N ECDATE,ECPAT,ECV,DIC,X,Y,ECROU,ECDESC
  S ECV="ECDFN^ECSD^ECED" D REQCHK(ECV) I ECERR Q
  S DIC=2,DIC(0)="QNMZX",X=ECDFN D ^DIC Q:Y<0  S ECPAT=$P(Y,U,2)
- ;EC*2.0*108 - Convert Date/Time to Date only
- S ECSD=$P(ECSD,"."),ECED=$P(ECED,".")
  D DATECHK(.ECSD,.ECED)
  S ECSD=ECSD-.0001,ECED=ECED+.9999
  I $E($G(ECRY))'="Y" K ECRY
@@ -66,16 +64,16 @@ ECRDSSU ;DSS Unit Workload Summary Report
  ;     Variable return
  ;       ^TMP($J,"ECRPT",n)=report output or to print device.
  N ECLOC,ECDSSU,ECV,ECI,ECSTDT,ECENDDT,ECKEY,ECROU,ECSAVE,ECDESC,ECNT
- N ECDATE,ECX,DIC,X,Y
+ N ECDATE,ECX,DUZ,DIC,X,Y
  S ECV="ECL^ECD0^ECSD^ECED^ECDUZ" D REQCHK(ECV) I ECERR Q
  D  I '$D(ECLOC) S ^TMP("ECMSG",$J)="1^Invalid Location." Q
  . I ECL="ALL" D LOCARRY^ECRUTL Q
- . S DIC=4,DIC(0)="QNZX",X=ECL D ^DIC Q:Y<0  S ECLOC(1)=+Y_"^"_$P(Y,U,2)
+ . S DIC=4,DIC(0)="QNMZX",X=ECL D ^DIC Q:Y<0  S ECLOC(1)=+Y_"^"_$P(Y,U,2)
  D  I '$D(ECDSSU) S ^TMP("ECMSG",$J)="1^Invalid DSS Unit." Q
  . I ECD0="ALL" D  Q
- . . S ECKEY=$S($D(^XUSEC("ECALLU",ECDUZ)):1,1:0) D ALLU^ECRUTL
+ . . S ECKEY=$S($D(^XUSEC("ECALLU",ECDUZ)):1,1:0),DUZ=ECDUZ D ALLU^ECRUTL
  . S (ECI,ECNT)=0 F ECI=0:1 S ECX="ECD"_ECI Q:'$D(@ECX)  D
- . . K DIC S DIC=724,DIC(0)="QNZX",X=@ECX D ^DIC I Y<0 Q
+ . . K DIC S DIC=724,DIC(0)="QNMZX",X=@ECX D ^DIC I Y<0 Q
  . . S ECNT=ECNT+1,ECDSSU(ECNT)=Y
  D DATECHK(.ECSD,.ECED)
  S ECSTDT=ECSD-.0001,ECENDDT=ECED+.9999
@@ -153,7 +151,7 @@ ECOSSUM ;Ordering Section Summary Report for RPC Call
  ;
  ;     Variable return
  ;       ^TMP($J,"ECRPT",n)=report output or to print device.
- N ECV,ECI,ECOSN,ECLOC,ECDSSU,ECDATE,ECNT,ECSAVE,ECROU,ECDESC,DIC,X,Y
+ N ECV,ECI,ECOSN,ECLOC,ECDSSU,ECDATE,ECNT,ECSAVE,ECROU,ECDESC,DUZ,DIC,X,Y
  S ECV="ECOS^ECL^ECD0^ECSD^ECED^ECDUZ" D REQCHK(ECV) I ECERR Q
  S DIC=723,DIC(0)="QNMZX",X=ECOS D ^DIC D:Y<0  Q:Y<0  S ECOSN=$P(Y,U,2)
  . S ^TMP("ECMSG",$J)="1^Invalid Ordering Section.",ECERR=1
@@ -162,7 +160,7 @@ ECOSSUM ;Ordering Section Summary Report for RPC Call
  . S DIC=4,DIC(0)="QNZX",X=ECL D ^DIC Q:Y<0  S ECLOC(1)=+Y_"^"_$P(Y,U,2)
  D  I '$D(ECDSSU) S ^TMP("ECMSG",$J)="1^Invalid DSS Unit." Q
  . I ECD0="ALL" D  Q
- . . S ECKEY=$S($D(^XUSEC("ECALLU",ECDUZ)):1,1:0) D ALLU^ECRUTL
+ . . S ECKEY=$S($D(^XUSEC("ECALLU",ECDUZ)):1,1:0),DUZ=ECDUZ D ALLU^ECRUTL
  . S (ECI,ECNT)=0 F ECI=0:1 S ECX="ECD"_ECI Q:'$D(@ECX)  D
  . . K DIC S DIC=724,DIC(0)="QNMZX",X=@ECX D ^DIC I Y<0 Q
  . . S ECNT=ECNT+1,ECDSSU(ECNT)=Y
@@ -194,36 +192,4 @@ ECPCER ;PCE Data Summary Report for RPC Call
  . S ECDESC="ECS/PCE PATIENT SUMMARY"
  . D QUEUE
  D SUM^ECPCER
- Q
-ECRDSSA ;DSS Unit Activity Report
- ;     Variables passed in
- ;       ECL    - Location to report (1 or ALL)
- ;       ECD0   - DSS Unit to report (1, some or ALL)
- ;       ECSORT  - Sort type(P,S or R)
- ;       ECSD   - Start Date or Report
- ;       ECED   - End Date or Report
- ;       ECDUZ  - User IEN from file (#200)
- ;
- ;     Variable return
- ;       ^TMP($J,"ECRPT",n)=report output or to print device.
- N ECLOC,ECDSSU,ECV,ECI,ECSTDT,ECENDDT,ECKEY,ECROU,ECSAVE,ECDESC,ECNT
- N ECDATE,ECX,DIC,X,Y
- S ECV="ECL^ECD0^ECSORT^ECSD^ECED^ECDUZ" D REQCHK(ECV) I ECERR Q
- D  I '$D(ECLOC) S ^TMP("ECMSG",$J)="1^Invalid Location." Q
- . I ECL="ALL" D LOCARRY^ECRUTL Q
- . S DIC=4,DIC(0)="QNZX",X=ECL D ^DIC Q:Y<0  S ECLOC(1)=+Y_"^"_$P(Y,U,2)
- D  I '$D(ECDSSU) S ^TMP("ECMSG",$J)="1^Invalid DSS Unit." Q
- . I ECD0="ALL" D  Q
- . . S ECKEY=$S($D(^XUSEC("ECALLU",ECDUZ)):1,1:0) D ALLU^ECRUTL
- . S (ECI,ECNT)=0 F ECI=0:1 S ECX="ECD"_ECI Q:'$D(@ECX)  D
- . . K DIC S DIC=724,DIC(0)="QNZX",X=@ECX D ^DIC I Y<0 Q
- . . S ECNT=ECNT+1,ECDSSU(ECNT)=Y
- D DATECHK(.ECSD,.ECED)
- S ECSTDT=ECSD-.0001,ECENDDT=ECED+.9999
- I ECPTYP="P" D  Q
- . S ECV="ECSORT^ECDATE^ECSTDT^ECENDDT",ECROU="STRPT^ECRDSSA"
- . S (ECSAVE("ECLOC("),ECSAVE("ECDSSU("))=""
- . S ECDESC="DSS UNIT ACTIVITY REPORT"
- . D QUEUE
- D STRPT^ECRDSSA
  Q

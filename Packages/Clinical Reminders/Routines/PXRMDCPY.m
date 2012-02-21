@@ -1,5 +1,5 @@
-PXRMDCPY ; SLC/PJH - Copy dialog files. ;06/12/2009
- ;;2.0;CLINICAL REMINDERS;**4,12**;Feb 04, 2005;Build 73
+PXRMDCPY ; SLC/PJH - Copy dialog files. ;07/09/2002
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;Called by label from PXRMDEDT
  ;
@@ -22,7 +22,7 @@ ASK(YESNO,TEXT,HLP,DEFAULT) ;
  ;Copy any dialog
  ;---------------
 ANY W IORESET
- N DIC,DUOUT,DTOUT,DIROUT,DIRUT,DTYP,LFIND,LOCK,SIEN,IENN,IENO,X,Y
+ N DIC,DUOUT,DTOUT,DIROUT,DIRUT,LFIND,LOCK,SIEN,IENN,IENO,X,Y
  N PROMPT,ROOT,WHAT
  S WHAT="dialog",ROOT="^PXRMD(801.41,",PROMPT="Select the dialog to copy: "
  ;
@@ -36,10 +36,7 @@ ANY W IORESET
  ;Check for Uneditable flag
  S LOCK=$P($G(^PXRMD(801.41,IENO,100)),U,4)
  S LFIND=$P($G(^PXRMD(801.41,IENO,1)),U,5)
- S DTYP=$P($G(^PXRMD(801.41,IENO,0)),U,4)
- I LOCK=1,'$G(PXRMINST),DTYP="G" D  Q
- .W !,"This item cannot be copied." H 2
- I LOCK=1,$G(LFIND)'="",$G(LFIND)'["ORD",'$G(PXRMINST),DTYP'="G" D  Q
+ I LOCK=1,$G(LFIND)'="",$G(LFIND)'["ORD",'$G(PXRMINST) D  Q
  .W !,"This item cannot be copied." H 2
  ;
  ;Copy the dialog
@@ -83,7 +80,7 @@ COPY(IENO,IENN,RDIEN) ;
  .D ^DIR Q:$D(DTOUT)!$D(DUOUT)
  .I Y["""" D EN^DDIOL(" name cannot contain quotes!") Q
  .I $E(Y,1,4)="PXRM" D EN^DDIOL(" name cannot begin with PXRM!") Q
- .I '$$VNAME^PXRMINTR(Y) Q
+ .I '$$VNAME^PXRMINTR(Y,801.41) Q
  .I $$UNIQNAME(Y,ROOT) S NAME=Y Q
  .D EN^DDIOL(" is not a unique name!")
  ;

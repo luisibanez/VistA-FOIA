@@ -1,6 +1,6 @@
 PRCHCON1 ;WISC/KMB/DL/DXH - CONV. TEMP 2237 TO PC ORDER ;7.29.99
-V ;;5.1;IFCAP;**108**;Oct 20, 2000;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  I '$D(^PRC(440.5,"C",DUZ)) W !!,"You are not authorized to use this option." Q
 START ;   get transaction number, convert to regular 2237
  N PRC,Y,PRCSIP,PRCSQ,ODA,PNW,TRY,TX1,T1,T2,T3,T4,PRCSY,PRCSDIC,PRCSAPP
@@ -15,7 +15,7 @@ START1 ;
  S DIC("S")="I $P(^(0),U,2)=""O"",$P(^(0),U,5)=PRC(""SITE""),$P(^(0),U,12)'=""A"",$D(^(3)),+$P(^(3),U)=+PRC(""CP""),$P($G(^(4)),U,5)="""""
  D ^DIC S:Y<0 QUIT=1 Q:Y<0  S (ODA,DA)=+Y,PRCSDIC=DIC
  I $P($G(^PRCS(410,DA,3)),U,4)="" W !,"This transaction has no entry in the Vendor File.",!,"Please edit this transaction's vendor before converting this order." H 4 Q
- I $P($G(^PRCS(410,DA,4)),U)>3000 W !,"The dollar amount for this transaction exceeds the $3000 purchase card cutoff." H 4 Q
+ I $P($G(^PRCS(410,DA,4)),U)>2500 W !,"The dollar amount for this transaction exceeds the $2500 purchase card cutoff." H 4 Q
  D W1^PRCSEB0 Q:%<0  S DIC=PRCSDIC
  L +^PRCS(410,DA):15 G:$T=0 START S T1=ODA,T2=^PRCS(410,DA,0),T4=$P(T2,"^",2),T2=$P(T2,"^"),T3=$P(^(3),"^")
  N REM,REM1 S REM=DA,REM1=+$P(PRC("CP")," ")

@@ -1,5 +1,5 @@
-LRAPLG1 ;AVAMC/REG/WTY/KLL - LOG-IN CONT. ;07/30/04
- ;;5.2;LAB SERVICE;**72,121,248,308**;Sep 27, 1994
+LRAPLG1 ;AVAMC/REG/WTY - LOG-IN CONT. ;9/22/00
+ ;;5.2;LAB SERVICE;**72,121,248**;Sep 27, 1994
  ;
  ;Reference to ^%ZOSF("TEST" supported by IA #10096
  ;Reference to ^VA(200 supported by IA #10060
@@ -25,9 +25,9 @@ LRAPLG1 ;AVAMC/REG/WTY/KLL - LOG-IN CONT. ;07/30/04
 AU S LRAN=X,LRAC=LRABV_" "_$E(LRAD,2,3)_" "_LRAN I LRSS="AU" D ^LRAUAW Q
  S DA(1)=LRDFN S:'$D(^LR(LRDFN,LRSS,0)) ^(0)="^"_LRSF_"DA^0^0"
 DT W !,"Date/time Specimen taken: "
- W $S($E(LRAD,1,3)=$E(DT,1,3):"NOW// ",1:"")
+ W $S($E(LRAD,1,3)=$E(DT,1,3):"TODAY// ",1:"")
  R X:DTIME G:X[U!('$T) END
- S:X=""&($E(LRAD,1,3)=$E(DT,1,3)) X="N"
+ S:X=""&($E(LRAD,1,3)=$E(DT,1,3)) X="T"
  S %DT="ETX",%DT(0)="-N" D ^%DT K %DT
  G:X["?" DT G:Y=-1 END
  S LRSD=Y,LRI=9999999-Y

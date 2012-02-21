@@ -1,5 +1,5 @@
 LRTSTOUT ;SLC/CJS-JAM TESTS OFF ACCESSIONS ;8/11/97
- ;;5.2;LAB SERVICE;**100,121,153,202,221,337**;Sep 27, 1994;Build 2
+ ;;5.2;LAB SERVICE;**100,121,153,202,221**;Sep 27, 1994
  ;Cancel tests - Test are no longer deleted, instead the status is changed to Not Performed.
 EN ;
  D ^LRPARAM Q:$G(LREND)
@@ -28,7 +28,6 @@ FX1 ;
  D SHOWTST
  Q
 CHG K LRCTST,DIC W !
- N LRIFN
  S:'$D(DIC("A")) DIC("A")="Change which LABORATORY TEST: "
  S DIC="^LRO(68,"_LRAA_",1,"_LRAD_",1,"_LRAN_",4,",DIC("S")="I '$L($P(^(0),U,5))",DIC(0)="AEMOQ"
  F  D ^DIC Q:Y<1  S LRCTST(+Y)=$P(^LAB(60,+Y,0),U),DIC("A")="Select another test: "
@@ -42,7 +41,7 @@ CHG K LRCTST,DIC W !
  D FX2 Q:$G(LREND)
  S LRTSTS=0 F  S LRTSTS=$O(LRCTST(LRTSTS)) Q:LRTSTS<1  D
  . Q:'$D(^LAB(60,LRTSTS,0))#2  S LRTNM=$P(^(0),U)
- . S LRORDTST=$P(^LRO(68,LRAA,1,LRAD,1,LRAN,4,LRTSTS,0),U,9) D SET,CLNPENDG
+ . S LRORDTST=$P(^LRO(68,LRAA,1,LRAD,1,LRAN,4,LRTSTS,0),U,9) D SET
  . W:'$G(LREND) !?5,"[ "_LRTNM_" ] ",$S('$D(LRLABKY):" Marked Canceled by Floor",1:" Marked Not Performed"),!
  S LREND=0 K LRCTST
  Q
@@ -153,13 +152,6 @@ FX3 K DIR W !
  S DIC(0)="SL"
  S DA=LRIDT,DA(1)=LRDFN,DIE="^LR("_LRDFN_","""_LRSS_""",",DIC=DIE
  S LRCCOM=$TR(LRCCOM,";","-") ; Strip ";" - FileMan uses ";" to parse DR string.
- S LRCCOM=$TR(LRCCOM,"""","'") ; Change " to ' -- " causes FileMan error.
  S DR=".99///^S X="_""""_LRCCOM_""""
  D ^DIE
- Q
-CLNPENDG ;Remove pending from Lab test when set to not performed
- N LRIFN
- S LRIFN=$P($G(^LAB(60,LRTSTS,.2)),U)
- Q:LRIFN=""
- S:$P($G(^LR(LRDFN,LRSS,LRIDT,LRIFN)),U)="pending" $P(^LR(LRDFN,LRSS,LRIDT,LRIFN),U)=""
  Q

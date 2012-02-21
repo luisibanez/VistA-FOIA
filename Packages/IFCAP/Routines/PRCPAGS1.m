@@ -1,6 +1,6 @@
-PRCPAGS1 ;WISC/RFJ-autogenerate secondary order ; 10/30/06 12:32pm
-V ;;5.1;IFCAP;**1,98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPAGS1 ;WISC/RFJ-autogenerate secondary order                     ;01 Dec 92
+V ;;5.1;IFCAP;**1**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ; PRCPSCHE is a flag passed by the Scheduler
@@ -36,7 +36,6 @@ START ;  start autogenerating items
  . . I $P(ITEMDATA,"^",7)!($P(ITEMDATA,"^",19))!($P(ITEMDATA,"^",27)) Q
  . . S INACTIVE=$P(^PRCP(445,PRCP("I"),0),"^",13)
  . . I INACTIVE D  I EXIT Q
- . . . N X1,X2 ; initialization of X1,X2 added with PRC*5.1*98
  . . . S EXIT=0
  . . . D NOW^%DTC
  . . . S X1=X,X2=-(INACTIVE*30+1)
@@ -62,10 +61,9 @@ START ;  start autogenerating items
  . . S ^TMP($J,"PRCPAG","NOV",%,VENDOR,DESCNSN,ITEMDA)=""
  . I $P(ITEMDATA,"^",26)="Y" D  D ERROR Q
  . . S ERROR="KWZ is set to YES, item not ordered"
- . ;  check normal stock level (O allowed for ODI per PRC*5.1*98)
- . I $P(ITEMDATA,"^",9)=0&($P(ITEMDATA,"^",30)'="Y")!($P(ITEMDATA,"^",9)']"") D  D ERROR Q
+ . ;  check normal stock level and standard reorder point
+ . I '$P(ITEMDATA,"^",9) D  D ERROR Q
  . . S ERROR="NORMAL STOCK LEVEL missing for item"
- . ;  check standard re-order point (no nils, 0 valid with PRC*5.1*1)
  . I $P(ITEMDATA,"^",10)']"" D  D ERROR Q
  . . S ERROR="STANDARD REORDER POINT missing for item"
  . S VENDORNM=$$INVNAME^PRCPUX1(VENDOR)

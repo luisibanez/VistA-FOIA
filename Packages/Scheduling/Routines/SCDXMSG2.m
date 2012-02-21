@@ -1,12 +1,10 @@
 SCDXMSG2 ;ALB/JRP - AMB CARE TRANSMISSION BULLETINS;01-JUL-1996 ; 1/17/02 5:07pm
- ;;5.3;Scheduling;**44,121,128,66,132,247,393,466**;AUG 13, 1993;Build 2
+ ;;5.3;Scheduling;**44,121,128,66,132,247,393**;AUG 13, 1993
  ;
-CMPLBULL(SENT,ERRCNT,IPCNT,IPERR) ;Send completion bulletin
+CMPLBULL(SENT,ERRCNT) ;Send completion bulletin
  ;
  ;Input  : SENT - Number of encounters sent to NPCDB (Defaults to 0)
  ;         ERRCNT - Contains the number of errored encounters
- ;         IPCNT  - Number of inpatient encounters
- ;         IPERR  - Contains the number of inpatient errored encounters
  ;Output : None
  ;
  ;Declare variables
@@ -16,10 +14,6 @@ CMPLBULL(SENT,ERRCNT,IPCNT,IPERR) ;Send completion bulletin
  S XMB="SCDX AMBCARE TO NPCDB SUMMARY"
  S XMB(1)=+$G(SENT)
  S XMB(2)=+$G(ERRCNT)
- S XMB(3)=+$G(SENT)-(+$G(IPCNT))
- S XMB(4)=+$G(IPCNT)
- S XMB(5)=+$G(ERRCNT)-(+$G(IPERR))
- S XMB(6)=+$G(IPERR)
  D ^XMB
  Q
  ;
@@ -49,7 +43,7 @@ ERRBULL(REASON) ;Send error bulletin
  ;
 LATEACT(XMITPTR,ACT,USER,DATE) ;Send late activity bulletin
  ;
- ;Input :  XMITPTR - Pointer to TRANSMITTED OUTPATIENT ENCOUNTER file
+ ;Inuput : XMITPTR - Pointer to TRANSMITTED OUTPATIENT ENCOUNTER file
  ;                   (#409.73) that was acted upon
  ;         ACT - Late activity that occurred
  ;               Free text (defaults to transmission event of XMITPTR)
@@ -88,7 +82,7 @@ LATEACT(XMITPTR,ACT,USER,DATE) ;Send late activity bulletin
  ;Set default values (if applicable)
  I (ACT="") D  Q:(ACT="")
  .S ACT=+$P(NODE,"^",5)
- .I (ACT=1)!(ACT=2) S ACT="Creation/Editing of encounter" Q
+ .I (ACT=1)!(ACT=2) S ACT="Creation/Editting of encounter" Q
  .I (ACT=3) S ACT="Deletion of encounter" Q
  .S ACT="Retransmission of encounter"
  I ('USER) D

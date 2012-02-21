@@ -1,5 +1,5 @@
 PXBDPOV ;ISL/JVS - DISPLAY POV (DIAGNOSIS) ;3/10/04 12:12pm
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**124,168**;Aug 12, 1996;Build 14
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**124**;Aug 12, 1996
  ;
  ;
 EN0 ;---Main entry point
@@ -122,8 +122,8 @@ DIS ;----DISPLAY
  Q
  ;
 CIA(X) ;Clinical Indicator Abbreviations
- N V,I,CI,CI2 S CI="SC^AO^IR^SWAC^MST^HNC^CV^SHAD",CI2=1 W !
- F I=1,7,2:1:4,8,5,6 S V=$P(X,U,I) I V]"" W ?(CI2*8),$P(CI,U,I),":",$S(V:"Y",1:"N") S CI2=CI2+1
+ N V,I,CI S CI="SC^AO^IR^EC^MST^HNC^CV" W !
+ F I=1,7,2:1:6 S V=$P(X,U,I) W:V]"" ?(I*8),$P(CI,U,I),":",$S(V:"Y",1:"N")
  Q
  ;
 ARRAY ;Set POV entries into ^TMP("PXBDPOV",$J,"DSP" for display

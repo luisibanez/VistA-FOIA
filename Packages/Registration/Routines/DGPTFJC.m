@@ -1,5 +1,5 @@
 DGPTFJC ;ALB/ADL - CLOSED PTF ;7/28/05 1:08pm
- ;;5.3;Registration;**158,510,517,590,636,635,701,729,785**;Aug 13, 1993;Build 7
+ ;;5.3;Registration;**158,510,517,590,636,635**;Aug 13, 1993
  ;;ADL;;Update for CSV Project;;Mar 25, 2003
 101 W !,"Enter '^N' for Screen N, RETURN for <MAS>,'^' to Abort: <MAS>//"
  D READ G Q^DGPTF:X=U,^DGPTFM:X="",^DGPTFJ:X?1"^".E D H G 101
@@ -36,7 +36,6 @@ EN ; DG*636
  S K=$S($D(K):K,1:1),DGER=0 S DGPTDAT=$$GETDATE^ICDGTDRG(DA(1))
  ;if there is a disch and a previous movement, if disch
  ;is >Oct 1 (next FY) and movement <Oct 1, then use the movement date
- I $G(DGZM0)="" S DGZM0=1,M(DGZM0)="0^"  ; to prevent sys err from TD5^DGPTTS2 and ptf quick load (DG*701/729)
  N DGPTMVDT I DGPTDAT=$P($G(^DGPT(DA(1),70)),U,1)&(DGPTDAT=$P($G(^DGPT(DA(1),"M",1,0)),U,10))&($D(M(DGZM0)))&($P($G(M(DGZM0)),U)'=1) S DGPTMVDT=$P($G(^DGPT(DA(1),"M",2,0)),U,10)
  ;next line is if using "Add a code" in MAS screen
  I '$G(DGPTMVDT)&($D(DGADD))&($G(DGMOV)'=1) S DGPTMVDT=$P($G(^DGPT(DA(1),"M",2,0)),U,10)
@@ -47,7 +46,6 @@ EN ; DG*636
  .I ($E(DGPTDAT,1,3)-$E(DGPTMVDT,1,3))>1 S DGPTDAT=DGPTMVDT Q
  .I $E(DGPTMVDT,4,7)<1001 S DGPTDAT=DGPTMVDT Q
  .I $E(DGPTDAT,4,7)>0930 S DGPTDAT=DGPTMVDT Q
- I $G(DGPMT)!$G(DGQWK) K M(DGZM0),DGZM0  ; DG*701/729
  S DGPTTMP=$$ICDDX^ICDCODE(+Y,DGPTDAT) I +DGPTTMP=-1!('$P(DGPTTMP,U,10)) S DGER=1 Q
  ;end DG*636
  ;===================================================================
@@ -59,8 +57,7 @@ EN ; DG*636
  Q
 EN1 S K=$S($D(K):K,1:1),DGER=0,DGPTDAT=$$GETDATE^ICDGTDRG(DA(1)),DGICD0=$$ICDOP^ICDCODE(+Y,DGPTDAT) I +DGICD0,0!('$P(DGICD0,U,10)) S DGER=1 Q
  I $P(DGICD0,U,11)]""&($P(DGICD0,U,11)'=$S($D(^DPT(+^DGPT(DA(1),0),0)):$P(^(0),U,2),1:"M")) W:K<24 !,$P(DGICD0,U,2)," can only be used with ",$S($P(DGICD0,U,11)="F":"FEMALES",1:"MALES") S K=K+1,DGER=1 Q
- S %=$P(^DGPT(DA(1),DGSB,DA,0),U,DGI)
- ;I $D(^DGPT(DA(1),DGSB,DGCR,Y,DA)),%'=Y S DGER=1 W !,"Cannot enter the same code more than once within a ",$S(DGSB="S":"401",1:"601")," transaction" Q
+ S %=$P(^DGPT(DA(1),DGSB,DA,0),U,DGI) I $D(^DGPT(DA(1),DGSB,DGCR,Y,DA)),%'=Y S DGER=1 W !,"Cannot enter the same code more than once within a ",$S(DGSB="S":"401",1:"601")," transaction" Q
  F I=0:0 S I=$O(^ICD0(+Y,"N",I)) Q:I'>0  I $D(^DGPT(DA(1),DGSB,DGCR,I,DA)),%'=I S DGPTTMP2=$$ICDOP^ICDCODE(I,DGPTDAT) W !,"Cannot use ",$P(DGICD0,U,2),"  with ",$S(+DGPTTMP2>0:$P(DGPTTMP2,U,2),1:"") S DGER=1 Q
  Q:DGER  S DG1=1 F I=0:0 S I=$O(^ICD0(+Y,"R",I)) Q:I'>0  S DG1=0 I $D(^DGPT(DA(1),DGSB,DGCR,I,DA)),%'=I S DG1=1 Q
  I 'DG1 W !,$P(DGICD0,U,2)," requires additional code."

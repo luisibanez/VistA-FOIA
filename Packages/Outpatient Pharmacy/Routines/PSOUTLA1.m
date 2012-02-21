@@ -1,14 +1,12 @@
-PSOUTLA1 ;BHAM ISC/RTR-Pharmacy utility program cont. ;5/22/07 10:01am
- ;;7.0;OUTPATIENT PHARMACY;**35,186,218,259,206**;DEC 1997;Build 39
+PSOUTLA1 ;BHAM ISC/RTR-Pharmacy utility program cont. ;10/25/05 12:10pm
+ ;;7.0;OUTPATIENT PHARMACY;**35,186,218**;DEC 1997
  ;External reference to File ^PS(55 supported by DBIA 2228
  ;External reference to File ^PSDRUG supported by DBIA 221
  ;External reference to File ^PS(59.7 supported by DBIA 694
  ;External reference to File ^PS(51 supported by DBIA 2224
  ;
- ;*186 - add DEACHK function
- ;*218 - add REFIP function
- ;*259 - reverse *218 delete restriction only warn of deleting
- ;       also add del of last refill only
+ ;PSO*186 - add DEACHK function
+ ;PSO*218 - add REFIP function
  ;
 EN1 ;Formats condensed, back door sig in BSIG array
  ;pass in  1) Internal Rx from 52
@@ -108,7 +106,7 @@ DEACHK(PSIRXN,PSDEA,PSDAYS,PCLOZ,PSOCS,PSMAXRF) ;Apply DEA restrictions
  I PCLOZ=1 S PSMAXRF=1 Q 0
  ;
  ;no refills if PSDEA = 'A' & not 'B' or 'F',
- I (PSDEA["A")&(PSDEA'["B")!(PSDEA["F")!(PSDEA[1)!(PSDEA[2) D  Q 1
+ I (PSDEA["A")&(PSDEA'["B")!(PSDEA["F") D  Q 1
  . S PSMAXRF=$$NUMFILLS(PSIRXN)
  ;
  N QQ
@@ -142,45 +140,17 @@ NUMFILLS(PSIRXN) ;Return number of fills thus far, or 0 if doesn't apply
  F  S RFN=$O(^PSRX(PSIRXN,1,RFN)) Q:'RFN  S RFNC=RFNC+1
  Q RFNC
  ;
-REFIP(RXI,RFIL,TYP) ;Check if refill is Not Released and In Process and
- ;           pending Auto Release by an external dispense machine.
- ; Input: RXI = internal Prescription no.
- ;        RFIL= refill number
- ;        TYP ="R"-refill or "P"-partial
+REFIP(RXI,RFIL) ;Check if refill is In Process and pending completion by the
+ ;       external dispense machines.
  ; Returns 1 = In Process      (Not OK to delete)
  ;         0 = Not In Process  (OK to delete)
  ;
  ;assumes a refill is Not In Process by the external dispense machine
  ;unless it finds a record in this file and is marked to the contrary
- ;
- N PSIEN,IP,FOUND,EXDATA,EXDIV
+ N PSIEN,IP,FOUND
  S (IP,FOUND)=0,PSIEN=""
  ;find first specified refill processing backwards, in case dupes
  F  S PSIEN=$O(^PS(52.51,"B",RXI,PSIEN),-1) Q:PSIEN=""  D  Q:FOUND
- . S EXDATA=^PS(52.51,PSIEN,0)
- . I $P(EXDATA,"^",9)=RFIL D
- . . S EXDIV=$P(EXDATA,"^",11)
- . . Q:'$P($G(^PS(59,EXDIV,"DISP")),"^",2)     ;quit, not auto release
- . . S FOUND=1
+ . S:$P(^PS(52.51,PSIEN,0),"^",9)=RFIL FOUND=1
  . I FOUND,$P(^PS(52.51,PSIEN,0),"^",10)'=2 S IP=1
  Q IP
- ;
-WARN1 ;partial del checks    *259
- N PSR,PSOL
- S PSR=0 F  S PSR=$O(^PSRX(DA(1),"P",PSR)) Q:'PSR  S PSOL=PSR
- I DA=PSOL,$P(^PSRX(DA(1),"P",DA,0),"^",19) D  Q
- .D EN^DDIOL("Partial Released! Use the 'Return to Stock' option!","","$C(7),!!"),EN^DDIOL(" ","","!")
- ;
- ;Warn of In Process, Only delete if answered Yes         ;*259
- I $$REFIP^PSOUTLA1(DA(1),DA,"P") D  I 'Y Q               ;reset $T
- . D EN^DDIOL("** Partial refill has previously been sent to the External Dispense Machine","","!!,?2")
- . D EN^DDIOL("** for filling and is still Pending Processing","","$C(7),!,?2")
- . D EN^DDIOL("","","!")
- . K DIR
- . S DIR("A")="Do you want to continue? "
- . S DIR("B")="Y"
- . S DIR(0)="YA^^"
- . S DIR("?")="Enter Y for Yes or N for No."
- . D ^DIR
- . K DIR
- Q

@@ -1,5 +1,5 @@
-ECV2RPC ;ALB/ACS - Event Capture Spreadsheet Validation ;30 Aug 2007
- ;;2.0; EVENT CAPTURE ;**25,30,49,95**;8 May 96;Build 26
+ECV2RPC ;ALB/ACS;Event Capture Spreadsheet Validation;07 Aug 01
+ ;;2.0; EVENT CAPTURE ;**25,30,49**;8 May 96
  ;
  ;-----------------------------------------------------------------------
  ;       Validates the following Event Capture spreadsheet fields:
@@ -34,7 +34,8 @@ ECV2RPC ;ALB/ACS - Event Capture Spreadsheet Validation ;30 Aug 2007
  I C=1,$D(^DIC(4,"D",ECSTAV)) S ECSTAV=$O(^DIC(4,"D",ECSTAV,"")) ;get ien
  ;
  ;--Patient SSN must be on the Patient file--
- N ECNAMEU,ECVNAMEV,ECVNAME,ECSSNNUM,ECI
+ N ECNAME4,ECNAME3,ECNAME2,ECNAME1,ECVNAME4,ECVNAME3
+ N ECVNAME2,ECVNAME1,ECVNAME,ECSSNNUM
  S (ECSSNIEN,ECERRFLG)=0,ECSSNNUM=+ECSSNV
  I $L(ECSSNNUM)>9!$L(ECSSNV)>10 D
  . ; User has entered an SSN that is too long
@@ -106,22 +107,36 @@ ECV2RPC ;ALB/ACS - Event Capture Spreadsheet Validation ;30 Aug 2007
  . . S ECERRMSG="WARNING: [PATIENT DIED ON "_$P(VADM(6),U,2)_"]"
  . . S ECCOLERR=ECSSNPC
  . . D ERROR
- ; -- Patient last name check
  I 'ECERRFLG D
- . F ECI=1:1:$L($P(ECPATV,",")) D  Q:ECERRFLG
- . .S ECVNAMEV=$E($P(ECVNAME,","),1,ECI),ECNAMEU=$E($P(ECPATV,","),1,ECI)
- . .I ECVNAMEV=ECNAMEU Q
- . .S ECERRMSG=$P($T(NAME2^ECV2RPC),";;",2)
- . .S ECCOLERR=ECPATLPC
- . .D ERROR
- ; -- Patient first name check
- I 'ECERRFLG D
- . F ECI=1:1:$L($P(ECPATV,",",2)) D  Q:ECERRFLG
- . .S ECVNAMEV=$E($P(ECVNAME,",",2),1,ECI),ECNAMEU=$E($P(ECPATV,",",2),1,ECI)
- . .I ECVNAMEV=ECNAMEU Q
- . .S ECERRMSG=$P($T(NAME3^ECV2RPC),";;",2)
- . .S ECCOLERR=ECPATLPC
- . .D ERROR
+ . S ECVNAME4=$E(ECVNAME,1,4),ECNAME4=$E(ECPATV,1,4)
+ . S ECVNAME3=$E(ECVNAME,1,3),ECNAME3=$E(ECPATV,1,3)
+ . S ECVNAME2=$E(ECVNAME,1,2),ECNAME2=$E(ECPATV,1,2)
+ . S ECVNAME1=$E(ECVNAME,1,1),ECNAME1=$E(ECPATV,1,1)
+ . I ECNAME1'=ECVNAME1 D
+ . . ; First char of name doesn't match
+ . . S ECERRMSG=$P($T(NAME5^ECV2RPC),";;",2)
+ . . S ECCOLERR=ECPATLPC
+ . . D ERROR
+ . . Q
+ . I 'ECERRFLG,ECNAME2'=ECVNAME2 D
+ . . ; First 2 chars of name doesn't match
+ . . S ECERRMSG=$P($T(NAME2^ECV2RPC),";;",2)
+ . . S ECCOLERR=ECPATLPC
+ . . D ERROR
+ . . Q
+ . I 'ECERRFLG,(ECNAME3'=ECVNAME3) D
+ . . ; First 3 chars of name doesn't match
+ . . S ECERRMSG=$P($T(NAME3^ECV2RPC),";;",2)
+ . . S ECCOLERR=ECPATLPC
+ . . D ERROR
+ . . Q
+ . I 'ECERRFLG,(ECNAME4'=ECVNAME4) D
+ . . ; First 4 chars of name doesn't match
+ . . S ECERRMSG=$P($T(NAME4^ECV2RPC),";;",2)
+ . . S ECCOLERR=ECPATLPC
+ . . D ERROR
+ . . Q
+ . Q
  Q
  ;
 ERROR ;--Set up array entry to contain the following:
@@ -145,5 +160,7 @@ SSN3 ;;No internal entry on patient file(#2) for ssn x-ref
 SSN4 ;;SSN doesn't match SSN on patient file(#2)
 SSN5 ;;SSN invalid
 NAME1 ;;Patient Name is missing from VistA patient file(#2)
-NAME2 ;;Patient last name doesn't match VistA
-NAME3 ;;Patient first name doesn't match VistA
+NAME2 ;;First 2 chars of patient last name don't match VistA
+NAME3 ;;First 3 chars of patient last name don't match VistA
+NAME4 ;;First 4 chars of patient last name don't match VistA
+NAME5 ;;First char of patient last name doesn't match VistA

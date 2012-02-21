@@ -1,5 +1,5 @@
 MPIFAPI ;CMC/BP-APIS FOR MPI ;DEC 21, 1998
- ;;1.0; MASTER PATIENT INDEX VISTA ;**1,3,14,16,17,21,27,28,33,35,37,43,45,44,46,48,55**;30 Apr 99;Build 3
+ ;;1.0; MASTER PATIENT INDEX VISTA ;**1,3,14,16,17,21,27,28,33,35,37,43,45**;30 Apr 99
  ; Integration Agreements Utilized:
  ;   ^DPT( - #2070 and #4079
  ;   ^DPT("AICN", ^DPT("AMPIMIS", ^DPT("ASCN2" - #2070
@@ -46,9 +46,8 @@ SUBNUM(DFN) ; returns SCN from MPI node for given DFN
  Q "-1^No Subscription Control Number for DFN "_DFN
  ;
 MPINODE(DFN) ; returns MPI node for given DFN
- ; DFN - patient file ien
+ ;DFN - patient file ien
  ; returns:  -1^error message or MPI node from patient file
- N TMP
  I '$D(DFN) Q "-1^DFN not defined"
  I '$D(^DPT(DFN)) Q "-1^DFN doesn't exist"
  I '$D(^DPT(DFN,"MPI")) Q "-1^No MPI node for DFN "_DFN
@@ -59,7 +58,7 @@ MPINODE(DFN) ; returns MPI node for given DFN
  .;**45 checking if checksum for ICN is correct, if not update the 991.02 field
  .; and include new value in NODE returned.
  .N CHK S CHK=$$CHECKDG^MPIFSPC($P(NODE,"^"))
- .I CHK'=$P(NODE,"^",2) S TMP=$$SETICN^MPIF001(DFN,$P(NODE,"^"),CHK) S $P(NODE,"^",2)=CHK
+ .I CHK'=$P(NODE,"^",2) D SETICN^MPIF001(DFN,$P(NODE,"^"),CHK) S $P(NODE,"^",2)=CHK
  L -^DPT("MPI",DFN)
  Q NODE
  ;
@@ -81,22 +80,16 @@ UPDATE(DFN,ARR,MPISILNT,REMOVE) ;api to edit 'mpi','mpifhis' and 'mpicmor' nodes
  Q $$UPDATE^MPIFAPI1(DFN,ARR,.MPISILNT,.REMOVE)
  ;
 MPIQ(DFN) ;MPI QUERY
- N MPIFARR
  L +^DPT(DFN):2 I '$T,'$D(MPIFS) W $C(7),!!,"Patient is being edited. No attempt will be made to connect to the MPI." H 2 Q
  I '$D(MPIFS) D  ;Not from SmartCard background job
  .;**37 mods to L -^DPT
  .I $G(DGNEW)=1 D  ;New patient, fields always blank, ask
  ..D WRTLN
- ..; **44 Adding Pseudo SSN Reason to the list of prompted fields if SSN is a pseudo and there isn't already a reason stored
- ..N MPIFP S MPIFP="" S DA=DFN,DIQ(0)="EI",DIC=2,DR=".09;.0906",DIQ="MPIFARR" D EN^DIQ1 K DA,DR,DIC,DQ,DR
- ..I $D(MPIFARR(2,DFN,.0906,"I")) D
- ...I MPIFARR(2,DFN,.09,"E")["P",("S"[MPIFARR(2,DFN,.0906,"I")) S MPIFP=".0906;"
  ..S DIE="^DPT(",DA=DFN,DIE("NO^")="BACK"
- ..S DR=MPIFP_".2403;.092;.093;1",DR(2,2.01)=".01;1" D ^DIE K DA,DIE,DR Q  ;*55 MPIC_1402 ALIAS SSN
+ ..S DR=".2403;.092;.093;1",DR(2,2.01)=".01" D ^DIE K DA,DIE,DR Q
  .I $G(DGNEW)="" D  ;Existing patient, get current values
- ..N MPIDOB,IMPRS,MPIMMN,MPICTY,MPIST
- ..S DIC=2,DR=".02;.03;.09;.0906;.092;.093;.2403;994;1",DR(2.01)=".01"
- ..;^ **44 include pseudo ssn reason to list
+ ..K MPIFARR N MPIDOB,IMPRS,MPIMMN,MPICTY,MPIST
+ ..S DIC=2,DR=".02;.03;.09;.092;.093;.2403;994;1",DR(2.01)=".01"
  ..S DA=DFN,DA(2.01)=1,DIQ(0)="EI",DIQ="MPIFARR"
  ..D EN^DIQ1 K DA,DIC,DIQ,DR
  ..;build DR from blank fields / imprecise DOB / pseudo SSN
@@ -109,32 +102,19 @@ MPIQ(DFN) ;MPI QUERY
  ...I ($E(MPIDOB,6,7)="00")&($E(MPIDOB,4,5)'="00") S IMPRS=1 ;Year/month only; no day
  ...I IMPRS=1 S DR=DR_".03;" ;DOB imprecise
  ..I $G(MPIFARR(2,DFN,.02,"I"))="" S DR=DR_".02;" ;SEX
- ..;if the SSN is null, add to prompted fields
- ..N SSNP S SSNP=0
- ..I ($G(MPIFARR(2,DFN,.09,"E"))="") S DR=DR_".09;",SSNP=1 ;SSN
- ..I DR'="" D
- ...D WRTLN
- ...S DIE="^DPT(",DA=DFN,DIE("NO^")="BACK"
- ...D ^DIE K DA,DIE,DR,DIC,DIQ
- ...;if SSN was prompted then reinitialize SSN ARRAY variable
- ...I SSNP=1 S MPIFARR(2,DFN,.09,"E")="" S DIC=2,DR=".09" S DA=DFN,DA(2.01)=1,DIQ(0)="E",DIQ="MPIFARR" D EN^DIQ1 K DA,DIC,DIQ,DR
- ...;**44 if the PSEUDO SSN REASON field exist
- ..S DR="" ;reset DR to null to be able to concatenate the fields together since DR was just killed above
- ..I $D(MPIFARR(2,DFN,.0906,"I")) D
- ...;check to see if the SSN is a PSEUDO and the PSEUDO SSN REASON is null or "S" (FOLLOW-UP REQUIRED), if so add PSEUDO SSN REASON to the prompted fields
- ...I MPIFARR(2,DFN,.09,"E")["P",(MPIFARR(2,DFN,.0906,"I")="") S DR=DR_".0906;" ;**48 correct when SSN is prompted
- ...I MPIFARR(2,DFN,.09,"E")["P",(MPIFARR(2,DFN,.0906,"I")="S") S DR=DR_".09;" ;**48 correct when SSN is prompted
+ ..I ($G(MPIFARR(2,DFN,.09,"E"))="")!($G(MPIFARR(2,DFN,.09,"E"))["P") S DR=DR_".09;" ;SOCIAL SECURITY NUMBER
  ..I $G(MPIFARR(2,DFN,994,"I"))="" S DR=DR_"994;" ;MULTIPLE BIRTH INDICATOR
  ..S MPIMMN=$G(MPIFARR(2,DFN,.2403,"E")) ;MOTHER'S MAIDEN NAME
  ..I $$VALDT(MPIMMN) S DR=DR_".2403;" ;Validate MMN value
  ..S MPICTY=$G(MPIFARR(2,DFN,.092,"E")) ;PLACE OF BIRTH [CITY]
  ..S MPIST=$G(MPIFARR(2,DFN,.093,"E")) ;PLACE OF BIRTH [STATE]
  ..I $S($$VALDT(MPICTY):1,$$VALDT(MPIST):1,1:0) S DR=DR_".092;.093;" ;Validate POB [CITY] & [STATE] value
- ..I $G(MPIFARR(2.01,1,.01,"E"))="" S DR=DR_"1",DR(2,2.01)=".01;1" ;ALIAS **44 ADDING ALIAS SSN TO FIELDS
+ ..I $G(MPIFARR(2.01,1,.01,"E"))="" S DR=DR_"1",DR(2,2.01)=".01" ;ALIAS
+ ..K MPIFARR
  ..I DR'="" D
  ...D WRTLN
  ...S DIE="^DPT(",DA=DFN,DIE("NO^")="BACK"
- ...D ^DIE K DA,DIE,DR,DIC,DIQ
+ ...D ^DIE K DA,DIE,DR
  L -^DPT(DFN)
  I $D(ZTQUEUED) S ZTREQ="@"
  K MPIFRTN D VTQ^MPIFQ0

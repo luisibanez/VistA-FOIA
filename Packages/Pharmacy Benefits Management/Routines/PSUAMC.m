@@ -1,5 +1,5 @@
 PSUAMC ;BIR/DAM - Combined AMIS Summary Report:21 APR 2004
- ;;4.0;PHARMACY BENEFITS MANAGEMENT;**9**;MARCH, 2005;Build 6
+ ;;4.0;PHARMACY BENEFITS MANAGEMENT;;MARCH, 2005
  ;
  ;This routine creates a combined AMIS summary report when
  ;the following extracts are run either by the automatic
@@ -17,10 +17,6 @@ EN ;Entry point.  Called from ^PSUCSR2
  ;
  S Y=PSUSDT\1 X ^DD("DD") S PSUDTS=Y ;    start date
  S Y=PSUEDT\1 X ^DD("DD") S PSUDTE=Y ;    end date
- ; * PSU*4*9 - RESET THE PARENT FACILITY
- S X=PSUSNDR,DIC=40.8,DIC(0)="X",D="C" D IX^DIC
- K DIC,DIC(0),D
- S X=+Y S PSUDIVNM=$$VAL^PSUTL(40.8,X,.01)
         ;
  S AMIS(1,1)="Monthly AMIS Summary for "_PSUDTS_" through "_PSUDTE_" for "_PSUDIVNM
  S AMIS(1,2)=""

@@ -1,6 +1,6 @@
 PRCSD122 ;WISC/SAW-CONTROL POINT ACT. 2237 TERM. DISP. CON'T ;4/21/93  08:46
-V ;;5.1;IFCAP;**107**;Oct 20, 2000;Build 13
- ;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  I IOSL-$Y<5 D NEWP^PRCSD121 Q:Z1=U
  W !,"JUSTIFICATION OF NEED OR TURN-IN"
  I '$D(^PRCS(410,DA,8,0)) G SIG
@@ -14,7 +14,7 @@ SIG ;PRINT SIGNATURE BLOCKS
  I '$D(^PRCS(410,DA,7)) W ! G SIG1
  W !,?37 K P1 S:$P(^PRCS(410,DA,7),U,3)'="" (P,P1)=$P(^(7),U,3) I $D(P1),$P(^(7),U,6)'="" W "/ES/",$$DECODE^PRCSC1(DA)
  N PRSHLB S PRSHLB=^DD(410,40,0) W ?69,! I $P(^PRCS(410,DA,7),U)'="" S (P,P2)=$P(^(7),U) I $P(PRSHLB,"^",2)[200,$D(^VA(200,P,20)),$P(^(20),U,2)]"" W $E($P(^(20),U,2),1,28)
- I $D(P2),$P(PRSHLB,"^",2)[200,$D(^VA(200,+P2,.13)),$L($P(^(.13),U,2))'>5 W " (",$P(^(.13),U,2),")"
+ I $D(P2),$P(PRSHLB,"^",2)[200,$D(^VA(200,+P2,.13)),$L($P(^(.13),U,2))'>4 W " (",$P(^(.13),U,2),")"
  N PRSHLC S PRSHLC=^DD(410,42,0) K P2 W ?37 I $D(P1),$P(PRSHLC,"^",2)[200,$D(^VA(200,P1,20)),$P(^(20),U,2)]"" W $E($P(^(20),U,2),1,30)
  W ?69,! W:$P(^PRCS(410,DA,7),U,2)'="" $P(^(7),U,2) W ?37 W:$P(^(7),U,4)'="" $P(^(7),U,4) W ?69 I $P(^(7),U,5)'="" S Y=$P(^(7),U,5) D DD^%DT W Y
 SIG1 W !,$E(L,1,36)

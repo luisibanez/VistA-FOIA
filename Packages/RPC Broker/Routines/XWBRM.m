@@ -1,24 +1,23 @@
-XWBRM ;OIFO-Oakland/REM - M2M Broker Server Request Mgr  ;4/6/06  10:21
- ;;1.1;RPC BROKER;**28,45**;Mar 28, 1997
+XWBRM ;OIFO-Oakland/REM - M2M Broker Server Request Mgr  ;05/20/2002  09:49
+ ;;1.1;RPC BROKER;**28**;Mar 28, 1997
  ;
  QUIT
  ;
  ; ---------------------------------------------------------------------
  ;                             Server Request Manager (SRM)
  ; ---------------------------------------------------------------------
- ;
+ ;                   
 EN(XWBROOT) ; -- main entry point for SRM
  NEW XWBOK,XWBOPT,XWBDATA,XWBMODE
  N XWBM2M ;Flag for M2M requests **M2M
  SET XWBOK=0,XWBM2M=0
  ;
- ; -- parse the xml
+ ; -- parse the xml 
  SET XWBOPT=""
  DO EN^XWBRMX(XWBROOT,.XWBOPT,.XWBDATA)
  S XWBMODE=$G(XWBDATA("MODE"))
- ;M ^REM($J)=XWBDATA ;**TEST ONLY
+ ;M ^RWF($J)=XWBDATA ;**TEST ONLY
  ;
- I $G(XWBDATA("URI"))="XUS GET VISITOR" D EN^XWBRPC(.XWBDATA) S XWBOK=1 S:'$D(DUZ) XWBSTOP=1 Q 1
  ;Break off to RCPBroker **M2M
  IF $G(XWBDATA("MODE"))="RPCBroker" D RPC^XWBM2MS(.XWBDATA) SET XWBSTOP=0
  ; -- single call processing
@@ -33,7 +32,7 @@ EN(XWBROOT) ; -- main entry point for SRM
  . DO RESPONSE^XWBVL()
  . SET XWBSTOP=1
  ;
- ; -- do security checks
+ ; -- do security checks 
  IF $G(XWBDATA("MODE"))'="RPCBroker",'$$SECCHK() SET XWBOK=0 GOTO ENQ
  ;
  ; -- call app to write to socket
@@ -43,7 +42,7 @@ ENQ ;
  QUIT XWBOK
  ;
  ; ---------------------------------------------------------------------
- ;
+ ; 
 SECCHK() ; -- do security checks  (no real checks at this time)
  NEW XWBCODES
  ;

@@ -1,12 +1,14 @@
-DGPFBGR ;ALB/RPM - PRF BACKGROUND PROCESSING DRIVER ; 6/3/05 12:25pm
- ;;5.3;Registration;**425,650**;Aug 13, 1993;Build 3
+DGPFBGR ;ALB/RPM - PRF BACKGROUND PROCESSING DRIVER ; 4/28/03 3:24pm
+ ;;5.3;Registration;**425**;Aug 13, 1993
  ;
  Q   ;no direct entry
  ;
 EN ;entry point for PRF background processing
  ;
+ Q:'$$ON^DGPFPARM()       ;software must be active
+ ;
  D NOTIFY($$NOW^XLFDT())  ;send review notification
- D RUNQRY^DGPFHLRT        ;run query for incomplete HL7 event status
+ D REXMIT^DGPFHLRT        ;retransmit rejected HL7 update messages
  Q
  ;
 NOTIFY(DGDATE) ;Send notification message for pending Patient Record Flag
@@ -87,7 +89,7 @@ NOTIFY(DGDATE) ;Send notification message for pending Patient Record Flag
  ;
  Q
  ;
-BLDMSG(DGMGROUP,DGLIST,DGXMTXT) ;build MailMan message array
+BLDMSG(DGMGROUP,DGLIST,DGXMTXT) ;buld MailMan message array
  ;
  ;  Input:
  ;   DGMGROUP - mail group name

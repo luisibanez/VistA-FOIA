@@ -1,14 +1,9 @@
-PRSAUDP ; WOIFO/DWA - Display Employee Pay Period Audit Data ;12/3/07
- ;;4.0;PAID;**116**;Sep 21, 1995;Build 23
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRSAUDP ; HISC/JLS-Display Employee Pay Period Audit Data ;5/13/94  09:43
+ ;;4.0;PAID;;Sep 21, 1995
  ;called by PRSADP2
  D RET Q:QT
  S STATYPE=$P(^DD(458.1101,4,0),"^",3)
- S PG=PG+1,X=$G(^PRSPC(DFN,0)) W @IOF,!,?3,$P(X,U,1) S X=$P(X,U,9)
- I '$G(PRSTLV)!($G(PRSTLV)=1) W ?68,"XXX-XX-",$E(X,6,9)
- I $G(PRSTLV)=2!($G(PRSTLV)=3) W ?68,$E(X),"XX-XX-",$E(X,6,9)
- I $G(PRSTLV)=7 W ?68,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9)
- W !,?26,"Corrected  T&A  History",!!
+ S PG=PG+1,X=$G(^PRSPC(DFN,0)) W @IOF,!,?3,$P(X,U,1) S X=$P(X,U,9) W ?68,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9),!,?26,"Corrected  T&A  History",!!
 AUN S AUN=0 F  S AUN=$O(^PRST(458,PPI,"E",DFN,"X",AUN)) Q:AUN=""!(QT=1)  D B
  W @IOF
 EX K AUN,AX0,B,CA,CB,CC,CD,DAY,DB,DISP,DTE,IFN,J,TYP,X,STATYPE,STATUS,LNE,DFN,AUR

@@ -1,7 +1,7 @@
 PRCHNPO ;WISC/SC,ID/RSD/RHD/DGL/BGJ-ENTER NEW PURCHASE ORDER/REQUISITION ; 4/2/01 1:50pm
-V ;;5.1;IFCAP;**7,11,79,108,123**;Oct 20, 2000;Build 6
- ;Per VHA Directive 2004-038, this routine should not be modified.
- S NOTCOMPL=0 ;Initialize for Incomplete Template.
+V ;;5.1;IFCAP;**7,11,79**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
+ S NOTCOMPL=0 ;Initialize for Incompelet Template.
  D SWITCH^PRCHUTL K ERRFLG ; SET LOG/ISMS SWITCH
  K PRCSIP ; Initialize Inventory point variable
  I $S('$G(PRCHPO):1,'$D(PRC("SITE")):1,1:0) G Q
@@ -37,10 +37,9 @@ V ;;5.1;IFCAP;**7,11,79,108,123**;Oct 20, 2000;Build 6
 PROS I $P($G(^PRC(442,PRCHPO,23)),U,11)]"" Q:$D(Y)  D  Q:$D(Y)  Q:'$G(CDA)
  . S PODIE=DIE,PODA=DA
  . S CDA=$P($G(^PRC(442,PRCHPO,23)),U,23),PRC("CP")=$P($G(^PRC(442,PRCHPO,0)),U,3)
- . I +$G(PRC("CP"))'=0 S DA=PRCHPO D START^PRCH410 I $G(PRCRMPR)=1,$G(X)="#" Q
+ . I +$G(PRC("CP"))'=0 S DA=PRCHPO D START^PRCH410
  . I '$G(PRCHPHAM),'$G(PRCPROST),+$G(PRC("CP"))'=0 S DIE="^PRCS(410,",DA=$P($G(^PRC(442,PRCHPO,23)),U,23),DR=16 D ^DIE
  . S DIE=PODIE,DA=PODA
- I $G(PRCRMPR)=1,X="#" Q
  S VEN=+$G(^PRC(442,PRCHPO,1))
  I '$P($G(^PRC(442,PRCHPO,23)),U,11),$P($G(PRCHNVF),U,3)!($G(^PRC(440.3,+$G(VEN),0))]"") D
  . I $P($G(^PRC(411,PRC("SITE"),9)),U,3)="Y" D  Q
@@ -61,7 +60,7 @@ PROS I $P($G(^PRC(442,PRCHPO,23)),U,11)]"" Q:$D(Y)  D  Q:$D(Y)  Q:'$G(CDA)
  . . K PRCHXDIE
  . D NEW^PRCOVRQ(VEN,PRC("SITE"))
  K VEN
- L +^PRC(442,PRCHPO):0 G ERR:'$T S PRCHSTAT=$P($G(^PRC(442,PRCHPO,7)),U,2) S:$D(Y)&('$D(PRCHNRQ))&(PRCHSTAT'=22) PRCHER="" S (PRCH,PRCHEC,PRCHX)=0
+ L ^PRC(442,PRCHPO):0 G ERR:'$T S PRCHSTAT=$P($G(^PRC(442,PRCHPO,7)),U,2) S:$D(Y)&('$D(PRCHNRQ))&(PRCHSTAT'=22) PRCHER="" S (PRCH,PRCHEC,PRCHX)=0
  S PRCHSC="" I $D(^PRC(442,PRCHPO,1)),$D(^PRCD(420.8,+$P(^(1),U,7),0)) S PRCHSC=$P(^(0),U,1) S $P(^PRC(442,PRCHPO,1),U,14)=$S(PRCHSC="B":"*",1:"")
  ;K PRCHER F  S PRCH=$O(^PRC(442,PRCHPO,2,PRCH)) Q:PRCH=""!(PRCH'>0)  D  G ERR:$D(PRCHER)
  K PRCHER F  S PRCH=$O(^PRC(442,PRCHPO,2,PRCH)) Q:PRCH=""!(PRCH'>0)  D
@@ -143,7 +142,7 @@ MSG ;Call by the "ENTRY ACTION" for Simplified PC (PRC*5.1*79)
  NEW MSG
  S MSG(1)="*********************************************"
  S MSG(1,"F")="!!?15"
- S MSG(2)="*  IF THE ORDER IS MORE THAN $3000.00       *"
+ S MSG(2)="*  IF THE ORDER IS MORE THAN $2500.00       *"
  S MSG(2,"F")="!?15"
  S MSG(3)="*  OR IS ON A CONTRACT, YOU CANNOT USE      *"
  S MSG(3,"F")="!?15"

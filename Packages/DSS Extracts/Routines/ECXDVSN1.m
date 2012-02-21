@@ -1,5 +1,5 @@
-ECXDVSN1 ;ALB/JAP - Division selection utility (cont.) ; 3/30/07 7:56am
- ;;3.0;DSS EXTRACTS;**8,105**;Dec 22, 1997;Build 70
+ECXDVSN1 ;ALB/JAP - Division selection utility (cont.) ;Sep 30, 1997
+ ;;3.0;DSS EXTRACTS;**8**;Dec 22, 1997
  ;
 ECQ(ECXDIV,ECXALL,ECXERR) ;setup division/site information for QSR extract audit report
  ;   input
@@ -133,26 +133,24 @@ PRE(ECXDIV,ECXALL,ECXERR) ;setup site information for PRE extract audit report
  ;   ECXERR = 0/1
  ;            if input problem, then '1' returned
  ;
- N X,Y,DIC,DIQ,DA,OUT,ECXARR,ECXP,ECXIEN,ARRAY
+ N X,Y,DIC,DIQ,DA,OUT,ECXARR,ECXP,ECXIEN
  S:'$D(ECXALL) ECXALL=1 S:ECXALL="" ECXALL=1
- S ECXERR=0,ECXP="",ARRAY="^TMP($J,""ECXDSS"")"
- K @ARRAY
+ S ECXERR=0,ECXP=""
  ;if ecxall=1, then all pharmacy sites are selected or there's only one
  I ECXALL=1 S ECXP="" D
- .D PSS^PSO59(,"??","ECXDSS")
- .F  S ECXP=$O(@ARRAY@("B",ECXP)) Q:ECXP=""  S ECXIEN=$O(^(ECXP,0)) Q:'ECXIEN  Q:'$D(^(ECXIEN))  D
- ..S ECXDIV(ECXIEN)=ECXIEN_U_@ARRAY@(ECXIEN,.01)_U_^(.06)_U_^(100)
+ .F  S ECXP=$O(^PS(59,"B",ECXP)) Q:ECXP=""  S ECXIEN=$O(^(ECXP,"")) D
+ ..K ECXARR S DIC="^PS(59,",DR=".01;.06;100",DIQ="ECXARR",DA=ECXIEN D EN^DIQ1
+ ..Q:'$D(ECXARR)
+ ..S ECXDIV(ECXIEN)=ECXIEN_U_ECXARR(59,ECXIEN,.01)_U_ECXARR(59,ECXIEN,.06)_U_ECXARR(59,ECXIEN,100)
  ;if ecxall=0, then user selects pharmacy site(s)
  I ECXALL=0 S OUT=0 D
  .F  Q:OUT!ECXERR  D
- ..N DIC,X,Y,DUOUT,DTOUT
- ..S DIC="^PS(59,",DIC(0)="AEMQZ"
- ..D DIC^PSODI(59,.DIC,.X)
+ ..S DIC="^PS(59,",DIC(0)="AEMQZ" K X,Y D ^DIC
  ..I $G(DUOUT)!($G(DTOUT)) S OUT=1,ECXERR=1 Q
  ..I Y=-1,X="" S OUT=1 Q
- ..D PSS^PSO59(+Y,,"ECXDSS")
- ..Q:'$D(@ARRAY)
- ..S ECXDIV(ECXIEN)=ECXIEN_U_@ARRAY@(ECXIEN,.01)_U_^(.06)_U_^(100)
+ ..K ECXARR S (ECXIEN,DA)=+Y,DIC="^PS(59,",DR=".01;.06;100",DIQ="ECXARR" D EN^DIQ1
+ ..Q:'$D(ECXARR)
+ ..S ECXDIV(ECXIEN)=ECXIEN_U_ECXARR(59,ECXIEN,.01)_U_ECXARR(59,ECXIEN,.06)_U_ECXARR(59,ECXIEN,100)
  ;
  I ECXERR=1 K ECXDIV
  I '$D(ECXDIV) S ECXERR=1

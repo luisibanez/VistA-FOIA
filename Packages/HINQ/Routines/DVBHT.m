@@ -1,5 +1,5 @@
-DVBHT ;PKE/ISC-ALBANY; HINQ alert parser; 5/10/92 ; 3/9/06 4:18pm
- ;;4.0;HINQ;**12,18,20,56**;03/25/92
+DVBHT ;PKE/ISC-ALBANY; HINQ alert parser; 5/10/92
+ ;;V4.0;HINQ;**12,18,20**;03/25/92
  ;
  ;call alert
 ALERT I '$D(ZTQUEUED) H 1 W $C(7),".. Alert found."
@@ -31,7 +31,7 @@ SETUP S DVBDATA=XQADATA K XQADATA,XQAKILL,DVBNOALR
  S Y=+$P(DVBDATA,"^") Q:'Y
  S DFN=Y,DVBDATA=$P(DVBDATA,"^",2,99)
  I '$D(^DVB(395.5,Y,0)) S XQAKILL=0 D KIL Q
- I '$P(^DVB(395.5,Y,0),"^",6) DO  D KIL Q
+ I '$P(^(0),"^",6) DO  D KIL Q  ;naked refer to setup+3
  .W !,?15," another request pending, alert cleared"
  .S XQAKILL=0
  I '$D(^XUSEC("DG ELIGIBILITY",DUZ)) DO  D KIL Q
@@ -54,17 +54,7 @@ SETUP S DVBDATA=XQADATA K XQADATA,XQAKILL,DVBNOALR
  ;
 UPD L +^DPT(DFN):3 I $T DO
  .N XQAID
- .S DIE="^DPT(",(DA,DFN)=+Y,DR="[DVBHINQ UPDATE]",DVBJ2=0 D TEM^DVBHIQR
- .N DVBQT
- .I '$D(DVBERCS) D CHKID^DVBHQD1 I DVBQT D  Q
- .. N DVBTMP1,DVBTMP2
- .. S DVBTMP1=$G(DVBNOALR)
- .. S DVBTMP2=$G(DVBJ2)
- .. S DVBNOALR=";4///a;5////"_DUZ_";6///N",DVBJ2=1
- .. D FILE^DVBHQUP
- .. S DVBNOALR=DVBTMP1
- .. S DVBJ2=DVBTMP2
- .D ^DIE:'$D(DVBERCS) K DIE,DR,DA Q
+ .S DIE="^DPT(",(DA,DFN)=+Y,DR="[DVBHINQ UPDATE]",DVBJ2=0 D TEM^DVBHIQR,^DIE:'$D(DVBERCS) K DIE,DR,DA Q
  E  W !?3,"This patient data is being edited by another user" H 1 G END
  L -^DPT(DFN)
  ;

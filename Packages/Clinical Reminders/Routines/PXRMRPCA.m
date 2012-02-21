@@ -1,5 +1,5 @@
-PXRMRPCA ; SLC/PJH - Functions returning REMINDER data ;11/04/2009
- ;;2.0;CLINICAL REMINDERS;**12,16**;Feb 04, 2005;Build 119
+PXRMRPCA ; SLC/PJH - Functions returning REMINDER data ;01/18/2005
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  Q
  ;
 ALL(ORY) ;All active reminders
@@ -8,9 +8,7 @@ ALL(ORY) ;All active reminders
  S ORREM=0
  F  S ORREM=$O(^PXD(811.9,ORREM)) Q:'ORREM  D
  .;Include only CPRS reminders
- .S USAGE=$P($G(^PXD(811.9,ORREM,100)),U,4)
- .I USAGE["L" Q
- .I USAGE["O" Q
+ .S USAGE=$P($G(^PXD(811.9,ORREM,100)),U,4) I USAGE["L" Q
  .I USAGE'["C",USAGE'["*" Q
  .S DATA=$G(^PXD(811.9,ORREM,0)) Q:DATA=""
  .;Skip inactive reminders
@@ -113,7 +111,7 @@ DLG(REM) ;Dialog check
  N DATA,DIEN,DOK
  S DIEN=$P($G(^PXD(811.9,REM,51)),U) Q:'DIEN 0
  S DATA=$G(^PXRMD(801.41,DIEN,0))
- I $P(DATA,U,4)="R",+$P(DATA,U,3)=0 Q 1
+ I $P(DATA,U,4)="R",$P(DATA,U,3)="" Q 1
  Q 0
  ;
 DLGWIPE(REM) ;Dialog check
@@ -149,7 +147,6 @@ GETLST(D0,D1,LEVEL,PARENT) ;Add to output array
  .S DATA=$G(^PXD(811.9,ORREM,0)) Q:DATA=""  Q:$P(DATA,U,6)
  .;Include only CPRS reminders
  .S USAGE=$P($G(^PXD(811.9,ORREM,100)),U,4) I USAGE'["C",USAGE'["*" Q
- .I USAGE["L"!(USAGE["O") Q
  .S NAME=$P(DATA,U) I NAME="" S NAME="Unknown"
  .;or printname
  .S NAME=$P(DATA,U,3)

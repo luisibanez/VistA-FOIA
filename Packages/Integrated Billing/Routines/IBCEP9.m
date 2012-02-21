@@ -1,6 +1,5 @@
 IBCEP9 ;ALB/TMP - MASS UPDATE OF PROVIDER ID FROM FILE OR MANUAL ;08-NOV-00
- ;;2.0;INTEGRATED BILLING;**137,200,320,348,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,200**;21-MAR-94
  ;
 EN ; Get parameters and mass input provider id by ins co
  N A,DA,DIC,DIE,DIK,DIR,DR,POP,Q,Q0,X,Y,Y3,Z,Z0
@@ -12,22 +11,16 @@ EN ; Get parameters and mass input provider id by ins co
 1 ; Select INSURANCE COMPANY NAME:
  G:IBQUIT ENQ
  S IBQUIT1=0
- S DIC("S")="I $P($G(^DIC(36,+Y,3)),U,13)'=""C"""
  S DIC(0)="AEMQ",DIC="^DIC(36," D ^DIC
  I Y'>0 G ENQ
  S IBINS=+Y
- S IBQUIT=$$LOCK^IBCEP9B(IBINS)
- I IBQUIT,$G(IBINS) D  G 1
- . D UNLOCK^IBCEP9B(IBINS)
- . S IBINS="",IBQUIT=0
- . W !!,"Unable to lock all associated insurance companies.",!,"Please try again later.",!!
- ;
 2 ; get data source
+ G:IBQUIT ENQ
  S IBQUIT1=0
  S DIR(0)="SA^M:Manual Entry;F:Entry from file"
  S DIR("A")="PROVIDER ID DATA SOURCE: ",DIR("B")="Manual Entry"
  S Y=$$DIR(.DIR,.IBQUIT,.IBQUIT1)
- I Y=""!("FM"'[Y)!IBQUIT1 D UNLOCK^IBCEP9B(IBINS) G 1
+ I Y=""!("FM"'[Y)!IBQUIT1 G 1
  S IBSRC=Y,IBVERIFY=0
  S IBVERIFY=(Y="M")
  I 'IBVERIFY D  G:IBQUIT ENQ G:IBQUIT 2
@@ -83,7 +76,7 @@ EN ; Get parameters and mass input provider id by ins co
 5 ; select Forms Type
  G:IBQUIT ENQ
  S IBQUIT1=0
- S DIR(0)="355.9,.04r",DIR("B")="BOTH UB-04 AND CMS-1500 FORMS"
+ S DIR(0)="355.9,.04r",DIR("B")="BOTH UB92 AND HCFA 1500 FORMS"
  S Y=$$DIR(.DIR,.IBQUIT,.IBQUIT1)
  G:IBQUIT1 4
  I Y=""!("012"'[Y) G 5
@@ -112,7 +105,7 @@ EN ; Get parameters and mass input provider id by ins co
  I IBSRC="M" D MANUAL^IBCEP9B G:IBQUIT1 6
  ; For 'OTHER' files ask position/length or delimiter/piece for data
  I IBSRC="F" D  I IBQUIT1 G:'IBCND 6 G 7
- . F Z="PROV. SSN^SSN^15^1","PROV. NAME^NAM^30","PROV. 1500 ID^PROF_ID^15","PROV. UB-04 ID^INST_ID^15" D  Q:IBQUIT1
+ . F Z="PROV. SSN^SSN^15^1","PROV. NAME^NAM^30","PROV. HCFA ID^PROF_ID^15","PROV. UB-92 ID^INST_ID^15" D  Q:IBQUIT1
  .. I $P(IBPOS,U)'="D" D
  ... N X
  ... I IBFT=0!(IBFT=1) Q:Z["PROF_ID"  I Z["INST_ID" S $P(Z,U)="PROV. ID"
@@ -146,7 +139,7 @@ EN ; Get parameters and mass input provider id by ins co
  .... W ! I Y>0,Y'=IBPOS($P(Z,U,2)) S $P(IBPOS($P(Z,U,2)),U,2)=Y
  .. ;
  . Q:IBQUIT1
- . D READFILE^IBCEP9B
+ . D READFILE
  . ;
 P1 ;
  S Z="" F  S Z=$O(^TMP("IBPID_IN",$J,Z)) Q:Z=""  S Z0=0 F  S Z0=$O(^TMP("IBPID_IN",$J,Z,Z0)) Q:'Z0  S Q=$G(^(Z0)) D  G:IBQUIT ENQ
@@ -193,10 +186,6 @@ P1 ;
  .. ;
  ;
 ENQ ; Print report, exit
- I $G(IBINS) D
- . D COPY^IBCEPCID(IBINS)
- . D UNLOCK^IBCEP9B(IBINS)
- ;
  I ($D(^TMP("IBPID-ERR",$J)))!($D(^TMP("IBPID_IN",$J))) D
  . N %ZIS,ZTSAVE,ZTRTN,ZTDESC,IBDUZ
  . S IBDUZ=$G(DUZ)
@@ -209,6 +198,31 @@ ENQ ; Print report, exit
  . D PRTERR^IBCEP9B
  K ^TMP("IBPID_IN",$J),^TMP("IBPID-ERR",$J),^TMP("IBPID",$J)
  U IO(0)
+ Q
+ ;
+READFILE ; Read records stored in ^TMP($J
+ ;
+ N D,DA,DIC,IBCT,IBP,IBQUIT,IBS,IBX,P,P3,X,Y,Z
+ S (IBCT,IBQUIT,IBQUIT1,IBS)=0
+ U IO(0)
+ ;
+ F  S IBCT=$O(^TMP($J,IBCT)) Q:'IBCT  S X=$G(^(IBCT)) I X'="" D  Q:IBQUIT
+ . D  Q:IBQUIT
+ .. I $P($G(IBPOS),U)="D" D
+ ... D CSV^IBCEP9B(X,.IBX,$P(IBPOS,U,2),$P(IBPOS,U,3))
+ ... D DSETUP^IBCEP9B(.IBX,.IBPOS,.P) K IBX
+ .. I $P($G(IBPOS),U)'="D" D FSETUP^IBCEP9B(X,.IBPOS,.P)
+ . ;
+ . I $G(P(1))'="" S P(1)=$$NOPUNCT^IBCEF(P(1),1),X=P(1),D="SSN",DIC="^VA(200,",DIC(0)="" D IX^DIC
+ . S IBP=+Y,IBVNAME=$P(Y,U,2)
+ . I $S($G(P(1))="":1,1:Y'>0) D  Q
+ .. S ^TMP("IBPID-ERR",$J,1,$S($G(P(1))'="":P(1),1:"NO SSN"),$G(P(2))_" ","??")=""
+ .. N IBID
+ .. S IBID=$S(IBFT=0!(IBFT=1):$G(P("INST_ID")),1:$G(P("PROF_ID")))
+ .. S ^TMP("IBPID-ERR",$J,1,$S($G(P(1))'="":P(1),1:"NO SSN"),$G(P(2))_" ","PROV ID")=IBID
+ . ;
+ . S ^TMP("IBPID_IN",$J,U,IBP)=P(1)_U_P(2)_U_IBVNAME
+ . F Q0=0,"TID","UPIN","INST_ID","PROF_ID","CU","CRED" S ^TMP("IBPID_IN",$J,U,IBP,Q0)=$G(P(Q0))
  Q
  ;
 DUP(IBPRV,IBINS,IBCU,IBFT,IBCT,IBPTYP) ; Check if provider id record already exists in file 355.9

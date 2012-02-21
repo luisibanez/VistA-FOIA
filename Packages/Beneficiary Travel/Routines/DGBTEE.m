@@ -1,5 +1,5 @@
 DGBTEE ;ALB/SCK - BENEFICIARY TRAVEL ENTER/EDIT; 12/3/92@1600
- ;;1.0;Beneficiary Travel;**2,14**;September 25, 2001;Build 7
+ ;;1.0;Beneficiary Travel;**2**;September 25, 2001
  Q
 SCREEN ;
  D SCREEN^DGBTEE1 Q:DGBTTOUT=-1!(DGBTTOUT=1)  Q:'$D(^DGBT(392,DGBTDT,0))
@@ -25,7 +25,7 @@ DIE1 ;  stuff from,to address, meals, ferry's/bridges
  . I DGBTRMK]"" W !,*7,"MILEAGE REMARKS: ",DGBTRMK,!
 EDIT ;  display trip type, mileage
  I DGBTACCT=4!(DGBTACCT=5) S DR="32//"_DGBTML_";S DGBTML=X;31//"_DGBTOWRT_";S DGBTOWRT=X;" D ^DIE I X=""!(X="^") S DGBTTOUT=-1 Q
- S:DGBTACCT=5&(DGBTCP=1) DGBTMR=DGBTMR1 S DGBTMLT=DGBTOWRT*DGBTML*DGBTMR,DGBTMLT=$J(DGBTMLT,0,2),DR="33///"_DGBTMLT
+ S:DGBTACCT=5&(DGBTCP=1) DGBTMR=DGBTMR1 S DGBTMLT=DGBTOWRT*DGBTML*DGBTMR,DR="33///"_DGBTMLT
  D ^DIE I X=""!(X="^") S DGBTTOUT=-1 Q
 DIE2 ;  stuff eligibility data, SC%, acct. type
  S DIE("NO^")="12345" S:'$D(DGBTCD) DGBTCD=""

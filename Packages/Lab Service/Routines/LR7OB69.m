@@ -1,5 +1,5 @@
 LR7OB69 ;slc/dcm/JAH - Get Lab order data from 69 - 68 - 63 ;8/10/04
- ;;5.2;LAB SERVICE;**121,187,224,291,373**;Sep 27, 1994;Build 1
+ ;;5.2;LAB SERVICE;**121,187,224,291**;Sep 27, 1994
  ;
 69(ODT,SN) ;Get data from file 69
  ;ODT=Order Date subscript in file 69
@@ -32,7 +32,8 @@ LR7OB69 ;slc/dcm/JAH - Get Lab order data from 69 - 68 - 63 ;8/10/04
  Q:'$D(^LRO(69,+ODT,1,+SN,0))  S X0=^(0),XP1=$G(^(.1)),X1=$G(^(1)),X3=$G(^(3)),X4=$O(^(4,0))
  Q:'$D(^LR(+X0,0))  ;No matching entry in ^LR
  S:'$D(DFN) DFN=$P(^LR(+X0,0),"^",3) S:'$D(LRDFN) LRDFN=+X0 S:'$D(LRDPF) LRDPF=$P(^LR(+X0,0),"^",2)_$G(^DIC(+$P(^LR(+X0,0),"^",2),0,"GL"))
- S Y1=+XP1,Y2=$S($P(X1,"^"):$P(X1,"^"),1:$P(X0,"^",8)),Y3=$P(X0,"^",3),Y4=$P(X0,"^",4),Y5=$P(X0,"^",5),Y6=$P(X0,"^",6),Y7=$P(X0,"^",9),Y8=$P(X3,"^"),Y9=$P(X3,"^",2),Y11=$P(X0,"^",11),Y12=$P(X0,"^",2)
+ S Y1=+XP1,Y2=$S($P(X1,"^"):$P(X1,"^"),1:$P(X0,"^",8)),Y3=$P(X0,"^",3),Y4=$P(X0,"^",4),Y5=$P(X0,"^",5),Y6=$P(X0,"^",6),Y7=$P(X0,"^",7),Y8=$P(X3,"^"),Y9=$P(X3,"^",2),Y11=$P(X0,"^",11),Y12=$P(X0,"^",2)
+ S:$L(Y7) Y7=$O(^SC("C",Y7,0))
  ;canceled entries are skipped, so calls to this routine from options
  ;that are removing tests need to make the call before setting the pieces
  ;that cancel the test: $P(^LRO(69,ODT,1,SN,2,IFN,0),"^",11)

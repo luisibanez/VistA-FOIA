@@ -1,5 +1,5 @@
 RMPRN6UT ;HINES-CIOFO/HNC - DISPLAY HEADER GROUPS NPPD;2-14-98
- ;;3.0;PROSTHETICS;**32,36,39,44,48,50,57,84,103,144**;Feb 09, 1996;Build 17
+ ;;3.0;PROSTHETICS;**32,36,39,44,48,50,57,84,103**;Feb 09, 1996
  ;
  ; ODJ - patch 50 - 7/28/00 - amend repair selection so that we don't
  ;                            need to alter this routine for NPPD line
@@ -23,11 +23,10 @@ DIS W !,?5,"1.   WHEELCHAIRS AND ACCESSORIES"
  W !,?5,"14.  SURGICAL IMPLANTS"
  W !,?5,"15.  MISC"
  W !,?5,"16.  REPAIR"
- W !,?5,"17.  BIOLOGICAL IMPLANTS"
 ASK ;
  K DIR,DTOUT,DIRUT
  S RMPRCDE=""
- S DIR(0)="N^1:17:0"
+ S DIR(0)="N^1:16:0"
  S DIR("A")="Select NPPD Group "
  D ^DIR
  G:$D(DIRUT)!($D(DTOUT)) EXIT
@@ -48,7 +47,6 @@ ASK ;
  I Y=14 S SELY=96
  I Y=15 S SELY=99
  I Y=16 S SELY=100
- I Y=17 S SELY=97
  F  S BR=$O(^TMP($J,"RMPRCODE",BR)) Q:BR=""  D
  .I $E(BR,1,2)=SELY S BRC=BRC+1 W !?5,BRC_".",?10,BR,?18,^(BR) S BRA(BRC,BR)=""
  .Q

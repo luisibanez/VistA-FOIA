@@ -1,5 +1,5 @@
-SROCD ;BIR/ADM - CASE CODING IN SURGERY PROCEDURE/DIAGNOSIS CODES FILE ;07/24/07
- ;;3.0; Surgery ;**142,152,159**;24 Jun 93;Build 4
+SROCD ;BIR/ADM - CASE CODING IN SURGERY PROCEDURE/DIAGNOSIS CODES FILE ;10/20/05
+ ;;3.0; Surgery ;**142,152**;24 Jun 93
  I '$D(SRSITE) D ^SROVAR I '$D(SRSITE) S XQUIT="" Q
  I '$G(SRTN) D ^SROPS1 I '$D(SRTN) S XQUIT="" Q
 BEG N S,SR2,SRCMOD,SRDES,SRDX,SREDIT,SRHDR,SRMOD,SRNM,SRPROC,SRS,SRSEL,SRTXT
@@ -46,8 +46,7 @@ SC S DIR("A")="Treatment related to Service Connected condition (Y/N)",DIR(0)="1
  I X=""!(X="@") W !,$C(7),?15,"Enter YES or NO." G SC
  S SRCL(3)=Y,SRDR=$G(SRDR)_".02////"_SRCL(3)_";"
  Q
-CV N SRCVD S SRCVD=$P($G(^SRO(136,DA(1),4,DA,0)),"^",8),DIR("B")=$S(SRCVD=0:"NO",1:"YES")
- S DIR("A")="Treatment related to Combat (Y/N)",DIR(0)="136.04,.08" D ^DIR K DIR I $D(DTOUT)!$D(DUOUT) S SRQ=1 Q
+CV S DIR("A")="Treatment related to Combat (Y/N)",DIR(0)="136.04,.08" D ^DIR K DIR I $D(DTOUT)!$D(DUOUT) S SRQ=1 Q
  I X=""!(X="@") W !,$C(7),?15,"Enter YES or NO." G CV
  S SRCL(7)=Y,SRDR=SRDR_".08////"_SRCL(7)_";"
  Q
@@ -59,7 +58,7 @@ IR S DIR("A")="Treatment related to Ionizing Radiation Exposure (Y/N)",DIR(0)="1
  I X=""!(X="@") W !,$C(7),?15,"Enter YES or NO." G IR
  S SRCL(2)=Y,SRDR=SRDR_".04////"_SRCL(2)_";"
  Q
-EC S DIR("A")="Treatment related to SW Asia (Y/N)",DIR(0)="136.04,.07" D ^DIR K DIR I $D(DTOUT)!$D(DUOUT) S SRQ=1 Q
+EC S DIR("A")="Treatment related to Environmental Contaminant Exposure (Y/N)",DIR(0)="136.04,.07" D ^DIR K DIR I $D(DTOUT)!$D(DUOUT) S SRQ=1 Q
  I X=""!(X="@") W !,$C(7),?15,"Enter YES or NO." G EC
  S SRCL(4)=Y,SRDR=SRDR_".07////"_SRCL(4)_";"
  Q

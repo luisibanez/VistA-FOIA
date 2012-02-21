@@ -1,5 +1,5 @@
-PXRMGECP ;SLC/JVS -GEC-Prompts ;7/14/05  10:43
- ;;2.0;CLINICAL REMINDERS;**2,4**;Feb 04, 2005;Build 21
+PXRMGECP ;SLC/JVS -GEC-Prompts ;2/13/05  19:56
+ ;;2.0;CLINICAL REMINDERS;**2**;Feb 04, 2005
  Q
 EN ;Entry Point
  ;^DISV(  = DBIA #510
@@ -13,7 +13,7 @@ EN ;Entry Point
  K DIR
  S DIR("A")="Select Option or ^ to Exit"
  I $D(^DISV(DUZ,"PXRMGEC","EN")) S DIR("B")=$G(^DISV(DUZ,"PXRMGEC","EN"))
- S DIR(0)="S^1:Category;2:Patient;3:Provider by Patient;4:Referral Date;5:Location;6:Referral Count Totals;7:Category-Referred Service;8:Summary (Score);9:'Home Help' Eligibility;10:Restore or Merge Referrals"
+ S DIR(0)="S^1:Category;2:Patient;3:Provider by Patient;4:Referral Date;5:Location;6:Referral Count Totals;7:Category-Referred Service;8:Summary (Score);9:'Home Help' Eligibility"
  D ^DIR
  K DIR("A"),DIR("B"),DIR(0)
  Q:$D(DIRUT)!($D(DIROUT))
@@ -28,7 +28,6 @@ EN ;Entry Point
  I MENU=7 D RS^PXRMGECO
  I MENU=8 D SUM^PXRMGECO
  I MENU=9 D HOME^PXRMG2R2
- I MENU=10 D EN^PXRMGECJ
  D KILL^%ZISS
  Q
  ;==========================================================
@@ -110,7 +109,6 @@ EDT ;=====Select Ending Date
 PAT ;--Return DFNONLY as Patient DFN
  W @IOF
  K DIR,DIR("A")
- K DFNONLY
  S DIR("A")="Select Patients or ^ to exit"
  I $D(^DISV(DUZ,"PXRMGEC","PAT")) S DIR("B")=$G(^DISV(DUZ,"PXRMGEC","PAT"))
  S DIR(0)="S^A:All Patients;M:Multiple Patients"
@@ -272,11 +270,6 @@ PATIO ;=====Select IO device for Patient Report
  .S ZTRTN="HS1^PXRMGECQ"
  .S ZTDESC="GEC PATIENT REPORT"
  .S ZTSAVE("*")=""
- .S ZTSAVE("FORMAT")=""
- .S ZTSAVE("EDT")=""
- .S ZTSAVE("BDT")=""
- .S ZTSAVE("DFNONLY")=""
- .I $D(DFNARY) S ZTSAVE("DFNARY(")=""
  .D ^%ZTLOAD K IO("Q") Q
  ;=====Call Report
  E  D HS1^PXRMGECR

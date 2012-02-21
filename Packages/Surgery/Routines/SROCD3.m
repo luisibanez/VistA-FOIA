@@ -1,5 +1,5 @@
-SROCD3 ;BIR/ADM - ASK SC/EI QUESTIONS FOR CODING ;07/24/07
- ;;3.0; Surgery ;**142,152,159**;24 Jun 93;Build 4
+SROCD3 ;BIR/ADM - ASK SC/EI QUESTIONS FOR CODING ;10/17/05
+ ;;3.0; Surgery ;**142,152**;24 Jun 93
  ;
  ; Reference to DIS^DGRPDB supported by DBIA #700
  ; Reference to Field #.322013 in File #2 supported by DBIA #3475
@@ -15,7 +15,7 @@ SCEI ; output of SC/EI conditions
  S SREC=SRY(2,DFN,.322013,"I"),SREC=$S(SREC="Y":"YES",1:"NO")
  W @IOF,!,VADM(1)_"  ("_VA("PID")_")       ",$P(VAEL(6),"^",2),!!,"   * * * Eligibility Information and Service Connected Conditions * * *"
  W !!,?5,"Primary Eligibility: "_SRELIG,!,?5,"Combat Vet: "_SRCV,?22,"A/O Exp.: "_SRAO,?39,"M/S Trauma: "_SRMST
- W !,?5,"ION Rad.: "_SRIR,?22,"SWAC: "_SREC,?39,"H/N Cancer: "_SRHNC
+ W !,?5,"ION Rad.: "_SRIR,?22,"Env Contam: "_SREC,?39,"H/N Cancer: "_SRHNC
  W !,?5,"PROJ 112/SHAD: "_SRPRJ
  D DIS^DGRPDB
  W ! F I=1:1:79 W "-"
@@ -41,8 +41,7 @@ SC S DIR("A")="Treatment related to Service Connected condition (Y/N)",DIR(0)="1
  S SRCL(3)=Y,SRDR=$G(SRDR)_".04////"_SRCL(3)_";"
  S SRCL(3,"UPDATE")=1
  Q
-CV N SRCVD S SRCVD=$P(^SRO(136,DA,0),"^",10),DIR("B")=$S(SRCVD=0:"NO",1:"YES")
- S DIR("A")="Treatment related to Combat (Y/N)",DIR(0)="136,.1" D ^DIR K DIR I $D(DTOUT)!$D(DUOUT) S SRQ=1 Q
+CV S DIR("A")="Treatment related to Combat (Y/N)",DIR(0)="136,.1" D ^DIR K DIR I $D(DTOUT)!$D(DUOUT) S SRQ=1 Q
  I X=""!(X="@") W !,$C(7),?15,"Enter YES or NO." G CV
  S SRCL(7)=Y,SRDR=SRDR_".1////"_SRCL(7)_";"
  S SRCL(7,"UPDATE")=1
@@ -57,7 +56,7 @@ IR S DIR("A")="Treatment related to Ionizing Radiation Exposure (Y/N)",DIR(0)="1
  S SRCL(2)=Y,SRDR=SRDR_".06////"_SRCL(2)_";"
  S SRCL(2,"UPDATE")=1
  Q
-EC S DIR("A")="Treatment related to SW Asia (Y/N)",DIR(0)="136,.07" D ^DIR K DIR I $D(DTOUT)!$D(DUOUT) S SRQ=1 Q
+EC S DIR("A")="Treatment related to Environmental Contaminant Exposure (Y/N)",DIR(0)="136,.07" D ^DIR K DIR I $D(DTOUT)!$D(DUOUT) S SRQ=1 Q
  I X=""!(X="@") W !,$C(7),?15,"Enter YES or NO." G EC
  S SRCL(4)=Y,SRDR=SRDR_".07////"_SRCL(4)_";"
  S SRCL(4,"UPDATE")=1

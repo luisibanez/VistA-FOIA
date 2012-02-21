@@ -1,15 +1,14 @@
-PRCPAGP1 ;WISC/RFJ-autogenerate primary or whse order ; 10/30/06 12:31pm
-V ;;5.1;IFCAP;**1,98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPAGP1 ;WISC/RFJ-autogenerate primary or whse order               ;11 Dec 92
+V ;;5.1;IFCAP;**1**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
 START ;  start autogenerating items
- ; new of X,X1,X2 added with PRC*5.1*98
  N %,CONV,COST,DESCNSN,EACHONE,ERROR,EXIT,G,GROUP,GROUPNM
  N INACTIVE,ISSMULT,ITEMDA,ITEMDATA,LASTONE,LEVEL,MANSRCE,MINISS
  N NOWDT,NUMBER,ORDER,PRCPFLAG,QTY,QTYAVAIL,TEMPLVL,TOTITEMS,TYPE
- N UNITI,UNITR,VENDATA,VENDOR,VENDORNM,WHSEDATA,X,X1,X2
+ N UNITI,UNITR,VENDATA,VENDOR,VENDORNM,WHSEDATA
  D NOW^%DTC S NOWDT=%
  L +^PRCP(445,PRCP("I"),1):5 I '$T D SHOWWHO^PRCPULOC(445,PRCP("I")_"-1",0) Q
  D ADD^PRCPULOC(445,PRCP("I")_"-1",0,"Autogeneration")
@@ -76,10 +75,9 @@ START ;  start autogenerating items
  . . S ^TMP($J,"PRCPAG","NOV",VENDORNM,VENDOR,DESCNSN,ITEMDA)="" Q
  . I $P(ITEMDATA,"^",26)="Y" D  D ERROR Q
  . . S ERROR="KWZ is set to YES, item not ordered"
- . ;  check normal stock level (zero allowed for on-demand items - PRC*5.1*98)
- . I $P(ITEMDATA,"^",9)=0&($P(ITEMDATA,"^",30)'="Y")!($P(ITEMDATA,"^",9)']"") D  D ERROR Q
+ . ;  check normal stock level and standard reorder point
+ . I '$P(ITEMDATA,"^",9) D  D ERROR Q
  . . S ERROR="NORMAL STOCK LEVEL missing for item"
- . ;  check standard reorder point (no nils, 0 valid with PRC*5.1*1)
  . I $P(ITEMDATA,"^",10)']"" D  D ERROR Q
  . . S ERROR="STANDARD REORDER POINT missing for item"
  . S VENDATA=$$GETVEN^PRCPUVEN(PRCP("I"),ITEMDA,MANSRCE,1)

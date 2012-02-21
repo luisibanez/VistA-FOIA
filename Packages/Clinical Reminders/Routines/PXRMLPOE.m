@@ -1,5 +1,5 @@
 PXRMLPOE ; SLC/PJH - Build OE/RR Team from Patient List;07/08/2002
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ; 
  ; Called from PXRM PATIENT LIST OE/RR protocol
  ;
@@ -58,7 +58,6 @@ ASK(PLIEN,OPT) ;Verify patient list name
 LOAD(NODE,LIST) ;Load Patient List
  N DFN,INC,SUB
  S SUB=0,INC=0
- K ^TMP(NODE,$J)
  F  S SUB=$O(^PXRMXP(810.5,LIST,30,SUB)) Q:'SUB  D
  .S DFN=$P($G(^PXRMXP(810.5,LIST,30,SUB,0)),U) Q:'DFN
  .S INC=INC+1,^TMP(NODE,$J,INC)=DFN
@@ -103,7 +102,7 @@ UPDLST(NODE,LIST,NAME) ;Update patient list
  S DFN=0,CNT=1
  F  S DFN=$O(^TMP(NODE,$J,DFN)) Q:'DFN  D
  .S CNT=CNT+1
- .S ^TMP("PXRMFDA",$J,100.2101,"?+"_CNT_",?1,",.01)=$G(^TMP(NODE,$J,DFN))_";DPT("
+ .S ^TMP("PXRMFDA",$J,100.2101,"?+"_CNT_",?1,",.01)=DFN_";DPT("
  ;Update
  S ^TMP("PXRMFDA",$J,100.21,"?1,",.01)=NAME
  S ^TMP("PXRMFDA",$J,100.21,"?1,",.1)=$$UP^XLFSTR(NAME)
@@ -116,7 +115,6 @@ UPDLST(NODE,LIST,NAME) ;Update patient list
  I $D(MSG) D ERR
  ;Unlock patient list
  D UNLOCK
- K ^TMP(NODE,$J)
  Q
  ;
  ;File locking

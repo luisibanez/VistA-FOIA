@@ -1,5 +1,5 @@
 GMRCSTU ;SLC/DCM,dee - Statistic Utilities for C/RT ;09/26/02 10:16
- ;;3.0;CONSULT/REQUEST TRACKING;**1,7,29,30,43,61**;DEC 27, 1997;Build 2
+ ;;3.0;CONSULT/REQUEST TRACKING;**1,7,29,30,43**;DEC 27, 1997
  Q
  ;
 GETDT(GMRCO) ;get the date that the consult/request was accepted by service
@@ -58,10 +58,8 @@ ODT ;List Manager entry point
  ;
 ODTSTR ;Find the mean, standard deviation of how long to complete a consult from when it is accepted in the service to when it is complete
  N RCVDT,COMPLDT,INDEX,TEMPTMP,GROUPER,TAB
- N GMRCDG,GMRCDGT,GMRCDT,GMRCDTP
+ N GMRCDG,GMRCDGT,GMRCDT
  N GMRCGRP,GMRCND,GMRCO,ND,X,X1,X2,X3,X4
- S GMRCDTP=GMRCDT2
- S GMRCDT2=GMRCDT2+1
  I '$O(^TMP("GMRCSLIST",$J,0)) S GMRCQUT=1 G KILL
  S INDEX=0
  F  S INDEX=$O(^TMP("GMRCSLIST",$J,INDEX)) Q:INDEX=""  D
@@ -122,7 +120,6 @@ STAT ;Do the statistics
  .I $P(^TMP("GMRCSVC",$J,2,ND,"T"),"^",1)>0 D DOSTAT^GMRCSTU1(2,ND)
  K ^TMP("GMRCR",$J,"PRL")
  S GMRCCT=0
- S GMRCDT2=GMRCDTP  ;reset date value to print report heading
  D LISTDATE^GMRCSTU1(GMRCDT1,GMRCDT2,.GMRCEDT1,.GMRCEDT2)
  S TAB=""
  S $P(TAB," ",40)=""

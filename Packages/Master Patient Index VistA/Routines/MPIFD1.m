@@ -1,5 +1,5 @@
 MPIFD1 ;BIRM/CMC-POTENTIAL DUP ON MPI ;DEC 2, 2005
- ;;1.0; MASTER PATIENT INDEX VISTA ;**43,48**;30 Apr 99;Build 6
+ ;;1.0; MASTER PATIENT INDEX VISTA ;**43**;30 Apr 99
  ;
 INIT ;Entry point for List Manager Template - MPIF POTENTIAL DUP
  Q
@@ -64,8 +64,6 @@ SELECT N VALMY
  .K DATA(.09),DATA(.01),DATA(.03)
  .D INIT^HLFNC2("MPIF ADT-A24 SERVER",.HL)
  .D BLDPID^VAFCQRY(DFN,2,"ALL",.PID2,.HL,.ERR)
- .;**48 want to resolve an reject exceptions for "current" ICN
- .D RESEX^MPIFDUP(DFN)
  .D EDIT^MPIFQED(DFN,"DATA"),MSG3^MPIFQ3,PROMPT^MPIFQ3
  .S RESLT=$$A24^MPIFA24B(DFN,.PID2) ;send a24 link icns
  .S PROCESS=1 Q
@@ -77,8 +75,6 @@ SELECT N VALMY
  .N PID2,ERR
  .D INIT^HLFNC2("MPIF ADT-A24 SERVER",.HL)
  .D BLDPID^VAFCQRY(DFN,2,"ALL",.PID2,.HL,.ERR)
- .;**48 want to resolve an reject exceptions for "current" ICN
- .D RESEX^MPIFDUP(DFN)
  .D EDIT^MPIFQED(DFN,"DATA") S MPIFRTN="CONTINUE" ;UPDATE ICN
  .W !!,"ICN and CMOR Updated" D PROMPT^MPIFQ3
  .S PROCESS=1 N RESLT
@@ -94,7 +90,7 @@ MPIPD ; MPI PDAT CALL (CLONED FROM MPIPD^MPIFQ1)
  S INDEX=$O(VALMY(0)),Y="" D CLEAR^VALM1
  S DATA=^TMP("MPIFVQQ",$J,INDEX,"DATA")
  S CMOR=$P(DATA,"^",5),CMOR3=CMOR,CMOR=$P($$NS^XUAF4($$LKUP^XUAF4(CMOR)),"^")
- W !,"MPI Data:",!!!,?3,"ICN: ",+$P(DATA,"^",6) ; **48 REMOVE CMOR FROM DISPLAY ,?30,"CMOR: ",CMOR," (",CMOR3,")"
+ W !,"MPI Data:",!!!,?3,"ICN: ",+$P(DATA,"^",6),?30,"CMOR: ",CMOR," (",CMOR3,")"
  W !,?2,"NAME: ",$P(DATA,"^")
  W !,?3,"SSN: ",$P(DATA,"^",3),?30,"SEX: ",$P(DATA,"^",11)
  W !,?3,"DOB: ",$P(DATA,"^",4)
@@ -106,7 +102,7 @@ MPIPD ; MPI PDAT CALL (CLONED FROM MPIPD^MPIFQ1)
  W !,?2,"CLAIM NUMBER: ",$P(DATA,"^",17)
  S POW=$P(DATA,"^",19) I POW'="" W !,?2,"POW STATUS: ",POW
  S CASE=$P(DATA,"^",18)
- I CASE'="" W !,?2,"Open Data Management Case",!,?5,"CASE#: ",$P(CASE,"/")_"   REMEDY/NOIS#: ",$P(CASE,"/",2),!,?5,"CASE WORKER: ",$P(CASE,"/",3)
+ I CASE'="" W !,?2,"Open Data Management Case",!,?5,"CASE#: ",$P(CASE,"/")_"   NOIS#: ",$P(CASE,"/",2),!,?5,"CASE WORKER: ",$P(CASE,"/",3)
  I $D(^TMP("MPIFVQQ",$J,INDEX,"ALIAS")) W !,?2,"Alias(es): " D
  .N XX S XX=0 F  S XX=$O(^TMP("MPIFVQQ",$J,INDEX,"ALIAS",XX)) Q:'XX  W !?10,^(XX)
  I $D(^TMP("MPIFVQQ",$J,INDEX,"TF"))&($O(^TMP("MPIFVQQ",$J,INDEX,"TF",1))'="") D

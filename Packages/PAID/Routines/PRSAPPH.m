@@ -1,10 +1,9 @@
-PRSAPPH ; WOIFO/JAH - Holiday Utilities ;12/17/08
- ;;4.0;PAID;**33,66,113,112,116,123**;Sep 21, 1995;Build 1
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRSAPPH ; HISC/REL-Holiday Utilities ;25 FEB 2001
+ ;;4.0;PAID;**33,66**;Sep 21, 1995
  K HOL S PDT=$G(^PRST(458,PPI,1)) Q:PDT=""  S X1=$P(PDT,"^",1),X2=-6 D C^%DTC
  S PRS8D=X D EN^PRS8HD
  S PDH=PRS8D F DAY=1:1:25 S X1=PRS8D,X2=DAY D C^%DTC S PDH=PDH_"^"_X
- F DAY=1:1:26 S Z=$P(PDH,"^",DAY) I $D(HD(Z)) S HOL(Z)=$S(DAY<7:-DAY,1:DAY-6) I $G(HD(Z))["Inauguration" S HOL(Z,"SC")="W"
+ F DAY=1:1:26 S Z=$P(PDH,"^",DAY) I $D(HD(Z)) S HOL(Z)=$S(DAY<7:-DAY,1:DAY-6)
  K HO,HD,PRS8D,PDH Q
 E ; Set Holidays for Employees
  S FLX=$P($G(^PRST(458,PPI,"E",DFN,0)),"^",6),DB=$P($G(^PRSPC(DFN,0)),"^",10)
@@ -13,18 +12,11 @@ E ; Set Holidays for Employees
  Q
 E0 ; Find Benefit Day
  Q:DAY=15  I DAY>0,DAY<15 G P0
- Q:$D(HOL(LLL,"SC"))
- Q:DB'=1  Q:NH=48!(NH=72)  G P1:DAY<0,P3:DAY>14
+ Q:DB'=1  Q:NH=48  G P1:DAY<0,P3:DAY>14
 P0 S TC=$P($G(^PRST(458,PPI,"E",DFN,"D",DAY,0)),"^",2) Q:'TC
  I (TC=3)!(TC=4) G U1
  I DB=1,NH=48 G U1
- S C=0
- I TC=2!$P($G(^PRST(458,PPI,"E",DFN,"D",DAY,0)),"^",8)!$P($G(^(0)),"^",14),'$P($G(^(0)),"^",12) G S0
- Q:$P($G(^(0)),"^",12)=LLL&(TT="HX") 
- G U1:DB=2!(NH=72)
- I $G(HOL(LLL,"SC"))="W" G U1
- ; From this point on the code is trying to find an In Lieu of Day
- I FLX'="C" G EF:(DAY#7=1),EB:(DAY#7=0)
+ S C=0 G:TC=2!$P($G(^PRST(458,PPI,"E",DFN,"D",DAY,0)),"^",8)!$P($G(^(0)),"^",14) S0 G:DB=2 U1 I FLX'="C" G EF:(DAY#7=1),EB:(DAY#7=0)
  S C=0 F X1=$S(DAY<8:1,1:8):1:DAY I '$P($G(^PRST(458,PPI,"E",DFN,"D",X1,0)),"^",8),'$P($G(^(0)),"^",14) S C=C+1
  I FLX'="C" G EF:C<2,EB
  I C'=2 G EF:C<3,EB

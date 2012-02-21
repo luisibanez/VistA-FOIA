@@ -1,5 +1,5 @@
 RMPRPCE1 ;HCIOFO/RVD - Prosthetics/PCE UPDATE UTILITY ;5/7/03  09:12
- ;;3.0;PROSTHETICS;**62,69,77,78,146**;Feb 09, 1996;Build 4
+ ;;3.0;PROSTHETICS;**62,69,77,78**;Feb 09, 1996
  ;
  ;patch #69
  ;RVD 4/10/02 - validate the length (16 c) of provisional diagnosis
@@ -125,8 +125,6 @@ LINK ;link 2319 to suspense
  I $D(^RMPR(660,+Y,"AMS")) N RMPRAMIS S RMPRAMIS=$P(^RMPR(660,+Y,"AMS"),U,1)
  S ^TMP($J,"RMPRPCE",660,+Y)=RMPRAMIS_"^"_RMPRDFN
  D LINK^RMPRS
- I $G(RMPRDA)="" S RMPRDA=$O(^TMP($J,"RMPRPCE",660,0))
- I $G(RMPRDA)="" L  G EXIT
  L -^RMPR(660,RMPRDA)
 EXIT ;quit
  K ^TMP($J)

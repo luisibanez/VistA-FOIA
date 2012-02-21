@@ -1,6 +1,6 @@
 IBCRCC ;ALB/ARH - RATES: CALCULATION OF ITEM CHARGE ;22-MAY-1996
- ;;2.0;INTEGRATED BILLING;**52,80,106,138,245,223,309,347,370,383,427**;21-MAR-94;Build 7
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,80,106,138,245,223,309**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; ITMCHG and RATECHG are basic item/set/rate charge functions, IBCRCI contains more standard callable functions
  ;
@@ -63,14 +63,11 @@ RATECHG(RS,CHG,EVDT,FEE) ; returns modifed item charge based on rate schedule:  
  Q IBX_IBRTY
  ;
 RXCOST(RX) ; returns (RX=ptr 362.4): VA Cost of an Rx - Per Unit Cost ^ bill IFN
- ; w/ Per Unit Cost = Refill (Current Unit Price of Drug - 52.1,1.2) or RX (Unit Price of Drug - 52,17)
+ ; w/ Per Unit Cost = RX (Unit Price of Drug - 52,17) or Drug (Price Per Dispense Unit 50,16) cost
  ;
- N IBRXP,IBDGP,IBLN,IBX,IBIFN,IBDT,IBY
- S (IBRXP,IBX)=0
- I +$G(RX) S IBLN=$G(^IBA(362.4,+RX,0)),IBRXP=$P(IBLN,U,5),IBDGP=$P(IBLN,U,4),IBIFN=$P(IBLN,U,2),IBDT=$P(IBLN,U,3)
- ;
- I +IBRXP S IBY=$$RFLNUM^IBRXUTL(IBRXP,IBDT) I +IBY S IBX=$$SUBFILE^IBRXUTL(IBRXP,+IBY,52,1.2)_U_IBIFN
- I +IBRXP,'IBX S IBX=$$FILE^IBRXUTL(IBRXP,17)_U_IBIFN
+ N IBRXP,IBDGP,IBLN,IBX,IBIFN S (IBRXP,IBX)=0
+ I +$G(RX) S IBLN=$G(^IBA(362.4,+RX,0)),IBRXP=$P(IBLN,U,5),IBDGP=$P(IBLN,U,4),IBIFN=$P(IBLN,U,2)
+ I +IBRXP S IBLN=$G(^PSRX(+IBRXP,0)) I IBLN'="" S IBX=$P(IBLN,U,17)_U_IBIFN
  I 'IBRXP,+IBDGP D DATA^IBRXUTL(+IBDGP) S IBLN=$G(^TMP($J,"IBDRUG",0)) I IBLN'="" S IBX=$G(^TMP($J,"IBDRUG",+IBDGP,16))_U_IBIFN
  K ^TMP($J,"IBDRUG")
  Q IBX
@@ -93,25 +90,6 @@ PRVCHG(CS,CHG,PRV,EVDT,ITEM) ; return discounted amount, based on total charge f
  .. S IBPDTY=U_$P($G(^VA(200,+PRV,0)),U,1)_" - "_$P(IBPD0,U,1)_" "_$P(IBPD0,U,3)_"% of "_$J(CHG,0,2)_U_+IBY
  Q IBX_IBPDTY
  ;
-MODCHG(CS,CHG,MODS) ; return adjusted amount due to RC modifier adjustment
- ; straight adjustment for RC Physician charges by modifier, if no modifier adjustment returns original amount
- ; Input:  Charge Set, Procedure Charge, Modifiers - list with modifier IEN's separated by ','
- ; Output: discounted amount ^ comment (if discounted) ^ percent discount
- ;
- N IBCS0,IBBR0,IBMOD,IBMODS,IBMODE,IBDSCNT,IBPDTY,IBI,IBX,IBY
- S CHG=+$G(CHG),MODS=$G(MODS),(IBBR0,IBPDTY,IBMODS)="",IBDSCNT=1,IBX=+CHG
- I +$G(CS) S IBCS0=$G(^IBE(363.1,+CS,0)),IBBR0=$G(^IBE(363.3,+$P(IBCS0,U,2),0))
- I $P(IBBR0,U,1)'["RC PHYSICIAN" S MODS="" ; professional charge only
- I $P(IBBR0,U,4)'=2 S MODS="" ; CPT item only
- I 'CHG S MODS=""
- ;
- I +MODS F IBI=1:1 S IBMOD=$P(MODS,",",IBI) Q:'IBMOD  S IBY=0 D
- . I IBMOD=3 S IBMODE=22,IBY=1.3,IBX=IBX*IBY ; modifier 22 at 120% adjustment
- . I IBMOD=10 S IBMODE=50,IBY=1.54,IBX=IBX*IBY ; modifier 50 at 154% adjustment
- . I +IBY S IBMODS=IBMODS_$S(IBMODS="":"",1:",")_IBMODE,IBDSCNT=IBDSCNT*IBY ; allow for multiple discounts
- I IBMODS'="" S IBPDTY=U_"Modifier "_IBMODS_" Adjustment "_(IBDSCNT*100)_"% of "_$J(CHG,0,2)_U_+IBDSCNT
- Q IBX_IBPDTY
- ;
 HRUNIT(HRS) ; returns Hour Units based on the Hours passed in
  ; Hour Units are the hours rounded to the nearest whole hour (less than 30 minutes is 0 units)
  N IBX S IBX=0 I +$G(HRS) S IBX=$J(HRS,0,0)
@@ -123,6 +101,6 @@ MLUNIT(MLS) ; returns Miles Units based on the Miles passed in
  Q IBX
  ;
 MNUNIT(MNS) ; return Minute Units based on the Minutes passed in
- ; Minute Units are 15 minute intervals, rounded up after any minutes
- N IBX S IBX=0 I +$G(MNS) S IBX=(MNS\15) S:+(MNS#15) IBX=IBX+1 I 'IBX S IBX=1
+ ; Minute Units are 15 minute intervals, rounded down for less than 5 minutes
+ N IBX S IBX=0 I +$G(MNS) S IBX=(MNS\15) S:(MNS#15)>4 IBX=IBX+1 I 'IBX S IBX=1
  Q IBX

@@ -1,5 +1,5 @@
 DVBAVDPT ;ALB/JLU,557/THM-GET VARIABLES VIA ^VADPT ; 1/23/91  8:02 AM
- ;;2.7;AMIE;**57,108**;Apr 10, 1995
+ ;;2.7;AMIE;**57**;Apr 10, 1995
  W *7,!!,"NOT a stand-alone program !",!!,*7 Q
  ;
 DCHGDT ;entry point for all reports that use discharge dates
@@ -32,9 +32,7 @@ CNUM ;Claim Number and Location
  S CNUM=$P(CNUM,U,3)
  S:CNUM="" CNUM="UNKNOWN"
  S XCN=$E(CNUM,$L(CNUM)-1,$L(CNUM))
- ; DVBA*2.7*108 - Modified next line for null values
- ; S CFLOC=$S($D(^DIC(4,CFLOC,99)):$P(^(99),U,1),1:"UNKNOWN")
- S CFLOC=$P($G(^DIC(4,CFLOC,99)),"^") S:CFLOC="" CFLOC="UNKNOWN"
+ S CFLOC=$S($D(^DIC(4,CFLOC,99)):$P(^(99),U,1),1:"UNKNOWN")
  Q
  ;
 ELIG N ED S ELIG=DVBAELIG,INCMP="",ED="Eligibility data:"

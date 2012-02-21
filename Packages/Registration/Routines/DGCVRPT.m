@@ -1,5 +1,5 @@
 DGCVRPT ;ALB/PJR - Unsupported CV End Dates Report;  ; 6/10/04 12:15pm
- ;;5.3;Registration;**564,731,792**; Aug 13,1993;Build 4
+ ;;5.3;Registration;**564**; Aug 13,1993
  ;
 EN ; Called from DG UNSUPPORTED CV END DATES RPT option
  N DGSRT
@@ -54,20 +54,23 @@ EN1 ; Extract
  K ^XTMP("DGCVRPT","RUNNING"),DGXTMP
  Q
  ;
-CHK ; Calculate CV End Date, check MSE data is supporting it
+CHK ; Calculate CV End Date
  ; INPUT: DFN - Patient file IEN
  ; OUTPUT: CEN  = CV End Date on file
  ;         CALC = Calculated CV End Date
- N DGARRY
+ N SSD,N322,I99
  S RECCOUNT=RECCOUNT+1 D CNT
  S CALC="",CEN=$P($G(^DPT(DFN,.52)),U,15) I 'CEN Q
- S CALC=$$CVDATE(DFN,.DGARRY)
- ; If OEF/OIF date's "to date" is used for the CV End date, (not the
- ;   last SSD), include it as an inconsistency on this report
- I $G(DGARRY("OEF/OIF")),DGARRY("OEF/OIF")>$G(DGARRY(2,DFN_",",.327,"I")) S CALC=""
+ N SSD,N322,I99
+ S SSD=$P($G(^DPT(DFN,.32)),U,7) I 'SSD Q
+ I $E(SSD,6,7)="00" Q
+ I SSD'>2981111 Q
+ I ($P($G(^DPT(DFN,.52)),U,14))>2981111 D SCH Q
+ S N322=$G(^DPT(DFN,.322))
+ F I99=12,18,21 I $P(N322,U,I99)>2981111 D SCH Q
  Q
  ;
-SCH S CALC=$$CALCCV^DGCV(DFN,SSD) Q
+SCH S CALC=$P($$SCH^XLFDT("24M",SSD),".",1) Q
  ;
 PUT ; Put record on list
  N NAM,SSN,NZERO
@@ -136,25 +139,3 @@ PAUSE() ; If report is sent to screen, prompt for next page or quit
  S DIR(0)="E"
  D ^DIR I 'Y Q 1
  Q 0
-CVDATE(DFN,DGARR,DGERR) ; Returns all values for calculating the CV End date
- ; in DGARR (passed by reference)
- ;   AND
- ; any error codes from the DIQ call in DGERR (passed by reference)
- ;   AND
- ; the calculated CV End Date as the result of the function call
- ;
- N N,DATE,SSD,X,Y
- S DATE=""
- D GETS^DIQ(2,DFN_",",".327;.322012;.322018;.322021;.5294","I","DGARR","DGERR")
- S DGARR("OEF/OIF")=$P($$LAST^DGENOEIF(DFN),U)
- S SSD=$G(DGARR(2,DFN_",",.327,"I"))
- ; If OEF/OIF date later than last serv sep dt, use to date of OEF/OIF
- I $G(DGARR("OEF/OIF")),DGARR("OEF/OIF")>SSD S DATE=DGARR("OEF/OIF") G CVDATEQ
- I SSD D
- . Q:$E(SSD,6,7)="00"!(SSD'>2981111)
- . I $G(DGARR("OEF/OIF")) S DATE=SSD Q
- . ; If conflict dates exist for any of the above listed fields, use SSD 
- . S N=0 F  S N=$O(DGARR(2,DFN_",",N)) Q:'N  I N'=.327,$G(DGARR(2,DFN_",",N,"I"))>2981111 S DATE=SSD Q
- ;
-CVDATEQ Q $S(DATE:$$CALCCV^DGCV(DFN,DATE),1:"")
- ;

@@ -1,14 +1,13 @@
-PSONVNEW ;BIR/SAB - Add Non-VA Med orders ;2/13/07 11:35am
- ;;7.0;OUTPATIENT PHARMACY;**132,118,203,265**;DEC 1997;Build 1
+PSONVNEW ;BIR/SAB - Add Non-VA Med orders ;5/4/05 1:31pm
+ ;;7.0;OUTPATIENT PHARMACY;**132,118,203**;DEC 1997
  ;External reference ^PS(50.606 supported by DBIA 2174
  ;External reference ^PS(50.7 supported by DBIA 2223
  ;External reference ^PS(55 supported by DBIA 2228
  ;External reference to ^PS(51.2 supported by DBIA 2226
  ;adds new non-va med to #55
  ;
- ;*203 change 3 fields from "///" to "////" they can be larger than
- ;      defined and need to be put in as is to prevent hard crash.
- ;*265 change update of Dosage & Sched fields DR strings, can contain ;      free form char ";"
+ ;PSO*203 change 3 fields from "///" to "////" they can be larger than
+ ;defined and need to be put in as is to prevent hard crash.
  ;
  I '$D(^PS(55,DFN,0)) D
  .K DD,DO S DIC(0)="L",(DINUM,X)=DFN,DIC("DR")="52.1////2" D FILE^DICN D:Y<1  K DIC,DA,DR,DD,DO
@@ -22,14 +21,11 @@ PSONVNEW ;BIR/SAB - Add Non-VA Med orders ;2/13/07 11:35am
  ;
  ; - Files the Non-VA Med order into the "NVA" multiple in File #55
  K DR,DIC,DD,DA,DO,DINUM S DA(1)=DFN,X=PSORDITE
- ;*203,*265 fix DR & dose & sched fields
- S PSODOS=$G(PSOLQ1I(1)),PSOSCH=$$SCHED($P($G(QTARRAY(1)),"^"))
- S DR="1////"_PSODDRUG_";2////^S X=PSODOS;3////"_$$ROUTE($G(ROUTE(1)))
- S DR=DR_";4////^S X=PSOSCH;7////"_$G(PLACER)_";8///"_$G(STRDT)
+ S DR="1////"_PSODDRUG_";2////"_$G(PSOLQ1I(1))_";3////"_$$ROUTE($G(ROUTE(1)))     ;PSO*203
+ S DR=DR_";4////"_$$SCHED($P($G(QTARRAY(1)),"^"))_";7////"_$G(PLACER)_";8///"_$G(STRDT)       ;PSO*203
  S DR=DR_";11///"_$G(PSOLOG)_";12////"_$G(ENTERED)_";13////"_$G(LOCATION)
  S DIC("DR")=DR,DIC(0)="L",DIC="^PS(55,"_DFN_",""NVA"",",DLAYGO=55.05
  D FILE^DICN S PSONVA=+Y K DR,DIC,DD,DA,DO,DINUM
- K PSODOS,PSOSCH
  ;
  K DSC,STDT
  I $P(PSODSC,"^",2)]"" D

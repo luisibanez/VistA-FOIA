@@ -1,6 +1,6 @@
-IBCNRDV ;OAKFO/ELZ - INSURANCE INFORMATION EXCHANGE VIA RDV ;27-MAR-03
- ;;2.0;INTEGRATED BILLING;**214,231,361,371**;21-MAR-94;Build 57
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCNRDV ;OAKFO/ELZ - INSURANCE INFORMATION EXCHANGE VIA RDV;27-MAR-03
+ ;;2.0;INTEGRATED BILLING;**214,231**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; This routine is used to exchange insurance information between
  ; facilities.
@@ -12,7 +12,7 @@ OPT ; Menu option entry point.  This is used to select a patient to request
 AGAIN S DIC="^DPT(",DIC(0)="AEMNQ" D ^DIC Q:Y<1  S DFN=+Y
  ;
 BACKGND ; background/tasked entry point
- ; IBTYPE is being used as a flag to indicate this is running in background
+ ; IBTYPE is being used as a flag to indicate this is running in bkng
  ;
  ; look up treating facilities
  K IBT S IBT=$$TFL^IBARXMU(DFN,.IBT)
@@ -57,7 +57,7 @@ BACKGND ; background/tasked entry point
  . S IBY=0 F  S IBY=$O(IBR(IBY))  Q:IBY<1  D
  .. F IBL=5:1  S IBT=$P($T(MAP+IBL),";",3) Q:IBT=""  D
  ... ;
- ... ; am I on the right MAP line
+ ... ; am i on the right MAP line
  ... I $P(IBT,IBP,3)=$S(IBY#6:IBY#6,1:6) S IBZ=$P(IBR(IBY),"^",$P(IBT,IBP,4)) I $L(IBZ) D
  .... ;
  .... ; xecute code to change external to internal
@@ -79,12 +79,12 @@ BACKGND ; background/tasked entry point
  ... W:'$D(IBTYPE)&($L($G(IBB(20.01)))) !,$P($G(IBB),"^")," Buffer File entry for ",$G(IBB(20.01))
  ... K IBB
  ;
- ; flag so I don't do this patient again within 90 days
+ ; flag so i don't do this patient again within 90 days
  S ^IBT(356,"ARDV",DFN,$$FMADD^XLFDT(DT,90))=""
  ;
  Q
  ;
-RPC(IBD,IBICN) ; RPC entry for looking up insurance info
+RPC(IBD,IBICN) ; rpc entry for looking up insurance info
  N DFN,IBZ,IBX,IBY,IBP,IBI,IBT,IBZ
  S DFN=$$DFN^IBARXMU(IBICN) I 'DFN S IBD(0)="-1^ICN Not found" Q
  D ALL^IBCNS1(DFN,"IBY",3)
@@ -93,27 +93,26 @@ RPC(IBD,IBICN) ; RPC entry for looking up insurance info
  ; IBD(0)   = # of insurance companies
  S IBD(0)=$G(IBY(0))
  ;
- ; where n starts at 1 and increments to 7 for each insurance company
+ ; where n starts at 1 and increments 6 for each insurnace co
  ; IBD(n) = 355.33, zero node format
  ; IBD(n+1) = 355.33, 20 node format
  ; IBD(n+2) = 355.33, 21 node format
  ; IBD(n+3) = 355.33, 40 node format
  ; IBD(n+4) = 355.33, 60 node format
  ; IBD(n+5) = 355.33, 61 node format
- ; IBD(n+6) = 355.33, 62 node format
  ;
  S IBP="|"
  S IBI=0 F  S IBI=$O(IBY(IBI))  Q:IBI<1  F IBL=5:1 S IBT=$P($T(MAP+IBL),";",3) Q:IBT=""  D
  . S IBZ=$P($G(IBY(IBI,+IBT)),"^",$P(IBT,IBP,2)) ; set the existing data
  . I $L($P(IBT,IBP,6)) X $P(IBT,IBP,6) ; output transform
- . S $P(IBD(IBI-1*7+$P(IBT,IBP,3)),"^",$P(IBT,IBP,4))=IBZ ; set data IBD
+ . S $P(IBD(IBI-1*6+$P(IBT,IBP,3)),"^",$P(IBT,IBP,4))=IBZ ; set data IBD
  Q
  ;
 MAP ; this is a mapping of data returned from ALL^IBCNS1 to the buffer file
  ; format is:  node number | piece | extract node | extract piece
  ;             | 355.33 field number | format out code (if any)
  ;             | format in code (if any)
- ; the extract nodes will be sequential to match buffer file DD
+ ; the exract nodes will be sequential to match buffer file dd
  ;;0|1|2|1|20.01|N Z X "F Z=0,.11,.13 S IBY(IBI,36+Z)=$G(^DIC(36,IBZ,Z))" S IBZ=$P(IBY(IBI,36),"^");ins co name
  ;;0|2|5|4|60.04;subscriber id
  ;;0|4|5|3|60.03;experation date
@@ -137,10 +136,8 @@ MAP ; this is a mapping of data returned from ALL^IBCNS1 to the buffer file
  ;;2|12|6|4|61.04;retirement date
  ;;3|1|5|8|60.08;insured's dob
  ;;3|5|5|9|60.09;insured's ssn
- ;;3|12|5|13|60.13;insured's sex
  ;;4|1|5|10|60.1;primary care provider
  ;;4|2|5|11|60.11;primary provider phone
- ;;5|1|7|1|62.01;patient id
  ;;355.3|2|4|1|40.01;is this a group policy
  ;;355.3|3|4|2|40.02;group name
  ;;355.3|4|4|3|40.03;group number

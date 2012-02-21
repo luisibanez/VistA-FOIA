@@ -1,23 +1,18 @@
 RGRSUTIL ;ALB/RJS-MPI/PD UTILITIES ;03/12/96
- ;;1.0;CLINICAL INFO RESOURCE NETWORK;**1,3,19,45,57**;30 Apr 99;Build 2
-EXCEPT ;Members of the RG CIRN DEMOGRAPHIC ISSUES Mail Group are
- ;notified upon login if there are unresolved Primary View
- ;Reject exceptions for review in the MPI/PD Exception
- ;Handler ;**57 MPIC_1893 Only exception type 234 remains
- ;
- ;Is user a member of this mail group?
- S RGCDI=$$FIND1^DIC(3.8,,,"RG CIRN DEMOGRAPHIC ISSUES")
- I RGCDI="" G END
- S XMDUZ=DUZ,Y=RGCDI D CHK^XMA21 I '$T G END
- ;User is a member.
- I $O(^RGHL7(991.1,"ASTAT","0",234,0)) D
- .D SET^XUS1A("!  <<------------------------------------------------------------------------>>")
- .D SET^XUS1A("!  << You have Primary View Reject exceptions that need to be reviewed using >>")
- .D SET^XUS1A("!  << the MPI/PD Exception Handling Option on the Message Exception Menu.    >>")
- .D SET^XUS1A("!  <<------------------------------------------------------------------------>>")
-END K RGCDI,XMDUZ,Y
+ ;;1.0;CLINICAL INFO RESOURCE NETWORK;**1,3,19**;30 Apr 99
+EXCEPT ;This entry point identifies exception notifications
+ ;Check the mail group RG CIRN DEMOGRAPHIC ISSUES to see if 
+ ;this user should be notified.
+ N DIC,X,Y
+ S DIC="3.8",DIC(0)="Z",X="RG CIRN DEMOGRAPHIC ISSUES"
+ D ^DIC
+ S RGMG=$P($G(Y),"^",1) Q:RGMG<1
+ D GETS^DIQ(3.8,+RGMG_",","2*","I","RGAR") S RGNOTFY=0,RGX="" F  S RGX=$O(RGAR(3.81,RGX)) Q:RGX=""  I RGAR(3.81,RGX,.01,"I")=$G(DUZ) S RGNOTFY=1
+ ;identify existence of unresolved exceptions
+ I RGNOTFY=1 S RGNOTFY=$$CUREX^RGEX01()
+ I RGNOTFY=1 D SET^XUS1A("!Use the MPI/PD Exception Handling option on the Message Exception Menu to resolve exceptions.")
+ K RGTYPE,RGMG,RGNOTFY,RGAR,RGX,RGEX
  Q
- ;
 SEG(SEGMENT,PIECE,CODE) ;Return segment from RGDC array and kill node
  N RGNODE,RGDATA,RGDONE,RGC K RGDONE
  I '$D(RGC) S RGC=$E(HL("ECH"))
@@ -86,12 +81,3 @@ UPDTFLD(FILE,FLD,ANS1,ANS2) ; Returns the correct field answer
 SSNINT(SSN) ;
  Q:$G(SSN)="" ""
  Q $TRANSLATE(SSN,"-","")
- ;
-ACTION ;Entry action for Primary View Reject exceptions
- I $O(^RGHL7(991.1,"ASTAT","0",234,0)) D
- .W !!,"  <<------------------------------------------------------------------------>>"
- .W !,"  << You have Primary View Reject exceptions that need to be reviewed using >>"
- .W !,"  << the MPI/PD Exception Handling Option on the Message Exception Menu.    >>"
- .W !,"  <<------------------------------------------------------------------------>>"
- Q
- ;

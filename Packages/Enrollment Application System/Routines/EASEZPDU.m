@@ -1,5 +1,5 @@
-EASEZPDU ;ALB/AMA - PRINT 10-10EZ OR EZR FROM DG OPTIONS UTILITIES ; 8/1/08 1:23pm
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**57,70**;Mar 15, 2001;Build 26
+EASEZPDU ;ALB/AMA - PRINT 10-10EZ OR EZR FROM DG OPTIONS UTILITIES
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**57**;Mar 15, 2001
  ;
  Q
  ;
@@ -39,7 +39,7 @@ SETUP(EALNE,EAINFO) ; Set-up print variables
  S EAINFO("SSN")=""
  Q
  ;
-NETEZ(EALNE,EAINFO,EASDG) ;  Print SECTION X - PREVIOUS CALENDAR YEAR NET WORTH
+NETEZ(EALNE,EAINFO) ;  Print SECTION X - PREVIOUS CALENDAR YEAR NET WORTH
  ;Copied from EASEZP64
  ; Input
  ;   EALNE   - Line format array
@@ -50,7 +50,6 @@ NETEZ(EALNE,EAINFO,EASDG) ;  Print SECTION X - PREVIOUS CALENDAR YEAR NET WORTH
  ;      ("VET" ) - Veteran's name submitting the application
  ;      ("SSN")  - Veteran's SSN
  ;      ("DISC") - Financial Disclosure status
- ;    EASDG  - Flag variable to signify request to print from DG options
  ;
  N EASIGN,EASD
  ;
@@ -61,7 +60,7 @@ NETEZ(EALNE,EAINFO,EASDG) ;  Print SECTION X - PREVIOUS CALENDAR YEAR NET WORTH
  D HDR^EASEZP6F(.EALNE,.EAINFO)
  S EASD=$NA(^TMP("EASEZ",$J,2))
  ;
- I $G(EASDG),+@EASD@(999) W !!?7,"SECTION X - PREVIOUS CALENDAR YEAR NET WORTH  (INCOME YEAR:  ",@EASD@(999),")  (Use a separate sheet for additional dependents)"
+ I +@EASD@(999) W !!?7,"SECTION X - PREVIOUS CALENDAR YEAR NET WORTH  (INCOME YEAR:  ",@EASD@(999),")  (Use a separate sheet for additional dependents)"
  E  W !!?18,"SECTION X - PREVIOUS CALENDAR YEAR NET WORTH  (Use a separate sheet for additional dependents)"
  W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
  ;
@@ -93,7 +92,7 @@ NETEZ(EALNE,EAINFO,EASDG) ;  Print SECTION X - PREVIOUS CALENDAR YEAR NET WORTH
  ;
  Q
  ;
-NETEZR(EALNE,EAINFO,EASDG) ;  Print SECTION IX - PREVIOUS CALENDAR YEAR NET WORTH
+NETEZR(EALNE,EAINFO) ;  Print SECTION IX - PREVIOUS CALENDAR YEAR NET WORTH
  ;Copied from EASEZRP3
  ; Input
  ;   EALNE   - Line format array
@@ -104,7 +103,6 @@ NETEZR(EALNE,EAINFO,EASDG) ;  Print SECTION IX - PREVIOUS CALENDAR YEAR NET WORT
  ;      ("VET" ) - Veteran's name submitting the application
  ;      ("SSN")  - Veteran's SSN
  ;      ("DISC") - Financial Disclosure status
- ;    EASDG  - Flag variable to signify request to print from DG options
  ;
  N EASIGN,EASD
  ;
@@ -115,7 +113,7 @@ NETEZR(EALNE,EAINFO,EASDG) ;  Print SECTION IX - PREVIOUS CALENDAR YEAR NET WORT
  D HDR^EASEZRPF(.EALNE,.EAINFO)
  S EASD=$NA(^TMP("EASEZR",$J,2))
  ;
- I $G(EASDG),+@EASD@(999) W !?7,"SECTION IX - PREVIOUS CALENDAR YEAR NET WORTH  (INCOME YEAR:  ",@EASD@(999),")  (Use a separate sheet for additional dependents)"
+ I +@EASD@(999) W !?7,"SECTION IX - PREVIOUS CALENDAR YEAR NET WORTH  (INCOME YEAR:  ",@EASD@(999),")  (Use a separate sheet for additional dependents)"
  E  W !?18,"SECTION IX - PREVIOUS CALENDAR YEAR NET WORTH  (Use a separate sheet for additional dependents)"
  W ?131,$C(13) W:EALNE("ULC")="-" ! W EALNE("UL")
  ;

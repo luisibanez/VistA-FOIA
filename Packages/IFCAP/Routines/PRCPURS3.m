@@ -1,6 +1,6 @@
 PRCPURS3 ;WISC/RFJ-select distribution points                       ;24 May 93
-V ;;5.1;IFCAP;**1,108**;Oct 20, 2000;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;5.1;IFCAP;**1**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
@@ -56,5 +56,5 @@ ALLDISTR() ;  select all distribution points/recipients
  .   S XH="Enter 'YES' to select ALL distr. points, 'NO' to not select all distr. points."
  I PRCP("DPTYPE")="S" D
  .   S XP="Do you want ALL recipients"
- .   S XH="Enter 'YES' to select ALL recipients, 'NO' to select individual recipients."
+ .   S XH="Enter 'YES' to select ALL recipients, 'NO' to not select individual recipients."
  Q $$YN^PRCPUYN(1)

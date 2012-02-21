@@ -1,9 +1,10 @@
-RORHL05 ;HOIFO/CRT - HL7 AUTOPSY: OBR ; 3/13/06 9:23am
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORHL05 ;HOIFO/CRT - HL7 AUTOPSY: OBR ; 2/8/06 8:06am
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
  ; #1995         $$CPT^ICPTCOD (supported)
+ ; #2503         LRDFN^LR7OR1 (controlled)
  ; #3465         Access to autopsy data (private)
  ; #10040        Read the INSTITUTION field of file #44 (supported)
  ; #10090        Read access to the file #4 (supported)

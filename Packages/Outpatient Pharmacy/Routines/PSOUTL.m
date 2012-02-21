@@ -1,11 +1,10 @@
-PSOUTL ;BHAM ISC/SAB - pso utility routine ;4/28/09 4:14pm
- ;;7.0;OUTPATIENT PHARMACY;**1,21,126,174,218,259,324**;DEC 1997;Build 6
+PSOUTL ;BHAM ISC/SAB - pso utility routine ;10/27/05 10:50am
+ ;;7.0;OUTPATIENT PHARMACY;**1,21,126,174,218**;DEC 1997
  ;External reference SERV^IBARX1 supported by DBIA 2245
  ;External reference ^PS(55,     supported by DBIA 2228
  ;
- ;*218 prevent refill from being deleted if pending processing via
+ ;PSO*218 prevent refill from being deleted if pending processing via
  ; external dispense machines
- ;*259 reverse *218 restrictions & Add del only last refill logic.
  ;
 SUSPCAN ;dcl rx from suspense used in new, renew AND verification of Rxs
  S PSLAST=0 F PSI=0:0 S PSI=$O(^PSRX(PSRX,1,PSI)) Q:'PSI  S PSLAST=PSI
@@ -30,8 +29,7 @@ CHK1 I '$P(PSOSYS,"^",2) W !?10,$C(7),"RX# ",$P(^PSRX(PSRX,0),"^")," is not a va
  I $P(PSOSYS,"^",3) W !?10,$C(7),"RX# ",$P(^PSRX(PSRX,0),"^")," is from another division. Continue? (Y/N) " R ANS:DTIME I ANS="^"!(ANS="") S PSPOP=1 Q
  I (ANS']"")!("YNyn"'[$E(ANS)) W !?10,$C(7),"Answer 'YES' or 'NO'." G CHK1
  S:$E(ANS)["Nn" PSPOP=1 Q
- ;PSO*7*259; SET VAR PSOSFN TO CHECK FOR SUSPENDED REFILL
-K52 K PSOSFN S SFN=+$O(^PS(52.5,"B",DA(1),0)),PSOSFN=SFN Q:SFN=0
+K52 S SFN=+$O(^PS(52.5,"B",DA(1),0)) Q:SFN=0
  I $P($G(^PS(52.5,SFN,0)),"^",5)=$P($G(^PSRX(+^PS(52.5,SFN,0),"P",0)),"^",3),$P($G(^PSRX($P(^PS(52.5,SFN,0),"^"),"P",0)),"^",4)=0 N PSOXX S PSOXX=1 G KILL
  G:X'=""&($G(Y)=1) KILL I $G(Y)'=1,SFN I $D(^PS(52.5,SFN,0)),'$P(^(0),"^",5),'$P($G(^("P")),"^") D
  .S SDT=+$P(^PS(52.5,SFN,0),"^",2) K ^PS(52.5,"C",SDT,SFN)
@@ -46,8 +44,7 @@ S52 S (RIFN,PSOSX)=0 F  S RIFN=$O(^PSRX(DA(1),1,RIFN)) Q:'RIFN  S RFID=$P(^PSRX(
  .I $P($G(^PS(52.5,SFN,0)),"^",7)="Q" S ^PS(52.5,"AQ",RFID,+$P(^PS(52.5,SFN,0),"^",3),SFN)="" D SCMPX^PSOCMOP(SFN,"Q")
  .I $P($G(^PS(52.5,SFN,0)),"^",7)="" S ^PS(52.5,"AC",+$P(^PS(52.5,SFN,0),"^",3),RFID,SFN)=""
  K SFN,RFIN,RFID,PSOSX,PSOSXDT Q
-KILL N DFN
- I SFN D
+KILL I SFN D
  .S $P(^PSRX(DA(1),"STA"),"^")=0 Q:'$D(^PS(52.5,SFN,0))  S DFN=+$P(^PS(52.5,SFN,0),"^",3),PAT=$P(^DPT(DFN,0),"^")
  .;I $P(^PS(52.5,SFN,0),"^",5) Q
  .K ^PS(52.5,"B",+$P(^PS(52.5,SFN,0),"^"),SFN),^PS(52.5,"C",+$P(^PS(52.5,SFN,0),"^",2),SFN),^PS(52.5,"D",PAT,SFN),^PS(52.5,"AF",DFN,SFN)
@@ -105,39 +102,28 @@ IBSSR S PSOIBFL=0 F PSOIBLP=0:0 S PSOIBLP=$O(^DIC(49,PSOIBLP)) Q:'PSOIBLP!(PSOIB
 WARN ;
  I $G(PSOUNHLD) D  Q
  .D EN^DDIOL("You cannot delete a refill while removing from Hold! Use the Edit Action.","","$C(7),!!"),EN^DDIOL(" ","","!!")
- I $G(CMOP(DA))]""&(+$G(CMOP(DA))<3) D  K CMOP Q
+ I $G(CMOP(DA))]""&(+$G(CMOP(DA))<3) D   K CMOP Q
  .D EN^DDIOL("You cannot delete a refill that"_$S(+$G(CMOP(DA))=1:" has been released by",1:" is being transmitted to")_" the CMOP","","!!")
  .D EN^DDIOL(" ","","!!")
  K CMOP
- ;
- N PSOL,PSR
  S PSR=0 F  S PSR=$O(^PSRX(DA(1),1,PSR)) Q:'PSR  S PSOL=PSR
- I DA=PSOL,$P(^PSRX(DA(1),1,DA,0),"^",18) D  Q
- .D EN^DDIOL("Refill Released! Use the 'Return to Stock' option!","","$C(7),!!"),EN^DDIOL(" ","","!")
+ I DA=PSOL,$P(^PSRX(DA(1),1,DA,0),"^",18) D
+ .D EN^DDIOL("Refill Released! Use the 'Return to Stock' option before attempting to delete!","","$C(7),!!"),EN^DDIOL(" ","","!")
  ;
- ;Only allow deletion if last refill      *259
- I $O(^PSRX(DA(1),1,DA)) D  Q
- .D EN^DDIOL("Only the last refill can be deleted.  Later refills must be deleted first.","","$C(7),!!")
- .D EN^DDIOL("","","!!")
+ ;PSO*218 warning on delete of an in process refill
+ I $$REFIP^PSOUTLA1(DA(1),DA) D                    ;In Process
+ . D EN^DDIOL("** You cannot delete a refill that is pending Release from an ","","!!,?2")
+ . D EN^DDIOL("** External Dispense Machine! ","","$C(7),!,?2")
+ . D EN^DDIOL("Wait for it to be released from the External Dispense Machine,","","!!,?5")
+ . D EN^DDIOL("then use the 'Return to Stock' option before attempting to delete!","","!,?5")
+ . D EN^DDIOL("","","!!")
  ;
- ;Warn of In Process, Only delete if answered Yes         ;*259
- I $$REFIP^PSOUTLA1(DA(1),DA,"R") D  I 'Y Q               ;reset $T
- . D EN^DDIOL("** Refill has previously been sent to the External Dispense Machine","","!!,?2")
- . D EN^DDIOL("** for filling and is still Pending Processing","","$C(7),!,?2")
- . D EN^DDIOL("","","!")
- . K DIR
- . S DIR("A")="Do you want to continue? "
- . S DIR("B")="Y"
- . S DIR(0)="YA^^"
- . S DIR("?")="Enter Y for Yes or N for No."
- . D ^DIR
- . K DIR
+ K PSR,PSOL Q
+WARN1 S PSR=0 F  S PSR=$O(^PSRX(DA(1),"P",PSR)) Q:'PSR  S PSOL=PSR
+ I DA=PSOL,$P(^PSRX(DA(1),"P",DA,0),"^",19) D
+ .D EN^DDIOL("Partial Released! Use the 'Return to Stock' option before attempting to delete!","","$C(7),!!"),EN^DDIOL(" ","","!")
+ K PSR,PSOL Q
  Q
- ;
-WARN1 ;move to PSOUTLA1
- D WARN1^PSOUTLA1
- Q
- ;
 CAN(PSOXRX) ;Clean up Rx when discontinued
  N SUSD,IFN,RF,NODE,DA
  Q:'$D(^PSRX(PSOXRX,0))
@@ -166,74 +152,4 @@ CMOP1 N X
  .S CMOP($P($G(^PSRX(CRX,4,X,0)),"^",3))=$P($G(^(0)),"^",4)
  S X=$O(^PS(52.5,"B",CRX,0)) I X]"" S CMOP("S")=$P($G(^PS(52.5,X,0)),"^",7)
  K CRX,X
- Q
- ;
-CHKCMOP(RX,REA) ;Check if an RX is Transmitted/Retransmitted to CMOP and send alert mail
- ;
- ; Input:  RX - ien to file #52
- ;        REA - reason DC's "A" = admission, "D" = death
- ; Output: none
- ;
- N CMOP,PSOCMOP
- S REA=$G(REA)
- I $$TRANCMOP(RX),$G(PSOCMOP)]"" D MAILCMOP(RX,PSOCMOP,REA)
- Q
- ;
-TRANCMOP(RX) ;check if a fill is Transmitted or Retransmitted
- ;
- ; Input:          = RX number
- ; Function output:= RX number if CMOP status is Trans or Retrans
- ;                 = 0 if neither
- ; Global parm out:= PSOCMOP = string from call to ^PSOCMOPA
- ;
- N DA,PSOTRANS
- S DA=RX D ^PSOCMOPA
- S PSOTRANS=$P($G(PSOCMOP),"^")
- Q:PSOTRANS=0!(PSOTRANS=2) RX
- Q 0
- ;
-MAILCMOP(RX,STR,REA) ;Send mail message to mail group PSX EXTERNAL DISPENSE ALERTS
- ;
- ; Input:  RX  = ien of PSRX
- ;         STR = CMOP STATUS # ^ TRANSMIT DATE (FM) ^ LAST FILL #
- ;         REA = reason DC'd  "A" = admission, "D" = death
- ; Output: none
- ;
- N CMDT,CMST,DFN,VADM,PSOTEXT,PSOIEN,PSOKEYN,XMY,XMDUZ,XMSUB,XMTEXT
- N DIV,SSN,RXO,FILL,DRUG,DIVN,MAILGRP,NAME,PRV,RXSTS
- S RXO=$$GET1^DIQ(52,RX,.01)
- S CMDT=$P(STR,U,2)
- S CMDT=$E(CMDT,4,5)_"/"_$E(CMDT,6,7)_"/"_$E(CMDT,2,3)
- S FILL=$P(STR,U,3)
- S CMST=$P(STR,U),CMST=$S(CMST=2:"RETRANSMITTED",1:"TRANSMITTED")
- S DIV=$P(^PSRX(RX,2),"^",9),DIVN=$P($G(^PS(59,DIV,0)),"^")
- S MAILGRP="PSX EXTERNAL DISPENSE ALERTS"
- S XMY("G."_MAILGRP)=""
- ;if no members & no member groups & no remote members, then send to
- ; the default: PSXCMOPMGR key holders
- S PSOIEN=$O(^XMB(3.8,"B",MAILGRP,0))
- I '$O(^XMB(3.8,PSOIEN,1,0))&'$O(^XMB(3.8,PSOIEN,5,0))&'$O(^XMB(3.8,PSOIEN,6,0)) D
- . S PSOKEYN=0
- . F  S PSOKEYN=$O(^XUSEC("PSXCMOPMGR",PSOKEYN)) Q:'PSOKEYN  D
- . . S XMY(PSOKEYN)=""
- S DFN=$$GET1^DIQ(52,RX,2,"I") D DEM^VADPT
- S NAME=VADM(1)
- S SSN=$P($P(VADM(2),"^",2),"-",3)
- S RXSTS=$$GET1^DIQ(52,RX,100)
- S DRUG=$$GET1^DIQ(52,RX,6)
- S PRV=$$GET1^DIQ(52,RX,4)
- S XMDUZ=.5
- S XMSUB=DIVN_" - DC Alert on CMOP Rx "_RXO_" "_CMST
- S PSOTEXT(1)="             Rx #: "_RXO_"   Fill: "_FILL
- S PSOTEXT(2)="          Patient: "_NAME_" ("_SSN_")"
- S PSOTEXT(3)="             Drug: "_DRUG
- S PSOTEXT(4)="        Rx Status: "_RXSTS
- S:REA="A" PSOTEXT(4)=PSOTEXT(4)_" (due to Admission)"
- S:REA="D" PSOTEXT(4)=PSOTEXT(4)_" (due to Date of Death)"
- S PSOTEXT(5)="Processing Status: "_CMST_" to CMOP on "_CMDT
- S PSOTEXT(6)="         Provider: "_PRV
- S PSOTEXT(7)=""
- S PSOTEXT(8)="********    Please contact CMOP or take appropriate action    ********"
- S XMTEXT="PSOTEXT(" D ^XMD
- D KVA^VADPT
  Q

@@ -1,6 +1,6 @@
 IBCU82 ;ALB/ARH - THIRD PARTY BILLING UTILITIES (AUTOMATED BILLER) ;02 JUL 93
- ;;2.0;INTEGRATED BILLING;**43,55,91,124,160,304,347,432**;21-MAR-94;Build 192
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**43,55,91,124,160**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
 EVNTCHK(IBTRN) ;special checks to determine if event should be auto billed
@@ -17,16 +17,14 @@ EVNTCHK(IBTRN) ;special checks to determine if event should be auto billed
  I +$P(IBTRND,U,18)=4,$P(IBTRND,U,10)="" S X="1^Claims Tracking event does not have an associated prescription refill in Pharmacy." G EVNTCQ
  ;
  S DFN=+$P(IBTRND,U,2),IBEVDT=$P(IBTRND,U,6) I '$$INSURED^IBCNS1(DFN,IBEVDT) S X="1^Patient not insured for event date." G EVNTCQ
- ; Check filing timeframe
- I '$$PTFTF^IBCNSU31(DFN,IBEVDT) S X="1^Filing timeframe not met" G EVNTCQ
  S IBCAT=$S($P(IBTRND,U,18)=1!($P(IBTRND,U,18)=5):"INPATIENT",$P(IBTRND,U,18)=2:"OUTPATIENT",$P(IBTRND,U,18)=4:"PHARMACY",1:"")
  I IBCAT'="",'$$PTCOV^IBCNSU3(DFN,IBEVDT,IBCAT) S X="1^Patient insurance does not cover "_IBCAT_"." G EVNTCQ
  D ELIG^VADPT S X=0 I 'VAEL(4) S X="1^Patient is not a veteran." G EVNTCQ
  ;
  ;check the last disposition before the episode to see if maybe workers comp or tort feasor
  S IBX=9999999-(IBEVDT\1+1),IBX=$O(^DPT(+DFN,"DIS",IBX)) I +IBX S IBY=$$DT(IBX),IBX=$G(^DPT(DFN,"DIS",IBX,2)) D  G:+X EVNTCQ
- . I $P(IBX,U,1)="Y" S X="1^Need may be related to occupation, check "_IBY_" disposition." Q
- . I $P(IBX,U,4)="Y" S X="1^Need may be related to an accident, check "_IBY_" disposition." Q
+ . I $P(IBX,U,1)'="N" S X="1^Need may be related to occupation, check "_IBY_" disposition." Q
+ . I $P(IBX,U,4)'="N" S X="1^Need may be related to an accident, check "_IBY_" disposition." Q
  ;
  I +$P(IBTRND,U,5) S IBX=$G(^DGPM(+$P(IBTRND,U,5),0)) D  G EVNTCQ ; inpatient specific
  . I IBX="" S X="1^Inpatient admission movement not found." Q
@@ -49,9 +47,9 @@ EVNTCHK(IBTRN) ;special checks to determine if event should be auto billed
  . ;can not bill twice for same day so ignore outpatient visits if patient was an inpatient at end of day (this means that outpatient visits on the date of discharge will be billed)
  . I $$ADM^IBCU64(DFN,IBEVDT) S X="1^Not Billable: Patient was an inpatient on this visit date."
  ;
- I +$P(IBTRND,U,8) S IBX=$$RXZERO^IBRXUTL(+$P(IBTRND,U,2),+$P(IBTRND,U,8)) D  G EVNTCQ ; rx refills
+ I +$P(IBTRND,U,8) S IBX=$G(^PSRX(+$P(IBTRND,U,8),0)) D  G EVNTCQ ; rx refills
  . I IBX="" S X="1^Prescription not found in Pharmacy." Q
- . I +$P(IBTRND,U,10)>0 S IBY=$$ZEROSUB^IBRXUTL(+$P(IBTRND,U,2),+$P(IBTRND,U,8),+$P(IBTRND,U,10)) I IBY="" S X="1^Prescription refill not found in Pharmacy." Q
+ . I +$P(IBTRND,U,10)>0 S IBY=$G(^PSRX(+$P(IBTRND,U,8),1,+$P(IBTRND,U,10),0)) I IBY="" S X="1^Prescription refill not found in Pharmacy." Q
  . S IBZ=$$DBLCHK^IBTRKR31(IBTRN) I 'IBZ S X="1^Can not auto bill this refill, check Claims Tracking." Q
 EVNTCQ Q X
  ;

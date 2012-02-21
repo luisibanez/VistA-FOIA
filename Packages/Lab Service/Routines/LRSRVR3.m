@@ -1,9 +1,9 @@
-LRSRVR3 ;DALOI/JMC -LAB DATA SERVER, CONT'D - LOINC SECTION ;Aug 17,2006
- ;;5.2;LAB SERVICE;**303,346**;Sep 27, 1994;Build 10
+LRSRVR3 ;DALOI/JMC -LAB DATA SERVER, CONT'D - LOINC SECTION ; Nov 24, 2004
+ ;;5.2;LAB SERVICE;**303**;Sep 27, 1994
  ;
  ;
 LOINCLD ; Build and send local delimited LOINC report
- N I,LR6206,LR64,LINR,LRA,LRB,LRCNT,LRCRLF,LRMSUBJ,LRNODE,LRSTR,LRTXT,LRXREF,X,Y
+ N I,LR6206,LR64,LINR,LRA,LRB,LRCNT,LRCRLF,LRNODE,LRSTR,LRTXT,LRXREF,X,Y
  ;
  K ^TMP($J,"LRSERVER","LOINC"),^TMP($J,"LRDATA")
  S ^TMP($J,"LRDATA",1)="Report Generated.......: "_$$FMTE^XLFDT($$NOW^XLFDT)_" at "_LRSTN
@@ -23,7 +23,7 @@ LOINCLD ; Build and send local delimited LOINC report
  S ^TMP($J,"LRDATA",13)=$$REPEAT^XLFSTR("-",$L(X))
  S ^TMP($J,"LRDATA",14)=$$REPEAT^XLFSTR("-",$L(Y))
  S ^TMP($J,"LRDATA",15)=" "
- S ^TMP($J,"LRDATA",16)=$$UUBEGFN^LRSRVR2A(LRFILENM)
+ S ^TMP($J,"LRDATA",16)="begin 0644 "_LRFILENM
  S LINR=1,LRCNT=0,LRSTR="",LRTXT=0,LRCRLF=$C(13,10)
  ;
  F LRXREF="AI","AH" D
@@ -40,9 +40,8 @@ LOINCLD ; Build and send local delimited LOINC report
  . S LR64=$$GET1^DIQ(62.06,LR6206_",",64,"I")
  . S LRREC=$$MICRO(LR64)
  . S LRINDX=LRST_"-"_LR64_"-"_"AB"_LR6206
- . S LRSTR=LRSTR_LRINDX_"|"_LRREC_LRCRLF
+ . S LRSTR=LRSTR_LRINDX_"|"_LRREC
  . D SETDATA^LRSRVR2
- . S LRCNT=LRCNT+1
  ;
  S ^TMP($J,"LRDATA",6)="Total number of records: "_LRCNT
  I '$O(^TMP($J,"LRDATA",15)) S ^TMP($J,"LRDATA",12)="No LOINC codes mapped at "_LRSTN
@@ -53,8 +52,11 @@ LOINCLD ; Build and send local delimited LOINC report
  S ^TMP($J,"LRDATA",LRNODE+1)=" "
  S ^TMP($J,"LRDATA",LRNODE+2)="end"
  ;
- S LRMSUBJ=LRST_" "_LRSTN_" LOCAL REPORT DELIMIT "_$$HTE^XLFDT($H,"1M")
- D MAILSEND^LRSRVR6(LRMSUBJ)
+ K XMY
+ S XMY(XQSND)="",XMTEXT="^TMP($J,""LRDATA"","
+ S XMSUB=LRST_" "_LRSTN_" LOCAL REPORT DELIMIT "_$$HTE^XLFDT($H,"1M")
+ S XMDUN="Lab Server",XMDUZ=".5"
+ D ^XMD
  D CLEAN^LRSRVR
  Q
  ;
@@ -82,9 +84,7 @@ LOINCLA ;
  . I '$D(LOINCDTA(64.01,LRAA1,.01,"I")) D  Q
  . . S $P(LRSTUB,"|",6)="Specimen sub-field error in file 64 - "_LRAA1
  . . S $P(LRSTUB,"|",7)=$G(LRERR("DIERR",1,"TEXT",1))
- . . S LRSTR=LRSTR_LRCRLF
  . . D SETDATA^LRSRVR2
- . . S LRCNT=LRCNT+1
  . S LRPNTA=LOINCDTA(64.01,LRAA1,.01,"I")
  . S $P(LRSTUB,"|",6)=$$GET1^DIQ(61,LRPNTA_",",.0961) ; Time Aspect
  . S $P(LRSTUB,"|",7)=LOINCDTA(64.01,LRAA1,.01,"E") ; Specimen
@@ -108,9 +108,8 @@ LOINCLA ;
  . . S $P(LRSTUB,"|",19)=LRSS ; Lab subscript
  . . S $P(LRSTUB,"|",20)=$G(LOINCDTB(64,LRPNTB,13,"E")) ; Lab section
  . . S LRINDX=LRST_"-"_LR64_"-"_LR61_"-"_LOINCDTA(64.02,LRAA,.01,"I")
- . . S LRSTR=LRSTR_LRINDX_"|"_LRSTUB_LRCRLF
+ . . S LRSTR=LRSTR_LRINDX_"|"_LRSTUB
  . . D SETDATA^LRSRVR2
- . . S LRCNT=LRCNT+1
  Q
  ;
  ;
@@ -143,7 +142,7 @@ MICRO(LR64) ;
  ;
 TSTTYP(LRX) ; Determine test data type
  N LRSTUB,LRTYPE,LRY
- I LRX="" Q "|"
+ I LRX="" Q ""
  S LRX=$P(LRX,"(",2)
  ;
  ; Data type

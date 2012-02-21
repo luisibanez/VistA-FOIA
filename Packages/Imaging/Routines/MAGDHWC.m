@@ -1,6 +1,5 @@
-MAGDHWC ;WOIFO/PMK/NST - Capture Consult/Procedure Request data ; 27 Aug 2010 8:40 AM
- ;;3.0;IMAGING;**10,51,46,54,106**;Mar 19, 2002;Build 2002;Feb 28, 2011
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDHWC ;WOIFO/PMK - Capture Consult/Procedure Request data ; 10/08/2003  09:54
+ ;;3.0;IMAGING;**10**;Nov 06, 2003
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDHWC ;WOIFO/PMK/NST - Capture Consult/Procedure Request data ; 27 Aug 2010 8:
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -15,32 +15,28 @@ MAGDHWC ;WOIFO/PMK/NST - Capture Consult/Procedure Request data ; 27 Aug 2010 8:
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;
 ENTRY ;
  ; determine the kind of message and branch appropriately
- N APTSCHED,CONSULT,DATETIME,DEL,DEL2,DEL3,DEL4,DEL5,DFN
+ N %,APTSCHED,CONSULT,DATETIME,DEL,DEL2,DEL3,DEL4,DEL5,DFN
  N DIVISION,FILLER1,FWDFROM,FMDATE,FMDATETM,GMRCIEN,HL,HL7,HL7ORC,HL7REC
- N I,IGNORE,ITYPCODE,ITYPNAME,IGNORE,MSGTYPE,OBXSEGNO,ORIGSERV,SERVICE,X,Y,Z
- I $D(GMRCMSG) M HL7=GMRCMSG
- E  I $D(XQORHSTK(0)) M HL7=XQORHSTK(0)
- E  Q  ; can't find HL7 data to handle this!
+ N I,IGNORE,ITYPCODE,IGNORE,MSGTYPE,OBXSEGNO,ORIGSERV,SERVICE,X,Y,Z
+ I '$D(GMRCMSG) Q  ; can't handle this!
+ M HL7=GMRCMSG
  S HL7REC=HL7(1)
  S DEL=$E(HL7REC,4),X=$P(HL7REC,DEL,2)
  F I=1:1:$L(X) S @("DEL"_(I+1))=$E(X,I)
- S FMDATETM=$$NOW^XLFDT(),FMDATE=FMDATETM\1
- ;
- ; find PID segment and get the DFN
- S I=0 I '$$FINDSEG^MAGDHW0(.HL7,"PID",.I,.X) Q  ; no PID segment
- S DFN=$P(X,DEL,3)
- ;
- ; find ORC segment and get GMRCIEN
- S I=0 I '$$FINDSEG^MAGDHW0(.HL7,"ORC",.I,.HL7ORC) Q  ; no ORC segment
- S GMRCIEN=+$P(HL7ORC,DEL,3) ; GMRC request is in ^GMR(123,GMRCIEN,...)
- ;
- D ^MAGDTR01 ; update the Read/Unread list with the data from the HL7 message
+ D NOW^%DTC S FMDATE=%\1,FMDATETM=%
  ;
  S IGNORE=1 ; decide if service is one that requires HL7->DICOM gateway
  ;
+ ; find PID sgement and get the DFN
+ S I=0 I '$$FINDSEG^MAGDHW0(.HL7,"PID",.I,.X) Q  ; no PID segment
+ S DFN=$P(X,DEL,3)
+ ;
  ; find ORC segment and check for an "OK" order control value
+ S I=0 I '$$FINDSEG^MAGDHW0(.HL7,"ORC",.I,.HL7ORC) Q  ; no ORC segment
+ S GMRCIEN=+$P(HL7ORC,DEL,3) ; GMRC request is in ^GMR(123,GMRCIEN,...)
  I $P(HL7ORC,DEL)="OK" D  Q  ; generate message by ^MAGDHWS
  . S SERVICE=$$GET1^DIQ(123,GMRCIEN,1,"I")
  . D SERVICE ; send this transaction to the DICOM gateway?
@@ -48,16 +44,6 @@ ENTRY ;
  . . D INIT^MAGDHW0 ; initialize variables
  . . S DATETIME=""
  . . D MESSAGE^MAGDHWS("O") ; indicates new order
- . . Q
- . Q
- ;
- I " CA CR DR OC OD "[(" "_$P(HL7ORC,DEL)_" ") D  Q  ; Discontinued order
- . S SERVICE=$$GET1^DIQ(123,GMRCIEN,1,"I")
- . D SERVICE ; send this transaction to the DICOM gateway?
- . I 'IGNORE D
- . . D INIT^MAGDHW0 ; initialize variables
- . . S DATETIME=""
- . . D MESSAGE^MAGDHWS("C") ; Cancelled/Discontinued order
  . . Q
  . Q
  ;
@@ -82,10 +68,11 @@ ENTRY ;
  . . Q
  . Q
  ;
- ; find ZSV segment and requested service - check if appropriate
+ ; find ZSV segement and requested service - check if appropriate
  S I=0 I '$$FINDSEG^MAGDHW0(.HL7,"ZSV",.I,.X) Q  ; no ZSV segment
  S SERVICE=$P($P(X,DEL),DEL2,4)
  D SERVICE ; send this transaction to the DICOM gateway?
+ I IGNORE Q  ; just ignore HL7 message, don't send it to DICOM gateway
  ;
  S Z=$P(HL7ORC,DEL,1) ; Order Control
  S Y=$P(HL7ORC,DEL,5) ; Order Status
@@ -101,13 +88,6 @@ ENTRY ;
  . . Q
  . Q
  E  S MSGTYPE="UNKNOWN"
- ;
- ;-- patch 106: In case the service is not in file #2006.5831
- I IGNORE D  Q  ; just ignore HL7 message, don't send it to DICOM gateway
- . N I
- . I MSGTYPE["RESULT" S I=$$NEWTIU^MAGDHWA(GMRCIEN)
- . Q
- ;
  D MSH^MAGDHWA,PID^MAGDHWA,ORC^MAGDHWA,OBR^MAGDHWA,ZSV^MAGDHWA
  I '$$OBX() D  ; get OBX segment from database
  . S I=$O(HL7(""),-1)+1 S I=$$OBX^MAGDHWS(I)
@@ -143,7 +123,7 @@ DIVISION(Y) ;
 APPOINT ; quite often the appointment is entered before the order is entered
  ; if this is the case, see if we can find the corresponding appointment
  N CLINIC,HIT,I,LOCIEN,ORDERIEN,VASD,XE,XI
- ; look for appointments for today or later - don't need VASD parameters
+ ; look for appointments for today or later - don't need VASD paramters
  D SDA^VADPT ; get the list of the appointments
  ; first check the order record for the patient location
  ; it might be the clinic for the appointment
@@ -170,7 +150,7 @@ APPOINT ; quite often the appointment is entered before the order is entered
  K ^UTILITY("VASD",$J)
  Q
  ;
-APPOINT1 ; fill the appointment schedule array
+APPOINT1 ; fill the appontment schedule array
  S APTSCHED("FM DATETIME")=$P(XI,"^")
  S APTSCHED("CLINIC IEN")=CLINIC
  S APTSCHED("DATETIME")=$P(XE,"^")
@@ -187,7 +167,6 @@ OBX() ; find OBX segments to determine the highest value of OBXSEGNO
  Q OBXSEGNO
  ;
 OBX1 ; if there are second level OBX data, add OBX segment prefix
- N I,J
  ; add additional OBX segments to convey the Reason for the Request
  ; more than one, so can't use "I $$FINDSEG^MAGDHW0(.HL7,"OBX",.I) D  "
  S I="" F  S I=$O(HL7(I)) Q:I=""  I $P(HL7(I),DEL)="OBX" D

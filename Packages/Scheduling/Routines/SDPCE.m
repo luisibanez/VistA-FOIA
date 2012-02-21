@@ -1,5 +1,5 @@
-SDPCE ;MJK/ALB - Process PCE Event Data ;31 MAY 2005
- ;;5.3;Scheduling;**27,91,132,150,244,325,441**;Aug 13, 1993;Build 14
+SDPCE ;MJK/ALB - Process PCE Event Data ;01 APR 1993
+ ;;5.3;Scheduling;**27,91,132,150,244,325**;Aug 13, 1993
  ;
  ; **** See SDPCE0 for variable definitions ****
  ;
@@ -106,8 +106,8 @@ CLASS(SDVSIT,SDEVENT) ; -- set-up classification data from visit data
  N SD800A,SD800B,SDI,CLASS,SDA,SDB
  S SD800A=$G(^TMP("PXKCO",$J,SDVSIT,"VST",SDVSIT,800,"AFTER")),SD800B=$G(^("BEFORE"))
  ; -- process each piece
- F SDI=1:1:8 D
- . S CLASS=$P("SC^AO^IR^EC^MST^HNC^CV^SHAD",U,SDI),SDA=$P(SD800A,U,SDI),SDB=$P(SD800B,U,SDI)
+ F SDI=1:1:7 D
+ . S CLASS=$P("SC^AO^IR^EC^MST^HNC^CV",U,SDI),SDA=$P(SD800A,U,SDI),SDB=$P(SD800B,U,SDI)
  .; -- changed or same class data
  . IF SDA]"",SDB]"" S @SDEVENT@("CLASSIFICATION",$S(SDA'=SDB:"CHANGE",1:"ADD"),CLASS)=$$CLASSVAL(SDA) Q
  .; -- new class data
@@ -122,8 +122,8 @@ CLASSAE(SDVSIT,SDEVENT) ; -- set-up classification data from visit data
  N SD800A,SD800B,SDI,CLASS,SDA,SDB
  S SD800A=$G(^TMP("PXKENC",$J,SDVSIT,"VST",SDVSIT,800,"AFTER")),SD800B=$G(^("BEFORE"))
  ; -- process each piece
- F SDI=1:1:8 D
- . S CLASS=$P("SC^AO^IR^EC^MST^HNC^CV^SHAD",U,SDI),SDA=$P(SD800A,U,SDI),SDB=$P(SD800B,U,SDI)
+ F SDI=1:1:7 D
+ . S CLASS=$P("SC^AO^IR^EC^MST^HNC^CV",U,SDI),SDA=$P(SD800A,U,SDI),SDB=$P(SD800B,U,SDI)
  .; -- changed or same class data
  . IF SDA]"",SDB]"" S @SDEVENT@("CLASSIFICATION",$S(SDA'=SDB:"CHANGE",1:"ADD"),CLASS)=$$CLASSVAL(SDA) Q
  .; -- new class data

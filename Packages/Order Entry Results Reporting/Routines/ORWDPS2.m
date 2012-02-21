@@ -1,5 +1,5 @@
-ORWDPS2 ; SLC/KCM/JLI - Pharmacy Calls for Windows Dialog;05/09/2007
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,116,125,131,132,148,141,195,215,258,243**;Dec 17, 1997;Build 242
+ORWDPS2 ; SLC/KCM/JLI - Pharmacy Calls for Windows Dialog
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,116,125,131,132,148,141,195,215**;Dec 17, 1997
  ;
 OISLCT(LST,OI,PSTYPE,ORVP,NEEDPI,PKIACTIV) ; return for defaults for pharmacy orderable item
  N ILST,ORDOSE,ORWPSOI,ORWDOSES,X1,X2
@@ -72,7 +72,7 @@ ALLDOSE ; from OISLCT, set up a list of all possible doses
  . . S ILST=ILST+1
  . . S LST(ILST)="i"_$P(X,U,5)_U_$P($P(X,U,4),"&",6)_U_$P(X,U,4)
  Q
-BLDDOSE(X) ; build dose info where X is ORDOSE node
+BLDDOSE(X)  ; build dose info where X is ORDOSE node
  ; from ALLDOSE
  ;    X=TotalDose^Units^U/D^Noun^LocalDose^DispDrugIEN
  ;    Y=iDrugName^Strength^NF^TDose&Units&U/D&Noun&LDose&Drug&Stren&Units^
@@ -97,7 +97,7 @@ ROUTE ; from OISLCT, get list of routes for the drug form
  . S X=^TMP("PSJMR",$J,I)
  . S ROUT=$P(X,U),ABBR=$P(X,U,2),IEN=$P(X,U,3),EXP=$P(X,U,4)
  . S ILST=ILST+1,LST(ILST)="i"_IEN_U_ROUT_U_ABBR_U_EXP_U_$P(X,U,5)
- . I $P(X,U,6)="D",IEN S ILST=ILST+1,LST(ILST)="d"_IEN_U_ROUT ;_U_ABBR ; assume first always default
+ ;. I I=1,IEN S ILST=ILST+1,LST(ILST)="d"_IEN_U_ROUT ;_U_ABBR ; assume first always default
  ; add abbreviations to list of routes, commented out for 15.5 on
  ; S I="" F  S I=$O(^TMP("PSJMR",$J,I)) Q:I=""  D
  ; . S X=^TMP("PSJMR",$J,I)
@@ -116,13 +116,13 @@ GUIDE ; from OISLCT, get guidelines associated with this medication
 OIMSG ; from OISLCT, get the orderable item message for this medication
  S I=0 F  S I=$O(^ORD(101.43,OI,8,I)) Q:I'>0  S ILST=ILST+1,LST(ILST)="t"_^(I,0)
  Q
-ADMIN(REC,DFN,SCH,OI,LOC,ADMIN) ; return administration time info
+ADMIN(REC,DFN,SCH,OI,LOC)       ; return administration time info
  ; REC: StartText^StartTime^Duration^FirstAdmin
  S OI=+$P($G(^ORD(101.43,+OI,0)),U,2)
  S LOC=+$G(^SC(LOC,42)),REC=""
- I $L($G(^DPT(DFN,.1))) S REC=$$FIRST^ORCDPS3(DFN,LOC,OI,SCH,"",$G(ADMIN))
+ I $L($G(^DPT(DFN,.1))) S REC=$$FIRST^ORCDPS3(DFN,LOC,OI,SCH)
  Q
-REQST(VAL,DFN,SCH,OI,LOC,TXT) ; return requested start time
+REQST(VAL,DFN,SCH,OI,LOC,TXT)   ; return requested start time
  ; VAL: FirstAdmin time
  S VAL=""
  Q:'$L($G(SCH))  Q:'$G(OI)
@@ -130,7 +130,7 @@ REQST(VAL,DFN,SCH,OI,LOC,TXT) ; return requested start time
  S LOC=+$G(^SC(LOC,42))
  S VAL=$P($$RESOLVE^PSJORPOE(DFN,SCH,OI,TXT,LOC),U,2)
  Q
-DAY2QTY(VAL,DAY,UPD,SCH,DUR,PAT,DRG) ; return qty for days supply
+DAY2QTY(VAL,DAY,UPD,SCH,DUR,PAT,DRG)        ; return qty for days supply
  ; VAL: quantity
  N ORWX,I,X,ADUR,ADURNM
  S ORWX("DAYS SUPPLY")=DAY
@@ -148,7 +148,7 @@ DAY2QTY(VAL,DAY,UPD,SCH,DUR,PAT,DRG) ; return qty for days supply
  D QTYX^PSOSIG(.ORWX)
  S VAL=$G(ORWX("QTY"))
  Q
-QTY2DAY(VAL,QTY,UPD,SCH,DUR,PAT,DRG) ; return days supply given quantity
+QTY2DAY(VAL,QTY,UPD,SCH,DUR,PAT,DRG)        ; return days supply given quantity
  ; VAL: days supply
  N ORWX,I,X,ADUR
  S ORWX("QTY")=QTY
@@ -164,7 +164,7 @@ QTY2DAY(VAL,QTY,UPD,SCH,DUR,PAT,DRG) ; return days supply given quantity
  D QTYX^PSOSIG(.ORWX)
  S VAL=$G(ORWX("DAYS SUPPLY"))
  Q
-MAXREF(VAL,PAT,DRG,SUP,OI,OUT) ; return the maximum number of refills
+MAXREF(VAL,PAT,DRG,SUP,OI,OUT)      ; return the maximum number of refills
  ; PAT=Patient DFN, DRG=ptr50, SUP=days supply, OI=orderable item
  ; VAL: maximum refills allowed
  N ORWX
@@ -176,7 +176,7 @@ MAXREF(VAL,PAT,DRG,SUP,OI,OUT) ; return the maximum number of refills
  D MAX^PSOSIGDS(.ORWX)
  S VAL=$G(ORWX("MAX"))
  Q
-SCHREQ(VAL,OI,RTE,DRG) ; return 1 if schedule is required
+SCHREQ(VAL,OI,RTE,DRG)  ; return 1 if schedule is required
  ; OI=orderable item, RTE=ptr route, DRG=ptr dispense drug
  S VAL=1
  Q:'$G(OI)  Q:'$G(RTE)

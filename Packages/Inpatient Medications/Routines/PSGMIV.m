@@ -1,5 +1,5 @@
 PSGMIV ;BIR/MV-IV ORDER FOR THE 24 HOUR MAR. ;25 Nov 98 / 9:07 AM
- ;;5.0; INPATIENT MEDICATIONS ;**4,20,21,28,58,111,131,145**;16 DEC 97;Build 17
+ ;;5.0; INPATIENT MEDICATIONS ;**4,20,21,28,58,111,131**;16 DEC 97
  ;
  ; Reference to ^PS(55 supported by DBIA #2191.
  ; Reference to ^PS(52.7 supported by DBIA #2173.
@@ -14,40 +14,10 @@ IV ;*** Sort IV orders for 24 Hrs MAR.
  S X=$P(P("MR"),U,2) Q:XTYPE=2&(X["IV")  Q:XTYPE=3&(PST="S")&'($S(X="IV":1,X="IVPB":1,1:0))
  S QST=$$ONE^PSJBCMA(DFN,ON,P(9),P(2),P(3))
  S QST=$S(P(9)["PRN":"OVP",QST="O":"OVO",1:"CV")_XTYPE
- N PSGMARWC  ;DEM (05/30/2006) - PSGMARWC is used to preserve original value of PSGMARWN (patient location) in case location is changed by an order with a clinic location.
- S PSGMARWC=PSGMARWN
- I $G(DRG) S X=$S($G(DRG("AD",1)):DRG("AD",1),1:$G(DRG("SOL",1))),X=$E($P(X,U,2),1,20)_U_ON_"V" D
- . N A
- . S A=$G(^PS(55,PSGP,"IV",+ON,"DSS")) I $P(A,"^")]"" S PSGMARWN="C!"_$P(A,"^") I $G(SUB1)]"",$G(SUB2)]"",'$D(^TMP($J,TM,PSGMARWN,SUB1,SUB2)) D
- . . N X,X1,Y
- . . D SPN^PSGMAR0
- . . Q
- . . ;
- . I PSGSS="P" S ^TMP($J,PPN,PSGMARWN,$S(+PSGMSORT:$E(QST,1),1:QST),X)="" Q                         ;DAM 5-01-07 Print by PATIENT
- . I PSGSS="L" Q:((PSGINWDG="")&(PSGMARWN'["C!"))  S ^TMP($J,PPN,PSGMARWN,$S(+PSGMSORT:$E(QST,1),1:QST),X)="" Q     ;DAM 5-01-07 Print by clinic group
- . I PSGSS="C" Q:((PSGINWD="")&(PSGMARWN'["C!"))  I ((PSGMARWN[PSGCLNC)!(PSGMARWN'["C!")) S ^TMP($J,PPN,PSGMARWN,$S(+PSGMSORT:$E(QST,1),1:QST),X)=""  Q    ;DAM 5-01-07 Print by Clinic
- . ;
- . ;DAM 5-01-07 Set up XTMP global where location and patient names are switched
- . I '$G(PSGREP) N PSGDEM1 S PSGDEM1=X D   ;transfer contents of patient drug information contained in "X" above to a new variable temporarily
- . . S PSGREP="PSGM_"_$J
- . . S X1=DT,X2=1 D C^%DTC K %,%H,%T
- . . S ^XTMP(PSGREP,0)=X_U_DT
- . I PSGRBPPN="P",PSGSS="W" Q:((PSGINCL="")&(PSGMARWN["C!"))  D         ;Construct XTMP global for printing by WARD and sort by PATIENT
- . . S ^XTMP(PSGREP,TM,PPN,PSGMARWN,PSJPRB,$S(+PSGMSORT:$E(QST,1),1:QST),PSGDEM1)=""
- . . D SPN^PSGMAR0
- . I PSGRBPPN="P",PSGSS="G" Q:((PSGINCLG="")&(PSGMARWN["C!"))  D       ;Construct XTMP global for printing by WARD GROUP and sort by PATIENT
- . .  S ^XTMP(PSGREP,TM,PPN,PSGMARWN,PSJPRB,$S(+PSGMSORT:$E(QST,1),1:QST),PSGDEM1)=""
- . .  D SPN^PSGMAR0
- . S X=$G(PSGDEM1)
- . ;END DAM
- . ;
- . I PSGRBPPN="R",PSGSS="W" Q:((PSGINCL="")&(PSGMARWN["C!"))  D        ;Construct TMP global for printing by WARD and sort by ROOM/BED
- . . S ^TMP($J,TM,PSGMARWN,PSJPRB,PPN,$S(+PSGMSORT:$E(QST,1),1:QST),X)=""
- . I PSGRBPPN="R",PSGSS="G" Q:((PSGINCLG="")&(PSGMARWN["C!"))  D      ;Construct TMP global for printing by WARD GROUP and sort by ROOM/BED
- . . S ^TMP($J,TM,PSGMARWN,PSJPRB,PPN,$S(+PSGMSORT:$E(QST,1),1:QST),X)=""
- . ;
- S:PSGMARWN'=PSGMARWC PSGMARWN=PSGMARWC
- ;
+ I DRG S X=$S($G(DRG("AD",1)):DRG("AD",1),1:$G(DRG("SOL",1))),X=$E($P(X,U,2),1,20)_U_ON_"V" D
+ . I PSGSS="P"!(PSGSS="C")!(PSGSS="L") S ^TMP($J,PPN,$S(+PSGMSORT:$E(QST,1),1:QST),$S(PSGMARWN'["C!":"A",1:PSGMARWN),X)="" Q
+ . S:PSGRBPPN="P" ^TMP($J,TM,PSGMARWN,PPN,PSJPRB,$S(+PSGMSORT:$E(QST,1),1:QST),X)=""
+ . S:PSGRBPPN="R" ^TMP($J,TM,PSGMARWN,PSJPRB,PPN,$S(+PSGMSORT:$E(QST,1),1:QST),X)=""
  Q
 PRT ;*** Print IV orders.
  K TS,P,DRG NEW ON55,LN,PSJLABEL S PSJLABEL=1
@@ -103,7 +73,7 @@ PRTIV ;*** Print IV order on MAR
  E  D L(1)
  W:P("OPI")=""&(TS>6) !
  I P("OPI")'="" D
- . W:(L#6)=0 !
+ . W:(L#6)=1 !
  . F Y=1:1:$L($P(P("OPI"),"^")," ") S Y1=$P($P(P("OPI"),"^")," ",Y) D  W Y1," "
  . I ($X+$L(Y1))>47 W ?48,PSGL,$G(TS(L)),?55,"|" D L(1) W !
  I L>TS,(L#6) W ?48,PSGL,$G(TS(L)),?55,"|" S L=L+1 W:L#6=0 !

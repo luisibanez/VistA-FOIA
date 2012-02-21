@@ -1,6 +1,5 @@
-MAGDIR81 ;WOIFO/PMK - Read a DICOM image file ; 25 Feb 2008 11:06 AM
- ;;3.0;IMAGING;**11,30,51,50,46,54,53**;Mar 19, 2002;Build 1719;Apr 28, 2010
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDIR81 ;WOIFO/PMK - Read a DICOM image file ; 09/08/2004  07:30
+ ;;3.0;IMAGING;**11,30**;16-September-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDIR81 ;WOIFO/PMK - Read a DICOM image file ; 25 Feb 2008 11:06 AM
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -15,6 +15,7 @@ MAGDIR81 ;WOIFO/PMK - Read a DICOM image file ; 25 Feb 2008 11:06 AM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;
  ; M2MB server
  ;
  ; This routine is invoked by the ^MAGDIR8 for the "STORE1/STORE2"
@@ -23,27 +24,24 @@ MAGDIR81 ;WOIFO/PMK - Read a DICOM image file ; 25 Feb 2008 11:06 AM
  ; "parent data files".
  ;
 ENTRY ; process one image
+ N MEDATA ;--- medicine pkg patient & study data (set in ^MAGDIR8A)
  N FILEDATA ;- array of data to be passed between routines
  N FIRSTDCM ;- patient first name from the image header (ie, PNAMEDCM)
  N GMRCIEN ;-- internal entry number of consult/procedure request
- N IMPORTER ;- flag set by a gateway that is running the IMPORTER app
  N LASTDCM ;-- patient last name from the image header (ie, PNAMEDCM)
- N MEDIA ;---- source of DICOM object for Importer (D=disk, T=transmission)
  N MAGGP ;---- image's group pointer in ^MAG(2005)
  N MAGIEN ;--- pointer to the entry for the image in ^MAG(2005)
  N MIDCM ;---- patient middle initial from the image header (PNAMEDCM)
- N OLDPATH ;-- original path for imported images (set by Importer)
- N ORIGINDX ;- origin index (file 2005, field 45)
  N PNAMEVAH ;- patient name from VADM(1)
  N PROCDESC ;- procedure description (VA's name)
  N RADATA ;--- radiology pkg patient & study data (set in ^MAGDIR8A)
  N VADM ;----- array of demographic variables filled in by DEM^VADPT
- N I,MAG0,MAG1,MAG2,QUIT,X
+ N MAG0,MAG1,MAG2,QUIT,X
  ;
- N ACNUMB,ARG2,CASENUMB,EMAIL,FROMPATH,IMAGEUID,IMAGNAME,IMAGNUMB,IMGSVC
- N INSTLOC,INSTNAME,LASTIMG,LOCATION,MACHID,MFGR,MODALITY,MODEL,MODPARMS
- N MULTFRAM,PID,PNAMEDCM,ROUTRULE,SERINUMB,SERIEUID,SOPCLASS,STAMP,STATUS
- N STUDYDAT,STUDYTIM,STUDYDAT,STUDYTIM,STUDYUID,SYSTITLE
+ N ACNUMB,CASENUMB,EMAIL,FROMPATH,IMAGEUID,IMAGNAME,IMAGNUMB,IMGSVC
+ N INSTLOC,INSTNAME,LASTIMG,LOCATION,LOOPCNT,MACHID,MODALITY,MODPARMS
+ N MULTFRAM,PID,PNAMEDCM,ROUTRULE,SERINUMB,SERIEUID,STATUS,STUDYDAT
+ N STUDYTIM,STUDYDAT,STUDYTIM,STUDYUID,SYSTITLE
  ;
  S STATUS=$P(ARGS,"|",1),LOCATION=$P(ARGS,"|",2)
  S MACHID=$P(ARGS,"|",3),IMGSVC=$P(ARGS,"|",4)
@@ -51,7 +49,7 @@ ENTRY ; process one image
  S PID=$P(ARGS,"|",7),PNAMEDCM=$P(ARGS,"|",8)
  S CASENUMB=$P(ARGS,"|",9),ACNUMB=$P(ARGS,"|",10)
  S STUDYDAT=$P(ARGS,"|",11),STUDYTIM=$P(ARGS,"|",12)
- S IMPORTER=$P(ARGS,"|",13),MODALITY=$P(ARGS,"|",14)
+ S LOOPCNT=$P(ARGS,"|",13),MODALITY=$P(ARGS,"|",14)
  S IMAGNAME=$P(ARGS,"|",15),MODPARMS=$P(ARGS,"|",16)
  S SERINUMB=$P(ARGS,"|",17),IMAGNUMB=$P(ARGS,"|",18)
  S INSTLOC=$P(ARGS,"|",19),MULTFRAM=$P(ARGS,"|",20)
@@ -60,13 +58,11 @@ ENTRY ; process one image
  I OPCODE'="STORE2" D  Q
  . D RESULT^MAGDIR8("STORE","-101 Expecting STORE2, got """_OPCODE_"""")
  . Q
- S ARG2=$P(REQUEST(IREQUEST),"|",2,999)
- S STUDYUID=$P(ARG2,"|",1),SERIEUID=$P(ARG2,"|",2)
- S IMAGEUID=$P(ARG2,"|",3),SOPCLASS=$P(ARG2,"|",4)
- S LASTIMG=$P(ARG2,"|",5),ROUTRULE=$P(ARG2,"|",6)
- S MFGR=$P(ARG2,"|",7),MODEL=$P(ARG2,"|",8)
- S STAMP=$P(ARG2,"|",9),ORIGINDX=$P(ARG2,"|",10)
- S MEDIA=$P(ARG2,"|",11),OLDPATH=$P(ARG2,"|",12)
+ S ARGS=$P(REQUEST(IREQUEST),"|",2,999)
+ S STUDYUID=$P(ARGS,"|",1),SERIEUID=$P(ARGS,"|",2)
+ S IMAGEUID=$P(ARGS,"|",3),LASTIMG=$P(ARGS,"|",4)
+ S ROUTRULE=$P(ARGS,"|",5),MFGR=$P(ARGS,"|",6)
+ S MODEL=$P(ARGS,"|",7)
  ;
  ; get a pointer to the image, if it is already on file
  S MAGIEN=$O(^MAG(2005,"P",IMAGEUID,0))
@@ -76,7 +72,7 @@ ENTRY ; process one image
  ;
  I MULTFRAM,MAGIEN D  ; subsequent image of a multiframe object
  . D MULTFRAM ; require both MULTFRAM and MAGIEN to be non-zero
- . Q
+ . Q 
  E  D  Q:ERRCODE  ; new image
  . S ERRCODE=$$NEWIMAGE()
  . I ERRCODE D  ; error - abort image processing
@@ -103,41 +99,36 @@ ENTRY ; process one image
  . S X="0|"_RETURN
  . ; save pname, pid, dob, age, and sex from DEM^VADPT for gateway
  . F I=1:1:5 S X=X_"|"_VADM(I)
- . S X=X_"|"_$$GETICN^MPIF001(DFN) ; save ICN value
  . D RESULT^MAGDIR8("STORE",X)
  . Q
  Q
  ;
 NEWIMAGE() ; processing for a new image
- N ERRORMSG ;- error message causing processing to stop
  N PIDCHECK ;- return value of from $$PIDCHECK^MAGDIR8A()
  ;
- I MAGIEN D  I $L(ERRORMSG) Q ERRORMSG
- . N I,X
- . K MSG S I=0
- . I IMAGEUID=$$GETUID(MACHID) D  ; same image as last one
- . . ; process the image again, after software crash
- . . ; If the software crashed processing the first image, it might
- . . ; delete the image without ever writing it to the file server.
- . . ; Now, the image processing software has a second chance.
- . . S I=I+1,MSG(I)="Reprocessing image """_FROMPATH_""""
- . . S I=I+1,MSG(I)="which is partially in the database (#"_MAGIEN_") for"
- . . D ERROR^MAGDIR8("STORE","1 Image partially in the database",.MSG,$T(+0))
- . . S ERRORMSG="" ; this is not an error!
- . . Q
- . E  D  ; don't accept images with duplicate UIDs
- . . S I=I+1,MSG(I)="Image """_FROMPATH_""""
- . . S I=I+1,MSG(I)="is already in the database (#"_MAGIEN_") for"
- . . S ERRORMSG="-1 Image already in database"
- . . Q
- . S X=$P($G(^MAG(2005,MAGIEN,2)),"^",1)
- . S X=$S(X:$$FMTE^XLFDT(X,1),1:"<no date known>")
- . S I=I+1,MSG(I)=""""_$P($G(^MAG(2005,MAGIEN,0)),"^")_""""
- . S I=I+1,MSG(I)="Entered into VistA database on "_X
- . S I=I+1,MSG(I)="UID = "_IMAGEUID
+ I MAGIEN,LOOPCNT>2 D  Q "-1 Image already in database"
+ . K MSG
+ . S Y=$P($G(^MAG(2005,MAGIEN,2)),"^") I Y D DD^%DT
+ . S MSG(1)="Image """_FROMPATH_""""
+ . S MSG(2)="is already in the database (#"_MAGIEN_") for"
+ . S MSG(3)=""""_$P($G(^MAG(2005,MAGIEN,0)),"^")_""""
+ . S MSG(4)="Acquired on "_Y
+ . S MSG(5)="UID = "_IMAGEUID
  . Q
  ;
- D SAVEUID(MACHID,IMAGEUID) ; record the UID of the image being processed
+ I MAGIEN D  ; process the image again, after software crash
+ . ; If the software crashed processing the first image, it might
+ . ; delete the image without ever writing it to the file server.
+ . ; Now, the image processing software has a second chance.
+ . K MSG
+ . S Y=$P($G(^MAG(2005,MAGIEN,2)),"^") I Y D DD^%DT
+ . S MSG(1)="Reprocessing image """_FROMPATH_""""
+ . S MSG(2)="which is partially in the database (#"_MAGIEN_") for"
+ . S MSG(3)=""""_$P($G(^MAG(2005,MAGIEN,0)),"^")_""""
+ . S MSG(4)="Acquired on "_Y
+ . S MSG(5)="UID = "_IMAGEUID
+ . D ERROR^MAGDIR8("STORE","1 Image partially in the database",.MSG,$T(+0))
+ . Q
  ;
  ; lookup the study by ACNUMB/CASENUMB, get DFN, and double-check PID
  S ERRCODE=$$LOOKUP Q:ERRCODE ERRCODE
@@ -149,12 +140,7 @@ NEWIMAGE() ; processing for a new image
  . K MSG
  . S MSG(1)=PIDCHECK
  . S (ROWS,COLUMNS,OFFSET,MODIEN,MFGR,MODEL,CASETEXT)=""
- . I 'IMPORTER D
- . . D MOVE^MAGDLBAA
- . . Q
- . E  D
- . . D STORE^MAGDIR8R ; record miss-matched image
- . . Q
+ . D MOVE^MAGDLBAA
  . Q
  ; create the group pointer
  I IMGSVC="RAD" D  Q:ERRCODE ERRCODE
@@ -168,37 +154,13 @@ NEWIMAGE() ; processing for a new image
  . S MSG(1)="Undefined Imaging Service: "_IMGSVC
  . D ERROR^MAGDIRVE($T(+0),"DICOM IMAGE PROCESSING ERROR",.MSG)
  . Q
- ; delete import reconciliation entry
- I IMPORTER,$L(OLDPATH) Q $$DELETE^MAGDIR8R(IMAGEUID,MACHID,OLDPATH)
+ ;
  Q 0
- ;
-SAVEUID(MACHID,UID) ; record the UID of the image being processed
- N D0,X
- S D0=$O(^MAGD(2006.5715,"B",MACHID,"")) D:'D0
- . L +^MAGD(2006.5715):1E9 ; Background process MUST wait
- . S D0=$O(^MAGD(2006.5715," "),-1)+1
- . S X=$G(^MAGD(2006.5715,0))
- . S $P(X,"^",1,2)="CURRENT IMAGE^2006.5715"
- . S $P(X,"^",3)=D0
- . S $P(X,"^",4)=$P(X,"^",4)+1
- . S ^MAGD(2006.5715,0)=X
- . S ^MAGD(2006.5715,D0,0)=MACHID
- . S ^MAGD(2006.5715,"B",MACHID,D0)=""
- . L -^MAGD(2006.5715)
- . Q
- S $P(^MAGD(2006.5715,D0,0),"^",2)=UID
- Q
- ;
-GETUID(MACHID) ; lookup the UID of the last image processed
- N D0
- S D0=+$O(^MAGD(2006.5715,"B",MACHID,""))
- Q $P($G(^MAGD(2006.5715,D0,0)),"^",2)
  ;
 MULTFRAM ; Handle additional images in a multiframe object
  ; Get the information from the first image for the additional ones
  ;
  N DIQUIET,INAME,MAG0,MAG40,MAG100,MAGPACS
- N SOPCLASP ; pointer to SOP Class file (#2006.532)
  S MAG0=^MAG(2005,MAGIEN,0),MAG1=$G(^(1)),MAG2=$G(^(2))
  S MAG40=$G(^MAG(2005,MAGIEN,40)),MAG100=$G(^(100))
  S MAGPACS=$G(^MAG(2005,MAGIEN,"PACS"))
@@ -219,9 +181,6 @@ MULTFRAM ; Handle additional images in a multiframe object
  S FILEDATA("PROC/EVENT")=$P(MAG40,"^",4) ; field 43
  S FILEDATA("SPEC/SUBSPEC")=$P(MAG40,"^",5) ; field 44
  S FILEDATA("ACQUISITION DEVICE")=$P(MAG100,"^",4) ; field 107
- ; get the SOP Class pointer (file 2005, field 251)
- S SOPCLASP=$O(^MAG(2006.532,"B",SOPCLASS,""))
- S FILEDATA("SOP CLASS POINTER")=SOPCLASP
  S PROCDESC=$P(MAG2,"^",4) ; field 10
  ; S X="" F  S X=$O(FILEDATA(X)) Q:X=""  I FILEDATA(X)="" K FILEDATA(X)
  I PROCDESC?.E1" (#".N1")" S PROCDESC=$P(PROCDESC," (#")

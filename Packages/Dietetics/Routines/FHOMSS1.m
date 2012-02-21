@@ -1,59 +1,60 @@
 FHOMSS1 ;Hines OIFO/RTK SPECIAL MEALS STATUS LIST  ;4/11/03  10:05
- ;;5.5;DIETETICS;**5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;;Jan 28, 2005
  ;
-LIST ; Display for cancel/print/authorize screens - First build data in ^TMP
- K ^TMP($J),FHLIST S NUM=0,EX="",ENDT=9999999
- F FHSMDT=STDT:0 S FHSMDT=$O(^FHPT("SM",FHSMDT)) Q:FHSMDT'>0!(FHSMDT>ENDT)  D
- .F FHDFN=0:0 S FHDFN=$O(^FHPT("SM",FHSMDT,FHDFN)) Q:FHDFN'>0  D
- ..S FHSMDTX=$E(FHSMDT,1,7)
- ..S FHZN=$G(^FHPT(FHDFN,"SM",FHSMDT,0)),FHST=$P(FHZN,U,2) I FHST="C" Q
- ..I FHS'[FHST Q
- ..D PATNAME^FHOMUTL I FHDFN="" Q
- ..S FHLOC=$P(FHZN,U,3) Q:FHLOC=""
- ..S FHPRORD=$P($G(^FH(119.6,FHLOC,0)),U,4) I FHPRORD="" S FHPRORD=99
- ..S FHPRORD=$S(FHPRORD<1:99,FHPRORD<10:"0"_FHPRORD,1:FHPRORD)
- ..S FHLOCNM=$P($G(^FH(119.6,FHLOC,0)),U,1),FHML=$P(FHZN,U,9)
- ..S FHML=$S(FHML="B":1,FHML="N":2,FHML="E":3)
- ..S ^TMP($J,FHPRORD_"~"_FHLOCNM,FHSMDTX_"."_FHML,FHPTNM_"~"_FHDFN)=FHZN
+ D STDATE^FHOMUTL I STDT="" Q
+ D ENDATE^FHOMUTL I ENDT="" Q
+ S FHS="ACDP"
+ D DEV Q
+DEV ;get device and set up queue
+ W ! K %ZIS,IOP S %ZIS="Q" D ^%ZIS Q:POP
+ I '$D(IO("Q")) U IO D LIST,^%ZISC,END Q
+ S ZTSAVE("STDT")="",ZTSAVE("ENDT")=""
+ S ZTSAVE("FHDFN")="",ZTSAVE("FHS")=""
+ S ZTRTN="LIST^FHOMSS1",ZTDESC="Special Meals Display" D ^%ZTLOAD
+ D ^%ZISC K %ZIS,IOP
+ D END Q
+LIST ;
+ K FHLIST S NUM=0,EX=""
+ I $G(ENDT)="" S ENDT=9999999
+ D HDR S ENDT=ENDT_.99
+ F FHSMDT=STDT:0 S FHSMDT=$O(^FHPT("SM",FHSMDT)) Q:FHSMDT'>0!(FHSMDT>ENDT)!(EX=U)  D
+ .S FHDFN=$O(^FHPT("SM",FHSMDT,""))
+ .S FHNODE=$G(^FHPT(FHDFN,"SM",FHSMDT,0)),FHSTAT=$P(FHNODE,U,2)
+ .I FHS'[FHSTAT Q
+ .S FHSTAT=$S(FHSTAT="P":"PENDING",FHSTAT="A":"AUTHORIZED",FHSTAT="D":"DENIED",1:"CANCELLED")
+ .S NUM=NUM+1,PAD=$S($L(NUM)=1:" ",1:"") W !,PAD,NUM
+ .D PATNAME^FHOMUTL W ?5,$E(FHPTNM,1,18)
+ .S FHD=$$FMTE^XLFDT(FHSMDT,"P") W ?25,$E(FHD,1,12)
+ .S FHLPT=$P(FHNODE,U,3),FHLOC=$E($P($G(^FH(119.6,FHLPT,0)),U,1),1,10)
+ .W ?39,FHLOC
+ .S FHDPT=$P(FHNODE,U,4),FHDIET=$E($P($G(^FH(111,FHDPT,0)),U,1),1,12)
+ .W ?51,FHDIET
+ .S FHMEAL=$P(FHNODE,U,9) W ?66,FHMEAL,?70,FHSTAT
+ .S FHLIST(NUM)=FHDFN_"^"_FHSMDT
+ .I $E(FHSTAT,1)="D" D
+ ..S FHDENY=$P(FHNODE,U,6) W !?6,"Denied by: "
+ ..I FHDENY'="" W $P($G(^VA(200,FHDENY,0)),U,1)
+ .S FHCOMM=$P(FHNODE,U,8) I FHCOMM'="" W !?6,"Comment: ",FHCOMM
+ .I $D(^FHPT(FHDFN,"SM",FHSMDT,1)) D
+ ..S FHEL=$G(^FHPT(FHDFN,"SM",FHSMDT,1))
+ ..W !?6,"Early/Late Tray Time: ",$P(FHEL,U,1)
+ ..W "  Bagged Meal: ",$P(FHEL,U,2)
  ..Q
- .Q
- I '$D(^TMP($J)) Q
- D HDR
- S FHLSRT="" F  S FHLSRT=$O(^TMP($J,FHLSRT)) Q:FHLSRT=""!(EX=U)  D
- .F FHSMDT=STDT:0 S FHSMDT=$O(^TMP($J,FHLSRT,FHSMDT)) Q:FHSMDT'>0!(FHSMDT>ENDT)!(EX=U)  D
- ..S FHPTN="" F  S FHPTN=$O(^TMP($J,FHLSRT,FHSMDT,FHPTN)) Q:FHPTN=""!(EX=U)  D
- ...S FHNODE=$G(^TMP($J,FHLSRT,FHSMDT,FHPTN)),FHSMDTX=$P(FHNODE,U,1)
- ...S NUM=NUM+1,PAD=$S($L(NUM)=1:" ",1:"") W !,PAD,NUM
- ...S FHDFN=$P(FHPTN,"~",2) D PATNAME^FHOMUTL W ?4,$E(FHPTNM,1,17)
- ...S FHSTAT=$P(FHNODE,U,2),FHSTAT=$S(FHSTAT="P":"PENDING",FHSTAT="A":"AUTH",FHSTAT="D":"DENIED",1:"CANCEL")
- ...S FHD=$$FMTE^XLFDT(FHSMDTX,"P") W ?22,$E(FHD,1,12)
- ...S FHLPT=$P(FHNODE,U,3),FHLOC=$E($P($G(^FH(119.6,FHLPT,0)),U,1),1,9)
- ...S FHRMBD=$P(FHNODE,U,13),FHRMBNM=""
- ...I FHRMBD'="" S FHRMBNM=$E($P($G(^DG(405.4,FHRMBD,0)),U,1),1,9)
- ...W ?35,FHLOC,?45,FHRMBNM
- ...S FHDPT=$P(FHNODE,U,4),FHDIET=$E($P($G(^FH(111,FHDPT,0)),U,1),1,12)
- ...W ?55,FHDIET
- ...S FHMEAL=$P(FHNODE,U,9) W ?69,FHMEAL,?73,FHSTAT
- ...S FHLIST(NUM)=FHDFN_"^"_FHSMDTX
- ...I $E(FHSTAT,1)="D" D
- ....S FHDENY=$P(FHNODE,U,6) W !?6,"Denied by: "
- ....I FHDENY'="" W $P($G(^VA(200,FHDENY,0)),U,1)
- ...S FHCOMM=$P(FHNODE,U,8) I FHCOMM'="" W !?6,"Comment: ",FHCOMM
- ...I $D(^FHPT(FHDFN,"SM",FHSMDTX,1)) D
- ....S FHEL=$G(^FHPT(FHDFN,"SM",FHSMDTX,1))
- ....W !?6,"Early/Late Tray Time: ",$P(FHEL,U,1)
- ....W "  Bagged Meal: ",$P(FHEL,U,2)
  .I $Y>(IOSL-4) D PG I EX=U Q
  .Q
+ I NUM=0 W !!,"NO SPECIAL MEALS FOR THIS DATE RANGE" Q
  Q
 PG ;
+ Q:$O(^FHPT(FHDFN,"SM",FHSMDT))'>0
  I IOST?1"C".E W ! K DIR S DIR(0)="E" D ^DIR I 'Y S EX=U Q
  D HDR Q
 HDR ;
  W:$Y @IOF
  W !?5,"S P E C I A L    M E A L S    S T A T U S    R E P O R T"
- W !!!?1,"#",?6,"Name",?23,"Date/Time",?35,"Location",?45,"Room-Bed"
- W ?55,"Diet Ordered",?68,"Meal",?73,"Status"
- W !,"===",?4,"=================",?22,"============"
- W ?35,"========= =========",?55,"============",?68,"====",?73,"======="
+ W !!!?1,"#",?8,"Name",?26,"Date/Time",?40,"Location"
+ W ?51,"Diet Ordered",?65,"Meal",?71,"Status"
+ W !,"===",?5,"==================",?25,"============",?39,"=========="
+ W ?51,"============",?65,"====",?70,"========="
  Q
+END ;
+ K EX,FHNODE,FHSTAT Q

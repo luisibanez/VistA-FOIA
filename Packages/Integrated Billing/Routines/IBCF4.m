@@ -1,6 +1,6 @@
 IBCF4 ;ALB/ARH - PRINT BILL ADDENDUM ;12-JAN-94
- ;;2.0;INTEGRATED BILLING;**52,137,199,309,389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,137,199,309**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 PRXA ;get bill number then print rx refill addendums for bills
  S DIC("S")="I $D(^IBA(362.4,""AIFN""_+Y))!($D(^IBA(362.5,""AIFN""_+Y)))"
@@ -55,7 +55,7 @@ PROS I '$D(^IBA(362.5,IBXREF)) G END
  S IBPI=0 F  S IBPI=$O(^IBA(362.5,IBXREF,IBPI)) Q:IBPI=""!IBQUIT  S IBPIFN=0 F  S IBPIFN=$O(^IBA(362.5,IBXREF,IBPI,IBPIFN)) Q:'IBPIFN!IBQUIT  D
  . S IBY=$G(^IBA(362.5,IBPIFN,0)),IBYC="" Q:IBY=""
  . S IBYC=$$CHG(IBPIFN,5,.IBRC)
- . W !,$$FMTE^XLFDT(+$P(IBY,U,1),2),?11,$J($S(IBYC:"$"_$FN(IBYC,",",2),1:""),10),?24,$E($P(IBY,U,5),1,55)
+ . W !,$$FMTE^XLFDT(+$P(IBY,U,1),2),?11,$J($S(IBYC:"$"_$FN(IBYC,",",2),1:""),10),?24,$P($$PIN^IBCSC5B(+$P(IBY,U,3)),U,2)
  . S IBLN=IBLN+1 I IBLN>(IOSL-7) D PAUSE,HDR
  D:'IBQUIT PAUSE
 END K IBX,IBY,IBPGN,IBRX,IBHDR,IBRIFN,IBLN,IBCDT,IBI,IBXREF,IBPI,IBPIFN,IBRC,IBYC

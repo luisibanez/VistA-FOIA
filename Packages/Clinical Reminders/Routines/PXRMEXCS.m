@@ -1,50 +1,17 @@
-PXRMEXCS ; SLC/PKR - Routines to compute checksums. ;07/20/2009
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
- ;====================================================
-CHECKSUM(ATTR,START,END) ;Get the the checksum for a packed reminder
- ;component and load it into the attribute array.
- N CS,LINE
- ;If checksum is in packed component return it otherwise calculate it.
- I ATTR("FILE NUMBER")=0 D
- . S LINE=^PXD(811.8,PXRMRIEN,100,START-3,0)
- . S CS=$$GETTAGV^PXRMEXU3(LINE,"<CHECKSUM>")
- . I CS="" S CS=$$PRTNCS(PXRMRIEN,START,END)
- I ATTR("FILE NUMBER")>0 D
- . S LINE=^PXD(811.8,PXRMRIEN,100,START-2,0)
- . S CS=$$GETTAGV^PXRMEXU3(LINE,"<CHECKSUM>")
- . I CS="" S CS=$$PFDACS(PXRMRIEN,START,END)
- S ATTR("CHECKSUM")=CS
- Q
- ;
- ;====================================================
-DIQOUTCS(DIQOUT) ;Return checksum for a processed DIQOUT array.
- N CS,DATA,FIELD,FNUM,IENS,IND,SFN,STRING,TARGET,TEXT,WP
- S FNUM=$O(DIQOUT(""))
- D FIELD^DID(FNUM,"EDIT HISTORY","","SPECIFIER","TARGET")
- S SFN=+$G(TARGET("SPECIFIER"))
- S (CS,FNUM)=0
- F  S FNUM=$O(DIQOUT(FNUM)) Q:FNUM=""  D
- . I FNUM=SFN Q
- . S IENS=""
- . F  S IENS=$O(DIQOUT(FNUM,IENS)) Q:IENS=""  D
- .. S FIELD=0
- .. F  S FIELD=$O(DIQOUT(FNUM,IENS,FIELD)) Q:FIELD=""  D
- ... S DATA=DIQOUT(FNUM,IENS,FIELD)
- ... S TEXT=FNUM_$L(IENS,",")_FIELD_DATA
- ... S CS=$$CRC32^XLFCRC(TEXT,CS)
- ... I DATA["WP-start" F IND=1:1:$P(DATA,"~",2) D
- .... S TEXT=DIQOUT(FNUM,IENS,FIELD,IND)
- .... S CS=$$CRC32^XLFCRC(TEXT,CS)
- Q CS
- ;
+PXRMEXCS ; SLC/PKR - Routines to compute checksums. ;12/21/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;====================================================
 FILE(FILENUM,IEN) ;Return checksum for entry IEN in file FILENUM.
- ;Make sure the entry exists.
- I +$$FIND1^DIC(FILENUM,,"A","`"_IEN)=0 Q 0
- N CS,DIQOUT,IENROOT,MSG
- D GETS^DIQ(FILENUM,IEN,"**","N","DIQOUT","MSG")
- D CLDIQOUT^PXRMEXPD(FILENUM,IEN,"**",.IENROOT,.DIQOUT)
- S CS=$$DIQOUTCS(.DIQOUT)
+ N CS,LC,REF,ROOT,TARGET
+ D FILE^DID(FILENUM,"","GLOBAL NAME","TARGET")
+ S ROOT=$$CREF^DILF(TARGET("GLOBAL NAME"))
+ K ^TMP($J,"PXRMEXCS")
+ M ^TMP($J,"PXRMEXCS")=@ROOT@(IEN)
+ S REF="^TMP($J,""PXRMEXCS"")"
+ S REF=$NA(@REF)
+ S (CS,LC)=0
+ F  S REF=$Q(@REF) Q:REF'["PXRMEXCS"  S LC=LC+1,CS=CS+$$LINECS(LC,@REF)
+ K ^TMP($J,"PXRMEXCS")
  Q CS
  ;
  ;====================================================
@@ -63,7 +30,16 @@ HFCS(PATH,FILENAME) ;Return checksum for host file.
 HFCSGBL(GBL) ;Return checksum for host file loaded into global GBL.
  N CS,IND,LINE
  S (CS,IND)=0
- F  S IND=$O(@GBL@(IND)) Q:+IND=0  S LINE=@GBL@(IND),CS=$$CRC32^XLFCRC(LINE,CS)
+ F  S IND=$O(@GBL@(IND)) Q:+IND=0  S LINE=@GBL@(IND),CS=CS+$$LINECS(IND,LINE)
+ Q CS
+ ;
+ ;====================================================
+LINECS(LINENUM,STRING) ;Return checksum of line number LINEUM whose contents
+ ;is STRING.
+ N CS,IND,LEN
+ S CS=0
+ S LEN=$L(STRING)
+ F IND=1:1:LEN S CS=CS+($A(STRING,IND)*(LINENUM+IND))
  Q CS
  ;
  ;====================================================
@@ -71,49 +47,19 @@ MMCS(XMZ) ;Return checksum for MailMan message ien XMZ.
  N CS,IND,LINE,NLINES
  S NLINES=+$P($G(^XMB(3.9,XMZ,2,0)),U,3)
  S CS=0
- F IND=1:1:NLINES S LINE=$G(^XMB(3.9,XMZ,2,IND,0)),CS=$$CRC32^XLFCRC(LINE,CS)
- Q CS
- ;
- ;====================================================
-PFDACS(IEN,FDASTART,FDAEND) ;Return checksum for FDA array of packed
- ;reminder component.
- N CS,DATA,IENS,IND,JND,FIELD,FNUM,SFN,TARGET,TEMP,TEXT
- S TEMP=^PXD(811.8,IEN,100,FDASTART,0)
- S FNUM=$P(TEMP,";",1)
- D FIELD^DID(FNUM,"EDIT HISTORY","","SPECIFIER","TARGET")
- S SFN=+$G(TARGET("SPECIFIER"))
- S CS=0
- F IND=FDASTART:1:FDAEND D
- . S TEMP=^PXD(811.8,IEN,100,IND,0)
- . S DATA=$P(TEMP,"~",2,99)
- . S TEMP=$P(TEMP,"~",1)
- . S FNUM=$P(TEMP,";",1)
- . I FNUM=SFN Q
- . I FNUM="Exchange Stub" Q
- . S IENS=$P(TEMP,";",2)
- . S FIELD=$P(TEMP,";",3)
- . S TEXT=FNUM_$L(IENS,",")_FIELD_DATA
- . S CS=$$CRC32^XLFCRC(TEXT,CS)
- . I DATA["WP-start" F JND=1:1:$P(DATA,"~",2) D
- .. S IND=IND+1
- .. S TEXT=^PXD(811.8,IEN,100,IND,0)
- .. S CS=$$CRC32^XLFCRC(TEXT,CS)
+ F IND=1:1:NLINES S LINE=$G(^XMB(3.9,XMZ,2,IND,0)),CS=CS+$$LINECS(IND,LINE)
  Q CS
  ;
  ;====================================================
 ROUTINE(RA) ;Return checksum for a routine loaded in array RA. RA has the
  ;form created by ^%ZOSF("LOAD") i.e, RA(1,0) ... RA(N,0).
- N CS,IND,TEXT
+ N CS,IND,LINE
  S (CS,IND)=0
- ;Get rid of the build number on the second line.
- S RA(2,0)=$P(RA(2,0),";",1,6)
- F  S IND=$O(RA(IND)) Q:+IND=0  D
- . S TEXT=RA(IND,0)
- . S CS=$$CRC32^XLFCRC(RA(IND,0),CS)
+ F  S IND=$O(RA(IND)) Q:+IND=0  S CS=CS+$$LINECS(IND,RA(IND,0))
  Q CS
  ;
  ;====================================================
-RTNCS(ROUTINE) ;Return checksum for a routine ROUTINE.
+RTN(ROUTINE) ;Return checksum for a routine ROUTINE.
  N CS,DIF,RA,X,XCNP
  S XCNP=0
  S DIF="RA("
@@ -124,16 +70,5 @@ RTNCS(ROUTINE) ;Return checksum for a routine ROUTINE.
  . X ^%ZOSF("LOAD")
  . S CS=$$ROUTINE(.RA)
  E  S CS=-1
- Q CS
- ;
- ;====================================================
-PRTNCS(IEN,START,END) ;Return checksum for a packed routine.
- N CS,IND,SL,TEXT
- S CS=0,SL=START+1
- F IND=START:1:END D
- . S TEXT=^PXD(811.8,IEN,100,IND,0)
- . ;Get rid of the build number on the second line.
- . I IND=SL S TEXT=$P(TEXT,";",1,6)
- . S CS=$$CRC32^XLFCRC(TEXT,CS)
  Q CS
  ;

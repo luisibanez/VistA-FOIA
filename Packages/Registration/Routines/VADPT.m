@@ -1,15 +1,15 @@
-VADPT ;ALB/MRL/MJK,ERC,TDM - RETURN PATIENT VARIABLE ARRAYS [DRIVER] ; 7/28/09 1:52pm
- ;;5.3;Registration;**193,343,389,415,489,498,688,754**;Aug 13, 1993;Build 46
+VADPT ;ALB/MRL/MJK - RETURN PATIENT VARIABLE ARRAYS [DRIVER];07 DEC 1988
+ ;;5.3;Registration;**193,343,389,415,489,498**;Aug 13, 1993
  ;DFN = Patient IFN [if not passed entire array returned as null]
  ;
 DEM ;Demographic Variables
  S VAN=1,VAN(1)=12,VAV="VADM" D ^VADPT0 Q
  ;
 OPD ;Other Patient Data
- S VAN=2,VAN(1)=8,VAV="VAPD" D ^VADPT0 Q
+ S VAN=2,VAN(1)=7,VAV="VAPD" D ^VADPT0 Q
  ;
 ADD ;Current Address
- S VAN=3,VAN(1)=29,VAV="VAPA" D ^VADPT0 Q
+ S VAN=3,VAN(1)=22,VAV="VAPA" D ^VADPT0 Q
  ;
 OAD ;Other Patient Variables
  S VAN=4,VAN(1)=11,VAV="VAOA" D ^VADPT0 Q
@@ -27,7 +27,7 @@ MB ;Monetary Benefits
  S VAN=8,VAN(1)=9,VAV="VAMB" D ^VADPT0 Q
  ;
 SVC ;Service Information
- S VAN=9,VAN(1)=14,VAV="VASV" D ^VADPT0 Q
+ S VAN=9,VAN(1)=9,VAV="VASV" D ^VADPT0 Q
  ;
 REG ;Registration data
  S VAN=10,VAV="VARP" D ^VADPT0 Q

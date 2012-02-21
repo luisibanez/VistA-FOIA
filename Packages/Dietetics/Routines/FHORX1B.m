@@ -1,5 +1,5 @@
 FHORX1B ; HISC/REL/RVD - Diet Activity Labels ;8/26/94  12:10
- ;;5.5;DIETETICS;**1,8**;Jan 28, 2005;Build 28
+ ;;5.5;DIETETICS;**1**;Jan 28, 2005
  ;
  ;^tmp($J,"I" - for inpatient data.
  ;^tmp($J,"O" - for outpatient data;
@@ -61,14 +61,13 @@ T2 ;get the last outpatient entry.
  .I $G(FHDIDA),$D(^FH(111,FHDIDA,0)) S FHDIET=$P(^FH(111,FHDIDA,0),U,7)
  .;S:FHDIET="" FHDIET="NO ORDER"
  .S Y=FHDIET
- .S W1=$P(P0,"~",2),R1="",N1=$P(P0,"~",5)
+ .S W1=$P(P0,"~",2),R1=$P(P0,"~",4),N1=$P(P0,"~",5)
  .D WRT
  Q
  ;
-WRT S ALG="" D ALG^FHCLN
- I LAB>2 D LL Q
+WRT I LAB>2 D LL Q
  W !,$E(N1,1,S2-5-$L(W1)),?(S2-3-$L(W1)),W1,!,BID W:NP " *"
- W @FHIO("EON") W ?(S2-3\2),TC W @FHIO("EOF") W ?(S2-3-$L(R1)),R1 W @FHIO("EON") I $L(Y)<S2 W:LAB=2 ! W !,$S(ALG="":"",1:"*ALG"),!,Y,!!
+ W @FHIO("EON") W ?(S2-3\2),TC W @FHIO("EOF") W ?(S2-3-$L(R1)),R1 W @FHIO("EON") I $L(Y)<S2 W:LAB=2 ! W !!,Y,!!
  E  S L=$S($L($P(Y,",",1,3))<S2:3,1:2) W !!,$P(Y,",",1,L) W:LAB=2 ! W !,$E($P(Y,",",L+1,5),2,99),!
  W @FHIO("EOF") W:LAB=2 ?(S2-20),$P(H1," - ",2),!! Q
  ;

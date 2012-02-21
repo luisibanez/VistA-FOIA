@@ -1,10 +1,10 @@
-YTAPI5 ;ALB/ASF- MH API NOTES ; 7/24/07 4:11pm
- ;;5.01;MENTAL HEALTH;**62,85**;Dec 30, 1994;Build 48
+YTAPI5 ;ALB/ASF- MH API NOTES ;3/17/00  14:54
+ ;;5.01;MENTAL HEALTH;**62**;Dec 30, 1994
  Q
 OUTNOTE(YSDATA) ;
  N G,I,N,P,R,X,Y,YS2,YSADATE,YSCODE,YSGG,YSGG1,YSGG2,YSJ,YSJJ,YSNCODE,YSSET,YSSR,YSST,YSX1,YSX2,YSX3,YIN,YSINN,YSINE,YSMC
  I $G(YSDATA(1))?1"[ERROR".E Q  ;---->
- I '$D(YSDATA(5)) S YSDATA(1)="[ERROR]",YSDATA(2)="bad ysdata to outnote" Q  ;--->
+ I '$D(YSDATA(5)) S YSDATA(1)="ERROR]",YSDATA(2)="bad ysdata to outnote" Q  ;--->
  S YS2=$G(YSDATA(2))
  S YSCODE=$P(YS2,U,2)
  S YSADATE=$P(YS2,U,4)
@@ -15,7 +15,7 @@ OUTNOTE(YSDATA) ;
  S YSSR=$P(YSDATA(6),U,3)
  S YSST=$P(YSDATA(6),U,4)
  S Y=$G(^YTT(601.6,YSNCODE,2))
- I Y="" S YSDATA(1)="[ERROR]",YSDATA(2)="no mh mult outcome code" Q  ;--->
+ I Y="" S YSDATA(1)="[ERROR"],YSDATA(2)="no mh mult outcome code" Q  ;--->
  ;
  X Y
  I X'>0 S YSDATA(1)="[ERROR]",YSDATA(2)="bad M executable" Q  ;--->
@@ -67,16 +67,6 @@ GAFURL(YSDATA) ;returns MH GAF horizontal sheet
 PRIVL(YSDATA,YS) ;check privileges
  N YSCODE,YSET
  S YSCODE=$G(YS("CODE"),-1)
- ;ASF 03/08/06
- I (YSCODE="GAF")!(YSCODE="ASI") S YSDATA(1)="[DATA]",YSDATA(2)="1^exempt test" Q  ;-->out test exempt
- I $D(^YTT(601.71,"B",YSCODE)) D  Q  ;--> out
- . S YSET=$O(^YTT(601.71,"B",YSCODE,0))
- . S YSDATA(1)="[DATA]"
- . S YSKEY=$$GET1^DIQ(601.71,YSET_",",9)
- . I YSKEY="" S YSDATA(2)="1^exempt test" Q  ;-->out
- . I $D(^XUSEC(YSKEY,DUZ)) S YSDATA(2)="1^user privileged" Q  ;-->out has key
- . S YSDATA(2)="0^no access" Q  ;->out
- ;
  I '$D(^YTT(601,"B",YSCODE)) S YSDATA(1)="[ERROR]",YSDATA(2)="BAD TEST CODE" Q  ;--> out
  S YSET=$O(^YTT(601,"B",YSCODE,0))
  S YSDATA(1)="[DATA]"

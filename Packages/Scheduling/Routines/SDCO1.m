@@ -1,7 +1,5 @@
-SDCO1 ;ALB/RMO - Appointment - Check Out;Apr 23 1999  ; 12/11/08 5:30pm  ; Compiled December 12, 2008 13:01:34
- ;;5.3;Scheduling;**27,132,149,193,250,296,446,538**;08/13/93;Build 5
- ;
- ;check out if sd/369 is released before 446!!!
+SDCO1 ;ALB/RMO - Appointment - Check Out;Apr 23 1999
+ ;;5.3;Scheduling;**27,132,149,193,250,296**;08/13/93
  ;
 EN ;Entry point for SDCO APPT CHECK OUT protocol
  N SDCOALBF,SDCOAP,SDCOBG,SDCODT,VALMY
@@ -79,24 +77,7 @@ CO(DFN,SDT,SDCL,SDDA,SDASK,SDCODT,SDCOACT,SDLNE,SDCOALBF) ;Appt Check Out
  S SDOE=$$GETAPT^SDVSIT2(DFN,SDT,SDCL)
  D EN^SDCO(SDOE,,1)
  ;
-COQ K % D EWLCHK Q
- Q
-EWLCHK ;check if patient has any open EWL entries (SD/372)
- ;get appointment
- ;
- K ^TMP($J,"SDAMA301"),^TMP($J,"APPT")
- W:$D(IOF) @IOF D APPT^SDWLEVAL(DFN,SDT,SDCL)
- Q:'$D(^TMP($J,"APPT"))
- N SDEV D EN^SDWLEVAL(DFN,.SDEV) I SDEV,$L(SDEV(1))>0 D
- .K ^TMP("SDWLPL",$J),^TMP($J,"SDWLPL")
- .D INIT^SDWLPL(DFN,"M")
- .Q:'$D(^TMP($J,"SDWLPL"))
- .D LIST^SDWLPL("M",DFN)
- .F  Q:'$D(^TMP($J,"SDWLPL"))  N SDR D ANSW^SDWLEVAL(1,.SDR) I 'SDR D LIST^SDWLPL("M",DFN) D
- ..F  N SDR  D ANSW^SDWLEVAL(0,.SDR) Q:'$D(^TMP($J,"SDWLPL"))  I 'SDR W !!,"MUST ACCEPT OR ENTER A REASON NOT TO DISPOSITION MATCHED EWL ENTRY",!
- ..Q
- .Q
- Q
+COQ K % Q
  ;
 BEFORE(SDATA,DFN,SDT,SDCL,SDDA,SDHDL) ; -- event driver before ; not used
  S SDATA=SDDA_"^"_DFN_"^"_SDT_"^"_SDCL,SDHDL=$$HANDLE^SDAMEVT(1)

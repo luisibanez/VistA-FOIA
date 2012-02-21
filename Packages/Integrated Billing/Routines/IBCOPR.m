@@ -1,18 +1,15 @@
-IBCOPR ;WISC/RFJ,BOISE/WRL-print dollar amts for pre-registration ; 05 May 97  8:30 AM [7/22/03 11:59am]
- ;;2.0; INTEGRATED BILLING ;**75,345**; 21-MAR-94;Build 28
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCOPR ;WISC/RFJ,BOISE/WRL-print dollar amts for pre-registration ; 05 May 97  8:30 AM [5/9/97 3:17pm]
+ ;;Version 2.0 ; INTEGRATED BILLING ;**75**; 21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  W !!,"This report will sort through insurance policies in the patient file"
  W !,"and print patients, bills, and payments with an insurance policy source"
- W !,"of information equal to the user selected criteria."
+ W !,"of information equal to pre-registration."
  ;
- N DATEEND,DATESTRT,IBCNFSUM,IBCNESOI
+ N DATEEND,DATESTRT,IBCNFSUM
  ;
  ;  select date range
  W ! D DATESEL I '$G(DATEEND) Q
- ;
- ;  select Source of Information (SOI)
- W ! D SOISEL I '$D(IBCNESOI) Q
  ;
  S IBCNFSUM=$$SUMMARY I 'IBCNFSUM Q
  ;
@@ -22,13 +19,13 @@ IBCOPR ;WISC/RFJ,BOISE/WRL-print dollar amts for pre-registration ; 05 May 97  8
  ;  select device
  W ! S %ZIS="Q" D ^%ZIS Q:POP
  I $D(IO("Q")) D  D ^%ZTLOAD K IO("Q"),ZTSK Q
- .   S ZTDESC="Source of Information Report",ZTRTN="DQ^IBCOPR"
+ .   S ZTDESC="Pre-Registration Source Report",ZTRTN="DQ^IBCOPR"
  .   S ZTSAVE("DATE*")="",ZTSAVE("IBCN*")="",ZTSAVE("ZTREQ")="@"
  ;
  W !!,"<*> please wait <*>"
  ;
 DQ ;  report (queue) starts here
- N AMOUNT,BILLNUM,CANCEL,CLASS,COUNTNEW,DA,DATA,DATE,DFN,INSCO,PAYMTAMT,PAYMTCNT,TOTALAMT,TOTALCNT,TRANDA,VA,Y,SOI
+ N AMOUNT,BILLNUM,CANCEL,CLASS,COUNTNEW,DA,DATA,DATE,DFN,INSCO,PAYMTAMT,PAYMTCNT,TOTALAMT,TOTALCNT,TRANDA,VA,Y
  K ^TMP($J,"IBCOPR")
  S COUNTNEW=0
  ;
@@ -38,31 +35,25 @@ DQ ;  report (queue) starts here
  .   .   S DA=0 F  S DA=$O(^DPT("AB",INSCO,DFN,DA)) Q:'DA  D
  .   .   .   S DATA=$G(^DPT(DFN,.312,DA,1))
  .   .   .   S DATE=$P($P(DATA,"^",10),".")
- .   .   .   S SOI=$P(DATA,"^",9)
  .   .   .   ;
- .   .   .   ; Check for existence of SOI
- .   .   .   I $G(SOI)="" Q
- .   .   .   ;
- .   .   .   ;  check source of information
- .   .   .   I $G(IBCNESOI)'=1,$G(IBCNESOI(SOI))="" Q
+ .   .   .   ;  check source of information (4=pre-registration)
+ .   .   .   I $P(DATA,"^",9)'=4 Q
  .   .   .   ;
  .   .   .   ;  build list of all patients
  .   .   .   D PID^VADPT
  .   .   .   S Y=$P(DATE,".") D DD^%DT
- .   .   .   S ^TMP($J,"IBCOPR","ALL",DFN,INSCO)=$P($G(^DPT(DFN,0)),"^")_"^"_$G(VA("BID"))_"^"_Y_"^"_SOI
+ .   .   .   S ^TMP($J,"IBCOPR","ALL",DFN,INSCO)=$P($G(^DPT(DFN,0)),"^")_"^"_$G(VA("BID"))_"^"_Y
  .   .   .   ;
  .   .   .   ;  check date of source of information
  .   .   .   I DATE<DATESTRT!(DATE>DATEEND) Q
  .   .   .   ;
  .   .   .   ;  build list of patients match during select date range
- .   .   .   S COUNTNEW(SOI)=$G(COUNTNEW(SOI))+1
  .   .   .   S COUNTNEW=COUNTNEW+1
- .   .   .   S ^TMP($J,"IBCOPR","NEW",SOI,DFN,INSCO)=""
+ .   .   .   S ^TMP($J,"IBCOPR","NEW",DFN,INSCO)=""
  ;
  ;  get charges and payments
  S DFN=0 F  S DFN=$O(^TMP($J,"IBCOPR","ALL",DFN)) Q:'DFN  D
  .   S INSCO=0 F  S INSCO=$O(^TMP($J,"IBCOPR","ALL",DFN,INSCO)) Q:'INSCO  D
- .   .   S SOI=$P(^TMP($J,"IBCOPR","ALL",DFN,INSCO),"^",4)
  .   .   S DA=0 F  S DA=$O(^DGCR(399,"AE",DFN,INSCO,DA)) Q:'DA  D
  .   .   .   ;  date first printed, bill classification
  .   .   .   S DATE=$P($P($G(^DGCR(399,DA,"S")),"^",12),".")
@@ -77,8 +68,8 @@ DQ ;  report (queue) starts here
  .   .   .   S AMOUNT=+$$ORI^PRCAFN(DA) I AMOUNT'>0 Q
  .   .   .   ;
  .   .   .   I DATE'<DATESTRT,DATE'>DATEEND D
- .   .   .   .   S ^TMP($J,"IBCOPR","BILL",SOI,CLASS,DATE,DA)=DFN_"^"_INSCO_"^"_CANCEL_"^"_BILLNUM_"^"_AMOUNT
- .   .   .   .   I CANCEL="" S TOTALCNT(SOI,CLASS)=$G(TOTALCNT(SOI,CLASS))+1,TOTALAMT(SOI,CLASS)=$G(TOTALAMT(SOI,CLASS))+AMOUNT
+ .   .   .   .   S ^TMP($J,"IBCOPR","BILL",CLASS,DATE,DA)=DFN_"^"_INSCO_"^"_CANCEL_"^"_BILLNUM_"^"_AMOUNT
+ .   .   .   .   I CANCEL="" S TOTALCNT(CLASS)=$G(TOTALCNT(CLASS))+1,TOTALAMT(CLASS)=$G(TOTALAMT(CLASS))+AMOUNT
  .   .   .   ;
  .   .   .   ;  get payments
  .   .   .   S TRANDA=0 F  S TRANDA=$O(^PRCA(433,"C",DA,TRANDA)) Q:'TRANDA  D
@@ -89,12 +80,9 @@ DQ ;  report (queue) starts here
  .   .   .   .   I DATE<DATESTRT!(DATE>DATEEND) Q
  .   .   .   .   I '$P($G(^PRCA(433,TRANDA,0)),"^",4) Q
  .   .   .   .   S AMOUNT=$P($G(^PRCA(433,TRANDA,3)),"^")
- .   .   .   .   S ^TMP($J,"IBCOPR","TRAN",SOI,CLASS,DATE,DA)=DFN_"^"_INSCO_"^"_CANCEL_"^"_TRANDA_"^"_$P(DATA,"^",2)_"^"_AMOUNT
- .   .   .   .   I CANCEL="" S PAYMTCNT(SOI,CLASS)=$G(PAYMTCNT(SOI,CLASS))+1,PAYMTAMT(SOI,CLASS)=$G(PAYMTAMT(SOI,CLASS))+AMOUNT
+ .   .   .   .   S ^TMP($J,"IBCOPR","TRAN",CLASS,DATE,DA)=DFN_"^"_INSCO_"^"_CANCEL_"^"_TRANDA_"^"_$P(DATA,"^",2)_"^"_AMOUNT
+ .   .   .   .   I CANCEL="" S PAYMTCNT(CLASS)=$G(PAYMTCNT(CLASS))+1,PAYMTAMT(CLASS)=$G(PAYMTAMT(CLASS))+AMOUNT
  ;
- S SOI=0
- F  S SOI=$O(TOTALCNT(SOI)) Q:SOI=""  I $G(COUNTNEW(SOI))="" S COUNTNEW(SOI)=0
- F  S SOI=$O(PAYMTCNT(SOI)) Q:SOI=""  I $G(COUNTNEW(SOI))="" S COUNTNEW(SOI)=0
  D PRINT^IBCOPR1
  ;
  D ^%ZISC
@@ -118,24 +106,6 @@ START S Y=$E(DT,1,5)_"01" D DD^%DT S DEFAULT=Y
  W !?5,"***  Selected date range from ",Y," to " S Y=DATEEND D DD^%DT W Y,"  ***"
  Q
  ;
- ;;
-SOISEL ; Select one SOI (source of information) or ALL - File #355.12
- NEW DIC,DTOUT,DUOUT,X,Y,CT,Q
- K IBCNESOI S CT=0 W !?5,"Enter Sources of Information to include one at a time."
-SOISEL1 S DIC(0)="AMEQ"
- S Q="Include Source of Information"
- I CT=0 S Q=Q_" (<RETURN> for ALL)"
- E  S Q="Also "_Q
- S DIC("A")=$$FO^IBCNEUT1(Q_": ",50,"R")
- S DIC="^IBE(355.12,"
- D ^DIC
- I $D(DUOUT)!$D(DTOUT) G SOISELX
- ; If nothing was selected (Y=-1), select ALL sources
- I Y=-1 G SOISELX:CT=1 S IBCNESOI=1 G SOISELX
- S IBCNESOI($P(Y,"^",1))=$P(Y,"^",2),CT=1 G SOISEL1
- ;
-SOISELX ; SOISEL exit pt
- Q
  ;
 SUMMARY() ;  ask to print detailed or summary report
  N DIR,DIRUT,X,Y
@@ -144,4 +114,3 @@ SUMMARY() ;  ask to print detailed or summary report
  W ! D ^DIR
  I $D(DIRUT) Q 0
  Q $S(Y="S":1,Y="D":2,1:0)
- ;

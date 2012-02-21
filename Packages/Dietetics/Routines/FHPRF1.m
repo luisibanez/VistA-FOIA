@@ -1,7 +1,7 @@
 FHPRF1 ; HISC/REL/RVD - Calculate Total Forecast ;1/23/98  16:10
- ;;5.5;DIETETICS;**5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;;Jan 28, 2005
  ;
- ;patch #5 - added screen for cancelled quest meals.
+ ;RVD 2/18/04 - Outpatient meals
  ;
  S %DT="X",X="T" D ^%DT S DT=+Y
  D DIV^FHOMUTL G:'$D(FHSITE) KIL
@@ -126,7 +126,6 @@ GUEST ;guest meals
  .F FHK=0:0 S FHK=$O(@FHTMPS@(FHN,FHI,FHJ,FHK)) Q:(FHK'>0)!(FHK>FHDT)  D
  ..S (FHPDIET,FHLOC,FHSER,FHDIET)="***"
  ..S FHIJKDAT=@FHTMPS@(FHN,FHI,FHJ,FHK)
- ..Q:$P(FHIJKDAT,U,7)="C"
  ..S FHDIET=$P($G(^FH(119.9,1,0)),U,2)   ;default diet from 119.9
  ..S FHDIETN=$P(FHIJKDAT,U,6)  ;diet from guest meal
  ..S:$D(^FH(119.6,"B",FHI)) FHLOC=$O(^FH(119.6,"B",FHI,0))

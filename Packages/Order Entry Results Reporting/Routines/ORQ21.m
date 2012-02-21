@@ -1,5 +1,5 @@
-ORQ21 ; SLC/MKB/GSS - Detailed Order Report cont ; 12/28/2006
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**141,190,195,215,243**;Dec 17, 1997;Build 242
+ORQ21 ; SLC/MKB/GSS - Detailed Order Report cont ; 10/6/2005
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**141,190,195,215**;Dec 17, 1997
  ;
  ; DBIA 2400   OEL^PSOORRL   ^TMP("PS",$J)
  ; DBIA 2266   EN30^RAO7PC1  ^TMP($J,"RAE2")
@@ -49,15 +49,12 @@ M1 I TYPE="I" D  ;admin data
  . S X="Administration Times:         ",I=0
  . F  S I=$O(^TMP("PS",$J,"ADM",I)) Q:I'>0  S Y=$G(^(I,0)) S:$L(Y) CNT=CNT+1,@ORY@(CNT)=X_Y,X=$$REPEAT^XLFSTR(" ",30)
 M2 I TYPE="O" D  ;fill history
- . N FILLD,RET,X,Y,I
+ . N FILLD,X,Y,I
  . S:$P(NODE,U,12) CNT=CNT+1,@ORY@(CNT)="Last Filled:                  "_$$FMTE^XLFDT($P(NODE,U,12),2)
  . S CNT=CNT+1,@ORY@(CNT)="Refills Remaining:            "_$P(NODE,U,4)
  . I $P(RXN,U,6)!$G(^TMP("PS",$J,"REF",0)) S X="Filled:                       " D
  .. I $P(RXN,U,6) S FILLD=$P(RXN,U,6)_"^^^"_$P(RXN,U,7)_U_$P(RXN,U,3,4) D FILLED("R")
- .. S RET=$G(^TMP("PS",$J,"RXN","RSTC")) I RET'="" D RETURNS(RET)
- .. S I=0 F  S I=$O(^TMP("PS",$J,"REF",I)) Q:I'>0  D
- ... S FILLD=$G(^(I,0)) D FILLED("R")
- ... S RET=$G(^TMP("PS",$J,"REF",I,"RSTC")) I RET'="" D RETURNS(RET)
+ .. S I=0 F  S I=$O(^TMP("PS",$J,"REF",I)) Q:I'>0  S FILLD=$G(^(I,0)) D FILLED("R")
  . I $G(^TMP("PS",$J,"PAR",0)) S I=0,X="Partial Fills:      " F  S I=$O(^TMP("PS",$J,"PAR",I)) Q:I'>0  S FILLD=$G(^(I,0)) D FILLED("P")
  . S:RXN CNT=CNT+1,@ORY@(CNT)="Prescription#:                "_$P(RXN,U)
 M3 S:$P(RXN,U,5) CNT=CNT+1,@ORY@(CNT)="Pharmacist:                   "_$P($G(^VA(200,+$P(RXN,U,5),0)),U)
@@ -69,7 +66,7 @@ M3 S:$P(RXN,U,5) CNT=CNT+1,@ORY@(CNT)="Pharmacist:                   "_$P($G(^VA
  . S CNT=CNT+1,@ORY@(CNT)="   " ;blank line
  . S CNT=CNT+1,@ORY@(CNT)="First Party Pay Exemptions"
  . S X="For conditions related to:    "
- . F I=1:1:8 S Y=$P(OR5,U,I) I Y S CNT=CNT+1,@ORY@(CNT)=X_$$SC(I),X=$$REPEAT^XLFSTR(" ",30)
+ . F I=1:1:7 S Y=$P(OR5,U,I) I Y S CNT=CNT+1,@ORY@(CNT)=X_$$SC(I),X=$$REPEAT^XLFSTR(" ",30)
  Q
  ;
 BA ;Billing Aware data display
@@ -93,7 +90,7 @@ BA ;Billing Aware data display
  . S X=X_ICD9_" - "_DXV,CNT=CNT+1,@ORY@(CNT)=X
  I OCT'="" D  ;if there are diagnoses show Treatment Factors
  . S X="For conditions related to:    "
- . F I=1:1:8 S Y=$P(^OR(100,ORIFN,5.2),U,I) I Y D
+ . F I=1:1:7 S Y=$P(^OR(100,ORIFN,5.2),U,I) I Y D
  .. S CNT=CNT+1,@ORY@(CNT)=X_$$SC(I),X=$$REPEAT^XLFSTR(" ",30)
  Q
  ;
@@ -103,17 +100,6 @@ FILLED(TYPE) ; -- add FILLD data
  S:TYPE="P"&$P(FILLD,U,3) Y=Y_" Qty: "_$P(FILLD,U,3)
  S CNT=CNT+1,@ORY@(CNT)=X_Y,X=$$REPEAT^XLFSTR(" ",30)
  S:$L($P(FILLD,U,6)) CNT=CNT+1,@ORY@(CNT)=X_$P(FILLD,U,6)
- Q
-RETURNS(NODE) ; add Return to Stock Data
- N DATE,NAME,TEXT,X
- S DATE=$$FMTE^XLFDT($P(NODE,U))
- S NAME=$P(^VA(200,$P(NODE,U,2),0),U)
- S X=$$REPEAT^XLFSTR(" ",13)
- S TEXT="Return to Stock: "_X_DATE_" by "_NAME
- S CNT=CNT+1,@ORY@(CNT)=TEXT
- S X=$$REPEAT^XLFSTR(" ",30)
- S TEXT=X_"Comments: "_$P(NODE,U,3)
- S CNT=CNT+1,@ORY@(CNT)=TEXT
  Q
  ;
 ROUTING(X) ; -- Returns external form
@@ -129,5 +115,4 @@ SC(J) ; -- Returns name of SC field by piece number
  I J=5 Q "ENVIRONMENTAL CONTAMINANTS"
  I J=6 Q "HEAD OR NECK CANCER"
  I J=7 Q "COMBAT VETERAN"
- I J=8 Q "SHIPBOARD HAZARD AND DEFENSE"
  Q ""

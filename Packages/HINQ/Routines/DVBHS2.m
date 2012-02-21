@@ -1,5 +1,5 @@
 DVBHS2 ;ALB/JLU;This is the display for screen 2 ;10/7/91
- ;;4.0;HINQ;**11,17,49,56**;03/25/92 
+ ;;4.0;HINQ;**11,17,49**;03/25/92 
  ;
  N Y
  K DVBX(1)
@@ -18,12 +18,12 @@ DVBHS2 ;ALB/JLU;This is the display for screen 2 ;10/7/91
  W ?19,DVBDIQ(2,DFN,.313,"E")
  I $D(DVBCN),DVBCN W ?49,DVBCN
  ;
- W !,DVBON,"<2>",DVBOFF X DVBLIT1
+ W !,DVBON,"[2]",DVBOFF X DVBLIT1
  W ?4,"Date of Birth:"
  W ?19,DVBDIQ(2,DFN,.03,"E")
  I $D(DVBDOB),DVBDOB I DVBDOB?8N S M=$E(DVBDOB,1,2) D MM^DVBHQM11 W ?49,M_" "_$S(+$E(DVBDOB,3,4)>0:$E(DVBDOB,3,4)_", ",1:" ")_$E(DVBDOB,5,8) K M
  ;
- W !,DVBON,"<3>",DVBOFF X DVBLIT1
+ W !,DVBON,"[3]",DVBOFF X DVBLIT1
  W ?4,"Sex:"
  W ?19,DVBDIQ(2,DFN,.02,"E")
  I $D(DVBVET),$P(DVBVET,U,1)'="C" W ?49,$S($P(DVBVET,U,3)="M":"MALE",$P(DVBVET,U,3)="F":"FEMALE",1:"")

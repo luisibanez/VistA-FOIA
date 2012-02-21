@@ -1,5 +1,5 @@
-SROES ;BIR/ADM - SURGERY E-SIG UTILITY ;06/07/06
- ;;3.0; Surgery ;**100,153**;24 Jun 93;Build 11
+SROES ;BIR/ADM - SURGERY E-SIG UTILITY ; [ 02/14/04  1:03 PM ]
+ ;;3.0; Surgery ;**100**;24 Jun 93
  ;
  ;** NOTICE: This routine is part of an implementation of a nationally
  ;**         controlled procedure.  Local modifications to this routine
@@ -46,7 +46,7 @@ HDR S DFN=$P(^SRF(SRTN,0),"^") D DEM^VADPT S Y=$E($P(^SRF(SRTN,0),"^",9),1,7) X 
  W @IOF,!," "_VADM(1)_" ("_VA("PID")_")   Case #"_SRTN_" - "_SRSDATE
  Q
 EXIT ; post-edit check to see if addenda to nurse/anes. reports are required
- Q:'$D(SRTN)  D WAIT^DICD
+ D WAIT^DICD
  D:$D(^TMP("SRNRAD1",$J,SRTN)) EX^SROESNR
  D:$D(^TMP("SRARAD1",$J,SRTN)) EX^SROESAR
  I $D(^TMP("SRNRAD1",$J,SRTN))!$D(^TMP("SRARAD1",$J,SRTN))!$D(^TMP("SRNRAD2",$J,SRTN))!$D(^TMP("SRARAD2",$J,SRTN)) D ^SROESAD1

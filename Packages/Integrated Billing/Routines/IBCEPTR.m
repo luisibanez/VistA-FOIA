@@ -1,6 +1,5 @@
 IBCEPTR ;ALB/ESG - Test Claim Messages Report ;28-JAN-2005
- ;;2.0;INTEGRATED BILLING;**296,320,348,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**296**;21-MAR-94
  ;
  ; eClaims Plus
  ; Report on Test Claim Transmissions and Status Messages
@@ -19,14 +18,14 @@ SELECT ; Determine which claim#'s or batch#'s to report on
  W !!?23,"Test Claim EDI Transmission Report"
  W !!?7,"This report will display EDI transmission data and returned status"
  W !?7,"message data for selected test claims.  You may select test claims"
- W !?7,"by claim number or by batch number or you may search for claims that"
- W !?7,"were transmitted within a date range.",!
- S DIR(0)="SO^C:Claim;B:Batch;D:Date Range (Date Transmitted)"
- S DIR("A")="Selection Method",DIR("B")="D"
+ W !?7,"by either the claim number or by the batch number.  You can choose"
+ W !?7,"one or more test claims or batches for this report.",!
+ S DIR(0)="SO^C:Claim;B:Batch"
+ S DIR("A")="Select by Claim or Batch",DIR("B")="C"
  D ^DIR K DIR
  I $D(DIRUT) S STOP=1 G SELECTX
  S IBRMETH=Y
- I IBRMETH'="C",IBRMETH'="B",IBRMETH'="D" S STOP=1 G SELECTX
+ I IBRMETH'="C",IBRMETH'="B" S STOP=1 G SELECTX
  ;
  K IBRDATA
  I IBRMETH="C" D
@@ -53,22 +52,7 @@ SELECT ; Determine which claim#'s or batch#'s to report on
  .. Q
  . Q
  ;
- I IBRMETH="D" D
- . W !
- . S DIR(0)="DAO^:"_DT_":AEX",DIR("A")="  Earliest Date Claims Transmitted: "
- . D ^DIR K DIR
- . I $D(DIRUT)!'Y Q
- . S IBRDATA(1)=Y
- . W !
- . S DIR(0)="DAO^"_Y_":"_DT_":AEX",DIR("A")="    Latest Date Claims Transmitted: ",DIR("B")="Today"
- . D ^DIR K DIR
- . I $D(DIRUT)!'Y Q
- . S IBRDATA(2)=Y
- . Q
- ;
- I '$O(IBRDATA("")) S STOP=1 G SELECTX
- I IBRMETH="D",'$G(IBRDATA(1)) S STOP=1 G SELECTX
- I IBRMETH="D",'$G(IBRDATA(2)) S STOP=1 G SELECTX
+ I '$O(IBRDATA("")) S STOP=1
  ;
 SELECTX ;
  Q
@@ -85,7 +69,7 @@ DEVX ;
  Q
  ;
 COMPILE ; compile the data into a scratch global
- NEW RTN,EXTBCH,IBIFN,BCHIEN,TXDATM
+ NEW RTN,EXTBCH,IBIFN,BCHIEN
  S RTN="IBCEPTR"
  KILL ^TMP($J,RTN)  ; init scratch global
  ;
@@ -102,15 +86,6 @@ COMPILE ; compile the data into a scratch global
  .. I EXTBCH="" S EXTBCH="~unknown"
  .. S IBIFN=0
  .. F  S IBIFN=$O(^IBM(361.4,"C",BCHIEN,IBIFN)) Q:'IBIFN  D STORE(IBIFN)
- .. Q
- . Q
- ;
- I IBRMETH="D" D    ; date range search
- . S EXTBCH=0
- . S TXDATM=$O(^IBM(361.4,"ATD",IBRDATA(1)),-1)
- . F  S TXDATM=$O(^IBM(361.4,"ATD",TXDATM)) Q:'TXDATM  Q:(TXDATM\1)>IBRDATA(2)  D
- .. S IBIFN=0
- .. F  S IBIFN=$O(^IBM(361.4,"ATD",TXDATM,IBIFN)) Q:'IBIFN  D STORE(IBIFN)
  .. Q
  . Q
  ;
@@ -138,25 +113,15 @@ STORE(IBIFN) ; Input = internal bill#; continue compilation
  . F  S TXIEN=$O(^IBM(361.4,"C",BCHIEN,IBIFN,TXIEN)) Q:'TXIEN  D STORETX(IBIFN,TXIEN)
  . Q
  ;
- I IBRMETH="D" D   ; date range search for transmission data ("ATD" xref)
- . S TXIEN=0
- . F  S TXIEN=$O(^IBM(361.4,"ATD",TXDATM,IBIFN,TXIEN)) Q:'TXIEN  D STORETX(IBIFN,TXIEN)
- . Q
- ;
  ; loop thru all returned messages for claim
  S SMIEN=0
  F  S SMIEN=$O(^IBM(361.4,IBIFN,2,SMIEN)) Q:'SMIEN  D
- . S DATA=$G(^IBM(361.4,IBIFN,2,SMIEN,0)) Q:DATA=""   ; received msg data
- . S TXDTM=$P(DATA,U,1) Q:'TXDTM    ; msg rec'd date/time
+ . S DATA=$G(^IBM(361.4,IBIFN,2,SMIEN,0)) Q:DATA=""
+ . S TXDTM=$P(DATA,U,1) Q:'TXDTM
  . ;
  . ; Batch only: if this status message was received before the
  . ; earliest transmission for this batch, then don't include it
  . I IBRMETH="B",TXDTM'>IBRTXD0 Q
- . ;
- . ; Date range search only:  make sure the date/time the status message
- . ; was received is inside the user specified date range for this report
- . I IBRMETH="D",(TXDTM\1)<IBRDATA(1) Q    ; rec'd too early
- . I IBRMETH="D",(TXDTM\1)>IBRDATA(2) Q    ; rec'd too late
  . ;
  . ; store it
  . M ^TMP($J,RTN,EXTBCH,CLAIM,TXDTM,2,SMIEN)=^IBM(361.4,IBIFN,2,SMIEN)
@@ -215,21 +180,18 @@ PRINTX ;
  Q
  ;
 TXPRT ; print transmission information
- NEW DATA,TXDTM,EXTBCH,TXBY,INSIEN,PAYER,PSEQ,INZ
+ NEW DATA,TXDTM,EXTBCH,TXBY,INSIEN,PAYER,PSEQ
  S DATA=$G(^TMP($J,RTN,BATCH,CLAIM,TXD,TYPE,IEN,0)) I DATA="" G TXPRTX
  S TXDTM=$$FMTE^XLFDT($P(DATA,U,1),"5Z")
  S EXTBCH=$$EXTERNAL^DILFD(361.41,.02,,$P(DATA,U,2))  ; batch
  S TXBY=$$EXTERNAL^DILFD(361.41,.03,,$P(DATA,U,3))    ; who tx
  S INSIEN=+$$FINDINS^IBCEF1(IBIFN,$P(DATA,U,4))       ; insurance
- S INZ=$$INSADD^IBCNSC02(INSIEN)                      ; ins name/addr
- S PAYER=$P(INZ,U,1)                                  ; ins name
+ S PAYER=$P($G(^DIC(36,INSIEN,0)),U,1)                ; ins name
  S PSEQ=$TR($P(DATA,U,4),"123","PST")                 ; payer seq
  ;
  I $Y+2>MAXCNT!'PAGECNT D HEADER I STOP G TXPRTX
  W !,"Transmission Information"
  W !?1,TXDTM,?22,"Bch#",+$E(EXTBCH,4,99),?33,$E(TXBY,1,15),?50,$E(PAYER,1,20),"  (",PSEQ,")"
- ; display address info if not Medicare
- I '$$MCRWNR^IBEFUNC(INSIEN) W !?50,$E($P(INZ,U,2),1,15),",",$E($P(INZ,U,3),1,11),",",$E($P(INZ,U,4),1,2)
  W !
 TXPRTX ;
  Q
@@ -267,7 +229,7 @@ HEADER ; page break and header
  W "Test Claim EDI Transmission Report"
  S HDR="Page: "_PAGECNT,TAB=80-$L(HDR)-1
  W ?TAB,HDR
- W !,"Selected ",$S(IBRMETH="B":"Batches",IBRMETH="C":"Claims",1:"Date Range")
+ W !,"Selected ",$S(IBRMETH="B":"Batches",1:"Claims")
  S HDR=$$FMTE^XLFDT($$NOW^XLFDT,"1Z"),TAB=80-$L(HDR)-1
  W ?TAB,HDR
  W !,$$RJ^XLFSTR("",80,"=")
@@ -287,7 +249,7 @@ BT(IBIFN) ; bill type and info
  ; [3] patient name
  NEW TYPE,IB0,F,C,S S TYPE=""
  S IB0=$G(^DGCR(399,+$G(IBIFN),0)) I IB0="" Q ""
- S F=$P(IB0,U,19),F=$S(F=2:"1500",1:"UB04")
+ S F=$P(IB0,U,19),F=$S(F=2:"Hcfa",1:"UB92")
  S C=$P(IB0,U,27),C=$S(C=1:"Inst",1:"Prof")
  S S=$$INPAT^IBCEF(IBIFN),S=$S(S=1:"Inpat",1:"Outpat")
  S TYPE=F_", "_C_", "_S
@@ -299,8 +261,8 @@ CLMLST(IBIFN) ; DIC lister
  S LTD=$$FMTE^XLFDT($P($G(^IBM(361.4,IBIFN,0)),U,2),"2Z")
  S N1=+$P($G(^IBM(361.4,IBIFN,1,0)),U,4)  ; # transmissions
  S N2=+$P($G(^IBM(361.4,IBIFN,2,0)),U,4)  ; # return messages
- W " ",TYPE,?34," ",LTD,?45," ",N1," Transmission",$S(N1'=1:"s",1:"")
- W ?63," ",N2," Message",$S(N2'=1:"s",1:"")
+ W TYPE,?33," ",LTD,?44," ",N1," Transmission",$S(N1'=1:"s",1:"")
+ W ?62," ",N2," Message",$S(N2'=1:"s",1:"")
 CLMLSTX ;
  Q
  ;

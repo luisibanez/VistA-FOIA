@@ -1,6 +1,5 @@
 FHWHEA ; HISC/REL - Health Summary ;7/16/96  15:47
- ;;5.5;DIETETICS;**1,8**;Jan 28, 2005;Build 28
- ;patch #8 - adding Nutrition Assessment (follow-up date and comment) in the "NA" node.
+ ;;5.5;DIETETICS;**1**;Jan 28, 2005
  S FH9=9999999,FHS1=$S(GMTS2<1:1,1:FH9-GMTS2),FHS2=$S(GMTS1<1:FH9,1:FH9-GMTS1)
  K ^UTILITY($J) S (FHN1,FHN2,FHN3,FHN4)=0
  ; Nutrition Status in inverse order
@@ -9,12 +8,6 @@ FHWHEA ; HISC/REL - Health Summary ;7/16/96  15:47
  ; Dietetic Encounters
  F FHX1=FHS1:0 S FHX1=$O(^FHEN("AP",DFN,FHX1)) Q:FHX1=""!(FHX1>FHS2)  F FHI=0:0 S FHI=$O(^FHEN("AP",DFN,FHX1,FHI)) Q:FHI<1  D EN
  F FHADM=0:0 S FHADM=$O(^FHPT(FHDFN,"A",FHADM)) Q:FHADM'>0  D CHK
- ;add nutrition assessment (Follow-up date & comments.
- ; where ^utility($j,"NA",date,1)=follow-up date
- ;                        date,2)=pt's allergy
- ;                        date,3)=1nd line comment
- ;                        date,4)=2rd line comment and so on... 
- F FHI=0:0 S FHI=$O(^FHPT(FHDFN,"N",FHI)) Q:FHI'>0  I $D(^(FHI,"DI")) D NAD
  I GMTSNDM'>0 G KIL
  I FHN1>GMTSNDM S FHL=0 F FHI=0:0 S FHI=$O(^UTILITY($J,"DI",FHI)) Q:FHI=""  S FHL=FHL+1 I FHL>GMTSNDM K ^UTILITY($J,"DI",FHI)
  I FHN2>GMTSNDM S FHL=0 F FHI=0:0 S FHI=$O(^UTILITY($J,"TF",FHI)) Q:FHI=""  S FHL=FHL+1 I FHL>GMTSNDM K ^UTILITY($J,"TF",FHI)
@@ -59,24 +52,6 @@ EN ; Decode Dietetic Encounter
  S FHX=FHX1_"^"_FHX3_"^"_$P(FHX2,"^",11)_"^"_$P($G(^FHEN(FHI,"P",DFN,0)),"^",4)
  S ^UTILITY($J,"EN",(FH9-FHX1),0)=FHX,FHN4=FHN4+1 Q
  Q
- ;
-NAD ;Nutrition Assessment.
- S FHX=$G(^FHPT(FHDFN,"N",FHI,0))
- S FHDI=$G(^FHPT(FHDFN,"N",FHI,"DI"))
- S FHX1=$P(FHX,U,1)
- S FHFUD=$P(FHDI,U,5),FHNAST=$P(FHDI,U,6)
- S DTP=FHFUD D DTP^FH S FHFUD=$E(DTP,1,9)
- I (FHNAST="")!(FHNAST="W") Q
- I (FHX1<FHS1)!(FHX1>FHS2) Q
- S FHNA=1
- S ^UTILITY($J,"NA",(FH9-FHX1),FHNA)="Follow-up Date: "_FHFUD
- D ALG^FHCLN
- S FHNA=FHNA+1 S ^UTILITY($J,"NA",(FH9-FHX1),FHNA)="Patient's Allergy: "_ALG
- I $D(^FHPT(FHDFN,"N",FHI,"X")) S FHNA=FHNA+1 S ^UTILITY($J,"NA",(FH9-FHX1),FHNA)="Comment: "
- F FHI1=0:0 S FHI1=$O(^FHPT(FHDFN,"N",FHI,"X",FHI1)) Q:FHI1'>0  D
- .S FHNA=FHNA+1
- .S ^UTILITY($J,"NA",(FH9-FHX1),FHNA)=$G(^FHPT(FHDFN,"N",FHI,"X",FHI1,0))
- Q
 BRK ; Break Supplemental Feeding
  S FHVAL=""
  D STP(FHN(1),.FHVAL) S FHN(1)=FHVAL
@@ -87,6 +62,4 @@ STP(FHVAL1,FHVAL2) ; Strip Excess Spaces and truncate SF from 20 to 16 char
  S FHVAL2=""
  F FHK2=1:1:4 S FHP1=$P(FHVAL1,";",FHK2) I FHP1'="" S:$E(FHP1,1)=" " FHP1=$E(FHP1,2,$L(FHP1)) S:FHVAL2'="" FHVAL2=FHVAL2_";" S FHVAL2=FHVAL2_$E(FHP1,1,16)
  Q
-KIL K %,FHADM,FHDU,FHI,FHK1,FHK2,FHL,FHLD,FHN,FHN1,FHN2,FHN3,FHN4,FHOR,FHP,FHP1,FHX,FHX1,FHX2,FHX3,FHX4,FHS1,FHS2,FH9,FHFHY,FHVAL,FHVAL1,FHVAL2
- K FHI1,FHNA,FHFUD,FHNAST,FHDI,FHDFN,FHY,FHZ115,FLAG
- Q
+KIL K %,FHADM,FHDU,FHI,FHK1,FHK2,FHL,FHLD,FHN,FHN1,FHN2,FHN3,FHN4,FHOR,FHP,FHP1,FHX,FHX1,FHX2,FHX3,FHX4,FHS1,FHS2,FH9,FHFHY,FHVAL,FHVAL1,FHVAL2 Q

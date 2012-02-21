@@ -1,6 +1,6 @@
-FBCKDIS ;AISC/CMR-OUTPUT BY CHECK # ;7/NOV/2006
- ;;3.5;FEE BASIS;**4,61,101**;JAN 30, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+FBCKDIS ;AISC/CMR-OUTPUT BY CHECK # ;8/7/2003
+ ;;3.5;FEE BASIS;**4,61**;JAN 30, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;FBCN=Check Number               FBPROG=Fee payment type
  ;FBPR is set if called from the phone menu.  If this variable exists,
  ;     the user will not be returned to the TOP to select another ck #.
@@ -12,7 +12,7 @@ START S Q="-",$P(Q,"-",80)="-",QQ="=",$P(QQ,"=",80)="=",FBPG=1 K ^TMP($J,"FBCK")
  U IO W:$E(IOST,1,2)["C-" @IOF
  F FBPROG="OPT","CH","CNH","PHAR","TRAV" I $D(^TMP($J,"FBCK",FBPROG)) D PGCHK D  Q:$G(FBAAOUT)
  .S FBV=0 F  S FBV=$O(^TMP($J,"FBCK",FBPROG,FBV)) Q:FBV']""!($G(FBAAOUT))  W:FBPROG'="TRAV" !!,"VENDOR:  ",$$VNAME^FBNHEXP(FBV),?40,"  VENDOR ID:  ",$$VID^FBNHEXP(FBV) D
- ..S DFN=0 F  S DFN=$O(^TMP($J,"FBCK",FBPROG,FBV,DFN)) Q:'DFN!($G(FBAAOUT))  D:$Y+8>IOSL PGCHK Q:$G(FBAAOUT)  W !!,"Patient:  ",$$NAME^FBCHREQ2(DFN),?40,"Patient ID:  ",$$SSNL4^FBAAUTL($$SSN^FBAAUTL(DFN)) D
+ ..S DFN=0 F  S DFN=$O(^TMP($J,"FBCK",FBPROG,FBV,DFN)) Q:'DFN!($G(FBAAOUT))  D:$Y+8>IOSL PGCHK Q:$G(FBAAOUT)  W !!,"Patient:  ",$$NAME^FBCHREQ2(DFN),?40,"Patient ID:  ",$$SSN^FBAAUTL(DFN) D
  ...N FBAARC,FBADJLA,FBADJLR,FBC,FBFPPSC,FBFPPSL,FBSUSPA,FBX
  ...S FBCNT=0 F  S FBCNT=$O(^TMP($J,"FBCK",FBPROG,FBV,DFN,FBCNT)) Q:'FBCNT!($G(FBAAOUT))  S FBDA=^(FBCNT) D @FBPROG,OUTPUT,CLEAN
 END K FBCN,FBCNT,DFN,FBV,FBPROG,FBPG,DIRUT,DTOUT,DUOUT,Q,QQ,^TMP($J,"FBCK")

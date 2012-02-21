@@ -1,5 +1,5 @@
-LEXXFI7 ; ISL/KER - File Info - Prompts and Header   ; 02/22/2007
- ;;2.0;LEXICON UTILITY;**32,49**;Sep 23, 1996;Build 3
+LEXXFI7 ; ISL/KER - File Info - Prompts and Header   ; 07/28/2004
+ ;;2.0;LEXICON UTILITY;**32**;Sep 23, 1996
  Q
  ;                    
  ; Global Variables
@@ -49,14 +49,14 @@ FI(X) ; Select Lexicon/ICD File
  Q X
 FIH ;   File Help
  W !,"     Select either a Lexicon, ICD or CPT file:"
- W !!,"                          Lexicon                  ICD       CPT"
- W !,"     ----------------------------------------       ----      ----"
- W !,"     757        757.03     757.12     757.31        80        81"
- W !,"     757.001    757.03     757.13     757.4         80.1      81.1"
- W !,"     757.01     757.05     757.14     757.41        80.3      81.2"
- W !,"     757.011    757.06     757.2                              81.3"
- W !,"     757.014    757.1      757.21"
- W !,"     757.02     757.11     757.3 "
+ W !!,"                          Lexicon                           ICD       CPT"
+ W !,"     ---------------------------------------------------    ----      ----"
+ W !,"     757        757.03     757.12     757.31     757.903    80        81"
+ W !,"     757.001    757.03     757.13     757.4      757.91     80.1      81.1"
+ W !,"     757.01     757.05     757.14     757.41                80.2      81.3"
+ W !,"     757.011    757.06     757.2      757.9                 80.3"
+ W !,"     757.014    757.1      757.21     757.901"
+ W !,"     757.02     757.11     757.3      757.902"
  Q
 FOT(X) ;   File Output Transform
  N LEX,LEXX
@@ -106,8 +106,10 @@ ARY(X,LEX) ;   Build Array  of Files
  ;                          
  ; Miscellaneous
 U(X) ;   UCI where Lexicon is installed
- N LEXU,LEXP,LEXT,Y X ^%ZOSF("UCI") S LEXU=Y,LEXP="" S:LEXU=^%ZOSF("PROD")!($P(LEXU,",",1)=^%ZOSF("PROD")) LEXP=" (Production)"
- S:LEXU'=^%ZOSF("PROD")&($P(LEXU,",",1)'=^%ZOSF("PROD")) LEXP=" (Test)" S X="",$P(X,"^",1)=LEXU,$P(X,"^",2)=LEXP
+ N LEXU,LEXP,LEXT,Y X ^%ZOSF("UCI")
+ S LEXU=Y S:Y=^%ZOSF("PROD")!($P(Y,",",1)=^%ZOSF("PROD")) LEXP=" (Production)"
+ S:Y'=^%ZOSF("PROD")&($P(Y,",",1)'=^%ZOSF("PROD")) LEXP=" (Test)"
+ S:LEXU["DEM" LEXP=" (Demo)" S X="",$P(X,"^",1)=LEXU,$P(X,"^",2)=LEXP
  Q X
 A(X) ;   As of date/time
  N LEXX S LEXX=$$NOW^XLFDT,LEXX=$$FMTE^XLFDT(LEXX,"1")

@@ -1,5 +1,5 @@
-GMRANKA ;HIRMFO/WAA-ALLERGY/ADVERSE REACTION PATIENT NKA DRIVE ;10/12/06  11:03
- ;;4.0;Adverse Reaction Tracking;**2,21,36**;Mar 29, 1996;Build 9
+GMRANKA ;HIRMFO/WAA-ALLERGY/ADVERSE REACTION PATIENT NKA DRIVE ;12/3/04  13:51
+ ;;4.0;Adverse Reaction Tracking;**2,21**;Mar 29, 1996
 NKA(DFN) ;See if patient has reaction on file
  ;  Input Variables:
  ;       DFN = Patient Internal Entry Number
@@ -17,7 +17,19 @@ NKAASK(DFN,GMRAOUT) ; Ask a Patient if patient has any known allergens
  ;     DFN = Patient Internal entry number
  ;  GMRAOUT = Up Caret or time out flag
  ;
- ;Ask if patient has allergies
+ N GMAIEN
+ L +^GMR(120.86,0):1
+ I $G(^GMR(120.86,DFN,0))="" D  ;ADD A RECORD TO THE 120.86 FILE
+ .N HEAD
+ .;UPDATE HEADER
+ .S HEAD=^GMR(120.86,0)
+ .S $P(HEAD,U,4)=($P(HEAD,U,4)+1)
+ .S $P(HEAD,U,3)=DFN,^GMR(120.86,0)=HEAD
+ .S ^GMR(120.86,DFN,0)=DFN_U,^GMR(120.86,"B",DFN,DFN)=""
+ .Q
+ L -^GMR(120.86,0)
+ L +^GMR(120.86,DFN,0):1
+ ;ASK PATIENT QUESTION VIA
  N DIR,Y,DIROUT,DTOUT,DIRUT,DUOUT,GMAOLD
  S GMAOLD=$P($G(^GMR(120.86,DFN,0)),U,2)
  S DIR(0)="120.86,1^AO^I Y=0&'$$NKASCR^GMRANKA(DFN) D INFO^GMRANKA K X"
@@ -26,15 +38,16 @@ NKAASK(DFN,GMRAOUT) ; Ask a Patient if patient has any known allergens
  S DIR("?")=$S(GMAOLD=0:"You may also enter @ to delete a previous NKA assessment and return the patient to a 'not assessed' state.  Use this if the NKA assessment was previously incorrectly entered.",1:"") ;21
  D ^DIR
  I $G(X)="@" D:GMAOLD=0 CLN W:GMAOLD=0 !,"Assessment deleted." Q  ;21 Allow removal of NKA
- I $D(DTOUT)!$D(DIROUT) S GMRAOUT=1 Q  ;36
- I $D(DUOUT) S GMRAOUT=2 Q  ;36
+ I $D(DTOUT)!$D(DIROUT) S GMRAOUT=1 D:GMAOLD="" CLN Q
+ I $D(DUOUT) S GMRAOUT=2 D:GMAOLD="" CLN Q
  ; User Hits return and doesn't answer question
- I Y="",GMAOLD="" Q  ;36
+ I Y="",GMAOLD="" D CLN Q
  I Y'="",GMAOLD'=Y D
  . N DIE,DA,DR
- . S DIE="^GMR(120.86,",DA=DFN,DR=$S(GMAOLD="":(".01////"_DFN_";"),1:"")_"1////"_Y_";2////"_DUZ_";3///NOW" ;36
+ . S DIE="^GMR(120.86,",DA=DFN,DR="1////"_Y_";2////"_DUZ_";3///NOW"
  . D ^DIE
  . Q
+ L -^GMR(120.86,DFN,0)
  Q
 CLN ; Clean out entries that have not been answered.
  S DIK="^GMR(120.86,",DA=DFN D ^DIK K DIK,DA

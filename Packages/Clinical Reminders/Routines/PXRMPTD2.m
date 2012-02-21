@@ -1,11 +1,11 @@
-PXRMPTD2 ; SLC/PKR/PJH - Reminder Inquiry print template routines.;03/06/2007
- ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
+PXRMPTD2 ; SLC/PKR/PJH - Reminder Inquiry print template routines.;08/30/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;================================================
 DATE(FIND0,PIECE,FLDNUM,TITLE,RJC,PAD,FILENUM,FLG) ;Standard DATE
  N DATE,X
  S DATE=$P($G(FIND0),U,PIECE)
  I DATE'="" D
- .S DATE=$$FMTE^XLFDT(DATE,"5Z"),X=$$RJ^XLFSTR(TITLE,RJC,PAD),X=X_" "_DATE
+ .S DATE=$$FMTE^XLFDT(DATE,"D"),X=$$RJ^XLFSTR(TITLE,RJC,PAD),X=X_" "_DATE
  .D ^DIWP
  Q
  ;
@@ -21,10 +21,11 @@ ENTRYNAM(VPTR) ;Given the variable pointer return the entry name. The
  ;
  ;================================================
 FREQ(FREQ) ;Format frequency.
- I FREQ=-1 Q "Cannot be determined"
- I +FREQ=0 Q FREQ_" - Not indicated"
- I FREQ="99Y" Q "99Y - Once"
- Q +FREQ_($S(FREQ?1N.N1"D":" day",FREQ?1N.N1"M":" month",FREQ?1N.N1"Y":" year",1:""))_$S(+FREQ>1:"s",1:"")
+ N STR
+ I +FREQ=0 S STR=FREQ_" - Not Indicated" Q STR
+ I FREQ?1"99Y" S STR="99Y - Once"
+ E  S STR=+FREQ_($S(FREQ?1N.N1"D":" day",FREQ?1N.N1"M":" month",FREQ?1N.N1"Y":" year",1:""))_$S(+FREQ>1:"s",1:"")
+ Q STR
  ;
  ;================================================
 FTYPE(VPTR,CNT) ;Return finding type.
@@ -32,7 +33,8 @@ FTYPE(VPTR,CNT) ;Return finding type.
  I VPTR="" Q "UNDEFINED?"
  S ROOT=$P(VPTR,";",2)
  I '$D(PXRMFVPL) N PXRMFVPL D BLDRLIST^PXRMVPTR(811.902,.01,.PXRMFVPL)
- S FTYPE=$S(CNT=1:$P(PXRMFVPL(ROOT),U,4),1:$P(PXRMFVPL(ROOT),U,2))
+ I CNT=1 S FTYPE=$P(PXRMFVPL(ROOT),U,4)
+ E  S FTYPE=$P(PXRMFVPL(ROOT),U,2)
  Q FTYPE
  ;
  ;================================================

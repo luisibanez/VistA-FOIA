@@ -1,165 +1,142 @@
-BPSOSRB ;BHAM ISC/FCS/DRS/FLS - Process claim on processing queue ;06/01/2004
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5,7,8,10**;JUN 2004;Build 27
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;
+BPSOSRB ;BHAM ISC/FCS/DRS/FLS - background from BPSOSRX ;06/01/2004
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
  Q
 BACKGR ;
  I '$$LOCKNOW^BPSOSRX("BACKGROUND") Q
- N TYPE,KEY1,KEY2,IEN59,IEN59PR,BPNOW,BPUNTIL
- N BPIEN77,BPLCKRX,BPQ,BPCOBIND,GRPLAN
- S BPNOW=$$NOW^BPSOSRX()
- ;go through all ACTIVATED
- S KEY1="" F  S KEY1=$O(^BPS(9002313.77,"AC",1,KEY1)) Q:KEY1=""  D
- . S KEY2="" F  S KEY2=$O(^BPS(9002313.77,"AC",1,KEY1,KEY2)) Q:KEY2=""  D
- . . S IEN59PR=+$$IEN59^BPSOSRX(KEY1,KEY2,0)
- . . S BPLCKRX=$$LOCKRF^BPSOSRX(KEY1,KEY2,10,IEN59PR,$T(+0)) I BPLCKRX=0 D  Q
- . . . D LOG^BPSOSL(IEN59PR,$T(+0)_"-Failed to $$LOCKRF^BPSOSRX.  Will retry later.")
- . . S BPQ=0
- . . S BPIEN77="" F  S BPIEN77=$O(^BPS(9002313.77,"AC",1,KEY1,KEY2,BPIEN77)) Q:(+BPIEN77=0)!(BPQ=1)  D
- . . . ;check DONT PROCESS UNTIL field #.08 and if it is greater than NOW then DO NOT process it
- . . . S BPUNTIL=+$P($G(^BPS(9002313.77,BPIEN77,0)),U,8) I BPUNTIL>BPNOW S BPQ=1 Q  ;D LOG^BPSOSL(IEN59,$T(+0)_"-The request cannot be processed until."_BPUNTIL_" Will retry later.") Q
- . . . ;check if PROCESS FLAG is IN PROCESS - if the earlier record for this RX refill is in progress - 
- . . . ;we should not process the next operation queued - go to the next refill (BPQ=1)
- . . . I $P($G(^BPS(9002313.77,BPIEN77,0)),U,4)=2 S BPQ=1 D  Q
- . . . . D LOG^BPSOSL(IEN59,$T(+0)_"-Status is 'IN PROCESS'.  Will retry later.")
- . . . S BPCOBIND=$P(^BPS(9002313.77,BPIEN77,0),U,3)
- . . . S IEN59=$$IEN59^BPSOSRX(KEY1,KEY2,BPCOBIND)
- . . . ; Removed code to check Insurer Asleep
- . . . S TYPE=$P($G(^BPS(9002313.77,+BPIEN77,1)),U,4),TYPE=$S(TYPE="C":"CLAIM",TYPE="U":"UNCLAIM",TYPE="E":"ELIGIBILITY",1:"UNKNW")
- . . . I TYPE="UNKNW" D ERROR(+BPIEN77,IEN59,"Request Type is unknown. Cannot be processed.") Q
- . . . D LOG^BPSOSL(IEN59,$T(+0)_"-Processing the Activated request "_BPIEN77)
- . . . D LOG^BPSOSL(IEN59,$T(+0)_"-Dequeuing.  Type is "_TYPE)
- . . . ; if this is ACTIVATED then make it IN PROCESS (see SETPRFLG below)
+ N BACKSLOT S BACKSLOT=DT+.4
+ D INIT^BPSOSL(BACKSLOT,1,-1)
+ N LIST,TYPE,RXI,RXR,IEN59  S LIST="BPSOSRX"
+ I '$$LOCK^BPSOSRX("BACKGROUND",300) D  G FAIL
+ . D LOG^BPSOSL("Failed to $$LOCK^BPSOSRX(""BACKGROUND"")")
+ I $D(MOREDATA("DIALOUT")) S VADIAL=MOREDATA("DIALOUT") ;VA
+ F TYPE="CLAIM","UNCLAIM" D
+ . S RXI="" F  S RXI=$O(^BPSECP(LIST,TYPE,RXI)) Q:RXI=""  D
+ . . S RXR="" F  S RXR=$O(^BPSECP(LIST,TYPE,RXI,RXR)) Q:RXR=""  D
+ . . . N X S X=$$STATUS^BPSOSRX(RXI,RXR,0)
+ . . . S IEN59=$$IEN59^BPSOSRX(RXI,RXR)
+ . . . D LOG59^BPSOSL($T(+0)_" - Dequeuing.  Type is "_TYPE,IEN59)
+ . . . I $P(X,U)="IN PROGRESS" D  Q
+ . . . . D LOG59^BPSOSL($T(+0)_" - Status is 'IN PROGRESS'.  Will retry later.",IEN59)
  . . . N TIME,MOREDATA
- . . . S TIME=$P($G(^BPS(9002313.77,+BPIEN77,6)),U,1) ; time requested
- . . . D READMORE^BPSOSRX4(BPIEN77,.MOREDATA)
- . . . ;now it is IN PROCESS - i.e. goes to BACKGR1 (as K ^XTMP("BPS-PROC",TYPE,KEY1,KEY2 in old logic) 
- . . . I +$$INPROCES^BPSOSRX4(BPIEN77)=0 D ERROR(+BPIEN77,IEN59,"Cannot change the PROCESS FLAG to IN PROCESS. Cannot be processed.") Q
- . . . D LOG^BPSOSL(IEN59,$T(+0)_"-The request "_BPIEN77_" has been changed to IN PROCESS")
- . . . I +$$BACKGR1(TYPE,KEY1,KEY2,TIME,.MOREDATA,IEN59,+BPIEN77)=0 Q
- . . . S BPQ=1 ; This will skip requests with the same keys as the one just processed
- . . I BPLCKRX D UNLCKRF^BPSOSRX(KEY1,KEY2,IEN59PR,$T(+0))
+ . . . S TIME=^BPSECP(LIST,TYPE,RXI,RXR) ; time requested
+ . . . I '$$LOCK^BPSOSRX("SUBMIT",10) D  Q
+ . . . . D LOG59^BPSOSL($T(+0)_" - Failed to $$LOCK^BPSOSRX(""SUBMIT"").  Will retry later.",IEN59)
+ . . . I $D(^BPSECP(LIST,TYPE,RXI,RXR,"MOREDATA")) M MOREDATA=^("MOREDATA")
+ . . . E  S MOREDATA=0
+ . . . K ^BPSECP(LIST,TYPE,RXI,RXR)
+ . . . D BACKGR1(TYPE,RXI,RXR,TIME,.MOREDATA)
+ . . . D UNLOCK^BPSOSRX("SUBMIT")
+ . . . I $P($G(^BPS(9002313.99,1,"SITE TYPE")),"^",1) D HANG  ;VA; don't hang for VA Rx's
+FAIL D RELSLOT^BPSOSL
  D UNLOCK^BPSOSRX("BACKGROUND")
  Q
- ;
- ;
- ; BACKGR1 - Further processing of the claim
- ; Besides the parameter below, IEN59 also needs to be defined
- ; TYPE - "CLAIM", "UNCLAIM", or "ELIGIBILITY"
- ; KEY1 - First key of the request
- ; KEY2 - Second key of the request
- ; TIME - time requested
- ; MOREDATA - array with claim data
- ; IEN59 - BPS TRANSACTION ien
- ; BPS77 - BPS REQUEST file ien
-BACKGR1(TYPE,KEY1,KEY2,TIME,MOREDATA,IEN59,BPS77) ;
+STARTTIM(RXI,RXR)  Q $P($G(^BPST($$IEN59(RXI,RXR),0)),U,11)
+BACKGLOG(X) ;
+ N MSG S MSG=RXI_","_RXR_" "_$S(TYPE="CLAIM":"",1:TYPE)_" "_X
+ D LOG2SLOT^BPSOSL(MSG,BACKSLOT)
+ Q
+BACKGR1(TYPE,RXI,RXR,TIME,MOREDATA)        ;
  ; Resolve multiple requests
- N SKIP,SKIPREAS,BPCOBIND,RESULT,PAYABLE
- D LOG^BPSOSL(IEN59,$T(+0)_"-Processing request "_BPS77_" with keys "_KEY1_", "_KEY2_" and type "_TYPE)
- S SKIP=0
- S BPCOBIND=$$COB59^BPSUTIL2(IEN59)
- S RESULT=$P($$STATUS^BPSOSRX(KEY1,KEY2,0,,BPCOBIND),U)
- S PAYABLE=$$PAYABLE^BPSOSRX5(RESULT)
+ N SKIP S SKIP=0 ; skip if you already got desired result
+ N SKIPREAS
+ N RESULT S RESULT=$$STATUS^BPSOSRX(RXI,RXR,0),RESULT=$P(RESULT,U)
+ N STARTTIM S STARTTIM=$$STARTTIM(RXI,RXR)
  I TYPE="CLAIM" D
- . I $$RXDEL^BPSOS(KEY1,KEY2) S SKIP=1,SKIPREAS="Prescription is marked as DELETED or CANCELLED in Outpatient Pharmacy" Q
- . I PAYABLE S SKIP=1,SKIPREAS="Prescription is currently paid.  Previous Result is "_RESULT Q
- I TYPE="UNCLAIM",'PAYABLE S SKIP=1,SKIPREAS="Cannot reverse - previous result was "_RESULT
- ;
- ; If the SKIP flag message is set, handle error and quit
- I SKIP D ERROR(BPS77,IEN59,SKIPREAS) Q 0
- ;
- ; Submit claim
- S MOREDATA("SUBMIT TIME")=TIME
- ;
- ; If reversal, execute reversal code and quit
- I TYPE="UNCLAIM" D REVERSE(IEN59,.MOREDATA,$G(BPS77)) Q 1
- ;
- ; Claims and Eligibility will fall through to here
- D LOG^BPSOSL(IEN59,$T(+0)_"-Initiating Claim")
- D EN^BPSOSIZ(IEN59,.MOREDATA,$G(BPS77))
- Q 1
- ;
- ; Error handling - If a record can not be processed, then it needs to be
- ; inactivated and the next request activated
- ; 
- ; This is also called by ERROR^BPSOSIZ
-ERROR(BPS77,IEN59,ERROR) ;
- I '$G(BPS77) Q
- I $G(ERROR)="" S ERROR="Unknown"
- N BPNXT77,BPRETV
- D LOG^BPSOSL(IEN59,$T(+0)_"-Skipping "_BPS77_" because of ERROR: "_ERROR)
- ;
- ; Inactivate the current request
- S BPRETV=$$INACTIVE^BPSOSRX4(BPS77,ERROR)
- I 'BPRETV D LOG^BPSOSL(IEN59,$T(+0)_"-Could not inactivate the request: "_BPRETV) Q
- D LOG^BPSOSL(IEN59,$T(+0)_"-Request is inactivated")
- ;
- ; See if there is a next request linked to this one
- ; If there is, activate it
- S BPNXT77=+$$GETNXREQ^BPSOSRX6(BPS77,0,0,$G(IEN59))
- I BPNXT77 D
- . S BPRETV=$$ACTIVATE^BPSOSRX4(BPNXT77)
- . D LOG^BPSOSL(IEN59,$T(+0)_"-The next request "_BPNXT77_" has "_$S('BPRETV:"not ",1:"")_"been activated")
+ . I $$RXDEL^BPSOS(RXI,RXR) D  Q
+ . . S SKIP=1,SKIPREAS="Prescription is marked as DELETED or CANCELLED"
+ . ; If it's never been through ECME before, good.
+ . I RESULT="" Q
+ . ; There's already a complete transaction for this RXI,RXR
+ . ; (We screened out "IN PROGRESS" earlier)
+ . ; The program to poll indexes would have set DO NOT RESUBMIT.
+ . ; Calls from pharm pkg to ECME have '$D(MOREDATA("DO NOT RESUBMIT"))
+ . I $D(MOREDATA("DO NOT RESUBMIT")) D
+ . . S SKIP=1
+ . . S SKIPREAS="MOREDATA(""DO NOT RESUBMIT"") is set"
+ . E  I TIME<STARTTIM D  ; our request was made before trans. began
+ . . ; submit claim but only if the prev result was successful reversal
+ . . I RESULT="PAPER REVERSAL" Q
+ . . I RESULT="E REVERSAL ACCEPTED" Q
+ . . S SKIP=1
+ . . S SKIPREAS="Prev result "_RESULT_"; claim started "_STARTTIM_">"_TIME_" submitted"
+ . E  D  ; our request was made after it began
+ . . ; So we will make a reversal if necessary,
+ . . ; and then the claim will be resubmitted.
+ . . I RESULT="E PAYABLE"!(RESULT="E DUPLICATE") D
+ . . . S MOREDATA("REVERSE THEN RESUBMIT")=1
+ E  I TYPE="UNCLAIM" D
+ . ; It must have gone through ECME with a payable result
+ . I RESULT="E PAYABLE" Q
+ . I RESULT="E DUPLICATE" Q
+ . N RXACTION S RXACTION=$G(MOREDATA("RX ACTION"))
+ . I RESULT="E REVERSAL REJECTED",(",DE,EREV,RS,"[(","_RXACTION_",")) Q
+ . I RESULT="E REVERSAL STRANDED",RXACTION="EREV" Q
+ . S SKIP=1
+ . S SKIPREAS="Cannot reverse - previous result was "_RESULT
+ E  D IMPOSS^BPSOSUE("P","TI","bad arg TYPE="_TYPE,,"BACKGR1",$T(+0))
+ I SKIP D  Q
+ . D LOG59^BPSOSL($T(+0)_" - Skipping.  Reason: "_SKIPREAS,IEN59)
+ I TYPE="UNCLAIM"!$G(MOREDATA("REVERSE THEN RESUBMIT")) D REVERSE
+ E  D CLAIM(RXI,RXR,IEN59,.MOREDATA)
  Q
  ;
+ ; Process claim request
+ ; EP - Above and BPSOSU (for a resubmit after a reversal)
+CLAIM(RXI,RXR,IEN59,MOREDATA) ;
+ N ABSBRXI,ABSBRXR,ABSBNDC
+ S (ABSBRXI,ABSBRXI(1))=RXI,(ABSBRXR,ABSBRXR(1))=RXR
+ S ABSBNDC(1)=$$DEFNDC^BPSOSIV
+ ;
+ ; If MOREDATA("ORIGIN") is undefined, give it a "1" here.
+ I '$D(MOREDATA("ORIGIN")) S MOREDATA("ORIGIN")=1
+ D LOG59^BPSOSL($T(+0)_" - Initiating Claim",IEN59)
+ D FILING^BPSOSIV(0,MOREDATA("ORIGIN"),.MOREDATA)  ;6/23/03 PASS MOREDATA FOR IB DATA FILING
+ Q
  ; Process the reversal
-REVERSE(IEN59,MOREDATA,BP77) ;
- N MSG,RETVAL,REV
+ ; EP - Above 
+REVERSE ;
+ N IEN59 S IEN59=$$IEN59(RXI,RXR)
+ N M S M=$T(+0)_" - Initiating Reversal"
+ I $G(MOREDATA("REVERSE THEN RESUBMIT")) D
+ . S M=M_" and after that, claim will be resubmitted"
+ . N X,X1,X2
+ . S X1=DT,X2=30 D C^%DTC
+ . S ^XTMP("BPSOSRB",0)=X_U_DT_U_"PASS VARIABLES FOR RESUBMITS"
+ . K ^XTMP("BPSOSRB","MOREDATA",IEN59)
+ . M ^XTMP("BPSOSRB","MOREDATA",IEN59,"RESUB")=MOREDATA
+ D LOG59^BPSOSL(M,IEN59)
+ N RETVAL S RETVAL=$$REVERS59^BPSOS6D(IEN59,1)
+ D LOG59^BPSOSL($T(+0)_" - Return Value from BPSOS6D: "_RETVAL,IEN59)
  ;
- ; Update BPS REQUEST with the BPS TRANSACTION IEN
- I $G(BP77)>0 D UPD7759^BPSOSRX4(BP77,IEN59)
- ;
- ; Log Reversal or Reversal/Resubmit message.
- ; Note that the reversal/resubmit message is needed
- ;   for Turn-Around Stats - Do NOT delete/alter!!
- S MSG=$T(+0)_"-Initiating Reversal"
- D LOG^BPSOSL(IEN59,MSG)
- ;
- ; Change status to 0% (Waiting to Start), which will reset START TIME,
- ;   and then to 10% (Building transaction)
- D SETSTAT^BPSOSU(IEN59,0)
- D SETSTAT^BPSOSU(IEN59,10)
- ;
- ; Update Submit Date (#6), User (#13), Request Type (#19), Reversal Reason (#404),
- ;   Reversal Request (#405), Reversal Request Date and Time (#406),
- ;   and RX Action (#1201) in BPS Transactions
- N DIE,DR,DA
- S DIE=9002313.59,DA=IEN59
- S DR="6////"_$G(MOREDATA("SUBMIT TIME"))_";13////"_$G(MOREDATA("USER"))
- S DR=DR_";404////"_$G(MOREDATA("REVERSAL REASON"))_";1201////"_$G(MOREDATA("RX ACTION"))
- S DR=DR_";19////"_$G(MOREDATA("REQ TYPE"))_";405////"_$G(MOREDATA("REQ IEN"))_";406////"_MOREDATA("REQ DTTM")
- ;
- D ^DIE
- ;
- ; Store the Payer Sequence in the log
- N BPSCOB
- S BPSCOB=$$COB59^BPSUTIL2(IEN59),BPSCOB=$S(BPSCOB=2:"-Secondary",BPSCOB=3:"-Tertiary",1:"-Primary"),BPSCOB=BPSCOB_" Insurance"
- D LOG^BPSOSL(IEN59,$T(+0)_BPSCOB)
- ;
- ; Store contents of BPST in the Log
- D LOG^BPSOSL(IEN59,$T(+0)_"-Contents of ^BPST("_IEN59_") :")
- D LOG59^BPSOSQA(IEN59) ; Log contents of 9002313.59
- ;
- ; Add semi-colon to result text
- D PREVISLY^BPSOSIZ(IEN59)
- ;
- ; Construct reversal claim
- ;   If no reversal claim is returned, log error and quit.
- S REV=$$REVERSE^BPSECA8(IEN59)
- I REV=0 D  Q
- . D LOG^BPSOSL(IEN59,$T(+0)_"-Reversal claim not created for "_IEN59)
- . D ERROR^BPSOSU($T(+0),IEN59,100,"Reversal Claim not created")
- ;
- ; Update Reversal Field in the transaction
- S DIE=9002313.59,DA=IEN59,DR="401////"_REV
- D ^DIE
- ;
- ; Update Log
- D LOG^BPSOSL(IEN59,$T(+0)_"-Reversal claim "_$P(^BPSC(REV,0),U)_" ("_REV_")")
- ;
- ; Update status to 30% (Building the claim)
- D SETSTAT^BPSOSU(IEN59,30)
- ;
- ; Fire off task to get this on the HL7 queue
- D TASK^BPSOSQA
+ ; Reset $T so the calling code does not fall through to the else
+ I 1
  Q
+LASTLOG ; tool for test - find and print most recent log file
+ N X S X=999999999999
+ F  S X=$O(^BPSECP("LOG",X),-1) Q:'X  Q:X#1=.4
+ I 'X W "No log file found",! Q
+ D PRINTLOG^BPSOSL(X)
+ Q
+HANG ; how long to hang before submitting the next claim?
+ ; usually not at all (0 secs)
+ ; but if there are an extraordinary # of claims in processing,
+ ; then wait up a bit before letting anything else through
+ ;
+ ; FUTURE:  Have to make this smarter - make it aware of how many
+ ; claims have been requested in, say, the past 1 minute as well.
+ ; This would be to keep the backbilling from flooding taskman
+ ; with excessive BPSOSQ1 and BPSOSQ2 jobs which have nothing to
+ ; do.  That way, the BPSOSQ3 jobs would activate more quickly.
+ ;
+ ; I $H<some date H $R(10) ; put in this line if doing massive backbill
+ I $R(50) Q  ; for efficiency - check only once every 50 claims
+ N LOCK,MYDEST
+HANGA ;
+ I '$G(VARX) S VARX=0 S:$P($G(^BPS(9002313.99,1,"SITE TYPE")),"^",1)=0 VARX=1
+ K MYDEST S LOCK=0 D FETSTAT^BPSOS2("MYDEST")
+ N T,S S T=0 F S=0:10:90 S T=T+$G(MYDEST(S))
+ I T<20 Q  ; not too many; that's fine
+ I '$G(VARX) H 30 ; wait 30 secs and try again until things have settled down
+ E  H 5
+ G HANGA
+IEN59(RXI,RXR)     Q $$IEN59^BPSOSRX(RXI,RXR)

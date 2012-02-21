@@ -1,5 +1,5 @@
-SDWLMSG ;IOFO BAY PINES/DMR - EWL-SC PRIORITY BACKGROUND MESSAGES;09/02/2004 2:10 PM [5/12/05 2:58pm]  ; Compiled June 7, 2006 11:07:43  ; Compiled May 1, 2007 15:08:25
- ;;5.3;scheduling;**327,394,446**;AUG 13, 1993;Build 77
+SDWLMSG ;IOFO BAY PINES/DMR - EWL-SC PRIORITY BACKGROUND MESSAGES;09/02/2004 2:10 PM [5/12/05 2:58pm]
+ ;;5.3;scheduling;**327,394**;AUG 13, 1993
  ;
 MESS ;Send message 1
  S ^TMP("SDWLQSC1",$J,.01)="Patient Name                    SSN   OLD-EWL/SC %  NEW-EWL/SC %  PRIORITY"
@@ -120,24 +120,4 @@ MESS8 ;PCMM Position available open slots
  S XMTEXT="^TMP(""SDWLQSC9"",$J,"
  S XMDUZ="POSTMASTER"
  D ^XMD K ^TMP("SDWLQSC9",$J)
- Q
-MESS9(DFN) ;
- S ^TMP("ENC",$J,.01)="This message displays any open EWL Clinic (C) or Specialty (S) type entries"
- S ^TMP("ENC",$J,.02)="along with the date/time of the first identified encounter or appointment for"
- S ^TMP("ENC",$J,.03)="that patient (in the same Clinic or Specialty) entered after the origination"
- S ^TMP("ENC",$J,.04)="date of the EWL entry."
- S ^TMP("ENC",$J,.05)=""
- S ^TMP("ENC",$J,.06)="Please review, and Disposition the EWL entry if the encounter/appointment has"
- S ^TMP("ENC",$J,.07)="satisfied the need for the EWL entry."
- N SDFORM S SDFORM=$$FORM^SDFORM("PATIENT NAME",22,"CLINIC",18,"EWL Type-Org. Date",25,"Date/Time of Appt",21) D  ;added
- .S ^TMP("ENC",$J,.08)=SDFORM
- S ^TMP("ENC",$J,.09)="-------------------------------------------------------------------------------"
- N SSN S SSN=$$GET1^DIQ(2,DFN_",",.09,"I"),SSN=$E(SSN,1,3)_"-"_$E(SSN,4,5)_"-"_$E(SSN,6,10)
- S ^TMP("ENC",$J,.1)=SSN
- N XMSUB,XMY,XMTEXT,XMDUZ
- S XMSUB="EWL entries with existing, related appointment/encounter."
- S XMY("G.SD EWL BACKGROUND UPDATE")=""
- S XMTEXT="^TMP(""ENC"",$J,"
- S XMDUZ="POSTMASTER"
- D ^XMD K ^TMP("ENC",$J)
  Q

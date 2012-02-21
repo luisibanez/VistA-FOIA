@@ -1,6 +1,6 @@
 PRCHNPO8 ;WISC/RHD/DL-MISCELLANEOUS ROUTINES FROM P.O.ADD/EDIT 443.6 ;9/5/00  12:30
-V ;;5.1;IFCAP;**113**;Oct 20, 2000;Build 4
- ;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN1 ;FILE 443.6, FCP #1
  N Y
@@ -14,7 +14,6 @@ EN1 ;FILE 443.6, FCP #1
  I $D(^PRC(420,PRC("SITE"),1,+Y,2,0)),$P(^(0),U,4)=1,$D(^($P(^(0),U,3),0)),$D(^PRCD(420.1,+^(0),0)) S PRCHN("CC")=$P(^(0)," ",1)
  S PRC("APP")="",X=Z0,PRC("BBFY")=$$BBFY^PRCSUT(PRC("SITE"),PRC("FY"),+X) I PRC("BBFY")="" Q
  S PRC("APP")=$P($$ACC^PRC0C(PRC("SITE"),+X_"^"_PRC("FY")_"^"_PRC("BBFY")),U,11) K Z0,Z1
- I $P($G(^PRC(420,PRC("SITE"),1,+X,0)),U,19)=1 W !,"Sorry, this FCP is inactive!",! K X Q
  Q
  ;
 EN2 ;UPDATE BOC #3.5

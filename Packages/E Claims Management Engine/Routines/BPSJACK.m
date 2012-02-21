@@ -1,6 +1,6 @@
-BPSJACK ;BHAM ISC/LJF - HL7 Acknowledgement Messages ;3/13/08  16:08
- ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5,7**;JUN 2004;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+BPSJACK ;BHAM ISC/LJF - HL7 Acknowledgement Messages ;21-NOV-2003
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; This routine examines an Acknowledgement Message. If the message is
  ; the E-PHARM Application Acknowledgement Message, and it is "AA",
@@ -26,26 +26,10 @@ EN(HL) N ACK,AREG,BPSJSEG,ERR,HCT,SEG
  . ;
  . I SEG="MFI",ACK="AA",$P($G(BPSJSEG(2)),$E($G(HL("ECH"))))="Facility Table" S AREG=1
  . ;
- . ;GET NPI
- . I SEG="MFI",ACK="AA",$P($G(BPSJSEG(2)),$E($G(HL("ECH"))))="Pharmacy Table" D
- . . I '$G(MSGID) Q
- . . N BPSJNPI,BPSJPIX,BPSJNDT,BPSJ,HLMAID,HLID
- . . ; back track AA/ACK to message sent out to find NPI sent out
- . . S HLMAID=$O(^HLMA("C",MSGID,"")) I '$G(HLMAID) Q
- . . S HLID=$P(^HLMA(HLMAID,0),U) I '$G(HLID) Q
- . . S BPSJNPI=$P($G(^HL(772,HLID,"IN",22,0)),"|") I '$G(BPSJNPI) Q
- . . S BPSJ=$G(^XTMP("BPSJ","NPI",BPSJNPI)) I 'BPSJ Q
- . . S BPSJPIX=$P(BPSJ,U),BPSJNDT=$P(BPSJ,U,2)
- . . N DA,DIC,DIE,DINUM,DIR,DIRUT,DIROUT,DLAYGO,DR,DTOUT,DUOUT,X,Y
- . . S DA=BPSJPIX,DIE=$$ROOT^DILFD(9002313.56)
- . . S DR="41.01////"_BPSJNPI_";41.02////"_BPSJNDT D ^DIE
- . . K ^XTMP("BPSJ","NPI",BPSJNPI)
- . ;
  . I SEG="MFA",ACK="AE" S ERR("MFA",U_$G(BPSJSEG(5)))="" Q
  ;
- ; Pharmacy Registrations
+ ; Application Registered, do pharmacy registrations
  I AREG S AREG=0 D
- . S $P(^BPS(9002313.99,1,0),"^",7)=$$NOW^XLFDT
  . F  S AREG=$O(^BPS(9002313.56,AREG)) Q:'AREG  D REG^BPSJPREG(AREG)
  ;
  I $D(ERR) D ERRORM D MSG^BPSJUTL(.ERR,"BPSJACK")
@@ -70,7 +54,7 @@ ERRORM ; Error message setup
  Q
  ;
 APPACK(HL,APPACK,PSIEN) ; Application Acknowledgement for Payer Sheets
- N MGRP,MSG,MCT,BPSGENR
+ N MGRP,MSG,MCT,GENRSLT
  N TLN,FS,FS2,FS3,CS
  ;
  K ^TMP("HLA",$J)
@@ -100,7 +84,7 @@ APPACK(HL,APPACK,PSIEN) ; Application Acknowledgement for Payer Sheets
  . S TLN=TLN_APPACK("MFA",5)_FS_APPACK("MFA",6)
  E  D MFASEGS
  ;
- D GENACK^HLMA1($G(HL("EID")),$G(HL("HLMTIENS")),$G(HL("EIDS")),"GM",1,.BPSGENR)
+ D GENACK^HLMA1($G(HL("EID")),$G(HL("HLMTIENS")),$G(HL("EIDS")),"GM",1,.GENRSLT)
  ;
  K ^TMP("HLA",$J)
  Q

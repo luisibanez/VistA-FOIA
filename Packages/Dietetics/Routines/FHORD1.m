@@ -1,5 +1,5 @@
 FHORD1 ; HISC/REL/NCA - Diet Order ;3/28/01  10:28
- ;;5.5;DIETETICS;**8**;Jan 28, 2005;Build 28
+ ;;5.5;DIETETICS;;Jan 28, 2005
 F0 S ALL=1 D ^FHDPA G:'DFN KIL G:'FHDFN KIL
  I $G(ADM)="" W *7,!!," NOT CURRENTLY AN INPATIENT" D KIL Q
  D D0 G:'DFN KIL G:'FHDFN KIL D PROC
@@ -8,7 +8,6 @@ F0 S ALL=1 D ^FHDPA G:'DFN KIL G:'FHDFN KIL
  G F0
 D0 ; Process Diet Order
  D CUR^FHORD7 W !!,"Current Diet: ",$S(Y'="":Y,1:"No current order")
- D ALG^FHCLN W !!,"Allergies: ",$S(ALG="":"None on file",1:ALG)
  I FHORD S COM=$G(^FHPT(FHDFN,"A",ADM,"DI",FHORD,1)) I COM'="" W !,"Comment: ",COM
  D NOW^%DTC S NOW=% K %,%H,%I D FUT
 C0 I CT W *7 R !!,"A new order with no expiration date will CANCEL these diets.",!!,"Do you wish to CONTINUE? (Y/N): ",X:DTIME G:'$T!(X="^") AB S:X="" X="^" D TR^FH G:$P("NO",X,1)="" AB I $P("YES",X,1)'="" W *7,"  Answer YES or NO" G C0

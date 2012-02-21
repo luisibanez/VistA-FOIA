@@ -1,5 +1,5 @@
 RMPRPIY6 ;HINES OIFO/ODJ - EI - Edit Locations and Items ;10/7/02  14:46
- ;;3.0;PROSTHETICS;**61,145**;Feb 09, 1996;Build 6
+ ;;3.0;PROSTHETICS;**61**;Feb 09, 1996
  Q
  ;
  ;***** EI - Edit Inventory ITEM
@@ -66,7 +66,7 @@ HCPCS5 D ITED^RMPRPIY1(.RMPR11,.RMPREXC)
  ;
  ; Lock the current stock 661.7 file at HCPCS Item level as we may be
  ; reducing or increasing the quantity on hand
-CURSTL L +^RMPR(661.7,"XSHIDS",RMPRSTN("IEN"),RMPR11("HCPCS"),RMPR11("ITEM")):5 E  W !,"PROSTHETIC CURRENT STOCK record for HCPCS item open by someone else" G LOCN
+CURSTL L +^RMPR(661.7,"XSHIDS",RMPRSTN("IEN"),RMPR11("HCPCS"),RMPR11("ITEM"))
  ;
  ;***** CURST - call prompt for current stock record
 CURST S RMPRLCN="" K RMPR5
@@ -173,11 +173,10 @@ TVAL I RMPRUCST D  G VEND
  I RMPREXC="T" G EIU
  ;
  ;***** VEND - call prompt for Vendor
- ;VENDOR edit removed 3/1/08 per Karen Blum
-VEND ;D VEND^RMPRPIY5(.RMPRVEND,.RMPREXC)
- ;I RMPREXC="P" G UCST
- ;I RMPREXC="^" D UNLOCK G HCPCS
- ;I RMPREXC="T" G EIU
+VEND D VEND^RMPRPIY5(.RMPRVEND,.RMPREXC)
+ I RMPREXC="P" G UCST
+ I RMPREXC="^" D UNLOCK G HCPCS
+ I RMPREXC="T" G EIU
  ;
  ;
  ;***** UNIT - call prompt for UNIT OF ISSUE

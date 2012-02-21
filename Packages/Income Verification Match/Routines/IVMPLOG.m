@@ -1,5 +1,5 @@
-IVMPLOG ;ALB/CJM,RTK,ERC - API for IVM PATIENT file; ; 8/15/08 12:49pm
- ;;2.0;INCOME VERIFICATION MATCH;**9,19,12,21,17,28,36,40,49,68,115**; 21-OCT-94;Build 28
+IVMPLOG ;ALB/CJM,RTK - API for IVM PATIENT file; ; 12/6/00 5:28pm
+ ;;2.0;INCOME VERIFICATION MATCH;**9,19,12,21,17,28,36,40,49,68**; 21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
@@ -260,13 +260,11 @@ EVENT(DFN) ;
  ;
  ;if the eligibility/enrollment upload is in progess, or there is no enrollment, do nothing
  Q:($G(DGENUPLD)="ENROLLMENT/ELIGIBILITY UPLOAD IN PROGRESS")
- ;remove screen for non-vets, IVM 115 - ERC
- I '$$VET1^DGENPTA(DFN) S EVENTS("ENROLL")=1 I $$LOG(DFN,$$YEAR(DFN),.EVENTS) Q 
  I ('$$FINDCUR^DGENA(DFN)),('$$VET^DGENPTA(DFN)) Q
  N STATUS
  S STATUS=$$STATUS^DGENA(DFN)
  ; Purple Heart added status 21
- I $$VET1^DGENPTA(DFN)!(STATUS=1)!(STATUS=2)!(STATUS=9)!(STATUS=15)!(STATUS=16)!(STATUS=17)!(STATUS=18)!(STATUS=19)!(STATUS=20)!(STATUS=21)!(STATUS=23) D
+ I $$VET1^DGENPTA(DFN)!(STATUS=1)!(STATUS=2)!(STATUS=9)!(STATUS=15)!(STATUS=16)!(STATUS=17)!(STATUS=18)!(STATUS=19)!(STATUS=20)!(STATUS=21) D
  .N EVENTS
  .S EVENTS("ENROLL")=1
  .I $$LOG(DFN,$$YEAR(DFN),.EVENTS) ;no need to inform on success or failure

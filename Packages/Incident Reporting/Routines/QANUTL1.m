@@ -1,5 +1,5 @@
 QANUTL1 ;HISC/GJC-UTILITIES FOR INCIDENT REPORTING (PATIENT DATA) ;7/12/93  09:07
- ;;2.0;Incident Reporting;**20,27,32**;08/07/1992;Build 3
+ ;;2.0;Incident Reporting;**20,27**;08/07/1992
  ;
 DICW ;Sets up output for patient lookup.
  S QANY=$P(^QA(742,+Y,0),U),QANYY=+$P(^QA(742,+Y,0),U,3)
@@ -34,7 +34,7 @@ PAT ;Choose your patient.
  S DIC("S2")="&($D(^QA(742,""BPRS"",1,+Y)))"
  S DIC("S3")="I $P(^QA(742,+Y,0),U,3)=QANIEN"
  S DIC("S")=$S(QANTYPE=3:DIC("S1")_DIC("S2"),1:DIC("S3")_DIC("S2"))
-PAT1 ;entry point from EDIT1^QANDCNT
+PAT1    ;entry point from EDIT1^QANDCNT
  S DIC("W")="D DICW^QANUTL1",D="B^BS5" D MIX^DIC1
  I $G(X)']"" W !!,$C(7),"You must enter patient's name to continue editing." G PAT1
  K DIC
@@ -77,7 +77,7 @@ EDTNME ;Edit the patients name.
  S (QANPAT,QANPIEN)=+X
  Q:QANXIT!(+X=QAHOLD)  ;Exit on abnormal exit OR same patient
  S QA2=$G(^DPT(+X,0)),QANSSN=$P(QA2,U,9),QA1=$P(QA2,U),QANDOB=$P(QA2,U,3)
- S QANPID=$$QANPID^QANCDNT(QA1)
+ S QANPID=$E($P(QA1,",",2))_$E($P(QA1," ",2))_$E($P(QA1,","))_$E(QANSSN,6,9)
  D ADMDT ;Grab ward, t spec, admit date, and patient type for new patient
  S QANADMDT=$S(QANADMDT]"":QANADMDT,1:"@"),QANTRSP=$S(QANTRSP]"":QANTRSP,1:"@"),QANINPAT=$S(QANINPAT]"":QANINPAT,1:"@"),QANWARD=$S(QANWARD]"":QANWARD,1:"@"),QANPID=$S(QANPID]"":QANPID,1:"")
  S DIE="^QA(742,",DA=QANDFN

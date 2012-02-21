@@ -1,21 +1,11 @@
-IVMPRECZ ;ALB/SEK,RTK,TDM - ROUTINE TO PROCESS V1.5 ORF-Z06 INCOMING HL7 MESSAGES ; 8/15/08 10:28am
- ;;2.0;INCOME VERIFICATION MATCH;**34,64,71,115**;21-OCT-94;Build 28
+IVMPRECZ ;ALB/SEK,RTK - ROUTINE TO PROCESS V1.5 ORF-Z06 INCOMING HL7 MESSAGES ; 01/02/03 10:01am
+ ;;2.0;INCOME VERIFICATION MATCH;**34,64,71**;21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
 GET ; get HL7 segment from ^HL
  S IVMDA=$O(^HL(772,HLDA,"IN",+IVMDA)),IVMSEG=$G(^(+IVMDA,0))
  S IVMSEG1=$E(IVMSEG,1,3)
- I IVMSEG1="PID" D  Q
- .N NOPID,PIDCNTR,PIDSTR
- .K IVMPID
- .S (NOPID,PIDCNTR)=1,PIDSTR(PIDCNTR)=$P(IVMSEG,HLFS,2,99)
- .F I=1:1 D  Q:NOPID
- ..I $E($G(^HL(772,HLDA,"IN",IVMDA+1,0)),1,4)="ZMT^" S NOPID=1 Q
- ..S IVMDA=$O(^HL(772,HLDA,"IN",+IVMDA))
- ..S IVMSEG=$G(^HL(772,HLDA,"IN",+IVMDA,0))
- ..S PIDCNTR=PIDCNTR+1,PIDSTR(PIDCNTR)=IVMSEG
- .D BLDPID^IVMPREC6(.PIDSTR,.IVMPID)
  Q
  ;
 ACK ; - prepare acknowledgment (ACK) message
@@ -60,7 +50,7 @@ ERRBULL ; build mail message for transmission to IVM mail group notifying site
  S IVMTEXT(6)="    ERROR:    "_IVMTEXT(6)
  Q
 ORF ;entry point for Means Test Signature Z06 msgs.
- N SEG,EVENT,MSGID,COMP,TMPARY,PID3ARY,DFN,ICN
+ N SEG,EVENT,MSGID
  S:'$D(HLEVN) HLEVN=0
  D NXTSEG(HLDA,0,.SEG)
  Q:(SEG("TYPE")'="MSH")  ;wouldn't have reached here if this happened!
@@ -74,12 +64,10 @@ ORF ;entry point for Means Test Signature Z06 msgs.
  .S IVMFLGC=0
  .D GET I IVMSEG1'="PID" D  Q
  ..S HLERR="Missing PID segment" D ACK
- .;S DFN=$P($P(IVMSEG,HLFS,4),$E(HLECH))
- .M TMPARY(3)=IVMPID(3) D PARSPID3^IVMUFNC(.TMPARY,.PID3ARY)
- .S DFN=$G(PID3ARY("PI")),ICN=$G(PID3ARY("NI"))
- .I '$$MATCH^IVMUFNC(DFN,ICN,"","","I",.ERRMSG) S HLERR=ERRMSG D ACK Q
- .K TMPARY,PID3ARY
- .;I $P(IVMSEG,HLFS,20)'=$P(^DPT(DFN,0),"^",9) S HLERR="Couldn't match IVMSSN with DHCP SSN" D ACK Q
+ .S DFN=$P($P(IVMSEG,HLFS,4),$E(HLECH))
+ .I ('DFN!(DFN'=+DFN)!('$D(^DPT(+DFN,0)))) D  Q
+ ..S HLERR="Invalid DFN" D ACK
+ .I $P(IVMSEG,HLFS,20)'=$P(^DPT(DFN,0),"^",9) S HLERR="Couldn't match IVMSSN with DHCP SSN" D ACK Q
  .S IVMDAP=IVMDA ; save IVMDA for veteran PID segment
  .D GET I IVMSEG1'="ZMT" D  Q
  ..S HLERR="Missing ZMT segment" D ACK

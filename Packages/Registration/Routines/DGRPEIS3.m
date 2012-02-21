@@ -1,5 +1,5 @@
-DGRPEIS3 ;ALB/CAW,EG,ERC,BAJ,TDM - INCOME SCREENING DATA (CON'T) ; 5/26/10 2:03pm
- ;;5.3;Registration;**45,624,659,653,688,754**;Aug 13, 1993;Build 46
+DGRPEIS3 ;ALB/CAW - INCOME SCREENING DATA (CON'T) ;12/1/94
+ ;;5.3;Registration;**45,624**;Aug 13, 1993
  ;
 HELP ; Display information when veteran's DOB is past the income year
  ;
@@ -20,7 +20,6 @@ WRT ; Write age statement
  Q
  ;
 EDIT ;CALLED FROM ROUTINE DGRPEIS
- N DGEXIT,SSNV,SSNVL,SSNUM
  S DGEDDEP=1
  S DGFL=$G(DGFL)
  S DATE=$S($G(DATE):DATE,1:$$LYR^DGMTSCU1(DT))
@@ -28,36 +27,13 @@ EDIT ;CALLED FROM ROUTINE DGRPEIS
  S DGTYPE=$G(DGTYPE),DGTYPE=$S(DGTYPE']"":"S",DGTYPE="C":"C",DGTYPE="D":"D",1:"S")
  S DIE="^"_$P(X,";",2),DA=+X
  ;
- ; DG*5.3*653 ERC Pseudo SSN Reason changes
- ; DG*5.3*688 BAJ SSN Verification changes
- ; 
- ; Retrieve SSN VERIFIED statusrequired 
- S SSNVL=DIE_DA_",0)"
- S SSNUM=$P(@SSNVL,"^",9),SSNV=$P(@SSNVL,"^",11)
- ;
- ; Lock SSN if SSN is VERIFIED
- S DR=$S(SSNV=4:".01;.02;.03;S UPARROW=1",1:".01;.02;.03;.09;S UPARROW=1")
- S DGEXIT=0
- K DG,DQ D ^DIE I $D(DTOUT)!$D(DUOUT)!'$D(UPARROW) S DGFL=$S($D(DTOUT):-2,1:-1) S DGEXIT=1 D EDITQ Q
- I SSNV="V" W !,"SOCIAL SECURITY NUMBER "_SSNUM_" has been verified by SSA -- NO EDITING"
- ;
- ; changes to make Pseudo SSN Reason required - DG*5.3*653, ERC
- S DGEXIT=0 I $P($G(@(DIE_DA_",0)")),U,9)["P" D SSNREA(.DGEXIT) I DGEXIT=1 Q
- I DGTYPE="S" D
- . S DR="1.1;S UPARROW=1"
- . K DG,DQ D ^DIE I $D(DTOUT)!$D(DUOUT)!'$D(UPARROW) S DGFL=$S($D(DTOUT):-2,1:-1) S DGEXIT=1
- I DGEXIT=1 Q
- ;
- ; ; end SSN Verification & Pseudo SSN Reason changes
- ; 
+ S DR=".01;.02;.03;.09"_$S(DGTYPE="S":";1.1",1:"")_";S UPARROW=1"
+ K DG,DQ D ^DIE I $D(DTOUT)!$D(DUOUT)!'$D(UPARROW) S DGFL=$S($D(DTOUT):-2,1:-1) D EDITQ Q
  S DOB=$P($G(@(DIE_DA_",0)")),U,3)
  ;
  N DGVADD,DGSADD,DGIPIEN,DGUQTLP,SPOUSE,DGFL,DGRPI
  S (DGVADD,DGSADD,DGIPIEN,DGUQTLP)=0
  S SPOUSE=$S(DGTYPE="S":1,1:0),DGFL=$G(DGFL)
- ;
- ; if veteran address is not USA, skip this ^DIR call
- I $$FORIEN^DGADDUTL($P($G(^DPT(DFN,.11)),U,10)) G FOREIGN
  ; Is spouse/dependent address same as patient address?
  K DIR
  S DIR(0)="YAO^^"
@@ -67,7 +43,6 @@ EDIT ;CALLED FROM ROUTINE DGRPEIS
  D ^DIR
  S DGVADD=+Y
  K Y,DIR
-FOREIGN ;tag added for rejoining if country not USA
  S DGIPIEN=$$SPSCHK^DGRPEIS(DFN)
  I 'DGVADD,(DGTYPE'="S"),DGIPIEN D
  . K DIR,Y
@@ -109,23 +84,16 @@ EDACTDT I $G(^DGPR(408.12,+DGPREF,"E",+DGMIEN,0)) D  G:$G(DGFL)<0 EDITQ
 EDITQ K DA,DIE,DIRUT,DR,DTOUT,DUOUT
  Q
  ;
-SSNREA(DGEXIT) ;if SSN is pseudo Pseudo SSN Reason is required - DG*5.3*653
- N I,EXIT
- S EXIT=0
- F  D  Q:EXIT
- . S DR=$S(DIE["DGPR":.1,1:.0906)_";S UPARROW=1"
- . K DG,DQ D ^DIE I $D(DTOUT)!$D(DUOUT)!'$D(UPARROW) S DGFL=$S($D(DTOUT):-2,1:-1) S (EXIT,DGEXIT)=1 Q
- . I $P($G(@(DIE_DA_",0)")),U,10)']"" S EXIT=0 Q
- . S EXIT=1
- Q
 HELP1(DGISDT) ; Displays the help for the active/inactive prompt
  ;
  D CLEAR^VALM1
  W !,"Enter the date this person first became a dependent of the veteran."
  W !,"In the case of a spouse, this would be the date of marriage.  For"
- W !,"a child, this would be the date of birth or date of adoption.  For a"
- W !,"stepchild, this would be the date of marriage to the child's parent."
- W !!,"Date must be before DEC 31, "_DGISDT_" as dependents are collected for the"
+ W !,"a parent or other dependent, this would be the date the dependent"
+ W !,"moved in.  For a child, this would be the date of birth or date of"
+ W !,"adoption."
+ W !," "
+ W !,"Date must be before DEC 31, "_DGISDT_" as dependents are collected for the"
  W !,"prior calendar year only."
  S VALMBCK="R"
  Q
@@ -160,7 +128,7 @@ HELPMN ; * Displays help for Spouse Maiden Name
  ;
 HELPSA1 ; * Displays help for Street Address 1
  N DGRELTP
- S DGRELTP=$$RELTYPE^DGRPEIS2($G(DA),1)
+ S DGRELTP=$$RELTYPE($G(DA),1)
  W !,"If a "_DGRELTP_"'s name has been specified, enter the first line of"
  W !,"that person's street address [3-30 characters]; otherwise this field"
  W !,"may be left blank.  This field cannot be deleted as long as a "_DGRELTP_"'s"
@@ -170,7 +138,7 @@ HELPSA1 ; * Displays help for Street Address 1
  ;
 HELPSA2 ; * Displays help for Street Address 2
  N DGRELTP
- S DGRELTP=$$RELTYPE^DGRPEIS2($G(DA),1)
+ S DGRELTP=$$RELTYPE($G(DA),1)
  W !,"If a "_DGRELTP_"'s name has been specified, enter the second line of"
  W !,"that person's street address [3-30 characters]; otherwise this field"
  W !,"may be left blank.  This field cannot be deleted as long as a "_DGRELTP_"'s"
@@ -180,7 +148,7 @@ HELPSA2 ; * Displays help for Street Address 2
  ;
 HELPSA3 ; * Displays help for Street Address 3
  N DGRELTP
- S DGRELTP=$$RELTYPE^DGRPEIS2($G(DA),1)
+ S DGRELTP=$$RELTYPE($G(DA),1)
  W !,"If a "_DGRELTP_"'s name has been specified, enter the third line of"
  W !,"that person's street address [3-30 characters]; otherwise this field"
  W !,"may be left blank.  This field cannot be deleted as long as a "_DGRELTP_"'s"
@@ -190,7 +158,7 @@ HELPSA3 ; * Displays help for Street Address 3
  ;
 HELPCITY ; * Displays help for City
  N DGRELTP
- S DGRELTP=$$RELTYPE^DGRPEIS2($G(DA),1)
+ S DGRELTP=$$RELTYPE($G(DA),1)
  W !,"If a "_DGRELTP_"'s name has been specified, enter the city in which"
  W !,"that person resides [3-30 characters]; otherwise this field may be"
  W !,"left blank.  This field cannot be deleted as long as a "_DGRELTP_"'s"
@@ -199,37 +167,57 @@ HELPCITY ; * Displays help for City
  Q
  ;
 HELPSTAT ; * Displays help for the state
- N DGRELTP,DIRA,DGRDVAR,DDIOLARY
- S DGRELTP=$$RELTYPE^DGRPEIS2($G(DA),1)
- S DDIOLARY(1)="If a "_DGRELTP_"'s name has been specified, select the state in which"
- S DDIOLARY(1,"F")="!"
- S DDIOLARY(2)="that person resides; otherwise this field may be left blank.  This"
- S DDIOLARY(2,"F")="!"
- S DDIOLARY(3)="field cannot be deleted as long as a "_DGRELTP_"'s name is on file."
- S DDIOLARY(3,"F")="!"
- S DDIOLARY(4)=""
- S DDIOLARY(4,"F")="!"
- D EN^DDIOL(.DDIOLARY)
+ N DGRELTP,DIRA,DGRDVAR
+ S DGRELTP=$$RELTYPE($G(DA),1)
+ W !,"If a "_DGRELTP_"'s name has been specified, select the state in which"
+ W !,"that person resides; otherwise this field may be left blank.  This"
+ W !,"field cannot be deleted as long as a "_DGRELTP_"'s name is on file.",!
  ;
  Q:X="?"
- D EN^DDIOL("Enter RETURN to continue:","","!")
- R DGRDVAR:DTIME
+ W !,"Enter RETURN to continue:" R DGRDVAR:DTIME
  Q
  ;
 HELPZIP ; * Displays help for the Zip code
  N DGRELTP
- S DGRELTP=$$RELTYPE^DGRPEIS2($G(DA),1)
+ S DGRELTP=$$RELTYPE($G(DA),1)
  W !,"Answer with the 5 digit format (e.g. 12345) or the nine digit"
  W !,"format (e.g. 12345-6789 or 123456789).  This is related to the"
  W !,DGRELTP_"'s address."
  I $G(DA),(X="?") W !
  Q
+ ;
 HELPPHON ; * Displays help for the Phone number
  N DGRELTP
- S DGRELTP=$$RELTYPE^DGRPEIS2($G(DA),1)
+ S DGRELTP=$$RELTYPE($G(DA),1)
  W !,"If a "_DGRELTP_"'s name has been specified, enter the "_DGRELTP_"'s"
  W !,"phone number [4-20 characters], otherwise this field may be left"
  W !,"blank.  This field cannot be deleted as long as a "_DGRELTP_"'s"
  W !,"name is on file."
  I $G(DA),(X="?") W !
  Q
+ ;
+RELTYPE(RELIEN,TYPE) ;* Return type of relationship
+ ;
+ ;* INPUT
+ ;    RELIEN - IEN from Income Person file (408.13)
+ ;    TYPE   - 0: Pull specific relationship from Relationship file
+ ;           - 1: Just return "spouse", "child", "dependent"
+ ;
+ ;* OUTPUT
+ ;    DGPATREL - Relationship value
+ ;
+ N DGPTRLIN,DGRELIEN,DGPATREL
+ S TYPE=+$G(TYPE)
+ I +$G(RELIEN)>0 DO
+ .S DGPTRLIN=""
+ .S DGPTRLIN=$O(^DGPR(408.12,"C",RELIEN_";DGPR(408.13,",DGPTRLIN))
+ .S DGRELIEN=$P($G(^DGPR(408.12,DGPTRLIN,0)),"^",2)
+ .S DGPATREL=$P($G(^DG(408.11,DGRELIEN,0)),"^",1)
+ .S:DGPATREL']"" DGPATREL="dependent"
+ .I +TYPE=1 S DGPATREL=$S(DGPATREL["SPOUSE":"spouse",($G(DGRPS)=8):"relative",$G(DGSCR8):"relative",1:"child")
+ I +$G(RELIEN)'>0 DO
+ .S:$G(DGANS)="S" DGPATREL="spouse"
+ .S:$G(DGANS)="C" DGPATREL="child"
+ .S:$G(DGANS)="D" DGPATREL="relative"
+ S:DGPATREL="" DGPATREL="relative"
+ Q DGPATREL

@@ -1,6 +1,5 @@
 MAGGTERR ;WOIFO/GEK - IMAGING ERROR TRAP, AND ERROR LOG ; [ 06/20/2001 08:56 ]
- ;;3.0;IMAGING;**8,59**;Nov 27, 2007;Build 20
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.0;IMAGING;**8**;Sep 15, 2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -20,7 +19,8 @@ MAGGTERR ;WOIFO/GEK - IMAGING ERROR TRAP, AND ERROR LOG ; [ 06/20/2001 08:56 ]
  ;  Imaging routines should have this code for setting error trap
  ;  This will enable logging Imaging errors and Sending messages for
  ;  certain errors etc. later
- ;N $ETRAP,$ESTACK S $ETRAP="D ERRA^MAGGTERR"
+ ;IF $$NEWERR^%ZTER N $ETRAP,$ESTACK S $ETRAP="D ERRA^MAGGTERR"
+ ;E  S X="ERRA^MAGGTERR",@^%ZOSF("TRAP")
  ;
  ; This assumes the Return variable or array is MAGRY or MAGRY()
  Q
@@ -45,18 +45,13 @@ ERR ; ERROR TRAP FOR String Return variables
  Q
 LOGERR(ERROR) ;
  Q:'$G(MAGJOB("SESSION"))
- N SESS,WRKS,ERR
- S SESS=$G(MAGJOB("SESSION"))
- ; Quit if No entry in Session File.
- Q:'$D(^MAG(2006.82,SESS,0))
- I '$D(^MAG(2006.82,SESS,"ERR",0)) S ^MAG(2006.82,SESS,"ERR",0)="^2006.823A^0^0"
- S ERR=$O(^MAG(2006.82,SESS,"ERR"," "),-1)+1
- S ^MAG(2006.82,SESS,"ERR",ERR,0)=ERROR
- S $P(^MAG(2006.82,SESS,"ERR",0),"^",3,4)=ERR_"^"_ERR
- ;
- Q:'$G(MAGJOB("WRKSIEN"))
- S WRKS=$G(MAGJOB("WRKSIEN"))
- ; Quit if No entry in Workstation File.
- Q:'$D(^MAG(2006.81,WRKS,0))
- S $P(^MAG(2006.81,WRKS,0),"^",11)=ERR
+ N MAGGFDA,MAGXERR,MAGXIEN,MAGNODE
+ S MAGNODE="+1,"_+MAGJOB("SESSION")_","
+ ;S MAGNODE="+1,10,"
+ S MAGGFDA(2006.823,MAGNODE,.01)=ERROR
+ D UPDATE^DIE("","MAGGFDA","MAGXIEN","MAGXERR")
+ ; error flag for this session in workstation file
+ S MAGNODE=+MAGJOB("WRKSIEN")_","
+ S MAGGFDA(2006.81,MAGNODE,11)=+MAGXIEN(1) ;
+ D UPDATE^DIE("","MAGGFDA","MAGXIEN","MAGXERR")
  Q

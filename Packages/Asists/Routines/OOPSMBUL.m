@@ -1,5 +1,5 @@
 OOPSMBUL ;HIRMFO/REL-Bulletin ;3/30/98
- ;;2.0;ASISTS;**2,4,15**;Jun 03, 2002;Build 9
+ ;;2.0;ASISTS;**2,4**;Jun 03, 2002
  Q
 MFAC ;
  N NIEN,NGRP,TEST
@@ -37,18 +37,6 @@ SAFETY(IEN) ; Safety Officer Bulletin
  S XMB(1)=$P(X0,U,2)
  S XMB(3)=$P(X0,U,1)
  S Y=$P(X0,U,5) D DD^%DT S XMB(2)=Y
- S GRP="OOPS SAFETY"
- D MFAC
- D ^XMB K XMB,XMY,XMM,XMDT
- Q
-CIO(IEN) ; OOPS INCIDENT OUTCOME REQUIRED BULLETIN
- ;this bulletin is sent to the safety officer when the response to the 
- ;INITIAL RETURN TO WORK STATUS (field #352) is "Days Away Work" or 
- ;"Job Transfer/Transfer"
- ;Input:  IEN of the ASISTS case
- N GRP,XMB,X0
- S XMB="OOPS INCIDENT OUTCOME REQUIRED",X0=$G(^OOPS(2260,IEN,0)) K XMY
- S XMB(1)=$P(X0,U,1)
  S GRP="OOPS SAFETY"
  D MFAC
  D ^XMB K XMB,XMY,XMM,XMDT

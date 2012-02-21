@@ -1,5 +1,5 @@
 RGEVPRG ;BAY/ALS-OPTIONS TO PURGE MPI/PD EXCEPTIONS ;08/23/99
- ;;1.0;CLINICAL INFO RESOURCE NETWORK;**3,12,19,32,35,43,44,50,52**;30 Apr 99;Build 2
+ ;;1.0;CLINICAL INFO RESOURCE NETWORK;**3,12,19,32,35,43**;30 Apr 99
  ;
 MAIN ;
  ;Q:($D(^TMP("RGEXC")))!($D(^TMP("RGEXC2")))
@@ -9,7 +9,7 @@ MAIN ;
  I $D(ZTQUEUED) S ZTREQ="@"
  S $P(^RGSITE(991.8,1,"EXCPRG"),"^",1)=$$NOW^XLFDT
  S $P(^RGSITE(991.8,1,"EXCPRG"),"^",3)="R"
- ;D PROC  ;**52 Module is obsolete
+ D PROC
  D PRGDUP
  D PRG30
  D PRGZZ
@@ -90,7 +90,6 @@ PRG30   ; Purge Exceptions over 30 days old
  K DIFF,TODAY,EXCDT,CNT,IEN,IEN2,NUM,STAT
  Q
 PRGEXC ; Purge by Exception Type
- ;**52 This module was obsolete before 52; just adding comment
  ;S DIC="^RGHL7(991.11,",DIC(0)="QEAM"
  ;S DIC("A")="Enter an exception type to purge: "
  ;D ^DIC K DIC G:Y<200 QUIT  S EXCTYP=+Y,ETYPE=X
@@ -107,9 +106,8 @@ PRGEXC ; Purge by Exception Type
  ;I CNT=0 W !,"There are no "_ETYPE_" exceptions on file."
  ;E  I CNT>0 W !,CNT_" "_ETYPE_" Exceptions purged!"
  ;K ETYPE,CNT,IEN,IEN2,NUM,X,Y
- Q  ;**52;if module accidentally called, should quit instead of falling into next module.
-PRGDUP ;Purge Duplicate Entries; retain most recent for all except types.
- ;**50 through remainder of module.
+ ;Q
+PRGDUP ; Purge Duplicate Entries
  S EXCTYP="",CNT=0
  K ^TMP("RGEVDUP",$J)
  F  S EXCTYP=$O(^RGHL7(991.1,"ADFN",EXCTYP)) Q:'EXCTYP  D
@@ -119,29 +117,27 @@ PRGDUP ;Purge Duplicate Entries; retain most recent for all except types.
  .. F  S IEN=$O(^RGHL7(991.1,"ADFN",EXCTYP,RGDFN,IEN)) Q:'IEN  D
  ... S IEN2=0
  ... F  S IEN2=$O(^RGHL7(991.1,"ADFN",EXCTYP,RGDFN,IEN,IEN2)) Q:'IEN2  D
- .... I $P($G(^RGHL7(991.1,IEN,1,IEN2,0)),"^",5)=1 K ^RGHL7(991.1,"ADFN",EXCTYP,RGDFN,IEN,IEN2) Q  ;exception processed
- .... S EXCDT=$P($G(^RGHL7(991.1,IEN,0)),"^",3) ;incoming date
+ .... S EXCDT=$P(^RGHL7(991.1,IEN,0),"^",3)
  .... I '$D(^TMP("RGEVDUP",$J,RGDFN,EXCTYP)) D  Q
  ..... S ^TMP("RGEVDUP",$J,RGDFN,EXCTYP)=EXCDT_"^"_IEN_"^"_IEN2
- .... I $D(^TMP("RGEVDUP",$J,RGDFN,EXCTYP)) D  ;duplicate exists; compare incoming to previous.
+ .... I $D(^TMP("RGEVDUP",$J,RGDFN,EXCTYP)) D
  ..... S OLDNODE=^TMP("RGEVDUP",$J,RGDFN,EXCTYP)
- ..... S OLDDT=$P(OLDNODE,"^"),OLDIEN=$P(OLDNODE,"^",2),OLDIEN2=$P(OLDNODE,"^",3)
- ..... I EXCDT>OLDDT D  Q  ;incoming date greater than previous? purge old, keep new.
+ ..... S OLDDT=$P(OLDNODE,"^")
+ ..... I EXCDT>OLDDT D  Q
  ...... S NUM="" S NUM=$P(^RGHL7(991.1,IEN,1,0),"^",4)
- ...... I NUM=1 S DIK="^RGHL7(991.1,",DA=OLDIEN D ^DIK K DIK,DA
- ...... I NUM>1 D
- ....... S DA(1)=OLDIEN,DA=OLDIEN2
+ ...... I NUM=1 S DIK="^RGHL7(991.1,",DA=$P(OLDNODE,"^",2) D ^DIK K DIK,DA
+ ...... E  I NUM>1 D
+ ....... S DA(1)=$P(OLDNODE,"^",2),DA=$P(OLDNODE,"^",3)
  ....... S DIK="^RGHL7(991.1,"_DA(1)_",1," D ^DIK K DIK,DA
+ ...... S CNT=CNT+1
  ...... S ^TMP("RGEVDUP",$J,RGDFN,EXCTYP)=EXCDT_"^"_IEN_"^"_IEN2
- ..... ;
- ..... I OLDDT>EXCDT!(OLDDT=EXCDT) D  ;previous date greater or equal incoming? purge new, keep old.
+ ..... I OLDDT>EXCDT!(OLDDT=EXCDT) D
  ...... S NUM="" S NUM=$P(^RGHL7(991.1,IEN,1,0),"^",4)
- ...... I NUM=1 S DIK="^RGHL7(991.1,",DA=IEN D ^DIK K DIK,DA
- ...... I NUM>1 D DEL
- ...... ;
- K CNT,EXCDT,EXCTYP,IEN,IEN2,NUM,OLDDT,OLDIEN,OLDIEN2,OLDNODE,RGDFN,RGDT,^TMP("RGEVDUP")
+ ...... I NUM=1 S DIK="^RGHL7(991.1,",DA=IEN D ^DIK K DIK,DA S CNT=CNT+1
+ ...... E  I NUM>1 D DEL
+ ; W !,CNT_" Duplicate entries"
+ K OLDDT,OLDNODE,EXCDT,CNT,IEN,IEN2,NUM,RGDFN
  Q
- ;
 PRGZZ ;Purge if name field is null (incomplete record)
  ;Purge if -9 node exists, this indicates the record has been merged.
  S EXCTYP="",CNT=""
@@ -166,23 +162,22 @@ DEL ;
  D ^DIK K DIK,DA
  Q
 PROC ;Set these exception types to PROCESSED if they have a national ICN
- ;**52 The PROC module is obsolete and is no longer being called.
  ;209 - Required field(s) missing for patient sent to MPI,
  ;227 - Multiple ICNs, 213 - SSN Match Failed, 214 - Name Doesn't Match
- ;S EXCTYP=""
- ;S HOME=$$SITE^VASITE()
- ;F  S EXCTYP=$O(^RGHL7(991.1,"AC",EXCTYP)) Q:'EXCTYP  D
- ;. I (EXCTYP=209)!(EXCTYP=227)!(EXCTYP=213)!(EXCTYP=214) D  ;**43
- ;.. S IEN=0
- ;.. F  S IEN=$O(^RGHL7(991.1,"AC",EXCTYP,IEN)) Q:'IEN  D
- ;... S IEN2=0,ICN="",RGDFN=""
- ;... F  S IEN2=$O(^RGHL7(991.1,"AC",EXCTYP,IEN,IEN2)) Q:'IEN2  D
- ;.... S RGDFN=$P(^RGHL7(991.1,IEN,1,IEN2,0),"^",4) Q:'RGDFN
- ;.... S ICN=+$$GETICN^MPIF001(RGDFN)
- ;.... I $E(ICN,1,3)'=$E($P(HOME,"^",3),1,3)&(ICN>0) D
- ;..... L +^RGHL7(991.1,IEN):10
- ;..... S DA(1)=IEN,DA=IEN2,DR="6///"_1,DIE="^RGHL7(991.1,"_DA(1)_",1,"
- ;..... D ^DIE K DIE,DA,DR
- ;..... L -^RGHL7(991.1,IEN)
- ;K EXCTYP,HOME,ICN,IEN,IEN2,RGDFN
+ S EXCTYP=""
+ S HOME=$$SITE^VASITE()
+ F  S EXCTYP=$O(^RGHL7(991.1,"AC",EXCTYP)) Q:'EXCTYP  D
+ . I (EXCTYP=209)!(EXCTYP=227)!(EXCTYP=213)!(EXCTYP=214) D  ;**43
+ .. S IEN=0
+ .. F  S IEN=$O(^RGHL7(991.1,"AC",EXCTYP,IEN)) Q:'IEN  D
+ ... S IEN2=0,ICN="",RGDFN=""
+ ... F  S IEN2=$O(^RGHL7(991.1,"AC",EXCTYP,IEN,IEN2)) Q:'IEN2  D
+ .... S RGDFN=$P(^RGHL7(991.1,IEN,1,IEN2,0),"^",4) Q:'RGDFN
+ .... S ICN=+$$GETICN^MPIF001(RGDFN)
+ .... I $E(ICN,1,3)'=$E($P(HOME,"^",3),1,3)&(ICN>0) D
+ ..... L +^RGHL7(991.1,IEN):10
+ ..... S DA(1)=IEN,DA=IEN2,DR="6///"_1,DIE="^RGHL7(991.1,"_DA(1)_",1,"
+ ..... D ^DIE K DIE,DA,DR
+ ..... L -^RGHL7(991.1,IEN)
+ K EXCTYP,HOME,ICN,IEN,IEN2,RGDFN
  Q

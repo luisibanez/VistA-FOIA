@@ -1,73 +1,34 @@
-DGRPU ;ALB/MRL,TMK,BAJ - REGISTRATION UTILITY ROUTINE ; 12/20/2005
- ;;5.3;Registration;**33,114,489,624,672,689,688**;Aug 13, 1993;Build 29
+DGRPU ;ALB/MRL - REGISTRATION UTILITY ROUTINE ; 8/30/05 9:58am
+ ;;5.3;Registration;**33,114,489,624,672**;Aug 13, 1993
 H ;Screen Header
- I DGRPS'=1.1 W @IOF S Z=$P($T(H1+DGRPS),";;",2)_", SCREEN <"_DGRPS_">"_$S($D(DGRPH):" HELP",1:""),X=79-$L(Z)\2 D W
+ I (DGRPS'=1.1)&(DGRPS'=6.1) W @IOF S Z=$P($T(H1+DGRPS),";;",2)_", SCREEN <"_DGRPS_">"_$S($D(DGRPH):" HELP",1:""),X=79-$L(Z)\2 D W
  I DGRPS=1.1 W @IOF S Z="ADDITIONAL PATIENT DEMOGRAPHIC DATA, SCREEN <"_DGRPS_">"_$S($D(DGRPH):" HELP",1:""),X=79-$L(Z)\2 D W
- S X=$$SSNNM(DFN)
- I '$D(DGRPH) W !,X S X=$S($D(DGRPTYPE):$P(DGRPTYPE,"^",1),1:"PATIENT TYPE UNKNOWN"),X1=79-$L(X) W ?X1,X
+ I DGRPS=6.1 W @IOF S Z="ADDITIONAL MILITARY SERVICE DATA, SCREEN <"_DGRPS_">"_$S($D(DGRPH):" HELP",1:""),X=79-$L(Z)\2 D W
+ S X=$S($D(^DPT(+DFN,0)):^(0),1:""),SSN=$P(X,"^",9),SSN=$E(SSN,1,3)_"-"_$E(SSN,4,5)_"-"_$E(SSN,6,10)
+ I '$D(DGRPH) W !,$P(X,"^",1),"; ",SSN S X=$S($D(DGRPTYPE):$P(DGRPTYPE,"^",1),1:"PATIENT TYPE UNKNOWN"),X1=79-$L(X) W ?X1,X
  S X="",$P(X,"=",80)="" W !,X Q
  Q
 AL(DGLEN) ;DGLEN= Available length of line
 A ;Format address(es)
- ; DG*5.3*688 BAJ 12/20/2005 modified for foreign address
  I '$D(DGLEN) N DGLEN S DGLEN=29
- N I,DGX,FILE,IEN,CNTRY,TMP,FNODE,FPCE,ROU
- ; set up variables
- S FNODE=$S(DGAD=.121:.122,1:DGAD),FPCE=$S(DGAD=.121:3,DGAD=.141:16,1:10)
- ; collect Street Address info
- F I=DGA1:1:DGA1+2 I $P(DGRP(DGAD),U,I)]"" S TMP(DGA2)=$P(DGRP(DGAD),U,I),DGA2=DGA2+2
- I DGA2=1 S TMP(1)="STREET ADDRESS UNKNOWN",DGA2=DGA2+2
- ; retrieve country info -- PERM country is piece 10 of node .11
- S FOR=0
- I DGA1=1 D
- . S FILE=779.004,IEN=$P(DGRP(FNODE),U,FPCE),CNTRY=$E($$CNTRYI^DGADDUTL(IEN),1,25) I CNTRY=-1 S CNTRY="UNKNOWN COUNTRY"
- . ; assemble (US) CITY, STATE ZIP or (FOREIGN) CITY PROVINCE POSTAL CODE
- . S FOR=$$FORIEN^DGADDUTL(IEN) I FOR=-1 S FOR=1
- S ROU=$S(FOR=1:"FOREIGN",1:"US")_"(DGAD,.TMP,DGA1,.DGA2)" D @ROU
- ; append COUNTRY to address
- S DGA2=DGA2+2,TMP(DGA2)=$S($G(CNTRY)="":"",1:CNTRY)
- M DGA=TMP
- K DGA1
- Q
- ;
-US(DGAD,TMP,DGA1,DGA2) ;process US addresses and format in DGA array
- ; DG*5.3*688 BAJ this is the code for all addresses prior to the addition of Foreign address logic.
- ; Modifications for Foreign address are in Tag FOREIGN
- N DGX,I,J
- ; format STATE field and merge with CITY & ZIP
- S J=$S('$D(^DIC(5,+$P(DGRP(DGAD),U,DGA1+4),0)):"",('$L($P(^(0),U,2))):$P(^(0),U,1),1:$P(^(0),U,2)),J(1)=$P(DGRP(DGAD),U,DGA1+3),J(2)=$P(DGRP(DGAD),U,DGA1+5),TMP(DGA2)=$S(J(1)]""&(J]""):J(1)_","_J,J(1)]"":J(1),J]"":J,1:"UNK. CITY/STATE")
- ; zip code capture
+ N DGX
+ F I=DGA1:1:DGA1+2 I $P(DGRP(DGAD),U,I)]"" S DGA(DGA2)=$P(DGRP(DGAD),U,I),DGA2=DGA2+2
+ I DGA2=1 S DGA(1)="STREET ADDRESS UNKNOWN",DGA2=DGA2+2
+ S J=$S('$D(^DIC(5,+$P(DGRP(DGAD),U,DGA1+4),0)):"",('$L($P(^(0),U,2))):$P(^(0),U,1),1:$P(^(0),U,2)),J(1)=$P(DGRP(DGAD),U,DGA1+3),J(2)=$P(DGRP(DGAD),U,DGA1+5),DGA(DGA2)=$S(J(1)]""&(J]""):J(1)_","_J,J(1)]"":J(1),J]"":J,1:"UNK. CITY/STATE")
  I ".33^.34^.211^.331^.311^.25^.21"[DGAD D
  .F I=1:1:7 I $P(".33^.34^.211^.331^.311^.25^.21",U,I)=DGAD S DGX=$P($G(^DPT(DFN,.22)),U,I)
  E  D
  .I DGAD=.141 S DGX=$P(DGRP(.141),U,6) Q
  .S DGX=$P(DGRP(DGAD),U,DGA1+11)
- ; format ZIP+4 with hyphen
  S:$L(DGX)>5 DGX=$E(DGX,1,5)_"-"_$E(DGX,6,9)
- ;combine CITY,STATE and ZIP fields on a single line
- S TMP(DGA2)=$E($P(TMP(DGA2),",",1),1,(DGLEN-($L(DGX)+4)))_$S($L($P(TMP(DGA2),",",2)):",",1:"")_$P(TMP(DGA2),",",2)_" "_DGX
- F I=0:0 S I=$O(TMP(I)) Q:'I  S TMP(I)=$E(TMP(I),1,DGLEN)
- Q
- ;
-FOREIGN(DGAD,TMP,DGA1,DGA2) ;process FOREIGN addresses and format in DGA array
- N I,J,CITY,PRVNCE,PSTCD,FNODE
- F I=1:1 S J=$P($T(FNPCS+I),";;",3) Q:J="QUIT"  D
- . I DGAD=$P(J,";",1) S FNODE=$P(J,";",2),CITY=$P(J,";",3),PRVNCE=$P(J,";",4),PSTCD=$P(J,";",5)
- ; assemble CITY PROVINCE and POSTAL CODE on the same line
- ; NOTE CITY is sometimes on a different node than the PROVINCE & POSTAL CODE
- S TMP(DGA2)=$P(DGRP(FNODE),U,PSTCD)_" "_$P(DGRP(DGAD),U,CITY)_" "_$P(DGRP(FNODE),U,PRVNCE)
- F I=0:0 S I=$O(TMP(I)) Q:'I  S TMP(I)=$E(TMP(I),1,DGLEN)
+ S DGA(DGA2)=$E($P(DGA(DGA2),",",1),1,(DGLEN-($L(DGX)+4)))_$S($L($P(DGA(DGA2),",",2)):",",1:"")_$P(DGA(DGA2),",",2)_" "_DGX
+ F I=0:0 S I=$O(DGA(I)) Q:'I  S DGA(I)=$E(DGA(I),1,DGLEN)
+ K DGA1,I,J
  Q
  ;
 W I IOST="C-QUME",$L(DGVI)'=2 W ?X,Z Q
  W ?X,@DGVI,Z,@DGVO
  Q
- ;
-FNPCS ; Foreign data pieces.  Structure-->Description;;Main Node;Data Node;City;Province;Postal code.
- ;;Permanent;;.11;.11;4;8;9
- ;;Temporary;;.121;.122;4;1;2
- ;;Confidential;;.141;.141;4;14;15
- ;;QUIT;;QUIT
  ;
 H1 ;
  ;;PATIENT DEMOGRAPHIC DATA
@@ -202,9 +163,3 @@ HLP3603 ;help text for field .3603, Discharge Due to LOD Disability
  W !,"     will no longer be editable by VistA users. Send updates and/or requests"
  W !,"     to HEC."
  Q
-SSNNM(DFN) ; SSN and name on first line of screen
- N X,SSN
- S X=$S($D(^DPT(+DFN,0)):^(0),1:""),SSN=$P(X,"^",9),SSN=$E(SSN,1,3)_"-"_$E(SSN,4,5)_"-"_$E(SSN,6,10)
- S X=$P(X,U)_"; "_SSN
- Q X
- ;

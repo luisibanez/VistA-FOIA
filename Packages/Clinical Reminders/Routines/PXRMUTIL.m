@@ -1,7 +1,7 @@
-PXRMUTIL ; SLC/PKR/PJH - Utility routines for use by PXRM. ;01/11/2010
- ;;2.0;CLINICAL REMINDERS;**4,6,11,12,17**;Feb 04, 2005;Build 102
+PXRMUTIL ; SLC/PKR/PJH - Utility routines for use by PXRM. ;01/28/2005
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
- ;=================================
+ ;===========================================================
 ATTVALUE(STRING,ATTR,SEP,AVSEP) ;STRING contains a list of attribute value
  ;pairs. Each pair is separated by SEP and the attribute value pair
  ;is separated by AVSEP. Return the value for the attribute ATTR.
@@ -13,40 +13,11 @@ ATTVALUE(STRING,ATTR,SEP,AVSEP) ;STRING contains a list of attribute value
  . I AVPAIR[ATTR S VALUE=$P(AVPAIR,AVSEP,2)
  Q VALUE
  ;
- ;=================================
-ACOPY(REF,OUTPUT) ;Copy all the descendants of the array reference into a linear
- ;array. REF is the starting array reference, for example A or
- ;^TMP("PXRM",$J). OUTPUT is the linear array for the output. It
- ;should be in the form of a closed root, i.e., A() or ^TMP($J,).
- ;Note OUTPUT cannot be used as the name of the output array.
- N DONE,IND,LEN,NL,OROOT,OUT,PROOT,ROOT,START,TEMP
- I REF="" Q
- S NL=0
- S OROOT=$P(OUTPUT,")",1)
- S PROOT=$P(REF,")",1)
- ;Build the root so we can tell when we are done.
- S TEMP=$NA(@REF)
- S ROOT=$P(TEMP,")",1)
- S REF=$Q(@REF)
- I REF'[ROOT Q
- S DONE=0
- F  Q:(REF="")!(DONE)  D
- . S START=$F(REF,ROOT)
- . S LEN=$L(REF)
- . S IND=$E(REF,START,LEN)
- . S NL=NL+1
- . S OUT=OROOT_NL_")"
- . S @OUT=PROOT_IND_"="_@REF
- . S REF=$Q(@REF)
- . I REF'[ROOT S DONE=1
- Q
- ;
- ;=================================
+ ;===========================================================
 AWRITE(REF) ;Write all the descendants of the array reference.
  ;REF is the starting array reference, for example A or ^TMP("PXRM",$J).
- N DONE,IND,LEN,LN,PROOT,ROOT,START,TEMP,TEXT
+ N DONE,IC,IND,LEN,PROOT,ROOT,START,TEMP
  I REF="" Q
- S LN=0
  S PROOT=$P(REF,")",1)
  ;Build the root so we can tell when we are done.
  S TEMP=$NA(@REF)
@@ -54,17 +25,16 @@ AWRITE(REF) ;Write all the descendants of the array reference.
  S REF=$Q(@REF)
  I REF'[ROOT Q
  S DONE=0
- F  Q:(REF="")!(DONE)  D
+ F IC=0:0 Q:(REF="")!(DONE)  D
  . S START=$F(REF,ROOT)
  . S LEN=$L(REF)
  . S IND=$E(REF,START,LEN)
- . S LN=LN+1,TEXT(LN)=PROOT_IND_"="_@REF
+ . W !,PROOT_IND,"=",@REF
  . S REF=$Q(@REF)
  . I REF'[ROOT S DONE=1
- D MES^XPDUTL(.TEXT)
  Q
  ;
- ;=================================
+ ;===========================================================
 DIP(VAR,IEN,PXRMROOT,FLDS) ;Do general inquiry for IEN return formatted
  ;output in VAR. VAR can be either a local variable or a global.
  ;If it is a local it is indexed for the broker. If it is a global
@@ -114,11 +84,11 @@ DIP(VAR,IEN,PXRMROOT,FLDS) ;Do general inquiry for IEN return formatted
  S SUCCESS=$$DEL^%ZISH(PATH,$NA(FILESPEC))
  Q
  ;
- ;=================================
+ ;===========================================================
 FNFR(ROOT) ;Given the root of a file return the file number.
  Q +$P(@(ROOT_"0)"),U,2)
  ;
- ;=================================
+ ;===========================================================
 NTOAN(NUMBER) ;Given an integer N return an alphabetic string that can be
  ;used for sorting. This will be modulus 26. For example N=0 returns
  ;A, N=26 returns BA etc.
@@ -141,85 +111,7 @@ NTOAN(NUMBER) ;Given an integer N return an alphabetic string that can be
  . S NUM=NUM-(DIGIT*P26(PC))
  Q ANUM
  ;
- ;=================================
-OPTION(ACT) ;Disable/enable options.
- N ACTION,IND,OPT,LIST,RESULT
- S ACTION=$S(ACT="DISABLE":2,ACT="ENABLE":1,1:1)
- D BMES^XPDUTL(ACT_" options.")
- ;
- D FIND^DIC(19,"","@;.01","","GMTS","*","B","","","LIST")
- F IND=1:1:+LIST("DILIST",0) S OPT=LIST("DILIST","ID",IND,.01)
-  S RESULT=$$OPTDE^XPDUTL(OPT,ACTION)
-  I RESULT=0 D MES^XPDUTL("Could not "_ACT_" option "_OPT)
- ;
- K LIST
- D FIND^DIC(19,"","@;.01","","IBDF PRINT","*","B","","","LIST")
- F IND=1:1:+LIST("DILIST",0) D
- . S OPT=LIST("DILIST","ID",IND,.01)
- . S RESULT=$$OPTDE^XPDUTL(OPT,ACTION)
- . I RESULT=0 D MES^XPDUTL("Could not "_ACT_" option "_OPT)
- ;
- S OPT="OR CPRS GUI CHART"
- S RESULT=$$OPTDE^XPDUTL(OPT,ACTION)
- I RESULT=0 D MES^XPDUTL("Could not "_ACT_" option "_OPT)
- ;
- S OPT="ORS HEALTH SUMMARY"
- S RESULT=$$OPTDE^XPDUTL(OPT,ACTION)
- I RESULT=0 D MES^XPDUTL("Could not "_ACT_" option "_OPT)
- ;
- K LIST
- D FIND^DIC(19,"","@;.01","","PXRM","*","B","","","LIST")
- F IND=1:1:+LIST("DILIST",0) D
- . S OPT=LIST("DILIST","ID",IND,.01)
- . S RESULT=$$OPTDE^XPDUTL(OPT,ACTION)
- . I RESULT=0 W !,"Could not ",ACTION," option ",OPT
- Q
- ;
- ;=================================
-PROTOCOL(ACT) ;Disable/enable protocols.
- N ACTION,PROT,RESULT
- S ACTION=$S(ACT="DISABLE":2,ACT="ENABLE":1,1:1)
- D BMES^XPDUTL(ACT_" protocols.")
- ;
- S PROT="ORS HEALTH SUMMARY"
- S RESULT=$$PRODE^XPDUTL(PROT,ACTION)
- I RESULT=0 D MES^XPDUTL("Could not "_ACT_" protocol "_PROT)
- ;
- S PROT="ORS AD HOC HEALTH SUMMARY"
- S RESULT=$$PRODE^XPDUTL(PROT,ACTION)
- I RESULT=0 D MES^XPDUTL("Could not "_ACT_" protocol "_PROT)
- ;
- S PROT="PXRM PATIENT DATA CHANGE"
- S RESULT=$$PRODE^XPDUTL(PROT,ACTION)
- I RESULT=0 D MES^XPDUTL("Could not "_ACT_" protocol "_PROT)
- Q
- ;
- ;=================================
-RENAME(FILENUM,OLDNAME,NEWNAME) ;Rename entry OLDNAME to NEWNAME in
- ;file number FILENUM.
- N DA,DIE,DR,NIEN
- S DA=$$FIND1^DIC(FILENUM,"","BX",OLDNAME)
- I DA=0 Q
- S NIEN=$$FIND1^DIC(FILENUM,"","BX",NEWNAME) I NIEN>0 Q
- S DIE=FILENUM
- S DR=".01///^S X=NEWNAME"
- D ^DIE
- Q
- ;
- ;=================================
-RMEHIST(FILENUM,IEN) ;Remove the edit history for a reminder file.
- I (FILENUM<800)!(FILENUM>811.9)!(FILENUM=811.8) Q
- N DA,DIK,GLOBAL,ROOT
- S GLOBAL=$$GET1^DID(FILENUM,"","","GLOBAL NAME")
- ;Edit History is stored in node 110 for all files.
- S DA(1)=IEN
- S DIK=GLOBAL_IEN_",110,"
- S ROOT=GLOBAL_IEN_",110,DA)"
- S DA=0
- F  S DA=+$O(@ROOT) Q:DA=0  D ^DIK
- Q
- ;
- ;=================================
+ ;===========================================================
 SEHIST(FILENUM,ROOT,IEN) ;Set the edit date and edit by and prompt the
  ;user for the edit comment.
  N DIC,DIR,DWLW,DWPK,ENTRY,FDA,FDAIEN,IENS,IND,MSG,SFN,TARGET,X,Y
@@ -252,14 +144,7 @@ SEHIST(FILENUM,ROOT,IEN) ;Set the edit date and edit by and prompt the
  K ^TMP("PXRMWP",$J)
  Q
  ;
- ;=================================
-SETPVER(VERSION) ;Set the package version
- N DA,DIE,DR
- S DIE="^PXRM(800,",DA=1,DR="5////"_VERSION
- D ^DIE
- Q
- ;
- ;=================================
+ ;===========================================================
 SFRES(SDIR,NRES,FIEVAL) ;Save the finding result.
  I NRES=0 S FIEVAL=0 Q
  N DATE,IND,OA,SUB,TF
@@ -275,21 +160,19 @@ SFRES(SDIR,NRES,FIEVAL) ;Save the finding result.
  F  S SUB=$O(FIEVAL(IND,SUB)) Q:SUB=""  M FIEVAL(SUB)=FIEVAL(IND,SUB)
  Q
  ;
- ;=================================
+ ;===========================================================
 SSPAR(FIND0,NOCC,BDT,EDT) ;Set the finding search parameters.
  S BDT=$P(FIND0,U,8),EDT=$P(FIND0,U,11),NOCC=$P(FIND0,U,14)
- I +NOCC=0 S NOCC=1
+ I NOCC="" S NOCC=1
  ;Convert the dates to FileMan dates.
- S BDT=$S(BDT="":0,BDT=0:0,1:$$CTFMD^PXRMDATE(BDT))
+ S BDT=$S(BDT="":0,1:$$CTFMD^PXRMDATE(BDT))
  I EDT="" S EDT="T"
  S EDT=$$CTFMD^PXRMDATE(EDT)
  ;If EDT does not contain a time set it to the end of the day.
  I EDT'["." S EDT=EDT_".235959"
- I $G(PXRMDDOC)'=1 Q
- S ^TMP("PXRMDDOC",$J,$P(FIND0,U,1,11))=BDT_U_EDT
  Q
  ;
- ;=================================
+ ;===========================================================
 STRREP(STRING,TS,RS) ;Replace every occurrence of the target string (TS)
  ;in STRING with the replacement string (RS).
  ;Example 9.19 (page 220) in "The Complete Mumps" by John Lewkowicz:
@@ -307,26 +190,7 @@ STRREP(STRING,TS,RS) ;Replace every occurrence of the target string (TS)
  S STR=STR_$P(STRING,TS,NPCS)
  Q STR
  ;
- ;=================================
-UPEHIST(FILENUM,IEN,TEXT,MSG) ;Update the edit history.
- N FDA,GBL,IENS,IND,LN,NEXT,SUBFN,TARGET,WPTMP
- D FIELD^DID(FILENUM,"EDIT HISTORY","","SPECIFIER","TARGET")
- S SUBFN=+$G(TARGET("SPECIFIER"))
- I SUBFN=0 Q
- S GBL=$$GET1^DID(FILENUM,"","","GLOBAL NAME")_IEN_",110)"
- S NEXT=$O(@GBL@("B"),-1)+1
- S (IND,LN)=0
- F  S IND=$O(TEXT(IND)) Q:IND=""  D
- . S LN=LN+1
- . S WPTMP(1,2,LN)=TEXT(IND)
- S IENS="+"_NEXT_","_IEN_","
- S FDA(SUBFN,IENS,.01)=$$NOW^XLFDT
- S FDA(SUBFN,IENS,1)=$G(DUZ)
- S FDA(SUBFN,IENS,2)="WPTMP(1,2)"
- D UPDATE^DIE("","FDA","","MSG")
- Q
- ;
- ;=================================
+ ;===========================================================
 VEDIT(ROOT,IEN) ;This is used as a DIC("S") screen to select which entries
  ;a user can edit.
  N CLASS,ENTRY,VALID

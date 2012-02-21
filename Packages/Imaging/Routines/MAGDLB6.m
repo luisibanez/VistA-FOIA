@@ -1,5 +1,5 @@
-MAGDLB6 ;WOIFO/LB,MLH - DICOM file utilities ; 12/16/2004  11:30
- ;;3.0;IMAGING;**21,10,11,51**;26-August-2005
+MAGDLB6 ;WOIFO/LB,MLH - DICOM file utilities ; 01/30/2004  17:11
+ ;;3.0;IMAGING;**21,10,11**;14-April-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -16,39 +16,51 @@ MAGDLB6 ;WOIFO/LB,MLH - DICOM file utilities ; 12/16/2004  11:30
  ;; +---------------------------------------------------------------+
  ;;
  Q
- ;
-XREF ; Set "F" xref for fields 36 and 9 - Gateway Location and Study UID
- N GWLOC ; -- location number of DICOM Gateway
- N ORIG ; --- Entry number for original image for this study
- N PREDA ; -- original DA value
- S GWLOC=$P(^MAGD(2006.575,DA,1),"^",5) Q:'GWLOC
- ;
- ; If this is the first one, create the "F" cross-reference
- ;
+XREF ;set xref for field 9 - study uid
+ N ORIG,PREX,PREDA
+ N GWLOC ; -- site number of DICOM Gateway
+ S PREX=X
+ S GWLOC=$P(^MAGD(2006.575,DA,1),"^",5)
+ Q:'GWLOC
  I '$D(^MAGD(2006.575,"F",GWLOC,X)) D  Q
  . S ^MAGD(2006.575,"F",GWLOC,X,DA)=""
  . Q
- ;
- ; Otherwise, the image is "related" to the original one
- ; for this study.
- ;
  S ORIG=$O(^MAGD(2006.575,"F",GWLOC,X,0))
- Q:'$D(^MAGD(2006.575,ORIG,0))  ; No longer in database
- S PREDA=DA D
- . N D0,DA,DD,DIC,DIE,ERR,X,Y
- . S DIC="^MAGD(2006.575,"_ORIG_",""RLATE"","
- . S DIC(0)="L"
- . S DA(1)=ORIG,X=PREDA
- . S ERR="Related Image ("_X_") for image #"_ORIG_" not filed."
- . D FILE^DICN
- . I Y=-1 D EN^DDIOL(ERR,"","!")
- . Q
+ Q:'$D(^MAGD(2006.575,ORIG,0))   ;NO LONGER AN ENTRY
+ S PREDA=DA D ADD
+ S DA=PREDA,X=PREX
  Q
- ;
-XREFK ; Kill "F" cross-reference
- N GWLOC
+ADD ;
+ N DA,DIE,DIC,DD,D0,X,Y
+ S DIC="^MAGD(2006.575,"_ORIG_",""RLATE"","
+ S DIC(0)="L"
+ S DA(1)=ORIG,X=PREDA
+ K DD D FILE^DICN
+ I Y=-1 D EN^DDIOL("NOT FILED","","!")
+ Q
+FIXRF ;set xref for field 16 - fixed flag  - will incorporate the machine id
+ ;machine id is for multiple machines being used processing images from
+ ;xray modalities
  Q:'DA
- S GWLOC=$P(^MAGD(2006.575,DA,1),"^",5) Q:'GWLOC
- K ^MAGD(2006.575,"F",GWLOC,X,DA)
+ N MACH,STUDY,GWLOC
+ S MACH=$P(^MAGD(2006.575,DA,1),"^",4)   ;Machine ID
+ S GWLOC=$P(^MAGD(2006.575,DA,1),"^",5)  ;Place where gateway is located
+ S STUDY=$G(^MAGD(2006.575,DA,"ASUID"))
+ Q:'$L(STUDY)      ;
+ I '$D(^MAGD(2006.575,"F",GWLOC,STUDY,DA)) Q     ;Only unique study set this xref
+ S ^MAGD(2006.575,"AFX",GWLOC,MACH,DA)=""
  Q
- ;
+FIXRFK ; kill xref for field 16 - fixed flag
+ N GWLOC ; -- gateway location
+ N MACH ; ----- machine ID (for multiple machines)
+ S GWLOC=$P($G(^MAGD(2006.575,DA,1)),"^",5)
+ S MACH=$P($G(^MAGD(2006.575,DA,1)),"^",4)
+ I GWLOC]"",MACH]"" K ^MAGD(2006.575,"AFX",GWLOC,MACH,DA)
+ Q
+XREFK ;
+ Q:'DA
+ N GWLOC,SUID
+ S GWLOC=$P(^MAGD(2006.575,DA,1),"^",5)
+ Q:'GWLOC
+ S SUID=$P(^MAGD(2006.575,DA,"ASUID"),"^")
+ K ^MAGD(2006.575,"F",GWLOC,SUID,DA)

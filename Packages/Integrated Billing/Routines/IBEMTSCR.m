@@ -1,6 +1,6 @@
 IBEMTSCR ;ALB/RFJ-print billable types for visit copay ;23 Nov 01
- ;;2.0;INTEGRATED BILLING;**167,187,351**;21-MAR-94;Build 4
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**167,187**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  W !!,"This option will print the billable types for copay visits."
  W !,"You have the option to deliver the report to yourself in MailMan"
@@ -36,19 +36,19 @@ DQ ;  print report
  D SET(" ")
  ;
  D SET("The following Visit Copay Billing Types are defined for your station:")
- D SET("Stop Code    Description                        Effective Date  Billable Type")
- D SET("---------    -----------------------------      --------------  -------------")
+ D SET("  Stop Code    Description            Effective Date  Billable Type")
+ D SET("  ---------    -------------------    --------------  -------------")
  S IBSTOP="" F  S IBSTOP=$O(^IBE(352.5,"B",IBSTOP)) Q:IBSTOP=""  D
  .   S IBDA=0 F  S IBDA=$O(^IBE(352.5,"B",IBSTOP,IBDA)) Q:'IBDA  S IBDATA=^IBE(352.5,IBDA,0) D
  .   .   ;  stop code
- .   .   S X=$J($P(IBDATA,"^"),9)
+ .   .   S X="  "_$J($P(IBDATA,"^"),9)
  .   .   ;  description
- .   .   S X=X_"    "_$P(IBDATA,"^",4)_$J("",35-$L($P(IBDATA,"^",4)))
+ .   .   S X=X_"    "_$E($P(IBDATA,"^",4)_"                    ",1,20)
  .   .   ;  effective date
  .   .   I '$P(IBDATA,"^",2) S $P(IBDATA,"^",2)="???????"
- .   .   S X=X_$E($P(IBDATA,"^",2),4,5)_"/"_$E($P(IBDATA,"^",2),6,7)_"/"_$E($P(IBDATA,"^",2),2,3)
+ .   .   S X=X_"    "_$J($E($P(IBDATA,"^",2),4,5)_"/"_$E($P(IBDATA,"^",2),6,7)_"/"_$E($P(IBDATA,"^",2),2,3),13)
  .   .   ;  billable type
- .   .   D SET(X_$J("",8)_$$TYPE($P(IBDATA,"^",3)))
+ .   .   D SET(X_"  "_$$TYPE($P(IBDATA,"^",3)))
  ;
  ; *** print or deliver the report from tmp ***
  ;

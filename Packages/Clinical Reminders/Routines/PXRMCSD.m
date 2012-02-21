@@ -1,5 +1,5 @@
-PXRMCSD ;SLC/JVS - Code Set Version-dialog file ;11/02/2009
- ;;2.0;CLINICAL REMINDERS;**9,17**;Feb 04, 2005;Build 102
+PXRMCSD ;SLC/JVS - Code Set Version-dialog file ;04/10/2003  12:02
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;Variable List
  ;TMP        =Mail message array
  ;DLGNAME    =Dialogue Name .01 field
@@ -34,7 +34,7 @@ TASKICD ;TASK for ICD codes
  S ZTDTH=$H
  D ^%ZTLOAD
  Q
-OPTION ;Option entry point for dir call
+OPTION  ;Option entry point for dir call
  N X,Y,%,%H,X
  K DIR,Y,%I
  S DIR(0)="SX^1:ICPT Codes;2:ICD9 Codes;3:ALL Codes"
@@ -66,7 +66,7 @@ DLG(GLOBAL,OPTION) ;ENTRY POINT
  Q:'$D(GLOBAL)
  N IEN,VAR,STATUS,NUM,ITEM,FILE,VARDIS,LINE,VARTYP
  N VARIEN,VRSTATUS,VARDESC,DLGNAME,VARIENX,ARRY,VARDIS
- N TMP,TYPE,XMDUN,XMSUB,XMUSB
+ N TMP,TYPE
  ;=====Set variables====================================
  S TMP="^TMP(""PXRMXMZ"",$J,NUM,0)"
  S NUM=0
@@ -109,11 +109,8 @@ DLG(GLOBAL,OPTION) ;ENTRY POINT
  ....D TMP
  .D DLG3
  S XMSUB="Reminder Dialog "_$S(GLOBAL="ALL":"ICD9 AND CPT",GLOBAL="ICPT":"CPT",1:GLOBAL)_" Code changes"
- I '$D(^TMP("PXRMXMZ",$J)) D
- . S ^TMP("PXRMXMZ",$J,1,0)="No dialog elements using inactive codes were found."
- . S ^TMP("PXRMXMZ",$J,2,0)="No action is necessary."
- D SEND^PXRMMSG("PXRMXMZ",XMSUB)
- K ^TMP("PXRMXMZ",$J)
+ D SEND^PXRMMSG(XMSUB)
+ K ^TMP("PXRMXUZ",$J),XMDUN,XMSUB,XMUSB
  S ZTREQ="@"
  Q
 DLG3 ;^PXRMD(801.41,IEN,3,IEN3,0) 1ST PIECE

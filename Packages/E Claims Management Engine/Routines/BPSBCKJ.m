@@ -1,15 +1,14 @@
 BPSBCKJ ;BHAM ISC/AAT - BPS NIGHTLY BACKGROUND JOB ;02/27/2005
- ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5,7,8**;JUN 2004;Build 29
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
  ;
  Q
  ;
 EN ; The ECME NIGHTLY PROCESS
  ;
- ; The list of nightly actions
- D AUTOREV     ; Auto-Reversals (normal and inpatient)
- D MAIN^BPSOSK ; Purge BPS LOG
- D TASKMAN^BPSJAREG ; Do automatic registration.
+ ;The list of nightly actions
+ ;
+ D AUTOREV
+ ;TODO: Add more actions here
  Q
  ;
 AUTOREV ; The Auto-Reverse Procedure
@@ -32,6 +31,7 @@ AUTOREV ; The Auto-Reverse Procedure
  . S BTRAN0=$G(^BPST(BTRAN,0)),BTRAN1=$G(^(1)),BTRAN4=$G(^(4))
  . I BTRAN0=""!(BTRAN1="") W:BTEST "ZERO OR ONE NODE MISSING" Q
  . I '$$PAID^BPSOSQ4(BTRAN) W:BTEST "NOT PAID" Q  ; Not paid
+ . I $P(BTRAN0,U,13)'=1 W:BTEST "NOT AN RX" Q  ; Not a prescription transmission
  . S BPHARM=$P(BTRAN1,U,7) I 'BPHARM W:BTEST "NO BPS PHARM" Q  ; BPS PHARMACY
  . W:BTEST "BPHARM=",$P($G(^BPS(9002313.56,BPHARM,0)),U,1),"  "
  . ;
@@ -67,13 +67,12 @@ AUTOREV ; The Auto-Reverse Procedure
  ;
  ;20050810;BEE;Phase III - CR11
  ;
-REVINP(BNOW,BTRAN,BTRAN0,BTRAN1,BPHARM) ;
- N BRX,BFIL,BCLAIM,BDATE,BRES,DFN,VAIP
+REVINP(BNOW,BTRAN,BTRAN0,BTRAN1,BPHARM) N BRX,BFIL,BCLAIM,BDATE,BRES,DFN,VAIP
  ;
  ;Only process Window fills
  S BRX=+$P(BTRAN1,U,11) I BRX=0 Q 0
  S BFIL=+$P(BTRAN1,U)
- I $$MWC^BPSRPT6(BRX,BFIL)'="W" Q 0
+ I $$MWC^BPSRPT6(BRX,BFIL)'=3 Q 0
  ;
  ;Check for Fill date - Must be equal to T-5
  S BCLAIM=$P(BTRAN0,U,4) I 'BCLAIM Q 0
@@ -95,32 +94,29 @@ REVINP(BNOW,BTRAN,BTRAN0,BTRAN1,BPHARM) ;
  . S @REF@(BRES,BCNT)=BTRAN_U_BCLAIM_U_BRX_U_BFIL_U_BPHARM
  Q 1
  ;
-RELDATE(BRX,BFIL) ;Get the Released Date
- I BFIL Q $$RXSUBF1^BPSUTIL1(BRX,52,52.1,+BFIL,17,"I")
- Q $$RXAPI1^BPSUTIL1(BRX,31,"I")
+RELDATE(BRX,BFIL) ;Get the Released Date 
+ I BFIL Q $P($G(^PSRX(BRX,1,+BFIL,0)),U,18)
+ Q $P($G(^PSRX(BRX,2)),U,13)
  ;
-FILDATE(BRX,BFIL) ;Get the Fill Date
- I BFIL Q $$RXSUBF1^BPSUTIL1(BRX,52,52.1,+BFIL,.01,"I")
- Q $$RXAPI1^BPSUTIL1(BRX,22,"I")
+FILDATE(BRX,BFIL) ;Get the Fill Date 
+ I BFIL Q $P($G(^PSRX(BRX,1,+BFIL,0)),U,1)
+ Q $P($G(^PSRX(BRX,2)),U,2)
  ;
 REVERSE(BRX,BFIL,BCLAIM,BTYPE) ;Auto-Reverse the claim
  ;PUBLIC BTEST
- N BDOS,BRES,BDAT,BMES,BRSN,BPSCOB,BP59
+ N BDOS,BRES,BDAT,BMES,BRSN
  I $G(BTEST) Q 0  ; Test mode
  ;
  ; Get Date of Service and set reversal reason
  S BDOS=$$DOSDATE^BPSSCRRS(BRX,BFIL)
  S BRSN=$S(BTYPE=2:"CURRENT INPATIENT",1:"PRESCRIPTION NOT RELEASED")
  ;
- S BP59=$$CLAIM59^BPSUTIL2(BCLAIM) ;get the BPS TRANSACTION IEN for the claim
- S BPSCOB=$$COB59^BPSUTIL2(BP59) ;get COB for the BPS TRANSACTION IEN
- ;
  ; Call ECME to process reversal
- S BRES=$$EN^BPSNCPDP(BRX,BFIL,BDOS,"AREV","",BRSN,"",,,,BPSCOB)
+ S BRES=$$EN^BPSNCPDP(BRX,BFIL,BDOS,"AREV","",BRSN,"")
  ;
  ; If successful, log message to the Prescription Activity Log
  ;  and set the auto-reversal flag
- S BRES=+BRES,BMES="ECME: AUTO REVERSAL JOB-"_$S(BPSCOB=1:"p",BPSCOB=2:"s",1:"")_$$INSNAME^BPSSCRU6(BP59)
+ S BRES=+BRES,BMES="Submitted to ECME: AUTO REVERSAL JOB"
  I BRES=0 D
  . D ECMEACT^PSOBPSU1(BRX,BFIL,BMES,.5)
  . S BDAT(9002313.02,BCLAIM_",",.07)=BTYPE D FILE^DIE("","BDAT")
@@ -131,21 +127,20 @@ BULL(REF) ;Bulletin to the OPECC
  ;PUBLIC BTEST,DUZ,DT
  N XMSUB,XMY,XMTEXT,XMDUZ,BLNUM
  ;
- I BCNT<1,'$G(BTEST),(+$G(@REF@(4)))=0 Q
  S BLNUM=0,BCNT=+$G(@REF@(0))
  S XMSUB="ECME AUTO-REVERSAL PROCESS"
- I $G(BTEST) D T("*** P L E A S E   D I S R E G A R D    T H I S    E M A I L ***"),T(),T("NOT ACTUALLY REVERSED - THIS IS A TEST"),T()
- D T("The ECME Nightly Process submitted auto-reversals for the following e-Pharmacy")
+ I $G(BTEST) D T("*** P L E A S E   D I S R E G A R D    T H I S    E M A I L ***"),T(),T("NOT ACTUALLY REVERSED - THIS IS A TEST TEST TEST TEST"),T()
+ D T("The ECME Nightly Process completed auto-reversals for the following e-Pharmacy")
  D T("prescriptions.")
  D T()
- D T("TOTAL CLAIMS SUBMITTED FOR AUTO-REVERSALS: "_BCNT)
+ D T("TOTAL AUTO-REVERSED CLAIMS: "_BCNT)
  D T()
- D T("Claims Submitted for Auto-Reversals on "_$$DAT(DT)_":") D ARLIST(0,REF)
+ I BCNT D T("Claims Auto-Reversed on "_$$DAT(DT)_":") D ARLIST(0,REF)
  D T()
  S BCNT=+$G(@REF@(4))
  I BCNT'=0 D
  . D T()
- . D T("The ECME Nightly Process attempted to auto-reverse the following claims but")
+ . D T("The ECME Nightly Process attempted to auto-reversal the following claims but")
  . D T("could not because the previous request was IN PROGRESS.  Please verify that")
  . D T("the previous request is not stranded.")
  . D T()
@@ -176,12 +171,12 @@ ARLIST(BRES,REF) ;Auto-Rev List
  . S Y=@REF@(BRES,I)
  . S BTRAN=$P(Y,U)
  . S BCLAIM=$P(Y,U,2)
- . S BRX=$P(Y,U,3),BRXN=$$RXAPI1^BPSUTIL1(BRX,.01,"I")
- . S BPAT=$P($G(^DPT(+$$RXAPI1^BPSUTIL1(BRX,2,"I"),0)),U)
+ . S BRX=$P(Y,U,3),BRXN=$P($G(^PSRX(BRX,0)),U)
+ . S BPAT=$P($G(^DPT($P($G(^PSRX(BRX,0)),U,2),0)),U)
  . S BFIL=$P(Y,U,4)
  . S BPHARM=$P(Y,U,5),BPHARMN=$P($G(^BPS(9002313.56,BPHARM,0)),U)
  . S BFDATE=$$FILDATE(BRX,BFIL)
- . S BPSTAT=$$MWC^BPSRPT6(BRX,BFIL)_"/"_$S($$RELDATE(BRX,BFIL)]"":"RL",1:"NR")
+ . S BPSTAT=$$MWCNAM^BPSRPT1($$MWC^BPSRPT6(BRX,BFIL))_"/"_$S($$RELDATE(BRX,BFIL)]"":"RL",1:"NR")
  . S TXT=$J(I,3)_" "_$$J(BRXN,10)_" "_$$J(BFIL,2)_"  "_$J(BPSTAT,4)_"  "_$$J($$DAT(BFDATE),11)_$$J(BPAT,25)_" "_$J($E(BPHARMN,1,15),15)
  . D T(TXT)
  D T("------------------------------------------------------------------------------")

@@ -1,5 +1,5 @@
 PSOCPE ;BIR/BAB - PHARMACY COPAY APPLICATION UTILITIES FOR IB ;10/26/92
- ;;7.0;OUTPATPSOCT PHARMACY;**26,71,85,114,157,219,268,225,303**;DEC 1997;Build 19
+ ;;7.0;OUTPATPSOCT PHARMACY;**26,71,85,114,157,219**;DEC 1997
  ;
  ;REF/IA
  ;^XUSEC/10076
@@ -43,7 +43,7 @@ XMPT ;   Entry point for menu option to select copay exemption
  G:$D(DTOUT) QUIT
  S PSORXPRE=$P($G(^PS(53,+$G(Y),0)),"^",7)
  S PSORXPNM=$P($G(^PS(53,+$G(Y),0)),"^")
- S DA=+Y,DR="15" L +^PS(53,DA):$S(+$G(^DD("DILOCKTM"))>0:+^DD("DILOCKTM"),1:3) I '$T W !!,PSORXPNM_" is locked by another user. Try Later!" W ! D PAGE G QUIT
+ S DA=+Y,DR="15" L +^PS(53,DA):0 I '$T W !!,PSORXPNM_" is locked by another user. Try Later!" W ! D PAGE G QUIT
  W ! D ^DIE
  I PSORXPRE,$P($G(^PS(53,DA,0)),"^",7) W !!,"All Rx's entered with this Rx Patient Status will be EXEMPT from Copayment.",! D PAGE L -^PS(53,DA) G QUIT
  I 'PSORXPRE,'$P($G(^PS(53,DA,0)),"^",7) W !!,"All Rx's entered with this Rx Patient Status will NOT be exempt from Copayment.",! D PAGE L -^PS(53,DA) G QUIT
@@ -107,7 +107,7 @@ MAIL2 ; SEND MAIL TO PHARMACIST, PROVIDER, AND HOLDERS OF PSO COPAY KEY
  S PSOC=PSOC+1
  S PSOTXT(PSOC)=" "
  S PSOC=PSOC+1
- F EXMT="SC","CV","AO","IR","EC","SHAD","MST","HNC" I $D(PSOTG(EXMT)) D
+ F EXMT="SC","CV","AO","IR","EC","MST","HNC" I $D(PSOTG(EXMT)) D
  . I PSOTG(EXMT)'="" Q
  . S PSOLTAG="REL"_EXMT
  . S PSOQUES=$P($T(@PSOLTAG),";",2) I PSOQUES="" Q
@@ -131,8 +131,8 @@ MAIL2 ; SEND MAIL TO PHARMACIST, PROVIDER, AND HOLDERS OF PSO COPAY KEY
  S PSOC=PSOC+1,PSOTXT(PSOC)="determine if the Rx can be billed to a third party insurance. These Veterans"
  S PSOC=PSOC+1,PSOTXT(PSOC)="will NOT be charged a VA copay."
  S PSOC=PSOC+1,PSOTXT(PSOC)=" "
- S PSOC=PSOC+1,PSOTXT(PSOC)="Supply, nutritional and investigational drugs are not charged a VA copay"
- S PSOC=PSOC+1,PSOTXT(PSOC)="but could be reimbursable by third party insurance."
+ S PSOC=PSOC+1,PSOTXT(PSOC)="Supply and investigational drugs are not charged a VA copay but could be"
+ S PSOC=PSOC+1,PSOTXT(PSOC)="reimbursable by third party insurance."
  ; S XMY() TO ALL THE RECIPIENTS
  I '$G(PSOREF) S XMY(+$P(^PSRX(RXP,0),"^",4))="" ; ORIGINAL
  I $G(PSOREF) S XMY(+$P(^PSRX(RXP,1,PSOREF,0),"^",17))="" ; REFILL
@@ -158,8 +158,7 @@ RELSC ;Is this Rx for a Service Connected Condition?;1
 RELMST ;Is this Rx related to the treatment of Military Sexual Trauma?;2
 RELAO ;Is this Rx for treatment of Vietnam-Era Herbicide (Agent Orange) exposure?;3
 RELIR ;Is this Rx for treatment of Ionizing Radiation exposure?;4
-RELEC ;Is this Rx for treatment related to service in SW Asia?;5
+RELEC ;Is this Rx for treatment of Environmental Contaminants exposure?;5
 RELHNC ;Is this Rx related to treatment of Head and/or Neck Cancer?;6
 RELCV ;Is this Rx potentially for treatment related to Combat?;7
-RELSHAD ;Is this Rx related to treatment of PROJ 112/SHAD?;8
  ;

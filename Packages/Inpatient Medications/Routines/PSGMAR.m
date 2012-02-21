@@ -1,8 +1,7 @@
 PSGMAR ;BIR/CML3-24 HOUR MAR - MAIN DRIVER ;14 Oct 98 / 4:27 PM
- ;;5.0; INPATIENT MEDICATIONS ;**8,15,20,111,131,145**;16 DEC 97;Build 17
+ ;;5.0; INPATIENT MEDICATIONS ;**8,15,20,111,131**;16 DEC 97
  ;
 EN ;
- ;
  NEW PSGOP
  D ENCV^PSGSETU G:$D(XQUIT) DONE
  D MARFORM^PSGMUTL G:PSGMARB=0 DONE S:PSGMARB'=1 PSGMARS=3
@@ -27,9 +26,6 @@ ENDATE ; get start date
 ENQ ; when queued
  N F,P,DRGI,DRGN,DRGT,PSIVUP,PSJORIFN,PSGMSORT
  S PSJACNWP=1 U IO D ^PSGMAR0 I $D(^TMP($J))>9 D ^PSGMAR1
- ;DAM 5-01-07
- I $D(PSGREP) K ^XTMP(PSGREP)
- ;END DAM
  D ^%ZISC G DONE
  ;
 OUT W $C(7),!!?5,"(No patient(s) selected for MAR run.)" K PSGPLF,PSGPLS
@@ -67,12 +63,10 @@ P ; get patient
  Q
  ;
 C ;
- ;DAM Add new variable to hold numerical value of CLINIC 5-01-07
- S PSGCLNC=""
  K DIR S DIR(0)="FAO",DIR("A")="Select CLINIC: "
  S DIR("?")="^D CDIC^PSGVBW" W ! D ^DIR
 CDIC ;
- K DIC S DIC="^SC(",DIC(0)="QEMIZ" D ^DIC K DIC S:+Y>0 CL=+Y S PSGCLNC=+Y I +Y<0 S PSJSTOP=1 Q
+ K DIC S DIC="^SC(",DIC(0)="QEMIZ" D ^DIC K DIC S:+Y>0 CL=+Y I +Y<0 S PSJSTOP=1 Q
  W:X["?" !!,"Enter the clinic you want to use to select patients for processing.",!
  Q
 L ;
@@ -83,8 +77,7 @@ LDIC ;
  W:X["?" !!,"Enter the name of the clinic group you want to use to select patients for processing."
  Q
 DEV ; ask print device and queue if asked to
- K ZTSAVE S PSGTIR="ENQ^PSGMAR",ZTDESC="24 HOUR MAR" S:PSGMARB ZTSAVE("PSGMARS")="" D
- . F X="PSGMARWG","PSGMARWD","PSGP","PSGPAT(","PSGDT","PSGMARDT","PSGSS","PSGMARB","PSGMARDF","PSGMTYPE","PSGRBPPN","^TMP($J,","PSGINCL","PSGINCLG","PSGINWD","PSGINWDG" S ZTSAVE(X)=""
+ K ZTSAVE S PSGTIR="ENQ^PSGMAR",ZTDESC="24 HOUR MAR" S:PSGMARB ZTSAVE("PSGMARS")="" F X="PSGMARWG","PSGMARWD","PSGP","PSGPAT(","PSGDT","PSGMARDT","PSGSS","PSGMARB","PSGMARDF","PSGMTYPE","PSGRBPPN","^TMP($J," S ZTSAVE(X)=""
  I $P(PSGMARDT,".",2) F X="PSGPLS","PSGPLF","PSGMARSD","PSGMARFD","PSGMARSP","PSGMARFP" S ZTSAVE(X)=""
  I PSGSS="W" F X="PSGTMALL","PSGTM","PSGTM(" S ZTSAVE(X)=""
  D ENDEV^PSGTI W:POP !!?3,"No device selected for 24 hour MAR run." W:$D(ZTSK) !?3,"24 hour MAR Queued!" K ZTSK Q

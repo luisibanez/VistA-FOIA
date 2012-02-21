@@ -1,9 +1,8 @@
 RMPR9LN1 ;HOIFO/HNC -  FLEX FIELD SORT;9/18/02 11:38
- ;;3.0;PROSTHETICS;**90,75,60,125**;Feb 09, 1996;Build 21
- ;SPS - Patch 75 added DALC section at the end.
+ ;;3.0;PROSTHETICS;**90**;Feb 09, 1996
 EN(RESULT) ;
- ;RESULT passed to broker in ^TMP($J,
- ;delimited by "^"
+ ; RESULT passed to broker in ^TMP($J,
+ ; delimited by "^"
  K ^TMP($J)
  N RMPRII,RMPRLN
  S CNT=0
@@ -23,18 +22,14 @@ HLST ;pick list
  ;;12;Souce
  ;;14;Total Cost
  ;;16;Remarks
- ;;20;DELIVERY VERIFICATION DATE
- ;;20.1;DELIVERY VERIFICATION STATUS
  ;;23;Transaction Number or PO Number
  ;;24;Brief Description
  ;;25;Deliver To
- ;;26;Date Required
  ;;27;Initiator
  ;;38.1;Exclude/Waiver
  ;;38.7;Contract #
  ;;62;Patient Category
  ;;63;Special Category
- ;;34;OIF/OEF
  ;;78;Unit Of Issue
  ;;89;Saved Item Description
  ;;0;*** INVENTORY ***
@@ -81,18 +76,5 @@ HLST ;pick list
  ;;70;Receiving Station
  ;;71;Work Order Number
  ;;72;2529-3 Date
- ;;4.92;HIGH TECH ITEM
- ;;72.5;FREE TEXT WO #
  ;;80;Lab Work for Other Station
- ;;81;NO ADMIN COUNT
- ;;0;*** DALC ***
- ;;89.1;DALC REFERENCE NUMBER
- ;;89.2;DALC BILLING DATE
- ;;89;DALC ITEM
- ;;4.2;WHO PLACED ORDER
- ;;89.3;DALC ORDERING STATION
- ;;90;DALC BILLING STATION
- ;;91;DALC VENDOR
- ;;92;DALC DUNS
- ;;93;DALC TAXID
  ;END

@@ -1,5 +1,5 @@
-KMPDSSD1 ;OAK/RAK - CM Tools Status ;5/1/07  15:07
- ;;2.0;CAPACITY MANAGEMENT TOOLS;**3,6**;Mar 22, 2002;Build 3
+KMPDSSD1 ;OAK/RAK - CM Tools Status ;2/14/05  11:43
+ ;;2.0;CAPACITY MANAGEMENT TOOLS;**3**;Mar 22, 2002
  ;
 CPU ;-- cpu/node data
  ;
@@ -24,7 +24,7 @@ CPU ;-- cpu/node data
  ;
 MGRP ;-- mail group members
  ;
- N MEMBER,MEMBER1,NAME,NMARRY
+ N MEMBER,NAME,NMARRY
  ;
  S IEN=$O(^XMB(3.8,"B","KMP-CAPMAN",0)) Q:'IEN
  ;
@@ -37,13 +37,6 @@ MGRP ;-- mail group members
  F  S MEMBER=$O(^XMB(3.8,IEN,1,"B",MEMBER)) Q:'MEMBER  D
  .S NAME=$P($G(^VA(200,MEMBER,0)),U)
  .I NAME'="" S NMARRY(NAME)=MEMBER
- ; remote members
- S MEMBER="",MEMBER1=0
- F  S MEMBER=$O(^XMB(3.8,IEN,6,"B",MEMBER)) Q:MEMBER=""  D 
- .S MEMBER1=0
- .F  S MEMBER1=$O(^XMB(3.8,IEN,6,"B",MEMBER,MEMBER1)) Q:'MEMBER1  D 
- ..S NAME=$P($G(^XMB(3.8,IEN,6,MEMBER1,0)),U)
- ..I NAME'="" S NMARRY(NAME)=MEMBER
  ;
  I '$D(NMARRY) S LN=LN+1 D SET^VALM10(LN,TEXT_" No Users") Q
  ;
@@ -51,9 +44,7 @@ MGRP ;-- mail group members
  F  S NAME=$O(NMARRY(NAME)) Q:NAME=""  D
  .S MEMBER=NMARRY(NAME)
  .S TEXT=TEXT_$J(" ",32-$L(TEXT))_NAME
- .; if not a remote user
- .I NAME'["@" D 
- ..S MEMBER=$$ACTIVE^XUSER(MEMBER) I '+MEMBER S TEXT=TEXT_" ("_$P(MEMBER,U,2)_")"
+ .S MEMBER=$$ACTIVE^XUSER(MEMBER) I '+MEMBER S TEXT=TEXT_" ("_$P(MEMBER,U,2)_")"
  .S LN=LN+1
  .D SET^VALM10(LN,TEXT)
  .S TEXT=""

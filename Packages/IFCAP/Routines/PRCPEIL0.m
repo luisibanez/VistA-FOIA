@@ -1,6 +1,6 @@
-PRCPEIL0 ;WISC/RFJ-edit inventory items (build arrays)              ; 9/20/06 11:02am
- ;;5.1;IFCAP;**98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPEIL0 ;WISC/RFJ-edit inventory items (build arrays)              ;01 Dec 93
+ ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
@@ -60,22 +60,12 @@ OUTSTRAN ;  build outstanding transaction array
  ;
  ;
 SPECIAL ;  build special parameter array
- ;  subroutine modified to add On-Demand Items (PRC*5.1*98)
- N PRCPONN S PRCPONN=""
  S LINE=31,COLUMN=1,CLREND=39
  D SET("Special Parameters",LINE+0,COLUMN,CLREND,0,IORVON,IORVOFF)
  D SET("Kill When Zero    ",LINE+1,COLUMN,CLREND,17)
  D SET("",LINE+2,COLUMN,CLREND)
- S X=""
- I PRCPTYPE="W" S X="",%=0 F  S %=$O(^PRCP(445,PRCPINPT,1,ITEMDA,4,%)) Q:'%  S X=X_$S(X="":"",1:", ")_%
- I PRCPTYPE'="W" D
- . N X
- . S X=$$GET1^DIQ(445.01,ITEMDA_","_PRCPINPT_",",.8,"E")
- . I X']"" S X="NO"
- . S PRCPONN="On-Demand         : "
- . I '$O(^PRCP(445,PRCPINPT,9,"B",DUZ,"")) S PRCPONN="(On-Demand)       : "
- . S PRCPONN=PRCPONN_X
- D SET($S(PRCPTYPE="W":"Substitute Items: "_X,1:PRCPONN),LINE+3,COLUMN,CLREND)
+ S X="",%=0 F  S %=$O(^PRCP(445,PRCPINPT,1,ITEMDA,4,%)) Q:'%  S X=X_$S(X="":"",1:", ")_%
+ D SET($S(PRCPTYPE="W":"Substitute Items: "_X,1:""),LINE+3,COLUMN,CLREND)
  D SET("",LINE+4,COLUMN,CLREND)
  Q
  ;

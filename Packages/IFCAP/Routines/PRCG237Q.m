@@ -1,5 +1,5 @@
 PRCG237Q ;WISC/BGJ - IFCAP 442 FILE CLEANUP (QUEUE); 11/8/99 2:07pm ;9/20/00  13:00
-V ;;5.1;IFCAP;**95**;Oct 20, 2000
+V ;;5.1;IFCAP;;Oct 20, 2000
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;This routine is installed by patch PRC*5*237.
  ;This routine creates entries in file 443.1 for background processing
@@ -47,7 +47,6 @@ DQ ;
  . . . S Z="",ROUTINE=REF_"^PRCG237P",VARIABLE=BEGDA_"-"_ENDA_";"_PRC("SITE")
  . . . I ADDVAR]"" S VARIABLE=VARIABLE_";"_ADDVAR
  . . . D ADD^PRCGPM1(ROUTINE,VARIABLE,.Z)
- D CLN4406
  D END^PRCGU
  ;
 OUT ;
@@ -81,17 +80,6 @@ DATE ;Select fiscal year
  D ^DIR
  S OUT=$G(DTOUT)_$G(DUOUT)_$G(DIRUT)_$G(DIROUT)
  K DTOUT,DUOUT,DIRUT,DIROUT,DIR
- Q
-CLN4406 ;add line to delete
- S MYHLD=0,MYCOUNT=0,THISCNT=0
- F  S MYHLD=$O(^PRC(443.1,MYHLD)) Q:'MYHLD  S MYCOUNT=MYHLD
- S LAST=MYCOUNT+1
- S X="START^PRCCL406"
- S THISCNT=$P(^PRC(443.1,0),U,4)
- S Y=""
- S:X'["^" X="^"_X
- I '$D(^PRC(443.1,LAST)) S ^PRC(443.1,LAST,0)=LAST_"^"_X_"^"_Y,$P(^PRC(443.1,0),"^",3,4)=(LAST_"^"_(THISCNT+1))
- K MYHLD,MYCOUNT,THISCNT
  Q
 LOAD ;
  ;;442;^PRC(442,;442;PRC("DATE")

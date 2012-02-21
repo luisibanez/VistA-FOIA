@@ -1,5 +1,5 @@
-ECXPLBB ;DALOI/KML - DSS BLOOD BANK PRE-EXTRACT AUDIT REPORT ; 8/13/07 7:08am
- ;;3.0;DSS EXTRACTS;**78,92,105**;Dec 22, 1997;Build 70
+ECXPLBB ;DALOI/KML - DSS BLOOD BANK PRE-EXTRACT AUDIT REPORT ;12/10/2004
+ ;;3.0;DSS EXTRACTS;**78**;Dec 22, 1997
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
  ;entry point from option
  D SETUP^ECXLBB I ECFILE="" Q
@@ -12,7 +12,6 @@ START ;  entry point from tasked job
  ; get LAB DATA and build temporary global ^TMP("ECXLBB",$J)
  N ECTRSP,ECADMT,ECTODT,ECXRPT,ECOUT,ECXSTR,ECRDT,ECLINE,ECPG,ECQUIT
  N ECD,ECXDFN,ECARRY,EC66,ECERR,ECTRFDT,ECTRFTM,ECX,ECINOUT,ECXJOB
- N ECXLOGIC
  S ECXJOB=$J
  K ^TMP("ECXLBB",ECXJOB)
  U IO
@@ -31,25 +30,26 @@ PRINT ;
  I $Y+5>IOSL D  Q:ECQUIT
  . I $E(IOST,1,2)["C-" S DIR(0)="E" D ^DIR K DIR I 'Y S ECQUIT=1 Q
  . W @IOF D HED
- W !,$P(ECXSTR,"^",5),?11,$P(ECXSTR,"^",4),?26,$P(ECXSTR,"^",16)
- W ?37,$$FMTE^XLFDT($$HL7TFM^XLFDT($P(ECXSTR,"^",8)),2)
- W ?49,$P(ECXSTR,"^",11),?60,$J(+$P(ECXSTR,"^",12),2)
+ W !,$P(ECXSTR,"^",5),?7,$P(ECXSTR,"^",4),?19,$P(ECXSTR,"^",16)
+ W ?27,$$FMTE^XLFDT($$HL7TFM^XLFDT($P(ECXSTR,"^",8)),2)
+ W ?36,$P(ECXSTR,"^",11),?47,$J(+$P(ECXSTR,"^",12),2),?54
+ W $P(ECXSTR,"^",17),?67,$P(ECXSTR,"^",18)
  Q
  ;
 HED ;
  S ECPG=ECPG+1
- W !,"LBB Extract Audit Report",?72,"Page",$J(ECPG,3)
+ W !,"LBB Pre-Extract Audit Report",?72,"Page",$J(ECPG,3)
  W !,ECSDN," - ",ECEDN,?58,"Run Date:",$J(ECRDT,12)
- W !,?37,"Transf",?57,"Number"
- W !,"Name",?14,"SSN",?25,"FDR LOC",?37,"Date",?49,"COMP"
- W ?57,"of Units"
+ W !,?27,"Transf",?44,"Number"
+ W !,"Name",?10,"SSN",?18,"FDR LOC",?27,"Date",?36,"COMP"
+ W ?44,"of Units",?54,"IPD",?67,"IP"
  W !,ECLINE
  Q
 DATES ;
  N OUT,CHKFLG
  I '$D(ECNODE) S ECNODE=7
  I '$D(ECHEAD) S ECHEAD=" "
- W @IOF,!,"LBB Extract Audit Report Information for DSS",!!
+ W @IOF,!,"LBB Pre-Extract Audit Report Information for DSS",!!
  S:'$D(ECINST) ECINST=+$P(^ECX(728,1,0),U)
  S ECXINST=ECINST
  K ECXDIC S DA=ECINST,DIC="^DIC(4,",DIQ(0)="I",DIQ="ECXDIC",DR=".01;99"
@@ -77,7 +77,7 @@ QUE ;
  F X="ECPACK","ECPIECE","ECRTN","ECGRP","ECNODE" S ZTSAVE(X)=""
  F X="ECFILE","ECHEAD","ECVER","ECINST","ECXINST" S ZTSAVE(X)=""
  F X="ECXLOGIC","ECXDATES" S ZTSAVE(X)=""
- S ZTDESC=ECPACK_" EXTRACT AUDIT REPORT: "_ECSDN_" TO "_ECEDN,ZTRTN="START^ECXPLBB",ZTIO=""
+ S ZTDESC=ECPACK_" PRE-EXTRACT AUDIT REPORT: "_ECSDN_" TO "_ECEDN,ZTRTN="START^ECXPLBB",ZTIO=""
  S IOP="Q" W ! S %ZIS="QMP" D ^%ZIS S:POP ECXPOP=1 Q:POP  I $D(IO("Q")) K IO("Q"),ZTIO D ^%ZTLOAD W:$D(ZTSK) !,$C(7),"REQUEST QUEUED",!,"Task #: ",$G(ZTSK) K I,ZTSK,ZTIO,ZTSAVE,ZTRTN D HOME^%ZIS S ECXPOP=1
  Q
  ;

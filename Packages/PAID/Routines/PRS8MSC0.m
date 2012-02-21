@@ -1,10 +1,12 @@
-PRS8MSC0 ;HISC/DAD,WCIOFO/JAH,SAB - MISC TIME CARD ADJUST(contd) ;4/04/2007
- ;;4.0;PAID;**22,35,40,56,111,112**;Sep 21, 1995;Build 54
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRS8MSC0 ;HISC/DAD,WCIOFO/JAH,SAB - MISC TIME CARD ADJUST(contd) ;08/14/00
+ ;;4.0;PAID;**22,35,40,56**;Sep 21, 1995
+ ;; if daily employee has 5 days AL, charge 7 days, UNLESS
+ ;  other leave has been manually charged (such as LWOP).
+ S (NPL(1),NPL(2))=0 I TYP["D" F X=1,2 D
+ .  D AUTOLVCH^PRS8MSC1(X,NUM(X),WP(X),NONP(X),FLG(X),RL(X),DYWK(X))
+ .  S NPL(X)=$S(NL(X)+FLG(X)=5:NL(X)+2-NP(X),1:NL(X))
  ;
- ; for employee on daily tour check if no duty performed during week
- I TYP["D" D NODUTY^PRS8MSC1
- ;
+ I NPL(1)+NPL(2)>$P(WK(3),"^") S $P(WK(3),"^")=NPL(1)+NPL(2)
  S B="",Z0="" S $P(B,"B",97)="",$P(Z0,"0",97)="",FLAG=0
  F X=1:1:PEROWK S Y=$P(PEROWK(X),"^",4),DAT=$P(PEROWK(X),"^",1,3),DY=$P(DAT,"^",1),BEG=$P(DAT,"^",2),END=$P(DAT,"^",3) D
  .I $L(Y)'<96,TYP'["Ff",$E(ENT,27) D  ; slp for 24hr cvg
@@ -79,20 +81,11 @@ PRS8MSC0 ;HISC/DAD,WCIOFO/JAH,SAB - MISC TIME CARD ADJUST(contd) ;4/04/2007
  ..I STOP-START+1+Z<8 D
  ...I TYP["W",$E($P(PEROT(H),"^",3))'="E"&($G(^TMP($J,"PRS8",$P(PEROT(H),"^",1),"OFF"))=0) S TOUR=$G(^TMP($J,"PRS8",$P(PEROT(H),"^",1),"TOUR"))
  ...S D=+OT,P=$S($E($P(PEROT(H),"^",3))'="E":TOUR+19,1:7),Y=8-(STOP-START+1+Z)
- ...;
- ...I TYP["P",TYP'["B",P'=7,'+NAWS D
+ ...I TYP["P",TYP'["B",P'=7 D
  ....I $P($G(^TMP($J,"PRS8",$P(PEROT(H),"^",1),"OFF")),"^",1)=1&(TH(WEEK)'>160) S Y=0 Q
  ....I $P(C0,"^",12)="E" S P=$S($L($TR(W,"0O"))>31&(TH(WEEK)'>160):TOUR+25,1:P) D:Y SET S Y=$S(TH(WEEK)'>160:Y,1:0) S P=9 D:Y SET S Y=0
  ...I $P(C0,"^",12)="N",P'=7 S P=$S($L($TR(W,"0O"))>31:TOUR+15,1:P) D:Y SET S Y=0
- ...D:Y&('+NAWS) SET
- ...;
- ...I +NAWS D  Q  ; Checks for just the AWS nurses
- ....N CNT,HT,I
- ....S CNT=Y,Y=1,HT=$G(^TMP($J,"PRS8",D,"HT"))
- ....F I=1:1:CNT D
- .....I HT'<32 S P=$S(P'=7:TOUR+15,1:P) D SET1 Q  ; DA/DE or CE/CT
- .....I TH($S(+OT>7:2,1:1))'<160 S P=$S(P'=7:TOUR+19,1:P) D SET1 Q  ; OA/OE or CE/CT
- .....I HT<32,TH($S(+OT>7:2,1:1))<160 S P=9 D SET1 Q  ; UN/US
+ ...D:Y SET
  ..Q
  .Q
  F X="OT","DA","UN","CT" D  ; store FF OT into WK array
@@ -103,22 +96,11 @@ PRS8MSC0 ;HISC/DAD,WCIOFO/JAH,SAB - MISC TIME CARD ADJUST(contd) ;4/04/2007
  ; check/adjust night differential granted for leave
  D LVND
  Q
-SET ; Set sleep time into WK array
+SET ; Set sleep time into WK arrary
  Q:D<1!(D>14)
  S WEEK=$S(D>7:2,1:1)
  S $P(WK(WEEK),"^",P)=$P(WK(WEEK),"^",P)+Y
  Q
- ;
-SET1     ; Set sleep time into WK array
- Q:D<1!(D>14)
- S WEEK=$S(D>7:2,1:1)
- S $P(WK(WEEK),"^",P)=$P(WK(WEEK),"^",P)+Y
- Q:(HT>32)&(TH(WEEK)<160)&(NH<320)&($E(ENT,19)=1)
- Q:(HT>32)&(TH(WEEK)<160)&(NH=320)&($E(ENT,19)=1)&($E(AC,2)=2)  ; 9month AWS
- S HT=HT+1,TH(WEEK)=TH(WEEK)+1
- S ^TMP($J,"PRS8",D,"HT")=^TMP($J,"PRS8",D,"HT")+1
- Q
- ;
 OTNXTPP(DAY,CALLBK,EMPNM,PPIEN,TLU) ;
  ;OT or CT connects to a tour of duty in the next pay period.
  ;JAH-patch PRS*4*22
@@ -175,8 +157,6 @@ LVND ; Leave Night Differential
  Q:LU'>31  ;               Didn't take 8hrs of leave
  F W=1,2 D  ;              For each week subtract leave ND from total ND
  . Q:'WKL(W)  ;                                 No leave ND to subtract
- . I +NAWS'=36 S $P(WK(W),"^",10)=$P(WK(W),"^",10)-WKL(W) ; Subtract
- . ; For 36/40 AWS subtract time from Night Differential-AWS (piece 51)
- . I +NAWS=36 S $P(WK(W),"^",51)=$P(WK(W),"^",51)-WKL(W)
+ . S $P(WK(W),"^",10)=$P(WK(W),"^",10)-WKL(W) ; Subtract
  . S WKL(W)=0 ;                                 Reset leave ND amount
  Q

@@ -1,11 +1,12 @@
-RORRP015 ;HCIOFO/SG - RPC: DIVISIONS AND HOSPITAL LOCATIONS ; 3/13/06 9:25am
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORRP015 ;HCIOFO/SG - RPC: DIVISIONS AND HOSPITAL LOCATIONS ; 1/23/06 2:27pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
+ ; #????         Access to the file #40.8 (???: 3433)
  ; #1246         WIN^DGPMDDCF (supported)
- ; #2438         Access to the file #40.8 (controlled)
  ; #10040        Access to the HOSPITAL LOCATION file (supported)
+ ;           ??? Add DIVISION (3.5) to DBIA #10040
  ;
  Q
  ;

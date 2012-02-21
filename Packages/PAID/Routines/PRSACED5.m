@@ -1,7 +1,5 @@
-PRSACED5 ; HISC/REL/FPT/PLT-T&A Cross-Edits ;11/20/06  12:53
- ;;4.0;PAID;**102,112**;Sep 21, 1995;Build 54
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;
+PRSACED5 ; HISC/REL/FPT-T&A Cross-Edits ;02/07/06  12:53
+ ;;4.0;PAID;**102**;Sep 21, 1995
  G D1:DUT=1,D2:DUT=2,D3:DUT=3 Q
 D1 G:+NOR N1
  I "045"'[LVG S ERR=151 D ERR^PRSACED
@@ -12,8 +10,7 @@ D1 G:+NOR N1
  I E(1)>7!(E(2)>7) S ERR=159 D ERR^PRSACED
  I LVG=5 I E(1)+E(2)+$P(C1,"^",30)>14 S ERR=160 D ERR^PRSACED
  Q
- ;36/40 employee has 8b normal hour = 72
-N1 I '(NOR=48!(NOR=72)&("KM"[PAY)),NOR<80 S ERR=153 D ERR^PRSACED
+N1 I '(NOR=48&("KM"[PAY)),NOR<80 S ERR=153 D ERR^PRSACED
  I '(PAY="W"&(LVG=0)),"123"'[LVG S ERR=154 D ERR^PRSACED
  S E(1)=0 F K=13:1:18,20,43 S X=$P(C0,"^",K),E(1)=E(1)+$E(X,1,2)+($E(X,3)*.25)
  S E(2)=0 F K=48:1:53 S X=$P(C0,"^",K),E(2)=E(2)+$E(X,1,2)+($E(X,3)*.25)
@@ -26,12 +23,10 @@ N1 I '(NOR=48!(NOR=72)&("KM"[PAY)),NOR<80 S ERR=153 D ERR^PRSACED
 N2 I CWK'="C",E(1)>45!(E(2)>45) S ERR=165 D ERR^PRSACED
  I CWK="C",E(1)+E(2)>80 S ERR=166 D ERR^PRSACED
  Q
- ;exclude 9/3 month employee
-D2 I PAY'="M"!(FLSA'="E"),NOR<1!(NOR>79) S ERR=155 D ERR^PRSACED
+D2 I NOR<1!(NOR>79) S ERR=155 D ERR^PRSACED
  I "0123"'[LVG S ERR=156 D ERR^PRSACED
  I "ABCGLMNRU0123456789PQT"'[PAY S ERR=157 D ERR^PRSACED
- ;exclude 9/3 month employee
- QUIT:"123"'[LVG!(NOR="80"&(PAY="M"))
+ Q:"123"'[LVG
  S E(1)=0 F K=13:1:18,20,43 S X=$P(C0,"^",K),E(1)=E(1)+$E(X,1,2)+($E(X,3)*.25)
  S E(2)=0 F K=48:1:53 S X=$P(C0,"^",K),E(2)=E(2)+$E(X,1,2)+($E(X,3)*.25)
  F K=2,25 S X=$P(C1,"^",K),E(2)=E(2)+$E(X,1,2)+($E(X,3)*.25)

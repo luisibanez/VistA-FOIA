@@ -1,6 +1,5 @@
 IBCEF1 ;ALB/TMP - FORMATTER SPECIFIC BILL FUNCTIONS - CONT ;30-JAN-96
- ;;2.0;INTEGRATED BILLING;**52,124,51,137,210,155,349,371**;21-MAR-94;Build 57
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,124,51,137,210,155**;21-MAR-94
  ;
 OCC(IBIFN,REL,TEXT) ;Sets up an arrays of occurrence codes for various cks
  ;RETURNS 1^additional data for entry IBXSAVE("OCC",n) if REL or TEXT
@@ -10,7 +9,7 @@ OCC(IBIFN,REL,TEXT) ;Sets up an arrays of occurrence codes for various cks
  ; REL = 'OCC RELATED TO' value to check for
  ; TEXT = text to check for the .01 field of 399.1 entry pointed to
  ;         by the occurrence code
- N OCC,SORT,ARR,N,DATA,CODE,CT
+ N OCC
  I '$D(IBXSAVE("OCC")),'$D(IBXSAVE("OCCS")) D
  .N IBI,Z,CT1,CT2,Z0 S (IBI,CT1,CT2)=0
  .F  S IBI=$O(^DGCR(399,IBIFN,"OC",IBI)) Q:'IBI  S Z=$G(^(IBI,0)) D
@@ -19,13 +18,6 @@ OCC(IBIFN,REL,TEXT) ;Sets up an arrays of occurrence codes for various cks
  ..I $P(Z0,U,10) S CT2=CT2+1,IBXSAVE("OCCS",CT2)=$S($P(Z0,U,4):$P(Z0,U,2)_U_$P(Z,U,2),1:U)_U_$P(Z,U,4)_U_$P(Z0,U)_U_$P(Z0,U,9)_U_$P(Z,U,3)_U_$P(Z,U,2)
  ..I '$P(Z0,U,10) S CT1=CT1+1,IBXSAVE("OCC",CT1)=$S($P(Z0,U,4):$P(Z0,U,2)_U_$P(Z,U,2),1:U)_U_U_$P(Z0,U)_U_$P(Z0,U,9)_U_$P(Z,U,3)_U_$P(Z,U,2)
  I '$D(IBXSAVE("OCC"))&'$D(IBXSAVE("OCCS")) S IBXSAVE("OCC")="" G OCCQ
- ;
- ; esg - IB*2*349 - order the occurrence codes
- ;       Build the SORT array sorted by the occ code
- F ARR="OCC","OCCS" S N=0 F  S N=$O(IBXSAVE(ARR,N)) Q:'N  S DATA=$G(IBXSAVE(ARR,N)) I $P(DATA,U,1)'="" S CODE=" "_$P(DATA,U,1),SORT(ARR,CODE,N)=DATA
- ;       Loop thru the SORT array and re-build the IBXSAVE array
- F ARR="OCC","OCCS" K IBXSAVE(ARR) S CODE="",CT=0 F  S CODE=$O(SORT(ARR,CODE)) Q:CODE=""  S N=0 F  S N=$O(SORT(ARR,CODE,N)) Q:'N  S CT=CT+1,IBXSAVE(ARR,CT)=SORT(ARR,CODE,N)
- ;
  I $G(REL)'=""!($G(TEXT)'="") D OCC1("",.OCC,$G(REL),$G(TEXT)) D:'$D(OCC) OCC1("S",.OCC,$G(REL),$G(TEXT))
 OCCQ Q $G(OCC)
  ;
@@ -59,7 +51,7 @@ OUTPT(IBIFN,IBPRINT) ; Moved for space
  D OUTPT^IBCEF11(IBIFN,$G(IBPRINT))
  Q
  ;
-OCC92 ;Reformats IBXSAVE("OCC") and IBXSAVE("OCCS") to fit blocks on UB-04
+OCC92 ;Reformats IBXSAVE("OCC") and IBXSAVE("OCCS") to fit blocks on UB92
  ; Set up IBXSAVE(32-36) arrays
  N IBPG,IB32,IB33,IB34,IB35,IB36,IBFL,Z,Z0,PG
  S IBPG=0
@@ -70,8 +62,21 @@ OCC92 ;Reformats IBXSAVE("OCC") and IBXSAVE("OCCS") to fit blocks on UB-04
  F Z=32:1:36 S Z0="" F  S Z0=$O(IBFL(Z,Z0)) Q:'Z0  S IBXSAVE("OC92",Z,Z0)=$P(IBFL(Z,Z0),U,1,3)
  Q
  ;
-BATCH() ; Moved for space IB*2*349
- Q $$BATCH^IBCEF11()
+BATCH() ; Sets up record for and stores/returns the next batch number
+ N NUM,FAC,DO,DD,DLAYGO,DIC,X,Y
+ ;Keep latest batch number for view/print edi bill extract data option
+ I $D(IBVNUM) S NUM=IBVNUM G BATCHQ
+ ;Check for batch resubmit - if yes, use same number as original batch
+ I $P($G(^TMP("IBRESUBMIT",$J)),U,3)=1 S NUM=$P(^($J),U) G BATCHQ
+ L +^IBA(364.1,0):5 I '$T Q 0
+ S FAC=+$P($$SITE^VASITE(),U,3),NUM=$O(^IBA(364.1,"B",""),-1)
+ I $D(^IBA(364.1,+NUM,0)),$P(^(0),U,2)="" F  D  Q:'NUM!($P($G(^IBA(364.1,+NUM,0)),U,2)'="")
+ . I $D(^IBA(364.1,NUM,0)) S DA=NUM,DIK="^IBA(364.1," D ^DIK
+ . S NUM=$O(^IBA(364.1,"B",""),-1)
+ F  S NUM=$S($P(NUM,FAC,2)'="":NUM+1,1:FAC_"0000001") Q:'$D(^IBA(364.1,"B",NUM))
+ K DO,DD S DIC="^IBA(364.1,",DLAYGO=364.1,DIC(0)="L",X=NUM D FILE^DICN K DD,DO I Y'>0 S NUM=0
+ L -^IBA(364.1,0)
+BATCHQ Q NUM
  ;
 PROC(T,TYPE) ; Find procedure code, strip '.' Function returns result
  ; T = Procedure internal entry #;file reference
@@ -113,12 +118,10 @@ FINDINS(IBIFN,IBSEQ) ; Returns the internal entry number of the insurance
  ;  IBSEQ is null)
  Q $P($G(^DGCR(399,IBIFN,"I"_$$COBN^IBCEF(IBIFN,$G(IBSEQ)))),U)
  ;
-TOB(IBIFN) ; Returns UB-04 type of bill from data in the output formatter
+TOB(IBIFN) ; Returns UB92 type of bill from data in the output formatter
  N IBTOB,IBZ1,IBZ2,IBZ3
- D F^IBCEF("N-UB-04 LOCATION OF CARE","IBZ1",,IBIFN)
- D F^IBCEF("N-UB-04 BILL CLASSIFICATION","IBZ2",,IBIFN)
- D F^IBCEF("N-UB-04 TIMEFRAME OF BILL","IBZ3",,IBIFN)
- S IBTOB=IBZ1_IBZ2_IBZ3
+ D F^IBCEF("N-UB92 LOCATION OF CARE","IBZ1",,IBIFN),F^IBCEF("N-UB92 BILL CLASSIFICATION","IBZ2",,IBIFN),F^IBCEF("N-UB92 TIMEFRAME OF BILL","IBZ3",,IBIFN)
+ S IBTOB=$S($G(^TMP("IBXSAVE",$J,"RM")):" ",1:"")_IBZ1_IBZ2_IBZ3
  Q IBTOB
  ;
 PRCD(PRIEN,ALL,EDT) ; Function returns the code that corresponds to the variable
@@ -145,9 +148,9 @@ REQ(FT,INP,IBIFN) ; Determine if bill IBIFN is of form type FT and
  ;Returns 1 if both conditions FT and INP match for the bill
  ; or 0 if either of these conditions are not true
  ; I $$REQ^IBCEF1(2,"I",1) would mean if bill entry #1 is
- ;                         CMS-1500/inpatient the data would be required
+ ;                         HCFA 1500/inpatient the data would be required
  ; I '$$REQ^IBCEF1(2,"I",1) would mean if bill entry #1 is anything but
- ;                          CMS-1500/inpatient, the data would not be
+ ;                          HCFA 1500/inpatient, the data would not be
  ;                          required
  N Z
  S Z=1
@@ -170,52 +173,23 @@ SET1(IBIFN,A,IBZ,IBXDATA,IBXNOREQ) ; Utility to set variables for output
  Q
  ;
 CIADDR(IBXDATA,IBXSAVE,LINE,FORM) ; Format current ins co address line LINE for FORM
- ; FORM = 1 for CMS-1500, 2 for UB-04
- ; Called from output formatter - both IBXDATA, IBXSAVE parameters are
+ ; FORM = 1 for HCFA 1500, 2 for UB-92
+ ; Called from formatter - both IBXDATA, IBXSAVE parameters are
  ;  passed by reference
- ;
  K IBXDATA
  I $G(FORM)'=1 D
- . ;
- . ; esg - 11/17/06 - IB*2*349 - UB-04 FL-38 contains the payer name
- . ;       and address on 4 lines within this 5 line box.  All 5 lines
- . ;       are formatted here into the IBXDATA array.  This is the
- . ;       address that shows through the envelope window.
- . ;
- . ; esg - 9/13/07 - IB*2*371 - Line 1 of this box contains the print
- . ;       status (i.e. copy, 2nd notice, 3rd notice, MRA needed).
- . ;
- . N Z,Z1,LM,Q,ADDR,X,IBPSTAT
- . S LM=$P($G(^IBE(350.9,1,1)),U,31)   ; UB address column parameter
- . S Z=""
- . I LM S $P(Z," ",LM)=""              ; beginning spaces indent
- . S ADDR=$G(IBXSAVE("CADR"))          ; address data string
- . ;
- . D F^IBCEF("N-PRINT BILL SUBMIT STATUS","IBPSTAT",,+$G(IBXIEN))
- . S Z1=Z I Z1="" S Z1=" "     ; line 1 can't start in column 1
- . S IBXDATA(1)=Z1_$G(IBPSTAT),Q=1             ; line 1 print status
- . S Q=Q+1
- . S IBXDATA(Q)=Z_$G(IBXSAVE("CADR_NAME"))     ; line 2 payer name
- . S X=$P(ADDR,U,1)
- . I X'="" S Q=Q+1,IBXDATA(Q)=Z_X              ; address line 1
- . S X=$P(ADDR,U,2)
- . I X'="" S Q=Q+1,IBXDATA(Q)=Z_X D            ; address line 2
- .. S X=$P(ADDR,U,3)
- .. I X'="" S IBXDATA(Q)=IBXDATA(Q)_" "_X      ; address line 3
- .. Q
- . S Q=Q+1                                     ; city,st,zip on last line
- . S IBXDATA(Q)=Z_$P(ADDR,U,4)_", "_$$STATE^IBCEFG1($P(ADDR,U,5))_" "_$P(ADDR,U,6)
- . KILL IBXSAVE("CADR_NAME"),IBXSAVE("CADR")   ; cleanup
- . Q
- ;
- I $G(FORM)=1 D           ; CMS-1500
+ . Q:'$G(LINE)
+ . N Z
+ . S:'$D(IBXSAVE("LM-UB")) IBXSAVE("LM-UB")=$P($G(^IBE(350.9,1,1)),U,31)-1
+ . S Z=$S(IBXSAVE("LM-UB")>0:$J("",IBXSAVE("LM-UB")),1:"")
+ . I LINE=1 S IBXDATA=Z_$P(IBXSAVE("CADR"),U)_$S($P(IBXSAVE("CADR"),U,2)'="":" "_$P(IBXSAVE("CADR"),U,2),1:"")_$S($P(IBXSAVE("CADR"),U,3)'="":" "_$P(IBXSAVE("CADR"),U,3),1:"")
+ . I LINE=2 S IBXDATA=Z_$P(IBXSAVE("CADR"),U,4)_", "_$$STATE^IBCEFG1($P(IBXSAVE("CADR"),U,5))_" "_$P(IBXSAVE("CADR"),U,6)
+ I $G(FORM)=1 D
  . N CT,X,Z
  . S:'$D(IBXSAVE("INDENT")) Z="",$P(Z," ",+$P($G(^IBE(350.9,1,1)),U,27)+1)="",IBXSAVE("INDENT")=Z
  . S CT=0
  . S X=$P(IBXSAVE("CADR"),U) S:X'="" CT=CT+1,IBXDATA(CT)=IBXSAVE("INDENT")_X
  . S X=$S($P(IBXSAVE("CADR"),U,2)'="":$P(IBXSAVE("CADR"),U,2),1:"")_$S($P(IBXSAVE("CADR"),U,2)'="":" ",1:"")_$P(IBXSAVE("CADR"),U,3) S:X'="" CT=CT+1,IBXDATA(CT)=IBXSAVE("INDENT")_X
  . S CT=CT+1,IBXDATA(CT)=IBXSAVE("INDENT")_$P(IBXSAVE("CADR"),U,4)_", "_$$STATE^IBCEFG1($P(IBXSAVE("CADR"),U,5))_" "_$P(IBXSAVE("CADR"),U,6)
- . Q
- ;
  Q
  ;

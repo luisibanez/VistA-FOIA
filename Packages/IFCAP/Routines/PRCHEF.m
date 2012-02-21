@@ -1,12 +1,12 @@
 PRCHEF ;ID/RSD,SF-ISC/TKW-EDIT ROUTINES FOR SUPPLY SYSTEM ;6/10/97 9:34
-V ;;5.1;IFCAP;**107**;Oct 20, 2000;Build 13
- ;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN80 ;DELETE A RECEIVING REPORT (CONT.FROM PRCHE)
  K PRCHNRQ D PO^PRCHE G:'$D(PRCHPO) Q^PRCHE
  I $P($G(^PRC(442,PRCHPO,23)),U,11)="S"!($P($G(^(23)),U,11)="P") W !!,?5,"Please create an adjustment voucher to delete",!,?5,"receiving reports for purchase card orders.",! G EN80
  I $P($G(^PRC(442,PRCHPO,23)),U,11)="D" W !!,?5,"Please create an adjustment voucher to delete",!,?5,"receiving reports for delivery orders.",! G EN80
- I X<25!(X>33) W $C(7)," Receiving Report cannot be deleted, please create an adjustment voucher." G EN80
+ I X<25!(X>33) W $C(7)," ??" G EN80
  I '$O(^PRC(442,PRCHPO,11,0)) W !?3,"Order has no Receiving Reports !",$C(7) G EN80
  D LCK1^PRCHE G:'$D(DA) EN80 S:$P(^PRC(442,PRCHPO,0),U,2)=8 PRCHNRQ=1
  S DIC="^PRC(442,PRCHPO,11,",DIC(0)="QEANZ" D ^DIC I Y<0 L  G EN80

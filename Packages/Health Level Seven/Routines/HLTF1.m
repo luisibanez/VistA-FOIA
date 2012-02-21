@@ -1,7 +1,5 @@
-HLTF1 ;AISC/SAW/MTC-Process Message Text File Entries (Cont'd) ;10/17/2007  09:43
- ;;1.6;HEALTH LEVEL SEVEN;**5,8,22,25,19,78,122**;Oct 13, 1995;Build 14
- ;Per VHA Directive 2004-038, this routine should not be modified.
- ;
+HLTF1 ;AISC/SAW/MTC-Process Message Text File Entries (Cont'd) ;09/10/98  11:21
+ ;;1.6;HEALTH LEVEL SEVEN;**5,8,22,25,19,78**;Oct 13, 1995
 MERGE15(ARAYTYPE,MTIEN,SUB1,SUB2) ;Merge Local/Global Array From Application into
  ;Message Text File
  ;
@@ -68,9 +66,6 @@ MERGE(ARAYTYPE,MTIEN,SUB1,SUB2) ;Merge Local/Global Array From Application into
  ;
  N HLCHAR,HLEVN,HLFS,I,X,X1,X2,X3 S (HLCHAR,HLEVN,X)=0
  ;
- ; patch HL*1.6*122: MPI-client/server
- F  L +^HL(772,+$G(MTIEN)):10 Q:$T  H 1
- ;
  ;Merge data from a global array with two subscript
  I ARAYTYPE="G",$G(SUB2)'="" D
  . S X="",I=0
@@ -104,9 +99,6 @@ MERGE(ARAYTYPE,MTIEN,SUB1,SUB2) ;Merge Local/Global Array From Application into
  ;
  ;-- update 0 node for message text
  S ^HL(772,MTIEN,"IN",0)="^^"_I_"^"_I_"^"_$$DT^XLFDT_"^"
- ;
- ; patch HL*1.6*122: MPI-client/server
- L -^HL(772,+$G(MTIEN))
  ;
  ;File message statistics
  D STATS^HLTF0(MTIEN,HLCHAR,HLEVN)

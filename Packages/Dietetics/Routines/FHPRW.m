@@ -1,6 +1,5 @@
 FHPRW ;Hines OIFO/REL,RTK - List Dietetic Locations ;5/13/94  14:57 
- ;;5.5;DIETETICS;**12**;Jan 28, 2005;Build 3
- ; 10/24/07 BAY/KAM FH*5.5*12 CALL 214407 Display new Clinician Field
+ ;;5.5;DIETETICS;;Jan 28, 2005
 F1 R !!,"Select LOCATION (or ALL): ",X:DTIME G:'$T!("^"[X) KIL D:X="all" TR^FH I X="ALL" S WRD=0
  E  K DIC S DIC="^FH(119.6,",DIC(0)="EQM" D ^DIC K DIC G:Y<1 F1 S WRD=+Y
  I 'WRD W !!,"Verifying completeness of room-bed & ward assignments ..." D VER
@@ -15,12 +14,7 @@ Q1 ; Print Dietetic Ward Profile
 Q2 S X=^FH(119.6,K1,0),NODE1=$G(^FH(119.6,K1,1)) D BLD,HDR
  W !!,"Print Order:",?22,$P(X,"^",4)
  W !,"Type of Location:",?22,$S($P(X,U,3)="O":"OUTPATIENT",1:"INPATIENT")
- ;
- ;10/24/07 BAY/KAM *12 214407 Print new Clinician Multiple field
- N C1 S C1=""
- F  S C1=$O(^FH(119.6,K1,2,C1)) Q:C1=""  D
- .  S Z=$G(^FH(119.6,K1,2,C1,0)) I Z W !,"Assigned Clinician(s):",?22,$P($G(^VA(200,Z,0)),"^",1)
- ;
+ W !,"Assigned Clinician:",?22 S Z=$P(X,"^",2) I Z W $P($G(^VA(200,Z,0)),"^",1)
  W !,"Tray Assembly:",?22 S Z=$P(X,"^",5) I Z W $P($G(^FH(119.72,Z,0)),"^",1) S Z=$P(X,"^",17) S:Z="" Z=100 W "   (",Z,"%)"
  W !,"Cafeteria:",?22 S Z=$P(X,"^",6) I Z W $P($G(^FH(119.72,Z,0)),"^",1) S Z=$P(X,"^",18) S:Z="" Z=100 W "   (",Z,"%)"
  W !,"Dining Room:",?22 S Z=$P(X,"^",7) I Z W "Yes" S Z=$P(X,"^",19) S:Z="" Z=100 W "   (",Z,"%)"

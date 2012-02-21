@@ -1,6 +1,6 @@
 BPSSCRU5 ;BHAM ISC/SS - ECME SCREEN UTILITIES ;05-APR-05
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5,7,8,10**;JUN 2004;Build 27
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;USER SCREEN
  Q
  ;
@@ -15,9 +15,8 @@ DATETIME(Y) ;EP - convert fileman date.time to printable
  ; BPHIST - array to return results
  ;output:
  ; Array in BPHIST with the format:
- ;  BPHIST(type,timedate,PointerToResponseClaimFile)=PointerTo#9002313.57^request type
+ ;  BPHIST(type,timedate,PointerToResponseClaimFile)=PointerTo#9002313.57
  ;  where:
- ;  request type - "C" - billing request, "R" - reversal request
  ;  type "C" - BPS CLAIM file, "R" - BPS RESPONSE file
  ;  PointerToResponseClaimFile - pointer to 9002313.03 or 9002313.02
 MKHIST(BP59,BPHIST) ;
@@ -37,12 +36,12 @@ MKHIST(BP59,BPHIST) ;
  . . ;old BPS CLAIMS recs don't have dates, so use START TIME from .57 file but 
  . . ;only at the very first time (using $D for this)
  . . I BP1=0 I '$D(BPSARR02(BPLSTCLM)) S (BPSARR02(BPLSTCLM))=BPSSTDT,BP1=BPSSTDT
- . . I BP1 I '$D(BPHIST("C",BP1,BPLSTCLM)) S BPHIST("C",BP1,BPLSTCLM)=BP57_U_"C"
+ . . I BP1 S BPHIST("C",BP1,BPLSTCLM)=BP57_U_"C"
  . S BPLSTRSP=+$P(BPDAT57(0),U,5) ;response
  . I BPLSTRSP>0 D
  . . S BP1=+$P($G(^BPSR(BPLSTRSP,0)),U,2) ;received on
  . . I BP1=0 I '$D(BPSARR03(BPLSTRSP)) S (BPSARR02(BPLSTCLM))=BPSSTDT,BP1=BPSSTDT
- . . I BP1 I '$D(BPHIST("R",BP1,BPLSTRSP)) S BPHIST("R",BP1,BPLSTRSP)=BP57_U_"C"
+ . . I BP1 S BPHIST("R",BP1,BPLSTRSP)=BP57_U_"C"
  . ;reversal transmissions
  . S BPDAT57(4)=$G(^BPSTL(BP57,4))
  . S BPLSTCLM=+$P(BPDAT57(4),U,1) ;reversal
@@ -50,12 +49,12 @@ MKHIST(BP59,BPHIST) ;
  . . S BP1=+$P($G(^BPSC(BPLSTCLM,0)),U,5) ;transmitted on
  . . I BP1=0 S BP1=+$P($G(^BPSC(BPLSTCLM,0)),U,6) ;rec created on
  . . I BP1=0 I '$D(BPSARR02(BPLSTCLM)) S (BPSARR02(BPLSTCLM))=BPSSTDT,BP1=BPSSTDT
- . . I BP1 I '$D(BPHIST("C",BP1,BPLSTCLM)) S BPHIST("C",BP1,BPLSTCLM)=BP57_U_"R"
+ . . I BP1 S BPHIST("C",BP1,BPLSTCLM)=BP57_U_"R"
  . S BPLSTRSP=+$P(BPDAT57(4),U,2) ;reversal response
  . I BPLSTRSP>0 D
  . . S BP1=+$P($G(^BPSR(BPLSTRSP,0)),U,2) ;received on
  . . I BP1=0 I '$D(BPSARR03(BPLSTRSP)) S (BPSARR02(BPLSTCLM))=BPSSTDT,BP1=BPSSTDT
- . . I BP1 I '$D(BPHIST("R",BP1,BPLSTRSP)) S BPHIST("R",BP1,BPLSTRSP)=BP57_U_"R"
+ . . I BP1 S BPHIST("R",BP1,BPLSTRSP)=BP57_U_"R"
  ;--------
  ;sorting: pairs (send/respond) in reversed chronological order
  N BPCLDT1,BPCLIEN,BPRSDT1,BPRSIEN,BPCLDT2
@@ -122,25 +121,32 @@ RESPSTAT(BPIEN03) ;
  ;
  ;Electronic payer - ptr to #9002313.92 
  ;BPIEN02 - ptr in #9002313.02
-B1PYRIEN(BP57) ;
- N BPX,BPX2
- S BPX2=+$P($G(^BPSTL(BP57,10,+$G(^BPSTL(BP57,9)),0)),U,2)
- S BPX=$P($G(^BPSF(9002313.92,BPX2,0)),U)
- Q BPX
+PYRIEN(BPIEN02) ;
+ Q $P($G(^BPSF(9002313.92,+$P($G(^BPSC(BPIEN02,0)),U,2),0)),U)
  ;
  ;BPIEN02 - ptr in #9002313.02
-B2PYRIEN(BP57) ;
+B2PYRIEN(BPIEN02,BP57) ;
  N BPX,BPX2
- S BPX2=+$P($G(^BPSTL(BP57,10,+$G(^BPSTL(BP57,9)),0)),U,3)
- S BPX=$P($G(^BPSF(9002313.92,BPX2,0)),U)
+ S BPX=$G(^BPSF(9002313.92,+$$PYRIEN(BPIEN02),"REVERSAL"))
+ I $L(BPX)=0 D
+ . S BPX2=+$P($G(^BPSTL(BP57,10,+$G(^BPSTL(BP57,9)),0)),U,3)
+ . S BPX=$P($G(^BPSF(9002313.92,BPX2,0)),U)
  Q BPX
  ;
  ;B3 payer sheet 
-B3PYRIEN(BP57) ;
+B3PYRIEN(BPIEN02,BP59,BP57) ;
  N BPX,BPX2
  S BPX2=+$P($G(^BPSTL(BP57,10,+$G(^BPSTL(BP57,9)),0)),U,4)
  S BPX=$P($G(^BPSF(9002313.92,BPX2,0)),U)
  Q BPX
+ ;
+ALLTRANS(BP59) ;
+ N BPX,BPRXIEN,BPREF,BP1,BPISSDT,BPZERO
+ S BP1=$$RXREF^BPSSCRU2(BP59)
+ S BPRXIEN=$P(BP1,U,1)
+ S BPREF=$P(BP1,U,2)
+ S BPZERO=$G(^BPST(BP59,0))
+ S BPISSDT=$$GET1^DIQ(52,BPRXIEN,1)
  ;
  ;
  ;BPLN= line to use in SETLINE
@@ -219,11 +225,10 @@ PRN(BPPATNAM,BPRETV,BPRXINFO,BPPRNFL) ;
  ;
 MS2NDINS ;
  N Y,Z
- W !,"This patient has ADDITIONAL insurance with Rx Coverage that may be"
- W !,"used to bill this claim.  The system will change the CT entry to a"
- W !,"NON-BILLABLE Episode. If appropriate, please go to the ECME Pharmacy"
- W !,"COB menu and use the PRO - Process Secondary/TRICARE Rx to ECME"
- W !,"option to create an ePharmacy secondary claim."
+ W !,"This patient HAS additional insurance with Rx Coverage that may be"
+ W !,"used to bill this claim.  The system WILL change the CT entry to a"
+ W !,"NON-BILLABLE Episode. If appropriate, please go to Claims Tracking"
+ W !,"to manually create a bill to the additional payer listed below."
  W !!,"Patient: ",?18,BPPATNAM
  S Y=$P(BPRETV,U,4)\1 D DD^%DT
  W !,"Date of service: ",?18,Y

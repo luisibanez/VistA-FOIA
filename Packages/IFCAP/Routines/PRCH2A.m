@@ -1,5 +1,5 @@
 PRCH2A ;WISC/PLT-DAILY PURCHASE CARD CHARGES STATEMENT ; 6/28/99 3:18pm
-V ;;5.1;IFCAP;**8,125**;Oct 20, 2000;Build 15
+V ;;5.1;IFCAP;**8**;Oct 20, 2000
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  QUIT  ;invalid entry
  ;
@@ -68,7 +68,7 @@ EN3 ;charge card reg exception option
  S BY="@70,@.01",FR="E",TO="E"
  S DIOEND="I Y'[""^"" D EOR^PRCH2A"
  S:$D(ZTIO) IOP=ZTIO
- S DIS(0)="I $D(PRC(""SITE"")),($P($G(^PRC(440.5,D0,2)),""^"",3)=PRC(""SITE"")!($P($G(^PRC(440.5,D0,50)),""^"",3)=PRC(""SITE"")))"
+ S DIS(0)="I $D(PRC(""SITE"")),$P($G(^PRC(440.5,D0,2)),""^"",3)=PRC(""SITE"")"
  D EN1^DIP
  QUIT
 EOR W !!,"* - Invalid data, it must be corrected by the charge card company.",!,"# - New charge card data may not match the old one.",!!,"END OF REPORT"

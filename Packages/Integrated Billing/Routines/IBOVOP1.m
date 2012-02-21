@@ -1,7 +1,6 @@
 IBOVOP1 ;ALB/RLW-Report of Visits for NSC Outpatients ;12-JUN-92
- ;;2.0;INTEGRATED BILLING;**52,91,99,132,156,176,234,249,339,372**;21-MAR-94;Build 12
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;
+ ;;2.0;INTEGRATED BILLING;**52,91,99,132,156,176,234,249**;21-MAR-94
+ ;; Per VHA Directive 10-93-142, this routine should not be modified
 MAIN(IBQUERY) ; perform report for day(s)
  ; IBQUERY = the query object to use to search for outpt encounters
  ;           if not a valid #, a new QUERY will be created
@@ -48,18 +47,18 @@ OPTENC(IBOE,IBOE0) ; Extract outpatient encounter
  .;            field 6=status
  . S IBFLD4=$P($G(^SC(IBCL,0)),U)
  . I IBFLD4'="" S:+$G(^SC(IBCL,"AT"))=6 IBFLD4=$E(IBFLD4,1,13)_" [R]"
- . S ^TMP("IBOVOP",$J,$$FLD1(DFN),"CLINIC APPT",$$FLD3(IBJ,1),0)=$E(IBFLD4,1,17)_U_$$FLD5($P(IBOE0,U,10))_U_$E($$EXTERNAL^DILFD(409.68,.12,"",$P(IBOE0,"^",12)),1,17)_U_DFN_U_IBOE Q
+ . S ^TMP("IBOVOP",$J,$$FLD1(DFN),"CLINIC APPT",$$FLD3(IBJ),0)=$E(IBFLD4,1,17)_U_$$FLD5($P(IBOE0,U,10))_U_$E($$EXTERNAL^DILFD(409.68,.12,"",$P(IBOE0,"^",12)),1,17)_U_DFN_U_IBOE Q
  ;
  I $P(IBOE0,U,8)=2 D  ; - add/edit stop code
  .;           field 5=appt type
- . S ^TMP("IBOVOP",$J,$$FLD1(DFN),"STOP CODE",$$FLD3(IBJ,1),IBSEQ)=$E($P($G(^DIC(40.7,$P(IBOE0,U,3),0)),U),1,16)_U_$$FLD5($P(IBOE0,U,10))_"^^"_DFN_U_IBOE,IBSEQ=IBSEQ+1
+ . S ^TMP("IBOVOP",$J,$$FLD1(DFN),"STOP CODE",$$FLD3(IBJ),IBSEQ)=$E($P($G(^DIC(40.7,$P(IBOE0,U,3),0)),U),1,16)_U_$$FLD5($P(IBOE0,U,10))_"^^"_DFN_U_IBOE,IBSEQ=IBSEQ+1
  ;
  I $P(IBOE0,U,8)=3 D  ; - registration
  . Q:'$$DISCT^IBEFUNC(IBOE,IBOE0)
  . S IBDATA=$$DISND^IBSDU(IBOE,IBOE0)
  . S IBFLD4=$E($$EXTERNAL^DILFD(2.101,2,"",$P(IBDATA,U,3)),1,16)
  . S Y=$E($$EXTERNAL^DILFD(2.101,6,"",$P(IBDATA,U,7)),1,30)
- . S ^TMP("IBOVOP",$J,$$FLD1(DFN),"REGISTRATION",$$FLD3(IBJ,1),0)=IBFLD4_U_Y_"^^"_DFN_U_IBOE
+ . S ^TMP("IBOVOP",$J,$$FLD1(DFN),"REGISTRATION",$$FLD3(IBJ),0)=IBFLD4_U_Y_"^^"_DFN_U_IBOE
  ;
  K IBB,IBE,IBX,IBY,IBCLN,IBXP,IBDFN,IBAPDT,IBAPTYP,X,Y
  Q
@@ -74,15 +73,13 @@ FLD1(DFN) ; get patient name, l-4 ssn id, classification, insured?
  I $D(IBY(1)) S IBZ="AO"
  I $D(IBY(2)) S IBZ=IBZ_$S(IBZ]"":"/",1:"")_"IR"
  I $D(IBY(3)) S IBZ=IBZ_$S(IBZ]"":"/",1:"")_"SC"
- I $D(IBY(4)) S IBZ=IBZ_$S(IBZ]"":"/",1:"")_"SWA"
+ I $D(IBY(4)) S IBZ=IBZ_$S(IBZ]"":"/",1:"")_"EC"
  I $D(IBY(5)) S IBZ=IBZ_$S(IBZ]"":"/",1:"")_"MST"
  I $D(IBY(6)) S IBZ=IBZ_$S(IBZ]"":"/",1:"")_"HNC"
  I $D(IBY(7)) S IBZ=IBZ_$S(IBZ]"":"/",1:"")_"CV"
- I $D(IBY(8)) S IBZ=IBZ_$S(IBZ]"":"/",1:"")_"SHAD"
  Q $E($P(IBX,U),1,20)_" "_$E(IBX)_$P(IBX,U,3)_$S(IBZ]"":"    ["_IBZ_"]",1:"")_$S($$INSURED^IBCNS1(DFN,IBDATE):"    **Insured**",1:"")
  ;
-FLD3(Y,IBMID) ; time - convert date/time to time only, no seconds
- I +$G(IBMID) Q:$G(Y)'["." "00.00"
+FLD3(Y) ; time - convert date/time to time only, no seconds
  I '$G(Y) Q ""
  X ^DD("DD") Q $P($P(Y,"@",2),":",1,2)
  ;

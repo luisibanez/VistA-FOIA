@@ -1,6 +1,6 @@
 PRCHQ4 ;WOIFO/LKG-RFQ Set up Transmission Records ;7/25/05  15:27
- ;;5.1;IFCAP;**63,114**;Oct 20, 2000;Build 4
- ;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;5.1;IFCAP;**63**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
 HE ;Set up Heading segment
  N PRCN0,PRCN1,PRCA,PRCB,PRCZ,DA,DIC,DR,DIQ,X,Y
  S PRCN0=$G(^PRC(444,PRCDA,0)),PRCN1=$G(^PRC(444,PRCDA,1))
@@ -94,7 +94,7 @@ IT(PRCC) ;Set up Item segment (Also calls SC and DE to set up Delivery
  . S PRCB=$G(^PRC(444,PRCDA,2,PRCA,0)) Q:PRCB=""
  . S PRCD=$G(^PRC(444,PRCDA,2,PRCA,1)),PRCG=$P(PRCB,U)
  . S PRCY="IT^"_PRCG_"^"_$S($P(PRCB,U,6)]"":$P(PRCB,U,6),$P(PRCB,U,5)>0:$P($G(^PRC(441.2,$P(PRCB,U,5),0)),U),1:"")_"^^^",PRCCNT=PRCCNT+1
- . I $P($G(^PRC(444,PRCDA,5,0)),U,4)=1,$P($G(^PRC(444,PRCDA,1)),U,8)'="y" S $P(PRCY,U,5)=$P($G(^PRC(444,PRCDA,2,PRCA,5)),U,2)
+ . I $P($G(^PRC(444,PRCDA,5,0)),U,4)=1,$P($G(^PRC(444,PRCDA,1)),U,8)'="y" S $P(PRCY,U,5)=$P($G(^PRC(444,PRCDA,5)),U,2)
  . S PRCY=PRCY_$P(PRCB,U,9)_"^"_$P(PRCB,U,8)_"^"_($P(PRCB,U,2)*100)_"^^"
  . S PRCE=$P(PRCB,U,3) S:PRCE?1.N PRCH=$P($G(^PRCD(420.5,PRCE,0)),U),$P(PRCY,U,9)=PRCH
  . S PRCY=PRCY_"^^^^^^^^^^^^^"

@@ -1,123 +1,146 @@
-BPSOSHR ;BHAM ISC/SD/lwj/DLF - Format conversion for reversals ;06/01/2004
- ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5**;JUN 2004;Build 45
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+BPSOSHR ;BHAM ISC/SD/lwj/DLF - 3.2 to 5.1 clm reversal format ;06/01/2004
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
  ;
- ; This routine was originally used by IHS to reformat reversal claims
- ;   into version 5.1 if the original billing request was version 3x.
- ;   For that purpose, this routine is no longer needed.  However,
- ;   it also executes the special code fields so for that reason, it
- ;   has not been removed. We also may need to do this if we change
- ;   from version 5.1 to some other version, such as version 8, in the
- ;   future.
+ ;-------------------------------------------------------
+ ; IHS/SD/lwj 10/22/02 NCPDP 5.1 changes
+ ; We ran into a big snag - some processors are doing an all or nothing
+ ; switch to 5.1 with no grace period for 3.2 and 5.1 claims.  What this
+ ; means is that we have to be able to reverse a previously submitted
+ ; 3.2 claim in 5.1 reversal format since they won't accept 3.2 any
+ ; more.  The biggest problem with this is that 3.2 and 5.1 fields
+ ; are formatted differently, and the reversal process was used to
+ ; simply copy the information from the original claim into the
+ ; reversal claim.  To get around this, this routine was created
+ ; to try and reformat those fields that require the 5.1 format to
+ ; reverse properly.
  ;
- ; NOTE: There is a problem with special code if it relies on BPS array
- ;   values, such as BPS("Site","NCPDP") since those variables will not
- ;   be defined at this point.  So, the only special code that will
- ;   work are hard-coded values or executes of a procedure.  If executing
- ;   a procedure, it also needs to not rely on BPS array elements or needs
- ;   to distinquish between billing requests and reversals.
+ ; This routine should only be called from within the BPSECA8 - it
+ ; is dependent on variables set there.
+ ;
+ ; Basic logic:
+ ;  Read the format for the designated segment
+ ;  Read through the fields on the segment (no xref - very few fields)
+ ;  Determine if there are "special" values for the field
+ ;  Format the field with the proper value
+ ;  Set the TMP field to the formatted value
+ ;
  Q
  ;
- ; Input
- ;   BPSFORM  - Reversal payer sheet IEN
- ;   CLAIMIEN - Original claim IEN
- ;   POS      - Multiple from original claim
+REFORM(BPSFORM) ;EP  main driver of problem and entry point - everything
+ ; should call through to here
  ;
- ; Input/Output
- ;   TMP is the array originally created in BPSECA8.  Since it is quite
- ;     large, we are not passing it into here.  It will be modified by
- ;     this routine.
+ N BPS
  ;
-REFORM(BPSFORM,CLAIMIEN,POS) ;
+ D REFRMH(BPSFORM)
+ D REFRMD(BPSFORM)
  ;
- ; Validate parameters
- I $G(BPSFORM)="" Q
- I $G(CLAIMIEN)="" Q
- I $G(POS)="" Q
+ Q
+REFRMH(BPSFORM) ;
+ ; This routine will only attempt to reset the "header" fields that need
+ ; adjusting for 5.1.  There are four fields in the header segment that
+ ; need to be reformatted - we will leave the others since they may have
+ ; gone through extensive formatting for the original claim and are fine
+ ; the way they are.  These four fields were either new to the reversal
+ ; in 5.1, or changed value/length in 5.1.  The fields are:
+ ;     109  Transaction Count   (not on 3.2 reversal)
+ ;     110  Software Vendor/Certificationd ID  (new field to 5.1)
+ ;     201  Service Provider ID (changed length in 5.1)
+ ;     202  Service Provider ID Qualifier (new to 5.1)
  ;
- ; Initialize variables
- N FLDIEN,PMODE,ORDER,RECMIEN,FIELD,NODE
+ ; Remember - the header is stagnate - that's the only reason we look
+ ; specifically for those two fields.
  ;
- ; First go through the header fields.  The original IHS logic was only
- ;   checking four specific fields.  Of these, I removed:
- ;    109 (Transaction Count) - Always 1 for reversals and it does
- ;      not make sense for this to be determined by special code.
- ;    201 (Service Provider ID) - The logic currently implemented
- ;      relies on BPS array elements that are not defined here so this
- ;      was getting set to NULL when it needed to be set.  In addition
- ;      I compared reversal and request (11/30/2006) and this value is 
- ;      always the same for both so reversals will get the right value
- ;      from the request.
- ;    202 (Service Provider ID Qualifier) - It does not make sense
- ;      to do this field if we are not doing field 201.
+ ; IEN and TMP are set in BPSECA8
  ;
- ; So that leaves 110 (Software Vendor/Certification ID), which is needed
- ;   by the WEBMD reversal test payer sheet.
+ ; The header segment is small, and there isn't a xref by field #, so we
+ ; will read the entire segment here.
  ;
- ; Kept looping structure in case other fields are added later
- ;     
- S NODE=100,ORDER=0
- F  S ORDER=$O(^BPSF(9002313.92,BPSFORM,NODE,"B",ORDER)) Q:'ORDER  D
- . S RECMIEN=$O(^BPSF(9002313.92,BPSFORM,NODE,"B",ORDER,0))
- . I 'RECMIEN Q
- . S FLDIEN=$P($G(^BPSF(9002313.92,BPSFORM,NODE,RECMIEN,0)),U,2)
+ N FLDIEN,PMODE,ORDER,RECMIEN,FIELD
+ ;
+ S ORDER=0
+ F  S ORDER=$O(^BPSF(9002313.92,BPSFORM,100,"B",ORDER)) Q:'ORDER  D
+ . S RECMIEN=$O(^BPSF(9002313.92,BPSFORM,100,"B",ORDER,0))
+ . Q:'RECMIEN
+ . S FLDIEN=$P($G(^BPSF(9002313.92,BPSFORM,100,RECMIEN,0)),U,2)
  . S FIELD=$P($G(^BPSF(9002313.91,FLDIEN,0)),U)
- . I FIELD'=110 Q
+ . Q:(FIELD'=110)&(FIELD'=202)&(FIELD'=201)&(FIELD'=109)
  . ;
- . ; Check to see if the format has special code.  If not, quit
- . ;  If we change versions (5x to ??), we made need to execute FORMAT
- . ;    code no matter what, but for now, only do if there is special
- . ;    code.
- . S PMODE=$P($G(^BPSF(9002313.92,BPSFORM,NODE,RECMIEN,0)),U,3)
- . I PMODE'="X" Q
+ . ; check to see if the format has a "special" value for this field
+ . S PMODE=$P($G(^BPSF(9002313.92,BPSFORM,100,RECMIEN,0)),U,3)
+ . I PMODE="X" D XSPCCODE^BPSOSCF(BPSFORM,100,RECMIEN)
+ . I PMODE'="X" S BPS("X")=$G(TMP(9002313.02,IEN,FIELD,"I"))
  . ;
- . ; If special code, get the value, format it and store it in TMP
- . D XSPCCODE^BPSOSCF(BPSFORM,NODE,RECMIEN)
- . D FORMAT(NODE,FLDIEN)
- . S TMP(9002313.02,CLAIMIEN,FIELD,"I")=BPS("X")
+ . D FORMAT
+ . ;
+ . S TMP(9002313.02,IEN,FIELD,"I")=BPS("X")
  ;
- ; Now reformat the "detail" portion of the claim. For now, the only
- ;   segment we are going to look at is 130, which is the claim segment
- ;   If other reversal formats become available, and they require other
- ;   segments - this section will have to change.  Since the claim
- ;   segment full of optional fields, we wil read through the format
- ;   and take it a field at a time.
- S NODE=130,ORDER=0
- F  S ORDER=$O(^BPSF(9002313.92,BPSFORM,NODE,"B",ORDER)) Q:'ORDER  D
- . S RECMIEN=$O(^BPSF(9002313.92,BPSFORM,NODE,"B",ORDER,0))
- . I 'RECMIEN Q
- . S FLDIEN=$P($G(^BPSF(9002313.92,BPSFORM,NODE,RECMIEN,0)),U,2)
- . S FIELD=$P($G(^BPSF(9002313.91,FLDIEN,0)),U)
- . I FIELD=111 Q    ; Never do Segment Indentifier
- . ;
- . ; Check to see if the format has special code.  If not, quit
- . ; If we change versions (5x to ??), we made need to execute FORMAT
- . ;   code no matter what, but for now, only do if there is special
- . ;   code.
- . S PMODE=$P($G(^BPSF(9002313.92,BPSFORM,NODE,RECMIEN,0)),U,3)
- . I PMODE'="X" Q
- . ;
- . ; If special code, get the value, format it and store it in TMP
- . D XSPCCODE^BPSOSCF(BPSFORM,NODE,RECMIEN)
- . D FORMAT(NODE,FLDIEN)
- . S TMP(9002313.0201,POS_","_CLAIMIEN,FIELD,"I")=BPS("X")
+ ;
  Q
  ;
- ; FORMAT will format the data based on the FORMAT code in BPS NCPDP
- ;   FIELD DEFS
-FORMAT(NODE,FLDIEN) ;
- N INDEX,MCODE,QUAL
+REFRMD(BPSFORM) ;
+ ; This routine is going to try and reformat the "detail" portion of the
+ ; claim. For now, the only segment we are going to look at is 130
+ ; which is the claim segment.  If other reversal formats become
+ ; available, and they require other segments - this section will have
+ ; to change.  Since the claim segment full of optional fields, we wil
+ ; read through the format and take it a field at a time.
  ;
- ; Loop through format code and format the data
+ ; IEN, RX, and TMP were set in BPSECA8
+ ;
+ ;
+ N FLDIEN,PMODE,ORDER,RECMIEN,NODE,IDIEN,DOFORM,FIELD
+ S NODE=130
+ ;
+ S ORDER=0
+ F  S ORDER=$O(^BPSF(9002313.92,BPSFORM,NODE,"B",ORDER)) Q:'ORDER  D
+ . S RECMIEN=$O(^BPSF(9002313.92,BPSFORM,NODE,"B",ORDER,0))
+ . Q:'RECMIEN
+ . S FLDIEN=$P($G(^BPSF(9002313.92,BPSFORM,NODE,RECMIEN,0)),U,2)
+ . S FIELD=$P($G(^BPSF(9002313.91,FLDIEN,0)),U)
+ . Q:FIELD=111    ;(SEGMENT IDENTIFIER - SKIP)
+ . ;
+ . ; check to see if the format has a "special" value for this field
+ . S PMODE=$P($G(^BPSF(9002313.92,BPSFORM,NODE,RECMIEN,0)),U,3)
+ . I $G(VARX) S BPS("X")=$G(TMP(9002313.0201,RX_","_IEN,FIELD,"I")) ;LJE;8/2/03
+ . I PMODE="X" D XSPCCODE^BPSOSCF(BPSFORM,NODE,RECMIEN)
+ . ;
+ . ; if this isn't a special value field in 5.1, we need to make sure
+ . ; it wasn't an optional field in 3.2. If it was, the field ID is
+ . ; already a part of the field, and we don't need to reformat it
+ . ;
+ . S DOFORM=1
+ . I PMODE'="X" D
+ .. ; DMB 4/29/2005
+ .. I '$G(VARX) S:$P($G(^BPSF(9002313.91,FLDIEN,0)),U,2)'="" DOFORM=0
+ .. E  I $P($G(^BPSF(9002313.91,FLDIEN,5)),U,1)'="" S DOFORM=0
+ .. S:DOFORM BPS("X")=$G(TMP(9002313.0201,RX_",",IEN,FIELD,"I"))
+ . ;
+ . ; format it only if it needs it
+ . ;
+ . I DOFORM D
+ .. D FORMAT
+ .. S TMP(9002313.0201,RX_","_IEN,FIELD,"I")=BPS("X")
+ ;
+ ;
+ Q
+ ;
+FORMAT ; This routine will format the field to 5.1 standards - remember it
+ ; will set BPS("X") based on what is in the BPS NCPDP Field Defs file
+ ;
+ N INDEX,MCODE,NODE,QUAL,QUALFLG  ;LJE;8/2/03
+ S NODE=25            ;we only want the 5.1 format code
+ ;
+ S QUALFLG=0,QUAL="",QUAL=$P(^BPSF(9002313.91,FLDIEN,5),"^",1) ;LJE;8/2/03
+ I $E(BPS("X"),1,2)=QUAL S QUALFLG=1,BPS("X")=$P(BPS("X"),QUAL,2) ;LJE;8/2/03
  S INDEX=0
- F  S INDEX=$O(^BPSF(9002313.91,FLDIEN,25,INDEX))  Q:'+INDEX  D
- . S MCODE=$G(^BPSF(9002313.91,FLDIEN,25,INDEX,0))
- . I MCODE="" Q
- . I $E(MCODE,1)=";" Q
+  F  D  Q:'+INDEX
+ . S INDEX=$O(^BPSF(9002313.91,FLDIEN,NODE,INDEX))
+ . Q:'+INDEX
+ . S MCODE=$G(^BPSF(9002313.91,FLDIEN,NODE,INDEX,0))
+ . Q:MCODE=""
+ . Q:$E(MCODE,1)=";"
  . X MCODE
+ I QUALFLG&($E(BPS("X"),1,2)'=QUAL) S BPS("X")=QUAL_BPS("X")
  ;
- ; If node not equal to 100, append qualifier
- I NODE'=100 D
- . S QUAL=$P(^BPSF(9002313.91,FLDIEN,5),"^",1)
- . S BPS("X")=QUAL_BPS("X")
+ ;
  Q

@@ -1,6 +1,6 @@
-DICQ ;SFISC/XAK,TKW-HELP FOR LOOKUPS ;7:20 AM  17 May 2007
- ;;22.0;VA FileMan;**4,3,57,151**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DICQ ;SFISC/XAK,TKW-HELP FOR LOOKUPS ;5:54 AM  11 Aug 2000
+ ;;22.0;VA FileMan;**4,3,57**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  S DZ=X D:DIC(0)]"" DQ
  I '$D(DDS),$G(DDH) D ^DDSU
  S:$D(DZ) X=DZ K DZ,DDH,DIZ,DDD I $D(DTOUT) S Y=-1 D Q^DIC2 Q
@@ -9,11 +9,11 @@ DICQ ;SFISC/XAK,TKW-HELP FOR LOOKUPS ;7:20 AM  17 May 2007
 DQ ; Main entry point for displaying online ^DIC help (list of current
  ; entries in a file.
  N %,%Y,X,Y,DD,DDC,DDD,DS,DID01,DICNT,DIDONE,DIFROM,DIPART,DIW,DIX,DIY,DIZ,DIUPRITE,DST,DIBEGSUB,DIBEGIX
- I $D(DZ)[0 N DZ S DZ=""
+ I '$D(DZ)#2 N DZ S DZ=""
  S DDC=$S($D(DDS):7,1:15)
  N:'$D(DDH) DDH S DDH=+$G(DDH)
  S DIBEGIX=D
- I '($D(DIRECUR)#2) N DIRECUR S DIRECUR=0
+ I '$D(DIRECUR)#2 N DIRECUR S DIRECUR=0
  I '$D(DO) N DO D GETFA^DIC1(.DIC,.DO)
  I DO="0^-1" K DO S DST="  Pointed-to File does not exist!" D % Q
  S DICNT=$P(DO,U,4),DIY=DO D DIY
@@ -112,8 +112,7 @@ DSPHLP(DIC,DIFILE,DINDEX,DZ,DINOKILL) ; Display online help for lookups (^DIC)
  ;
 N D % S DST="    " Q
  ;
-% ;CALLED FROM ^DICQ1
- S DDH=$G(DDH)+1,DDH(DDH,"T")=DST K DST Q
+% S DDH=DDH+1,DDH(DDH,"T")=DST K DST Q
  ;
 0 Q:$D(DTOUT)!(DIC(0)'["L")  K DIW,DIUPRITE S:$D(DDS) DDD=1 D 0^DICQ1 Q
  ;

@@ -1,6 +1,6 @@
-DIC5 ;SFISC/XAK,TKW,SEA/TOAD-VA FileMan: Lookup, Part 1 (utilities) ;05/28/2008
- ;;22.0;VA FileMan;**4,20,31,70,159**;Mar 30, 1999;Build 8
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIC5 ;SFISC/XAK,TKW,SEA/TOAD-VA FileMan: Lookup, Part 1 (utilities) ;1:56 PM  19 Sep 2002
+ ;;22.0;VA FileMan;**4,20,31,70**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
 NODE75 ; Do after executing 7.5 node on DD, called from ^DIC
  I $D(X)#2 S (DIVAL,DIVAL(1))=X Q
  S Y=-1 Q:DIC(0)'["Q"!(DIC(0)'["E")
@@ -22,8 +22,7 @@ BYIEN2 ; Lookup record by IEN when user enters a numeric lookup value, called fr
  . I 'DD Q:T["N"  I '$O(@(DIC_"""A["")")),$O(^("A["))]"" Q
  . N % S %=DINDEX("START") N DINDEX S DINDEX="",DINDEX("#")=1,DINDEX("START")=%
  . S Y=X D S^DIC3 I '$T S Y=-1 Q
- . N DZ,DS,DIX,DIC5D S DIC5D=D,DS=1,DIX=X D ADDKEY^DIC3,GOT^DIC2 Q:Y>0
- . D DO^DIC1 S D=DIC5D
+ . N DZ,DS,DIX S DS=1,DIX=X D ADDKEY^DIC3,GOT^DIC2 Q
  I T["P"!(T["V"),DIC(0)'["U" S DISKIPIX=D
  Q
  ;

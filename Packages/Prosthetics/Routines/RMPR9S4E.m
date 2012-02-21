@@ -1,5 +1,5 @@
 RMPR9S4E ;HOIFO/SPS-GUI 2319 Extended Display Transaction screen 4 ;12/17/02  09:35
- ;;3.0;PROSTHETICS;**59,92,99,90,75**;Feb 09, 1996;Build 25
+ ;;3.0;PROSTHETICS;**59,92,99,90**;Feb 09, 1996
  ;
  ;         (IEN)=ien of file 660
  ;
@@ -89,8 +89,6 @@ A2 ;
  .D EN^DIQ1
  .; "WORK ORDER: ",
  .S RESULTS(24)=$G(R19(660,RMPRDA,71,"E"))
- .I $P(^RMPR(660,RMPRDA,"AM"),U,2)=1 S RESULTS(24)=$G(R19(660,RMPRDA,72.5,"E"))
- .I $P(^RMPR(660,RMPRDA,"LB"),U,14)=1 S RESULTS(24)=$G(R19(660,RMPRDA,72.5,"E"))
  .; "RECEIVING STATION: ",
  .S RESULTS(25)=$G(R19(660,RMPRDA,70,"E"))
  .; "TECHNICIAN: ",

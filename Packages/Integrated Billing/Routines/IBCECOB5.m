@@ -1,6 +1,5 @@
 IBCECOB5 ;ALB/TMP - IB COB MANAGEMENT SCREEN ;31-JAN-01
- ;;2.0;INTEGRATED BILLING;**137,155,349,417**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,155**;21-MAR-94
  ;
 INIT ;
  S IBDA=+$O(IBDA(0))
@@ -24,10 +23,8 @@ BLD(IBDA) ; Build list entrypoint
  D SET(X)
  ;
  S IBIFN1=$P($G(^IBM(361.1,IBCNT,0)),U,1)      ; bill#
- ; filing error
  S IBPTRESP=$P($G(^IBM(361.1,IBCNT,1)),U,2)    ; Pt Resp Amt 1.02 field
- S:$D(^IBM(361.1,IBCNT,"ERR")) IBPTRESP=0      ; filing error
- ; Override Pt Resp Amt for bills with Form Type UB-04
+ ; Override Pt Resp Amt for bills with Form Type UB92
  I $$FT^IBCEF(IBIFN1)=3 S IBPTRESP=$$PTRESPI^IBCECOB1(IBCNT)
  ;
  S X=$E($S($G(IBSRC):"        Bill Balance: $"_$$A10^IBCECSA5(+$P(IB,U,4)),1:" Pt Resp Amt:         $"_$$A10^IBCECSA5(IBPTRESP))_$J("",40),1,40)

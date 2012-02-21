@@ -1,35 +1,35 @@
-PSOHLDS1 ;BIR/LC,PWC-Build HL7 Segments for Automated Interface ; 7/25/08 1:28pm
- ;;7.0;OUTPATIENT PHARMACY;**156,232,255,200,305,336**;DEC 1997;Build 1
+PSOHLDS1 ;BIR/LC,PWC-Build HL7 Segments for Automated Interface ;10/17/2003
+ ;;7.0;OUTPATIENT PHARMACY;**156**;DEC 1997
  ;HLFNC       supp. by DBIA 10106
  ;PSNAPIS     supp. by DBIA 2531
  ;VASITE      supp. by DBIA 10112
  ;VADPT       supp. by DBIA 10061
  ;EN^DIQ1     supp. by DBIA 100
+ ;EN^VAFHLPID supp. by DBIA 263
  ;EN^VAFHLZTA supp. by DBIA 758
  ;PSDRUG      supp. by DBIA 221
+ ;PS(50.7     supp. by DBIA 2223
+ ;PS(50.606   supp. by DBIA 2174
  ;PS(50.607   supp. by DBIA 2221
+ ;PS(51.2     supp. by DBIA 2226
  ;PS(55       supp. by DBIA 2228
+ ;PSNDF(50.6  supp. by DBIA 2195
+ ;DIC(5       supp. by DBIA 10056
  ;DPT         supp. by DBIA 3097
  ;SC          supp. by DBIA 10040
  ;VA(200      supp. by DBIA 10060
  ;SCMSVUT5    supp. by DBIA 4347
  ;BLDPID^VAFCQRY supp. by DBIA 3630
  ;MAKEIT^VAFHLU  supp. by DBIA 4346
- ;
- ;*232 allow for Do Not Mail
- ;*255 move NTEPMI to PSOHLDS4.  fix "MP" node test to '=""
- ;*305 send  Notice of Privacy Practices in NTE9 - Modified to NTE9 as NTE8 already exist
- ;
 START ;
  D GETDATA
  D PID(.PSI),PV1(.PSI),PV2(.PSI),IAM^PSOHLDS4(.PSI),ORC^PSOHLDS4(.PSI)
  D NTE^PSOHLDS2,RXE^PSOHLDS2(.PSI),RXD^PSOHLDS2(.PSI)
- D NTEPMI^PSOHLDS4(.PSI),NTE9^PSOHLDS2(.PSI),RXR^PSOHLDS2(.PSI)                ;*255
+ D NTEPMI^PSOHLDS2(.PSI),RXR^PSOHLDS2(.PSI)
  ; clean up data set by GETDATA
  K EBY,EBY1,EFDT,EXDT,FDT,PVDR,PVDR1,CSINER,CSINER1,SITE,SITADD,SITPHN
  K VPHARMID,VPHARM,DEAID,MW,QTY,DASPLY,OLAN,OTHLAN,PRIORDT,RFRM,NFLD,WARN
  K PSOXN,PSOXN2,PSND1,PSND2,PRODUCT,PSOPROD,UNIT,VANAME,DISPDT,PSONDC
- K DRUG
  Q
 GETDATA ; this is the place to set all data needed for several segments
  I $G(FP)="F"&('$G(FPN)) D    ;original
@@ -66,8 +66,9 @@ GETDATA ; this is the place to set all data needed for several segments
  K DIC,X,Y S DIC="^VA(200,",DIC(0)="N,Z",X=CSINER D ^DIC
  S CSINER1=$S(+Y:$$HLNAME^HLFNC($P(Y,"^",2)),1:"""""") K DIC,X,Y
  D 6^VADPT
+ I MW="W" S MP=$S($P($G(^PSRX(IRXN,"MP")),"^"):$P(^("MP"),"^"),1:"""""")
  S X=$S($D(^PS(55,DFN,0)):^(0),1:""),CAP=$P(X,"^",2)
- D MW(X,.MW,.MP)                                              ;PSO*232
+ S:MW="M" MP="""""",MW=$S($P(X,"^",3):"R",1:MW) S MW=$S(MW="M":"REGULAR MAIL",MW="R":"CERTIFIED MAIL",MW="W":"WINDOW",1:"""""")
  I (($P(^PSRX(IRXN,"STA"),"^")>0)&($P(^("STA"),"^")'=2)&('$G(PSODBQ)))!'$G(^PSRX(IRXN,"IB")) S COPAY="NO COPAY"
  E  S COPAY="COPAY"
  S NURSE=$S($P($G(^DPT(DFN,"NHC")),"^")="Y":1,$P($G(^PS(55,DFN,40)),"^"):1,1:0)
@@ -105,10 +106,7 @@ PID(PSI) ;patient ID segment
  ; build ZTA (Temporary Address)
  K X2 S X2=$$EN^VAFHLZTA(DFN,"1,2,3,4,5,6,7,",1)
  ; parse X2 (ZTA) into individual fields if temp add. exists
- D:'$$CHKTEMP^PSOBAI(DFN)
- . N BADA S BADA=$$CHKRX^PSOBAI(IRXN)
- . I $P(BADA,"^"),'$P(BADA,"^",2),ADDSEQ(1,7)'["VAB" S BADA=$$GET1^DIQ(2,DFN_",",.121,"I") S:BADA ADDSEQ(1,7)="VAB"_BADA
- D:$$CHKTEMP^PSOBAI(DFN)
+ I $P(X2,HLFS,3) D
  . K PRSEZTA D SEGPRSE^SCMSVUT5("X2","PRSEZTA",HL1("FS"))
  . ; parse temporary address into individual components
  . K TMPADD D SEQPRSE^SCMSVUT5($NA(PRSEZTA(5)),"TMPADD",HL1("ECH"))
@@ -120,8 +118,8 @@ PID(PSI) ;patient ID segment
  . S ADDSEQ(SPOT,12,1)=PRSEZTA(3)
  . S ADDSEQ(SPOT,12,2)=PRSEZTA(4)
  . ;move address sequence back into parse PID segment
+ . K PRSEPID(11) M PRSEPID(11)=ADDSEQ
  ; rebuild PID segment
- K PRSEPID(11) M PRSEPID(11)=ADDSEQ
  K PSPID1 D MAKEIT^VAFHLU("PID",.PRSEPID,.PSPID1,.PSPID1)
  ;put rebuilt PID into format used by $$EN^VAFCQRY
  K PSPID S PSPID(1)=PSPID1
@@ -147,14 +145,4 @@ PV2(PSI) ;patient visit segment (additional information)
  S $P(PV2,"|",24)=$P($G(^PS(53,+$P($G(^PSRX(IRXN,0)),"^",3),0)),"^",2)_"~"_COPAY_FS
  S ^TMP("PSO",$J,PSI)="PV2|"_PV2
  S PSI=PSI+1,PAS2=1
- Q
- ;
-MW(PS55,MW,MP) ;Return Mail/Window and MP expanded text               ;PSO*232
- I MW="W"!(MW="") D                   ;*255
- . S MP=$S($P($G(^PSRX(IRXN,"MP")),"^")'="":$P(^("MP"),"^"),1:"""""")
- . S MW="WINDOW"
- I MW="M" D
- . S MP=""""""
- . S PS55=$P(PS55,"^",3)
- . S MW=$S(PS55=1:"CERTIFIED MAIL",PS55=2:"DO NOT MAIL",1:"REGULAR MAIL")
  Q

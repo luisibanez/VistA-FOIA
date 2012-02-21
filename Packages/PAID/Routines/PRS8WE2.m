@@ -1,6 +1,6 @@
-PRS8WE2 ;WCIOFO/MGD-DECOMPOSITION, WEEKEND PREMIUM PART 2 ;3/23/07
- ;;4.0;PAID;**90,92,96,112,119**;Sep 21, 1995;Build 4
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRS8WE2 ;WCIOFO/MGD-DECOMPOSITION, WEEKEND PREMIUM PART 2 ;10/22/04
+ ;;4.0;PAID;**90,92,96**;Sep 21, 1995
+ ;
 COUNT(DAYN,SEG) ; Increase count of premium for tour
  ; input
  ;   DAYN = day # (0-15) being counted
@@ -40,16 +40,16 @@ COUNT(DAYN,SEG) ; Increase count of premium for tour
  . . . S FND=1
  . . . Q:TOURS=1!(TOURS=4)  ; If on a Tour it counts as Premium
  . . . S RC=$P(TOUR,"^",POST+3)
- . . . ; Remarks Code must be OT/CT on Premium (#9), Tour Coverage (#12),
- . . . ; CB - Premium T&L (#14) or OT/CT With Premiums (#17) to qualify for Premium pay.
- . . . I "^9^12^14^17^"'[("^"_RC_"^") S NOTELG=1
+ . . . ; Remarks Code must be OT/CT on Premium (#9), Tour Coverage (#12)
+ . . . ; or CB - Premium T&L (#14) to qualify for Premium pay.
+ . . . I "^9^12^14^"'[("^"_RC_"^") S NOTELG=1
  . Q:FND
  . ;
  . ; If we didn't find SEG in either of the two tours or the
  . ; exceptions then check to see if it crossed over into this day.
  . S PREVDAY=DAYN-1
  . N INC,END
- . F TOURS=1,4,2 D  Q:NOTELG!(FND)
+ . F TOURS=1,4,2 D  Q:NOTELG
  . . S TOUR=$G(^TMP($J,"PRS8",PREVDAY,TOURS))
  . . Q:TOUR=""
  . . S INC=$S(TOURS=2:4,1:3)
@@ -60,9 +60,9 @@ COUNT(DAYN,SEG) ; Increase count of premium for tour
  . . . S FND=1
  . . . Q:TOURS=1!(TOURS=4)  ; If on a Tour it counts as Premium
  . . . S RC=$P(TOUR,"^",POST+3)
- . . . ; Remarks Code must be OT/CT on Premium (#9), Tour Coverage (#12),
- . . . ; CB - Premium T&L (#14) or OT/CT With Premiums to qualify for premium pay.
- . . . I "^9^12^14^17^"'[("^"_RC_"^") S NOTELG=1
+ . . . ; Remarks Code must be OT/CT on Premium (#9), Tour Coverage (#12)
+ . . . ; or CB - Premium T&L (#14) to qualify for premium pay.
+ . . . I "^9^12^14^"'[("^"_RC_"^") S NOTELG=1
  ;
  I $E(H(DAYN),SEG)=1!($E(P(DAYN),SEG)=5) Q
  ; determine special code
@@ -84,10 +84,6 @@ COUNT(DAYN,SEG) ; Increase count of premium for tour
  . . . . . . S SC=$P(DAT,U,(TS-1)*3+3),SHIFT=$S(SC=6:2,SC=7:3,1:1)
  . . . . . . I "^2^3^"[(U_SHIFT_U) S FND=1
  ;
- ;Set shift 2 for 36/40 AWS nurses with premium time outside tour
- ;for this time segment  i.e. overtime(O), comp time(C) or called in from
- ;on-call(c)
- I +NAWS=36,"cOE"[$E(D(DAYN),SEG) S SHIFT=2
  ; add to count
  S CNT(DAYN,SHIFT)=$G(CNT(DAYN,SHIFT))+1
  Q
@@ -104,11 +100,6 @@ SAVE ; Update WK array with final count for tour
  . S SHIFT="" F  S SHIFT=$O(CNT(DAYN,SHIFT)) Q:SHIFT=""  D
  . . S AMT=CNT(DAYN,SHIFT)
  . . S PC=$S(TP="SAT":0,1:SHIFT)+12
- . . ;Shift 2 used for 36/40 nurses premium time within tour using the 2080 divisor (40*52).
- . . ;Saturday Premium-AWS (SR/SS) and Sunday Premium-AWS (SD/SH)
- . . ;Paid at the AAC with the 1872 divisor for the hourly rate (36*52)
- . . ;for time outside the tour.
- . . S:+NAWS=36 PC=$S(SHIFT=2:$S(TP="SAT":12,1:13),TP="SAT":49,1:50)
  . . S $P(WK(WEEK),U,PC)=$P(WK(WEEK),U,PC)+AMT
  Q
  ;

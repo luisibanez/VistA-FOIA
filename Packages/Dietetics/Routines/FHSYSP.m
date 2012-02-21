@@ -1,8 +1,8 @@
 FHSYSP ; HISC/REL - Site Parameter Edit ;3/20/95  07:53
- ;;5.5;DIETETICS;**2,5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;**2**;Jan 28, 2005
  S DA=1,DIE="^FH(119.9,"
  I '$D(^FH(119.9,DA,0)) S DR=".01///"_DA D ^DIE
- W ! S DR="3;22;4;S:X="""" Y=9;5:8;40:49;9:13;50:59;14:18;25:39;100//Y;I X'=""Y"" S Y="""";99" D ^DIE G KIL
+ W ! S DR="3;22;4;S:X="""" Y=9;5:8;40:49;9:18;25:39;100//Y;I X'=""Y"" S Y="""";99" D ^DIE G KIL
 EN1 ; Display Selected Lab Tests
  W ! S L=0,DIC="^FH(119.9,",FLDS="[FHSYP1]",BY="@SITE"
  S (FR,TO)=1,DHD="SELECTED LABORATORY TESTS" D EN1^DIP,RSET Q

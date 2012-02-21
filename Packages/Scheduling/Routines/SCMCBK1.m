@@ -1,5 +1,5 @@
 SCMCBK1 ;LB/SCK - Broker Utilities for multiple patient assignments;
- ;;5.3;Scheduling;**41,51,210,297**;AUG 13, 1993
+ ;;5.3;Scheduling;**41,51,210**;AUG 13, 1993
  ;;1T1;;
  Q
  ;
@@ -64,10 +64,7 @@ PTCLEN(SCOK,SC) ;  Enroll patient in associated clinic for a position
  S SCADDFLD(1)=$G(SC("ADD1"),"O")
  S SCOK=0
  ;
- ;Enroll Patient in all associated clincs not entrolled in
- F SCCLN=0:0 S SCCLN=$O(^SCTM(404.57,SCPOS,5,SCCLN)) Q:'SCCLN  D
- .I $D(^DPT(SCDFN,"DE","B",SCCLN)) Q
- .S SCOK=$$ACPTCL^SCAPMC18(SCDFN,SCCLN,"SCADDFLD",SCDTVAR,"SCERMSG")
+ S SCOK=$$ACPTCL^SCAPMC18(SCDFN,SCCLN,"SCADDFLD",SCDTVAR,"SCERMSG")
  ;
  D CLRVAR
  Q
@@ -94,7 +91,6 @@ CHKPOS(SCOK,SC) ;  Check for primary care pratitioner and attending positions fo
 NOPCTM(SCOK,SC) ;  Build list of patients with a primary care assignment, but no primary care team;
  ;    ' SC BLD NOPC TM LIST '
  ;
- N I1
  D NEWVAR
  ;
  D CHK^SCUTBK

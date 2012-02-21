@@ -1,6 +1,5 @@
 IBCEP4 ;ALB/TMP - EDI UTILITIES for provider ID ;29-SEP-00
- ;;2.0;INTEGRATED BILLING;**137,320,348,349,377**;21-MAR-94;Build 23
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137**;21-MAR-94
  ;
 EN ; -- main entry point
  N IBINS,IBALL,IB95
@@ -9,20 +8,11 @@ EN ; -- main entry point
  ;
 EN1(IBINS) ; -- Entry point from provider number maintenence
  N IBPRV,IBALL,IB95
- S VALMBCK="R"
  D ENX
  Q
  ;
 ENX ; Common call to list template for dual entry points
- N IBSLEV,DIR,Y
- K IBFASTXT
  D FULL^VALM1
- S DIR(0)="SA^1:Performing Provider Care Units;2:Billing Provider Care Units"
- S DIR("A")="Enter Type of Care Unit: ",DIR("B")=$P($P(DIR(0),":",2),";",1)
- W ! D ^DIR K DIR W !
- I Y'>0 Q
- S IBSLEV=+Y
- I IBSLEV=2 D EN^VALM("IBCE 2ND PRVID CARE UNIT MAINT") Q
  D EN^VALM("IBCE PRVCARE UNIT MAINT")
  Q
  ;
@@ -34,6 +24,7 @@ HDR ; -- header
  ;
 INIT ; -- init variables, list array
  N Z,IB,IBLCT,IBENT,IBNM,IB0,Z0,Z1,IBQ,DIR,Y,X
+ ;
  I $G(IBINS) S Y=IBINS ; For entrypoint from provider number maintenance
  ;
  I '$G(IBINS) D
@@ -50,11 +41,8 @@ INIT ; -- init variables, list array
  ;
 BLD ;  Bld display  - IBINS must = ien of file 36
  K ^TMP("IBPRV_CU",$J)
- ;
- I $G(IBSLEV)=2 Q
- ;
  S (IBENT,IBLCT)=0,IBNM=""
- F  S IBNM=$O(^IBA(355.95,"C",IBINS,IBNM)) Q:IBNM=""  S Z=0 F  S Z=$O(^IBA(355.95,"C",IBINS,IBNM,Z)) Q:'Z  S IB=$G(^IBA(355.95,Z,0)) I IB'="",$P(IB,U,4)="" D
+ F  S IBNM=$O(^IBA(355.95,"C",IBINS,IBNM)) Q:IBNM=""  S Z=0 F  S Z=$O(^IBA(355.95,"C",IBINS,IBNM,Z)) Q:'Z  S IB=$G(^IBA(355.95,Z,0)) I IB'="" D
  . S IBLCT=IBLCT+1,IBENT=IBENT+1
  . I '$D(^IBA(355.96,"AUNIQ",IBINS,Z)) D SET^VALM10(IBLCT,$E(IBENT_"    ",1,4)_$E($P(IB,U)_$J("",30),1,30)_"  "_$E($P(IB,U,2)_$J("",20),1,20)_" (NO COMBINATIONS FOUND)",IBENT) Q
  . D SET^VALM10(IBLCT,$E(IBENT_"    ",1,4)_$E($P(IB,U)_$J("",30),1,30)_"  "_$E($P(IB,U,2)_$J("",20),1,20),IBENT)
@@ -62,17 +50,14 @@ BLD ;  Bld display  - IBINS must = ien of file 36
  . S Z0=0 F  S Z0=$O(^IBA(355.96,"AE",Z,Z0)) Q:'Z0  S Z1=0 F  S Z1=$O(^IBA(355.96,"AE",Z,Z0,Z1)) Q:'Z1  S IB0=$G(^IBA(355.96,Z1,0)) I IB0'="" D
  .. S IBLCT=IBLCT+1
  .. S IBQ=$J("",28)_"o "_$E($$EXPAND^IBTRE(355.96,.06,+$P(IB0,U,6))_$J("",20),1,20)
- .. S IBQ=IBQ_"  "_$E($P("Both form types^UB-04 Only^CMS-1500 Only",U,$P(IB0,U,4)+1)_$J("",15),1,15)_"  "_$E($P("Inpt/Outpt^Inpt Only^Outpt Only^RX Only",U,+$P(IB0,U,5)+1)_$J("",10),1,10)
+ .. S IBQ=IBQ_"  "_$E($P("Both form types^UB92 Only^HCFA 1500 Only",U,$P(IB0,U,4)+1)_$J("",15),1,15)_"  "_$E($P("Inpt/Outpt^Inpt Only^Outpt Only^RX Only",U,+$P(IB0,U,5)+1)_$J("",10),1,10)
  .. D SET^VALM10(IBLCT,IBQ,IBENT)
  ;
- I 'IBLCT D SET^VALM10(1,"No CARE UNITs Found"_$S('$G(IBINS):"",1:" for Insurance Co")) S IBLCT=1
+ I 'IBLCT D SET^VALM10(1,"No CARE UNITs Found"_$S('$G(IBINS):"",1:" for Insurance Co"))
  S VALMCNT=IBLCT,VALMBG=1
  Q
  ;
 HELP ; -- help
- ;
- I $G(IBSLEV)=2 Q
- ;
  S X="?" D DISP^XQORM1 W !!
  Q
  ;

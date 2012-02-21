@@ -1,6 +1,5 @@
-VALM1 ;ALB/MJK - Screen Manipulation Utilities ;06/27/2006
- ;;1.0;List Manager;**5,6,8,9**;Aug 13, 1993;Build 2
- ;Per VHA Directive 2004-038, this routine should not be modified.
+VALM1 ;ALB/MJK - Screen Manipulation Utilities ;01/31/2001  14:13
+ ;;1.0;List Manager;**5,6**;Aug 13, 1993
 INSTR(STR,X,Y,LENGTH,ERASE) ; -- insert text
  ;    STR := string to insert
  ;      X := X coordinate
@@ -30,9 +29,9 @@ SETSTR(S,V,X,L) ; -- insert text(S) into variable(V)
  ;    L := clear # of chars (length)
  Q $E(V_$J("",X-1),1,X-1)_$E(S_$J("",L),1,L)_$E(V,X+L,999)
 FULL ; set full scrolling region
- I '$L($G(IOSTBM))!'$G(IOSL)!'$L($G(IOSC))!'$D(IORC) D TERM^VALM0
+ I '$D(IOSTBM) D TERM^VALM0
  I IOSTBM]"" S IOTM=1,IOBM=IOSL W IOSC W @IOSTBM W IORC
- S:'$G(VALMWD) VALMWD=IOM S X=VALMWD X ^%ZOSF("RM")
+ S X=VALMWD X ^%ZOSF("RM")
  Q
 CLEAR ; -- clear screen
  D FULL,ERASE W @IOF
@@ -116,7 +115,7 @@ PRTLS ;
  N VALMPGE,VALMESC,VALMCC,VALMI,VALMLNS,VALMCAP,VALMWD
  I $D(ZTQUEUED) S ZTREQ="@"
  S VALMWD=IOM,VALMLNS=VALM("LINES"),VALMPG1=1
- S VALM("LINES")=IOSL-(VALM("TM")+3),VALMCC=0,VALMPGE=1,VALMCAP=$$CAPTION^VALM
+ S VALM("LINES")=IOSL-5,VALMCC=0,VALMPGE=1,VALMCAP=$$CAPTION^VALM
  U IO D HDR^VALM,TBAR^VALM
  F VALMI=1:1:VALMCNT S X=$G(@VALMAR@($$GET^VALM4(VALMI),0)) W !,X I IOSL<($Y+6) D FTR G PRTLQ:VALMESC S VALMPGE=VALMPGE+1 D HDR^VALM,TBAR^VALM
  D FTR

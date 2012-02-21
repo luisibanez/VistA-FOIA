@@ -1,5 +1,5 @@
 ORWDBA3 ; SLC/GSS Billing Awareness (CIDC) [8/20/03 9:19am]
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**190,195,243**;Dec 17, 1997;Build 242
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**190,195**;Dec 17, 1997
  ;
 ORFMDAT(ORDFN) ; Return date in FM format regarding order for CSV/CTD/HIPAA
  ; Pass in Order IEN
@@ -29,7 +29,7 @@ DISPLAY ; Display of BA data from original copied order (ORIT = ORIEN)
  ;  TFV     = TxF verbiage
  ;
  N CUN,I,NTF,ORITARY,SPCS,TF1,TFGBL,TFGUI,TFV,Y
- S NTF=8,SPCS=28,ORITARY(1)=+ORIT
+ S NTF=7,SPCS=28,ORITARY(1)=+ORIT
  ; Get Y(+ORIT) string in ORIEN^CUUUCCN^Dx1^Desc1^Dx2^Desc2^... format
  D GETTFCI^ORWDBA4(.Y,.ORITARY)
  S CUN=$P($G(Y(1)),U,2)  ;CUN = Treatment Factors in CUN syntax
@@ -52,7 +52,6 @@ DISPLAY ; Display of BA data from original copied order (ORIT = ORIEN)
  S TFV("MST")="MILITARY SEXUAL TRAUMA",TFV("AO")="AGENT ORANGE"
  S TFV("IR")="IONIZING RADIATION",TFV("EC")="ENVIRONMENTAL CONTAMINANTS"
  S TFV("HNC")="HEAD AND NECK CANCER",TFV("CV")="COMBAT VETERAN"
- S TFV("SHD")="SHIPBOARD HAZARD"
  ; Output Checked TxF's
  F I=2:1:NTF I $E(CUN,I)="C" D
  . I 'TF1 S LST(ILST)=LST(ILST)_TFV($P(TFGUI,U,I)),TF1=1 D FRMTLST Q
@@ -83,7 +82,7 @@ HINTS(Y) ; Return HINTS for ORBA Treatment Factors - used by Delphi
  ;
  N CT,I,ORTFIEN,TF,TFLN,TFS,TFV
  ;
- S TFS="SC^MST^AO^IR^EC^HNC^CV^SHD",CT=0
+ S TFS="SC^MST^AO^IR^EC^HNC^CV",CT=0
  ; Get next TxF from TFS
  F I=1:1 S TF=$P(TFS,U,I) Q:TF=""  D
  . S ORTFIEN=$O(^DIC(9.2,"B","ORBA-"_TF,"")),TFV="",TFLN=0
@@ -126,16 +125,16 @@ DG1(ORDFN,COUNTER,CTVALUE) ; Create DG1 segment(s) & make call for ZCL seg.
  S @COUNTER=CTVALUE
  Q
  ;
-ZCL ;create all the ZCL segments (currently 8 TxF's) for order number OCT
+ZCL ;create all the ZCL segments (currently 7 TxF's) for order number OCT
  ;
  N I,J,TABLE,TF,TFGBL,TFGUI,TFTBL,TFIN,TFS,VALUE
  D TFSTGS^ORWDBA1  ;set string sequence of treatment factors
  ; TFS is TxF data in ^OR(100,ORIEN,5.2) order
  S TFS=$G(^OR(100,ORDFN,5.2)),TABLE=""
  ; conversion order from ^OR stored data and Table SD008 for HL7 msg
- ; convert so that the ZCL segments will be in Table SD008 order (1-8)
- F I=1:1:8 S TF=$P(TFTBL,U,I) F J=1:1:8 I $P(TFGBL,U,J)=TF S TABLE=TABLE_J Q
- F TFIN=1:1:8 D
+ ; convert so that the ZCL segments will be in Table SD008 order (1-7)
+ F I=1:1:7 S TF=$P(TFTBL,U,I) F J=1:1:7 I $P(TFGBL,U,J)=TF S TABLE=TABLE_J Q
+ F TFIN=1:1:7 D
  . ; ORMSG counter incremented
  . S CTVALUE=CTVALUE+1
  . ; TF VALUE=0 for no or 1 for yes (only if not req. is it null)
@@ -179,12 +178,12 @@ BDOSTR ;Store backdoor order DG1 and ZCL messages from HL7
  ;
  K ORSDCARY,SDCARYA
  D TFSTGS^ORWDBA1  ;set string sequence of treatment factors
- S (CT,NDX,OBX)=0,NTF=8,(CPNODE,GUITF,TF,Y,ZCL)="",X="T"
+ S (CT,NDX,OBX)=0,NTF=7,(CPNODE,GUITF,TF,Y,ZCL)="",X="T"
  ; Call API to acquire Treatment Factors in force
  D NOW^%DTC,CL^SDCO21(DFN,%,"",.ORSDCARY)  ;DBIA 406
- ; Retrved array order: AO,IR,SC,EC,MST,HNC,CV,SHD, e.g., ORSDCARY(3) for SC
+ ; Retrved array order: AO,IR,SC,EC,MST,HNC,CV, e.g., ORSDCARY(3) for SC
  ; Convert to character array, e.g., SDCARYA("SC")=""
- F I=1:1:NTF S:$D(ORSDCARY(I)) SDCARYA($P("AO^IR^SC^EC^MST^HNC^CV^SHD",U,I))=""
+ F I=1:1:NTF S:$D(ORSDCARY(I)) SDCARYA($P("AO^IR^SC^EC^MST^HNC^CV",U,I))=""
  ; Process only four DG1 segments and first set of ZCL segments
  F  S OBX=$O(@ORMSG@(OBX)) Q:OBX'>0  S J=$E(@ORMSG@(OBX),1,3) I J="DG1"!(J="ZCL"&($P(@ORMSG@(OBX),"|",2)=1)) D
  . S REC=@ORMSG@(OBX)

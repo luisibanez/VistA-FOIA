@@ -1,10 +1,10 @@
-PRCPXALL ;WISC/RFJ-purge all automatically by TaskManager           ; 2/19/07 1:19pm
- ;;5.1;IFCAP;**98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPXALL ;WISC/RFJ-purge all automatically by taskmanager           ;16 Oct 92
+ ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
-DQ ;  TaskManager comes here to start the automatic purge of
+DQ ;  taskmanager comes here to start the automatic purge of
  ;  inventory points.
  N %,%H,%I,INVPT,NOWDT,PRCP,PRCPZTSK,STOPDATE,TYPE,X,Y
  D NOW^%DTC S NOWDT=$E(X,1,5)_"01",X1=$E(X,1,5)_"15",X2=-395 D C^%DTC S (Y,STOPDATE)=$E(X,1,5)_"01"
@@ -19,6 +19,4 @@ DQ ;  TaskManager comes here to start the automatic purge of
  .   D DQ^PRCPXTRA
  .   ;  usage/distribution totals
  .   D DQ^PRCPXUSE
- .   ;  on-demand item audits (PRC*5.1*98)
- .   I TYPE'="W" D DQ^PRCPXODI
  Q

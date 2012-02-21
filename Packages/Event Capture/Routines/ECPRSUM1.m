@@ -1,5 +1,5 @@
-ECPRSUM1 ;BIR/DMA,RHK,JPW - Provider Summary (1 to 7) ;22 Jul 2008
- ;;2.0; EVENT CAPTURE ;**5,18,33,47,62,63,61,72,88,95**;8 May 96;Build 26
+ECPRSUM1 ;BIR/DMA,RHK,JPW-Provider Summary (1 to 7) ;27 Mar 96
+ ;;2.0; EVENT CAPTURE ;**5,18,33,47,62,63,61,72**;8 May 96
  S DIC=200,DIC(0)="AQEMZ",DIC("A")="Select Provider: "
  D ^DIC K DIC G END:Y<0 S ECU=+Y,ECUN=$P(Y,"^",2)
  D REASON^ECRUTL ;* Prompt to include Procedure Reasons
@@ -21,7 +21,7 @@ EN ;QUEUED ENTRY POINT
  U IO
  S (ECOUT,ECPG)=0 F ECI=1:1:7 S ECGT(ECI)=0,A(ECI)=0
  K ^TMP($J) S ECOUT=0,ECSD=ECSD-.1,ECED=ECED+.3
- F ECD=ECSD:0 S ECD=$O(^ECH("AC",ECD)) Q:'ECD  Q:ECD>ECED  F DA=0:0 S DA=$O(^ECH("AC",ECD,DA)) Q:'DA  I $D(^ECH("APRV",ECU,DA)) S EC=$G(^ECH(DA,0)) D 
+ F ECD=ECSD:0 S ECD=$O(^ECH("AC",ECD)) Q:'ECD  Q:ECD>ECED  F DA=0:0 S DA=$O(^ECH("AC",ECD,DA)) Q:'DA  S EC=$G(^ECH(DA,0)) D 
  .K ECPRV S ECPRV=$$GETPRV^ECPRVMUT(DA,.ECPRV),ECX=0 I ECPRV Q
  .F ECI=1:1:7 S A(ECI)=0
  .F ECI=1:1:7 S ECX=$O(ECPRV(ECX)) Q:'ECX  D
@@ -42,9 +42,8 @@ EN ;QUEUED ENTRY POINT
  .I ECFILE=725 S EC725=$G(^EC(725,+ECP,0)),ECPN=$P(EC725,"^",2)_" "_$P(EC725,"^")
  .S ECPTDS=ECCPT_ECPN_$S(ECPSYN]"":" ["_ECPSYN_"] ",1:"")
  .;Get Procedure CPT modifiers
- . K ECMOD S ECMODF=0 I $O(^ECH(DA,"MOD",0))'="" D
- ..S ECMODF=$$MOD^ECUTL(DA,"I",.ECMOD)
- ..;K ECMOD S ECMODF=$$MOD^ECUTL(DA,"I",.ECMOD)
+ .S ECMODF=0 I $O(^ECH(DA,"MOD",0))'="" D
+ ..K ECMOD S ECMODF=$$MOD^ECUTL(DA,"I",.ECMOD)
  .;
  .;ALB/ESD - Get procedure reason from EC Patient file (#721) record
  .S ECPRSN="",ECLNK=+$P(EC,"^",23)
@@ -76,7 +75,7 @@ PRINT ;print report
  ...S A=$G(^TMP($J,PR,ECREAS,PA,0))
  ...W ! W:$D(ECRY) $E(ECREAS,1,23)
  ...W ?25,$E($P(PA,"^"),1,24),?50,$P(PA,"^",2)
- ...F J=1:1:7 S A=$G(^TMP($J,PR,ECREAS,PA,J)),A(J)=A(J)+A W ?10*J+50,$J(A,5,0) I J=7 I $Y+8>IOSL D PAGE Q:ECOUT  D HDR
+ ...F J=1:1:7 S A=$G(^TMP($J,PR,ECREAS,PA,J)),A(J)=A(J)+A W ?10*J+50,$J(A,5,0) I J=7 I $Y+5>IOSL D PAGE Q:ECOUT  D HDR
  ...;print CPT procedure modifiers
  ...Q:ECOUT  S IEN=""
  ...F  S IEN=$O(^TMP($J,PR,ECREAS,PA,"MOD",IEN)) Q:IEN=""  D  I ECOUT Q
@@ -85,7 +84,7 @@ PRINT ;print report
  ....S MODESC=$P(MODI,U,3)  I MODESC="" S MODESC="UNKNOWN"
  ....S MODAMT=^TMP($J,PR,ECREAS,PA,"MOD",IEN)
  ....W !?5,"- ",MOD," ",MODESC," (",MODAMT,")"
- ....I ($Y+7)>IOSL D PAGE Q:ECOUT  D HDR
+ ....I ($Y+4)>IOSL D PAGE Q:ECOUT  D HDR
  ...K MODESC,MOD,MODAMT
  W !!,?60 F RK=61:1:IOM W "*"
  W !,?35,"GRAND TOTAL - PROCEDURES"
@@ -93,7 +92,6 @@ PRINT ;print report
  D:'ECOUT PAGE G END
  ;
 PAGE ; end of page
- D FOOTER
  I $E(IOST,1,2)="C-" S DIR(0)="E" D ^DIR K DIR I 'Y S ECOUT=1
  Q
 HDR ;
@@ -109,11 +107,6 @@ TOT W !,?60 F RK=61:1:IOM W "-"
  W !?35,"TOTAL PROCEDURES"
  F J=1:1:7 W ?10*J+50,$J(A(J),5,0) S ECGT(J)=ECGT(J)+A(J)
  W ! F ECI=1:1:7 S A(ECI)=0
- Q
- ;
-FOOTER ;print page footer
- W !!?4,"Volume totals may represent days, minutes, numbers of procedures"
- W !?4,"and/or a combination of these."
  Q
  ;
 END D ^ECKILL K ^TMP($J),ZTSK W @IOF

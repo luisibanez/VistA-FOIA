@@ -1,5 +1,5 @@
-GMRAPEM0 ;HIRMFO/WAA,FT-ALLERGY/ADVERSE REACTION PATIENT EDIT DRIVER ;9/22/06  09:35
- ;;4.0;Adverse Reaction Tracking;**2,5,17,21,36**;Mar 29, 1996;Build 9
+GMRAPEM0 ;HIRMFO/WAA,FT-ALLERGY/ADVERSE REACTION PATIENT EDIT DRIVER ;11/10/04  15:04
+ ;;4.0;Adverse Reaction Tracking;**2,5,17,21**;Mar 29, 1996
 EN11 ; Entry point for GMRA USER E/E PAT REC DATA option
  ; GMRAUSER is a flag that indicates that this is a User
  ; If user has Verifier Key then user will act normal
@@ -80,7 +80,7 @@ SELECT ;Select a patient reaction
  D REACT^GMRAPAT(DFN) ; Load all reaction for this patient.
  D EN1^GMRAPES0
  I GMRAPA>0 D TYPE D
- .I GMRAOUT D:$G(GMRANEW) DELETE S:'$$MISSREQ&('$P($G(GMRAPA(0)),U,12)) GMRAOUT=0,^TMP($J,"GMRASF","B",GMRAPA,GMRACNT)="",^TMP($J,"GMRASF",GMRACNT,GMRAPA)="" D:GMRAOUT UPOUT^GMRAPEM3 Q  ; 21,36
+ .I GMRAOUT D:$G(GMRANEW)&($$MISSREQ) DELETE S:'$$MISSREQ&($G(GMRANEW)) GMRAOUT=0,^TMP($J,"GMRASF","B",GMRAPA,GMRACNT)="",^TMP($J,"GMRASF",GMRACNT,GMRAPA)="" D:GMRAOUT UPOUT^GMRAPEM3 Q  ; 21 The user up arrows out
  .I GMRAERR D ERR^GMRAPEM3 Q  ;The reaction was entered in error
  .I $P(GMRAPA(0),U,12) D SIGNED^GMRAPEM3 Q  ;The reaction has been signed
  .; Reaction is a new reaction or Update data
@@ -130,7 +130,7 @@ EXIT S GMRAPA=0 F  S GMRAPA=$O(^TMP($J,"GMRASF","B",GMRAPA)) Q:GMRAPA<1  D UNLOC
  ;
 DELETE ;Delete entry if required information is not entered - section added in 17
  N DA,DIK,GMRAPA1
- W !!,"Entry process not completed, deleting entry...",!
+ W !!,"Required data not entered, deleting entry...",!
  S GMRAPA1=$O(^GMR(120.85,"C",GMRAPA,0))
  I GMRAPA1,$G(^GMR(120.85,GMRAPA1,0))="" K ^GMR(120.85,"C",GMRAPA,GMRAPA1)
  I GMRAPA1 S DIK="^GMR(120.85,",DA=GMRAPA1 D ^DIK D UNLOCK^GMRAUTL(120.85,GMRAPA1)

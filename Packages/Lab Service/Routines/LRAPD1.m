@@ -1,5 +1,5 @@
-LRAPD1 ;AVAMC/REG/WTY/KLL - AP DATA ENTRY ;9/25/00
- ;;5.2;LAB SERVICE;**41,91,248,259,317**;Sep 27, 1994
+LRAPD1 ;AVAMC/REG/WTY - AP DATA ENTRY ;9/25/00
+ ;;5.2;LAB SERVICE;**41,91,248,259**;Sep 27, 1994
  ;
  ;WTY;17-AUG-01;Unwrapped text and add kills for DR string
  ;
@@ -32,11 +32,9 @@ ASP ;Micro Description/ICD9CM Coding
 SSP ;Supplementary Report, Surg Path
  S (LRSOP,LRSFLG)="S",(LR(2),LR(7),LR(6))=1
  K DR
- ;Entry of Supp rept must be allowed on released reports
- ;S DR="N LRREL D RELEASE^LRAPUTL(.LRREL,LRDFN,LRSS,LRI) "
- ;S DR=DR_"I LRREL(1) D VMSG^LRAPD1 S LRSFLG="""",Y=0;"
- ;S DR=DR_".09///^S X=LRWHO;.03;10"
- S DR=".09///^S X=LRWHO;.03;10"
+ S DR="N LRREL D RELEASE^LRAPUTL(.LRREL,LRDFN,LRSS,LRI) "
+ S DR=DR_"I LRREL(1) D VMSG^LRAPD1 S LRSFLG="""",Y=0;"
+ S DR=DR_".09///^S X=LRWHO;.03;10"
  S DR(2,63.12)=".01;D T^LRAPD;S:'LR(8) Y=4;2;4;I '$D(LR(1)) "
  S DR(2,63.12)=DR(2,63.12)_"S Y=0;1;1.5;3"
  S DR(3,63.16)=".01;I '$D(LR(1)) S Y=0;1"
@@ -82,11 +80,9 @@ SCY ;Supplementary Report, Cyto
  S LRSFLG="S"
  S (LR(2),LR(7),LR(6))=1
  K DR
- ;Entry of Supp rept must be allowed on released reports
- ;S DR="N LRREL D RELEASE^LRAPUTL(.LRREL,LRDFN,LRSS,LRI) "
- ;S DR=DR_"I LRREL(1) D VMSG^LRAPD1 S LRSFLG="""",Y=0;"
- ;S DR=DR_".09///^S X=LRWHO;.03;10"
- S DR=".09///^S X=LRWHO;.03;10"
+ S DR="N LRREL D RELEASE^LRAPUTL(.LRREL,LRDFN,LRSS,LRI) "
+ S DR=DR_"I LRREL(1) D VMSG^LRAPD1 S LRSFLG="""",Y=0;"
+ S DR=DR_".09///^S X=LRWHO;.03;10"
  S DR(2,63.912)=".01;D T^LRAPD;S:'LR(8) Y=4;2;4;I '$D(LR(1)) "
  S DR(2,63.912)=DR(2,63.912)_"S Y=0;1;1.5;3"
  S DR(3,63.916)=".01;I '$D(LR(1)) S Y=0;1"
@@ -131,11 +127,9 @@ SEM ;Supplementary Report, EM
  S LRSFLG="S"
  S (LR(2),LR(7),LR(6))=1
  K DR
- ;Entry of Supp rept must be allowed on released reports
- ;S DR="N LRREL D RELEASE^LRAPUTL(.LRREL,LRDFN,LRSS,LRI) "
- ;S DR=DR_"I LRREL(1) D VMSG^LRAPD1 S LRSFLG="""",Y=0;"
- ;S DR=DR_".09///^S X=LRWHO;.03;10"
- S DR=".09///^S X=LRWHO;.03;10"
+ S DR="N LRREL D RELEASE^LRAPUTL(.LRREL,LRDFN,LRSS,LRI) "
+ S DR=DR_"I LRREL(1) D VMSG^LRAPD1 S LRSFLG="""",Y=0;"
+ S DR=DR_".09///^S X=LRWHO;.03;10"
  S DR(2,63.212)=".01;D T^LRAPD;S:'LR(8) Y=4;2;4;I '$D(LR(1)) "
  S DR(2,63.212)=DR(2,63.212)_"S Y=0;1;1.5;3"
  S DR(3,63.216)=".01;I '$D(LR(1)) S Y=0;1"

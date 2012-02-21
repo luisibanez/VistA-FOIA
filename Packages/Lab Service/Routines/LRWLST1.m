@@ -1,5 +1,5 @@
-LRWLST1 ;DALOI/CJS/RWF/FHS - ACCESSION SETUP ; July 19, 2006
- ;;5.2;LAB SERVICE;**48,65,121,153,261,286,331,379**;Sep 27, 1994;Build 2
+LRWLST1 ;DALOI/CJS/RWF/FHS - ACCESSION SETUP ;2/7/91  12:21
+ ;;5.2;LAB SERVICE;**48,65,121,153,261,286**;Sep 27, 1994
  ;
  ; Reference to ^DIC(42 supported by IA #10039
  ; Reference to ^SC( supported by IA #10040
@@ -19,8 +19,7 @@ LRWLST1 ;DALOI/CJS/RWF/FHS - ACCESSION SETUP ; July 19, 2006
  Q
  ;
 SPLIT ;
- N LRAA,LRX
- ; Setup regular accessions (LRUNQ=0)
+ N LRAA
  S LRUNQ=0,LREND=0
  I $D(LRTSTS(LRWLC,0)) D
  . D GTWLN
@@ -29,14 +28,11 @@ SPLIT ;
  . F  S LRAA=$O(LRTSTS(LRWLC,0,LRAA)) Q:LRAA<1  D
  . . S LRSS=LRTSTS(LRWLC,0,LRAA)
  . . D STWLN,ST2,^LRWLST11,EN^LA7ADL(LRUID)
- . D SICA^LRWLST11
  ;
- ; Setup accessions requiring 'unique' accession numbers (LRUNQ=1)
  S LRUNQ=1,LRAA=0
  F  S LRAA=$O(LRTSTS(LRWLC,1,LRAA)) Q:LRAA<1  D
  . S LRSS=LRTSTS(LRWLC,1,LRAA)
- . F  D GTWLN Q:LREND  D   Q:$O(LRTSTS(LRWLC,1,LRAA,0))<1
- . . D STWLN,ST2,^LRWLST11,EN^LA7ADL(LRUID),SICA^LRWLST11
+ . F  D GTWLN Q:LREND  D STWLN,ST2,^LRWLST11,EN^LA7ADL(LRUID) Q:$O(LRTSTS(LRWLC,1,LRAA,0))<1
  Q
  ;
  ;
@@ -47,7 +43,7 @@ STWLN ; Set accession number
  ;
  S LRDPF=$P(^LR(LRDFN,0),U,2),DFN=$P(^(0),U,3)
  ;
- ; Handle 'in common' area that was not setup in GTWLN call.
+ ; Handle "in common area" that was not setup in GTWLN call.
  I '$D(^LRO(68,LRAA,1,LRAD,1,LRAN)) D SETAN(LRAA,LRAD,LRAN)
  ;
  S LREND=0,LRLBLBP=1-$P(LRSS,U,2),LRSS=$P(LRSS,U)
@@ -69,7 +65,6 @@ STWLN ; Set accession number
  S FDA(1,68.02,LR6802,3)=LRODT
  S FDA(1,68.02,LR6802,4)=LRSN
  S FDA(1,68.02,LR6802,6)=LRLLOC
- S X=$G(^LRO(69,LRODT,1,LRSN,.1)) I X'="" S FDA(1,68.02,LR6802,14)=X
  ;
  ; No ordering provider/location on controls
  I LRDPF'=62.3 D
@@ -98,17 +93,7 @@ STWLN ; Set accession number
  . S FDAIEN(1)=1
  . S FDA(2,68.05,"+1,"_LR6802,.01)=LRSPEC
  . S FDA(2,68.05,"+1,"_LR6802,1)=$P(LRSAMP,";",1)
- . ;
- . ; Modification to prevent lock failures - loop 10 times to give system a chance to get lock
- . N LRLOCKOK,LRLOOPCT
- . S LRLOCKOK=0
- . F LRLOOPCT=1:1:10 Q:LRLOCKOK  D  I 'LRLOCKOK H 5
- . . K LRDIE(2)
- . . D UPDATE^DIE("","FDA(2)","FDAIEN","LRDIE(2)")
- . . S:$D(LRDIE(2))=0 LRLOCKOK=1
- . K LRLOCKOK,LRLOOPCT
- . ;
- . ;D UPDATE^DIE("","FDA(2)","FDAIEN","LRDIE(2)")
+ . D UPDATE^DIE("","FDA(2)","FDAIEN","LRDIE(2)")
  . I $D(LRDIE(2)) D MAILALRT
  ;
  ; If no specimen defined then use specimen values from file #69.
@@ -188,7 +173,7 @@ GTWLN ;
  ;
  ; Execute accession transform for this area.
  S LRAN=0
- S X=$G(^LRO(68,LRWLC,.1)) X:X'="" X
+ S X=$G(^LRO(68,LRWLC,.1)) X:$L(X) X
  ;
  D GETLOCK(LRWLC,LRAD)
  D CHECK68(LRWLC,LRAD)
@@ -212,35 +197,23 @@ ASK ;
  ; Don't ask if tasked or a "silent" call
  I $D(ZTQUEUED)!($G(LRQUIET)) Q
  ;
- N DIR,DIROUT,DIRUT,DTOUT,DUOUT,LROK,LRANX,X,Y
- S LROK=0
- F  D  Q:LREND!(LROK)
- . K DIR
- . S DIR(0)="NO^1:"_$S($P(LRLABKY,U,2):999999,1:LRAN)_":0"
- . S DIR("A")="Force to",DIR("B")=LRAN
- . D ^DIR
- . I $D(DIRUT) S LREND=1 Q
- . S LRANX=Y
- . I LRANX<+$P($G(^LRO(68,LRWLC,1,LRAD,1,0)),U,3) D
- . . W !,"This accession number may be already assigned either in this "
- . . W !,"area or a common accession area."
- . I $D(^LRO(68,LRWLC,1,LRAD,1,LRANX,0)) D  Q:'LROK
- . . N LRDFNX S LRDFNX=LRDFN
- . . N DFN,LRDFN,LRDPF,PNM,SSN
- . . S LRDFN=+^LRO(68,LRWLC,1,LRAD,1,LRANX,0),LRDPF=$P(^LR(LRDFN,0),U,2),DFN=$P(^LR(LRDFN,0),U,3)
- . . D PT^LRX
- . . W !,"THIS NUMBER BELONGS TO ",!,PNM,"     SSN: ",SSN
- . . D INF^LRX
- . . I LRDFN=LRDFNX S LROK=1
- . K DIR
- . S DIR(0)="YO",DIR("A")="Are you sure",DIR("B")="NO"
- . D ^DIR
- . I $D(DIRUT) S LREND=1 Q
- . I Y=1 S LRAN=LRANX,LROK=1
+ K LRDFNX
+ S LRSAN=LRAN
+ W !,"force to: ",LRAN,"//" R X:DTIME
+ S:X="" X=LRAN G:X="^"!'$T END
+ S:+X'=X!(X>99999)!(X<1)!(X>LRAN&'$P(LRLABKY,U,2)&(LRDFN'<1)) X=""
+ S:X'="" LRAN=X
+ I X="" W !,"Must be a number between 1 and ",$S($P(LRLABKY,U,2):99999,1:LRAN),", inclusive.  ""^"" EXITS" G ASK
  ;
- ; Unlock if aborting.
- I LREND L -^LRO(68,LRWLC,1,LRAD,1,0)
+ N PNM,SSN
+ I $D(^LRO(68,LRWLC,1,LRAD,1,LRAN,0)) S LRDFNX=LRDFN,LRDFN=+^(0),LRDPF=$P(^LR(LRDFN,0),U,2),DFN=$P(^LR(LRDFN,0),U,3) D PT^LRX W !,"THIS NUMBER BELONGS TO ",!,PNM,"     SSN: ",SSN D INF^LRX G:LRDFN=LRDFNX SURE S LRDFN=LRDFNX,LRAN=LRSAN G ASK
  ;
+WN1A I LRAN<+$P(^LRO(68,LRWLC,1,LRAD,1,0),U,3) D
+ . W !,"This accession number may be already assigned either in this "
+ . W !,"area or a common accession area."
+ ;
+SURE W !,"Are you sure" S %=2 D YN^DICN G:%=-1 END I %'=1 S LRAN=LRSAN G ASK
+ K LRSAN
  Q
  ;
  ;
@@ -251,13 +224,12 @@ CHECK68(LRAA,LRAD) ; Check for/set header node of ^LRO(68) 68.01 subfile.
  ;
  ; Set accession date in file #68 for this acession.
  ; Check for existence of accession number multiple but not accession date multiple,
- ; FileMan DBS call fails when accession number multiple exists but accession date multiple does not.
+ ; FileMan DBS call fail when accession numbers multiple exist but accession date multiple does not.
  ; If this condition found then set missing node directly and quit.
  ;
  I '$D(^LRO(68,LRAA,1,LRAD,0)) D
- . N FDA,FDAIEN,LRDIE,X
- . S X=$Q(^LRO(68,LRAA,1,LRAD,0))
- . I X'="",$QS(X,4)=LRAD S $P(^LRO(68,LRAA,1,LRAD,0),"^")=LRAD Q
+ . N FDA,FDAIEN,LRDIE
+ . I $D(^LRO(68,LRAA,1,LRAD,1)) S $P(^LRO(68,LRAA,1,LRAD,0),"^")=LRAD Q
  . S (FDAIEN(1),FDA(1,68.01,"+1,"_LRAA_",",.01))=LRAD
  . D UPDATE^DIE("","FDA(1)","FDAIEN","LRDIE(1)")
  . I $D(LRDIE(1)) D MAILALRT
@@ -286,17 +258,7 @@ SETAN(LRAA,LRAD,LRAN) ; Create stub entry in file #68 for this acession.
  S LR6802=LRAD_","_LRAA_","
  S FDAIEN(1)=LRAN
  S FDA(2,68.02,"+1,"_LR6802,.01)=LRDFN
- ;
- ; Modification to prevent lock failures - loop 10 times to give system a chance to get lock
- N LRLOCKOK,LRLOOPCT
- S LRLOCKOK=0
- F LRLOOPCT=1:1:10 Q:LRLOCKOK  D  I 'LRLOCKOK H 5
- . K LRDIE(2)
- . D UPDATE^DIE("","FDA(2)","FDAIEN","LRDIE(2)")
- . S:$D(LRDIE(2))=0 LRLOCKOK=1
- K LRLOCKOK,LRLOOPCT
- ;
- ;D UPDATE^DIE("","FDA(2)","FDAIEN","LRDIE(2)")
+ D UPDATE^DIE("","FDA(2)","FDAIEN","LRDIE(2)")
  I $D(LRDIE(2)) D MAILALRT
  Q
  ;
@@ -312,9 +274,9 @@ MAILALRT ; Send mail message alert when FileMan DBS errors returned
  S LRMTXT(3)=" "
  S LRCNT=3
  ;
- F J="FDA","FDAIEN","LR68","LRAA","LRAD","LRAN","LRDFN","LRDIE","LRSS","LRTSTS","LRUNQ","LRWLC","XQY","XQY0" D
+ F J="FDA","FDAIEN","LR68","LRAA","LRAD","LRAN","LRDFN","LRDIE","LRSS","LRTSTS","LRUNQ","LRWLC" D
  . S X=$G(@J)
- . I X'="" S LRCNT=LRCNT+1,LRMTXT(LRCNT)=J_"="_X
+ . I $L(X) S LRCNT=LRCNT+1,LRMTXT(LRCNT)=J_"="_X
  . F  S J=$Q(@J) Q:J=""  S LRCNT=LRCNT+1,LRMTXT(LRCNT)=J_"="_@J
  ;
  S XMSUB="FileMan DBS call failed during accessioning in routine LRWLST1"
@@ -322,4 +284,12 @@ MAILALRT ; Send mail message alert when FileMan DBS errors returned
  S XMINSTR("FROM")=.5
  S XMINSTR("ADDR FLAGS")="R"
  D SENDMSG^XMXAPI(DUZ,XMSUB,"LRMTXT",.XMTO,.XMINSTR)
+ Q
+ ;
+ ;
+END ;
+ K LRSAN
+ S LREND=1
+ ; unlock
+ L -^LRO(68,LRWLC,1,LRAD,1,0)
  Q

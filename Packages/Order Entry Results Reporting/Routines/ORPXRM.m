@@ -1,5 +1,5 @@
-ORPXRM ; SLC/PKR - Clinical Reminder index routines for file 100. ;8/13/06  14:19
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**157,260**;Dec 17, 1997;Build 26
+ORPXRM ; SLC/PKR - Clinical Reminder index routines for file 100. ;06/18/2004
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**157**;Dec 17, 1997
  ;DBIA 4113 supports PXRMSXRM entry points. 
  ;DBIA 4114 supports setting and killing ^PXRMINDX
  ;=========================================================
@@ -106,8 +106,8 @@ SOR(X,DA) ;Set index for Order file.
  I 'X(2)!'X(3) Q
  S DFN=$P(X(1),";",1)
  S DAS=DA(1)_";.1;"_DA_";0"
- S STOP=$S(X(4)="":"U"_DA(1),1:+X(4))
- S ^PXRMINDX(100,"IP",X(2),DFN,+X(3),STOP,DAS)=""
- S ^PXRMINDX(100,"PI",DFN,X(2),+X(3),STOP,DAS)=""
+ S STOP=$S(X(4)="":"U"_DA(1),1:X(4))
+ S ^PXRMINDX(100,"IP",X(2),DFN,X(3),STOP,DAS)=""
+ S ^PXRMINDX(100,"PI",DFN,X(2),X(3),STOP,DAS)=""
  Q
  ;

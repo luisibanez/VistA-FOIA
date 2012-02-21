@@ -1,5 +1,5 @@
-LA7VIN4 ;DALOI/JMC - Process Incoming UI Msgs, continued ; 7/27/07 11:24am
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,67,66**;Sep 27, 1994;Build 30
+LA7VIN4 ;DALOI/JMC - Process Incoming UI Msgs, continued ; Jan 12, 2004
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,67**;Sep 27, 1994
  ;This routine is a continuation of LA7VIN1 and is only called from there.
  Q
  ;
@@ -88,10 +88,10 @@ OBR ; Process OBR segments
  . S X=$P($G(^LRO(68,LA7AA,0)),U,3)
  . S LA7AD=$S(X="D":DT,X="M":$E(DT,1,5)_"00",X="Y":$E(DT,1,3)_"0000",X="Q":$E(DT,1,3)_"0000"+(($E(DT,4,5)-1)\3*300+100),1:DT)
  . S LA7AN=+LA7SID
- . I LA7AN>0 D SETID^LA7VHLU1(LA76249,LA7ID,LA7AN) Q
- . D SETID^LA7VHLU1(LA76249,LA7ID,$S($G(LA7PNM)]"":LA7PNM,$G(LA7SSN)]"":LA7SSN,1:"NO ID"))
+ . I LA7AN>0 D SETID^LA7VHLU1(LA76249,LA7ID,LA7AN)
+ . E  D SETID^LA7VHLU1(LA76249,LA7ID,$S(LA7PNM]"":LA7PNM,LA7SSN]"":LA7SSN,1:"NO ID"))
  ;
- ; Zeroth node of accession area.
+ ; Zeroth node of acession area.
  S LA7AA(0)=$G(^LRO(68,+LA7AA,0))
  ; Accession's subscript
  S LA7SS=$P(LA7AA(0),"^",2)
@@ -119,8 +119,6 @@ OBR ; Process OBR segments
  ;
  ; Log error when specimen source does not match accession's specimen
  I LA70070'="",LA7SPEC'="",LA70070'=LA7SPEC D
- . ; Ignore if specimen related to lab control file #62.3
- . I $P($G(^LRO(68,LA7AA,1,LA7AD,1,LA7AN,0)),"^",2)=62.3 Q
  . N LA7OBR
  . S LA7OBR(15)=LA7SPEC ; backward compatible with old code
  . S LA7ERR=22,LA7QUIT=2

@@ -1,6 +1,6 @@
 IBCSC4A ;ALB/MJB - MCCR PTF SCREEN  ;24 FEB 89 9:49
- ;;2.0;INTEGRATED BILLING;**106,228,339**;21-MAR-94;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**106,228**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO DGCRSC4A
  ;
@@ -101,7 +101,7 @@ PTFPS(DFN,IBPTF,IBFDT,IBTDT) ; this will return a list of professional
  . S IBX=0 F  S IBX=$O(^TMP("PTF",$J,46,IBX)) Q:IBX<1  S IBY=^TMP("PTF",$J,46,IBX) D
  .. S IBRMARK=""
  .. F IBP=5:1:8,16:1:19 S IBDX=$P(IBY,"^",IBP),IBDXX=0 F  S IBDXX=$O(^TMP("PTF",$J,46.1,IBDXX)) Q:IBDXX<1!(IBRMARK)  I $P(^TMP("PTF",$J,46.1,IBDXX),"^",2)=IBDX D
- ... F IBPP=3:1:10 I $P(^TMP("PTF",$J,46.1,IBDXX),"^",IBPP) S IBRMARK=IBPP Q
+ ... F IBPP=3:1:9 I $P(^TMP("PTF",$J,46.1,IBDXX),"^",IBPP) S IBRMARK=IBPP Q
  .. S IBD=IBD+1,^UTILITY($J,"IB",IBC,IBD)=$P(IBY,"^",2)_"^"_$S(IBD=1:$P(IBDT,".")_"^"_$C(IBC+64)_"^+^",1:"^^^")_$S(IBRMARK:$P($T(EXEMPT+(IBRMARK-2)),";",3),1:"")_"^"_$P(IBY,"^",5,8)_"^"_$P(IBY,"^",15)_"^"_$P(IBY,"^",3,4)_"^"_IB46
  . S IBD=0
  . K ^TMP("PTF",$J,46)
@@ -114,9 +114,8 @@ EXEMPT ; exemption reasons
  ;;SC
  ;;AO
  ;;IR
- ;;SW
+ ;;EC
  ;;MT
  ;;HC
  ;;CV
- ;;SH
  ;

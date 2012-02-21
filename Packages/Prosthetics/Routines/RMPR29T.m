@@ -1,9 +1,8 @@
 RMPR29T ;PHX/JLT-PROCESSING 2529-3 ACTION ;01/04/95 3:56 PM
- ;;3.0;PROSTHETICS;**78,75**;Feb 09, 1996;Build 25
+ ;;3.0;PROSTHETICS;**78**;Feb 09, 1996
  ;
  ;RMS 08/25/03 Patch #78 - Add shipment date for
  ;Billing Awareness project
- ;SPS 06/06/06 Patch #75 - Removed shipment date
  ;
 ASK ;ASK TYPE OF PROCESSING ACTION
  ;CALLED BY RMPR29T
@@ -39,6 +38,9 @@ COM ;COMPLETE 2529-3
  K DA,Y,DIC,X S DA=RMPRDA,DR="24",DIE="^RMPR(664.1," D ^DIE I $D(DTOUT)!($D(Y)) D MESS G END^RMPR29A
  I $P(^RMPR(664.1,RMPRDA,0),U,27)=3 W !!,$C(7),?5,"2529-3 cannot be completed until issued to Veteran" G END^RMPR29A
  S DA=RMPRDA,DR="33;20R",DIE="^RMPR(664.1," D ^DIE I $D(DTOUT)!($D(Y)) D MESS G END^RMPR29A
+ ; RMS 9/2003, PATCH 78, NEXT 2 LINES
+ D GETDT
+ N RMPR660D S RMPR660D=$P(^RMPR(664.1,RMPRDA,0),U,5) D RTBILL
  S:'$P(^RMPR(664.1,RMPRDA,0),U,25) $P(^RMPR(664.1,RMPRDA,0),U,25)=DUZ S $P(^RMPR(664.1,RMPRDA,0),U,26)=DT
  W !!,?5,$C(7),"Request Completed and Posted!!!" S DIE="^RMPR(664.1,",DR="16///^S X=""C""",DA=RMPRDA D ^DIE
  G END^RMPR29A
@@ -56,7 +58,8 @@ ANK ;ASK TYPE OF CLOSE OUT ACTION
  .W !!,?5,$C(7),"Request Closed out and Posted!!!"
  .I $P(^RMPR(664.1,RMPRDA,0),U,20),$P(^(0),U,23) D DEL^RMPR29P(RMPRDA),PST^RMPR29P(RMPRDA)
  .N RMPRDL S RMPRDL=$P($G(^RMPR(664.1,RMPRDA,7)),U,2)
- .F RI=0:0 S RI=$O(^RMPR(664.1,RMPRDA,2,RI)) Q:RI'>0  I $D(^(RI,0)) S DA=$P(^(0),U,5) I +DA>0,RMPRDL S DIE="^RMPR(660,",DR="10///@;10///^S X=RMPRDL" D ^DIE
+ .F RI=0:0 S RI=$O(^RMPR(664.1,RMPRDA,2,RI)) Q:RI'>0  I $D(^(RI,0)) S DA=$P(^(0),U,5) I +DA>0,RMPRDL S DIE="^RMPR(660,",DR="10///@;10///^S X=RMPRDL;39///@;39////"_RMPRSHIP D ^DIE,RTBILL
+ .;F RI=0:0 S RI=$O(^RMPR(664.1,RMPRDA,2,RI)) Q:RI'>0  I $D(^(RI,0)) S DA=$P(^(0),U,5) I +DA>0,RMPRDL S DIE="^RMPR(660,",DR="10///@;10///^S X=RMPRDL" D ^DIE
  .S:'$P(^RMPR(664.1,RMPRDA,0),U,25) $P(^RMPR(664.1,RMPRDA,0),U,25)=DUZ S $P(^RMPR(664.1,RMPRDA,0),U,26)=DT
  .S DIE="^RMPR(664.1,",DA=RMPRDA,DR="16///^S X=""C""" D ^DIE
  Q
@@ -75,4 +78,28 @@ AMP ;ASK TYPE OF MULTIPLE ASSIGMENT ACTION
  G EXIT^RMPR29S
 MESS ;MESSAGE IF DTOUT OR $D(Y)
  W !!,$C(7),?5,"2529-3 has not been completed!!" Q
+GETDT ; DIR call to obtain the shipment date, RMS, PATCH 78
+ N DIR,RMPRTRDT
+ S RMPRTRDT=DT
+ S RMPRTRDT=$$FMTE^XLFDT(RMPRTRDT,"2D")
+ S DIR(0)="D",DIR("A")="SHIPMENT DATE",DIR("B")=$G(RMPRTRDT)
+ S DIR("?")="The date that the item was shipped or delivered to the patient."
+ S DIR("?")=DIR("?")_"The default date is today's date."
+ D ^DIR
+ S RMPRSHIP=Y
+ Q
+RTBILL ; Mark as ready for billing, RMS, PATCH 78
+ Q  ; taken out for Phase II Billing Aware (WLC 02/26/04)
+ N DIC,X,DLAYGO,RMPRO,DIE,DR
+ S DIC="^RMPR(660.5,"
+ S DIC(0)="L",X="""N"""
+ S DLAYGO=660.5 D ^DIC K DLAYGO Q:Y<1
+ S RMPRO=+Y,DIE=DIC
+ ;
+ L +^RMPR(660.5,RMPRO)
+ ; .01-Transaction Date; 2-Send Required; .02-Shipment Date
+ ; 3-ProsFile(pointer to file #660)
+ S DR=".01////^S X=DT;2////1;.02////^S X=RMPRSHIP;3////^S X=RMPR660D"
+ D ^DIE
+ L -^RMPR(660.5,RMPRO)
  Q

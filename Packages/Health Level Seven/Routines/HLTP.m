@@ -1,6 +1,5 @@
-HLTP ;AISC/SAW-Transaction Processor Module ;09/13/2006
- ;;1.6;HEALTH LEVEL SEVEN;**14,43,133**;Oct 13, 1995;Build 13
- ;Per VHA Directive 2004-038, this routine should not be modified.
+HLTP ;AISC/SAW-Transaction Processor Module ;03/03/99  12:33
+ ;;1.6;HEALTH LEVEL SEVEN;**14,43**;Oct 13, 1995
 GENERATE(HLMID,HLMTIEN,HLEID,HLARYTYP,HLFORMAT,HLRESLT,HLP) ;Generate an
  ;outgoing message
  ;
@@ -28,8 +27,6 @@ GENERATE(HLMID,HLMTIEN,HLEID,HLARYTYP,HLFORMAT,HLRESLT,HLP) ;Generate an
  ;   HLP("CONTPTR") = Continuation pointer, a 1 to 180 character string
  ;  HLP("GROUTINE") = The M code to execute to generate the HL7 message
  ;
- S HLRESLT=""
- ;
  ;Check for required parameters
  I '$G(HLMID)!('$G(HLMTIEN))!('$G(HLEID))!($G(HLARYTYP)']"")!($G(HLFORMAT)']"") S HLRESLT="7^"_$G(^HL(771.7,7,0))_" at GENERATE^HLTP entry point" G EXIT
  ;Extract data from file 101 and store in separate variables
@@ -41,11 +38,11 @@ GENERATE(HLMID,HLMTIEN,HLEID,HLARYTYP,HLFORMAT,HLRESLT,HLP) ;Generate an
  D STATUS^HLTF0(HLMTIEN,8)
  ;Check that local/global array exists and store in Message Text file
  ; if pre-compiled
- I HLFORMAT D  I +$G(HLRESLT) G EXIT
- .I $E(HLARYTYP)="G" D  I +$G(HLRESLT) D STATUS^HLTF0(HLMTIEN,4,+HLRESLT) Q
+ I HLFORMAT D  I $D(HLRESLT) G EXIT
+ .I $E(HLARYTYP)="G" D  I $D(HLRESLT) D STATUS^HLTF0(HLMTIEN,4,+HLRESLT) Q
  ..I $O(^TMP("HLS",$J,0))']"" S HLRESLT="8^"_$G(^HL(771.7,8,0)) Q
  ..D MERGE^HLTF1("G",HLMTIEN,"HLS")
- .I $E(HLARYTYP)="L" D  I +$G(HLRESLT) D STATUS^HLTF0(HLMTIEN,4,+HLRESLT) Q
+ .I $E(HLARYTYP)="L" D  I $D(HLRESLT) D STATUS^HLTF0(HLMTIEN,4,+HLRESLT) Q
  ..I $O(HLA("HLS",0))']"" S HLRESLT="8^"_$G(^HL(771.7,8,0)) Q
  ..D MERGE^HLTF1("L",HLMTIEN,"HLS")
  ;If array is not pre-compiled, call message generation routine

@@ -1,5 +1,5 @@
 PRCSP1C1 ;SF/LJP-CONTROL POINT ACTIVITY PRINT OPTIONS CON'T ;4-26-94/3:45 PM
-V ;;5.1;IFCAP;**101**;Oct 20, 2000
+V ;;5.1;IFCAP;;Oct 20, 2000
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 SUB ;BUDGET OBJECT CODE TOTALS
  D EN1^PRCSUT G W1:'$D(PRC("SITE")),EXIT:Y<0 W ! S %ZIS="MQ" D ^%ZIS G EXIT:POP I $D(IO("Q")) S ZTRTN="SUB1^PRCSP1C1",ZTSAVE("DUZ")="",ZTSAVE("PRC*")="" D ^%ZTLOAD,EXIT,W2 G SUB
@@ -16,7 +16,7 @@ SUB2 S N1=PRC("SITE")_"-"_PRC("FY")_"-"_PRC("QTR")_"-"_$P(PRC("CP")," "),N2=N1_"
 S1 S N2=$O(^PRCS(410,"B",N2)) Q:$P(N2,"-",1,4)'=N1
  S N3=0,N3=$O(^PRCS(410,"B",N2,N3)) G S1:'N3
  G S1:'$D(^PRCS(410,N3,0)),S1:$P(^(0),U,2)'="O"
- I $P(^PRCS(410,N3,0),"^",4)=1 D CALC2 G S2
+ N AA,BB,PRCTMP I $P(^PRCS(410,N3,0),"^",4)=1 D CALC2 G S2
  S N4=0 F I=0:0 S N4=$O(^PRCS(410,N3,"IT",N4)) Q:N4'>0  I $D(^(N4,0)) S X=^(0) I $P(X,U,4)]"",+$P(X,U,2),+$P(X,U,7) D CALC
  G S2
 CALC ;
@@ -24,12 +24,10 @@ CALC ;
  I $D(^PRCS(410,N3,"IT",N4,3)) S AMT=$P($G(^(0)),"^")-$P($G(^(0)),"^",2),SA=AMT
  S:'$D(T("S",+S)) T("S",+S)=0 S T("S",+S)=T("S",+S)+SA,T("OBL")=T("OBL")+SA Q
 CALC2 ; Changes to include 1358s begin here
- N AA,BB,PRCTMP
  S PRCTMP=^PRCS(410,N3,3) F AA=6,8 S BB=AA+1 I $P(PRCTMP,"^",AA),$P(PRCTMP,"^",BB) D
  .S S=$P(PRCTMP,"^",AA),SA=$P(PRCTMP,"^",BB)
  .I '$D(T("S",+S)) S T("S",+S)=0
  .S T("S",+S)=T("S",+S)+SA,T("OBL")=T("OBL")+SA
- K AA,BB,PRCTMP
  Q
 S2 S:$D(^PRCS(410,N3,4)) T("COM")=T("COM")+$P(^(4),U,1)
  G S1

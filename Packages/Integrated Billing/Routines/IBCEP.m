@@ -1,6 +1,5 @@
 IBCEP ;ALB/TMP - Functions for PROVIDER ID MAINT - INS CO PARAMS ;11-02-00
- ;;2.0;INTEGRATED BILLING;**137,232,320,348,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,232**;21-MAR-94
  ;
 EN ; -- main entry point for IBCE PRV INS PARAMS
  N IBINS,IBCUINC ; Variable should be available throughout actions
@@ -35,8 +34,8 @@ BLD(IBINS,IBCUINC) ; Build display for ins co level provider ID parameters
  S IB4=$G(^DIC(36,IBINS,4))
  K ^TMP("IBPRV_INS_ID_PARAMS",$J)
  ;
- S Z0="Perf Prov Secondary ID Type (1500): "_$E($$EXPAND^IBTRE(36,4.01,+$P(IB4,U))_$J("",20),1,20) D SET1(.IBLCT,Z0)
- S Z0="Perf Prov Secondary ID Type (UB04): "_$E($$EXPAND^IBTRE(36,4.02,+$P(IB4,U,2))_$J("",20),1,20) D SET1(.IBLCT,Z0)
+ S Z0="Perf Prov Secondary ID Type (HCFA): "_$E($$EXPAND^IBTRE(36,4.01,+$P(IB4,U))_$J("",20),1,20) D SET1(.IBLCT,Z0)
+ S Z0="Perf Prov Secondary ID Type (UB92): "_$E($$EXPAND^IBTRE(36,4.02,+$P(IB4,U,2))_$J("",20),1,20) D SET1(.IBLCT,Z0)
  S Z0=$J("",20)_"Required: "_$$EXPAND^IBTRE(36,4.03,$P(IB4,U,3)) D SET1(.IBLCT,Z0)
  S Z0=$J("",10)_"Care Unit Name: "_$$EXPAND^IBTRE(36,4.09,$P(IB4,U,9)) D SET1(.IBLCT,Z0)
  S Z0=""  D SET1(.IBLCT,Z0)
@@ -46,7 +45,7 @@ BLD(IBINS,IBCUINC) ; Build display for ins co level provider ID parameters
  ;
  S Z0=$J("",17)_"VALID CARE UNITS FOR THIS INSURANCE COMPANY" D SET1(.IBLCT,Z0),CNTRL^VALM10(IBLCT,18,46,IORVON,IORVOFF)
  S A=0
- F  S A=$O(^IBA(355.96,"AC",IBINS,A)) Q:'A  S IBPTYP=$P($G(^IBE(355.97,A,0)),U) I IBPTYP'="" D
+ F  S A=$O(^IBA(355.96,"AC",IBINS,A)) Q:'A  S IBPTYP=$P($G(^IBA(355.97,A,0)),U) I IBPTYP'="" D
  . S A2=IBPTYP_U_A,^TMP("IBPRV_INS_ID_PARAMS_SORT",$J,A2)=""
  . S A0=0 F  S A0=$O(^IBA(355.96,"AC",IBINS,A,A0)) Q:'A0  S A1=$G(^IBA(355.96,A0,0)) D
  .. I '$G(IBCUINC) S:'$D(^TMP("IBPRV_INS_ID_PARAMS_SORT",$J,A2,$P(A1,U,4)_U_$P(A1,U,5))) ^($P(A1,U,4)_U_$P(A1,U,5))="" Q
@@ -109,7 +108,6 @@ UPIN() ; Returns the ien of the entry in file 355.97 that is designated as the
  ;
 EDITID(IBCNS) ; Edit provider id's from insurance co enter/edit
  ; IBCNS = ien of file 36
- Q   ; WCJ 12/30/2005
  N X,Y,Z4,DIR
  S Z4=$G(^DIC(36,IBCNS,4))
  I 'Z4,'$P(Z4,U,2) Q

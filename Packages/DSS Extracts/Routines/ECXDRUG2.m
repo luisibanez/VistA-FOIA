@@ -1,5 +1,5 @@
-ECXDRUG2 ;ALB/TMD-Pharmacy Extracts Incomplete Feeder Key Report ; 2/19/08 3:44pm
- ;;3.0;DSS EXTRACTS;**40,68,84,105,111**;Dec 22, 1997;Build 4
+ECXDRUG2 ;ALB/TMD-Pharmacy Extracts Incomplete Feeder Key Report ; 6/13/05 3:31pm
+ ;;3.0;DSS EXTRACTS;**40,68,84**;Dec 22, 1997
  ;
 EN ; entry point
  N ECD,LINE,ECDRG,ECQTY,ECPRC
@@ -12,27 +12,19 @@ EN ; entry point
 PRE ; entry point for PRE data
  ; order through fills, refills and partial refills
  N ECRFL,ECRX,ECREF,ECDATA,ECDATA1
- K ^TMP($J,"ECXDSS")
- ;call pharmacy api pso52ex
- D EXTRACT^PSO52EX(ECD,ECED,"ECXDSS")
- S ECREF="RF"
- ;order thru fills and refills; refill values 0 thru 11
- ;     Note:  refill 0 = original fill
- F  S ECD=$O(^TMP($J,"ECXDSS","AL",ECD)),IEN=0 Q:'ECD  Q:ECD>ECED  Q:ECXERR  F  S IEN=$O(^(ECD,IEN)),ECRFL=""  Q:'IEN  Q:ECXERR  F  S ECRFL=$O(^(IEN,ECRFL)) Q:ECRFL']""  Q:ECXERR  D PRE2
- ;
- ;order thru partial fills
+ S ECREF=1
+ F  S ECD=$O(^PSRX("AL",ECD)),ECRX=0 Q:'ECD  Q:ECD>ECED   Q:ECXERR  F  S ECRX=$O(^PSRX("AL",ECD,ECRX)),ECRFL="" Q:'ECRX  F  S ECRFL=$O(^PSRX("AL",ECD,ECRX,ECRFL)) Q:ECRFL=""  Q:ECXERR  D PRE2
  S ECD=ECSD1,ECREF="P"
- F  S ECD=$O(^TMP($J,"ECXDSS","AM",ECD)),IEN=0 Q:'ECD  Q:ECD>ECED  Q:ECXERR  F  S IEN=$O(^(ECD,IEN)),ECRFL=""  Q:'IEN  Q:ECXERR  F  S ECRFL=$O(^(IEN,ECRFL)) Q:'ECRFL  Q:ECXERR  D PRE2
- K ^TMP($J,"ECXDSS")
+ F  S ECD=$O(^PSRX("AM",ECD)),ECRX=0 Q:'ECD  Q:ECD>ECED  Q:ECXERR  F  S ECRX=$O(^PSRX("AM",ECD,ECRX)),ECRFL="" Q:'ECRX  F  S ECRFL=$O(^PSRX("AM",ECD,ECRX,ECRFL)) Q:ECRFL=""  D PRE2
  Q
  ;
 PRE2 ; get Prescription data
- S ECDRG=+$P(^TMP($J,"ECXDSS",IEN,6),U)
- I ECRFL>0&(ECREF="RF") D
- .S ECQTY=^TMP($J,"ECXDSS",IEN,ECREF,ECRFL,1),ECPRC=^(1.2)
- I ECRFL>0&(ECREF="P") D
- .S ECQTY=^TMP($J,"ECXDSS",IEN,ECREF,ECRFL,.04),ECPRC=^(.042)
- I 'ECRFL S ECQTY=^TMP($J,"ECXDSS",IEN,7),ECPRC=^(17)
+ S ECDATA=$G(^PSRX(ECRX,0))
+ S ECDRG=+$P(ECDATA,U,6)
+ I ECRFL D
+ .S ECDATA1=$G(^PSRX(ECRX,ECREF,ECRFL,0))
+ .S ECQTY=+$P(ECDATA1,U,4),ECPRC=+$P(ECDATA1,U,11)
+ I 'ECRFL S ECQTY=+$P(ECDATA,U,7),ECPRC=+$P(ECDATA,U,17)
  D TEST
  Q
  ;

@@ -1,5 +1,5 @@
-PXRMPTL ; SLC/DLT,PKR,PJH - Print Clinical Reminders logic; 01/07/2008
- ;;2.0;CLINICAL REMINDERS;**4,12**;Feb 04, 2005;Build 73
+PXRMPTL ; SLC/DLT,PKR,PJH - Print Clinical Reminders logic ; 11/24/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;====================================================
 BLDFLST(RITEM,FL) ;Build the list of findings defined for this reminder.
@@ -129,8 +129,7 @@ DISLOG ;Display the patient cohort, resolution logic, and custom date due.
  ;====================================================
 DISLOGF(RITEM,FINDING,FL,PARRAY) ;Expand FUNCTION FINDING logic and
  ;return the result in PARRAY.
- N ARGNUM,AT,FARG,FUN,FUNCTION,FUNSTR,IND,ISFUN,MAXLEN,LARRAY
- N NAME,NLOGLIN,NPL,NUM,SEP,TEMP
+ N FARG,FUN,FUNSTR,IND,ISFUN,MAXLEN,LARRAY,NAME,NLOGLIN,NPL,NUM,SEP,TEMP
  S MAXLEN=72
  K PARRAY
  ;Get the function string.
@@ -139,7 +138,7 @@ DISLOGF(RITEM,FINDING,FL,PARRAY) ;Expand FUNCTION FINDING logic and
  ;
  ;Establish the list of separators that can be used in the logic
  ;string and take it apart.
- S SEP="'!&=><,()+-"
+ S SEP="'!&=><,()"
  S NLOGLIN=$$STRARR(FUNSTR,SEP,.LARRAY)
  ;Replace argument numbers with the finding.
  S FARG=0
@@ -148,15 +147,11 @@ DISLOGF(RITEM,FINDING,FL,PARRAY) ;Expand FUNCTION FINDING logic and
  . I TEMP="" Q
  . S FUN=$P(TEMP,"(",1)
  . S ISFUN=$S(FUN="":0,$D(^PXRMD(802.4,"B",FUN)):1,1:0)
- . I ISFUN S FARG=1,FUNCTION=$TR(FUN,"_",""),ARGNUM=0 Q
+ . I ISFUN S FARG=1 Q
  . I FARG D
  .. S NUM=+TEMP
- .. S ARGNUM=ARGNUM+1
- .. S AT=$$ARGTYPE^PXRMFFAT(FUNCTION,ARGNUM)
- .. I AT="F" D
- ... S NAME=$S($D(FL(NUM)):FL(NUM),1:"???")
- ... S LARRAY(IND)=$$STRREP^PXRMUTIL(LARRAY(IND),NUM,NAME)
- ..E  S LARRAY(IND)=TEMP
+ .. S NAME=$S($D(FL(NUM)):FL(NUM),1:"???")
+ .. S LARRAY(IND)=$$STRREP^PXRMUTIL(LARRAY(IND),NUM,NAME)
  . I TEMP[")" S FARG=0
  ;Format the array for printing.
  S NPL=$$FMTARR(MAXLEN,NLOGLIN,.LARRAY,.PARRAY)

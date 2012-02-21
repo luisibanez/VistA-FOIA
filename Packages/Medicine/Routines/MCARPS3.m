@@ -1,9 +1,8 @@
 MCARPS3 ; HOIFO/NCA - Get Procedures for Medicine and CP ;1/13/04  14:35
- ;;1.0;CLINICAL PROCEDURES;**5,13**;Apr 01, 2004;Build 19
+ ;;2.3;Medicine;**39**;09/13/1996
  ;Modified from MCARPS2 for CPRS
  ; Please Reference DBIA # 3397
 EN(MCDFN,CODE,MDSDT,MDEDT) ;Get procedures for a patient
- Q:$$GET^XPAR("SYS","MD MEDICINE CONVERTED",1)
  S WH="" K ^TMP("OR",$J,"MCAR")
  N MDGBL,MDPTR
  S MDGBL="^MCAR(690,""AC"",MCDFN)"
@@ -13,7 +12,6 @@ EN(MCDFN,CODE,MDSDT,MDEDT) ;Get procedures for a patient
  D PR0
  K S5 Q
 CONT ;CONT+1 modified on 2-7-94,S MCFILE..2) added to conform w/alpha site
- Q:$O(^MDD(702,"ACONV",S6_";"_S5_",",0))
  I $D(^MCAR(+$P(S5,"(",2),S6,2005)) S MCFILE=+$P(S5,"(",2) D SUM^MCMAG
  I S5="MCAR(702.7" Q
  I S5="MCAR(699" S (LL,LL1)=$P($G(^MCAR(699,S6,0)),U,12) Q:LL'>0  S LL=$P($G(^MCAR(697.2,LL,0)),U) G:'$D(PE) CONT1 Q:PE'=LL  G CONT1

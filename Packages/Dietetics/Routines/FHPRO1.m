@@ -1,6 +1,6 @@
 FHPRO1 ; HISC/REL/RVD - Production Processing ;3/6/95  15:45
- ;;5.5;DIETETICS;**3,5**;Jan 28, 2005;Build 53
- ;Patch #5 adding missing variable FHSITE & process each date seperately for Forecasting.
+ ;;5.5;DIETETICS;**3**;Jan 28, 2005
+ ;RVD 5/17/05 - as part of AFP project.
  ;
  K ^TMP($J),^TMP("FH")
  S FHSITE=""
@@ -72,9 +72,8 @@ L0 W !!,"The report requires a 132 column printer.",!
  U IO D ^FHPRO2 D ^%ZISC K %ZIS,IOP G KIL
  ;Next ask for forcasted amount.
 FOR S FHD1SAV=D1,FHQUIT=0 ;save the starting date.
- S FHSITE=0
  F FHDTI=1:1 S X1=FHD1SAV,X2=FHDTI-1 D C^%DTC Q:FHDTI'>0!(X>FHDT2)!$G(FHQUIT)  D
- .S FHDTTO=X,D1=X
+ .S FHDTTO=X
  .W !!,"Forecasting ..." D Q2^FHPRF1
  .F P0=0:0 S P0=$O(^TMP($J,P0)) Q:P0<1!$G(FHQUIT)  D
  ..S S1=^TMP($J,P0)

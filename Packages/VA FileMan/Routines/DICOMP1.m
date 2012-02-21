@@ -1,6 +1,6 @@
-DICOMP1 ;SFISC/GFT-EVALUATE COMPUTED FLD EXPR ;19JUNE2007
- ;;22.0;VA FileMan;**6,44,76,152**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DICOMP1 ;SFISC/GFT-EVALUATE COMPUTED FLD EXPR ;12:45 PM  9 Sep 2002
+ ;;22.0;VA FileMan;**6,44,76**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  F  Q:'$D(DPS(DPS,"ST"))  D DPS^DICOMPW S K=K+1,K(K)=X
  G 0:DPS
 INIT S T=99,DLV0=0,X="",K=1 D ST ;ST will build code to get top=level values
@@ -39,7 +39,7 @@ S S I="" F  S I=$O(M(I)),W=0 Q:I=""  D M:$L(X)>235 S K=$O(M(I,"")),X=X_" S D"_I_
  .I $D(DIM) S X=DICO D ^DIM
  S DICOMP="",DLV=DICO(1)
 Q I DICOMP'["S" S K=DICO(1) F  S K=$O(I(K)) Q:K=""  K I(K),J(K)
- I $D(X) S:$D(DICO("DIERR")) X="N DIERR "_X I $G(DICOMPQI) S X="N Y "_X
+ I $G(DICOMPQI),$D(X) S X="N Y "_X
 Y K Y I $D(DICO("RCR")) S Y=DICO("RCR")
  E  S Y=DLV_$E("W",$D(DPS("W")))_$S($G(DBOOL)=1:"B",$D(DATE)>9:"D",1:"")_$E("X",$D(DIM))_$E("L",$D(DICO(2)))
  S Y=Y_DIMW

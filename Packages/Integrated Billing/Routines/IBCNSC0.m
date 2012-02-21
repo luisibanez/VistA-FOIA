@@ -1,10 +1,10 @@
-IBCNSC0 ;ALB/NLR - INSURANCE COMPANY EDIT -  ;12-MAR-1993
- ;;2.0; INTEGRATED BILLING ;**371**; 21-MAR-94;Build 57
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCNSC0 ;ALB/NLR - INSURANCE COMPANY EDIT -  ; 12-MAR-1993
+ ;;Version 2.0 ; INTEGRATED BILLING ;; 21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 CLAIMS1 ; display Inpatient Claims information
  N OFFSET,START,IBCNS12,IBADD
- S START=27,OFFSET=2
+ S START=21,OFFSET=2
  D SET^IBCNSP(START,OFFSET+20," Inpatient Claims Office Information ",IORVON,IORVOFF)
  S IBCNS12=$$ADDRESS(IBCNS,.12,5)
  D SET^IBCNSP(START+1,OFFSET," Company Name: "_$P($G(^DIC(36,+$P(IBCNS12,"^",7),0)),"^",1))
@@ -21,7 +21,7 @@ R1Q Q
 CLAIMS2 ; display Outpatient Claims information
  ;
  N OFFSET,START,IBCNS16,IBADD
- S START=34,OFFSET=2
+ S START=27,OFFSET=2
  D SET^IBCNSP(START,OFFSET+20," Outpatient Claims Office Information ",IORVON,IORVOFF)
  S IBCNS16=$$ADDRESS(IBCNS,.16,6)
  D SET^IBCNSP(START+1,OFFSET," Company Name: "_$P($G(^DIC(36,+$P(IBCNS16,"^",7),0)),"^",1))

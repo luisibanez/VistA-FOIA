@@ -1,5 +1,5 @@
 PRCAGST ;WASH-ISC@ALTOONA,PA/CMS-Print Patient Statement ;12/12/96  9:39 AM
-V ;;4.5;Accounts Receivable;**34,181,190,249**;Mar 20, 1995;Build 2
+V ;;4.5;Accounts Receivable;**34,181,190**;Mar 20, 1995
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;ENTRY WITH DEBTOR PRINT STATEMENT
 EN(DEB,TBAL,PDAT,PBAL,LDT) ;
@@ -11,7 +11,7 @@ EN(DEB,TBAL,PDAT,PBAL,LDT) ;
  S X=X+1,ADD(X)=$P(ADD,U,4)_", "_$P(ADD,U,5)_"  "_$P(ADD,U,6)
  S X=X+1,ADD(X)=$P(ADD,U,7)
  W @IOF
- W !!,"Department of Veterans Affairs",?50,"Acct No.: ",$P($$SITE^VASITE(),U,3)_"/"_$E(SSN,6,9)
+ W !!,"Department of Veterans Affairs",?50,"Acct No.: ",SSN
  W !,$G(ADD(1))
  S Y=$$FPS^RCAMFN01($S($G(LDT)>0:$E(LDT,1,5),1:$E(DT,1,5))_$TR($J($$PST^RCAMFN01(DEB),2)," ",0),$S(+$E($G(LDT),6,7)>$$STD^RCCPCFN:2,1:1)) D DD^%DT
  W !,$G(ADD(2)),?50 I TBAL>0 W "Due: UPON RECEIPT"

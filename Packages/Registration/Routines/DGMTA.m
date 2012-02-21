@@ -1,5 +1,5 @@
-DGMTA ;ALB/RMO/CAW/LD/SCG/AEG/PHH - Add a New Means Test;2/24/10 2:58pm
- ;;5.3;Registration;**33,45,137,166,177,182,290,344,332,433,458,535,612,564,688,661,840**;Aug 13, 1993;Build 20
+DGMTA ;ALB/RMO/CAW/LD/SCG/AEG/PHH - Add a New Means Test ; 07/06/2004
+ ;;5.3;Registration;**33,45,137,166,177,182,290,344,332,433,458,535,612,564**;Aug 13, 1993
  ;
 EN ;Entry point to add a new means test
  N DGMDOD S DGMDOD=""
@@ -70,25 +70,17 @@ ADD ;Add means test
  ;           DGMTDT  Date
  ;           DGMTYPT Type of Test 1=MT 2=COPAY 4=LTC
  ; Output -- DGMTI   Annual Means/Copay/LTC Test IEN
- N DA,DD,DIC,DIK,DINUM,DLAYGO,DO,DS,X,D0,DGSITE,CONVRT,CURIEN,LINK,DGLNKMT
+ N DA,DD,DIC,DIK,DINUM,DLAYGO,DO,DS,X,D0,DGSITE
  ;
  ; obtain lock used to synchronize local MT/CT options with income test upload
  I $$LOCK^DGMTUTL(DFN) E  Q
  ;
- ; Check for Linked test and don't lose the link.
- S LINK="",DGLNKMT=$$LST^DGMTU(DFN,DGMTDT,DGMTYPT),CURIEN=+DGLNKMT
- I CURIEN D
- . ;Don't link test if it's in a different year (DG*5.3*661)
- . I $E($P(DGLNKMT,U,2),1,3)'=$E(DGMTDT,1,3) Q
- . S LINK=$P($G(^DGMT(408.31,CURIEN,2)),U,6)
+ ; Check for Linked test and don't loose the link.
+ S LINK="",CURIEN=+$$LST^DGMTU(DFN,DGMTDT,DGMTYPT)
+ I CURIEN S LINK=$P($G(^DGMT(408.31,CURIEN,2)),U,6)
  ;
  S DGSITE=$$GETSITE^DGMTU4(.DUZ)
  S X=DGMTDT,(DIC,DIK)="^DGMT(408.31,",DIC(0)="L",DLAYGO=408.31
- ;
- ;Look for existing IAI records and convert (if necessary)
- D ALL^DGMTU21(DFN,"VSD",DT,"IPR") ;ALL only returns IAI from last IY
- I $D(DGINC) DO
- . D ISCNVRT^DGMTUTL(.DGINC)
  ;
  ; The DIC("DR") string is built in this specific order so that
  ; all triggers and "M" x-refs fire correctly.  Should not be
@@ -103,15 +95,6 @@ ADD ;Add means test
  K DD,DO
  D FILE^DICN S DGMTI=+Y
  ;
- ; Check for another test in the current year and convert IAI records if needed
- ; Send new test date (as test that have) into VRCHKUP
- I $D(TYPE),((+TYPE=1)!(TYPE=4)) S CONVRT=$$VRCHKUP^DGMTU2(DGMTYPT,TYPE,DGMTDT)
- I $D(TYPE),((+TYPE'=1)&(TYPE'=4)) S CONVRT=$$VRCHKUP^DGMTU2(DGMTYPT,,DGMTDT)
- I '$D(TYPE) S CONVRT=$$VRCHKUP^DGMTU2(DGMTYPT,,DGMTDT)
- N DGERR,DGMTRT
- S DGMTRT(408.31,DGMTI_",",2.11)=1
- S DGERR=""
- D FILE^DIE("","DGMTRT",DGERR)
  ; release lock used to synchronize local MT/CT options with income test upload
  D UNLOCK^DGMTUTL(DFN)
  ;
@@ -149,4 +132,3 @@ WHY ;Why Copay Test cannot be added
  ;;Patient is an inpatient, automatically exempted.
  ;;Patient was a POW, automatically exempted.
  ;;Patient is Unemployable, automatically exempted.
- ;;Patient is Catastrophically Disabled, automatically exempted.

@@ -1,57 +1,41 @@
-ONCSAPIT ;Hines OIFO/SG - COLLABORATIVE STAGING (TABLES) ;06/23/10
- ;;2.11;ONCOLOGY;**40,41,47,51**;Mar 07, 1995;Build 65
+ONCSAPIT ;Hines OIFO/SG - COLLABORATIVE STAGING (TABLES)  ; 8/5/04 8:49am
+ ;;2.11;ONCOLOGY;**40,41**;Mar 07, 1995
  ;
  ;--- STRUCTURE OF THE RESPONSE
  ;
- ; <?xml version="1.0" encoding="utf-8"?>
- ; <soap:Envelope
- ;   xmlns:soap="http://www.w3.org/2001/12/soap-envelope"
- ;   soap:encodingStyle="http://www.w3.org/2001/12/soap-encoding">
- ;   <soap:Body>
- ;     <CS-RESPONSE xmlns="http://vista.med.va.gov/oncology">
- ;       <SCHEMA>...</SCHEMA>
- ;       <TABLE>
- ;         <NUMBER>...</NUMBER>
- ;         <PATTERN>...</PATTERN>
- ;         <ROLE>...</ROLE>
- ;         <SUBTITLE>...</SUBTITLE>
- ;         <TITLE>...</TITLE>
- ;         <ROWS>
- ;           <ROW>
- ;             <CODE>...</CODE>
- ;             <DESCR>
- ;               <P>...</P>
- ;               ...
- ;             </DESCR>
- ;             <AC>...</AC>
- ;             ...
- ;           </ROW>
- ;           ...
- ;         </ROWS>
- ;         <NOTES>
- ;           <TN>
- ;             <P>...</P>
- ;             ...
- ;           </TN>
- ;           ...
- ;           <FN>
- ;             <P>...</P>
- ;             ...
- ;           </FN>
- ;           ...
- ;         </NOTES>
- ;       </TABLE>
- ;       ...
- ;     </CS-RESPONSE>
- ;     <soap:Fault>
- ;       <faultcode> ... </faultcode>
- ;       <faultstring> ... </faultstring>
- ;       <detail>
- ;         <RC> ... </RC>
- ;       </detail>
- ;     </soap:Fault>
- ;   </soap:Body >
- ; </soap:Envelope>
+ ; <CS-RESPONSE xmlns="http://vista.med.va.gov/oncology">
+ ;  <SCHEMA>...</SCHEMA>
+ ;  <TABLE>
+ ;   <NUMBER>...</NUMBER>
+ ;   <NAME>...</NAME>
+ ;   <PATTERN>...</PATTERN>
+ ;   <ROWS>
+ ;    <ROW>
+ ;     <CODE>...</CODE>
+ ;     <DESCR>
+ ;      <P>...</P>
+ ;      ...
+ ;     </DESCR>
+ ;     <AC>...</AC>
+ ;     ...
+ ;    </ROW>
+ ;    ...
+ ;   </ROWS>
+ ;   <NOTES>
+ ;    <TN>
+ ;     <P>...</P>
+ ;     ...
+ ;    </TN>
+ ;    ...
+ ;    <FN>
+ ;     <P>...</P>
+ ;     ...
+ ;    </FN>
+ ;    ...
+ ;   </NOTES>
+ ;  </TABLE>
+ ;  ...
+ ; </CS-RESPONSE>
  ;
  Q
  ;
@@ -115,7 +99,7 @@ ENDEL(ELMT) ;
  . I (SCHEMA'>0)!(TABLE'>0)!(NAME="")  K @ONCXML@(ONCTBIEN)  Q
  . S $P(ONCTBDSC,U,2)=SCHEMA
  . ;---
- . S @ONCXML@(ONCTBIEN,0)=$E(ONCTBDSC,1,254)
+ . S @ONCXML@(ONCTBIEN,0)=ONCTBDSC
  . S @ONCXML@("ST",SCHEMA,TABLE)=ONCTBIEN
  ;---
  I L2E="ROW,CODE"  D  Q
@@ -166,12 +150,11 @@ GETCSTBL(ONCSAPI,SITE,HIST,TABLE) ;
  S ONCXML=$NA(^XTMP("ONCSAPI","TABLES"))
  S ONCXML("XSITE")=$S(SITE'="":SITE,1:" ")
  S ONCXML("XHIST")=$S(HIST'="":HIST,1:" ")
- S ONCXML("XDISC")=$S(DISCRIM'="":DISCRIM,1:" ")
  ;
  ;--- Check if the schema number is available
- S SCHEMA=+$G(@ONCXML@("SH",ONCXML("XSITE"),ONCXML("XHIST"),ONCXML("XDISC")))
+ S SCHEMA=+$G(@ONCXML@("SH",ONCXML("XSITE"),ONCXML("XHIST")))
  I SCHEMA'>0  D  Q:SCHEMA<0 SCHEMA
- . S SCHEMA=+$$SCHEMA^ONCSAPIS(.ONCSAPI,SITE,HIST,DISCRIM)
+ . S SCHEMA=+$$SCHEMA^ONCSAPIS(.ONCSAPI,SITE,HIST)
  ;
  ;--- Check if the table is available
  S ONCTBIEN=+$G(@ONCXML@("ST",SCHEMA,TABLE))
@@ -251,28 +234,6 @@ STARTEL(ELMT,ATTR) ;
  I L3E="NOTES,TN,P"   K ^UTILITY($J,"W")  Q
  Q
  ;
- ;***** RETURNS THE TABLE TITLE AND SUBTITLE
- ;
- ; [.ONCSAPI]    Reference to the API descriptor (see the ^ONCSAPI)
- ;
- ; SITE          Primary site
- ; HIST          Histology
- ; TABLE         Table number                    (see the ^ONCSAPI)
- ;
- ; Tables other than site specific factors (10-15) usually do not
- ; have subtitles.
- ;
- ; Return Values:
- ;       <0  Error code
- ;        0  0^Title^Subtitle
- ;
-TBLTTL(ONCSAPI,SITE,HIST,TABLE) ;
- N TBLIEN
- ;--- Make sure that table info is loaded
- S TBLIEN=$$GETCSTBL(.ONCSAPI,SITE,HIST,TABLE)  Q:TBLIEN<0 TBLIEN
- ;--- Return the table subtitle
- Q 0_U_$P($G(^XTMP("ONCSAPI","TABLES",TBLIEN,0)),U,5,6)
- ;
  ;***** TEXT CALLBACK FOR THE SAX PARSER
  ;
  ; TXT           Line of unmarked text
@@ -284,10 +245,9 @@ TEXT(TXT) ;
  ;---
  I L2E="CS-RESPONSE,SCHEMA"  S ONCXML("SCHEMA")=TXT  Q
  ;--- Table descriptor
- I L2E="TABLE,NUMBER"   S $P(ONCTBDSC,U,3)=$P(ONCTBDSC,U,3)_TXT  Q
- I L2E="TABLE,PATTERN"  S $P(ONCTBDSC,U,4)=$P(ONCTBDSC,U,4)_TXT  Q
- I L2E="TABLE,SUBTITLE" S $P(ONCTBDSC,U,6)=$P(ONCTBDSC,U,6)_TXT  Q
- I L2E="TABLE,TITLE"    S $P(ONCTBDSC,U,5)=$P(ONCTBDSC,U,5)_TXT  Q
+ I L2E="TABLE,NAME"     S $P(ONCTBDSC,U,5)=TXT  Q
+ I L2E="TABLE,NUMBER"   S $P(ONCTBDSC,U,3)=TXT  Q
+ I L2E="TABLE,PATTERN"  S $P(ONCTBDSC,U,4)=TXT  Q
  ;--- Codes
  I L2E="ROW,AC"  D  Q
  . S $P(@ONCXML@(ONCTBIEN,ONCTBROW,1),U,ONCXML("AC"))=TXT
@@ -318,6 +278,3 @@ WW(TXT,DIWR) ;
  . S X=$E(TXT,(I+ONCI1)\2,ONCI2-1-CR-LF)
  . D ^DIWP
  Q
- ;
-CLEANUP ;Cleanup
- K DISCRIM

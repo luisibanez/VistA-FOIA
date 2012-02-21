@@ -1,5 +1,5 @@
 GMPLX1 ; SLC/MKB/KER -- Problem List Person Utilities ; 04/15/2002
- ;;2.0;Problem List;**3,26,35**;Aug 25, 1994;Build 26
+ ;;2.0;Problem List;**3,26**;Aug 25, 1994
  ;
  ; External References
  ;   DBIA   348  ^DPT(
@@ -33,13 +33,9 @@ VADPT(DFN) ; Get Service/Elig Flags
  ;   GMPGULF   Persian Gulf Exposure
  ;   GMPMST    Military Sexual Trauma
  ;   GMPHNC    Head and/or Neck Cancer
- ;   GMPCV     Combat Veteran
- ;   GMPSHD    Shipboard Hazard and Defense
  ;          
  N VAEL,VASV,VAERR,HNC,X D 7^VADPT S GMPSC=VAEL(3),GMPAGTOR=VASV(2)
  S GMPION=VASV(3),X=$P($G(^DPT(DFN,.322)),U,10),GMPGULF=$S(X="Y":1,X="N":0,1:"")
- S GMPCV=0 I +$G(VASV(10)) S:DT'>$P($G(VASV(10,1)),U) GMPCV=1  ;CV
- S GMPSHD=+$G(VASV(14,1))  ;SHAD
  S X=$P($$GETSTAT^DGMSTAPI(DFN),"^",2),GMPMST=$S(X="Y":1,X="N":0,1:"")
  S X=$$GETCUR^DGNTAPI(DFN,"HNC"),X=+($G(HNC("STAT"))),GMPHNC=$S(X=4:1,X=5:1,X=1:0,X=6:0,1:"")
  Q
@@ -48,9 +44,9 @@ SCS(PROB,SC) ; Get Exposure/Conditions Strings
  ;   Input     PROB  Pointer to Problem #9000011
  ;               
  ;   Returns   SC Array passed by reference
- ;             SC(1)="AO/IR/EC/HNC/MST/CV/SHD"
- ;             SC(2)="A/I/E/H/M/C/S"
- ;             SC(3)="AIEHMCS"
+ ;             SC(1)="AO/IR/EC/HNC/MST"
+ ;             SC(2)="A/I/E/H/M"
+ ;             SC(3)="AIEHM"
  ;                     
  ;   NOTE:  Military Sexual Trauma (MST) is suppressed
  ;          if the current device is a printer.
@@ -58,7 +54,6 @@ SCS(PROB,SC) ; Get Exposure/Conditions Strings
  N ND,DA,FL,AO,IR,EC,HNC,MST,PTR S DA=+($G(PROB)) Q:+DA=0
  S ND=$G(^AUPNPROB(+DA,1)),AO=+($P(ND,"^",11)),IR=+($P(ND,"^",12))
  S EC=+($P(ND,"^",13)),HNC=+($P(ND,"^",15)),MST=+($P(ND,"^",16))
- S CV=+($P(ND,"^",17)),SHD=+($P(ND,"^",18))
  S PTR=$$PTR^GMPLUTL4
  I +AO>0 D
  . S:$G(SC(1))'["AO" SC(1)=$G(SC(1))_"/AO" S:$G(SC(2))'["A" SC(2)=$G(SC(2))_"/A" S:$G(SC(3))'["A" SC(3)=$G(SC(3))_"A"
@@ -68,12 +63,8 @@ SCS(PROB,SC) ; Get Exposure/Conditions Strings
  . S:$G(SC(1))'["EC" SC(1)=$G(SC(1))_"/EC" S:$G(SC(2))'["E" SC(2)=$G(SC(2))_"/E" S:$G(SC(3))'["E" SC(3)=$G(SC(3))_"E"
  I +HNC>0 D
  . S:$G(SC(1))'["HNC" SC(1)=$G(SC(1))_"/HNC" S:$G(SC(2))'["H" SC(2)=$G(SC(2))_"/H" S:$G(SC(3))'["H" SC(3)=$G(SC(3))_"H"
- I +MST>0 D
- . S:$G(SC(1))'["MST" SC(1)=$G(SC(1))_"/MST" S:$G(SC(2))'["M" SC(2)=$G(SC(2))_"/M" S:$G(SC(3))'["M" SC(3)=$G(SC(3))_"M"
- I +CV>0 D
- . S:$G(SC(1))'["CV" SC(1)=$G(SC(1))_"/CV" S:$G(SC(2))'["C" SC(2)=$G(SC(2))_"/C" S:$G(SC(3))'["C" SC(3)=$G(SC(3))_"C"
  I +PTR'>0 D
- . I +SHD>0 S:$G(SC(1))'["SHD" SC(1)=$G(SC(1))_"/SHD" S:$G(SC(2))'["D" SC(2)=$G(SC(2))_"/S" S:$G(SC(3))'["S" SC(3)=$G(SC(3))_"S"
+ . I +MST>0 S:$G(SC(1))'["MST" SC(1)=$G(SC(1))_"/MST" S:$G(SC(2))'["M" SC(2)=$G(SC(2))_"/M" S:$G(SC(3))'["M" SC(3)=$G(SC(3))_"M"
  S:$D(SC(1)) SC(1)=$$RS(SC(1)) S:$D(SC(2)) SC(2)=$$RS(SC(2))
  Q
 SCCOND(DFN,SC) ; Get Service/Elig Flags (array)
@@ -83,8 +74,6 @@ SCCOND(DFN,SC) ; Get Service/Elig Flags (array)
  S SC("AO")=$P(VASV(2),"^",1)
  S SC("IR")=$P(VASV(3),"^",1)
  S X=$P($G(^DPT(DFN,.322)),U,10),SC("PG")=$S(X="Y":1,X="N":0,1:"")
- S SC("CV")=0 I +$G(VASV(10)) S:DT'>$P($G(VASV(10,1)),U) SC("CV")=1  ;CV
- S SC("SHD")=+$G(VASV(14,1))  ;SHAD
  S X=$P($$GETSTAT^DGMSTAPI(DFN),"^",2),SC("MST")=$S(X="Y":1,X="N":0,1:"")
  S X=$$GETCUR^DGNTAPI(DFN,"HNC"),X=+($G(HNC("STAT"))),SC("HNC")=$S(X=4:1,X=5:1,X=1:0,X=6:0,1:"")
  Q

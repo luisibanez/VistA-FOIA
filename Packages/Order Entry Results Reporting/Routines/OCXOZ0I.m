@@ -1,5 +1,5 @@
-OCXOZ0I ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
+OCXOZ0I ;SLC/RJS,CLA - Order Check Scan ;OCT 20,2005 at 22:40
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221**;Dec 17,1997
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
  ; ***************************************************************
@@ -8,6 +8,62 @@ OCXOZ0I ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
  ; ** will be lost the next time the rule compiler executes.    **
  ; ***************************************************************
  ;
+ Q
+ ;
+EL132 ; Examine every rule that involves Element #132 [LESS THAN LAB THRESHOLD]
+ ;  Called from SCAN+9^OCXOZ01.
+ ;
+ Q:$G(OCXOERR)
+ ;
+ D R69R1A^OCXOZ10   ; Check Relation #1 in Rule #69 'LAB THRESHOLD'
+ Q
+ ;
+EL28 ; Examine every rule that involves Element #28 [RADIOLOGY ORDER]
+ ;  Called from SCAN+9^OCXOZ01.
+ ;
+ Q:$G(OCXOERR)
+ ;
+ D R70R1A^OCXOZ11   ; Check Relation #1 in Rule #70 'NO ALLERGY ASSESSMENT'
+ Q
+ ;
+EL135 ; Examine every rule that involves Element #135 [DIET ORDER]
+ ;  Called from SCAN+9^OCXOZ01.
+ ;
+ Q:$G(OCXOERR)
+ ;
+ D R70R1A^OCXOZ11   ; Check Relation #1 in Rule #70 'NO ALLERGY ASSESSMENT'
+ Q
+ ;
+EL136 ; Examine every rule that involves Element #136 [NO ALLERGY ASSESSMENT]
+ ;  Called from SCAN+9^OCXOZ01.
+ ;
+ Q:$G(OCXOERR)
+ ;
+ D R70R1A^OCXOZ11   ; Check Relation #1 in Rule #70 'NO ALLERGY ASSESSMENT'
+ Q
+ ;
+EL137 ; Examine every rule that involves Element #137 [PHARMACY ORDER]
+ ;  Called from SCAN+9^OCXOZ01.
+ ;
+ Q:$G(OCXOERR)
+ ;
+ D R70R1A^OCXOZ11   ; Check Relation #1 in Rule #70 'NO ALLERGY ASSESSMENT'
+ Q
+ ;
+EL138 ; Examine every rule that involves Element #138 [DUP OPIOID MEDS]
+ ;  Called from SCAN+9^OCXOZ01.
+ ;
+ Q:$G(OCXOERR)
+ ;
+ D R71R1A^OCXOZ12   ; Check Relation #1 in Rule #71 'OPIOID MEDICATIONS'
+ Q
+ ;
+EL139 ; Examine every rule that involves Element #139 [OPIOID MED ORDER]
+ ;  Called from SCAN+9^OCXOZ01.
+ ;
+ Q:$G(OCXOERR)
+ ;
+ D R71R1A^OCXOZ12   ; Check Relation #1 in Rule #71 'OPIOID MEDICATIONS'
  Q
  ;
 R3R1A ; Verify all Event/Elements of  Rule #3 'CRITICAL LAB RESULTS'  Relation #1 'CRITICAL LAB TEST'
@@ -57,7 +113,7 @@ R3R1B ; Send Order Check, Notication messages and/or Execute code for  Rule #3 '
  Q
  ;
 R3R2A ; Verify all Event/Elements of  Rule #3 'CRITICAL LAB RESULTS'  Relation #2 'CRITICAL LAB ORDER'
- ;  Called from EL105+5^OCXOZ0F.
+ ;  Called from EL105+5^OCXOZ0G.
  ;
  Q:$G(OCXOERR)
  ;
@@ -66,52 +122,7 @@ R3R2A ; Verify all Event/Elements of  Rule #3 'CRITICAL LAB RESULTS'  Relation #
  ;
  Q:$G(^OCXS(860.2,3,"INACT"))
  ;
- I $$MCE105 D R3R2B
- Q
- ;
-R3R2B ; Send Order Check, Notication messages and/or Execute code for  Rule #3 'CRITICAL LAB RESULTS'  Relation #2 'CRITICAL LAB ORDER'
- ;  Called from R3R2A+10.
- ;
- Q:$G(OCXOERR)
- ;
- ;      Local Extrinsic Functions
- ; GETDATA( ---------> GET DATA FROM THE ACTIVE DATA FILE
- ; NEWRULE( ---------> NEW RULE MESSAGE
- ;
- Q:$D(OCXRULE("R3R2B"))
- ;
- N OCXNMSG,OCXCMSG,OCXPORD,OCXFORD,OCXDATA,OCXNUM,OCXDUZ,OCXQUIT,OCXLOGS,OCXLOGD
- S OCXCMSG=""
- S OCXNMSG="Critical labs - ["_$$GETDATA(DFN,"105^",96)_"]"
- ;
- Q:$G(OCXOERR)
- ;
- ; Send Notification
- ;
- S (OCXDUZ,OCXDATA)="",OCXNUM=0
- I ($G(OCXOSRC)="GENERIC HL7 MESSAGE ARRAY") D
- .S OCXDATA=$G(^TMP("OCXSWAP",$J,"OCXODATA","ORC",2))_"|"_$G(^TMP("OCXSWAP",$J,"OCXODATA","ORC",3))
- .S OCXDATA=$TR(OCXDATA,"^","@"),OCXNUM=+OCXDATA
- I ($G(OCXOSRC)="CPRS ORDER PROTOCOL") D
- .I $P($G(OCXORD),U,3) S OCXDUZ(+$P(OCXORD,U,3))=""
- .S OCXNUM=+$P(OCXORD,U,2)
- S:($G(OCXOSRC)="CPRS ORDER PRESCAN") OCXNUM=+$P(OCXPSD,"|",5)
- S OCXRULE("R3R2B")=""
- I $$NEWRULE(DFN,OCXNUM,3,2,57,OCXNMSG) D  I 1
- .D:($G(OCXTRACE)<5) EN^ORB3(57,DFN,OCXNUM,.OCXDUZ,OCXNMSG,.OCXDATA)
- Q
- ;
-R5R1A ; Verify all Event/Elements of  Rule #5 'ORDER FLAGGED FOR CLARIFICATION'  Relation #1 'ORDER FLAGGED'
- ;  Called from EL44+5^OCXOZ0F.
- ;
- Q:$G(OCXOERR)
- ;
- ;      Local Extrinsic Functions
- ; MCE44( ----------->  Verify Event/Element: 'ORDER FLAGGED'
- ;
- Q:$G(^OCXS(860.2,5,"INACT"))
- ;
- I $$MCE44 D R5R1B^OCXOZ0J
+ I $$MCE105 D R3R2B^OCXOZ0J
  Q
  ;
 CKSUM(STR) ;  Compiler Function: GENERATE STRING CHECKSUM
@@ -165,15 +176,6 @@ MCE24() ; Verify Event/Element: HL7 LAB TEST RESULTS CRITICAL
  N OCXRES
  I $L(OCXDF(37)) S OCXRES(24,37)=OCXDF(37)
  Q:'(OCXDF(37)) 0 I $D(^TMP("OCXCHK",$J,OCXDF(37),24)) Q $G(^TMP("OCXCHK",$J,OCXDF(37),24))
- Q 0
- ;
-MCE44() ; Verify Event/Element: ORDER FLAGGED
- ;
- ;  OCXDF(37) -> PATIENT IEN data field
- ;
- N OCXRES
- S OCXDF(37)=$P($G(OCXORD),"^",1) I $L(OCXDF(37)) S OCXRES(44,37)=OCXDF(37)
- Q:'(OCXDF(37)) 0 I $D(^TMP("OCXCHK",$J,OCXDF(37),44)) Q $G(^TMP("OCXCHK",$J,OCXDF(37),44))
  Q 0
  ;
 NEWRULE(OCXDFN,OCXORD,OCXRUL,OCXREL,OCXNOTF,OCXMESS) ; Has this rule already been triggered for this order number

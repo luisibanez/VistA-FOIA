@@ -1,6 +1,6 @@
 IBAMTS2 ;ALB/CPM - PROCESS UPDATED OUTPATIENT ENCOUNTERS ; 25-AUG-93
- ;;2.0;INTEGRATED BILLING;**52,91,117,132,153,156,167,247,339**;21-MAR-94;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,91,117,132,153,156,167,247**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 UPD ; Perform encounter update actions.
  N IBCBK,IBFILTER,IBVAL
@@ -41,7 +41,7 @@ BEDIT(IBOEN,IBEVT) ; - perform batch edit
  ;
  ; - check classifications
  S IBCLSF=$$ENCL(IBOEN)
- I IBCLSF[1 Q  ; care was related to ao/ir/swa/sc/mst/hnc/cv/shad
+ I IBCLSF[1 Q  ; care was related to ao/ir/ec/sc/mst/hnc/cv
  S IBSL="409.68:"_IBOEN ; set softlink
  ;
  ; - ready to bill another encounter
@@ -73,12 +73,12 @@ CLUPD() ; Examine changes in the classification.
  ;  Output:    0  --  no changes
  ;             1  --  changes require charges to be cancelled
  ;             2  --  changes require appt to be billed
- ;             3  --  [ec/swa] cancel charge, create deferred charge
- ;             4  --  [ec/swa] pass deferred charge, disposition case
+ ;             3  --  [ec] cancel charge, create deferred charge
+ ;             4  --  [ec] pass deferred charge, disposition case
  N I,Y S Y=0
  I IBCLSF("BEFORE")=IBCLSF("AFTER") G CLUPDQ
- F I=1,2,3,4,5,6,7,8 I '$P(IBCLSF("BEFORE"),U,I),$P(IBCLSF("AFTER"),U,I) S Y=$S(I=4:3,1:1) G CLUPDQ
- F I=1,2,3,4,5,6,7,8 I $P(IBCLSF("BEFORE"),U,I),'$P(IBCLSF("AFTER"),U,I) S Y=$S(I=4:4,1:2) Q
+ F I=1,2,3,4,5,6,7 I '$P(IBCLSF("BEFORE"),U,I),$P(IBCLSF("AFTER"),U,I) S Y=$S(I=4:3,1:1) G CLUPDQ
+ F I=1,2,3,4,5,6,7 I $P(IBCLSF("BEFORE"),U,I),'$P(IBCLSF("AFTER"),U,I) S Y=$S(I=4:4,1:2) Q
 CLUPDQ Q Y
  ;
 CANC ; Determine cancellation reason and cancel charge
@@ -90,7 +90,7 @@ CANC ; Determine cancellation reason and cancel charge
  ;
 ENCL(IBOE) ; Return classification results for an encounter.
  ;  Input:    IBOE  --  Pointer to outpatient encounter in file #409.68
- ;  Output:   ao^ir^sc^swa^mst^hnc^cv^shad, where, for each piece,
+ ;  Output:   ao^ir^sc^ec^mst^hnc^cv, where, for each piece,
  ;                      1 - care was related to condition, and
  ;                      0 (or null) - care not related to condition
  N CL,CLD,X,Y S Y=""

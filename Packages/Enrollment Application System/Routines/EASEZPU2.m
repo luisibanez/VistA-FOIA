@@ -1,5 +1,5 @@
-EASEZPU2 ; ALB/AMA - Print utility for 10-10EZ, Version 6 or greater ; 8/1/08 1:27pm
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**51,60,57,70**;Mar 15, 2001;Build 26
+EASEZPU2 ; ALB/AMA - Print utility for 10-10EZ, Version 6 or greater; 12/28/2004
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**51,60,57**;Mar 15, 2001
  ;
  Q
  ;Parts of this routine were copied from EASEZPU (this is the second
@@ -103,13 +103,13 @@ PAGE2 ;Retrieve page 2 data and format for output on 10-10EZ form
  ; Process Section IIE - Previous Calendar Year Net Worth
  S EZDATA=$NA(^TMP("EZTEMP",$J,"IIE",1))
  ;
- S EAV=$$PROCESS(1.1),EAS=$$PROCESS(1.2)  ;Vet & spouse cash
+ S EAV=$$PROCESS("1."),EAS=$$PROCESS(1.2)  ;Vet & spouse cash
  S @ZDATA@("2E1")=$S(EAV="":"",1:$J(EAV,0,2))_U_$S(EAS="":"",1:$J(EAS,0,2))
  ;
- S EAV=$$PROCESS(2.1),EAS=$$PROCESS(2.2)  ;Vet & spouse land value
+ S EAV=$$PROCESS("2."),EAS=$$PROCESS(2.2)  ;Vet & spouse land value
  S @ZDATA@("2E2")=$S(EAV="":"",1:$J(EAV,0,2))_U_$S(EAS="":"",1:$J(EAS,0,2))
  ;
- S EAV=$$PROCESS(3.1),EAS=$$PROCESS(3.2)  ;Vet & spouse other property
+ S EAV=$$PROCESS("3."),EAS=$$PROCESS(3.2)  ;Vet & spouse other property
  S @ZDATA@("2E3")=$S(EAV="":"",1:$J(EAV,0,2))_U_$S(EAS="":"",1:$J(EAS,0,2))
  ;
  ;Since Child amounts in Section IIE are for ALL dependents,

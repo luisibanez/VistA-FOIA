@@ -1,5 +1,5 @@
-DGENELA ;ALB/CJM,KCL,Zoltan/PJR,RGL,LBD,EG,TMK,CKN,ERC - Patient Eligibility API ; 9/19/06 9:27am
- ;;5.3;Registration;**121,147,232,314,451,564,631,672,659,583,653,688**;Aug 13,1993;Build 29
+DGENELA ;ALB/CJM,KCL,Zoltan/PJR,RGL,LBD,EG - Patient Eligibility API ; 10/6/05 1:13pm
+ ;;5.3;Registration;**121,147,232,314,451,564,631,672**;Aug 13,1993
  ;
 GET(DFN,DGELG) ;
  ;Description: Used to obtain the patient eligibility data.
@@ -25,20 +25,17 @@ GET(DFN,DGELG) ;
  ;"DISRET"             Military Disability Retirement
  ;"DISLOD"             Discharge Due to Disability (added with DG 672)
  ;"MEDICAID"           Medicaid
- ;"MEDASKDT"           Date Medicaid Last Asked
  ;"AO"                 Exposed to Agent Orange
  ;"IR"                 Radiation Exposure Indicated
- ;"RADEXPM"            Radiation Exposure Method
- ;"EC"                 SW Asia Cond - change from Env Con, DG*5.3*688
+ ;"EC"                 Environmental Contaminants
  ;"MTSTA"              Means Test Status
  ;P&T                  P&T
- ;P&TDT                P&T EFFECTIVE DATE (added with DG 688)
  ;POS                  PERIOD OF SERVICE
  ;UNEMPLOY             UNEMPLOYABLE
  ;SCAWDATE             SC AWARD DATE
  ;RATEINC              RATED INCOMPETENT
  ;CLAIMNUM             CLAIM NUMBER
- ;CLAIMLOC             CLAIM FOLDER LOCATION
+ ;** removed ***     CLAIMLOC             *CLAIM FOLDER LOCATION
  ;VADISAB              RECEIVING VA DISABILITY?
  ;ELIGSTA              ELIGIBILITY STATUS
  ;ELIGSTADATE          ELIGIBILITY STATUS DATE
@@ -56,7 +53,6 @@ GET(DFN,DGELG) ;
  ;"PH"                PURPLE HEART INDICATED
  ;"AOEXPLOC"          AGENT ORANGE EXPOSURE LOCATION
  ;"CVELEDT"           COMBAT VETERAN END DATE
- ;"SHAD"              SHAD EXPOSURE
  ;
  K DGELG
  S DGELG=""
@@ -74,7 +70,6 @@ GET(DFN,DGELG) ;
  S DGELG("SC")=$P(NODE,"^")
  S DGELG("SCPER")=$P(NODE,"^",2)
  S DGELG("P&T")=$P(NODE,"^",4)
- S DGELG("P&TDT")=$P(NODE,"^",13)
  S DGELG("UNEMPLOY")=$P(NODE,"^",5)
  S DGELG("SCAWDATE")=$P(NODE,"^",12)
  S DGELG("VADISAB")=$P(NODE,"^",11)
@@ -82,7 +77,7 @@ GET(DFN,DGELG) ;
  ;
  S NODE=$G(^DPT(DFN,.31))
  S DGELG("CLAIMNUM")=$P(NODE,"^",3)
- S DGELG("CLAIMLOC")=$P(NODE,"^",4)
+ ;S DGELG("CLAIMLOC")=$P(NODE,"^",2) ;removed
  ;
  S NODE=$G(^DPT(DFN,.32))
  S DGELG("POS")=$P(NODE,"^",3)
@@ -94,7 +89,6 @@ GET(DFN,DGELG) ;
  ;
  S NODE=$G(^DPT(DFN,.38))
  S DGELG("MEDICAID")=$P(NODE,"^")
- S DGELG("MEDASKDT")=$P(NODE,"^",2) ;Date Medicaid Last Asked
  ;
  S NODE=$G(^DPT(DFN,.361))
  S DGELG("ELIGSTA")=$P(NODE,"^")
@@ -112,9 +106,7 @@ GET(DFN,DGELG) ;
  S NODE=$G(^DPT(DFN,.321))
  S DGELG("AO")=$P(NODE,"^",2)
  S DGELG("IR")=$P(NODE,"^",3)
- S DGELG("RADEXPM")=$P(NODE,"^",12)
  S DGELG("AOEXPLOC")=$P(NODE,"^",13)
- S DGELG("SHAD")=$P(NODE,"^",15)  ;added with DG*5.3*653
  ;
  S NODE=$G(^DPT(DFN,.322))
  S DGELG("EC")=$P(NODE,"^",13)

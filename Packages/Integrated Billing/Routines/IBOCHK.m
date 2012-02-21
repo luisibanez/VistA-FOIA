@@ -1,5 +1,5 @@
 IBOCHK ;ALB/AAS - INTEGRATED BILLING - RX COPAY LINK CHECK ; 2-APR-91
- ;;2.0;INTEGRATED BILLING;**347**; 21-MAR-94;Build 24
+ ;;Version 2.0 ; INTEGRATED BILLING ;; 21-MAR-94
  ;
  ;  -loop through range of IB reference numbers and verify
  ;   soft link exists and has link back to IB.
@@ -32,21 +32,18 @@ DQ ;  -entry point from queing
  G END
  ;
 CHK S IBCNT=IBCNT+1
- N DFN,IBNODE
  I '$D(^IB(IBN,0))!('$D(^IB(IBN,1))) S IBOERR=1,IBND=IBN G LINE ;xref to no entry
  S IBND=$S($D(^IB(IBN,0)):^(0),1:"")
  S IBSL=$P(^IB(IBN,0),"^",4) I 'IBSL S IBOERR=2 G LINE ;no softlink
  I +IBSL'=52 Q  ;not a pharmacy rx entry
  S IBRXN=$P($P(IBSL,";"),":",2),IBRXN1=$P($P(IBSL,";",2),":",2)
- S DFN=$P(^IB(IBN,0),"^",2)
- I $$FILE^IBRXUTL(IBRXN,.01)="" S IBOERR=3 G LINE ;rx deleted
- S IBNODE=$$IBND^IBRXUTL(DFN,IBRXN)
- I IBNODE'["^" S IBOERR=4 G LINE ;IB node missing
- I +IBNODE,'$P(IBNODE,"^",2) S IBOERR=5 G LINE ;pointer back to IB missing
+ I '$D(^PSRX(IBRXN,0)) S IBOERR=3 G LINE ;rx deleted
+ I '$D(^PSRX(IBRXN,"IB")) S IBOERR=4 G LINE ;IB node missing
+ I +^PSRX(IBRXN,"IB"),'$P(^("IB"),"^",2) S IBOERR=5 G LINE ;pointer back to IB missing
  Q:'IBRXN1
- I +$$SUBFILE^IBRXUTL(IBRXN,IBRXN1,52,.01)=0 S IBOERR=6 G LINE ;refill deleted
- I $$IBNDFL^IBRXUTL(DFN,IBRXN,IBRXN1)'["^" S IBOERR=7 G LINE ;ib node on refill missing
- I +$$IBNDFL^IBRXUTL(DFN,IBRXN,IBRXN1)=0 S IBOERR=8 G LINE ;no data on node
+ I '$D(^PSRX(IBRXN,1,IBRXN1,0)) S IBOERR=6 G LINE ;refill deleted
+ I '$D(^PSRX(IBRXN,1,IBRXN1,"IB")) S IBOERR=7 G LINE ;ib node on refill missing
+ I '^PSRX(IBRXN,1,IBRXN1,"IB") S IBOERR=8 G LINE ;no data on node
  Q  ;pharmacy links okay.
  ;
 HDR ;

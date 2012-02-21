@@ -1,6 +1,6 @@
 PRCVRE1 ;WOIFO/VC-Transmit HL7 message to IFCAP for requisition received from DynaMed ; 11/3/04 3:13pm ; 5/6/05 3:43pm
- ;;5.1;IFCAP;**81,119**;Oct 20, 2000;Build 8
- ;Per VHA Directive 2004-038, this routine should not be modified
+ ;;5.1;IFCAP;**81**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified
  ;
  ;An exemption from the 245 character length standard for a variable
  ;   has been requested from the SACC for reading HL7 segments into
@@ -131,8 +131,6 @@ SETACK ; Set up information for the ACK or NAK
  ;
  ;Validate that there is only one FCP and CC
  S PRCFCP="",PRCFCP1=""
- ; Prevent PRCCC1 undefined   PRC*5.1*119
- S PRCCC1=""
  F X8=1:1 S PRCFCP=$O(TMP($J,PRCFCP)) Q:PRCFCP=""  D
  .S PRCFCP1=X8
  .S PRCCC=""

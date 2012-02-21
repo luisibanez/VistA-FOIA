@@ -1,5 +1,5 @@
-PXRMLPAU ; SLC/AGP - Reminder Patient List ;09/06/2007
- ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
+PXRMLPAU ; SLC/AGP - Reminder Patient List ;07/29/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;Main entry point for PXRM PATIENT LIST
 START(IEN) ;
@@ -82,7 +82,7 @@ PEXIT ;PXRM MENU protocol exit code
  D XQORM
  Q
  ;
-ADD ;add a user
+ADD ;add a users
  N CREAT,CNT,DIC,DIE,FDA,MSG,USER,Y
  S CREAT=$P($G(^PXRMXP(810.5,IEN,0)),U,7)
  I $G(CREAT)'=DUZ D  G ADDE
@@ -104,7 +104,7 @@ ADD ;add a user
  D ^DIR K DIR
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!($D(DUOUT)) Q
- I $G(Y)="" W !,"A level of control must be entered." H 2 Q
+ I $G(Y)="" W !,"A status must be enter" H 2 Q
  S YESNO=$E(Y(0))
  S FDA(810.54,"+2,"_IEN_",",.01)=USER
  S FDA(810.54,"+2,"_IEN_",",1)=Y
@@ -145,11 +145,13 @@ XSEL ;PXRM SELECT COMPONENT validation
  ;
 HELP(CALL) ;General help text routine
  N HTEXT
+ ;
  I CALL=1 D
- .S HTEXT(1)="Select CO to copy the patient list.\\"
- .S HTEXT(2)="Select COE to copy the patient list to an OE/RR Team.\\"
- .S HTEXT(3)="Select DE to delete the patient list.\\"
- .S HTEXT(4)="Select DSP to display the patient list.\\"
+ .S HTEXT(1)="Select CO to copy patient list."
+ .S HTEXT(2)="Select COE to copy patient list to OE/RR Team."
+ .S HTEXT(3)="Select CR to delete patient list."
+ .S HTEXT(4)="Select DSP to display patient list."
+ ;
  D HELP^PXRMEUT(.HTEXT)
  Q
  ;
@@ -160,7 +162,7 @@ PDELETE ;Patient list delete
  ;
  N CREAT,IND,LISTIEN,NODE
  I DUZ'=$P($G(^PXRMXP(810.5,IEN,0)),U,7) D  G PDELEX
- .W !,"Only the creator of this list can delete it." H 2
+ .W !,"Only the creator of this list can delete an user." H 2
  D EN^VALM2(XQORNOD(0))
  ;If there is no list quit.
  I '$D(VALMY) D BLDLIST S VALMBCK="R" Q
@@ -169,7 +171,7 @@ PDELETE ;Patient list delete
  .;Get the patient list ien.
  .S LISTIEN=^TMP("PXRMLPAU",$J,"IDX",IND,IND)
  .S DA(1)=IEN,DA=LISTIEN,DIK="^PXRMXP(810.5,"_DA(1)_",40," D ^DIK
- .W !,"Patient list deleted"
+ .W !,"PATIENT DELETED"
  ;
 PDELEX ;
  D BLDLIST

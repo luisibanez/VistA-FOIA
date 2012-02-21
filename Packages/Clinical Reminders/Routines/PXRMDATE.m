@@ -1,5 +1,5 @@
-PXRMDATE ; SLC/PKR - Clinical Reminders date utilities. ;10/30/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12,17**;Feb 04, 2005;Build 102
+PXRMDATE ; SLC/PKR - Clinical Reminders date utilities. ;12/16/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;==================================================
 CEFD(FDA) ;Called by the Exchange Utility only if the input packed
@@ -20,7 +20,7 @@ COMPARE(X) ;Compare beginning and ending dates, give a warning if
  ;definitions and terms.
  ;Do not execute as part of exchange.
  I $G(PXRMEXCH) Q
- N BDT,EDT,TEXT
+ N BDT,EDT
  S BDT=$S(X(1)'="":$$CTFMD^PXRMDATE(X(1)),1:0)
  S EDT=X(2)
  I EDT="" S EDT="T"
@@ -44,31 +44,16 @@ COTN(EFP) ;Convert an Effective Period to the new date/time format.
  Q EFP
  ;
  ;==================================================
-CTD(MULT,NUM) ;Convert months or years to days.
- N DAYS,INTDAYS,FRAC
- S DAYS=MULT*NUM
- ;Round the number of days.
- S INTDAYS=+$P(DAYS,".",1)
- S FRAC=DAYS-INTDAYS
- S DAYS=$S(FRAC<0.5:INTDAYS,1:INTDAYS+1)
- Q DAYS
- ;
- ;==================================================
 CTFMD(DATE) ;Convert DATE which may be in any of the FileMan acceptable
  ;forms as well as T-NY to a FileMan date. Also understands LAD for
  ;Last Admission Date.
- N %DT,ND,X,Y
- ;Already a FileMan date?
- S ND=+DATE
- I (ND'<1000000),(ND'>9991231) Q DATE
+ N %DT,X,Y
  ;Check for a date FileMan understands.
  S X=DATE,%DT="ST"
  D ^%DT
  ;If it is not a FileMan date check for a symbolic date.
  I Y=-1 S Y=$$SYMDATE(DATE)
- ;If it is not a date that is understood by SYMDATE return -1
- I Y=-1 Q -1
- I $G(PXRMDATE)'="",$$ISVSYMD(DATE) D
+ I $G(PXRMDATE)'="",((DATE["T")!(DATE["N")) D
  . N DIFFS
  . S DIFFS=-$$FMDIFF^XLFDT(DT,PXRMDATE,2)
  . S Y=$$FMADD^XLFDT(Y,0,0,0,DIFFS)
@@ -80,15 +65,6 @@ CTFMD(DATE) ;Convert DATE which may be in any of the FileMan acceptable
  .. S Y=$$FMADD^XLFDT(Y,0,0,0,DIFFS)
  Q Y
  ;
- ;=================================================
-DCHECK(DATE) ;Trap for special characters before calling CTFMD^PXRMDATE.
- ;Used in DIR("PRE") for date inputs.
- I $D(DTOUT) Q DATE
- I DATE="" Q DATE
- I DATE["^" Q DATE
- I DATE["?" Q DATE
- Q $$CTFMD^PXRMDATE(DATE)
- ;
  ;==================================================
 DUE(DEFARR,RESDATE,FREQ,DUE,DUEDATE,FIEVAL) ;Compute the due date.
  ;This is the date of the resolution finding + the reminder frequency.
@@ -98,25 +74,29 @@ DUE(DEFARR,RESDATE,FREQ,DUE,DUEDATE,FIEVAL) ;Compute the due date.
  N DATE,DIAT,DIATOK,LDATE,PXRMITEM,TDDUE,TODAY
  S PXRMITEM=DEFARR("IEN")
  ;If the final frequency is 0Y then the reminder is not due.
- I FREQ="0Y" S DUE=0,DUEDATE="" Q
+ I FREQ="0Y" D  Q
+ . S DUE=0
+ . S DUEDATE=""
  ;
- S DUEDATE=""
- ;Check for custom date due.
- I DEFARR(45)'="" S DUEDATE=$$CDUEDATE^PXRMCDUE(.DEFARR,.FIEVAL)
- I DUEDATE'="",DUEDATE'=-1 G SETDUE
+ S LDATE=$S(RESDATE["X":0,1:+RESDATE)
+ S TODAY=$$NOW
+ S DUE=""
+ I LDATE=0 D  Q
+ . S DUE="DUE NOW"
+ . S DUEDATE="DUE NOW"
  ;
- ;No custom date due, do regular date calculation.
- I (FREQ="")!(FREQ=-1) D  Q
+ I FREQ="" D  Q
  . S ^TMP(PXRMPID,$J,PXRMITEM,"WARNING","NOFREQ")="No reminder frequency - cannot compute due date!"
  . S (DUE,DUEDATE)="CNBD"
  ;
- S LDATE=$S(RESDATE["X":0,1:+RESDATE)
- I LDATE=0 S (DUE,DUEDATE)="DUE NOW" Q
- S DATE=$$FULLDATE(LDATE),DUEDATE=$$NEWDATE(DATE,FREQ)
+ ;Check for custom due date.
+ I DEFARR(45)="" S DATE=$$FULLDATE(LDATE),DUEDATE=$$NEWDATE(DATE,FREQ)
+ I DEFARR(45)'="" D
+ . S DUEDATE=$$CDUEDATE^PXRMCDUE(.DEFARR,.FIEVAL)
+ . I DUEDATE=-1 S DATE=$$FULLDATE(LDATE),DUEDATE=$$NEWDATE(DATE,FREQ)
  ;
-SETDUE ;If the due date is less than or equal to today's date the reminder
+ ;If the due date is less than or equal to today's date the reminder
  ;is due.
- S TODAY=$$NOW^PXRMDATE
  I +DUEDATE'>TODAY S DUE="DUE NOW"  Q
  ;
  S DIAT="-"_$P(DEFARR(0),U,4)
@@ -130,18 +110,7 @@ SETDUE ;If the due date is less than or equal to today's date the reminder
  Q
  ;
  ;==================================================
-DURATION(START,STOP) ;Return the number days between the Start Date and
- ;Stop Date.
- I +START=0 Q 0
- N PXRMNOW
- S PXRMNOW=$$NOW^PXRMDATE
- I START>PXRMNOW Q 0
- I (STOP="")!(STOP>PXRMNOW) S STOP=PXRMNOW
- Q $$FMDIFF^XLFDT(STOP,START)
- ;
- ;==================================================
 EDATE(DATE) ;Check for an historical (event) date, format as appropriate.
- I DATE=0 Q "00/00/0000"
  Q $$FMTE^XLFDT(DATE,"5DZ")
  ;
  ;==================================================
@@ -172,27 +141,15 @@ FULLDATE(DATE) ;See if DATE is a full date, i.e., it has a month and
 FRQINDAY(FREQ) ;Given a frequency in the form ND, NM, or NY where N is a
  ;number and D stands for days, M for months, and Y for years return
  ;the value in days.
- I FREQ="" Q 0
- N LEN,NUM,UNIT
+ I FREQ="" Q ""
+ N CODE,LEN,MULT,NUM
  S LEN=$L(FREQ)
- S NUM=+$E(FREQ,1,LEN-1)
- S UNIT=$E(FREQ,LEN)
- ;30.42 is average number of days in a month, 365.24 is average number
- ;of days in a year. Unknown unit return 0.
- S NUM=$S(UNIT="D":NUM,UNIT="M":$$CTD(30.42,NUM),UNIT="Y":$$CTD(365.24,NUM),1:0)
- Q NUM
- ;
- ;==================================================
-ISVSYMD(DATE) ;Return true if DATE is a valid symbolic date.
- N P1,P1OK,P2,P2OK,OP,PAT
- S DATE=$P(DATE,"@",1)
- S OP=$S(DATE["+":"+",1:"-")
- S P1=$P(DATE,OP,1),P1OK=0
- F PAT="T","TODAY","N","NOW" I P1=PAT S P1OK=1 Q:P1OK
- I PAT=DATE Q 1
- S P2=$P(DATE,OP,2),P2OK=0
- F PAT="1N.N","1N.N1""D""","1N.N1""M""","1N.N1""Y""" I P2?@PAT S P2OK=1 Q:P2OK
- Q P1OK&P2OK
+ S NUM=$E(FREQ,1,LEN-1)
+ S CODE=$E(FREQ,LEN,LEN)
+ S MULT=1.0
+ I CODE="M" S MULT=30.42
+ I CODE="Y" S MULT=365.25
+ Q +(MULT*NUM)
  ;
  ;==================================================
 NEWDATE(FMDATE,OFFSET) ;Given a date in VA Fileman format (FMDATE) and an
@@ -204,10 +161,29 @@ NEWDATE(FMDATE,OFFSET) ;Given a date in VA Fileman format (FMDATE) and an
  S LEN=$L(OFFSET)
  S NUM=+$E(OFFSET,1,LEN-1)
  S UNIT=$E(OFFSET,LEN)
- ;30.42 is average number of days in a month, 365.24 is average number
- ;of days in a year. Unknown unit return 0.
- S NUM=$S(UNIT="D":NUM,UNIT="M":$$CTD(30.42,NUM),UNIT="Y":$$CTD(365.24,NUM),1:0)
- Q +$$FMADD^XLFDT(FMDATE,NUM)
+ I UNIT="D" G DAY
+ I UNIT="M" G MONTH
+ I UNIT="Y" G YEAR
+ ;Unknown unit just return the original date
+ Q FMDATE
+DAY ;
+ S NEWDATE=+$$FMADD^XLFDT(FMDATE,NUM)
+ Q NEWDATE
+MONTH ;
+ ;Convert the months to days and then add the days using the DAY code.
+ ;Multiply the number of months by the average number of days in a month.
+ N INT,FRAC
+ S NUM=30.42*NUM
+ ;Round the number of days, FMADD^XLFDT has problems with non-integer
+ ;days.
+ S INT=+$P(NUM,".",1)
+ S FRAC=NUM-INT
+ I FRAC<0.5 S NUM=INT
+ E  S NUM=INT+1
+ G DAY
+ Q
+YEAR ;
+ Q FMDATE+(10000*NUM)
  ;
  ;==================================================
 NOW() ;If the reminder global PXRMDATE is defined return it, otherwise
@@ -216,21 +192,18 @@ NOW() ;If the reminder global PXRMDATE is defined return it, otherwise
  ;
  ;==================================================
 SYMDATE(DATE) ;Convert a symbolic date into a FileMan date.
- N %DT,OPER,PFSTACK,SYM,TIME,X,Y
- S TIME=$P(DATE,"@",2),DATE=$P(DATE,"@",1)
+ N %DT,OPER,PFSTACK,SYM,X,Y
  S X=$S(DATE="LAD":$G(PXRMLAD),1:"")
  I X="" D
  . S OPER="+-"
  . D POSTFIX^PXRMSTAC(DATE,OPER,.PFSTACK)
- I PFSTACK(0)=3 D
+ I $G(PFSTACK(0))=3 D
  . S SYM=PFSTACK(1)
  . S SYM=$S(SYM="LAD":"T",SYM="N":"N",SYM="NOW":"N",SYM="T":"T",SYM="TODAY":"T",1:"")
  . I SYM="" S Y=-1 Q
  .;FileMan only handles D, W, or M so convert Y to months.
  . I PFSTACK(2)["Y" S PFSTACK(2)=+PFSTACK(2)*12_"M"
  . S X=SYM_PFSTACK(3)_PFSTACK(2)
- I PFSTACK(0)=1 S X=PFSTACK(1)
- I TIME'="" S X=X_"@"_TIME
  S %DT="ST"
  D ^%DT
  Q Y

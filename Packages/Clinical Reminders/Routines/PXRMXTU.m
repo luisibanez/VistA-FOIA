@@ -1,5 +1,5 @@
-PXRMXTU ; SLC/PJH - Reminder Reports Template Update ;07/30/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMXTU ; SLC/PJH - Reminder Reports Template Update ;07/16/2002
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ; 
  ; Called from PXRMYD,PXRMXD (also at UPD from PXRMXPR/PXRMYPR)
  ;
@@ -58,12 +58,10 @@ FILE(INP,UPD,CLR) ;
  D XREF^PXRMXTB
  ;
  ;Save single fields into FDA
- F IC="NAME","PXRMLCSC","PXRMPRIM","PXRMREP","PXRMSEL","PXRMTYP","PXRMPML","PXRMPER" D
+ F IC="NAME","PXRMLCSC","PXRMPRIM","PXRMREP","PXRMSEL","PXRMTYP" D
  .S FDA(810.1,MODE,XREF(IC))=$G(@IC)
- F IC="PXRMFD","PXRMSCAT","RUN","TITLE" D
+ F IC="PXRMFD","RUN","TITLE" D
  .S FDA(810.1,MODE,XREF(IC))=$G(@IC)
- ;Save Owner value
- S FDA(810.1,MODE,15)=$S(+$G(PXRMOWN)>0:PXRMOWN,1:DUZ)
  ;
  I PXRMSEL="L" S PXRMLCSC=X
  ;
@@ -82,6 +80,8 @@ FILE(INP,UPD,CLR) ;
  D SUB1(.PXRMOTM,"810.17",1)
  ;Save PCMM Team codes
  D SUB1(.PXRMPCM,"810.18",1)
+ ;Save Service Category codes
+ I $G(PXRMSCAT)'="" D SUB2("PXRMSCAT","810.19")
  ;Save Hospital Location codes
  D SUB1(.PXRMLCHL,"810.11",2)
  ;Save Clinic Stop codes

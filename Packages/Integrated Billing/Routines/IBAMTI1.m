@@ -1,12 +1,11 @@
 IBAMTI1 ;ALB/CPM - SPECIAL INPATIENT BILLING CASES (CON'T.) ; 11-AUG-93
- ;;2.0;INTEGRATED BILLING;**52,132,156,199,234,339**;21-MAR-94;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,132,156,199,234**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 DISP ; Manually disposition a case record.
- W !!,"This option is used to disposition case records for special inpatient"
- W !,"episodes of care which are not to be billed. (AO/IR/SWA/SC/MST/HNC/CV/SHAD)"
- W !,"After identifying the case, please enter the reason (up to 80 characters)"
- W !,"for non-billing."
+ W !!,"This option is used to disposition case records for special (AO/IR/EC/SC/MST/"
+ W !,"HNC/CV) inpatient episodes of care which are not to be billed.After identifying"
+ W !,"the case, please enter the reason (up to 80 characters) for non-billing."
  ;
  ; - main processing loop
  S IBQ=0 F  W ! D SEL Q:IBQ
@@ -72,7 +71,7 @@ DSPL(IBC) ; Display a case record.
  S IBCD=$G(^IBE(351.2,IBC,0)),IBC1=$G(^(1)),IBC2=$G(^(2))
  S DFN=+IBCD,IBPT=$$PT^IBEFUNC(DFN),IBCL=$P(IBCD,"^",3)
  W !,$$DASH(),!?1,"Pt. Name: ",$E($P(IBPT,"^"),1,17),"  (",$P(IBPT,"^",3),")"
- W ?38,"Care related to ",$$PATTYAB^IBACV(IBCL),": ",$S($P(IBCD,"^",7):"YES",$P(IBCD,"^",7)=0:"NO",1:"UNANSWERED")
+ W ?38,"Care related to ",$S(IBCL=1:"AO",IBCL=2:"IR",IBCL=3:"EC",IBCL=5:"MST",IBCL=6:"HNC",IBCL=7:"CV",1:"SC"),": ",$S($P(IBCD,"^",7):"YES",$P(IBCD,"^",7)=0:"NO",1:"UNANSWERED")
  W !?5,"Type: ",$$UCCL^IBAMTI(IBCL),?39,"Case Dispositioned: ",$S($P(IBCD,"^",8):"YES",1:"NO")
  W !?1,"Adm Date: ",$$DAT1^IBOUTL(+$G(^DGPM(+$P(IBCD,"^",2),0)),1),?41,"Date Last Edited: ",$$DAT1^IBOUTL(+$P(IBC2,"^",4),1)
  S IBDIS=+$G(^DGPM(+$P($G(^DGPM(+$P(IBCD,"^",2),0)),"^",17),0))

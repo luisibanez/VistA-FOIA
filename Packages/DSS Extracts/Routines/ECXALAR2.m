@@ -1,5 +1,5 @@
-ECXALAR2 ;ALB/TMD-LAR Extract Report of Untranslatable Results ; 8/9/06 9:45am
- ;;3.0;DSS EXTRACTS;**46,51,112**;Dec 22, 1997;Build 26
+ECXALAR2 ;ALB/TMD-LAR Extract Report of Untranslatable Results ; 9/17/02 5:43pm
+ ;;3.0;DSS EXTRACTS;**46,51**;Dec 22, 1997
  ;
 EN ; entry point
  N COUNT
@@ -15,13 +15,15 @@ PROCESS ;
  D ^LRCAPDAR
  ;quit if no completion date for API compile
  ;I '$P($G(^LAR(64.036,1,2,1,0)),U,4) S ECXERR=1 Q
- ;build local array of workload codes from DSS LOINC codes
- N ECLOINC,ECA K ECLOC,ECA S ECLOINC=0
- S ECA("ALL")="" D LOINC^ECXUTL6(.ECA) ;builds ^tmp
- F  S ECLOINC=$O(^TMP($J,"ECXUTL6",ECLOINC)) Q:(ECLOINC="")  D
- . S ECWCDA=0 F  S ECWCDA=$O(^TMP($J,"ECXUTL6",ECLOINC,ECWCDA)) Q:('ECWCDA)  D
- .. I ECWCDA S ECWC=$P(^LAM(ECWCDA,0),U,2),ECLOC(ECWCDA)=ECWC
- K ECLOINC,ECA
+ ;build local array of workload codes for local lab tests linked to
+ ;DSS tests
+ K ECLOC S ECDTST=0
+ F  S ECDTST=$O(^ECX(727.2,1,1,ECDTST)) Q:('ECDTST)!ECXERR  S ECLTST=0 D
+ .F  S ECLTST=$O(^ECX(727.2,1,1,ECDTST,"LOC",ECLTST)) Q:('ECLTST)!ECXERR  D
+ ..S ECLTIEN=+^ECX(727.2,1,1,ECDTST,"LOC",ECLTST,0)
+ ..S ECWCDA=+$G(^LAB(60,ECLTIEN,64))
+ ..I ECWCDA S ECWC=$P(^LAM(ECWCDA,0),U,2),ECLOC(ECWCDA)=ECWC
+ K ECLTIEN
  ;process temporary lab file #64.036
  S QFLG=0,ECLRN=1
  F  S ECLRN=$O(^LAR(64.036,ECLRN)) Q:('ECLRN)!(QFLG)!(ECXERR)  D
@@ -54,5 +56,5 @@ PROCESS ;
  ;
 FILE ; put records in temp file to print later
  S COUNT=COUNT+1
- S ^TMP($J,"ECXALAR2",COUNT)=ECXDFN_U_ECSCDT_U_ECSCTM_U_ECN_U_ECRS
+ S ^TMP($J,COUNT)=ECXDFN_U_ECSCDT_U_ECSCTM_U_ECN_U_ECRS
  Q

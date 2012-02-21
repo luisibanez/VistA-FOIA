@@ -1,5 +1,5 @@
 PSODISP ;BIR/SAB,PWC-MANUAL BARCODE RELEASE FUNCTION ;03/02/93
- ;;7.0;OUTPATIENT PHARMACY;**15,71,131,156,185,148,247,200**;DEC 1997;Build 7
+ ;;7.0;OUTPATIENT PHARMACY;**15,71,131,156,185,148**;DEC 1997
  ;Reference to $$SERV^IBARX1 supported by DBIA 2245
  ;Reference to ^PSD(58.8 supported by DBIA 1036
  ;Reference to ^PS(55 supported by DBIA 2228
@@ -7,7 +7,6 @@ PSODISP ;BIR/SAB,PWC-MANUAL BARCODE RELEASE FUNCTION ;03/02/93
  ;Reference to ^PSDRUG("AQ" supported by DBIA 3165
  ;Reference to ^XTMP("PSA" supported by DBIA 1036
  ;Reference to ^PS(59.7 supported by DBIA 694
- ;Reference to ^DIC(19.2 supported by DBIA 1064
 AC K CX,PSODA,PSODT,PSRH,DA,DR,DIE,X,X1,X2,Y,RXP,CX,PX,REC,DIR,YDT,REC,RDUZ,DIRUT,PSOCPN,PSOCPRX,YY,QDRUG,QTY,TYPE,XTYPE,DUOUT,PSOPID
  K ^UTILITY($J,"PSOHL") S PSOPID=1
  I '$D(PSOPAR) D ^PSOLSET I '$D(PSOPAR) W $C(7),!!,?5,"Site Parameters must be defined to use the Release option!",! G EXIT
@@ -46,8 +45,7 @@ BC1 ;
  .W !!?7,$C(7),$C(7),$S($G(SPEED):"Rx# "_$P(^PSRX(RXP,0),"^"),1:"Original prescription")_" was last released on "_Y,!?7,"Checking for unreleased refills/partials " D REF
 BATCH ;
  I $P(^PSRX(RXP,2),"^",15),'$P(^(2),"^",14) S RESK=$P(^(2),"^",15)  W !!?5,"Rx# "_$P(^PSRX(RXP,0),"^")_" Original Fill returned to stock on "_$E(RESK,4,5)_"/"_$E(RESK,6,7)_"/"_$E(RESK,2,3),! G REF
- ;flag to determine if site is running HL7 v.2.4 Dispense Machines
- N PSODISP S PSODISP=$$GET1^DIQ(59,PSOSITE_",",105,"I")
+ N PSODISP S PSODISP=$$GET1^DIQ(59,PSOSITE_",",105,"I")   ;flag to determine if site is running HL7 v.2.4 Dispense Machines
  S PSOCPN=$P(^PSRX(RXP,0),"^",2),QTY=$P($G(^PSRX(RXP,0)),"^",7),QDRUG=$P(^PSRX(RXP,0),"^",6)
  ;original
  I '$P($G(^PSRX(RXP,2)),"^",13),+$P($G(^(2)),"^",2)'<PSIN S RXFD=$P(^(2),"^",2) D  D:$G(LBLP) UPDATE I $G(ISUF) D UPDATE G REF
@@ -55,11 +53,10 @@ BATCH ;
  .I $D(^PSDRUG("AQ",QDRUG)) K CMOP D OREL^PSOCMOPB(RXP) K CMOP I $G(ISUF) K ISUF,CMOP Q
  .;
  .F LBL=0:0 S LBL=$O(^PSRX(RXP,"L",LBL)) Q:'LBL  I '+$P(^PSRX(RXP,"L",LBL,0),"^",2),'$P(^(0),"^",5),$P(^(0),"^",3)'["INTERACTION" S LBLP=1
- .D CHKADDR^PSODISPS(RXP)
  .Q:'$G(LBLP)
  .;
  .; - Checking for OPEN/UNRESOLVED 3rd. Party Payer Rejects / NDC Editing
- .I $$MANREL^PSOBPSUT(RXP,0,$G(PSOPID))="^" K LBLP Q
+ .I $$MANREL^PSOBPSUT(RXP,0,$G(PSOPID))="^" Q
  .;
  .S:$D(^PSDRUG(QDRUG,660.1)) ^PSDRUG(QDRUG,660.1)=^PSDRUG(QDRUG,660.1)-QTY
  .D NOW^%DTC S DIE="^PSRX(",DA=RXP,DR="31///"_%_";23////"_PSRH_";32.1///@;32.2///@",PSODT=% D ^DIE K DIE,DR,DA,LBL

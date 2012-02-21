@@ -1,5 +1,5 @@
-PXCAVST1 ;ISL/dee & LEA/Chylton - Translates data from the PCE Device Interface into PCE's PXK format for the Visit and Providers ;6/6/05
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**73,74,111,121,130,168**;Aug 12, 1996;Build 14
+PXCAVST1 ;ISL/dee & LEA/Chylton - Translates data from the PCE Device Interface into PCE's PXK format for the Visit and Providers ;8/1/96
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**73,74,111,121,130**;Aug 12, 1996
  Q
  ;
 VST(PXCAENC) ;Visit
@@ -25,7 +25,7 @@ NODE150 I $P($G(^SC(+PXCAHLOC,0)),"^",7)=PXCACSTP D
  . S ^TMP(PXCAGLB,$J,"VST",1,150,"AFTER")="^^P"
  ;
 NODE800 ;
- S ^TMP(PXCAGLB,$J,"VST",1,800,"AFTER")=$P(PXCAENC,"^",6,10)_"^"_$P(PXCAENC,"^",17,19)
+ S ^TMP(PXCAGLB,$J,"VST",1,800,"AFTER")=$P(PXCAENC,"^",6,10)_"^"_$P(PXCAENC,"^",17,18)
  ;
  I PXCAVSIT'>0 D
  . S ^TMP(PXCAGLB,$J,"VST",1,"IEN")=""

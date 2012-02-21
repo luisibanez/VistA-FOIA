@@ -1,9 +1,9 @@
 PXCEVFI1 ;ISL/dee,esw - Routine to edit a visit or v-file entry ;8/3/04 10:32am
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**23,73,112,136,143,124,184,185**;Aug 12, 1996;Build 12
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**23,73,112,136,143,124**;Aug 12, 1996
  Q
  ;
 EDIT ; -- edit the V-File stored in "AFTER"
- N DIR,DA,X,Y,C,PXCEINP,PXCEIN01,PXCEEND,PXD
+ N DIR,DA,X,Y,C,PXCEINP,PXCEIN01,PXCEEND
  N PXCELINE,PXCETEXT,PXCEDIRB,PXCEMOD
  N PXCEKEY,PXCEIKEY,PXCENKEY,PXMDCNT
  W !
@@ -34,7 +34,7 @@ EDIT01 ;
  . E  D DEL^PXCEVFI2(PXCECAT)
  I $D(DIRUT),$P(PXCEAFTR(0),"^",1)="" S PXCELOOP=1
  I $D(DIRUT) S PXCEQUIT=1 Q
- S (PXCEINP,PXD)=Y
+ S PXCEINP=Y
  S PXCEIN01=X
  I $P(Y,"^",2)'=PXCEDIRB,$$DUP(PXCEINP) G EDIT01
  ;--File new CPT code and retrieve IEN
@@ -48,14 +48,6 @@ EDIT01 ;
  I PXCECAT="PRV",$P(PXCEAFTR(0),"^",1)>0,PXCEDIRB]"" S $P(PXCEAFTR(0),"^",6)=""
  S $P(PXCEAFTR(0),"^",1)=$P(PXCEINP,"^")
  K DIR,DA
- ;following code added per PX*185
- I $D(XQORNOD(0)) I $P(XQORNOD(0),U,4)="HF" D
- .N HFIEN,NODE
- .S HFIEN=$P(PXCEINP,U),NODE=$G(^AUTTHF(HFIEN,0))
- .Q:'$D(NODE)
- .I $P(NODE,U,8)'="Y" W !!,"WARNING:  This Health Factor is currently not set to",!?10,"display on a Health Summary report.",!!
- .K HFIEN,NODE
- .Q
  ;
  ;
 REST S PXCEEND=0

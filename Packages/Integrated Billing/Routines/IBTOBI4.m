@@ -1,5 +1,5 @@
 IBTOBI4 ;ALB/AAS - CLAIMS TRACKING BILLING INFORMATION PRINT ;27-OCT-93
- ;;2.0;INTEGRATED BILLING;**91,125,51,210,266,389**;21-MAR-94;Build 6
+ ;;2.0;INTEGRATED BILLING;**91,125,51,210,266**;21-MAR-94
  ;
 CLIN ; -- output clinical information
  N IBOE,DGPM
@@ -93,7 +93,7 @@ DRG1 W !!,"  Associated Interim DRG Information "
  ;
 4 ; -- Visit region for prosthetics
  N IBDA,IBRMPR S IBDA=$P(IBTRND,"^",9) D PRODATA^IBTUTL1(IBDA)
- S IBD(2,1)="          Item: "_$P($$PIN^IBCSC5B(+IBDA),U,2)
+ S IBD(2,1)="          Item: "_$G(IBRMPR(660,+IBDA,4,"E"))
  S IBD(3,1)="   Description: "_$G(IBRMPR(660,+IBDA,24,"E"))
  S IBD(4,1)="      Quantity: "_$J($G(IBRMPR(660,+IBDA,5,"E")),4)
  S IBD(5,1)="    Total Cost: $"_$G(IBRMPR(660,+IBDA,14,"E"))

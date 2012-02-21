@@ -1,5 +1,5 @@
 RMPRPIYF ;PHX/RFM,RVD-EDIT ISSUE FROM STOCK ;8/2/02  07:27
- ;;3.0;PROSTHETICS;**61,117,139,154**;Feb 09, 1996;Build 6
+ ;;3.0;PROSTHETICS;**61,117**;Feb 09, 1996
  ; RVD #61 - phase III of PIP enhancement.
  ;
  ;Per VHA Directive 10-93-142, this routine should not be modified.
@@ -65,13 +65,30 @@ API ;call API for 660, 661.7, 661.6, 661.63, 661.9
  I $G(RMPRERR) W !!,"*** ERROR in 2319 UPDATE, Please notify your IRM..IEN = ",$G(RMPR60("IEN")),!! H 3
  ;
 PCE ;update PCE data
+ I $D(^RMPR(660,RMPR60("IEN"),10)),$P(^RMPR(660,RMPR60("IEN"),10),U,12) D
+ .S RMCHK=0
+ .S RMCHK=$$SENDPCE^RMPRPCEA(RMPR60("IEN"))
+ .I RMCHK'=1 W !!,"*** ERROR in PCE UPDATE, Please notify your IRM..IEN = ",RMPR60("IEN"),!! H 3
  ;
  ;end posting (edit 2319)
  G EXIT
  ;
 DEL1 ;ENTRY POINT TO DELETE AN ISSUE FROM STOCK
- ;** MOVED TO RMPRPIFD DUE TO SIZE CONSTRAINTS
- G DEL1^RMPRPIFD
+ K DIR
+ S DIR("A")="Are you sure you want to DELETE this entry",DIR("B")="N",DIR(0)="Y"
+ D ^DIR I $D(DTOUT)!$D(DUOUT)!$D(DIRUT) G EXIT
+ I Y'=1 G CO^RMPRPIYE
+ ;
+DEL2 ;call API for returning item to PIP
+ S (RMCHK,RMERPCE)=0
+ S RMI68=$P($G(^RMPR(660,RMPRIEN,10)),U,1) I RMI68>0 D  I RMERPCE W !!,"** STOCK ISSUE DELETE ABORTED",!! G EXIT
+ .S RMCHK=$$DEL^RMPRPCED(RMPRIEN)
+ .I RMCHK'=0 W !!,"*** ERROR in PCE DELETE, Please notify your IRM..660 IEN = ",RMPRIEN,!! S RMERPCE=1 H 3
+ S RMPR60("IEN")=RMPRIEN
+ S RMCHK=$$DEL^RMPRPIU3(.RMPR60)
+ I $G(RMCHK) W !,"*** Error in API RMPRPIU3, ERROR = ",RMCHK,!,"*** Please inform your IRM !!",! G EXIT
+ ;
+ W $C(7),!?10,"Deleted..." H 1
 EXIT ;KILL VARIABLES AND EXIT ROUTINE
  I $G(RMPRIEN),$D(^RMPR(660,RMPRIEN)) L -^RMPR(660,RMPRIEN)
  K ^TMP($J) N RMPRSITE,RMPR D KILL^XUSCLEAN

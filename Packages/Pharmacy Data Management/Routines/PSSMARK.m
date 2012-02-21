@@ -1,5 +1,5 @@
 PSSMARK ;BIR/WRT-Review single NDF matches for CMOP ; 10/27/98 13:44
- ;;1.0;PHARMACY DATA MANAGEMENT;**15,17,20,28,57,82,124**;9/30/97;Build 2
+ ;;1.0;PHARMACY DATA MANAGEMENT;**15,17,20,28,57,82**;9/30/97
  ;
  ;Reference to ^PS(59 supported by DBIA #1976
  ;Reference to ^PS(50.605 supported by DBIA #2138
@@ -34,10 +34,7 @@ DUP I PSXVAP'=PSXLOC,$D(^PSDRUG("B",PSXVAP)) W !,"You cannot write over the GENE
 XREF K:PSXLOC'=PSXVAP ^PSDRUG("B",PSXLOC,PSXUM) S:PSXLOC'=PSXVAP ^PSDRUG("B",PSXVAP,PSXUM)="" I $D(^PSNTRAN(PSXUM,"END")) S $P(^PSNTRAN(PSXUM,"END"),"^",3)=PSXVAP,$P(^PSNTRAN("END"),"^",3)=PSXVAP
  Q
 BLD ;
- I $D(^PSDRUG(PSXUM,"I")) D  ;; <*124 RJS
- .N X,X1,X2
- .S X1=$G(^PSDRUG(PSXUM,"I")),X2=DT D ^%DTC
- .S:X<1 PSSEXP(1)="It has been inactivated."  ;; *124 RJS >
+ I $D(^PSDRUG(PSXUM,"I")) S PSSEXP(1)="It has been inactivated."
  I $D(^PSDRUG(PSXUM,2)),$P(^PSDRUG(PSXUM,2),"^",3)'["O" S PSSEXP(2)="It is not marked for outpatient pharmacy use."
 BLD5 I $P(^PSDRUG(PSXUM,0),"^",3)[1!($P(^(0),"^",3)[2) S PSSEXP(3)="It is a schedule I or schedule II controlled substance."
  I '$D(^PSDRUG(PSXUM,"ND")) S PSSEXP(4)="It is not matched to NDF."

@@ -1,5 +1,5 @@
 ORCDPSH ;SLC/CLA-Pharmacy dialog utilities-Non-VA Meds ; 09 April 2003 11:00 AM
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**190,215,243**;Dec 17, 1997;Build 242
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**190,215**;Dec 17, 1997
  ;
  ; DBIA 2418   START^PSSJORDF   ^TMP("PSJMR",$J)
  ; DBIA 3166   EN^PSSDIN        ^TMP("PSSDIN",$J)
@@ -87,7 +87,7 @@ CKSCH ; -- validate schedule [Called from P-S Action]
  N ORX S ORX=ORDIALOG(PROMPT,ORI) Q:ORX=$G(ORESET)  K ORSD ;reset
  D EN^PSSGS0(.ORX,"X")
  I $D(ORX) S ORDIALOG(PROMPT,ORI)=ORX D CHANGED("QUANTITY") Q  ;ok
- W $C(7),!,"Enter a standard schedule for administering this medication or one of your own,",!,"up to 20 characters.",!
+ W $C(7),!,"Enter either a standard administration schedule or one of your own,",!,"up to 70 characters and no more than 2 spaces.",!
  K DONE
  Q
  ;

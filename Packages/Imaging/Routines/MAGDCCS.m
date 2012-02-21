@@ -1,6 +1,5 @@
-MAGDCCS ;WOIFO/MLH - DICOM Correct - Clinical Specialties ; 05/18/2007 11:23
- ;;3.0;IMAGING;**10,11,85,54**;03-July-2009;;Build 1424
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDCCS ;WOIFO/MLH - DICOM Correct - Clinical Specialties ; 01/30/2004  17:14
+ ;;3.0;IMAGING;**10,11**;14-April-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDCCS ;WOIFO/MLH - DICOM Correct - Clinical Specialties ; 05/18/2007 11:23
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -16,7 +16,6 @@ MAGDCCS ;WOIFO/MLH - DICOM Correct - Clinical Specialties ; 05/18/2007 11:23
  ;; +---------------------------------------------------------------+
  ;;
  Q
- ;
 L ;Loop thru the entire file for entries that need processing
  ;The "F" xref is set for unique Study UIDs. The entry setting this xref
  ;will also have a "RLATE" node with all the Xray images associated with
@@ -47,7 +46,6 @@ L ;Loop thru the entire file for entries that need processing
  . . D SET
  . Q
  Q
- ;
 DISPLAY ;
  S OUT=0
  W !,"**************Processing entry**********"
@@ -58,13 +56,11 @@ DISPLAY ;
  W !,?2,"Correcting file on server ID: ",MACHID,!,?5,FILE
  S MSG="Do you want to Correct this entry? "
  Q
- ;
 NEWCASE ;
  S NEWDFN=$P(MAGDY,"^"),NEWNME=$P(MAGDY,"^",2),NEWSSN=$P(MAGDY,"^",3)
  S NEWCAS=$P(MAGDY,"^",4),NEWPROC=$P(MAGDY,"^",5),NEWDTI=$P(MAGDY,"^",6)
  S NEWMUL=$P(MAGDY,"^",7),NEWPIEN=$P(MAGDY,"^",8),PP=$P(MAGDY,"^",9)
  Q
- ;
 ASK() ;
  N ANS,ASK
 ASK1 S ASK="Y/N/D/Q"
@@ -77,7 +73,6 @@ ASK1 S ASK="Y/N/D/Q"
  . W !,"Legend: Y=yes, N=no, D=delete, P=Previous entry, and Q=quit",!
  S ANS=$TR(ANS,"yndpq","YNDPQ")
  Q $E(ANS)
- ;
 CHK ;remove any punctuation before doing comparison on SSN
  ;stop on 1st check.
  N OLD,I
@@ -90,7 +85,6 @@ CHK ;remove any punctuation before doing comparison on SSN
  ;xref or invalid number provided
  S MSG="Accession number different. Update? "
  Q
- ;
 NEWDIS ;
  W !,?2,"****Please review the following: *****"
  W !,?2,"Previous name: ",PAT,!,?2,"     New name: ",NEWNME
@@ -98,7 +92,6 @@ NEWDIS ;
  W !,?2,"Previous request/consultation #: ",CASENO,!,?2,"     New request/consultation #: ",NEWCAS
  ; Variable PP already has text message about being part of printset.
  Q
- ;
 UPDT ;
  N GWLOC ; -- gateway location
  W !,"Will change the following: " D NEWDIS
@@ -110,13 +103,12 @@ UPDT ;
  S ^MAGD(2006.575,MAGIEN,"FIXPR")=NEWPIEN_"^"_NEWPROC W "."
  ;Same as ^radpt(newdfn,"DT",newdti,"P",newmul,0) & ^RAMIS(71,newpien,0)
  S GWLOC=$P($G(^MAGD(2006.575,MAGIEN,1)),"^",5)
- S MACHID=$S(MACHID="":"A",1:MACHID) ; server ID
+ S MACHID=$S(MACHID="":"A",1:MACHID)   ;servier ID
  I GWLOC S ^MAGD(2006.575,"AFX",GWLOC,MACHID,MAGIEN)="" W "."
  E  W !,"Gateway place not defined on image entry "_MAGIEN_", continuing.."
  ;Xref to loop & process entries; processing will be minimal.
  S MAGFIX(MAGIEN)="F"
  Q
- ;
 SETDEL ;Entry to be deleted
  N GWLOC ; -- gateway location
  D LOGERR I ANS="^" S OUT=1 Q
@@ -127,12 +119,11 @@ SETDEL ;Entry to be deleted
  S ^MAGD(2006.575,MAGIEN,"FIXD")=1
  S MAGFIX(MAGIEN)="D"
  Q
- ;
 LOGERR ;Need to record error
- N DIR,DIRUT,DTOUT,ENTRY,I,MAGERR,MAGOUT,NOW,WHY,WHO,X,Y
+ N DIR,DIRUT,DTOUT,ENTRY,I,MAGERR,MAGOUT,X,Y,WHY,WHO
  W !! F I=1:1:80 W "*"
  W !,"*** Will log in error log (file 2006.599). ****"
- S NOW=$$NOW^XLFDT()
+ D NOW^%DTC
  S DIR(0)="F^3:30"
  S DIR("A")="Reason for deletion"
  S DIR("A",1)="Please enter a reason for deleting."
@@ -153,11 +144,10 @@ LOGERR ;Need to record error
  S ENTRY=$P(^MAGD(2006.599,0),"^",3)+1
  S $P(^MAGD(2006.599,0),"^",3)=ENTRY
  S $P(^MAGD(2006.599,0),"^",4)=$P(^MAGD(2006.599,0),"^",4)+1
- S ^MAGD(2006.599,ENTRY,0)=NOW_"^"_WHY_"^"_FILE_"^"_MODEL
+ S ^MAGD(2006.599,ENTRY,0)=%_"^"_WHY_"^"_FILE_"^"_MODEL
  S ^MAGD(2006.599,ENTRY,1)=WHO_"^"_PAT_"^"_PID_"^"_CASENO_"^"_MACHID
- S ^MAGD(2006.599,"B",NOW,ENTRY)=""
+ S ^MAGD(2006.599,"B",%,ENTRY)=""
  Q
- ;
 SET ;
  S MAGTYPE=$P(^MAGD(2006.575,MAGIEN,"TYPE"),"^")
  Q:$P($G(^MAGD(2006.575,MAGIEN,"FIXD")),"^")    ;Already fixed.
@@ -180,7 +170,6 @@ SET ;
  I ANS="D" D SETDEL,SETPREV Q
  Q:OUT
  K MAGDY W !," Lookup by case number or patient name"
- ;
 LOOK ;
  ;D ^MAGDLB2 Q:'$D(MAGDY)  Q:MAGDY'[""
  D EN^MAGDCCS2 Q:'$D(MAGDY)  Q:MAGDY'[""
@@ -195,7 +184,6 @@ LOOK ;
  I ANS="P" D CHKPREV Q
  D SETMAG
  Q
- ;
 DATELOOP(START,STOP) ;Loop thru the "AD" cross reference
  N MAGIEN,SUID,THEDT,FIRST,OOUT,MAGFIX
  S THEDT=START-.1,(OOUT,FIRST)=0
@@ -209,16 +197,13 @@ DATELOOP(START,STOP) ;Loop thru the "AD" cross reference
  . . Q
  . Q
  Q
- ;
 SETPREV ;
  S PREV=MAGIEN,PREVS=$G(SUID)
  Q
- ;
 SETMAG ;
  S FIRST=MAGIEN,FIRSTS=$G(SUID),MAGIEN=PREV,SUID=$G(PREVS)
  S PREV=FIRST,PREVS=FIRSTS
  Q
- ;
 CHKPREV ;
  S OUT=1 N STATUS
  I '$D(MAGFIX(PREV)) D SETMAG G SET
@@ -226,4 +211,3 @@ CHKPREV ;
  W !,"Previous entry has been "_STATUS_".",$C(7)
  G SET
  Q
- ;

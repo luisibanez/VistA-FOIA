@@ -1,15 +1,14 @@
-ONCSAPID ;Hines OIFO/SG - COLLABORATIVE STAGING (DEMO) ; 12/7/06 9:33am
- ;;2.11;ONCOLOGY;**40,47**;Mar 07, 1995;Build 19
+ONCSAPID ;Hines OIFO/SG - COLLABORATIVE STAGING (DEMO) ; 6/28/04 12:25pm
+ ;;2.11;ONCOLOGY;**40**;Mar 07, 1995
  ;
  Q
  ;
  ;***** DEMO ENTRY POINT
- ;
- ; [.ONCSAPI]    Reference to the API descriptor (see ^ONCSAPI)
- ;
-DEMO(ONCSAPI) ;
- N DISPLAY,EXIT,I,INPUT,RC,STATUS,STORE
- W !!?10,"DEMO CLIENT FOR THE COLLABORATIVE STAGING API",!
+DEMO ;
+ ;D DEBUG^ZZSGDBG()
+ N DISPLAY,EXIT,I,INPUT,ONCSAPI,RC,STATUS,STORE
+ ;S ONCSAPI("DEBUG")=1
+ W !?10,"DEMO CLIENT FOR THE COLLABORATIVE STAGE WEB SERVICE",!
  D CLEAR^ONCSAPIE(1)
  ;--- Check the DLL version
  S RC=$$CHKVER^ONCSAPIV(.ONCSAPI)
@@ -25,7 +24,7 @@ DEMO(ONCSAPI) ;
  . ;--- Call the CS API
  . S RC=$$CALC^ONCSAPI3(.ONCSAPI,.INPUT,.STORE,.DISPLAY,.STATUS)
  . ;--- Display the output values
- . W !!,"Output values of the Collaborative Staging API",!
+ . W !!,"Output values of the Collaborative Stage API",!
  . I $D(STORE)>1  S I=""  D  W !
  . . F  S I=$O(STORE(I))  Q:I=""  D
  . . . W !?2,$NA(STORE(I))_"="""_$G(STORE(I))_""""
@@ -72,11 +71,11 @@ INPUT(ONCINP) ;
  ;;SSF6     ^000 ^3^CS Site-Specific Factor 6^15
  ;
  N DIR,DIRUT,DTOUT,DUOUT,FLDLST,ICOL,IFLD,IIF,IROW,ML,NAME,NFL,NR,ONCBUF,RC,TABLE,TMP,VAL,X,Y
- W !,"Input values for Collaborative Staging API"
+ W !,"Input values for Collaborative Stage API"
  S RC=0
  ;--- Determine number of fields and load default values
  F NFL=1:1  S TMP=$P($T(INPUT+NFL),";;",2)  Q:TMP=""  D
- . S FLDESCR(NFL)=TMP,NAME=$TR($P(TMP,U)," ")
+ . S NAME=$TR($P(TMP,U)," ")
  . S:'$D(ONCINP(NAME)) ONCINP(NAME)=$TR($P(TMP,U,2)," ")
  S NFL=NFL-1
  ;
@@ -115,10 +114,7 @@ INPUT(ONCINP) ;
  . . S X=$S(ML>1:ML_" characters",1:"1 character")
  . . S DIR("?")="Enter the field value ("_X_")"
  . . S:TABLE>0 DIR("??")="^D HELP^ONCSAPI1("_TABLE_",,$G(ONCINP(""SITE"")),$G(ONCINP(""HIST"")))"
- . . W !
- . . S TMP=$$TBLTTL^ONCSAPIT(,$G(ONCINP("SITE")),$G(ONCINP("HIST")),TABLE)
- . . I TMP'<0  D:$P(TMP,U,3)'="" WW^ONCSAPIU($P(TMP,U,3),75)
- . . D ^DIR
+ . . W !  D ^DIR
  . . I $D(DTOUT)  S RC=-2  Q
  . . I $D(DUOUT)  S RC=-1  Q
  . . S ONCINP(NAME)=Y

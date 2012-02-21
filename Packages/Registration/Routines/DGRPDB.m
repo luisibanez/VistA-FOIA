@@ -1,5 +1,5 @@
 DGRPDB ;ALB/AAS,JAN,ERC,PHH - VIEW ONLY SCREEN TO DETERMINE BILLING ELIGIBILITY ; 3/23/06 8:16am
- ;;5.3;Registration;**26,50,358,570,631,709,713,749**;Aug 13, 1993;Build 10
+ ;;5.3;Registration;**26,50,358,570,631,709**;Aug 13, 1993
  ;
 % S:'$D(DGQUIT) DGQUIT=0
  G:DGQUIT END S DIC="^DPT(",DIC(0)="AEQMN" D ^DIC G:+Y<1 END S DFN=+Y D EN
@@ -61,15 +61,9 @@ IN ; Old code
  Q
  ;
 AOIR ;Agent Orange/ionizing radiation
- N DGEC,NTA
  S DGX=$S($D(^DPT(DFN,.321)):^(.321),1:"")
  F I=2,3 S X=$P(DGX,"^",I) W:I=2 !,"           A/O Exp.: " W:I=3 "ION Rad.: " W $S(X="Y":"YES",X="N":"NO",X="U":"UNKNOWN",1:"NOT ANSWERED"),"   "
  S X=$G(^DPT(DFN,.38)),X1=$P(X,"^",1) W "Medicaid Elig: ",$S(X1="":"NOT ANSWERED",'X1:"NO",1:"YES") I ($X+15)'>IOM W " - " S Y=$P(X,"^",2) D D^DIQ W $P(Y,"@")
- S DGEC=$S($D(^DPT(DFN,.322)):^DPT(DFN,.322),1:"")
- S X=$P(DGEC,U,13) W !,"        Env Contam.: " W $S(X="Y":"YES",X="N":"NO",X="U":"UNKNOWN",1:"NOT ANSWERED"),"   "
- S NTA=$S($$GETCUR^DGNTAPI(DFN,"DGNTARR")>0:DGNTARR("INTRP"),1:"")
- K DGNTARR
- W "N/T Radium: " W $S(NTA'="":NTA,1:"NOT ANSWERED")
  Q
  ;
 PAUSE F J=1:1 Q:($Y>(IOSL-3))  W !
@@ -91,44 +85,41 @@ END D KVAR^VADPT
  K A,C,I,I1,I2,I3,J,DIC,DIR,DFN,DGA1,DGMT,DGMTL,DGMTLA,DGX,DGX1,DGT,DGTYPE,DGQUIT,DGMTLL,X,X1,VAROOT,VA,Y,Z
  Q
  ;
-RDIS(DGDFN,DGARR) ;API to return all Rated Disabilities from the 
- ;Patient file for a patient using an array.  Returned in descending Service Connected percent.
+RDIS(DGDFN,DGARR) ;API will reutrn all Rated Disabilities from the 
  ;
- ; Integration Agreement #4807
- ; 
- ;Input          DGDFN - IEN of patient file (required)
- ;Input/Output   DGARR - name of array for returned disability info (required)
+ ;Integration Agreement - #????
+ ;
+ ;Patient file for a patient and put them into the array sent in.
+ ;Input  DGDFN - IEN of patient file (required)
+ ;       DGARR - name of array for returned disability info (required)
  ;               piece 1 - Disability IEN (in file 31)
- ;               piece 2 - Disability %
+ ;               piece 2 - SC%
  ;               piece 3 - SC? (1,0)
- ;               piece 4 - extremity affected
- ;               piece 5 - original effective date
- ;               piece 6 - current effective date
- ;Output 1=successful and array returned with data
- ;       0=unsuccessful and no array
- ;         
- N DGARR1,DGC,DGCC,DGERR,DGNODE,DGCT,DGE,DGEE
- K DGW,DGARR
- I $G(DGDFN)']"" Q 0
- I '$D(^DPT(DGDFN,0)) Q 0
+ ;               piece 4 - extremity
+ ;               piece 5 - original award date
+ ;               piece 6 - current award date
+ ;Output  DGOK - success or failure, 1=success, 0=failure
+ N DGARR1,DGC,DGCC,DGERR,DGNODE
+ K DGARR,DGOK
+ I $G(DGDFN)']"" S DGOK=0 Q DGOK
+ I '$D(^DPT(DGDFN,0)) S DGOK=0 Q DGOK
  D GETS^DIQ(2,DGDFN,".3721*","I","DGARR1","DGERR")
- I $D(DGERR) Q 0
- S DGCC=0
- S DGCC=$O(^DPT(DGDFN,.372,DGCC))
- I 'DGCC Q 0
+ I $D(DGERR) S DGOK=0 Q DGOK
+ S DGOK=1
  S DGC=""
+ S DGCC=$P($G(^DPT(DGDFN,.372,0)),U,3)
+ I $G(DGCC)'>0 S DGOK=0 Q DGOK
  F  S DGC=$O(DGARR1(2.04,DGC)) Q:DGC']""  D
  . S DGNODE=DGC
  . S DGARR(DGC)=DGARR1(2.04,DGNODE,.01,"I")_"^"_DGARR1(2.04,DGNODE,2,"I")_"^"_DGARR1(2.04,DGNODE,3,"I")_"^"_DGARR1(2.04,DGNODE,4,"I")_"^"_DGARR1(2.04,DGNODE,5,"I")_"^"_DGARR1(2.04,DGNODE,6,"I")
+ K DGW
+ N DGCT,DGE,DGEE
  S DGE=""
- F  S DGE=$O(DGARR(DGE)) Q:'DGE  D
- . I $P(DGARR(DGE),U,2)="" S $P(DGARR(DGE),U,2)=0
- . S DGW($P(DGARR(DGE),U,2),$P(DGE,",",1))=DGARR(DGE)
+ F  S DGE=$O(DGARR(DGE)) Q:'DGE  S DGW($P(DGARR(DGE),U,2),$P(DGE,",",1))=DGARR(DGE)
  S DGE="",DGCT=1
  K DGARR
  F  S DGE=$O(DGW(DGE),-1) Q:DGE']""  D
  . F DGEE=0:0 S DGEE=$O(DGW(DGE,DGEE)) Q:DGEE'>0  D
  . . S DGARR(DGCT)=DGW(DGE,DGEE) S DGCT=DGCT+1
  K DGW
- Q 1
- ;
+ Q DGOK

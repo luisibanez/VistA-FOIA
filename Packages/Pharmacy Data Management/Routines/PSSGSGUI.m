@@ -1,10 +1,7 @@
 PSSGSGUI ;BIR/CML3-SCHEDULE PROCESSOR FOR GUI ONLY ;05/29/98
- ;;1.0;PHARMACY DATA MANAGEMENT;**12,27,38,44,56,59,94**;9/30/97;Build 26
+ ;;1.0;PHARMACY DATA MANAGEMENT;**12,27,38,44,56,59**;9/30/97
  ;
- ; Reference to ^PS(53.1 supported by DBIA #2140
- ; Reference to ^PSIVUTL supported by DBIA #4580
- ; Reference to ^PS(59.6 supported by DBIA #2110
- ; Reference to ^DIC(42 is supported by DBIA# 10039
+ ;Reference to ^PS(53.1 supported by DBIA #2140
  ;
 ENA ; entry point for train option
  ;N X S X="PSGSETU" X ^%ZOSF("TEST") I  D ENCV^PSGSETU Q:$D(XQUIT)
@@ -22,7 +19,7 @@ EN(X,PSSGUIPK) ; validate
  ;I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>2)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N")!($E(X,1)=" ") K X Q
  I $G(PSSGUIPK)="O" D  Q
  .Q:$G(X)=""
- .I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>3)!(X["^")!($L(X)>20)!($L(X)<1) K X Q
+ .I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>3)!($L(X)>20)!($L(X)<1) K X Q
  .N PSSUPGUI S X=$$UPPER(X)
  ;I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>3)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N")!($E(X,1)=" ") K X Q
  I $TR(X," ")="PRN" S X="PRN"
@@ -32,17 +29,6 @@ EN(X,PSSGUIPK) ; validate
  ;
 ENOS ; order set entry
  ; NSS
- ; * GUI 27 CHANGES * Check for admin times to be derived from 'base' schedule
- N TMPAT I X["@" S TMPAT=$P(X,"@",2) I TMPAT]"" D
- .I '$D(^PS(51.1,"AC","PSJ",TMPAT)) K TMPAT Q
- .N II I '$$DOW^PSIVUTL($P(X,"@")) K TMPAT Q
- .N WARD I $G(DFN) S WARD=$G(^DPT(DFN,.1)) I WARD]"" D
- ..N DIC,X,Y S DIC="^DIC(42,",DIC(0)="BOXZ",X=WARD D ^DIC S WARD=+Y Q:WARD=0
- ..S WARD=$O(^PS(59.6,"B",WARD,0))
- .N TMPIEN S TMPIEN=$O(^PS(51.1,"AC","PSJ",TMPAT,0)),TMPAT=$P($G(^PS(51.1,+TMPIEN,0)),"^",2) D
- ..I $G(WARD) I $P($G(^PS(51.1,+TMPIEN,1,WARD,0)),"^",2) S TMPAT=$P($G(^(0)),"^",2)
- I $G(TMPAT) S (PSGS0Y,$P(X,"@",2))=TMPAT,PSGS0XT="D"
- ; * GUI 27 CHANGES END *
  S (PSGS0XT,PSGS0Y,XT,Y)="" ;I X["PRN"!(X="ON CALL")!(X="ONCALL")!(X="ON-CALL")!($D(^PS(51.1,"APPSJ",X))) G Q
  I $L(X)>63!(X?.E1C.E) S OK=0 G Q
  I X["PRN",$$PRNOK^PSSGS0(X) G Q

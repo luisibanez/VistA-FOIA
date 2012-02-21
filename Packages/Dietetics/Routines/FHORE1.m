@@ -1,5 +1,5 @@
 FHORE1 ; HISC/REL - Early/Late Trays ;8/8/96  13:57 ;
- ;;5.5;DIETETICS;**8**;Jan 28, 2005;Build 28
+ ;;5.5;DIETETICS;;Jan 28, 2005;
  S ALL=0 D ^FHDPA G:'DFN KIL G:'FHDFN KIL D F1 G:'$D(DFN) KIL G:'$D(FHDFN) KIL I 'FHWF S FHORN="" D ^FHORE1A G KIL
  ; Set HL7
  S FHORN="" D ^FHORE1A I FHDAY D EL^FHWOR3 D KIL I $D(MSG) D MSG^XQOR("FH EVSEND OR",.MSG) K MSG
@@ -7,8 +7,7 @@ FHORE1 ; HISC/REL - Early/Late Trays ;8/8/96  13:57 ;
 F1 ; Process order
  D NOW^%DTC S NOW=%,DT=NOW\1 K %
  S X1=DT,X2=31 D C^%DTC S X31=X
-F2 W ! D ALG^FHCLN W !,"Allergies: ",$S(ALG="":"None on file",1:ALG)
- S %DT="AEX",%DT("A")="Select Start Date: " D ^%DT K %DT G AB:U[X!$D(DTOUT),F2:Y<1 S SDT=+Y\1 I SDT<DT G F15
+F2 W ! S %DT="AEX",%DT("A")="Select Start Date: " D ^%DT K %DT G AB:U[X!$D(DTOUT),F2:Y<1 S SDT=+Y\1 I SDT<DT G F15
  I SDT>X31 W *7,!,"  [ Cannot schedule more than 31 days in the future ]" G F2
 F3 S DTP=SDT D DTP^FH
  S %DT="AEX",%DT("A")="Select End Date: "_DTP_"// " D ^%DT K %DT G AB:X["^"!$D(DTOUT) S:X="" Y=SDT G F3:Y<1 S EDT=+Y\1

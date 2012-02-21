@@ -1,6 +1,5 @@
 PRSASU ; HISC/REL-Supervisor Un-Certified List ;8/23/94  09:43
- ;;4.0;PAID;**114**;Sep 21, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;;Sep 21, 1995
 TK ; TimeKeeper Entry
  S PRSTLV=2 G S1
 SUP ; Supervisor Entry
@@ -24,8 +23,7 @@ CHK ; Check for needed approvals
  S STAT=$P($G(^PRST(458,PPI,"E",DFN,0)),"^",2) I STAT'="","PX"[STAT Q
  I $Y>(IOSL-5) D HDR Q:QT
  S X0=$G(^PRSPC(DFN,0)),SSN=$P(X0,"^",9),CNT=CNT+1
- I PRSTLV=2!(PRSTLV=3) W !,$E(SSN),"XX-XX-",$E(SSN,6,9),"  ",$P(X0,"^",1)
- I PRSTLV=7 W !,$E(SSN,1,3),"-",$E(SSN,4,5),"-",$E(SSN,6,9),"  ",$P(X0,"^",1)
+ W !,$E(SSN,1,3),"-",$E(SSN,4,5),"-",$E(SSN,6,9),"  ",$P(X0,"^",1)
  I SSN S EDUZ=+$O(^VA(200,"SSN",SSN,0)) I $D(^PRST(455.5,"AS",EDUZ,TLI)) S Z0=$P($G(^PRST(455.5,TLI,"S",EDUZ,0)),"^",2) I Z0'="",Z0'=TLE W "  Is Certified by T&L ",Z0
  Q
 HDR ; Display Header

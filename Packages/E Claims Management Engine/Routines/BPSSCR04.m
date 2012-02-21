@@ -1,6 +1,6 @@
 BPSSCR04 ;BHAM ISC/SS - USER SCREEN ;14-FEB-05
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5**;JUN 2004;Build 45
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;USER SCREEN
  Q
  ;input:
@@ -218,7 +218,7 @@ MKNAMINS(BPTMP) ;
  . S BPDFN=+$$GETPATID^BPSSCRU2(BP59)
  . Q:BPDFN=0
  . S BPINS=+$$GETINSUR^BPSSCRU2(BP59)
- . S @BPTMP@("SORT","PNI",$E($$PATNAME^BPSSCRU2(BPDFN),1,20)_BPDFN,BPINS,BP59)=""
+ . S @BPTMP@("SORT","PNI",$E($$PATNAME^BPSSCRU2(BPDFN),1,20),BPINS,BP59)=""
  Q
  ;Transaction type sorting - the 2nd pass
  ;is called after MKPATINS

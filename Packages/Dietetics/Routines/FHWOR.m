@@ -1,5 +1,5 @@
 FHWOR ; HISC/NCA - Main Routine to Decode HL7 ;10/10/00  14:55
- ;;5.5;DIETETICS;**2,5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;**2**;Jan 28, 2005
 EN(MSG) ; Entry Point for OE/RR 3 and pass MSG in FHMSG
  N ACT,ADM,BID,COM,FHDFN,DFN,EDT,FHPV,FHMSG,FHWF,NOW,SDT,CHK,DA,DATA,DATE,DIET,DUR,FHC,FHD,FHD1,FHD2,FOR,FTYP,IEN,ITVL,LP,MEAL,NAM,PER,PID,SERV,TIM,TIME,TM,TXT,TYPC,WARD,X,XX,YR
  S TXT="",FHWF=2 ; FHWF=2 - Orders from OE/RR
@@ -10,7 +10,7 @@ EN(MSG) ; Entry Point for OE/RR 3 and pass MSG in FHMSG
  ; Check PID
  S X=$G(FHMSG(2)) I $E(X,1,3)'="PID" S TXT="PID not second record" D GETOR G ERR
  S NAM=$P(X,"|",6),DFN=$P(X,"|",4)
- I '$D(^DPT("B",$E(NAM,1,30),DFN)) S TXT="Name/DFN not found" D GETOR G ERR
+ I '$D(^DPT("B",$E(NAM,1,30),DFN)) S TXT="Name/DFN not found" W !!,TXT,!! D GETOR G ERR
  S FHZ115="P"_DFN D ADD^FHOMDPA I FHDFN=""  S TXT="Patient not found in File #115" D GETOR G ERR
  D PID^VADPT6 S PID=$G(VA("PID")),BID=$G(VA("BID")) K VA
  S X=$G(FHMSG(3)) I $E(X,1,5)="ORC|Z" G PURGE

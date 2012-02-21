@@ -1,5 +1,5 @@
-OCXOZ0F ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
+OCXOZ0F ;SLC/RJS,CLA - Order Check Scan ;OCT 20,2005 at 22:40
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221**;Dec 17,1997
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
  ; ***************************************************************
@@ -10,12 +10,35 @@ OCXOZ0F ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
  ;
  Q
  ;
-CHK469 ; Look through the current environment for valid Event/Elements for this patient.
- ;  Called from CHK463+19^OCXOZ0E.
+CHK470 ; Look through the current environment for valid Event/Elements for this patient.
+ ;  Called from CHK1+34^OCXOZ02.
  ;
  Q:$G(OCXOERR)
  ;
- ;    Local CHK469 Variables
+ ;    Local CHK470 Variables
+ ; OCXDF(12) ---> Data Field: LAB RESULT (FREE TEXT)
+ ; OCXDF(34) ---> Data Field: ORDER NUMBER (NUMERIC)
+ ; OCXDF(37) ---> Data Field: PATIENT IEN (NUMERIC)
+ ; OCXDF(96) ---> Data Field: ORDERABLE ITEM NAME (FREE TEXT)
+ ; OCXDF(113) --> Data Field: LAB TEST ID (NUMERIC)
+ ; OCXDF(150) --> Data Field: LAB RESULT < THRESHOLD (BOOLEAN)
+ ; OCXDF(151) --> Data Field: LAB RESULT > THRESHOLD (BOOLEAN)
+ ; OCXDF(152) --> Data Field: LAB SPECIMEN ID (NUMERIC)
+ ;
+ ;      Local Extrinsic Functions
+ ; LABTHRSB( --------> LAB THRESHOLD EXCEEDED BOOLEAN
+ ; ORDITEM( ---------> GET ORDERABLE ITEM FROM ORDER NUMBER
+ ;
+ S OCXDF(151)=$P($$LABTHRSB(OCXDF(113),OCXDF(152),OCXDF(12),">"),"^",1) I $L(OCXDF(151)),(OCXDF(151)),$L(OCXDF(34)) S OCXDF(96)=$$ORDITEM(OCXDF(34)) I $L(OCXDF(37)) D CHK476
+ S OCXDF(150)=$P($$LABTHRSB(OCXDF(113),OCXDF(152),OCXDF(12),"<"),"^",1) I $L(OCXDF(150)),(OCXDF(150)),$L(OCXDF(34)) S OCXDF(96)=$$ORDITEM(OCXDF(34)) I $L(OCXDF(37)) D CHK483
+ Q
+ ;
+CHK476 ; Look through the current environment for valid Event/Elements for this patient.
+ ;  Called from CHK470+19.
+ ;
+ Q:$G(OCXOERR)
+ ;
+ ;    Local CHK476 Variables
  ; OCXDF(37) ---> Data Field: PATIENT IEN (NUMERIC)
  ; OCXDF(147) --> Data Field: PATIENT LOCATION (FREE TEXT)
  ;
@@ -26,12 +49,12 @@ CHK469 ; Look through the current environment for valid Event/Elements for this 
  S OCXDF(147)=$P($$PATLOC(OCXDF(37)),"^",2),OCXOERR=$$FILE(DFN,131,"12,37,96,113,147,152") Q:OCXOERR 
  Q
  ;
-CHK476 ; Look through the current environment for valid Event/Elements for this patient.
- ;  Called from CHK463+20^OCXOZ0E.
+CHK483 ; Look through the current environment for valid Event/Elements for this patient.
+ ;  Called from CHK470+20.
  ;
  Q:$G(OCXOERR)
  ;
- ;    Local CHK476 Variables
+ ;    Local CHK483 Variables
  ; OCXDF(37) ---> Data Field: PATIENT IEN (NUMERIC)
  ; OCXDF(147) --> Data Field: PATIENT LOCATION (FREE TEXT)
  ;
@@ -42,12 +65,12 @@ CHK476 ; Look through the current environment for valid Event/Elements for this 
  S OCXDF(147)=$P($$PATLOC(OCXDF(37)),"^",2),OCXOERR=$$FILE(DFN,132,"12,37,96,113,147,152") Q:OCXOERR 
  Q
  ;
-CHK482 ; Look through the current environment for valid Event/Elements for this patient.
- ;  Called from CHK446+17^OCXOZ0E.
+CHK489 ; Look through the current environment for valid Event/Elements for this patient.
+ ;  Called from CHK453+17^OCXOZ0E.
  ;
  Q:$G(OCXOERR)
  ;
- ;    Local CHK482 Variables
+ ;    Local CHK489 Variables
  ; OCXDF(37) ---> Data Field: PATIENT IEN (NUMERIC)
  ; OCXDF(58) ---> Data Field: ABNORMAL RENAL BIOCHEM RESULTS (FREE TEXT)
  ;
@@ -58,12 +81,12 @@ CHK482 ; Look through the current environment for valid Event/Elements for this 
  S OCXDF(58)=$P($$ABREN(OCXDF(37)),"^",2),OCXOERR=$$FILE(DFN,133,"58,154") Q:OCXOERR 
  Q
  ;
-CHK498 ; Look through the current environment for valid Event/Elements for this patient.
- ;  Called from CHK360+15^OCXOZ0C.
+CHK504 ; Look through the current environment for valid Event/Elements for this patient.
+ ;  Called from CHK361+15^OCXOZ0C.
  ;
  Q:$G(OCXOERR)
  ;
- ;    Local CHK498 Variables
+ ;    Local CHK504 Variables
  ; OCXDF(37) ---> Data Field: PATIENT IEN (NUMERIC)
  ; OCXDF(74) ---> Data Field: VA DRUG CLASS (FREE TEXT)
  ; OCXDF(158) --> Data Field: DUPLICATE OPIOID MEDICATIONS TEXT (FREE TEXT)
@@ -72,11 +95,11 @@ CHK498 ; Look through the current environment for valid Event/Elements for this 
  ; LIST( ------------> IN LIST OPERATOR
  ; OPIOID( ----------> OPIOID MEDICATIONS
  ;
- I $$LIST(OCXDF(74),"OPIOID ANALGESICS,OPIOID ANTAGONIST ANALGESICS") S OCXDF(37)=$G(DFN) I $L(OCXDF(37)) S OCXDF(158)=$P($$OPIOID(OCXDF(37)),"^",2) D CHK502
+ I $$LIST(OCXDF(74),"OPIOID ANALGESICS,OPIOID ANTAGONIST ANALGESICS") S OCXDF(37)=$G(DFN) I $L(OCXDF(37)) S OCXDF(158)=$P($$OPIOID(OCXDF(37)),"^",2) D CHK508
  Q
  ;
-CHK502 ; Look through the current environment for valid Event/Elements for this patient.
- ;  Called from CHK498+14.
+CHK508 ; Look through the current environment for valid Event/Elements for this patient.
+ ;  Called from CHK504+14.
  ;
  Q:$G(OCXOERR)
  ;
@@ -86,76 +109,12 @@ CHK502 ; Look through the current environment for valid Event/Elements for this 
  S OCXOERR=$$FILE(DFN,139,"158") Q:OCXOERR 
  Q
  ;
-CHK506 ; Look through the current environment for valid Event/Elements for this patient.
- ;  Called from CHK355+14^OCXOZ0C.
- ;
- Q:$G(OCXOERR)
- ;
- ;    Local CHK506 Variables
- ; OCXDF(37) ---> Data Field: PATIENT IEN (NUMERIC)
- ; OCXDF(130) --> Data Field: CLOZAPINE LAB RESULTS (FREE TEXT)
- ; OCXDF(131) --> Data Field: PHARMACY LOCAL ID (FREE TEXT)
- ;
- ;      Local Extrinsic Functions
- ; FILE(DFN,140, ----> FILE DATA IN PATIENT ACTIVE DATA FILE  (Event/Element: CLOZAPINE ANC >= 1.5 & < 2.0)
- ;
- S OCXDF(130)=$P($$CLOZLABS^ORKLR(OCXDF(37),"",OCXDF(131)),"^",4),OCXOERR=$$FILE(DFN,140,"130") Q:OCXOERR 
- Q
- ;
 EL24 ; Examine every rule that involves Element #24 [HL7 LAB TEST RESULTS CRITICAL]
  ;  Called from SCAN+9^OCXOZ01.
  ;
  Q:$G(OCXOERR)
  ;
  D R3R1A^OCXOZ0I   ; Check Relation #1 in Rule #3 'CRITICAL LAB RESULTS'
- Q
- ;
-EL105 ; Examine every rule that involves Element #105 [HL7 LAB ORDER RESULTS CRITICAL]
- ;  Called from SCAN+9^OCXOZ01.
- ;
- Q:$G(OCXOERR)
- ;
- D R3R2A^OCXOZ0I   ; Check Relation #2 in Rule #3 'CRITICAL LAB RESULTS'
- Q
- ;
-EL44 ; Examine every rule that involves Element #44 [ORDER FLAGGED]
- ;  Called from SCAN+9^OCXOZ01.
- ;
- Q:$G(OCXOERR)
- ;
- D R5R1A^OCXOZ0I   ; Check Relation #1 in Rule #5 'ORDER FLAGGED FOR CLARIFICATION'
- Q
- ;
-EL134 ; Examine every rule that involves Element #134 [ORDER UNFLAGGED]
- ;  Called from SCAN+9^OCXOZ01.
- ;
- Q:$G(OCXOERR)
- ;
- D R5R2A^OCXOZ0J   ; Check Relation #2 in Rule #5 'ORDER FLAGGED FOR CLARIFICATION'
- Q
- ;
-EL45 ; Examine every rule that involves Element #45 [ORDER REQUIRES CHART SIGNATURE]
- ;  Called from SCAN+9^OCXOZ01.
- ;
- Q:$G(OCXOERR)
- ;
- D R6R1A^OCXOZ0J   ; Check Relation #1 in Rule #6 'ORDER REQUIRES CHART SIGNATURE'
- Q
- ;
-EL21 ; Examine every rule that involves Element #21 [PATIENT ADMISSION]
- ;  Called from SCAN+9^OCXOZ01.
- ;
- Q:$G(OCXOERR)
- ;
- D R7R1A^OCXOZ0J   ; Check Relation #1 in Rule #7 'PATIENT ADMISSION'
- Q
- ;
-EL31 ; Examine every rule that involves Element #31 [RADIOLOGY ORDER CANCELLED]
- ;  Called from SCAN+9^OCXOZ01.
- ;
- Q:$G(OCXOERR)
- ;
- D R11R1A^OCXOZ0K   ; Check Relation #1 in Rule #11 'IMAGING REQUEST CANCELLED/HELD'
  Q
  ;
 ABREN(DFN) ;  Compiler Function: DETERMINE IF RENAL LAB RESULTS ARE ABNORMAL HIGH OR LOW
@@ -192,6 +151,22 @@ FILE(DFN,OCXELE,OCXDFL) ;     This Local Extrinsic Function logs a validated eve
  ;
  Q 0
  ;
+LABTHRSB(OCXLAB,OCXSPEC,OCXRSLT,OCXOP)       ;  Compiler Function: LAB THRESHOLD EXCEEDED BOOLEAN
+ ;
+ Q:'$G(OCXLAB)!'$G(OCXSPEC)!'$G(OCXRSLT)!'$L($G(OCXOP)) 0
+ ;
+ N OCXX,OCXPENT,OCXERR,OCXLABSP,OCXPVAL,OCXEXCD
+ S OCXEXCD=0,OCXLABSP=OCXLAB_";"_OCXSPEC
+ D ENVAL^XPAR(.OCXX,"ORB LAB "_OCXOP_" THRESHOLD",OCXLABSP,.OCXERR)
+ Q:+$G(ORERR)'=0 OCXEXCD
+ Q:+$G(OCXX)=0 OCXEXCD
+ S OCXPENT="" F  S OCXPENT=$O(OCXX(OCXPENT)) Q:'OCXPENT!OCXEXCD=1  D
+ .S OCXPVAL=OCXX(OCXPENT,OCXLABSP)
+ .I $L(OCXPVAL) D
+ ..I $P(OCXPENT,";",2)="VA(200,",@((+OCXRSLT)_OCXOP_OCXPVAL) D
+ ...S OCXEXCD=1
+ Q OCXEXCD
+ ;
 LIST(DATA,LIST) ;   IS THE DATA FIELD IN THE LIST
  ;
  S:'($E(LIST,1)=",") LIST=","_LIST S:'($E(LIST,$L(LIST))=",") LIST=LIST_"," S DATA=","_DATA_","
@@ -219,13 +194,19 @@ OPIOID(ORPT) ;determine if pat is receiving opioid med
  ...S DUPI=DUPI+1,DUP(DUPI)=" ["_DUPI_"] "_ORTEXT
  ...S ORTN=1
  I DUPI>0 D
- .;S DUPLEN=$P(215/DUPI,".")
- .S DUPLEN=500
+ .S DUPLEN=$P(215/DUPI,".")
  .F DUPJ=1:1:DUPI D
  ..I DUPJ=1 S ORDERS=$E(DUP(DUPJ),1,DUPLEN)
  ..E  S ORDERS=ORDERS_", "_$E(DUP(DUPJ),1,DUPLEN)
  K ^TMP("ORR",$J)
  Q ORTN_U_$G(ORDERS)
+ ;
+ORDITEM(OIEN) ;  Compiler Function: GET ORDERABLE ITEM FROM ORDER NUMBER
+ Q:'$G(OIEN) ""
+ ;
+ N OITXT,X S OITXT=$$OI^ORQOR2(OIEN) Q:'OITXT "No orderable item found."
+ S X=$G(^ORD(101.43,+OITXT,0)) Q:'$L(X) "No orderable item found."
+ Q $P(X,U,1)
  ;
 PATLOC(DFN) ;  Compiler Function: PATIENT LOCATION
  ;

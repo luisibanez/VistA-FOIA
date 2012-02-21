@@ -1,4 +1,4 @@
-SDM1T5 ; ;07/14/09
+SDM1T5 ; ;06/28/03
  D DE G BEGIN
 DE S DIE="^DPT(",DIC=DIE,DP=2,DL=1,DIEL=0,DU="" K DG,DE,DB Q:$O(^DPT(DA,""))=""
  I $D(^(.11)) S %Z=^(.11) S %=$P(%Z,U,5) S:%]"" DE(1)=% S %=$P(%Z,U,7) S:%]"" DE(3)=% S %=$P(%Z,U,12) S:%]"" DE(2)=%
@@ -50,7 +50,7 @@ SAVEVALS S @DIEZTMP@("V",DP,DIIENS,DIFLD,"O")=$G(DE(DQ)) S:$D(^("F"))[0 ^("F")=$
 NKEY W:'$D(ZTQUEUED) "??  Required key field" S X="?BAD" G QS
 KEYCHK() Q:$G(DE(DW,"KEY"))="" 1 Q @DE(DW,"KEY")
 BEGIN S DNM="SDM1T5",DQ=1
-1 D:$D(DG)>9 F^DIE17,DE S DQ=1,DW=".11;5",DV="*P5'a",DU="",DLB="STATE",DIFLD=.115
+1 D:$D(DG)>9 F^DIE17,DE S DQ=1,DW=".11;5",DV="P5'a",DU="",DLB="STATE",DIFLD=.115
  S DE(DW)="C1^SDM1T5",DE(DW,"INDEX")=1
  S DU="DIC(5,"
  G RE
@@ -97,9 +97,7 @@ C1X1(DION) K X
  S X=$G(X(1))
  Q
 C1F2 Q
-X1 S DIC("S")="I $P(^DIC(5,Y,0),U,6)=1" D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X
- Q
- ;
+X1 Q
 2 D:$D(DG)>9 F^DIE17,DE S DQ=2,DW=".11;12",DV="FXOa",DU="",DLB="ZIP+4",DIFLD=.1112
  S DQ(2,2)="S Y(0)=Y D ZIPOUT^VAFADDR"
  S DE(DW)="C2^SDM1T5",DE(DW,"INDEX")=1

@@ -1,6 +1,5 @@
-HLCSHDR1 ;SFIRMFO/RSD - Make HL7 header for TCP ;04/17/2007
- ;;1.6;HEALTH LEVEL SEVEN;**19,57,59,72,80,93,120,133,122**;Oct 13, 1995;Build 14
- ;Per VHA Directive 2004-038, this routine should not be modified.
+HLCSHDR1 ;SFIRMFO/RSD - Make HL7 header for TCP ;03/07/2006  09:23
+ ;;1.6;HEALTH LEVEL SEVEN;**19,57,59,72,80,93,120**;Oct 13, 1995;Build 12
 HEADER(IEN,CLIENT,HLERROR) ; Create an HL7 MSH segment
  ;
  ;Input  : IEN - Pointer to entry in Message Administration file (#773)
@@ -20,7 +19,6 @@ HEADER(IEN,CLIENT,HLERROR) ; Create an HL7 MSH segment
  ;
  N ACKTO,ACCACK,APPACK,CHILD,CLNTAPP,CLNTFAC,CNTRY,EC,EVNTYPE,FS,HLDATE,HLHDRI,HLHDRL,HLID,HLPID,MSGTYPE,PROT,PROTS,SECURITY,SEND,SERAPP,SERFAC,TXTP,TXTP0,X,MSGEVN
  N COMFLAG ; patch HL*1.6*120
- S HLERROR=""
  S HLPARAM=$$PARAM^HLCS2
  D VAR Q:$G(HLERROR)]""
  ; The following line commented by HL*1.6*72
@@ -68,7 +66,6 @@ BHSHDR(IEN,CLIENT,HLERROR) ; Create Batch Header Segment
  N CLNTFAC,CNTRY,EC,EVNTYPE,FS,HLDATE,HLHDRI,HLHDRL,HLID,HLPID ;HL*1.6*80 - added HLPID
  N PROT,PROTS,SECURITY,SEND,SERAPP,SERFAC,TXTP,TXTP0,X ;HL*1.6*80
  N COMFLAG ; patch HL*1.6*120
- S HLERROR=""
  ;
  S HLPARAM=$$PARAM^HLCS2
  D VAR Q:$G(HLERROR)]""
@@ -146,13 +143,6 @@ VAR ;Check input
  S PROT=$$TYPE^HLUTIL2(HLPROT)
  S:'ACKTO MSGTYPE=$P(PROT,U,2),EVNTYPE=$P(PROT,U,3),MSGEVN=$P(PROT,U,4)
  S ACCACK=$P(PROT,U,7),APPACK=$P(PROT,U,8)
- ;
- ; patch HL*1.6*122
- ; setting the MSH-15 and MSH-16 from subscriber protocol
- I HLPROTS,$P($G(^ORD(101,HLPROTS,773)),"^",5) D
- . S ACCACK=$P(PROTS,U,7)
- . S APPACK=$P(PROTS,U,8)
- ;
 PID ;Processing ID
  ;I PID not 'debug' get from site params
  ;If event driver set to 'debug' get from protocol
@@ -213,17 +203,14 @@ ESCAPE(INPUT,COMPONET) ;
  ;  COMPONET - if 1, escape component separator
  ;             if 0, do not escape component separator
  ;        FS - field separator character
- ;        EC - encoding characters 
+ ;        EC - encoding 4 characters 
  ; result: return the escaped string
  ;
  N HLDATA,HLESCAPE,HLI,HLCHAR,HLEN,HLOUT,COMFLAG
  S HLDATA=$G(INPUT)
  S COMFLAG=$G(COMPONET)
  Q:$L($G(FS))'=1 HLDATA
- ;
- ; patch HL*1.6*133
- ; Q:$L($G(EC))'=4 HLDATA
- Q:($L($G(EC))<3) HLDATA
+ Q:$L($G(EC))'=4 HLDATA
  Q:HLDATA']"" HLDATA
  ;
  S HLESCAPE=FS_EC
@@ -237,13 +224,13 @@ ESCAPE(INPUT,COMPONET) ;
  F HLI=1:1:HLEN D
  . S HLCHAR=$E(HLDATA,HLI)
  . I HLESCAPE[HLCHAR D  Q
- .. I HLCHAR=HLESCAPE("F") S HLOUT=HLOUT_HLESCAPE("E")_"F"_HLESCAPE("E") Q
+ .. I HLCHAR=HLESCAPE("F") S HLOUT=HLOUT_"\F\" Q
  .. I HLCHAR=HLESCAPE("S") D  Q
- ... I COMFLAG=1 S HLOUT=HLOUT_HLESCAPE("E")_"S"_HLESCAPE("E") Q
+ ... I COMFLAG=1 S HLOUT=HLOUT_"\S\" Q
  ... S HLOUT=HLOUT_HLCHAR
- .. I HLCHAR=HLESCAPE("R") S HLOUT=HLOUT_HLESCAPE("E")_"R"_HLESCAPE("E") Q
- .. I HLCHAR=HLESCAPE("E") S HLOUT=HLOUT_HLESCAPE("E")_"E"_HLESCAPE("E") Q
- .. I HLCHAR=HLESCAPE("T") S HLOUT=HLOUT_HLESCAPE("E")_"T"_HLESCAPE("E") Q
+ .. I HLCHAR=HLESCAPE("R") S HLOUT=HLOUT_"\R\" Q
+ .. I HLCHAR=HLESCAPE("E") S HLOUT=HLOUT_"\E\" Q
+ .. I HLCHAR=HLESCAPE("T") S HLOUT=HLOUT_"\T\" Q
  . ;
  . S HLOUT=HLOUT_HLCHAR
  Q HLOUT

@@ -1,4 +1,4 @@
-DGPTXX1 ; COMPILED XREF FOR FILE #45 ; 04/23/09
+DGPTXX1 ; COMPILED XREF FOR FILE #45 ; 04/10/06
  ; 
  S DIKZK=2
  S DIKZ(0)=$G(^DGPT(DA,0))
@@ -45,11 +45,11 @@ DGPTXX1 ; COMPILED XREF FOR FILE #45 ; 04/23/09
  S X=$P(DIKZ(70),U,1)
  I X'="" K ^DGPT("ADS",$E(X,1,30),DA)
  S X=$P(DIKZ(70),U,1)
- I X'="" N DGFDA,DGMSG S DGFDA(45.02,"1,"_$$IENS^DILF(DA),10)="@" D FILE^DIE("","DGFDA","DGMSG") K DGFDA,DGMSG
+ I X'="" S %=$S($D(^DGPT(DA,"M",1,0)):^(0),1:""),%D=+$P(%,U,10),^(0)=$P(%_"^^^^^^^^^^",U,1,9)_U_X_U_$P(%,U,11,99) K ^DGPT(DA,"M","AM",%D,1),%,%D
  S X=$P(DIKZ(70),U,1)
  I X'="" S L=$P(^DGPT(DA,0),"^",2) I L?7N.E,$G(DIK)'="^DGPT(" S ^DGPT("AADA",L,DA)=""
  S X=$P(DIKZ(70),U,2)
- I X'="" I $D(^DGPT(DA,"M",1,0)) N DGFDA,DGMSG S DGFDA(45.02,"1,"_$$IENS^DILF(DA),2)="@" D FILE^DIE("","DGFDA","DGMSG") K DGFDA,DGMSG
+ I X'="" I $D(^DGPT(DA,"M",1,0)) S $P(^(0),U,2)="",$P(^(0),U,16)=""
  S X=$P(DIKZ(70),U,10)
  I X'="" X ^DD(45,79,1,992,2)
  S DIKZ(70)=$G(^DGPT(DA,70))
@@ -246,4 +246,10 @@ CR11 S DIXR=442
  S X(4)=$P(DIKZ(70),U,24)
  S X(5)=$P(DIKZ(70),U,1)
  S X=$G(X(1))
+ I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
+ . K X1,X2 M X1=X,X2=X
+ . S:$D(DIKIL) (X2,X2(1),X2(2),X2(3),X2(4),X2(5))=""
+ . D KDGPT9D^DGPTDDCR(.X,.DA,"D SD9")
+CR12 S DIXR=443
+ K X
 END G ^DGPTXX2

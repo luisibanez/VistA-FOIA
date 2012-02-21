@@ -1,6 +1,5 @@
 PRSATE2 ; HISC/REL,WIRMFO/JAH - Display Employee Tour of Duty ;3/3/1998
- ;;4.0;PAID;**8,22,35,114**;Sep 21, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;**8,22,35**;Sep 21, 1995
  ;
  ;VARIABLES:
  ;   PPI   =  Pay period internal entry number from file 458
@@ -93,7 +92,7 @@ S1 ;
 L0 ; Long Display
  S C0=^PRSPC(DFN,0)
  W !!,$P(C0,U)
- S X=$P(C0,U,9) W ?65,$E(X),"XX-XX-",$E(X,6,9)
+ S X=$P(C0,U,9) W ?65,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9)
  D DT W !!,?11,"Week 1 - ",$E(Y1,5,13),?45,"Week 2 - ",$E(Y2,5,13),!
  F DAY=1:1:7 D ^PRSATE3
  Q

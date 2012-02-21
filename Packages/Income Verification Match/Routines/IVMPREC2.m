@@ -1,5 +1,5 @@
 IVMPREC2 ;ALB/KCL - ROUTE INCOMING HL7 (ORU) MESSAGES BY EVENT TYPE ;5/17/02 1:43pm
- ;;2.0;INCOME VERIFICATION MATCH;**12,34,112,118**;21-OCT-94
+ ;;2.0;INCOME VERIFICATION MATCH;**12,34,112**; 21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; This routine will process (ORU) HL7 messages received from the
@@ -79,8 +79,8 @@ ORU ; - Receive Observational Results Unsolicited Message
  D GENACK^HLMA1(HLEID,HLMTIENS,HLEIDS,HLARYTYP,1,.HLRESLTA,HLMTIENA,.HLP)
  ; The following line is added for  PFSS Registration.  This line will ensure any patient 
  ; registration updates received from the HEC are forwarded to a COTS billing application
- ; See DBIA#4840
- S X="DGPFSS2" X ^%ZOSF("TEST") I $T D BATCH^DGPFSS2(IVMRTN)
+ ; See DBIA#4780 
+ S X="DGPFSS1" X ^%ZOSF("TEST") I $T D SEND^DGPFSS1(DFN,0)
  ;
 ORUQ ;
  K DFN,IVMCNTR,IVMCT,IVMDA,IVMERR,IVMERROR,IVMHLMID,IVMNDE,IVMPTID

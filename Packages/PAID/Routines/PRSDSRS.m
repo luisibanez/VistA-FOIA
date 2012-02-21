@@ -1,7 +1,5 @@
 PRSDSRS ;HISC/GWB-SERVICE RECORD SCREEN ;2/8/95  14:14
- ;;4.0;PAID;**114,100**;Sep 21, 1995;Build 3
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;
+ ;;4.0;PAID;;Sep 21, 1995
 EMP S DA="",SSN=$P($G(^VA(200,DUZ,1)),"^",9)
  I SSN'="" S DA=$O(^PRSPC("SSN",SSN,0))
  I 'DA W !!,*7,"Your SSN was not found in both the New Person & Employee File!" G EX
@@ -64,9 +62,8 @@ VAL I $L(VAL)<48 W ?32,VAL Q
  Q
 HDR W:$Y>0 @IOF S PAGE=PAGE+1
  S CLNGTH=$L(CCORG),TAB=(80-CLNGTH)\2,TAB=TAB-1
- W !,NAME,?TAB,CCORG,?61,"DUTY STATION: ",STATION_DS
- I '$G(PRSTLV) W !,"XXX-XX-",$E(SSN,8,11),?71,"T&L: ",TLU,!,DASHES
- I $G(PRSTLV)=7 W !,SSN,?71,"T&L: ",TLU,!,DASHES
+ W !,NAME,?TAB,CCORG,?62,"DUTY STATION: ",STATION_DS
+ W !,SSN,?71,"T&L: ",TLU,!,DASHES
  S CLNGTH=$L(CATEGORY),TAB=(80-CLNGTH)\2,TAB=TAB-1
  W !,"LAST PP: ",LPP,?TAB,CATEGORY,?73,"PAGE ",PAGE
  W !,DASHES

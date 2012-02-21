@@ -1,5 +1,5 @@
 FHORD7 ; HISC/REL/NCA/JH - Diet Order Utilities ;4/5/96  11:27
- ;;5.5;DIETETICS;**8**;Jan 28, 2005;Build 28
+ ;;5.5;DIETETICS;;Jan 28, 2005
 CUR ; Get Diet
  S FHZ115="P"_DFN D CHECK^FHOMDPA I FHDFN="" Q
  S X1=$G(^FHPT(FHDFN,"A",ADM,0)),FHORD=$P(X1,"^",2),X1=$P(X1,"^",3),(FHLD,FHOR,X,Y)=""
@@ -12,13 +12,12 @@ C3 S Y="" F A1=1:1:5 S D3=$P(FHOR,"^",A1) I D3 S:Y'="" Y=Y_", " S Y=Y_$P(^FH(111
 NOW D NOW^%DTC S NOW=% Q
 POST ; Generate bulletin
  S WRD=$P($G(^FHPT(FHDFN,"A",ADM,0)),"^",8) Q:WRD<1
- F FHXMKK=0:0 S FHXMKK=$O(^FH(119.6,WRD,2,"B",FHXMKK)) Q:FHXMKK'>0  D
- .S XMY(FHXMKK)=""
- Q:'$D(XMY)  S XMB="FHDIORD"
+ S XMKK=$P($G(^FH(119.6,WRD,0)),"^",2) Q:XMKK<1
+ S XMB="FHDIORD",XMY(XMKK)=""
  D PATNAME^FHOMUTL I DFN="" Q
  S XMB(1)=$P(^DPT(DFN,0),"^",1),XMB(2)=$P(^FH(119.6,WRD,0),"^",1) D C3 S XMB(3)=Y
  S XMB(5)=$S($D(^DPT(DFN,.101)):^(.101),1:"unknown")
- S DTP=D1 D DTP^FH S XMB(4)=DTP D ^XMB K XMB,XMY,XMM,XMDT,FHXMKK Q
+ S DTP=D1 D DTP^FH S XMB(4)=DTP D ^XMB K XMB,XMY,XMM,XMDT Q
 STR ; Store new diet order
  D ORD,NOW
  S X=FHORD_"^"_FHOR_"^"_FHLD_"^"_TYP_"^"_D1_"^"_$S(D2:D2,1:"")_"^"_DUZ_"^"_NOW,FHNOW=NOW

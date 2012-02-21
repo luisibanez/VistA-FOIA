@@ -1,6 +1,6 @@
 FBAA79A ;AISC/GRR-PRINT 7079 CONTINUED ;1/12/98
- ;;3.5;FEE BASIS;**12,103**;JAN 30, 1995;Build 19
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.5;FEE BASIS;**12**;JAN 30, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  S DIWL=1,DIWF="WC120" K ^UTILITY($J,"W")
  I $D(^FBAAA(DFN,1,FBK,2)) F FBRR=0:0 S FBRR=$O(^FBAAA(DFN,1,FBK,2,FBRR)) Q:FBRR'>0  S FBXX=^(FBRR,0),X=FBXX D ^DIWP
  D ^DIWW:$D(FBXX) K FBXX
@@ -24,13 +24,7 @@ FBAA79A ;AISC/GRR-PRINT 7079 CONTINUED ;1/12/98
  W !,?3,"V. FEES. Fees claimed may not exceed those made to the general public for like services.",!
  W !,?3,"VI. PAYMENT. Payment by the VA for services rendered and approved is payment in full.",!
  W !,?3,"VII. HOSPITALIZATION. When a need for hospital care is indicated, please call the Station of Jurisdiction",!,?5,"for assistance in admitting the veteran to a VA hospital.",!
- W !,?3,"VIII. INQUIRIES. Additional information when required may be obtained by contacting the Station Of Jurisdiction.",!
- W !,?3,"IX. When submitting claims for payment you must include the NPI and Taxonomy Code of the rendering practitioner, and"
- W !,?5,"the NPI and Taxonomy Code of your organization.  If, under the HIPAA NPI Final Rule"
- W !,?5,"[http://www.cms.hhs.gov/NationalProvIdentStand], your organization is an ""atypical"" provider furnishing services such as"
- W !,?5,"taxi, home and vehicle modifications, insect control, habilitation, and respite services and is therefore ineligible"
- W !,?5,"for an NPI, it is important that you indicate ""Ineligible for NPI"" on your claim form ."
- W !,UL
+ W !,?3,"VIII. INQUIRIES. Additional information when required may be obtained by contacting the Station Of Jurisdiction.",!,UL
  W !?3,"VA Form 10-7079"
  W ?85,"Date Printed: ",$$FMTE^XLFDT(DT),!
  Q

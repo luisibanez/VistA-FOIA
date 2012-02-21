@@ -1,6 +1,6 @@
-DIO0 ;SFISC/GFT,TKW-BUILD SORT AND SUB-HDR ;28SEP2004
- ;;22.0;VA FileMan;**2,23,138,144**;Mar 30, 1999;Build 5
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIO0 ;SFISC/GFT,TKW-BUILD SORT AND SUB-HDR ;1:17 PM  21 Mar 2004
+ ;;22.0;VA FileMan;**2,23,138**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  S C=",",Z=Z+1,DE=$P(DN,C,Z)_"=$O("_DI_$P(DN,C,1,Z)_")),DN="_(Z+1) ;22*138
  I Z=1,$G(DPP(DJK,"PTRIX"))]"" D
@@ -44,7 +44,7 @@ SUB I $P($G(DPP(Y)),U,4)["+" S A(A)=Y,X=X_",A="_A_" D"_$S($D(DIS)<9:"",1:":$D(DI
  Q
  ;
 H S DOP=0 I $D(DNP) F W=1:1 G Q:'$D(DPP(W)) I DPP(W)["+" K DNP S DOP=1 Q
- S Y=$P(DN,",",Z),F=$P(DPP(Z),U,5),W=$P(DPP(Z),U,4),X=$P(W,"""",2),V=+$P(DPP(Z),U,2) S:W["-" Y="(-"_Y_")" I F'[""""&'$D(DPQ(+DPP(Z),V+X))&'DOP!(W["@")!(W["'")!$D(DISH) S (Y,V)="" G F:F]"",U
+ S Y=$P(DN,C,Z),F=$P(DPP(Z),U,5),W=$P(DPP(Z),U,4),X=$P(W,"""",2),V=+$P(DPP(Z),U,2) S:W["-" Y="(999999999-"_Y_")" I F'[""""&'$D(DPQ(+DPP(Z),V+X))&'DOP!(W["@")!(W["'")!$D(DISH) S (Y,V)="" G F:F]"",U
  I F[";TXT" S Y="$E("_Y_",2,$L("_Y_"))"
  S X=$S($D(^DD(+DPP(Z),V,0)):^(0),1:$P(DPP(Z),U,6,9)) I $P(X,U,2)["D" S Y=" S Y="_Y_" D DT"
  E  I $G(DPP(Z,"OUT"))]"" S DPP(Z,"OUT")=" S Y="_Y_" "_DPP(Z,"OUT"),Y=",Y"

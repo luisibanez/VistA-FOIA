@@ -1,6 +1,6 @@
-PRCPEITE ;WISC/RFJ-enter/edit inventory items                       ; 11/6/06 8:40am
-V ;;5.1;IFCAP;**1,98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPEITE ;WISC/RFJ-enter/edit inventory items                       ;01 Dec 93
+V ;;5.1;IFCAP;**1**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
 ALL(PRCPINPT,ITEMDA) ;  edit all fields option (for new items)
@@ -70,13 +70,11 @@ SPECIAL(PRCPINPT,ITEMDA) ;  special parameters and flags
  ;  removal of fields 14;14.3;14.4 if type = "P" (fields not used)
  S DR="17;"_$S($G(ISSUE):"14.5;",1:"")_$S(TYPE="W":"22;",1:"")
  S PRCPPRIV=1
- D ^DIE I $D(DTOUT)!$D(Y) Q
- K DIC,DIE,DA,DR
- I TYPE'="W" D ODI^PRCPEITG(PRCPINPT,ITEMDA) ; ask On-Demand (PRC*5.1*98)
+ D ^DIE
  Q
  ;
  ;
-DISPUNIT(PRCPINPT,ITEMDA) ;  drug accountability dispensing units
+DISPUNIT(PRCPINPT,ITEMDA) ;  drug accountablity dispensing units
  N %,D,D0,DA,DD,DDH,DI,DIC,DIE,DISYS,DIX,DIY,DO,DQ,DR,DZ,X,Y
  S DA(1)=PRCPINPT,DA=ITEMDA,(DIC,DIE)="^PRCP(445,"_PRCPINPT_",1,",DR="50;51"
  S PRCPPRIV=1 D ^DIE K PRCPPRIV
@@ -99,7 +97,7 @@ EDNORM(PRCPINPT,ITEMDA,TEXT,PRCPQUIT) ; editing the normal level on supply stati
  S PRCPNL=+$P(^PRCP(445,PRCPINPT,1,ITEMDA,0),"^",9)
  S ORD=0
  S ORD=$$ORDCHK^PRCPUITM(ITEMDA,PRCPINPT,"R","")
- I ORD D  ; this field is also a flag of items on supply station, editing must be restricted if there are outstanding supply station orders.
+ I ORD D  ; this field is also a flag of items on supply station, editing must be restriced if there are outstanding supply station orders.
  . N DIR
  . S DIR("A")=TEXT
  . S DIR("A",1)="There are outstanding regular orders for this item."

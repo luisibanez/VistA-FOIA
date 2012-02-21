@@ -1,17 +1,15 @@
-ORIMO ;SLC/JDL - Inpatient medication on outpatient. ; 02/12/2007
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**187,190,195,215,243**;Dec 17, 1997;Build 242
+ORIMO ;SLC/JDL - Inpatient medication on outpatient. ; 07/07/2005
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**187,190,195,215**;Dec 17, 1997
 IMOLOC(ORY,ORLOC,ORDFN) ;ORY>=0: LOC is an IMO authorized location
  S ORY=-1
  N PACH
  S PACH=$$PATCH^XPDUTL("PSJ*5.0*111")
  Q:'PACH
  I $L($TEXT(SDIMO^SDAMA203)) D
+ . ;I $P($G(^SC(ORLOC,0)),U,3)'="C" Q
+ . ;I $D(^SC("AE",1,ORLOC))=1 S ORY=1
  . ;#DBIA 4133
  . S ORY=$$SDIMO^SDAMA203(ORLOC,ORDFN)
- . ;if RSA returns an error then check against Clinic Loc.
- . I ORY=-3 D
- . .I $P($G(^SC(ORLOC,0)),U,3)'="C" Q
- . .I $D(^SC("AE",1,ORLOC))=1 S ORY=1
  . K SDIMO(1)
  Q
  ; 

@@ -1,6 +1,5 @@
-MAGDRPC6 ;WOIFO/EdM - Routing RPCs ; 05/18/2007 11:23
- ;;3.0;IMAGING;**11,30,51,54**;03-July-2009;;Build 1424
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDRPC6 ;WOIFO/EdM - Routing RPCs ; 08/13/2004  08:08
+ ;;3.0;IMAGING;**11,30**;16-September-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDRPC6 ;WOIFO/EdM - Routing RPCs ; 05/18/2007 11:23
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -30,7 +30,9 @@ PURGDONE(OUT,DAYS,LOCATION) ; RPC = MAG DICOM ROUTE PURGE DONE
  . . . S:$G(DAYS)'<1 RT=DAYS
  . . . S LIM=$H-RT
  . . . S D0="" F  S D0=$O(^MAGQUEUE(2006.035,"STS",LOCATION,STS,PR,DE,D0)) Q:D0=""  D
- . . . . Q:$$FMTH^XLFDT($P($G(^MAGQUEUE(2006.035,D0,1)),"^",4)\1)'<LIM
+ . . . . N %H,%T,%Y
+ . . . . S X=$P($G(^MAGQUEUE(2006.035,D0,1)),"^",4)\1 D H^%DTC
+ . . . . Q:%H'<LIM
  . . . . S X=$G(^MAGQUEUE(2006.035,D0,0)),IM=$P(X,"^",1),TP=$P(X,"^",3),ID=$P(X,"^",6)
  . . . . K ^MAGQUEUE(2006.035,"STS",LOCATION,STS,PR,DE,D0)
  . . . . K:ID'="" ^MAGQUEUE(2006.035,"ID",ID,D0)
@@ -137,7 +139,7 @@ XMIT ; Continuation from MAGDRPC5
  S:FROM["~NO NETWORK LOCATION DEFINED" (FROM,TO)="-1~No routable files found for image "_IM
  I TP="TEXT" S TO=$E(TO,1,$L(TO)-4)_".TXT",FROM=$E(FROM,1,$L(FROM)-4)_".TXT"
  I (FROM<0)!(TO<0)!(FROM="") D STATUS^MAGDRPC5(X,D0,"SENT",LOCATION) S OUT(1)=2 Q
- S HASH=$$DIRHASH^MAGFILEB(TO,+DEST) D:HASH'=""
+ S HASH=$$DIRHASH^MAGFILEB(TO,DEST) D:HASH'=""
  . I $E(TO,1)="\",$E(HASH,$L(HASH))="\" S HASH=$E(HASH,1,$L(HASH)-1)
  . I $E(TO,1)'="\",$E(HASH,$L(HASH))'="\" S HASH=HASH_"\"
  . S TO=HASH_TO
@@ -151,4 +153,3 @@ XMIT ; Continuation from MAGDRPC5
  S OUT(7)=FROM,OUT(8)=TO
  S OUT(1)=1
  Q
- ;

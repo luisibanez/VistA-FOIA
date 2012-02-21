@@ -1,5 +1,5 @@
 OOPSGUID ;WIOFO/LLH-RPC routine for GET/SET CA7 ;04/29/04
- ;;2.0;ASISTS;**8,15,20**;Jun 03, 2002;Build 2
+ ;;2.0;ASISTS;**8**;Jun 03, 2002
  ;
 SAVECA7 ; saves CA7 data to database
  S (RESULTS,RESULTS(1),RESULTS(2))=""
@@ -101,8 +101,6 @@ SAVECA7 ; saves CA7 data to database
  S DR(1,2264,92)="92///^S X=ARR(94)"
  S DR(1,2264,93)="93///^S X=ARR(95)"
  S DR(1,2264,94)="94///^S X=ARR(96)"
- ; V2_P15, added new field llh
- S DR(1,2264,95)="98///^S X=ARR(97)"
  D ^DIE
  ;Check the return of ^DIE
  I $D(Y)=0 S RESULTS(1)=IEN_U_ARR(0)_U_"UPDATE COMPLETED"
@@ -164,88 +162,4 @@ DUAL(RESULTS,INPUT,DATA) ; new sub for filing DUAL node fields -
  S DR(1,2260,6)="308///^S X=ARR(6)"
  D ^DIE
  I $D(Y)=0 S RESULTS="UPDATE COMPLETED"
- Q
-SAVE2162 ; V2_P15 moved entire SAVE2162 subroutine from OOPSGUI5 to here
- ; due to size of OOPSGUI5
- K DR S DIE="^OOPS(2260,",DA=IEN,DR=""
- S DR(1,2260,1)="3///^S X=ARR(3)"
- S DR(1,2260,2)="5///^S X=ARR(5)"
- S DR(1,2260,3)="6///^S X=ARR(6)"
- S DR(1,2260,4)="7///^S X=ARR(7)"
- S DR(1,2260,5)="8///^S X=ARR(8)"
- S DR(1,2260,7)="9///^S X=ARR(9)"
- S DR(1,2260,9)="10///^S X=ARR(10)"
- S DR(1,2260,12)="11///^S X=ARR(11)"
- S DR(1,2260,15)="12///^S X=ARR(12)"
- S DR(1,2260,18)="13////^S X=ARR(13)"
- S DR(1,2260,21)="14///^S X=ARR(14)"
- S DR(1,2260,24)="15///^S X=ARR(15)"
- S DR(1,2260,27)="16///^S X=ARR(16)"
- S DR(1,2260,30)="17///^S X=ARR(17)"
- S DR(1,2260,33)="18///^S X=ARR(18)"
- S DR(1,2260,36)="26///^S X=ARR(19)"
- S DR(1,2260,39)="27////^S X=ARR(20)"
- S DR(1,2260,42)="29///^S X=ARR(21)"
- S DR(1,2260,45)="29.5///^S X=ARR(22)"
- S DR(1,2260,48)="30///^S X=ARR(23)"
- S DR(1,2260,51)="30.1///^S X=ARR(24)"
- S DR(1,2260,54)="31///^S X=ARR(25)"
- S DR(1,2260,57)="32///^S X=ARR(26)"
- S DR(1,2260,60)="33///^S X=ARR(27)"
- S DR(1,2260,63)="34///^S X=ARR(28)"
- S DR(1,2260,66)="35///^S X=ARR(29)"
- S DR(1,2260,69)="36///^S X=ARR(30)"
- S DR(1,2260,72)="37///^S X=ARR(31)"
- S DR(1,2260,75)="38///^S X=ARR(32)"
- S DR(1,2260,78)="41///^S X=ARR(33)"
- S DR(1,2260,81)="42///^S X=ARR(34)"
- S DR(1,2260,84)="42.5///^S X=ARR(35)"
- S DR(1,2260,87)="43///^S X=ARR(36)"
- S DR(1,2260,90)="53////^S X=ARR(45)"
- S DR(1,2260,93)="53.1////^S X=ARR(46)"
- S DR(1,2260,96)="60///^S X=ARR(52)"
- S DR(1,2260,99)="61///^S X=ARR(53)"
- S DR(1,2260,102)="62///^S X=ARR(54)"
- S DR(1,2260,105)="63///^S X=ARR(55)"
- S DR(1,2260,108)="70///^S X=ARR(60)"
- S DR(1,2260,111)="73///^S X=ARR(63)"
- S DR(1,2260,114)="82///^S X=ARR(72)"
- S DR(1,2260,117)="83////^S X=ARR(73)"
- S DR(1,2260,120)="84///^S X=ARR(74)"
- S DR(1,2260,123)="85///^S X=ARR(75)"
- S DR(1,2260,126)="86///^S X=ARR(76)"
- S DR(1,2260,129)="87///^S X=ARR(77)"
- S DR(1,2260,132)="88///^S X=ARR(78)"
- S DR(1,2260,135)="89///^S X=ARR(79)"
- S DR(1,2260,136)="335///^S X=ARR(85)"
- S DR(1,2260,138)="336///^S X=ARR(86)"
- S DR(1,2260,140)="337///^S X=ARR(87)"
- D ^DIE I '($D(Y)=0) Q
- S DR(1,2260,142)="338///^S X=ARR(88)"
- S DR(1,2260,144)="339///^S X=ARR(89)"
- S DR(1,2260,146)="340///^S X=ARR(90)"
- S DR(1,2260,148)="341///^S X=ARR(91)"
- S DR(1,2260,150)="342///^S X=ARR(92)"
- S DR(1,2260,152)="343///^S X=ARR(93)"
- S DR(1,2260,154)="344///^S X=ARR(94)"
- S DR(1,2260,156)="345///^S X=ARR(95)"
- S DR(1,2260,158)="346///^S X=ARR(96)"
- S DR(1,2260,159)="334///^S X=ARR(97)"
- S DR(1,2260,160)="348///^S X=ARR(98)"
- S DR(1,2260,161)="349///^S X=ARR(99)"
- S DR(1,2260,162)="350///^S X=ARR(100)"
- S DR(1,2260,163)="351///^S X=ARR(101)"
- S DR(1,2260,164)="352///^S X=ARR(102)"
- ; V2_P15 new fields
- S DR(1,2260,165)="354///^S X=ARR(103)"
- S DR(1,2260,166)="355///^S X=ARR(104)"
- S DR(1,2260,167)="356///^S X=ARR(105)"
- S DR(1,2260,168)="357///^S X=ARR(106)"
- S DR(1,2260,169)="358///^S X=ARR(107)"
- S DR(1,2260,170)="359///^S X=ARR(108)"
- ; v2_P20 new field for Column F on the OSHA 300 log
- S DR(1,2260,171)="384///^S X=ARR(109)"
- D ^DIE I $D(Y)=0 S RESULTS(1)="UPDATE COMPLETED"
- ; V2_15 send new bulletin if the INITIAL RETURN TO WORK STATUS is one of 2 values below
- I ARR(102)="DAYS AWAY WORK"!(ARR(102)="Job Transfer/Restriction") D CIO^OOPSMBUL(IEN)
  Q

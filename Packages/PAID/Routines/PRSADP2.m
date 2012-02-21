@@ -1,6 +1,5 @@
 PRSADP2 ; HISC/REL-Display Employee Pay Period ;7/22/97
- ;;4.0;PAID;**21,28,46,114**;Sep 21, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;**21,28,46**;Sep 21, 1995
 PAY ; Payroll Entry
  N PPERIOD
  S PRSTLV=7
@@ -86,10 +85,7 @@ HDR ; Display Header
  S X=$G(^PRSPC(DFN,0)) ;employees (partial) master record.
  W ! W:$E(IOST,1,2)="C-" @IOF
  W ?3,$P(X,"^",1),?36,"T&L ",$S($G(TLE):TLE,1:$P(X,"^",8))
- S X=$P(X,"^",9)
- I '$G(PRSTLV)!($G(PRSTLV)=1) W ?68,"XXX-XX-",$E(X,6,9) W:PG>1 ! Q
- I PRSTLV=2!(PRSTLV=3) W ?68,$E(X),"XX-XX-",$E(X,6,9) W:PG>1 ! Q 
- I PRSTLV=7 W ?68,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9) W:PG>1 ! Q
+ S X=$P(X,"^",9) W ?68,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9) W:PG>1 ! Q
 H1 I PG,$E(IOST,1,2)="C-" R !!,"Press RETURN to Continue.",X:DTIME S:'$T!(X["^") QT=1
  Q
 EX G KILL^XUSCLEAN

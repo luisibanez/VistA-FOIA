@@ -1,49 +1,35 @@
-PXRMXQUE ; SLC/PJH - Reminder reports general queuing routine.;02/10/2010
- ;;2.0;CLINICAL REMINDERS;**4,6,12,17**;Feb 04, 2005;Build 102
+PXRMXQUE ; SLC/PJH - Reminder reports general queuing routine.;07/29/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
- ;===============================
-DEVICE(RTN,DESC,SAVE,%ZIS,RETZTSK) ;
- ;Pass RETZTSK as number such as 1 if you want to get ZTSK.
- N ZTSK
- W !
- D EN^XUTMDEVQ(RTN,DESC,.SAVE,.%ZIS,RETZTSK)
- I $D(ZTSK) W !!,DESC," has been queued, task number "_ZTSK H 2
- Q $G(ZTSK)
+QUE(DESC,PXRMIOV,ROUTINE,SAVE) ;Queue a task.
  ;
- ;===============================
-JOB ;Get the output device.
- N POP,%ZIS
- S %ZIS="NQ"
- W !
- D ^%ZIS
- I POP G EXIT^PXRMXD
- I IOT="HFS" S PXRMHFIO=IO
- S PXRMQUE=$G(IO("Q"))
- S PXRMIOP=ION_";"_$G(IOST)_";"_$G(IO("DOC"))_";"_$G(IOM)_";"_$G(IOSL)
- ;
- I PXRMQUE D  Q
- .;Queue the report.
- . N DESC,ROUTINE,TASK
- . S DESC="Reminder Due Report"
- . S ROUTINE="START^PXRMXSE1"
- . S TASK=$$QUE^PXRMXQUE(DESC,ROUTINE,"","SAVE^PXRMXQUE")
- . Q:TASK=""
- . W !,"Report queued, task number is ",TASK
- I 'PXRMQUE D ^PXRMXSE1
- Q
- ;
- ;===============================
-QUE(ZTDESC,ZTRTN,ZTDTH,SAVERTN) ;Queue a task.
- N ZTSK
- ;If ZTIO is not explicitly set to null then %ZTLOAD will open
- ;the device.
- S ZTIO=""
- D @SAVERTN
+ N ZTSAVE,ZTRTN,ZTIO,ZTDESC
+ D @SAVE
+ S ZTDESC=DESC
+ S ZTIO=PXRMIOV
+ S ZTRTN=ROUTINE
  D ^%ZTLOAD
  I $D(ZTSK)=0 W !!,DESC," cancelled"
+ E  W !!,DESC," has been queued, task number ",ZTSK
+ Q $G(ZTSK)
+ ;
+DEVICE(ZTRTN,ZTDESC,ZTSAVE,%ZIS,ZTSK) ;
+ W !
+ D EN^XUTMDEVQ(ZTRTN,ZTDESC,.ZTSAVE,.%ZIS,.ZTSK)
+ I $D(ZTSK)>1 W !!,ZTDESC," has been queued, task number "_$G(ZTSK) H 2
+ I $G(ZTSK)="" S ZTSK=0
  Q ZTSK
  ;
- ;===============================
+ ;=======================================================================
+REQUE(DESC,ROUTINE,TASK) ;Reque a task.
+ N ZTRTN,ZTIO,ZTDESC,ZTSAVE
+ S ZTDESC=DESC
+ S ZTRTN=ROUTINE
+ S ZTSK=TASK
+ D REQ^%ZTLOAD
+ Q
+ ;
+ ;=======================================================================
 SAVE ;Save the variables for queing.
  S ZTSAVE("PXRMBDT")="",ZTSAVE("PXRMEDT")="",ZTSAVE("PXRMSDT")=""
  S ZTSAVE("PXRMCS(")="",ZTSAVE("NCS")=""
@@ -53,10 +39,8 @@ SAVE ;Save the variables for queing.
  S ZTSAVE("PXRMFCMB")=""
  S ZTSAVE("PXRMFUT")="",ZTSAVE("PXRMDLOC")=""
  S ZTSAVE("PXRMFD")=""
- S ZTSAVE("PXRMHFIO")=""
  S ZTSAVE("PXRMINP")=""
- S ZTSAVE("PXRMIO")=""
- S ZTSAVE("PXRMIOP")=""
+ S ZTSAVE("PXRMIOD")=""
  S ZTSAVE("PXRMLCHL(")="",ZTSAVE("NHL")=""
  S ZTSAVE("PXRMLCMB")=""
  S ZTSAVE("PXRMLCSC")=""
@@ -64,7 +48,7 @@ SAVE ;Save the variables for queing.
  S ZTSAVE("PXRMQUE")=""
  S ZTSAVE("PXRMREP")=""
  S ZTSAVE("PXRMRT")=""
- S ZTSAVE("PXRMSCAT")="",ZTSAVE("PXRMSCAT(")=""
+ S ZTSAVE("PXRMSCAT")=""
  S ZTSAVE("PXRMSEL")=""
  S ZTSAVE("PXRMSRT")=""
  S ZTSAVE("PXRMSSN")=""
@@ -95,22 +79,7 @@ SAVE ;Save the variables for queing.
  S ZTSAVE("PATLST")=""
  S ZTSAVE("PXRMLIST(")=""
  S ZTSAVE("PXRMLIS1")=""
- S ZTSAVE("PLISTPUG")=""
  ;User DUZ
  S ZTSAVE("DBDUZ")=""
- S ZTSAVE("DBERR")=""
  S ZTSAVE("PXRMRERR(")=""
- ;Dubug information
- S ZTSAVE("PXRMDBUG")=""
- S ZTSAVE("PXRMDBUS")=""
- ;Patient Information
- S ZTSAVE("PXRMTPAT")=""
- S ZTSAVE("PXRMDPAT")=""
- I +$G(PXRMIDOD)>0 S ZTSAVE("PXRMIDOD")=""
- S ZTSAVE("PXRMPML")=""
- S ZTSAVE("PXRMPER")=""
- S ZTSAVE("PXRMCCS")=""
- S ZTSAVE("PXRMXCCS")=""
- I $D(^TMP("XM-MESS",$J)) S ZTSAVE("^TMP(""XM-MESS"",$J,")=""
  Q
- ;

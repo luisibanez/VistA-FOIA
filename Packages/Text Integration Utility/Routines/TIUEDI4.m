@@ -1,5 +1,5 @@
 TIUEDI4 ; SLC/JER - Enter/Edit a Document ; 7-FEB-2001 08:01:51
- ;;1.0;TEXT INTEGRATION UTILITIES;**100,109,216**;Jun 20, 1997
+ ;;1.0;TEXT INTEGRATION UTILITIES;**100,109**;Jun 20, 1997
  ;new rtn in TSC, created feb 2 from TIUEDIT
  ; 2/2: Moved LOADDFLT, BOIL, CANXEC, REPLACE, INSMULT to TIUEDI4
  ; 2/3 moved DIE, TEXTEDIT from TIUEDIT to TIUEDI4
@@ -136,24 +136,14 @@ LOADDFLT(DA,TIUTYP) ; Load bp text
  Q
 BOIL(LINE,COUNT) ; execute objects
  N TIUI,DIC,X,Y,TIUFPRIV S TIUFPRIV=1
- N TIUOLDR,TIUNEWR,TIUOLDG,TIUNEWG
  S DIC=8925.1,DIC(0)="FMXZ"
  S DIC("S")="I $P($G(^TIU(8925.1,+Y,0)),U,4)=""O"""
  F TIUI=2:2:$L(LINE,"|") S X=$P(LINE,"|",TIUI) D
  . D ^DIC
  . I +Y'>0 S X="The OBJECT "_X_" was NOT found...Contact IRM."
  . I +Y>0 D
- . . I $D(^TIU(8925.1,+Y,9)),+$$CANXEC(+Y) X ^(9) S:X["~@" X=$$APPEND(X) I 1
+ . . I $D(^TIU(8925.1,+Y,9)),+$$CANXEC(+Y) X ^(9) S:$E(X,1,2)="~@" X=X_"~@" I 1
  . . E  S X="The OBJECT "_X_" is INACTIVE...Contact IRM."
- . . I X["~@" D
- . . . I X'["^" D
- . . . . S TIUOLDR=$P(X,"~@",2),TIUNEWR=TIUOLDR_TIUI
- . . . . M @TIUNEWR=@TIUOLDR K @TIUOLDR
- . . . . S $P(X,"~@",2)=TIUNEWR
- . . . I X["^" D
- . . . . S TIUOLDG=$P(X,"~@",2),TIUNEWG="^TMP("_"""TIU201"""_","_$J_","_TIUI_")"
- . . . . M @TIUNEWG=@TIUOLDG
- . . . . S $P(X,"~@",2)=TIUNEWG
  . S LINE=$$REPLACE(LINE,X,TIUI)
  Q $TR(LINE,"|","")
 CANXEC(TIUODA) ; Eval Obj Status
@@ -188,7 +178,3 @@ INSMULT(LINE,TARGET,TIULCNT) ; Mult-valued results
  . . S @TARGET@(TIULCNT,0)=$G(TIUSLINE)
  . K @TIUSRC
  Q
-APPEND(X) ;
- N TIUXL S TIUXL=$L(X)
- I $E(X,TIUXL-1,TIUXL)'="~@" S X=X_"~@"
- Q X

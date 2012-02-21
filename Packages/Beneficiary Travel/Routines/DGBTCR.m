@@ -1,5 +1,5 @@
 DGBTCR ;ALB/SCK - BENEFICIARY TRAVEL FORM 70-3542d VARIABLES; 2/7/88@08:00 ;6/11/93@09:30
- ;;1.0;Beneficiary Travel;**7,14**;September 25, 2001;Build 7
+ ;;1.0;Beneficiary Travel;**7**;September 25, 2001
  ;Modification of AIVBTPRT / pmg / GRAND ISLAND ; 07 Jul 88 12:02 PM
 START Q:'$D(DGBTDT)
  S DGBTVAR(0)=$G(^DGBT(392,+DGBTDT,0)),DGBTACCT=$P($G(^DGBT(392.3,+$P(DGBTVAR(0),"^",6),0)),"^",5)
@@ -36,8 +36,7 @@ MILES S DGBTM6=$P(DGBTVAR("M"),"^")*$P(DGBTVAR("M"),"^",2)
  S X=$P(DGBTVAR("M"),"^",4) D COMMA^%DTC S DGBTM9=X
  S X=$P(DGBTVAR("M"),"^",5) D COMMA^%DTC S DGBTM10=X
  S X=DGBTM6*DGBTM7+$P(DGBTVAR("M"),"^",4)+$P(DGBTVAR("M"),"^",5) D COMMA^%DTC S DGBTM11=X
- S X2="3$",X=DGBTM7 D COMMA^%DTC S DGBTM7=X
- S X2="2$"  ;Reset edit mask to 2 decimal positions for rest of report
+ S X=DGBTM7 D COMMA^%DTC S DGBTM7=X
  S X=$P(DGBTVAR(0),"^",8) D COMMA^%DTC S DGBTM12=X
  S X=$P(DGBTVAR("M"),"^",4)+$P(DGBTVAR(0),"^",8) D COMMA^%DTC S DGBTM13=X
  S X=$P(DGBTVAR(0),"^",10) D COMMA^%DTC S DGBTM14=X

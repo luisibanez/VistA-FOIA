@@ -1,6 +1,5 @@
-PRS8EX ;HISC/MRL,WCIOFO/SAB-DECOMPOSITION, EXCEPTIONS ;6/11/2008
- ;;4.0;PAID;**2,40,56,69,111,112,117**;Sep 21, 1995;Build 32
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRS8EX ;HISC/MRL,WCIOFO/SAB-DECOMPOSITION, EXCEPTIONS ;8/23/01
+ ;;4.0;PAID;**2,40,56,69**;Sep 21, 1995
  ;
  ;This routine is used to process most exceptions to the normal
  ;tod.  It is used, for example, to determine whether or not the
@@ -11,8 +10,7 @@ PRS8EX ;HISC/MRL,WCIOFO/SAB-DECOMPOSITION, EXCEPTIONS ;6/11/2008
  ;
  S TT=$P(V,"^",3) ;type of time
  I TT="OT",+$P(V,"^",4)=8,$E(ENT,18) S TT="TT" ;ot in travel status
- I TT="CT",$P(V,"^",4)=16 S TT="CQ" ;credit hours earned
- I TT="CU",$P(V,"^",4)=16 S TT="CS" ;credit hours used
+ I TT="CU",$P(V,"^",4)=6 Q  ;comp for religious purposes/don't code
  I TT="HW",$E(ENT,1,2)="0D" S TT="RG"
  I TT="OT",TYP["P",TYP'["B" S TT="RG" ;To convert Pt ot to RG
  I TT="HW",TYP'["D",+V,+$P(V,"^",2) D
@@ -27,7 +25,7 @@ PRS8EX ;HISC/MRL,WCIOFO/SAB-DECOMPOSITION, EXCEPTIONS ;6/11/2008
  ..S ^TMP($J,"PRS8",DY,"HWK")=$G(^TMP($J,"PRS8",DY,"HWK"))_$P(V,U,1,2)_U
  ..Q
  .Q
- S X="^AL^SL^WP^NP^AA^RL^CU^CT^CP^HX^ML^TR^TV^OT^RG^TT^SB^ON^NL^HW^CB^AD^DL^RS^CH^CQ^CS" ;code
+ S X="^AL^SL^WP^NP^AA^RL^CU^CT^CP^HX^ML^TR^TV^OT^RG^TT^SB^ON^NL^HW^CB^AD^DL" ;code
  S X=($F(X,"^"_TT)\3)+4,(X,TT(1))=$P($T(ACT+X),";;",2) ;parameters
  S GO=0 I '+X!($E(ENT,+X)) S GO=1 ;entitlement exists-continue
  I TT="RG",$E(ENT,2)'=0 S GO=1 ;intermittent
@@ -75,8 +73,10 @@ PRS8EX ;HISC/MRL,WCIOFO/SAB-DECOMPOSITION, EXCEPTIONS ;6/11/2008
  I TYP'["D",TT="HX"!(TT="HW") S GO=1 ;process holiday excused/worked
  G END:'GO ;nothing to process
  I TT'="UN" S VAR=$P(X,"^",3) ;increment time code
+ I TT="NL",'$D(^TMP($J,"PRS8",DY,"NL")) D  ;np a/l
+ .S ^TMP($J,"PRS8",DY,"NL")=1
  I '$S(VAR'="W":1,'CYA:1,DY<CYA:1,1:0) D
- .S WPCY=1 ;flag to save WOP in hours from 1/1 for calendar year adjustment
+ .S WPCY=1 ;flag to save WOP in hours from 1/1 for calander year adjustment
  I TYP'["D" D  G END ;process hourly people and quit
  .; The following 2 lines commented out because for Employees that are
  .; non-daily tour (TYP'["D"), policy is has been described that all
@@ -100,10 +100,10 @@ PRS8EX ;HISC/MRL,WCIOFO/SAB-DECOMPOSITION, EXCEPTIONS ;6/11/2008
  .Q
  S D=DY
  I TT="NP"!($P(DAY(D,0),"^",2)'=1) S DAY(D,"W")=VAR,X=$P(TT(1),"^",4) I X'="",DY>0,DY<15 D SET I VAR="V" S X="M" D SET I VAR="V",TYP["DI",$E(ENT,2)="D" S X=9 D SET ; IF INT RESDNT PAID IN DAYS HAS COP POSTED PAY UN/US ALSO
- D ENCAP^PRS8EX0
+ D LOOP^PRS8EX0
  ;
 END ; --- all done here     
- K A,D,DD,GO,TT,X,Z
+ K A,BACK,D,DD,FRONT,GO,TT,X,Z
  Q
  ;
 SET ; --- enter here to set without VAL defined
@@ -144,7 +144,3 @@ ACT ; --- define variable X for action
  ;;31^Care and Bereavement^F^44
  ;;31^Adoption^G^45
  ;;35^Donor Leave^D^46
- ;;5^Recess^r^48
- ;;4^Comp Time for Travel Used^Z^53
- ;;28^Credit Hours Earned^Q^54
- ;;28^Credit Hours Used^q^55

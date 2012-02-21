@@ -1,5 +1,5 @@
-IVMCM5 ;ALB/SEK,BRM,CKN - ADD NEW DCD INCOME RELATION FILE ENTRIES ; 2/8/06 2:01pm
- ;;2.0;INCOME VERIFICATION MATCH;**17,49,105**;21-OCT-94;Build 2
+IVMCM5 ;ALB/SEK,BRM - ADD NEW DCD INCOME RELATION FILE ENTRIES ; 1/4/02 1:34pm
+ ;;2.0;INCOME VERIFICATION MATCH;**17,49**;21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; this routine will add entries to INCOME RELATION file (408.22).
@@ -22,9 +22,8 @@ EN ; this routine will add entries to INCOME RELATION file (408.22).
  ; IVM0   408.22 0 node pieces 5-7
  ; IVM01         0 node pieces 9-12
  ; IVM02         0 node piece  6
- ; IVM03         0 node piece  18
  ;
- N IVM0,IVM01,IVM02,IVM03
+ N IVM0,IVM01,IVM02
  S DGIRI=$$ADDIR^DGMTU2(DFN,DGINI)
  ;
  ; if can't create stub notify site & IVM Center
@@ -55,9 +54,9 @@ EN ; this routine will add entries to INCOME RELATION file (408.22).
  ..S DA=DGIRI,DR=".08////0;.13////@",DIE="^DGMT(408.22," D ^DIE
  ..K DA,DR,DIE
  .S IVM0=$P(IVMSEG,"^",2,4)
- I IVMSPCHV="C" S IVM01=$P(IVMSEG,"^",6,9),IVM02=$P(IVMSEG,"^",3),IVM03=$$CONVERT($P(IVMSEG,"^",14),"1/0")
+ I IVMSPCHV="C" S IVM01=$P(IVMSEG,"^",6,9),IVM02=$P(IVMSEG,"^",3)
  S DIK="^DGMT(408.22,"
- L +^DGMT(408.22,DGIRI) S:IVMSPCHV="V" $P(^DGMT(408.22,DGIRI,0),"^",5,7)=IVM0 S:IVMSPCHV="C" $P(^DGMT(408.22,DGIRI,0),"^",9,12)=IVM01,$P(^(0),"^",6)=IVM02,$P(^(0),"^",18)=IVM03 S DA=DGIRI D IX1^DIK L -^DGMT(408.22,DGIRI)
+ L +^DGMT(408.22,DGIRI) S:IVMSPCHV="V" $P(^DGMT(408.22,DGIRI,0),"^",5,7)=IVM0 S:IVMSPCHV="C" $P(^DGMT(408.22,DGIRI,0),"^",9,12)=IVM01,$P(^(0),"^",6)=IVM02 S DA=DGIRI D IX1^DIK L -^DGMT(408.22,DGIRI)
  K DA,DIK
  Q
  ;
@@ -110,18 +109,3 @@ INACT1 ; add inactivate entry to 408.1275
  L +^DGPR(408.12,+DGPRI) S $P(^DGPR(408.12,DA(1),"E",DA,0),"^",2,4)=0_"^"_1_$S(IVMTYPE=3:"",1:"^"_DGMTI) D IX1^DIK L -^DGPR(408.12,+DGPRI)
  K DA,DIC,DIK
  Q
-CONVERT(VAL,DATATYPE) ;Data Conversion
- ; Description: Converts the value found in the HL7 segment to DHCP format
- ;Input:
- ;        VAL - value parsed from HL7 segment
- ;   DATATYPE - indicates the type of conversion necessary
- ;              "1/0" - "Y"->1,"N"->0
- ;Currently only one type needs to be converted but new data types can
- ;be added for other conversion
- I VAL="" Q VAL
- I VAL="""""" S VAL="@" Q VAL
- I ($G(DATATYPE)="1/0") D
- .I VAL="N" S VAL=0 Q
- .I VAL="Y" S VAL=1 Q
- .S VAL=""
- Q VAL

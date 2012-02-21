@@ -1,5 +1,5 @@
-EASUM7 ;ALB/GN,EG - DELETE IVM MEANS TEST ; 07/07/2006
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**42,74**;21-OCT-94;Build 6
+EASUM7 ;ALB/GN - DELETE IVM MEANS TEST ; 6/15/04 10:52pm
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**42**;21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;EAS*1*42 This routine patterned after IVMUM7.
@@ -43,13 +43,11 @@ EN ; this routine will process an IVM MT/CT delete request
  .D ACK^IVMPREC
  ;
  ; get VAMC MT/CT via AD xref (by type) to be re-instated    ;EAS*1*42
- S IVMVAMC="A" ; ivmvamc is vamc ien
- ;make sure you get the latest test of that type for that date first
- F  S IVMVAMC=$O(^DGMT(408.31,"AD",DGMTYPT,DFN,IVMMTDT,IVMVAMC),-1) Q:'IVMVAMC  D  Q:$D(IVMVNO)
- . S IVMVNO=$G(^DGMT(408.31,+IVMVAMC,0)) ; vamc 0th node
- . S IVMSOT=$P($G(^DG(408.34,+$P(IVMVNO,"^",23),0)),"^") ; source of test
- . I IVMSOT'="VAMC",IVMSOT'="DCD",IVMSOT'="OTHER FACILITY" K IVMVNO Q
- . Q
+ S IVMVAMC=0 ; ivmvamc is vamc ien
+ F  S IVMVAMC=$O(^DGMT(408.31,"AD",DGMTYPT,DFN,IVMMTDT,IVMVAMC)) Q:'IVMVAMC  D  Q:$D(IVMVNO)
+ .S IVMVNO=$G(^DGMT(408.31,+IVMVAMC,0)) ; vamc 0th node
+ .S IVMSOT=$P($G(^DG(408.34,+$P(IVMVNO,"^",23),0)),"^") ; source of test
+ .I IVMSOT'="VAMC",IVMSOT'="DCD",IVMSOT'="OTHER FACILITY" K IVMVNO Q
  ;
  ; if no previous VAMC RXCT (type 2) on file, then          ;EAS*1*42
  ; simply delete the IVM RX converted 408.31 record

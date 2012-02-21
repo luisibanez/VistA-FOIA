@@ -1,11 +1,11 @@
-MHVXRX ;WAS/GPM - Prescription extract ; [12/14/06 11:38am]
- ;;1.0;My HealtheVet;**2**;Aug 23, 2005;Build 22
+MHVXRX ;WAS/GPM - Prescription extract ; [8/23/05 12:33am]
+ ;;1.0;My HealtheVet;;Aug 23, 2005
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  Q
  ;
 PROFILE(QRY,ERR,DATAROOT) ; Entry point to get prescription profile
- ; Retrieves requested prescription data and returns it in DATAROOT
+ ; Retrieves requested prescripton data and returns it in DATAROOT
  ; Retrieves all prescriptions with an active status
  ;
  ;  Integration Agreements:
@@ -21,14 +21,15 @@ PROFILE(QRY,ERR,DATAROOT) ; Entry point to get prescription profile
  ;  DATAROOT - Populated data array, includes # of hits
  ;       ERR - Errors during extraction
  ;
- N U,DT,HIT,DFN,FROM,TO,STA,DRUG,DIV,MHVSTAT,RXN,MHVDATE,INDEX
+ N U,DT,HIT,DFN,PRI,FROM,TO,STA,DRUG,DIV,MHVSTAT,RXN,MHVDATE,INDEX
  ;
- D LOG^MHVUL2("MHVXRX PROFILE","BEGIN","S","TRACE")
+ D LOG^MHV7U("MHVXRX Profile","BEGIN","S",0)
  S U="^",DT=$$DT^XLFDT
  S ERR=0,HIT=0
  K @DATAROOT
  K ^TMP("PSO",$J)
  S DFN=$G(QRY("DFN"))
+ S PRI=$G(QRY("PRI"))
  S FROM=DT
  S TO=""
  ;
@@ -39,12 +40,12 @@ PROFILE(QRY,ERR,DATAROOT) ; Entry point to get prescription profile
  ;
  K ^TMP("PSO",$J)
  S @DATAROOT=HIT
- D LOG^MHVUL2("MHVXRX PROFILE",HIT_" HITS","S","TRACE")
- D LOG^MHVUL2("MHVXRX PROFILE","END","S","TRACE")
+ D LOG^MHV7U("MHVXRX Profile HITS=",HIT,"S",0)
+ D LOG^MHV7U("MHVXRX Profile","END","S",0)
  Q
  ;
 EXTRACT(QRY,ERR,DATAROOT) ; Entry point to extract prescription data
- ; Retrieves requested prescription data and returns it in DATAROOT
+ ; Retrieves requested prescripton data and returns it in DATAROOT
  ; Retrieves all prescriptions of all statuses in given date range
  ; Statuses of deleted are filtered by the pharmacy API.
  ;
@@ -63,14 +64,15 @@ EXTRACT(QRY,ERR,DATAROOT) ; Entry point to extract prescription data
  ;  DATAROOT - Populated data array, includes # of hits
  ;       ERR - Errors during extraction
  ;
- N U,DT,HIT,DFN,FROM,TO,STA,DRUG,DIV,MHVSTAT,RXN,MHVDATE,INDEX
+ N U,DT,HIT,DFN,PRI,FROM,TO,STA,DRUG,DIV,MHVSTAT,RXN,MHVDATE,INDEX
  ;
- D LOG^MHVUL2("MHVXRX EXTRACT","BEGIN","S","TRACE")
+ D LOG^MHV7U("MHVXRX Extract","BEGIN","S",0)
  S U="^",DT=$$DT^XLFDT
  S ERR=0,HIT=0
  K @DATAROOT
  K ^TMP("PS",$J)
  S DFN=$G(QRY("DFN"))
+ S PRI=$G(QRY("PRI"))
  S FROM=$G(QRY("FROM"))
  S TO=$G(QRY("TO"))
  ;
@@ -86,8 +88,8 @@ EXTRACT(QRY,ERR,DATAROOT) ; Entry point to extract prescription data
  ;
  K ^TMP("PSO",$J)
  S @DATAROOT=HIT
- D LOG^MHVUL2("MHVXRX EXTRACT",HIT_" HITS","S","TRACE")
- D LOG^MHVUL2("MHVXRX EXTRACT","END","S","TRACE")
+ D LOG^MHV7U("MHVXRX Extract HITS=",HIT,"S",0)
+ D LOG^MHV7U("MHVXRX Extract","END","S",0)
  Q
  ;
 SET ;

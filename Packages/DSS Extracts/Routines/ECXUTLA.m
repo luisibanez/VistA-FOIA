@@ -1,5 +1,5 @@
-ECXUTLA ;ALB/JAP - Utilities for Audit Reports ; 4/16/08 4:04pm
- ;;3.0;DSS EXTRACTS;**8,14,112**;Dec 22, 1997;Build 26
+ECXUTLA ;ALB/JAP - Utilities for Audit Reports ;Sep 25, 1997
+ ;;3.0;DSS EXTRACTS;**8,14**;Dec 22, 1997
  ;
 AUDIT(ECXHEAD,ECXERR,ECXARRAY,ECXAUD) ;set audit report parameters
  ;   input
@@ -45,7 +45,7 @@ AUDIT(ECXHEAD,ECXERR,ECXARRAY,ECXAUD) ;set audit report parameters
  ;if transmit date exists, then ask user if audit still needed
  I $L(ECXARR(727,ECXDA,300,"E"))>0 D
  .W !!,?5,"The extract which you have chosen to audit"
- .W !,?5,"was transmitted to Austin/DSS on ",ECXARR(727,ECXDA,300,"E"),".",!
+ .W !,?5,"was transmitted to AAC/DSS on ",ECXARR(727,ECXDA,300,"E"),".",!
  .S DIR(0)="Y",DIR("A")="Do you want to continue with this audit report",DIR("B")="NO" D ^DIR
  .S:$G(DIRUT) ECXERR=1 S:Y=0 ECXERR=1
  Q:ECXERR

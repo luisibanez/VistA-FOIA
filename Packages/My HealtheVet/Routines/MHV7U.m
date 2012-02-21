@@ -1,5 +1,5 @@
-MHV7U ;WAS/GPM - HL7 UTILITIES ; [1/7/08 10:21pm]
- ;;1.0;My HealtheVet;**1,2**;Aug 23, 2005;Build 22
+MHV7U ;WAS/GPM - HL7 UTILITIES ; [8/22/05 6:09pm]
+ ;;1.0;My HealtheVet;;Aug 23, 2005
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ;This routine contains generic utilities used when building
@@ -20,48 +20,6 @@ LOADMSG(MSGROOT) ; Load HL7 message into temporary global for processing
  . F  S CNT=$O(HLNODE(CNT)) Q:'CNT  S @MSGROOT@(SEG,CNT)=HLNODE(CNT)
  Q
  ;
-LOADXMT(XMT) ;Set HL dependent XMT values
- ;
- ; The HL array and variables are expected to be defined.  If not,
- ; message processing will fail.  These references should not be
- ; wrapped in $G, as null values will simply postpone the failure to
- ; a point that will be harder to diagnose.  Except HL("APAT") which
- ; is not defined on synchronous calls.
- ; Also assumes MHV RESPONSE MAP file is setup for every protocol 
- ; pair defined by MHV package.
- ;
- ;  Integration Agreements:
- ;         1373 : Reference to PROTOCOL file #101
- ;
- N SUBPROT,RESPIEN,RESP0
- S XMT("MID")=HL("MID")                   ;Message ID
- S XMT("MODE")="A"                        ;Response mode
- I $G(HL("APAT"))="" S XMT("MODE")="S"    ;Synchronous mode
- S XMT("HLMTIENS")=HLMTIENS               ;Message IEN
- S XMT("MESSAGE TYPE")=HL("MTN")          ;Message type
- S XMT("EVENT TYPE")=HL("ETN")            ;Event type
- S XMT("DELIM")=HL("FS")_HL("ECH")        ;HL Delimiters
- S XMT("MAX SIZE")=0                      ;Default size unlimited
- ;
- ; Map response protocol and builder
- S SUBPROT=$P(^ORD(101,HL("EIDS"),0),"^")
- S RESPIEN=$O(^MHV(2275.4,"B",SUBPROT,0))
- S RESP0=$G(^MHV(2275.4,RESPIEN,0))
- S XMT("PROTOCOL")=$P(RESP0,"^",2)             ;Response Protocol
- S XMT("BUILDER")=$TR($P(RESP0,"^",3),"~","^") ;Response Builder
- S XMT("BREAK SEGMENT")=$P(RESP0,"^",4)        ;Boundary Segment
- Q
- ;
-DELIM(PROTOCOL) ;Return string of message delimiters based on Protocol
- ;
- ;  Integration Agreements:
- ;         2161 : INIT^HLFNC2
- ;
- N HL
- Q:PROTOCOL="" ""
- D INIT^HLFNC2(PROTOCOL,.HL)
- Q $G(HL("FS"))_$G(HL("ECH"))
- ;
 PARSEMSG(MSGROOT,HL) ; Message Parser
  ; Does not handle segments that span nodes
  ; Does not handle extremely long segments (uses a local)
@@ -76,6 +34,47 @@ PARSEMSG(MSGROOT,HL) ; Message Parser
  . ;Add handler for segments that span nodes here.
  . Q
  Q
+ ;
+LOG(NAME,DATA,TYPE,NEW) ;
+ Q:'$G(^XTMP("MHV7LOG"))
+ N DTM,CNT
+ I NEW D
+ . S DTM=-$$NOW^XLFDT()
+ . K ^TMP("MHV7LOG",DTM,$J)
+ . S ^TMP("MHV7LOG",$J)=DTM
+ . S CNT=1
+ . S ^TMP("MHV7LOG",DTM,$J)=CNT
+ E  D
+ . S DTM=^TMP("MHV7LOG",$J)
+ . S CNT=^TMP("MHV7LOG",DTM,$J)+1
+ . S ^TMP("MHV7LOG",DTM,$J)=CNT
+ ;
+ I TYPE="S" S ^TMP("MHV7LOG",DTM,$J,CNT,NAME)=DATA Q
+ I TYPE="M" M ^TMP("MHV7LOG",DTM,$J,CNT,NAME)=DATA Q
+ I TYPE="I" M ^TMP("MHV7LOG",DTM,$J,CNT,NAME)=@DATA Q
+ ;
+ S ^TMP("MHV7LOG",DTM,$J)=CNT
+ Q
+ ;
+TRIMSPC(STR) ;Trim leading and trailing spaces from a text string
+ ;
+ ;  Input:
+ ;    STR - Text string
+ ;
+ ;  Output:
+ ;   Function Value - Input text string with leading and trailing
+ ;                    spaces removed
+ ;
+ N SPACE,POS,LEN
+ S SPACE=$C(32)
+ S LEN=$L(STR)
+ S POS=1
+ F  Q:$E(STR,POS)'=SPACE!(POS>LEN)  S POS=POS+1
+ S STR=$E(STR,POS,LEN)
+ S POS=$L(STR)
+ F  Q:$E(STR,POS)'=SPACE!(POS<1)  S POS=POS-1
+ S STR=$E(STR,1,POS)
+ Q STR
  ;
 PARSESEG(SEG,DATA,HL) ;Generic segment parser
  ;This procedure parses a single HL7 segment and builds an array
@@ -97,7 +96,7 @@ PARSESEG(SEG,DATA,HL) ;Generic segment parser
  N REP     ;repetition subscript
  N REPVAL  ;repetition value
  N SUB     ;sub-component subscript
- N SUBVAL  ;sub-component value
+ N SUBVAL  ;suc-component value
  N FS      ;field separator
  N CS      ;component separator
  N RS      ;repetition separator
@@ -142,7 +141,7 @@ BLDSEG(DATA,HL) ;generic segment builder
  N REP     ;repetition subscript
  N REPVAL  ;repetition value
  N SUB     ;sub-component subscript
- N SUBVAL  ;sub-component value
+ N SUBVAL  ;suc-component value
  N FS      ;field separator
  N CS      ;component separator
  N RS      ;repetition separator
@@ -174,33 +173,41 @@ BLDSEG(DATA,HL) ;generic segment builder
  . . . . S SEG=SEG_SEP_SUBVAL
  Q SEG
  ;
-BLDWP(WP,SEG,MAXLEN,FORMAT,FMTLEN,HL) ;
+BLDWPSEG(WP,SEG,MAXLEN,HL) ;
  ;Builds segment nodes to add word processing fields to a segment
- N CNT,LINE,LAST,FS,RS,LENGTH,I
- I MAXLEN<1 S MAXLEN=99999999999999999
+ N CNT,LINE,LAST,FS,RS,LENGTH
+ I MAXLEN<1 S MAXLEN=999999999999
  S FS=HL("FS")         ;field separator
  S RS=$E(HL("ECH"),2)  ;repeat separator
  S CNT=$O(SEG(""),-1)+1
- S SEG(CNT)=FS
- S FMTLEN=0
- S LENGTH=0
- ;
- S I=0
- F  S I=$O(WP(I)) Q:'I  D  Q:LENGTH'<MAXLEN
- . I $D(WP(I,0)) S LINE=$G(WP(I,0))  ;conventional WP field
- . E  S LINE=$G(WP(I))
+ S LINE=$O(WP(0))
+ S LENGTH=$L(LINE)
+ S SEG(CNT)=""
+ S SEG(CNT)=FS_$$ESCAPE($G(WP(LINE,0)),.HL)
+ F  S LINE=$O(WP(LINE)) Q:LINE=""  D  Q:LENGTH'<MAXLEN
  . S LENGTH=LENGTH+$L(LINE)
  . I LENGTH'<MAXLEN S LINE=$E(LINE,1,$L(LINE)-(LENGTH-MAXLEN))
- . S LINE=$$ESCAPE(LINE,.HL)
- . S LAST=$E(LINE,$L(LINE))
- . ;first line
- . I SEG(CNT)=FS S SEG(CNT)=FS_LINE,FMTLEN=FMTLEN+$L(SEG(CNT)) Q
+ . S LAST=$E(SEG(CNT),$L(SEG(CNT)))
  . S CNT=CNT+1
- . S SEG(CNT)=RS_LINE,FMTLEN=FMTLEN+$L(SEG(CNT))
- . Q:'FORMAT
- . ;attempt to keep sentences together
- . I $E(LINE)=" "!(LAST=" ") S SEG(CNT)=LINE,FMTLEN=FMTLEN+$L(LINE)
+ . S SEG(CNT)=$$ESCAPE($G(WP(LINE,0)),.HL)
+ . I $E(SEG(CNT))'=" ",LAST'=" " S SEG(CNT)=RS_SEG(CNT)
  . Q
+ Q
+ ;
+ADD(VAL,SEP,SEG) ;append a value onto segment
+ ;
+ ;  Input:
+ ;    VAL - value to append
+ ;    SEP - HL7 separator
+ ;
+ ;  Output:
+ ;    SEG - segment passed by reference
+ ;
+ S SEP=$G(SEP)
+ S VAL=$G(VAL)
+ ; Escape VAL??
+ ; If exceed 512 characters don't add
+ S SEG=SEG_SEP_VAL
  Q
  ;
 ESCAPE(VAL,HL) ;Escape any special characters
@@ -255,7 +262,7 @@ UNESC(VAL,HL) ;Reconstitute any escaped characters
  ;     HL - HL7 environment array
  ;
  ;  Output:
- ;    VAL - passed by reference
+ ;    VAL - passed by referenc
  ;
  N FS      ;field separator
  N CS      ;component separator

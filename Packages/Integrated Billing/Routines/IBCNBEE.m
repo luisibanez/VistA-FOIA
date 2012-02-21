@@ -1,6 +1,6 @@
 IBCNBEE ;ALB/ARH-Ins Buffer: add/edit existing entries in buffer ;1 Jun 97
- ;;2.0;INTEGRATED BILLING;**82,184,252,251,356,361,371,377,416,438**;21-MAR-94;Build 52
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**82,184,252,251**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 ADD(IBSOURCE) ; add a new buffer file entry (#355.33), sets only status (0) node data
  N IBARR,IBERR,IBIFN,IBX I '$G(IBSOURCE) S IBSOURCE=1
@@ -55,8 +55,7 @@ POLICY(IBBUFDA,FLDS) ; edit the patient policy portion of the buffer file entry
  I $G(FLDS)="" S FLDS="MR"
  ;
  S DR=$P($T(@(FLDS_"POL")+1),";;",2,9999) Q:DR=""
- S DIE="^IBA(355.33,",DA=IBBUFDA
- S DIE("NO^")="BACKOUTOK" D ^DIE K DIE,DA,DR Q:$D(Y)
+ S DIE="^IBA(355.33,",DA=IBBUFDA D ^DIE K DIE,DA,DR Q:$D(Y)
  ;
  I FLDS="MR" D ESGHP(IBBUFDA)
  Q
@@ -76,7 +75,7 @@ ESGHP(IBBUFDA) ; sponsoring employer information
  . D DELEMP(IBBUFDA) ; delete any data already contained in these fields
  . ;
  . ; if the insured's current employer sponsors the plan then stuff that employer's address into the buffer
- . S IBE=$S(IBREL="01":.311,1:.25),IBEMPST=$P($G(^DPT(DFN,IBE)),U,15)
+ . S IBE=$S(IBREL="01":.311,1:.25),IBEMPST=$P($G(^DPT(DFN,IBE)),U,15) D
  . S DR="61.02///"_VAOA(9)_";61.03///"_IBEMPST_";61.06///"_$E(VAOA(1),1,30)_";61.07///"_$E(VAOA(2),1,30)
  . S DR=DR_";61.08///"_$E(VAOA(3),1,30)_";61.09///"_$E(VAOA(4),1,20)_";61.1////"_$P(VAOA(5),U,1)
  . S DR=DR_";61.11////"_$P(VAOA(11),U,1)_";61.12///"_$E(VAOA(8),1,15)
@@ -156,8 +155,8 @@ MRINS ; Insurance Company fields asked of MCCR users in the Buffer Process optio
 MRGRP ; Group/Plan fields asked of MCCR users in the Buffer Process options (all buffer grp fields 40.01-40.09) ;;Daou/EEN adding BIN and PCN (40.1,40.11)
  ;;40.01:40.03;40.1;40.11;40.09;40.04:40.08
  ;
-MRPOL ; Patient Policy fields asked of MCCR users in the Buffer Process options (all buffer policy fields except ESGHP,60.05,60.06 60.02-61.01
- ;;60.02;60.03;60.14PT. RELATIONSHIP TO INSURED;S IBZZ=X;I IBZZ'="18" S Y="@111";60.07///1;60.04T;60.08///@;60.09///@;62.01///@;S Y="@112";@111;60.07;60.04T;60.08;60.13;62.01T;@112;60.1:60.12;.03;61.01;62.02;62.03;62.04;62.05;62.06
+MRPOL ; Patient Policy fields asked of MCCR users in the Buffer Process options (all buffer policy fields except ESGHP 60.02-61.01
+ ;;60.02;60.03;60.05;60.06//^S X=$S(X="v":"01",X="s":"02",1:"");S IBZZ=X;60.04;I IBZZ'="01" S Y="@111";60.07///1;60.08///@;60.09///@;S Y="@112";@111;60.07:60.09;@112;60.1:60.12;.03;61.01
  ;
 OTINS ; Insurance Company fields asked of non-MCCR users entering buffer data from options outside IB (20.01-20.04,21.01-21.06)
  ;;20.01:20.04;21.01;I X="" S Y="@111";21.02;I X="" S Y="@111";21.03;@111;21.04:21.06
@@ -165,5 +164,5 @@ OTINS ; Insurance Company fields asked of non-MCCR users entering buffer data fr
 OTGRP ; Group/Plan fields asked of non-MCCR users entering buffer data from options outside IB (40.02,40.03,40.09) ;;Daou/EEN-adding BIN & PCN (40.1,40.11)
  ;;40.02;40.03;40.1;40.11;40.09
  ;
-OTPOL ; Patient Policy fields asked of non-MCCR users entering buffer data from options outside IB (60.02-60.08)
- ;;60.02;60.03;60.14PT. RELATIONSHIP TO INSURED;S IBZZ=X;60.04T;I IBZZ'="18" S Y="@111";60.07///1;60.08///@;60.09///@;62.01///@;S Y="@112";@111;60.07;60.08;60.13;62.01T;@112;62.02;62.03;62.04;62.05;62.06
+OTPOL ; Patient Policy fields asked of non-MCCR users entering buffer data from options outside IB (60.02-60.09)
+ ;;60.02;60.03;60.05;60.06//^S X=$S(X="v":"01",X="s":"02",1:"");S IBZZ=X;60.04;I IBZZ'="01" S Y="@111";60.07///1;60.08///@;60.09///@;S Y="@112";@111;60.07:60.09;@112

@@ -1,6 +1,6 @@
-PRSLIB00 ;WOIFO/JAH - PAID LIBRARY - ROUTINES & FUNCTIONS ;01/22/2005
- ;;4.0;PAID;**25,35,49,57,93**;Sep 21, 1995;Build 7
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRSLIB00 ;WIRMFO/JAH,MGD-PAID LIBRARY - ROUTINES & FUNCTIONS ;2/28/2000
+ ;;4.0;PAID;**25,35,49,57**;Sep 21, 1995
+ ;
  Q
  ;
  ;=====================================================================
@@ -23,7 +23,7 @@ AVAILREC(WHO,GLOBREF,OUT) ;IS RECORD AVAILABLE
  ;create message depending on which option is being used to attempt
  ;to edit record: Supervisory Certification or TimeKeeper posting.
  ;
- S M1="-Employee's pay period record locked. "
+ S M1="-Employee's pay period record is locked. "
  S M2=$S(WHO="SUP":"Timekeeper",WHO="TK":"Supervisor",1:"Another user")
  S M3=" may be editing or reviewing."
  S MESSAGE=M1_M2_M3
@@ -96,9 +96,8 @@ BLDYR(NEXT) ;Build year with last digit of year.
  ;==================================================================
 LEAPYR(Y) ;boolean function determines if year is leap year.
  ;INPUT:           Y =  year in standard 4 digit format.
- ;OUTPUT:  LEAPFLAG =  return 1 for leap year, otherwise 0.
+ ;OUTPUT:  LEAPFLAGE =  return 1 for leap year, otherwise 0.
  ;
- N LEAPFLAG
  S LEAPFLAG='(Y#4)
  I '(Y#100) S LEAPFLAG='(Y#400)
  Q LEAPFLAG

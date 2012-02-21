@@ -1,5 +1,5 @@
-SRONRPT0 ;BIR/ADM - NURSE INTRAOP REPORT ;05/31/06
- ;;3.0;Surgery;**100,129,147,153,157,175**;24 Jun 93;Build 6
+SRONRPT0 ;BIR/ADM - NURSE INTRAOP REPORT ;02/27/04
+ ;;3.0; Surgery ;**100,129,147**;24 Jun 93
  ;** NOTICE: This routine is part of an implementation of a nationally
  ;**         controlled procedure. Local modifications to this routine
  ;**         are prohibited.
@@ -18,47 +18,36 @@ SRONRPT0 ;BIR/ADM - NURSE INTRAOP REPORT ;05/31/06
  S Y=$P(SR(.1),"^",14),C=$P(^DD(130,.195,0),"^",2) D:Y'="" Y^DIQ S SRCONV=$S(Y'="":Y,1:"N/A")
  I 'SRALL,SRMOOD="N/A",SRCONS="N/A" G SKIN
  D LINE(1) S @SRG@(SRI)="Preop Mood:",@SRG@(SRI)=@SRG@(SRI)_$$SPACE(18)_SRMOOD,@SRG@(SRI)=@SRG@(SRI)_$$SPACE(40)_"Preop Consc:",@SRG@(SRI)=@SRG@(SRI)_$$SPACE(56)_SRCONS
-SKIN I 'SRALL,SRSKIN="N/A",SRCONV="N/A" G VER
+SKIN I 'SRALL,SRSKIN="N/A",SRCONV="N/A" G VAL
  D LINE(1) S @SRG@(SRI)="Preop Skin Integ: "_SRSKIN,@SRG@(SRI)=@SRG@(SRI)_$$SPACE(40)_"Preop Converse: "_SRCONV
+VAL S SRLF=1,Y=$P(SR(.6),"^",9),C=$P(^DD(130,.69,0),"^",2) D:Y'="" Y^DIQ S SRUSER=$S(Y="":"N/A",1:Y)
+ I 'SRALL,SRUSER="N/A" G VER
+ D LINE(1) S @SRG@(SRI)="Valid Consent/ID Band Confirmed By: "_SRUSER
  ;
-VER N II,SROIM,SROUT,SROIN,SRHRM
- S Y=$P(SR("VER"),"^",7),SROIN=$S(Y="Y":"YES",Y="N":"NO",1:"* NOT ENTERED *") D LINE(1) S @SRG@(SRI)="Confirm Correct Patient Identity: "_SROIN
- S Y=$P(SR("VER"),"^",8),SROIN=$S(Y="Y":"YES",Y="N":"NO",1:"* NOT ENTERED *") D LINE(1) S @SRG@(SRI)="Confirm Procedure to be Performed: "_SROIN
- S Y=$P(SR("VER"),"^",9),SROIN=$S(Y="Y":"YES",Y="N":"NO",Y="NA":"NOT APPLICABLE",1:"* NOT ENTERED *") D LINE(1) S @SRG@(SRI)="Confirm Site of the Procedure, including laterality: "_SROIN
- S Y=$P(SR("VER"),"^",10),SROIN=$S(Y="Y":"YES",Y="N":"NO",1:"* NOT ENTERED *") D LINE(1) S @SRG@(SRI)="Confirm Valid Consent Form: "_SROIN
- S Y=$P(SR("VER"),"^",11),SROIN=$S(Y="Y":"YES",Y="N":"NO",1:"* NOT ENTERED *") D LINE(1) S @SRG@(SRI)="Confirm Patient Position: "_SROIN
- S Y=$P(SR("VER"),"^",12),SROIN=$S(Y="Y":"YES",Y="N":"NO",1:"* NOT ENTERED *")
- D LINE(1) S @SRG@(SRI)="Confirm Procedure Site has been Marked Appropriately and that the Site of the " D LINE(1) S @SRG@(SRI)=" Mark is Visible After Prep and Draping: "_SROIN
- D LINE(1) S Y=$P(SR("VER"),"^",13),SROIM=$S(Y="Y":"YES",Y="N":"NO",Y="NA":"N/A",1:"* NOT ENTERED *") S @SRG@(SRI)="Pertinent Medical Images have been Confirmed: "_SROIN
- S Y=$P(SR("VER"),"^",14),SROIN=$S(Y="Y":"YES",Y="N":"NO",Y="NA":"NOT APPLICABLE",1:"* NOT ENTERED *") D LINE(1) S @SRG@(SRI)="Correct Medical Implant(s) is available: "_SROIN
- S Y=$P(SR("VER"),"^",18),SROIN=$S(Y="Y":"YES",Y="N":"NO",Y="NA":"NOT APPLICABLE",1:"* NOT ENTERED *") D LINE(1) S @SRG@(SRI)="Availability of Special Equipment: "_SROIN
- S Y=$P(SR("VER"),"^",15),SROIN=$S(Y="Y":"YES",Y="N":"NO",Y="NA":"NOT APPLICABLE",1:"* NOT ENTERED *") D LINE(1) S @SRG@(SRI)="Appropriate Antibiotic Prophylaxis: "_SROIN
- S Y=$P(SR("VER"),"^",16),SROIN=$S(Y="Y":"YES",Y="N":"NO",Y="NA":"NOT APPLICABLE",1:"* NOT ENTERED *") D LINE(1) S @SRG@(SRI)="Appropriate Deep Vein Thrombosis Prophylaxis: "_SROIN
- S Y=$P(SR("VER"),"^",17),SROIN=$S(Y="Y":"YES",Y="N":"NO",Y="NA":"NOT APPLICABLE",1:"* NOT ENTERED *") D LINE(1) S @SRG@(SRI)="Blood Availability: "_SROIN
- S II=51 D ENSC
- S SRLF=1,Y=$P(SR(.6),"^",9),C=$P(^DD(130,.69,0),"^",2) D:Y'="" Y^DIQ S SRUSER=$S(Y="":"N/A",1:Y)
- I 'SRALL,SRUSER="N/A" G PREP
- D LINE(1) S @SRG@(SRI)="Checklist Confirmed By: "_SRUSER
+VER N II,SROIM,SROUT,SROIN
+ S Y=$P(SR("VER"),"^",5),SROIN=$S(Y="Y":"YES",Y="M":"MARKING NOT REQUIRED FOR THIS PROCEDURE",Y="N":"NO - MARKING REQUIRED BUT NOT DONE (see CORRECT SURGERY COMMENTS)",1:"* NOT ENTERED *")
+ D LINE(1) S @SRG@(SRI)="Mark on Surgical Site Confirmed: "_$S($L(SROIN)>43:"",1:SROIN)
+ I $L(SROIN)>43 D LINE(1) S @SRG@(SRI)=$$SPACE(2)_SROIN
+ S II=84 D ENSC,LINE(1)
+ S Y=$P(SR("VER"),"^",4),SROIM=$S(Y="Y":"YES",Y="I":"IMAGING NOT REQUIRED FOR THIS PROCEDURE",Y="N":"IMAGING REQUIRED BUT NOT VIEWED (see CORRECT SURGERY COMMENTS)",1:"* NOT ENTERED *")
+ D LINE(1) S @SRG@(SRI)="Preoperative Imaging Confirmed:  "_$S($L(SROIM)>43:"",1:SROIM)
+ I $L(SROIM)>43 D LINE(1) S @SRG@(SRI)=$$SPACE(2)_SROIM
+ S II=83 D ENSC,LINE(1)
+ S Y=$P(SR("VER"),"^",3),SROUT=$S(Y="Y":"YES",Y="N":"NO (see SEE CORRECT SURGERY COMMENTS)",1:"* NOT ENTERED *")
+ D LINE(1) S @SRG@(SRI)="Time Out Verification Completed: "_$S($L(SROUT)>43:"",1:SROUT)
+ S II=82 D ENSC
  S SRLF=1
  ;
-PREP N SRSKIP S SRSKIP=0
- S Y=$P(SR(.1),"^",8),C=$P(^DD(130,.18,0),"^",2) D:Y'="" Y^DIQ,N(25) S SRUSER=$S(Y="":"N/A",1:Y)
+PREP S Y=$P(SR(.1),"^",8),C=$P(^DD(130,.18,0),"^",2) D:Y'="" Y^DIQ,N(25) S SRUSER=$S(Y="":"N/A",1:Y)
  S Y=$P(SR(.1),"^",7),C=$P(^DD(130,.175,0),"^",2) D:Y'="" Y^DIQ S SRAGNT=$S(Y="":"N/A",1:$E(Y,1,22))
  I 'SRALL,SRUSER="N/A",SRAGNT="N/A" G PREP2
  D LINE(1) S @SRG@(SRI)="Skin Prep By: "_SRUSER,@SRG@(SRI)=@SRG@(SRI)_$$SPACE(40)_"Skin Prep Agent: "_SRAGNT
- S SRSKIP=1
 PREP2 S Y=$P(SR(.1),"^",12),C=$P(^DD(130,4,0),"^",2) D:Y'="" Y^DIQ,N(21) S SRUSER=$S(Y="":"N/A",1:Y)
  S Y=$P(SR(31),"^",2),C=$P(^DD(130,8,0),"^",2) D:Y'="" Y^DIQ S SRAGNT=$S(Y="":"N/A",1:$E(Y,1,18))
  I 'SRALL,SRUSER="N/A",SRAGNT="N/A" G PREOP
  D LINE(1) S @SRG@(SRI)="Skin Prep By (2): "_SRUSER,@SRG@(SRI)=@SRG@(SRI)_$$SPACE(40)_"2nd Skin Prep Agent: "_SRAGNT
- S SRSKIP=0 D LINE(1)
-PREOP S Y=$P(SR(.1),"^",2),C=$P(^DD(130,.12,0),"^",2) D:Y'="" Y^DIQ S SRUSER=$S(Y="":"N/A",1:Y)
- D:SRSKIP LINE(1) D LINE(1) S @SRG@(SRI)="Preop Surgical Site Hair Removal by: "_SRUSER
- S Y=$P(SR("VER"),"^",6),C=$P(^DD(130,506,0),"^",2) D:Y'="" Y^DIQ S SRHRM=$S(Y="":"* NOT ENTERED *",1:Y)
- D LINE(1) S @SRG@(SRI)="Surgical Site Hair Removal Method: "_$S($L(SRHRM)>43:"",1:SRHRM)
- I $L(SRHRM)>43 D LINE(1) S @SRG@(SRI)=$$SPACE(2)_SRHRM
- S II=49 D ENSC
- ;
+PREOP S Y=$P(SR(.1),"^",2),C=$P(^DD(130,.12,0),"^",2) D:Y'="" Y^DIQ S SRUSER=$S(Y="":"N/A",1:Y) I 'SRALL,SRUSER="N/A" G POS
+ D LINE(1) S @SRG@(SRI)="Preop Hair Clipping By: "_SRUSER
 POS S SRLF=1,SRLINE="Surgery Position(s): " I '$O(^SRF(SRTN,42,0)),SRALL D LINE(1) S @SRG@(SRI)=SRLINE_"N/A"
  I $O(^SRF(SRTN,42,0)) D LINE(1) S @SRG@(SRI)=SRLINE D
  .S SRP=0 F  S SRP=$O(^SRF(SRTN,42,SRP)) Q:'SRP  S X=^SRF(SRTN,42,SRP,0),Z=$P(X,"^"),Y=$P(X,"^",2) D
@@ -121,7 +110,7 @@ ANE ; print anesthesia technique
  S A=^SRF(SRTN,6,ANE,0),Y=$P(A,"^"),C=$P(^DD(130.06,.01,0),"^",2) D:Y'="" Y^DIQ D LINE(1) S Y=Y_$S($P(A,"^",3)="Y":"  (PRINCIPAL)",1:""),@SRG@(SRI)=$$SPACE(2)_Y
  Q
 ENSC N X,SRLINE
- D LINE(1) S @SRG@(SRI)=$S(II=51:"Checklist Comment: ",II=49:"  Hair Removal Comments: ",1:"") D
+ D LINE(1) S @SRG@(SRI)="  "_$S(II=82:"Time Out Verified Comments: ",II=83:"Imaging Confirmed Comments: ",II=84:"Marked Site Comments: ",1:"") D
  .I '$O(^SRF(SRTN,II,0)) S @SRG@(SRI)=@SRG@(SRI)_"NO COMMENTS ENTERED" Q
  .S SRLINE=0 F  S SRLINE=$O(^SRF(SRTN,II,SRLINE)) Q:'SRLINE  S X=^SRF(SRTN,II,SRLINE,0) D COMM^SRONRPT3(X,3)
  Q

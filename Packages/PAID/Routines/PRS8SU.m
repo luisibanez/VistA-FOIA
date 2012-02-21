@@ -1,13 +1,12 @@
-PRS8SU ;HISC/MRL-DECOMPOSITION, SET-UP ;02/20/08
- ;;4.0;PAID;**112,116**;Sep 21, 1995;Build 23
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRS8SU ;HISC/MRL-DECOMPOSITION, SET-UP ;7/15/93  10:40
+ ;;4.0;PAID;;Sep 21, 1995
  ;
  ;This routine sets up various data elements required to process
  ;a decomp.  The ^TMP array is built for each day of the
  ;pay period (1-14) and includes tour information, exceptions,
  ;holiday information, etc.  All times are converted to 15-minute
  ;increments in this routine (the number of 15-minute increments
- ;into the day).  Additionally, the credit tour for WG
+ ;into the day).  Additionally, the credity tour for WG
  ;employees is determined in this routine.
  ;
  ;Called by Routines:  PRS8DR
@@ -35,7 +34,7 @@ PRS8SU ;HISC/MRL-DECOMPOSITION, SET-UP ;02/20/08
  ...S:K=1 (NDAY,LAST)=0 F K1=1,2 S X=$P(V,"^",K1),(Y,Y1)=K1-1 I X'="" D
  ....S FLAG=1 I N=2&(K1=1)&("^HW^"[("^"_$P(Z,"^",K+2)_"^")) S FLAG=$S(NDAY=1!(LAST>96)&("^HW^"[("^"_$P(Z,"^",K+2)_"^"))&((X["A")!(X["MID")):0,1:1),NDAY=0
  ....S:$P(D(0),"^",14)'=""&(X="MID")&(LAST=96)&(N=2)&(K1=1) FLAG=0 S:N=2&(K1=1)&(FLAG=1) (NDAY,LAST)=0 S Y=K1-1 D 15
- ....I N=2,"^RG^OT^CT^ON^SB^"'[("^"_$P(Z,"^",K+2)_"^") D
+ ....I N=2,"^RG^OT^CT^ON^SB^HW^"'[("^"_$P(Z,"^",K+2)_"^") D
  .....S Y=+$O(DADRFM("S",(-X-.01))),Y1=+$O(DADRFM("F",(X-.01)))
  .....I $G(DADRFM("S",Y))'=$G(DADRFM("F",Y1)) S X=X+96
  .....Q
@@ -62,7 +61,6 @@ PRS8SU ;HISC/MRL-DECOMPOSITION, SET-UP ;02/20/08
  .S Z="",$P(Z,"0",97)="",D1=D,X="W" D SET ;activity string
  .S X="HOL" D SET ;save holiday string
  .S X="P" D SET ;premium node
- .S X="r" D SET ;Recess node
  .S X=D(0),OFF=0 I $P(X,"^",2)=1 S OFF=1 ;day off
  .S Z=OFF,X="OFF" D SET
  .I +TWO=2 S MT2=$G(^TMP($J,"PRS8",D1,"MT2")),MT1=$G(^TMP($J,"PRS8",D1,"MT1")),^TMP($J,"PRS8",D1,"MT2")=MT1,^TMP($J,"PRS8",D1,"MT1")=MT2
@@ -80,10 +78,6 @@ PRS8SU ;HISC/MRL-DECOMPOSITION, SET-UP ;02/20/08
  ..I DAY=7!(DAY=14) S TOUR((DAY\7))=$S(T:T,1:1),T=0 ;save tour
  I TYP["B" S NH=320,(NH(1),NH(2))=160,TH=192,(TH(1),TH(2))=96 ; Baylor NH=40 hrs to mimic full time, TH = 24 hrs for reality
  E  S TH=NH,TH(1)=NH(1),TH(2)=NH(2) ;total hrs for pp
- ; 
- ; Update NH for the nurses on the 36/40 AWS
- I "KM"[$E(AC,1),$E(AC,2)=1,NH=288 S NH=320,(NH(1),NH(2))=160,TH=320,(TH(1),TH(2))=160
- ;
  I TYP["W",L>1 S $P(WK(3),"^",3)=L ;last tour (IN) in misc for WG
  S VALOLD=$G(^PRST(458,+PY,"E",+DFN,5)) ;existing decomp
  K D,D1,DAY,NDAY,FLAG,J,K,K1,L,LAST,MT,N,N1,N14,P,QT,T,V,W,X,Y,Y1,Z
@@ -92,7 +86,7 @@ PRS8SU ;HISC/MRL-DECOMPOSITION, SET-UP ;02/20/08
 15 ; --- convert time to 15-minute increments
  ;
  ; Need to conditionally set Y $S(Y=0 mid=00:00, y=1: mid=24:00)
- ; based on whether exception is within or outside the tour.
+ ; based on whether exception is within or outsided tour.
  D MIL^PRSATIM ;convert to military (24hr) time
  I +Y<1000 S Y=$E("0000",0,4-$L(Y))_Y
  S X=(+$E(Y,1,2)*4)+($E(Y,3,4)\15)

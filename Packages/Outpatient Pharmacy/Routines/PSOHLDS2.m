@@ -1,6 +1,7 @@
-PSOHLDS2 ;BHAM ISC/PWC,SAB-Build HL7 Segments for automated interface ;11/22/06 3:24pm
- ;;7.0;OUTPATIENT PHARMACY;**156,198,255,200,268,305,336**;DEC 1997;Build 1
+PSOHLDS2 ;BHAM ISC/PWC,SAB-Build HL7 Segments for automated interface ;4/18/05 12:55pm
+ ;;7.0;OUTPATIENT PHARMACY;**156,198**;DEC 1997
  ;DIWP supported by DBIA 10011
+ ;HLFNC supported by DBIA 10106
  ;^PS(50.606 supported by DBIA 2174
  ;^PS(50.7 supported by DBIA #2223
  ;^PS(51 supported by DBIA 2224
@@ -8,12 +9,13 @@ PSOHLDS2 ;BHAM ISC/PWC,SAB-Build HL7 Segments for automated interface ;11/22/06 
  ;^PS(55 supported by DBIA 2228
  ;^PSDRUG supported by DBIA 221
  ;^PS(54 supported by DBIA 2227
+ ;EN1^GMRAOR2 supported by DBIA 2422
+ ;^DPT supported by DBIA 3097
+ ;EN1^GMRADPT supported by DBIA 10099
+ ;PSNPPIO supported by DBIA 3794
  ;Cont'd build HL7 segments
  ;
- ;*198 add check to insert spaces into PMI segments
- ;*255 add 2 new fields to RXE.21 (label name & VA PRINT NAME)
- ;     and move NTEPMI tag to PSOHLDS4
- ; *305 send  Notice of Privacy Practices in NTE9 - Modified to NTE9 as NTE8 already exist
+ ;PSO*198 add check to insert spaces into PMI segments
  ;
 RXE(PSI) ;pharmacy encoded order segment
  Q:'$D(DFN)  N RXE S RXE="" S $P(RXE,"|",1)=""""""
@@ -28,13 +30,12 @@ RXE(PSI) ;pharmacy encoded order segment
  S $P(RXE,"|",13)=DEAID,$P(RXE,"|",14)=VPHARMID_CS_$P(VPHARM,",",1)_CS_$P(VPHARM,",",2)
  S $P(RXE,"|",15)=$P(^PSRX(IRXN,0),"^"),$P(RXE,"|",16)=RFRM,$P(RXE,"|",17)=NFLD
  S $P(RXE,"|",18)=PRIORDT,$P(RXE,"|",31)=CSUB_RS_SCTALK_RS_OTLAN
- S $P(RXE,"|",21)=CS_DRUG_RS_CS_$G(VANAME)                       ;*255
  S ^TMP("PSO",$J,PSI)="RXE|"_RXE,PSI=PSI+1
  K PODOSE,PODOSENM,POIPTR,TRADENM,UU
  Q
 RXD(PSI) ;pharmacy dispense segment
- Q:'$D(DFN)  N RXD,I
- S WNS="" I $G(WARN) F I=1:1 S WW=$P(WARN,",",I) Q:WW=""  S WNS=WNS_WW_CS_$S(WW'["N":^PS(54,WW,0),1:"")_RS
+ Q:'$D(DFN)  N RXD
+ S WNS="" I $G(WARN) F I=1:1 S WW=$P(WARN,",",I) Q:WW=""  S WNS=WNS_WW_CS_^PS(54,WW,0)_RS
  S RXD="RXD"_FS_$S($G(NFLD):NFLD,1:0)_FS_$S($P($G(^PSDRUG(IDGN,"ND")),"^",10)'="":$P(^("ND"),"^",10),($G(PSND1)&$G(PSND3)):$P($G(PSOXN2),"^",2),1:"""""")_CS_PSND2_CS_"99PSNDF"
  S RXD=RXD_CS_PSND1_"."_PSND3_"."_$G(IDGN)_CS_$P($G(^PSDRUG(IDGN,0)),"^")_CS_"99PSD"
  S RXD=RXD_FS_DISPDT_FS_FS_FS_FS_$P(^PSRX(IRXN,0),"^")_FS_NRFL
@@ -92,9 +93,6 @@ NTE ;build NTE segment for SIG
  ; 4 = Profile
  ; 5 = Drug Interaction
  ; 6 = Drug Allergy
- ; 7 = PMI Sheet (NTEPMI in PSOHLDS4)
- ; 8 = Medication Instructions
- ; 9 = Privacy Notification
  ;
  K FLDX
  D NTE1(.PSI) K FLDX D NTE2(.PSI) K FLDX D NTE3(.PSI) K FLDX
@@ -142,24 +140,12 @@ NTE2(PSI) ; Patient Narrative
  K DIWF,DIWL,DIWR,LLL,PSNACNT,PSSEVFL,PSSIXFL,ZZ
  Q
 NTE3(PSI) ;Drug Warning Narrative
- N NTE3,J,TEXT,W,CNT,PSSWSITE
- S WARN=$P($G(^PSDRUG(IDGN,0)),"^",8)
- S PSSWSITE=+$O(^PS(59.7,0))
- I $P($G(^PS(59.7,PSSWSITE,10)),"^",11)="N" D
- .S WARN=$$DRUG^PSSWRNA(IDGN,DFN)
- I WARN="" Q
- S NTE3="NTE"_FS_3_FS_FS,^TMP("PSO",$J,PSI)=NTE3,CNT=1
- F J=1:1:5 S W=$P(WARN,",",J) Q:W=""  D
- . S TEXT=$$WTEXT^PSSWRNA(W,$G(OLAN)) I TEXT'="" S FLDX=1 D
- . . I $L(TEXT)<245 S ^TMP("PSO",$J,PSI,CNT)=TEXT,CNT=CNT+1 Q
- . . N LTH,ST,EN,TXT,WW
- . . S LTH=$E($L(TEXT)/245,1) S:$L(TEXT)#245>0 LTH=LTH+1
- . . F WW=1:1:LTH D
- . . . S:WW=1 ST=1,EN=245 S:WW>1 ST=(ST+245),EN=(EN+245) S TXT=$E(TEXT,ST,EN)
- . . . S ^TMP("PSO",$J,PSI,CNT)=TXT,CNT=CNT+1
- I $G(FLDX) D  S PSI=PSI+1
- . I $L(^TMP("PSO",$J,PSI,CNT-1)_FS_"Drug Warning Narrative")<245 S ^TMP("PSO",$J,PSI,CNT-1)=$G(^TMP("PSO",$J,PSI,CNT-1))_FS_"Drug Warning Narrative"
- . E  S ^TMP("PSO",$J,PSI,CNT)=FS_"Drug Warning Narrative"
+ N NTE3 S WARN=$P($G(^PSDRUG(IDGN,0)),"^",8)
+ S:WARN'="" NTE3="NTE"_FS_3_FS_FS,^TMP("PSO",$J,PSI)=NTE3,CNT=1
+ F WWW=1:1 Q:$P(WARN,",",WWW,99)=""  S PSOWARN=$P(WARN,",",WWW) D:$D(^PS(54,PSOWARN,0))
+ .S FLDX=1 F JJJ=1:1 Q:'$D(^PS(54,PSOWARN,1,JJJ,0))  S ^TMP("PSO",$J,PSI,CNT)=^PS(54,PSOWARN,1,JJJ,0),CNT=CNT+1
+ S:$D(FLDX) ^TMP("PSO",$J,PSI,CNT-1)=$G(^TMP("PSO",$J,PSI,CNT-1))_FS_"Drug Warning Narrative",PSI=PSI+1
+ K CNT,WW,JJJ,PSOWARN,RX,WWW
  Q
 NTE4(PSI) ;Profile information
  S PSODFN=DFN N NTE4
@@ -177,16 +163,25 @@ NTE6(PSI) ;Drug Allergy Indications
  Q:NTE6=""
  S ^TMP("PSO",$J,PSI)=NTE6_FS_"Drug Allergy Indications",PSI=PSI+1
  Q
-NTE9(PSI) ;Privacy Notification
- N NTE9,PSOLAN
- S NTE9="NTE"_FS_9_FS_FS,^TMP("PSO",$J,PSI)=NTE9
- S PSOLAN=$P($G(^PS(55,DFN,"LAN")),"^",2)
- I PSOLAN'=2 D
- . S ^TMP("PSO",$J,PSI,1)="The VA Notice of Privacy Practices, IB 10-163, which outlines your privacy rights, is available online at http://www1.va.gov/Health/ or you may obtain a copy by writing the VHA Privacy Office (19F2),"
- . S ^TMP("PSO",$J,PSI,2)="810 Vermont Avenue NW, Washington, DC 20420."_FS_"Privacy Notification"
- I PSOLAN=2 D
- . S ^TMP("PSO",$J,PSI,1)="La Notificacion relacionada con las Politicas de Privacidad del Departamento de Asuntos del Veterano, IB 10-163, contiene los detalles acerca de sus derechos de privacidad y esta disponsible electronicamente"
- . S ^TMP("PSO",$J,PSI,2)=" en la siguiente direccion: http://www1.va.gov/Health/.  Usted tambien puede conseguir una copia escribiendo a la Oficina de Privacidad del Departamento de Asuntos de Salud del Veterano, (19F2),"
- . S ^TMP("PSO",$J,PSI,3)="810 Vermont Avenue NW, Washington, DC 20420."_FS_"Privacy Notification"
- S PSI=PSI+1
+NTEPMI(PSI) ;build NTE segment for PMI sheets
+ Q:'$D(DFN)  N A,I,PREVLN,CURRLN
+ S PSDRUG=+$P(^PSRX(IRXN,0),"^",6),PMI=$$EN^PSNPPIO(PSDRUG,.PSNMSG)
+ Q:'$D(^TMP($J,"PSNPMI"))
+ S ^TMP("PSO",$J,PSI)="NTE"_FS_^TMP($J,"PSNPMI",0)_FS
+ K A S CNT1=1,CNT=0
+ F A="W","U","H","S","M","P","I","O","N","D","R" S CNT=CNT+1,A(CNT)=A
+ F I=1:1:11 I $D(^TMP($J,"PSNPMI",A(I))) D
+ .S CNT=$P(^TMP($J,"PSNPMI",A(I),0),"^",3)
+ .S (PREVLN,CURRLN)=""
+ .F J=1:1:CNT D
+ .. S ^TMP("PSO",$J,PSI,CNT1)=^TMP($J,"PSNPMI",A(I),J,0)
+ .. ;PSO*198 check if " " should be inserted
+ .. S CURRLN=^TMP("PSO",$J,PSI,CNT1)
+ .. S:CNT1>1 PREVLN=$S(CNT>1:^TMP("PSO",$J,PSI,CNT1-1),1:"")
+ .. I CNT1>1,$$SPACE^PSOHLDS3(PREVLN,CURRLN) D
+ ... S ^TMP("PSO",$J,PSI,CNT1)=" "_^TMP("PSO",$J,PSI,CNT1)
+ .. I J=1 S $P(^TMP("PSO",$J,PSI,CNT1),":",1)="\H\"_$P(^TMP("PSO",$J,PSI,CNT1),":",1)_"\N\"
+ .. S CNT1=CNT1+1
+ S ^TMP("PSO",$J,PSI,CNT1-1)=^TMP("PSO",$J,PSI,CNT1-1)_FS_"Patient Medication Instructions"
+ S PSI=PSI+1 K A,I,J,CNT,CNT1,^TMP($J,"PSNPMI")
  Q

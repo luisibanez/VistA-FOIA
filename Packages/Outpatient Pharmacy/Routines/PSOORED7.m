@@ -1,9 +1,7 @@
 PSOORED7 ;ISC-BHAM/MFR-edit orders from backdoor con't ;03/06/95 10:24
- ;;7.0;OUTPATIENT PHARMACY;**148,247,281,289,358**;DEC 1997;Build 35
+ ;;7.0;OUTPATIENT PHARMACY;**148**;DEC 1997
  ;called from psooredt. cmop edit checks.
- ;Reference to file #50 supported by IA 221
- ;Reference to $$ECMEON^BPSUTIL supported by IA 4410
- ;Reference to $$DIVNCPDP^BPSBUTL supported by IA 4719
+ ;External reference to File #50 @NOCHG+17 supported by DBIA 221
  ;
 NOCHG S CMRL=1 D CHK1^PSOORED2 I '$G(CMRL) W !,"No editing allowed of "_$S(FLN=9:"Day Supply",FLN=10:"Quantity",1:"# of Refills")_" (CMOP)." D PAUSE^VALM1 K CMRL Q
  K CMRL,DIC,DIQ
@@ -47,62 +45,3 @@ VER ;checks for changes to dosing instructions
  .I $G(^PSRX(PSORXED("IRXN"),6,I,1))'=$G(PSORXED("ODOSE",I)) S PSOSIGFL=1
  K DURATION
  Q
- ;
-RESUB ; Resubmits 3rd party claim in case of an edit (Original)
- N CHANGED S CHANGED=$$CHANGED(PSORXED("IRXN"),.FLDS)
- I CHANGED D
- . N RX S RX=PSORXED("IRXN") Q:'RX
- . I $P(CHANGED,"^",2),'$$ECMEON^BPSUTIL($$RXSITE^PSOBPSUT(RX,0)) D  Q
- . . D REVERSE^PSOBPSU1(RX,0,"DC",99,"RX DIVISION CHANGED",1)
- . I $$SUBMIT^PSOBPSUT(RX,0,1,1) D
- . . I '$P(CHANGED,"^",2),$$STATUS^PSOBPSUT(RX,0)="" Q
- . . D ECMESND^PSOBPSU1(RX,0,,"ED",$$GETNDC^PSONDCUT(RX,0),,$S($P(CHANGED,"^",2):"RX DIVISION CHANGED",1:"RX EDITED"),,+$G(CHGNDC))
- . . ; Quit if there is an unresolved Tricare non-billable reject code, PSO*7*358
- . . I $$PSOET^PSOREJP3(RX,0) S X="Q" Q
- . . ;- Checking/Handling DUR/79 Rejects
- . . I $$FIND^PSOREJUT(RX,0) S X=$$HDLG^PSOREJU1(RX,0,"79,88","ED","IOQ","Q")
- Q
- ;
-CHANGED(RX,PRIOR) ; - Check if fields have changed and should for 3rd Party Claim resubmission
- ;Input:  (r) RX    - Rx IEN
- ;        (r) PRIOR - Array with fields
- ;Output:  CHANGED  - 0 - Not changed / 1 - Original Rx field changed ^ Rx Division changed (1 - YES)
- N CHANGED,SAVED
- S CHANGED=0 D GETS^DIQ(52,RX_",","4;7;8;20;22;27;81","I","SAVED")
- F I=4,7,8,22,27,81 D  I CHANGED Q
- . I $G(PRIOR(52,RX_",",I,"I"))'=$G(SAVED(52,RX_",",I,"I")) S CHANGED=1 Q
- I $$DIVNCPDP^BPSBUTL(+$G(PRIOR(52,RX_",",20,"I")))'=$$DIVNCPDP^BPSBUTL(+$G(SAVED(52,RX_",",20,"I"))) S CHANGED="1^1"
- Q CHANGED
- ;;
-NDCDAWDE(ST,FLN,RXN) ; allow edit of NDC & DAW for DC'd/expired ECME RXs
- ;;  input: (r) ST  - the Rx status code
- ;;         (r) FLN - field number selected for editing
- ;;         (r) RXN - prescription #
- ;; output: VALMSG for inappropriate field selection or use
- ;;         PSODRUG & RSORXED arrays updated if edited
- Q:$G(ST)=""!($G(FLN)="")!($G(RXN)="")
- I '((ST=11)!(ST=12)!(ST=14)!(ST=15)) S VALMSG=("Invalid selection!") Q
- I '((FLN=2)!(FLN=20)!(FLN=21)) S VALMSG=("Invalid selection!") Q
- I $$STATUS^PSOBPSUT(RXN,$$LSTRFL^PSOBPSU1(RXN))="" S VALMSG=("Invalid selection!") Q
- ;
- ; edit NDCs
- I FLN=2 D  Q
- .N NDC
- .S NDC=$$GETNDC^PSONDCUT(RXN,0)
- .D NDCEDT^PSONDCUT(RXN,"",$G(DRG),$G(PSOSITE),.NDC)
- .I $G(NDC)="^" Q
- .S (PSODRUG("NDC"),PSORXED("FLD",27))=NDC
- ;;
- ; edit refill NDCs/DAWs
- I FLN=20 D  Q
- .I $$LSTRFL^PSOBPSU1(RXN)=0 S VALMSG="Invalid selection!" Q
- .D REF^PSOORED2
- ;;
- ; edit DAW
- I FLN=21 D  Q
- .N DAW
- .D EDTDAW^PSODAWUT(RXN,0,.DAW)
- .I $G(DAW)="^" Q
- .S (PSODRUG("DAW"),PSORXED("FLD",81))=DAW
- Q
- ;;

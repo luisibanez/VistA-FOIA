@@ -1,6 +1,6 @@
 IBJTA1 ;ALB/ARH - TPI ACTIONS ;2/14/95
- ;;2.0;INTEGRATED BILLING;**39,137,377**;21-MAR-94;Build 23
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**39,137**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 CP ; -- IBJT CHANGE PATIENT action: change patient, only available on AL screen
  ;    user selects new patient, then Active Bills screen rebuilt with that patients active bills
@@ -45,24 +45,13 @@ CDIQ S VALMBCK="R",VALMBG=1
 ARCA ;  -- IBJT AR COMMENT ADD action:  add a comment transaction to the AR account, IBIFN required
  ;     IBARCOMM set to indicate AR Profile screen needs to be rebuilt when it is reentered
  ;     will cause the AR screen to be rebuilt including the new information if the AR screen is already open
- N AUTHDT,MRADT,STATUS,VALMQUIT,DIR
+ N VALMQUIT,DIR
  D FULL^VALM1
- S STATUS=$P($G(^DGCR(399,IBIFN,0)),U,13)
- S AUTHDT=$P($G(^DGCR(399,IBIFN,"S")),U,10)
- S MRADT=$P($G(^DGCR(399,IBIFN,"S")),U,7)
- ; if claim status is "NOT REVIEWED" or claim status is "CANCELLED" with neither MRA request date
- ; nor Authorization date present, display an error and bail out.
- I STATUS=1!(STATUS=7&(MRADT="")&(AUTHDT="")) D  G ARCAQ
- .S DIR(0)="EA",DIR("A",1)="A comment can not be added for an incomplete or cancelled while incomplete claim.",DIR("A")="Press RETURN to continue: " D ^DIR K DIR
- ; if claim status is "REQUEST MRA" or claim status is "CANCELLED" with MRA request date present,
- ; but no Authorization date, enter MRA comments.
- I STATUS=2!(STATUS=7&(MRADT'="")&(AUTHDT="")) D:$G(IBIFN) CMNT^IBCECOB6 G ARCAR
- ; otherwise, enter AR comments.
+ I $P($G(^DGCR(399,IBIFN,0)),U,13)=2 D  G ARCAQ
+ . S DIR(0)="EA",DIR("A",1)="A/R comments cannot be added for a bill awaiting an MRA request",DIR("A")="Press RETURN to continue: " D ^DIR K DIR
  D ADJUST^RCJIBFN3(IBIFN)
  I $D(^TMP("IBJTTA",$J)) S IBARCOMM=1
- K ^TMP("IBJTTC",$J)
-ARCAR ; rebuild comments screen
- D BLD^IBJTTC,HDR^IBJTTC
+ K ^TMP("IBJTTC",$J) D BLD^IBJTTC,HDR^IBJTTC
 ARCAQ S VALMBCK="R",VALMBG=1
  Q
  ;

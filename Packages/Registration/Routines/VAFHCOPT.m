@@ -1,5 +1,5 @@
-VAFHCOPT ;ALB/CM/PKE/PHH/EG/GAH OUTPATIENT APPT (HL7 MESS) NIGHT JOB ; 10/18/06
- ;;5.3;Registration;**91,568,585,725**;Aug 13, 1993;Build 12
+VAFHCOPT ;ALB/CM/PKE/PHH/EG OUTPATIENT APPT (HL7 MESS) NIGHT JOB ; 1/20/05 1:23pm
+ ;;5.3;Registration;**91,568,585**;Aug 13, 1993
  ;
  ;This routine will loop through the Hospital Location file "S" node
  ;and generate an A08 message for all appointments for today
@@ -28,6 +28,10 @@ EN ;
  .S DGARRAY(1)=START_";"_STOP,DGARRAY("FLDS")="1;3",DGARRAY(2)=ENT
  .S DGCNT=$$SDAPI^SDAMA301(.DGARRAY)
  .;
+ .;if there is data hanging from the 101 subscript, then
+ .;it is a valid appointment, otherwise, it
+ .;it is an error eg 01/20/2005
+ .I $D(^TMP($J,"SDAMA301",101))=1 Q
  .I DGCNT>0 S DFN=0 F  S DFN=$O(^TMP($J,"SDAMA301",ENT,DFN)) Q:DFN=""  D
  ..Q:'$D(^DPT(DFN,0))
  ..S ENT1=0 F  S ENT1=$O(^TMP($J,"SDAMA301",ENT,DFN,ENT1)) Q:ENT1=""!(ENT1'?.N1".".N)  D

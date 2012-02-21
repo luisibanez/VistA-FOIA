@@ -1,5 +1,5 @@
-PXUTLSCC ;ISL/dee,ISA/KWP - Validates and corrects the Service Connected Conditions ;6/06/05
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**74,107,111,130,168**;Aug 12, 1996;Build 14
+PXUTLSCC ;ISL/dee,ISA/KWP - Validates and corrects the Service Connected Conditions ;7/23/96
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**74,107,111,130**;Aug 12, 1996
  Q
  ;
 SCC(PXUPAT,PXUDT,PXUHLOC,PXUTLVST,PXUIN,PXUOUT,PXUERR) ;
@@ -23,10 +23,10 @@ SCC(PXUPAT,PXUDT,PXUHLOC,PXUTLVST,PXUIN,PXUOUT,PXUERR) ;
  ;+     -2   ::= value must be null
  ;+     -3   ::= must be null because SC is yes
  ;
- N PXUITEM,PXUPSCC,PXUSC,PXUAO,PXUIR,PXUEC,PXUMST,PXUHNC,PXUSHAD
+ N PXUITEM,PXUPSCC,PXUSC,PXUAO,PXUIR,PXUEC,PXUMST,PXUHNC
  D SCCOND(PXUPAT,PXUDT,PXUHLOC,$G(PXUTLVST),.PXUPSCC) ;Set up array of the patients SCC
  S PXUOUT=PXUIN
- S PXUERR="0^0^0^0^0^0^0^0"
+ S PXUERR="0^0^0^0^0^0^0"
  S PXUSC=$P(PXUIN,"^",1)
  I '(PXUSC=1!(PXUSC=0)!(PXUSC="")) S $P(PXUERR,"^",1)=-1 S $P(PXUOUT,"^",1)=""
  E  I PXUSC="" D  ;it is ok
@@ -77,13 +77,7 @@ SCC(PXUPAT,PXUDT,PXUHLOC,PXUTLVST,PXUIN,PXUOUT,PXUERR) ;
  E  I PXUCV="" D  ;it is ok
  . I $P(PXUPSCC("CV"),"^",1) S $P(PXUERR,"^",7)=1,$P(PXUOUT,"^",7)=$P(PXUPSCC("CV"),"^",2) ;should have had a value
  E  I PXUCV]"" D
- .I '$P(PXUPSCC("CV"),"^",1) S $P(PXUERR,"^",7)=-2 S $P(PXUOUT,"^",7)="" ;it must be null, not CV status
- S PXUSHAD=$P(PXUIN,"^",8) ;SHAD not dependent on SC question
- I '(PXUSHAD=1!(PXUSHAD=0)!(PXUSHAD="")) S $P(PXUERR,"^",8)=-1 S $P(PXUOUT,"^",8)="" ;not valid data
- E  I PXUSHAD="" D  ;it is ok
- . I $P(PXUPSCC("SHAD"),"^",1) S $P(PXUERR,"^",8)=1,$P(PXUOUT,"^",8)=$P(PXUPSCC("SHAD"),"^",2) ;should have had a value
- E  I PXUSHAD]"" D
- .I '$P(PXUPSCC("SHAD"),"^",1) S $P(PXUERR,"^",8)=-2 S $P(PXUOUT,"^",8)="" ;it must be null, not SHAD status
+ .I '$P(PXUPSCC("CV"),"^",1) S $P(PXUERR,"^",7)=-2 S $P(PXUOUT,"^",7)="" ;it must be null, not HNC status
  Q
  ;
  ;

@@ -1,5 +1,5 @@
-SDAMOCP1 ;IOFO BAY PINES/TEH - Detail Print for Cancelled Statistics;4/15/92  ; Compiled January 25, 2007 12:00:46
- ;;5.3;Scheduling;**487,496**;Aug 13, 1993;Build 11
+SDAMOCP1 ;IOFO BAY PINES/TEH - Detail Print for Cancelled Statistics;4/15/92
+ ;;5.3;Scheduling;**389**;Aug 13, 1993
  ;
 HDR ;Report Header
  ;
@@ -35,7 +35,6 @@ BLD ;Build output from ^TMP global
  .....S SDUSERNM=$$GET1^DIQ(200,SDUSER_",",.01,,"SDRES","SDMES")
  .....S SDCLNM=$$GET1^DIQ(44,SDCL_",",.01,,"SDRES","SDMES")
  .....W !,SDCR,?8,$E(SDNM,1,22),?30,SDSSN,?39,SDAPDT,?61,$E(SDCLNM,1,18),?81,SDCDT,?106,$E(SDUSERNM,1,26)
- .....K SDRES,SDMES ;SD/496
  .....D CHK I $D(DIRUT) Q 
  .....S SDTOT(SDCR)=$G(SDTOT(SDCR))+1,SDTOTT=SDTOTT+1
  W !!,"TOTAL CANCELLATIONS:",$J(SDTOTT,14)

@@ -1,5 +1,5 @@
 FHORX1 ; HISC/REL/RVD - Diet Activity Report ;9/10/98  15:31
- ;;5.5;DIETETICS;**1,8**;Jan 28, 2005;Build 28
+ ;;5.5;DIETETICS;**1**;Jan 28, 2005
  ;RVD patch #1 - get outpatient info from Nutrition Events file.
  ;
  D NOW^%DTC S NOW=%,TIM=""
@@ -49,7 +49,7 @@ OUTP ;get outpatient data
  .S FHPTNM="***"
  .S:FHLOCN="" FHLOCN="***"
  .D PATNAME^FHOMUTL
- .S FHLPAT=FHPROR_"~"_FHLOCN_"~~"_DFN_"~"_FHPTNM
+ .S FHLPAT=FHPROR_"~"_FHLOCN_"~~~"_FHPTNM
  .S DTP=FHDTIM D DTP^FH
  .S ^TMP($J,"O",FHLPAT,DA)=FHACTI_"^"_DTP_"^"_FHBID_"^"_FHDESC_"^"_FHTC
  ;

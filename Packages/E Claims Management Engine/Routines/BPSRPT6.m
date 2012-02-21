@@ -1,6 +1,6 @@
 BPSRPT6 ;BHAM ISC/BEE - ECME REPORTS ;14-FEB-05
- ;;1.0;E CLAIMS MGMT ENGINE;**1,3,5,7,8**;JUN 2004;Build 29
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  Q
  ;
@@ -8,18 +8,15 @@ BPSRPT6 ;BHAM ISC/BEE - ECME REPORTS ;14-FEB-05
  ;
  ; Returned Value -> ptr^Insurance Company Name
  ; 
-INSNAM(BP59) N BPIN,BPDOS,BPDFN,BPSZZ,BP36,BPX,BPINAME,BPIBA,BP36IEN
+INSNAM(BP59) N BPIN,BPDOS,BPDFN,BPSZZ,BP36,BPX
  ;
  ;Reset Insurance
  S BP36=""
  ;
  ;First Pull From BPS Transactions
  S BPIN=+$P($G(^BPST(BP59,9)),U)
- I +BPIN D
- . S BPINAME=$P($G(^BPST(BP59,10,BPIN,0)),U,7)
- . S BPIBA=$P($G(^BPST(BP59,10,BPIN,0)),U,1)
- . S BP36IEN=$$INSPL^IBNCPDPI(BPIBA)
- . S:BP36IEN]""&BPINAME]"" BP36=BP36IEN_"^"_BPINAME
+ I +BPIN S BP36=$P($G(^BPST(BP59,10,BPIN,0)),U,7) S:BP36]"" BP36="1^"_BP36
+ ;
  ;If Not Found, look up using API
  I BP36="" D
  .S BPDOS=+$P($G(^BPST(BP59,12)),U,2)\1
@@ -48,15 +45,15 @@ SELINS() N INS
  ; Input variable ->  BP50 - Lookup to DRUG (#50)
  ;                   BPLEN - Length of the display field
  ; Returned value -> Name of the drug
- ; 
-DRGNAM(BP50,BPLEN) Q $E($$DRUGDIE^BPSUTIL1(+BP50,.01,"E"),1,BPLEN)
- ;       
+ ;        
+DRGNAM(BP50,BPLEN) Q $E($P($G(^PSDRUG(+BP50,0)),U),1,BPLEN)
+ ;
  ;Select a DRUG file entry (Fileman Lookup)
  ;
  ; Returned Variable -> Y
  ; 
 SELDRG N DIC S DIC(0)="QEAM",DIC=50,DIC("A")="Select Drug: "
- D DRUGDIC^BPSUTIL1(.DIC)
+ D ^DIC
  Q
  ;
  ;Get the drug class for display
@@ -66,74 +63,62 @@ SELDRG N DIC S DIC(0)="QEAM",DIC=50,DIC("A")="Select Drug: "
  ; Returned value -> Name of the drug class
  ;                   
 DRGCLNAM(BP50605,BPLEN) N IEN,Y
- K ^TMP($J,"BPSRPT6")
+ K ^TMP($J,"L")
  S Y=""
  I BP50605]"" D 
- .D C^PSN50P65(BP50605,"","BPSRPT6")
- .S IEN=$O(^TMP($J,"BPSRPT6",0))
- .I IEN]"" S Y=$E($G(^TMP($J,"BPSRPT6",IEN,1)),1,BPLEN)
- K ^TMP($J,"BPSRPT6")
+ .D C^PSN50P65(BP50605,"","L")
+ .S IEN=$O(^TMP($J,"L",0))
+ .I IEN]"" S Y=$E($G(^TMP($J,"L",IEN,1)),1,BPLEN)
+ K ^TMP($J,"L")
  Q Y
  ;
  ;Select a VA DRUG CLASS file entry (Fileman Lookup)
  ;
 SELDRGC N DIR,DIRUT,DTOUT,DUOUT,IEN,TOT,X
- K ^TMP($J,"BPSRPT6")
+ K ^TMP($J,"L")
  ;
  F  D  Q:Y]""
- .K ^TMP($J,"BPSRPT6"),^TMP($J,"BPSRPT6X")
  .S DIR(0)="FO^1:35"
  .S DIR("A")="Select Drug Class"
  .S DIR("?")="Answer with VA DRUG CLASS CODE, or CLASSIFICATION. TYPE '??' FOR A LIST"
  .S DIR("??")="^D DCLIST^BPSRPT6"
  .D ^DIR
  .I ($G(DUOUT)=1)!($G(DTOUT)=1)!($G(Y)="") S Y="^" Q
+ .D C^PSN50P65("",Y,"L")
  .;
- .;Get list based on original user input
- .D C^PSN50P65("",Y,"BPSRPT6X")
- .;
- .;Get list based on uppercase input
- .S Y=$$UP^XLFSTR(Y)
- .D C^PSN50P65("",Y,"BPSRPT6")
- .;
- .;Merge lists together
- .M ^TMP($J,"BPSRPT6")=^TMP($J,"BPSRPT6X")
- .K ^TMP($J,"BPSRPT6X")
- .;
- .; Reset 0 node based on combined lists
- .S Y=0 F TOT=0:1 S Y=$O(^TMP($J,"BPSRPT6",Y)) Q:'+Y
- .S ^TMP($J,"BPSRPT6",0)=TOT
+ .;Pull Total Entries Found
+ .S TOT=+$G(^TMP($J,"L",0))
  .;
  .;Check for no entries found
  .I TOT<1 W "  ??" S Y="" Q
  .;
  .;Check for Unique Entry
  .I TOT=1 D  Q
- ..S Y="",IEN=$O(^TMP($J,"BPSRPT6",0))
- ..I IEN]"" S Y=$G(^TMP($J,"BPSRPT6",IEN,1)) W $C(13),"Select Drug Class: ",Y
+ ..S Y="",IEN=$O(^TMP($J,"L",0))
+ ..I IEN]"" S Y=$G(^TMP($J,"L",IEN,1)) W $C(13),"Select Drug Class: ",Y
  .;
  .;Check for multiple entries - allow user to pick
  .I TOT>1 S Y=$$DCSEL(TOT)
- .I Y="^^" S Y=""
  .;
+ K ^TMP($J,"L")
  Q
  ;
  ;List Entries in VA DRUG CLASS
  ;
 DCLIST N CL,DTOUT,IEN,Y
- K ^TMP($J,"BPSRPT6")
- D C^PSN50P65("","??","BPSRPT6")
+ K ^TMP($J,"L")
+ D C^PSN50P65("","??","L")
  ;
  ;First create new index - sorted by CLASSIFICATION
- S IEN=0 F  S IEN=$O(^TMP($J,"BPSRPT6",IEN)) Q:'IEN  D
- .S CL=$G(^TMP($J,"BPSRPT6",IEN,1)) Q:CL=""
- .S ^TMP($J,"BPSRPT6","B",CL,IEN)=$G(^TMP($J,"BPSRPT6",IEN,".01"))
+ S IEN=0 F  S IEN=$O(^TMP($J,"L",IEN)) Q:'IEN  D
+ .S CL=$G(^TMP($J,"L",IEN,1)) Q:CL=""
+ .S ^TMP($J,"L","B",CL,IEN)=$G(^TMP($J,"L",IEN,".01"))
  ;
  ;Now loop through and display entries
  S $X=0,$Y=0 W !,?3,"Choose from: ",!
- S (Y,CL)="" F  S CL=$O(^TMP($J,"BPSRPT6","B",CL)) Q:CL=""  D  Q:Y]""
- .S IEN="" F  S IEN=$O(^TMP($J,"BPSRPT6","B",CL,IEN)) Q:IEN=""  D  Q:Y]""
- ..W ?3,$G(^TMP($J,"BPSRPT6","B",CL,IEN)),!,?3,CL,!
+ S (Y,CL)="" F  S CL=$O(^TMP($J,"L","B",CL)) Q:CL=""  D  Q:Y]""
+ .S IEN="" F  S IEN=$O(^TMP($J,"L","B",CL,IEN)) Q:IEN=""  D  Q:Y]""
+ ..W ?3,$G(^TMP($J,"L","B",CL,IEN)),!,?3,CL,!
  ..I $Y>19!'$Y D
  ...W ?3 R "'^' TO STOP: ",Y:$G(DTIME,300)
  ...E  S DTOUT=1
@@ -141,43 +126,41 @@ DCLIST N CL,DTOUT,IEN,Y
  ...I ($G(DTOUT)=1)!($G(Y)="^") S Y="^" Q
  ...S $X=0,$Y=0
  ;
- K ^TMP($J,"BPSRPT6")
+ K ^TMP($J,"L")
  Q
  ;
  ;Allow user to pick VA DRUG CLASS entry based on initial input
  ;
- ; Input variable - TOT -> Total entries placed in ^TMP($J,"BPSRPT6")
+ ; Input variable - TOT -> Total entries placed in ^TMP($J,"L")
  ; Returned value - VA DRUG CLASSIFICATION
  ;
-DCSEL(TOT) N CL,DTOUT,I,IEN,IX,Y
+DCSEL(TOT) N CL,I,IEN,IX,Y
  ;
  ;First create new index
- F IX="B","N" K ^TMP($J,"BPSRPT6",IX)
- S Y="",IEN=0 F  S IEN=$O(^TMP($J,"BPSRPT6",IEN)) Q:'IEN  D
- .S CL=$G(^TMP($J,"BPSRPT6",IEN,1)) Q:CL=""
- .S ^TMP($J,"BPSRPT6","B",CL,IEN)=$G(^TMP($J,"BPSRPT6",IEN,".01"))
+ F IX="B","N" K ^TMP($J,"L",IX)
+ S Y="",IEN=0 F  S IEN=$O(^TMP($J,"L",IEN)) Q:'IEN  D
+ .S CL=$G(^TMP($J,"L",IEN,1)) Q:CL=""
+ .S ^TMP($J,"L","B",CL,IEN)=$G(^TMP($J,"L",IEN,".01"))
  ;
  ;Now loop through and allow one to be picked
- S (Y,CL)="" F  S CL=$O(^TMP($J,"BPSRPT6","B",CL)) Q:CL=""  D  Q:Y]""
- .S IEN="" F  S IEN=$O(^TMP($J,"BPSRPT6","B",CL,IEN)) Q:IEN=""  D  Q:Y]""
- ..S I=$G(I)+1 W !,?5,I,?9,$G(^TMP($J,"BPSRPT6","B",CL,IEN)),!,?3,CL
- ..S ^TMP($J,"BPSRPT6","N",I)=CL
+ S (Y,CL)="" F  S CL=$O(^TMP($J,"L","B",CL)) Q:CL=""  D  Q:Y]""
+ .S IEN="" F  S IEN=$O(^TMP($J,"L","B",CL,IEN)) Q:IEN=""  D  Q:Y]""
+ ..S I=$G(I)+1 W !,?5,I,?9,$G(^TMP($J,"L","B",CL,IEN)),!,?3,CL
+ ..S ^TMP($J,"L","N",I)=CL
  ..;
  ..;Stop after every 5 entries
- ..I I#5=0 I TOT>I D  Q:$G(Y)="^"!($G(Y)="^^")
+ ..I I#5=0 I TOT>I D
  ...W !,"Press <RETURN> to see more, '^' to exit this list, OR"
  ...W !,"CHOOSE 1 - "_I R ": ",Y:DTIME S:'$T DTOUT=1
- ...I ($G(DTOUT)=1)!(Y="^") S Y="^^"
  ..;
  ..;Stop after last entry
  ..I I=TOT D
  ...W !,"CHOOSE 1 - "_I R ": ",Y:DTIME S:'$T DTOUT=1
- ..I ($G(DTOUT)=1)!(Y="^") S Y="^^"
+ ..I ($G(DTOUT)=1)!($G(Y)="^") S Y="^"
  ..;
  ..;Check for valid entry
- ..I Y="^^" S Y=""
- ..I Y]"",'$D(^TMP($J,"BPSRPT6","N",Y)) W "  ??" S Y=""
- ..I Y]"",$D(^TMP($J,"BPSRPT6","N",Y)) S Y=$G(^TMP($J,"BPSRPT6","N",Y))
+ ..I Y]"",'$D(^TMP($J,"L","N",Y)) W "  ??" S Y=""
+ ..I Y]"",$D(^TMP($J,"L","N",Y)) S Y=$G(^TMP($J,"L","N",Y))
  ;
  Q Y
  ;
@@ -186,7 +169,7 @@ DCSEL(TOT) N CL,DTOUT,I,IEN,IX,Y
  ; Return Value -> n = ptr to DRUG (#50)
  ;                 0 = Unknown
  ; 
-GETDRUG(BPRX) Q +$$RXAPI1^BPSUTIL1(BPRX,6,"I")
+GETDRUG(BPRX) Q +$P($G(^PSRX(BPRX,0)),U,6)
  ;
  ;Get VA DRUG CLASS pointer
  ;       
@@ -195,17 +178,44 @@ GETDRUG(BPRX) Q +$$RXAPI1^BPSUTIL1(BPRX,6,"I")
  ; Return Value -> n = ptr to VA DRUG CLASS (#50.605)
  ;                 0 = Unknown
  ;
-GETDRGCL(BP50) Q $$DRUGDIE^BPSUTIL1(BP50,25)
+GETDRGCL(BP50) Q $P($G(^PSDRUG(BP50,"ND")),U,6)
  ;
  ;Determine whether claim was Mail, Window, or CMOP
  ;
  ; Input Variables: BPREF - refill # (0-No Refills,1-1st Refill, 2-2nd, ...) 
  ;
- ; Return Value -> M = Mail
- ;                 W = Window
- ;                 C = CMOP
+ ; Return Value -> 2 = Mail
+ ;                 3 = Window
+ ;                 4 = CMOP
  ;
-MWC(BPRX,BPREF) Q $$MWC^PSOBPSU2(BPRX,BPREF)
+MWC(BPRX,BPREF) N BPX,BPY
+ S BPY=2
+ ;
+ ;if 1st fill check #52 (#11) MAIL/WINDOW
+ ;if refill check refills multiple #52.1 (#2) MAIL/WINDOW
+ I BPREF=0 S BPX=$P($G(^PSRX(BPRX,0)),U,11)
+ E  S BPX=$P($G(^PSRX(BPRX,1,BPREF,0)),U,2)
+ ;
+ ; if WINDOW then 3(W)
+ I BPX="W" Q 3
+ ; else
+ ;  check STATUS of RX
+ ;  if STATUS="SUSPENSE" check 
+ I $G(^PSRX(BPRX,"STA"))=5 D  Q BPY
+ . ;   check #52.5
+ . S BPX=$O(^PS(52.5,"B",BPRX,0))
+ . ;   if CMOP INDICATOR = "P" then 2 (M)
+ . I $P($G(^PS(52.5,BPX,0)),U,7)="P" S BPY=2 Q
+ . ;   else (i.e. Q!X!L) 4(C)
+ . S BPY=4
+ ;  else 
+ ;  check CMOP EVENTS for this 0 fill
+ S BPY=2
+ S BPX=0 F  S BPX=$O(^PSRX(BPRX,4,BPX)) Q:+BPX=0!(BPY=4)  D
+ . ;  if exists for BPREF then 4("C")
+ . I $P($G(^PSRX(BPRX,4,BPX,0)),U,3)=BPREF S BPY=4
+ ;  else 2("M")
+ Q BPY
  ;
  ;Get Patient Name
  ;
@@ -227,30 +237,34 @@ SSN4(BPDFN) N X
  ;
  ; Returned value -> RX#
  ; 
-RXNUM(BPRX) Q $$RXAPI1^BPSUTIL1(+BPRX,.01,"I")
+RXNUM(BPRX) ;
+ Q $P($G(^PSRX(+BPRX,0)),U)
  ;
  ;Determine $Collected
  ;
  ; Returned Value -> $Collected
  ;
-COLLECTD(BPRX,BPREF,BPPAYSEQ) N COL,RET
- S RET=$$BILLINFO^IBNCPDPI(BPRX,BPREF,BPPAYSEQ)
+COLLECTD(BPRX,BPREF) N COL,RET
+ S RET=$$BILLINFO^IBNCPDPI(BPRX,BPREF)
  S COL=$P(RET,U,5) I COL="0",($P(RET,U,3)=16)!($P(RET,U,3)=27) S COL=""
  I $P(RET,U,7)=1 S COL="N/A"
- Q COL_U_$P(RET,U,2)
+ Q COL
  ;
  ;Determine Bill #
  ;
  ; Returned Value -> Bill Number
  ;
-BILL(BPRX,BPREF,BPPSEQ) ;
- N BPSARR,BPSZ,IBIEN
- I BPPSEQ=1 Q $P($$BILLINFO^IBNCPDPI(BPRX,BPREF,BPPSEQ),U,1)
- I BPPSEQ=2 S BPSZ=$$RXBILL^IBNCPUT3(BPRX,BPREF,"S",,.BPSARR),IBIEN="" D  I +IBIEN>0 Q $P($G(BPSARR(IBIEN)),U,1)
- . S IBIEN=+$P(BPSZ,U,2) Q:IBIEN>0     ; get active bill first
- . S IBIEN=+$O(BPSARR(999999999),-1)   ; get most recent bill next
- . Q
- Q ""
+BILL(BPRX,BPREF) N BILL
+ S BILL=$P($$BILLINFO^IBNCPDPI(BPRX,BPREF),U)
+ Q BILL
+ ;
+ ;Determine $Ins Paid
+ ;
+INSPAID(BP59) N X,RESP,POSITION
+ S X=$G(^BPST(BP59,0))
+ S RESP=$P(X,U,5)
+ S POSITION=$P(X,U,9)
+ Q $S(RESP&POSITION:$$NETPAID1^BPSOS03(RESP,POSITION),1:0)
  ;
  ;Get the Closed Claim Reason
  ;
@@ -277,7 +291,7 @@ CLSBY(BP59) N BP02,CBY,Y
  ;
  ; Input Variables: BPREF - refill # (0-No Refills,1-1st Refill, 2-2nd, ...) 
  ;
-STATUS(BPRX,BPREF,BPSEQ) Q $$STATUS^BPSOSRX(BPRX,BPREF,0,,$G(BPSEQ))
+STATUS(BPRX,BPREF) Q $$STATUS^BPSOSRX(BPRX,BPREF,0)
  ;
  ;Elapsed Time
  ;
@@ -287,11 +301,22 @@ ELAPSE(BP59) Q $$TIMEDIFI^BPSOSUD($P($G(^BPST(BP59,0)),U,11),$P($G(^BPST(BP59,0)
  ;
  ;Get RX issue date
  ;
-RXISSDT(BPRX) Q +$$RXAPI1^BPSUTIL1(BPRX,1,"I")
+RXISSDT(BPRX) Q +$P($G(^PSRX(BPRX,0)),U,13)
  ;
  ;
  ;Get RX's fill date
-RXFILDT(BPRX) Q +$$RXAPI1^BPSUTIL1(BPRX,22,"I")
+RXFILDT(BPRX) Q +$P($G(^PSRX(BPRX,2)),U,2)
+ ;
+ ;Get label date for RX,
+RXLBLDT(BPRX,BPDIR) N BPRET
+ I BPDIR=0 S BPRET=$O(^PSRX(BPRX,"L",0))
+ I BPDIR=1 S BPRET=$O(^PSRX(BPRX,"L",9999),-1)
+ I BPRET S BPRET=$P($G(^PSRX(BPRX,"L",+BPRET,0)),U)\1
+ Q BPRET
+ ;
+ ;Get label date for refills
+ ;
+REFLBLDT(BPRX,BPDIR) Q $$RXLBLDT(BPRX,BPDIR)
  ;
  ;Get Refill's issue date
  ;
@@ -299,36 +324,42 @@ REFISSDT(BPRX,BPREF) Q $$REFDISDT(BPRX,BPREF)
  ;
  ;Get Refill's dispense date
  ;
-REFDISDT(BPRX,BPREF) Q +$$RXSUBF1^BPSUTIL1(BPRX,52,52.1,+BPREF,10.1,"I")
+REFDISDT(BPRX,BPREF) Q +$P($G(^PSRX(BPRX,1,BPREF,0)),U,19)
  ;
  ;Get Refill's refill date
  ;
-REFFILDT(BPRX,BPREF) Q +$$RXSUBF1^BPSUTIL1(BPRX,52,52.1,+BPREF,.01,"I")
+REFFILDT(BPRX,BPREF) Q +$P($G(^PSRX(BPRX,1,BPREF,0)),U)
  ;
  ;Get RX's release date
  ;
-RXRELDT(BPRX) Q +$$RXAPI1^BPSUTIL1(BPRX,31,"I")
+RXRELDT(BPRX) Q +$P($G(^PSRX(BPRX,2)),U,13)
  ;
  ;Get Refill's release date
  ;
-REFRELDT(BPRX,BPREF) Q +$$RXSUBF1^BPSUTIL1(BPRX,52,52.1,+BPREF,17,"I")
+REFRELDT(BPRX,BPREF) Q +$P($G(^PSRX(BPRX,1,BPREF,0)),U,18)
  ;
  ;See if refill exists
  ;
-IFREFILL(BPRX,BPREF) Q $S(+$$RXSUBF1^BPSUTIL1(BPRX,52,52.1,+BPREF,.01,"I"):1,1:0)
+IFREFILL(BPRX,BPREF) Q $D(^PSRX(BPRX,1,BPREF))>0
  ;
  ;Get RX status
  ;
- ; Input Variables -> BP59 = ptr to BPS TRANSACTIONS
+ ; Input Variables -> RXNUM = ptr to #52 (MODE = 0)
+ ;                            or RX Number (MODE = 1)
  ;                            
-RXSTATUS(BP59) Q $$RXST^BPSSCRU2(BP59)
+RXSTATUS(RXNUM,MODE) ;
+ I $G(MODE) S RXNUM=$O(^PSRX("B",RXNUM,0)) I +RXNUM=0 Q -1
+ I '$D(^PSRX(RXNUM,"STA")) Q -1
+ Q $G(^PSRX(RXNUM,"STA"))
  ;
- ;Return RX Quantity (From BPS TRANSACTION)
+ ;Return RX Quantity
  ;
-QTY(BP59) Q +$P($G(^BPST(BP59,5)),U,1)
+QTY(BPRX,BPREF) ;
+ I +$G(BPREF)=0 Q +$P($G(^PSRX(BPRX,0)),U,7)
+ Q +$P($G(^PSRX(BPRX,1,BPREF,0)),U,4)
  ;
  ;Return NDC Number
 GETNDC(BPRX,BPREF) Q $$GETNDC^PSONDCUT(BPRX,BPREF)
  ;
  ;Return Copay Status ($)
-COPAY(BPRX) Q $S(+$$RXAPI1^BPSUTIL1(BPRX,105,"I"):"$",1:"")
+COPAY(BPRX) Q $S($G(^PSRX(BPRX,"IB")):"$",1:"")

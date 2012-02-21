@@ -1,6 +1,6 @@
-DIQG ;SFISC/DCL-DATA RETRIEVAL PRIMITIVE ;24AUG2009
- ;;22.0;VA FileMan;**76,118,133,149,162**;Mar 30, 1999;Build 19
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIQG ;SFISC/DCL-DATA RETRIEVAL PRIMITIVE ;5:44 AM  24 Nov 2003
+ ;;22.0;VA FileMan;**76,118,133**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
 GET(DIQGR,DA,DR,DIQGPARM,DIQGETA,DIQGERRA,DIQGIPAR) ; file,rec,fld,parm,targetarray,errarray,int
 DDENTRY I $G(U)'="^" N U S U="^"
  I '$G(DA) N X S X(1)="RECORD" Q $$F(.X,2)
@@ -51,20 +51,20 @@ C I C["m" N X S X(1)="MULTILINE COMPUTED" Q $$F(.X,3)
 CP I C["p",X S C=+$P(C,"p",2) I C,$D(^DIC(C,0,"GL")),$D(@(^("GL")_"0)")),$D(^(X,0)) Q $$EXTERNAL^DIDU(C,.01,"",$P(^(0),U))
  Q $S(C["D":$$FMTE^DILIBF(X,"1U"),1:X)
  ;
-REAL I $E($P(DIQGD4,";",2))="E" S Y=$E($G(@DIQGSI@(DA,P)),$E($P($P(DIQGD4,";",2),","),2,99),$P($P(DIQGD4,";",2),",",2)) S:Y?." " Y="" ;SPACES ARE NULL
+REAL I $E($P(DIQGD4,";",2))="E" S Y=$E($G(@DIQGSI@(DA,P)),$E($P($P(DIQGD4,";",2),","),2,99),$P($P(DIQGD4,";",2),",",2)) S:Y?." " Y=""
 AUDIT I $G(DIQGAUDD) D  ;Is there an AUDIT TRAIL for the field?
  .I $G(DIQGAUDR(DFF,$$DA^DIQGQ(.DA))) S Y="" Q  ;If entry was created after DIQGAUDD, we know there were no FIELD values!
  .S P=$G(DIQGAUDR(DFF,$$DA^DIQGQ(.DA),DIQGDRN))
  .I P S Y=$$DIA^DIAUTL(DIQGAUDD,DIQGAUDR,P)
  .Q:C'["P"!'Y  N F S F=+$P(C,"P",2) Q:F=DIQGEY("FILE")&(Y=DA)
  .S Y=$$GET1^DIQ(F,Y_",",.01,"A"_DIQGAUDD),C=$TR(C,"PO") ;Recurse to get old POINTER value (as long as recursion isn't infinite!)
- I 'DIQGPI&(C["O"!(C["S")!(C["P")!(C["V")!(C["D"))&($D(@DIQGDN@(DIQGDRN,0))) S C=$P(^(0),"^",2) Q $$EXTERNAL^DIDU(+$P(DIQGDN,"(",2),DIQGDRN,"A",Y)  ;"ALLOW" bad data
+ I 'DIQGPI&(C["O"!(C["S")!(C["P")!(C["V")!(C["D"))&($D(@DIQGDN@(DIQGDRN,0))) S C=$P(^(0),"^",2) Q $$EXTERNAL^DIDU(+$P(DIQGDN,"(",2),DIQGDRN,"",Y)
  Q $G(Y)
  ;
 BMW I C,$P(^DD(+C,.01,0),"^",2)["W" Q:DIQGWPB "$CREF$"_DIQGR_DA_","_$$Q^DIQGU(P)_")" D  G:X="" FE Q:DIQGWPO $NA(@DIQGETA) Q:DIQGIPAR "$WP$" Q ""
  .I DIQGETA']"" K X S X(1)="TARGET ARRAY" D BLD^DIALOG(202,.X) S X="" Q
  .S X=DIQGR_DA_","_$$Q^DIQGU(P)_")"
- .I '$O(@X@(0)) S X="" Q
+ .I '$P($G(@X@(0)),"^",3) S X="" Q
  .I DIQGZN M @DIQGETA=@X K @DIQGETA@(0) Q
  .S Y=0 F  S Y=$O(@X@(Y)) Q:Y'>0  I $D(^(Y,0)) S @DIQGETA@(Y)=^(0)
  .Q
@@ -89,7 +89,7 @@ CMPAUD(DEXPR,DIQGS) ;DEXPR is Expression, DIQGS is string of Fields used
  ;now we call DICOMP with old (audit) values plugged in to the field's Computed Expression --
  D EXPR(DIQGAUDR,DEXPR)
  Q
-EXPR(DIFILE,DIEXPR) I DIQGPI K X Q:$TR(DIEXPR," 1234567890.?")=""  S DIEXPR="INTERNAL("_DIEXPR_")"
+EXPR(DIFILE,DIEXPR) I DIQGPI S DIEXPR="INTERNAL("_DIEXPR_")"
  D EXPR^DICOMP(DIFILE,"",DIEXPR,.DIQGS)
  I 'DIQGPI,$G(Y)["D",Y'["m",$D(X)#2 S X=X_" S X=$$FMTE^DILIBF(X,""5U"")"
  Q

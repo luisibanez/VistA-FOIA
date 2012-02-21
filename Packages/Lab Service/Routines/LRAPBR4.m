@@ -1,5 +1,5 @@
 LRAPBR4 ;DALOI/WTY/KLL - Autopsy Browser Display;7/27/01
- ;;5.2;LAB SERVICE;**259,317**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**259**;Sep 27, 1994
  ;
  ;Reference to ^DPT supported by IA #918
  ;
@@ -39,14 +39,6 @@ BODY ;Report body
  .D GLENTRY("+*+* REPORT INCOMPLETE *+*+",20,1)
  .D GLENTRY(,,1)
  D MODAUCK
- ;Display supplementary report header if one or more has been added
- I $P($G(^LR(LRDFN,84,0)),U,4) D
- .S LRTEXT="*+* SUPPLEMENTARY REPORT HAS BEEN ADDED *+*"
- .S LRTEXT=$$CJ^XLFSTR(LRTEXT,IOM)
- .D GLENTRY(LRTEXT,,1)
- .S LRTEXT="*+* REFER TO BOTTOM OF REPORT *+*"
- .S LRTEXT=$$CJ^XLFSTR(LRTEXT,IOM)
- .D GLENTRY(LRTEXT,,1)
  D GLENTRY(,,1)
  F LRV=81,82,84 D
  .D:LRV'=84 GLENTRY(,,1)

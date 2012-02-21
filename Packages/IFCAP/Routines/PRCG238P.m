@@ -1,6 +1,6 @@
 PRCG238P ;WISC/BGJ-IFCAP 410 FILE CLEANUP (PURGE) ;11/5/99
-V ;;5.1;IFCAP;**95**;Oct 20, 2000
- ;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;This routine is installed by patch PRC*5*238.
  ;The purpose of this routine is to cleanup entries in files 410, 410.1
  ;and 443 that are leftover after running the Archive/Purge
@@ -104,29 +104,4 @@ KILL4101 ;
  . Q:LDA>PERMDATE
  . S DIK="^PRCS(410.1," D ^DIK
  . K DIK
- Q
-FIND445 ;find invalid records in file 445
- S IPIEN=0
- F  S IPIEN=$O(^PRCP(445,IPIEN)) Q:IPIEN'>0  D
- .S IEN=0
- .F  S IEN=$O(^PRCP(445,IPIEN,1,IEN)) Q:IEN'>0  D
- ..Q:'$D(^PRCP(445,IPIEN,1,IEN,7))
- ..S TTLI=$P(^PRCP(445,IPIEN,1,IEN,7,0),U,4)
- ..S ITIEN=0
- ..F  S ITIEN=$O(^PRCP(445,IPIEN,1,IEN,7,ITIEN)) Q:ITIEN'>0  D
- ...I '$D(^PRCS(410,ITIEN)) D KILL445
- ..S $P(^PRCP(445,IPIEN,1,IEN,7,0),U,4)=TTLI
- ..;-leave this with zero amount don't delete? - I TTLI=0 S ^PRCP(445,IPIEN,1,IEN,7) Q
- ..Q
- .Q
- K IPIEN,IEN,ITIEN,TTLI
- Q
-KILL445 ;clear the invalid records
- Q:'$D(^PRCP(445,IPIEN,1,IEN,7,ITIEN,0))
- S HLDDA=DA,DA(2)=IPIEN,DA(1)=IEN,DA=ITIEN
- S DIK="^PRCP(445,"_DA(2)_",1,"_DA(1)_",7,"
- D ^DIK
- K DIK
- S TTLI=TTLI-1
- S DA=HLDDA
  Q

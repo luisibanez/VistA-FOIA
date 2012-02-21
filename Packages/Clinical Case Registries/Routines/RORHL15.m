@@ -1,12 +1,12 @@
-RORHL15 ;HOIFO/BH - HL7 IV DATA: OBR, OBX ; 5/30/06 9:40am
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORHL15 ;HOIFO/BH - HL7 IV DATA: OBR, OBX ; 8/26/05 2:43pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
+ ; #117          Read access to the file #55 (controlled)
  ; #2400         OCL^PSOORRL and OEL^PSOORRL (controlled)
  ; #4549         ZERO^PSS52P6 (supported)
  ; #4550         ZERO^PSS52P7 (supported)
- ; #4826         PSS436^PSS55 (supported)
  ;
  Q
  ;
@@ -25,11 +25,9 @@ RORHL15 ;HOIFO/BH - HL7 IV DATA: OBR, OBX ; 5/30/06 9:40am
  ; The ^TMP("PS",$J) global node is used by this function.
  ;
 EN1(RORDFN,DXDTS) ;
- N ERRCNT,IDX,IEN55,II,NODE,RC,ROR55,ROR55SUB,RORENDT,RORII,RORORD,RORSTDT,RORTMP
+ N ERRCNT,IDX,II,RC,RORENDT,RORII,RORORD,RORSTDT,RORTMP
  S (ERRCNT,RC)=0
- ;
  S RORTMP=$$ALLOC^RORTMP()
- S ROR55=$$ALLOC^RORTMP(.ROR55SUB)
  ;
  S IDX=0
  F  S IDX=$O(DXDTS(14,IDX))  Q:IDX'>0  D  Q:RC<0
@@ -52,25 +50,22 @@ EN1(RORDFN,DXDTS) ;
  . ;--- Browse through the list and generate the HL7 segments
  . S RORII=0
  . F  S RORII=$O(@RORTMP@(RORII))  Q:'RORII  D
- . . S RORORD=$P(@RORTMP@(RORII,0),U),IEN55=+$P(RORORD,";")
- . . D PSS436^PSS55(RORDFN,IEN55,ROR55SUB)
- . . S NODE=$NA(@ROR55@(IEN55))
+ . . S RORORD=$P(@RORTMP@(RORII,0),U)
+ . . S RORORD=$P(RORORD,";")
+ . . S RORORD=$E(RORORD,1,$L(RORORD)-1)
  . . ;---
- . . S TMP=$$OBR(NODE,RORDFN)
+ . . S TMP=$$OBR(RORORD,RORDFN)
  . . I TMP  Q:TMP<0  S ERRCNT=ERRCNT+TMP
- . . ;---
- . . S TMP=$$OBX(NODE,RORDFN)
+ . . S TMP=$$OBX(RORORD,RORDFN)
  . . I TMP  Q:TMP<0  S ERRCNT=ERRCNT+TMP
  ;
- D FREE^RORTMP(ROR55),FREE^RORTMP(RORTMP)
+ D FREE^RORTMP(RORTMP)
  K ^TMP("PS",$J)
  Q $S(RC<0:RC,1:ERRCNT)
  ;
  ;***** IV OBR SEGMENT BUILDER
  ;
- ; NODE          Closed root of a subtree that stores the output of
- ;               the PSS436^PSS55 Pharmacy API
- ;
+ ; RORORD        Order Number
  ; RORDFN        IEN of the patient in the PATIENT file (#2)
  ;
  ; Return Values:
@@ -78,45 +73,53 @@ EN1(RORDFN,DXDTS) ;
  ;        0  Ok
  ;       >0  Non-fatal error(s)
  ;
-OBR(NODE,RORDFN) ;
- N CS,ERRCNT,IEN,RC,RORMSG,RORSEG,TMP
+OBR(RORORD,RORDFN) ;
+ N CS,ERRCNT,IEN,RC,RORBUF,RORIENS,RORMSG,RORSEG,TMP
  S (ERRCNT,RC)=0
  D ECH^RORHL7(.CS)
+ ;
+ S RORIENS=$$GETIENS(RORORD,RORDFN)  Q:'RORIENS 0
+ D GETS^DIQ(55.01,RORIENS,".02;.03;.04;.08;.09;9","IE","RORBUF","RORMSG")
+ I $G(DIERR)  D  S ERRCNT=ERRCNT+1
+ . D DBS^RORERR("RORMSG",-9,,RORDFN,55.01,RORIENS)
  ;
  ;--- Initialize the segment
  S RORSEG(0)="OBR"
  ;
  ;--- OBR-3 - Order Number
- S RORSEG(3)=$P($G(@NODE@(.01)),U)
+ S RORSEG(3)=RORORD
  ;
  ;--- OBR-4 - IV CPT Code
  S RORSEG(4)="90780"_CS_"IV"_CS_"C4"
  ;
  ;--- OBR-7 - Start Date
- S TMP=$$FMTHL7^XLFDT($P($G(@NODE@(.02)),U))
- Q:TMP'>0 $$ERROR^RORERR(-100,,,RORDFN,"No start date","PSS436^PSS55")
+ S TMP=$$FMTHL7^XLFDT($G(RORBUF(55.01,RORIENS,.02,"I")))
+ Q:TMP'>0 $$ERROR^RORERR(-95,,,RORDFN,55.01,RORIENS,.02)
  S RORSEG(7)=TMP
  ;
  ;--- OBR-8 - Stop Date
- S RORSEG(8)=$$FM2HL^RORHL7($P($G(@NODE@(.03)),U))
+ S TMP=$G(RORBUF(55.01,RORIENS,.03,"I"))
+ S RORSEG(8)=$$FM2HL^RORHL7(TMP)
  ;
  ;--- OBR-13 - Schedule
- S RORSEG(13)=$$ESCAPE^RORHL7($P($G(@NODE@(.09)),U))
+ S TMP=$G(RORBUF(55.01,RORIENS,.09,"I"))
+ S RORSEG(13)=$$ESCAPE^RORHL7(TMP)
  ;
  ;--- OBR-20 - Infusion Rate
- S RORSEG(20)=$$ESCAPE^RORHL7($P($G(@NODE@(.08)),U))
+ S TMP=$G(RORBUF(55.01,RORIENS,.08,"I"))
+ S RORSEG(20)=$$ESCAPE^RORHL7(TMP)
  ;
  ;--- OBR-24 - Diagnostic Service ID
  S RORSEG(24)="IMM"
  ;
  ;--- OBR-40 - Type
- S TMP=$P($G(@NODE@(.04)),U)
+ S TMP=$G(RORBUF(55.01,RORIENS,.04,"I"))
  I TMP'=""  D  S RORSEG(40)=TMP
- . S $P(TMP,CS,2)=$P($G(@NODE@(.04)),U,2)
+ . S $P(TMP,CS,2)=$G(RORBUF(55.01,RORIENS,.04,"E"))
  . S $P(TMP,CS,3)="VA"
  ;
  ;--- OBR-44 - Division
- S IEN=+$P($G(@NODE@(9)),U)
+ S IEN=+$G(RORBUF(55.01,RORIENS,9,"I"))
  I IEN>0  D
  . S IEN=+$$GET1^DIQ(42,IEN_",",44,"I",,"RORMSG")
  . D:$G(DIERR) DBS^RORERR("RORMSG",-99,,,42,IEN_",")
@@ -128,9 +131,7 @@ OBR(NODE,RORDFN) ;
  ;
  ;***** IV OBX SEGMENT(S) BUILDER
  ;
- ; NODE          Closed root of a subtree that stores the output of
- ;               the PSS436^PSS55 Pharmacy API
- ;
+ ; RORORD        Order Number
  ; RORDFN        IEN of the patient in the PATIENT file (#2)
  ;
  ; Return Values:
@@ -138,32 +139,63 @@ OBR(NODE,RORDFN) ;
  ;        0  Ok
  ;       >0  Non-fatal error(s)
  ;
-OBX(NODE,RORDFN) ;
- N ADD,CS,ERRCNT,I,ID,RC,SOL,TMP
+OBX(RORORD,RORDFN) ;
+ N CS,ERRCNT,IEN,RC,RORID,RORIENS,RORKEY,RORLST,RORMSG,TMP
  S (ERRCNT,RC)=0
  D ECH^RORHL7(.CS)
  ;
- ;=== Other print info
- S TMP=$P($G(@NODE@(31)),U)
- D:TMP'="" SETOBX(TMP,"OTPR"_CS_"Other Print info."_CS_"VA080")
+ S RORIENS=$$GETIENS(RORORD,RORDFN)  Q:'RORIENS 0
+ ;
+ ;=== Other Print information
+ S TMP=$$GET1^DIQ(55.01,RORIENS,31,"E",,"RORMSG")
+ I $G(DIERR)  D  S ERRCNT=ERRCNT+1
+ . D DBS^RORERR("RORMSG",-99,,RORDFN,55.01,RORIENS)
+ I TMP'=""  D  D SETOBX(TMP,RORID)
+ . S RORID="OTPR"_CS_"Other Print info."_CS_"VA080"
  ;
  ;=== Additive data
- I $G(@NODE@("ADD",0))>0  D
- . S ID="ADD"_CS_"Additive"_CS_"VA080"
- . S I=0
- . F  S I=$O(@NODE@("ADD",I))  Q:I'>0  D
- . . S ADD=$P($G(@NODE@("ADD",I,.01)),U,2)
- . . D:ADD'="" SETOBX(ADD,ID,$P($G(@NODE@("ADD",I,.02)),U))
+ K RORMSG,RORLST
+ D LIST^DIC(55.02,","_RORIENS,"@;.01;.02","I",,,,,,,"RORLST","RORMSG")
+ I $G(DIERR)  D  S ERRCNT=ERRCNT+1
+ . D DBS^RORERR("RORMSG",-99,,RORDFN,55.02,","_RORIENS)
+ I $D(RORLST)>1  D
+ . N RORAD,RORST,RORTMP,RORTS
+ . S RORTMP=$$ALLOC^RORTMP(.RORTS)
+ . S RORID="ADD"_CS_"Additive"_CS_"VA080"
+ . S RORKEY=""
+ . F  S RORKEY=$O(RORLST("DILIST","ID",RORKEY))  Q:'RORKEY  D
+ . . S IEN=+$G(RORLST("DILIST","ID",RORKEY,.01))  Q:IEN'>0
+ . . D ZERO^PSS52P6(IEN,,,RORTS)
+ . . S RORAD=$G(@RORTMP@(IEN,.01))  Q:RORAD=""
+ . . S RORST=$G(RORLST("DILIST","ID",RORKEY,.02))
+ . . D SETOBX(RORAD,RORID,RORST)
+ . D FREE^RORTMP(RORTMP)
  ;
  ;=== Solution Data
- I $G(@NODE@("SOL",0))>0  D
- . S ID="SOL"_CS_"Solution"_CS_"VA080"
- . S I=0
- . F  S I=$O(@NODE@("SOL",I))  Q:I'>0  D
- . . S SOL=$P($G(@NODE@("SOL",I,.01)),U,2)
- . . D:SOL'="" SETOBX(SOL,ID,$P($G(@NODE@("SOL",I,1)),U))
+ K RORMSG,RORLST
+ D LIST^DIC(55.11,","_RORIENS,"@;.01;1","I",,,,,,,"RORLST","RORMSG")
+ I $G(DIERR)  D  S ERRCNT=ERRCNT+1
+ . D DBS^RORERR("RORMSG",-99,,,55.11,","_RORIENS)
+ I $D(RORLST)>1  D
+ . N RORSOL,RORVOL,RORTMP,RORTS
+ . S RORTMP=$$ALLOC^RORTMP(.RORTS)
+ . S RORID="SOL"_CS_"Solution"_CS_"VA080"
+ . S RORKEY=""
+ . F  S RORKEY=$O(RORLST("DILIST","ID",RORKEY))  Q:'RORKEY  D
+ . . S IEN=+$G(RORLST("DILIST","ID",RORKEY,.01))  Q:IEN'>0
+ . . D ZERO^PSS52P7(IEN,,,RORTS)
+ . . S RORSOL=$G(@RORTMP@(IEN,.01))  Q:RORSOL=""
+ . . S RORVOL=$G(RORLST("DILIST","ID",RORKEY,1))
+ . . D SETOBX(RORSOL,RORID,RORVOL)
+ . D FREE^RORTMP(RORTMP)
  ;
  Q ERRCNT
+ ;
+ ;*****
+GETIENS(RORORD,RORDFN) ;
+ N IEN
+ S IEN=$O(^PS(55,RORDFN,"IV","B",RORORD,""))
+ Q $S(IEN>0:IEN_","_RORDFN_",",1:"")
  ;
  ;***** CREATES AND STORES THE OBX SEGMENT
 SETOBX(OBX5,OBX3,OBX7) ;

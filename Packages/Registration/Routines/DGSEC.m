@@ -1,8 +1,7 @@
 DGSEC ;ALB/RMO - MAS Patient Look-up Security Check ; 3/24/04 7:53pm
- ;;5.3;Registration;**32,46,197,214,249,281,352,391,425,582,769,796**;Aug 13, 1993;Build 6
+ ;;5.3;Registration;**32,46,197,214,249,281,352,391,425,582**;Aug 13, 1993
  ;
  ;Entry point from DPTLK
- I +$G(Y)=+$G(^DISV(DUZ,"^DPT(")),$G(DPTBTDT) K DPTBTDT Q
  N DFN,DGANS,DGMSG,DGOPT,DGPTSSN,DGREC,DGSENS,DGY,DX,DY,%,DG1
  ;Y=Patient file DFN
  S DGY=Y
@@ -147,8 +146,7 @@ BULTIN1(DFN,DGDUZ,DGOPT,DGMSG) ;Generate sensitive record access bulletin
  K DGB I $D(^DG(43,1,"NOT")),+$P(^("NOT"),U,10) S DGB=10
  Q:'$D(DGB)  S XMSUB="RESTRICTED PATIENT RECORD ACCESSED"
  S DGB=+$P($G(^DG(43,1,"NOT")),U,DGB) Q:'DGB
- S DGB=$$GET1^DIQ(3.8,DGB,.01,"","","ZERR") Q:'$L(DGB)
- ;S DGB=$P($G(^XMB(3.8,DGB,0)),U) Q:'$L(DGB)
+ S DGB=$P($G(^XMB(3.8,DGB,0)),U) Q:'$L(DGB)
  I $G(DGOPT)="" D OP^XQCHK S DGOPT=$S(+XQOPT<0:"^UNKNOWN",1:$P(XQOPT,U)_U_$P(XQOPT,U,2))
  N XMB,XMY,XMY0,XMZ
  S XMB="DG SENSITIVITY",XMB(1)=$P(^DPT(+DFN,0),U)
@@ -191,10 +189,9 @@ LOADXMY() ;this adds the contents of field #509 of File #43 to the XMY array
  ;          Returns: 0              - Ok
  ;                   -1^errortext   - if can't find mail group
  ;
- N DGB,DGERR,DGM
+ N DGB,DGERR
  S DGERR=0
  S DGB=+$P($G(^DG(43,1,"NOT")),"^",10)
- S DGM=$$GET1^DIQ(3.8,DGB,.01,"","","ZERR")
- I '$D(DGM) S DGERR="-1^No/Bad Field #509 entry in File #43" G QTLOADX
- S XMY("G."_DGM)="" ; pass mailgroup
+ I '$D(^XMB(3.8,DGB,0))#2 S DGERR="-1^No/Bad Field #509 entry in File #43" G QTLOADX
+ S XMY("G."_$P($G(^XMB(3.8,DGB,0)),"^",1))="" ; pass mailgroup
 QTLOADX Q DGERR

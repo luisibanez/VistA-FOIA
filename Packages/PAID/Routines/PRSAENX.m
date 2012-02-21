@@ -1,6 +1,5 @@
 PRSAENX ; HISC/REL-List Entitlement ;3/12/93  12:58
- ;;4.0;PAID;**34,112**;Sep 21, 1995;Build 54
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;**34**;Sep 21, 1995
  K DIC S DIC="^PRST(457.5,",DIC(0)="AEQM" W ! D ^DIC G:Y<1 EX S ENT=^PRST(457.5,+Y,1),NAM=$P(Y,"^",2)
  W ! K IOP,%ZIS S %ZIS("A")="Select Device: ",%ZIS="MQ" D ^%ZIS K %ZIS,IOP G:POP EX
  I $D(IO("Q")) S PRSAPGM="Q1^PRSAENX",PRSALST="NAM^ENT" D QUE^PRSAUTL G EX
@@ -18,9 +17,9 @@ EX G KILL^XUSCLEAN
 ENT ;;
 1 ;;Regular Scheduled
 2 ;;Regular Unscheduled
-3 ;;FF Reg. Sch. Hrs. Over 53
-4 ;;Reserved for future use
-5 ;;Recess Periods
+3 ;;Reg. Hrs. at OT Rate - Day
+4 ;;Reg. Hrs. at OT Rate - 2
+5 ;;Reg. Hrs. at OT Rate - 3
 6 ;;Night Differential - 2
 7 ;;Night Differential - 3
 8 ;;Saturday Premium

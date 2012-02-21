@@ -1,14 +1,13 @@
-XUSAP ;ISF/RWF - PROXY User Tools ;08/16/2006
- ;;8.0;KERNEL;**361,425**;Jul 10, 1995;Build 18
+XUSAP ;ISF/RWF - PROXY User Tools ;11/03/2005
+ ;;8.0;KERNEL;**361**;Jul 10, 1995;Build 1
  Q
  ;
-APFIND(NAME) ;Lookup Appliction user by name, return ien^vpid if OK
- ; -1,-2,-3 if not
+APFIND(NAME) ;Lookup Appliction user by name, return ien^vpid
  N X,IEN
- S X=0,IEN=+$$FIND1^DIC(200,,"X",NAME,"B") S:'IEN X="-1^not in user file"
- I IEN>0,'$$USERTYPE(IEN,"APPLICATION PROXY") S IEN=0,X="-2^not an app user"
- I IEN>0,$$USERTYPE(IEN,"CONNECTOR PROXY") S IEN=0,X="-3^is both an app user and a connector user"
- I IEN S X=IEN_"^"_$$VPID^XUPS(IEN)
+ S IEN=+$$FIND1^DIC(200,,"X",NAME,"B")
+ I IEN>0,'$$USERTYPE(IEN,"APPLICATION PROXY") S IEN=0
+ I IEN>0,$$USERTYPE(IEN,"CONNECTOR PROXY") S IEN=0 ;Can't be both
+ S X=0 I IEN S X=IEN_"^"_$$VPID^XUPS(IEN)
  Q X
  ;
 APCHK(IEN) ;Check if OK for AP user to run.

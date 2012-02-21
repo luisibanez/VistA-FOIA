@@ -1,5 +1,5 @@
 VADPT5 ;ALB/MRL/MJK - PATIENT VARIABLES [REG]; 14 DEC 1988 ; 8/6/04 7:42am
- ;;5.3;Registration;**54,63,242,584,749**;Aug 13, 1993;Build 10
+ ;;5.3;Registration;**54,63,242,584**;Aug 13, 1993
 10 ;Registration/Disposition [REG]
  N VARPSV
  S VARPSV("C")=$S('$G(VARP("C")):999999999,1:+VARP("C"))
@@ -26,9 +26,9 @@ VADPT5 ;ALB/MRL/MJK - PATIENT VARIABLES [REG]; 14 DEC 1988 ; 8/6/04 7:42am
  S $P(VAX("I"),"^",1)=+VAZ,$P(VAX("E"),"^",1)=$S($D(^SC(+VAZ,0)):$P(^(0),"^",1),1:""),VAX(1)=VAX(1)+1,@VAV@(VAX(1),"I")=VAX("I"),@VAV@(VAX(1),"E")=VAX("E") Q
  ;
 12 ;Appointments [SDA]
- N VASDSV,SDCNT,SDARRAY,VANOW
- S VANOW=$$NOW^XLFDT
- S VASDSV("F")=$S($G(VASD("F"))?7N.E:VASD("F"),1:VANOW)
+ N VASDSV,SDCNT,SDARRAY
+ D NOW^%DTC
+ S VASDSV("F")=$S($G(VASD("F"))?7N.E:VASD("F"),1:%)
  S VASDSV("T")=$S(+$G(VASD("T")):+VASD("T"),1:9999999) I '$P(VASDSV("T"),".",2) S $P(VASDSV("T"),".",2)=999999
  S VASDSV("W")=$S('$G(VASD("W")):12,1:VASD("W"))
  S VAZ(2)=$S($D(VASD("N")):VASD("N"),1:9999)

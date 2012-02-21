@@ -1,5 +1,5 @@
-RORHDTAC ;HCIOFO/SG - DATA EXTRACTION ACTION CONFIRMATIONS ; 3/14/06 11:07am
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORHDTAC ;HCIOFO/SG - DATA EXTRACTION ACTION CONFIRMATIONS ; 1/22/06 5:52pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  Q
  ;
@@ -33,16 +33,15 @@ CREATE(HDEIEN) ;
  ; HDEIEN        Data Extract IEN
  ; TASKIEN       Task IEN
  ; .FAM          File Access Mode is returned via this parameter
- ; .SDT          Start Date/Time is returned via this parameter
  ;
  ; Return Values:
  ;       <0  Error code
  ;        0  Ok
  ;        1  Cancel
  ;
-START(HDEIEN,TASKIEN,FAM,SDT) ;
+START(HDEIEN,TASKIEN,FAM) ;
  N DA,DIR,DIROUT,DIRUT,DTOUT,DUOUT,FILE,OUTDIR,RC,RORDST,RORSRC,STATUS,X,Y
- S FAM="",SDT=""
+ S FAM=""
  ;--- Check status of the task
  S STATUS=+$$TASKSTAT^RORHDTUT(HDEIEN,TASKIEN)
  I STATUS=1  D  Q:RC $S(RC<0:RC,1:1)
@@ -58,13 +57,6 @@ START(HDEIEN,TASKIEN,FAM,SDT) ;
  . S DIR("A")="The task is completed. Do you want to rerun it"
  . S DIR("B")="NO"
  . D ^DIR  S RC=$D(DIRUT)!'$G(Y)
- ;--- Ask the user for the start date/time
- K DIR
- S X=$$FMADD^XLFDT($$DT^XLFDT,30)
- S DIR(0)="D^NOW:"_X_":AEFNRSX",DIR("B")="NOW"
- S DIR("A")="Run the task"
- D ^DIR  Q:$D(DIRUT)!'$G(Y) 1
- S SDT=+Y
  ;--- Check if the output file exists already
  S RC=$$TASKFILE^RORHDTUT(HDEIEN,TASKIEN,.OUTDIR,.FILE)  Q:RC<0 RC
  S RORSRC(FILE)=""

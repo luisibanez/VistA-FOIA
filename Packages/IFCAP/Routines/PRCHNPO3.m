@@ -1,6 +1,6 @@
 PRCHNPO3 ;WISC/RSD/RHD/SC-CONT. OF NEW PO ; 4/23/99 1:39pm
-V ;;5.1;IFCAP;**112,115,143**;Oct 20, 2000;Build 3
- ;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  S PRCHSZ=1
  ;
@@ -34,14 +34,10 @@ EN1 S PRCHRFQT=$$DATE^PRC0C($P(Y(0),"^",11),"I"),PRCHRFQT=$P(PRCHRFQT,U,1,2)
  .I $P($G(^PRCS(410,+Y,0)),U,10)'=$P($G(^PRC(442,PRCHPO,23)),U,7) W $C(7),!!?3,"The substation on this 2237 does not match the substation entered",!?3,"on this "_$S($D(PRCHNRQ):"requisition.",1:"purchase order."),! S EN=1
  D SPRMK^PRCHNPO6
  ;
-N Q:'PRCHSZ  K ^TMP($J,"PRCHS"),PRCHSIT S J=0,K=1,PRCHSIT(K)="" G:$D(PRCHPOST) 1
- W !?3,"Line Items: " R PRCHX:DTIME G Q:PRCHX["^"!(PRCHX=""),HLP:$E(PRCHX)="?",1:"Aa"[$E(PRCHX)
- F  Q:'$F(PRCHX,",,")  S PRCHX=$P(PRCHX,",,",1)_","_$P(PRCHX,",,",2,99) ; *112 remove consecutive commas
- S:$E(PRCHX)="," PRCHX=$E(PRCHX,2,$L(PRCHX)) ; *112 remove leading comma
- S:$E(PRCHX,$L(PRCHX))="," PRCHX=$E(PRCHX,1,$L(PRCHX)-1) ; *112 remove trailing comma
+N Q:'PRCHSZ  K ^TMP($J,"PRCHS"),PRCHSIT S J=0,K=1,PRCHSIT(K)="" G:$D(PRCHPOST) 1 W !?3,"Line Items: " R PRCHX:DTIME G Q:PRCHX["^"!(PRCHX=""),HLP:$E(PRCHX)="?",1:"Aa"[$E(PRCHX)
  F I=1:1 S X=$P(PRCHX,",",I) Q:X=""  I +X'=X S X(1)=$P(X,":",1),X(2)=$P(X,":",2) K:+X(1)'=X(1)!(+X(2)'=X(2))!'(X(1)<X(2)) PRCHX Q:'$D(PRCHX)  S $P(PRCHX,",",I)=X(1)_":1:"_X(2)
  I '$D(PRCHX) W " ??",$C(7) G N
- X "F I="_PRCHX_" D IT Q:'$O(^TMP($J,""PRCHS"",0))" G:'$O(^TMP($J,"PRCHS",0)) N S ^(0)=J
+ S:$E(PRCHX,$L(PRCHX))="," PRCHX=$E(PRCHX,1,$L(PRCHX)-1) X "F I="_PRCHX_" D IT Q:'$O(^TMP($J,""PRCHS"",0))" G:'$O(^TMP($J,"PRCHS",0)) N S ^(0)=J
  ;
 3 G 2:J=+^PRCS(410,PRCHSY,10),Q:'$O(^TMP($J,"PRCHS",0)) W !,"A new 2237 will now be created with the following items: " F K=0:0 S K=$O(PRCHSIT(K)) Q:'K  W !?3,PRCHSIT(K)
  S %A="     Do you wish to proceed",%B="",%=1 D ^PRCFYN I %'=1 G N
@@ -77,8 +73,6 @@ DT S X="T" D ^%DT S DT=Y
 EN2 ;CHECKS FCP PARAMETERS & SET Y, CALLED FROM PRCH2138,PRCHIFREG
  S PRCHN("SFC")=+$P(^PRC(442,DA,0),"^",19)
  S $P(^PRC(442,DA,18),U,2)=$S((PRCHN("SFC")=2)&(PRCHN("MP")=12):"B",PRCHN("SFC")=2:"A",PRCHN("SFC")=3:"J",1:"")
- S Y(0)=+$P(^PRC(442,DA,0),"^",3)
- I $G(PRCHCC)'="",$G(Y(0))'="",'$D(^PRC(420,PRC("SITE"),1,+Y(0),2,+PRCHCC)) S PRCHCC="" K DE(2)
  Q
  ;
 ERR W !,$C(7),"Cannot get a transaction number at this time for the new transaction being split",!,"out.  Try again later!"
@@ -90,7 +84,7 @@ ERR1 W !,$C(7),"Cannot find the 2237 you selected in file 410."
 ERR2 W !,$C(7),"Not continuing with this 2237."
  Q
  ;
-VENMSG ;message to alert users that vendors don't match and that IMF will
+VENMSG ;mesasge to alert users that vendors don't match and that IMF will
  ;be updated.
  W !!,"NOTE-Vendors on PO and 2237 don't match.  If you proceed IMF info"," will be used.  If there is no IMF entry for the item for this vendor one will ","be created."
  N % S %=0

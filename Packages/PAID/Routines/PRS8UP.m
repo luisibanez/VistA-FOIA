@@ -1,6 +1,5 @@
-PRS8UP ;HISC/MRL,JAH/WIRMFO-DECOMPOSITION, UPDATE TOTALS ;7/10/08
- ;;4.0;PAID;**6,21,30,45,117**;Sep 21, 1995;Build 32
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRS8UP ;HISC/MRL,JAH/WIRMFO-DECOMPOSITION, UPDATE TOTALS ;12/15/97
+ ;;4.0;PAID;**6,21,30,45**;Sep 21, 1995
  ;
  ;This routine is used to collect information related to
  ;weekly activity which is unrelated to actual time, including
@@ -62,36 +61,6 @@ PRS8UP ;HISC/MRL,JAH/WIRMFO-DECOMPOSITION, UPDATE TOTALS ;7/10/08
  .K Y
  K I,T,W,X,Y
  ;
- ;PRS4*117 CT Trav Earnd Wk 1&2. Convert file decimal to 1/4 hr integer
- ;
- N CTTNODE,CTTW1,CTTW2 S CTTNODE=$G(^PRST(458,+PY,"E",+DFN,6))
- S CTTW1=+$P(CTTNODE,U)*100/.25\100
- S CTTW2=+$P(CTTNODE,U,2)*100/.25\100
- I CTTW1>0 S $P(WK(1),"^",52)=CTTW1
- I CTTW2>0 S $P(WK(2),"^",52)=CTTW2
- ;
- ;PRS4*117 Move Credit Hours back to the comptime buckets.
- ;   Credit hours still reported under comptime 8B codes but are
- ;   split out during decomp so appropriate rules are applied 
- ;   for credit hours. When credit hours 8B code reporting is 
- ;   implemented this code should be removed.[credit hours future use]
- ;
- ;     { begin credit hours move to ct buckets
- ;
- ;       For week 1 & 2, add credit hours to comptime buckets and zero 
- ;       out credit hours buckets.
- ;
- F I=1,2 D
- .;      add
- .  S $P(WK(I),U,7)=$P(WK(I),U,7)+$P(WK(I),U,54)
- .  S $P(WK(I),U,8)=$P(WK(I),U,8)+$P(WK(I),U,55)
- .;
- .;      zero out
- .  S $P(WK(I),U,54)=""
- .  S $P(WK(I),U,55)=""
- ;
- ;      end credit hours move to ct buckets }
- ;
  ; -- Lump Sum Data (LY, LH, LD, DT)
  ;
  S (X,Y)=$G(^PRST(458,+PY,"E",+DFN,3)),(C,T(1),T(2),T(3))=""
@@ -114,7 +83,7 @@ PRS8UP ;HISC/MRL,JAH/WIRMFO-DECOMPOSITION, UPDATE TOTALS ;7/10/08
  ;
  I $P(Y,"^",7)="Y" S $P(WK(3),"^",9)=1
  ;
- ; -- Foreign Cola (LA)
+ ; -- Foreigh Cola (LA)
  ;
  I $P(Y,"^",8)="Y" S $P(WK(3),"^",10)=2
  ;

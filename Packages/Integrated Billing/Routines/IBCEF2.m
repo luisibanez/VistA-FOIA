@@ -1,6 +1,5 @@
 IBCEF2 ;ALB/TMP - FORMATTER SPECIFIC BILL FUNCTIONS ;8/6/03 10:54am
- ;;2.0;INTEGRATED BILLING;**52,85,51,137,232,155,296,349,403,400,432**;21-MAR-94;Build 192
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,85,51,137,232,155,296**;21-MAR-94
  ;
 HOS(IBIFN) ; Extract rev codes for inst. episode into IBXDATA
  ; Moved for space
@@ -29,12 +28,12 @@ RECVR(IBIFN) ; Returns the V.A. internal routing id of the current ins
  ;IBIFN = bill ien
  N MCR,NUM,IBPH
  S IBPH=$P("P^H",U,$$FT^IBCEF(IBIFN)-1)
- S NUM="ENVOY"_IBPH
+ S NUM="ENVOY"_IBPH       ; 155 version
  ; If rate type is CHAMPVA, send 'CHAMVA'
  I $P($G(^DGCR(399.3,+$P($G(^DGCR(399,IBIFN,0)),U,7),0)),U)="CHAMPVA" S NUM="CHAMV"_IBPH
- I NUM["ENVOY",$$MCRWNR^IBEFUNC(+$$CURR(IBIFN)) D
- . S MCR=$P("B^A",U,$$FT^IBCEF(IBIFN)-1)    ; PART A/B for MEDICARE
- . S NUM="PART"_MCR
+ I NUM["ENVOY",$$MCRWNR^IBEFUNC(+$$CURR(IBIFN)) D  ;Find out PART A/B for MEDICARE    155 version
+ . S MCR=$$MRATYPE^IBEFUNC(IBIFN)
+ . I MCR'="","AB"[MCR S NUM="PART"_MCR
  Q NUM
  ;
 ALLPAYID(IBIFN,IBXDATA,SEQ) ; Returns clearinghouse id for all (SEQ="")
@@ -46,7 +45,7 @@ ALLPAYID(IBIFN,IBXDATA,SEQ) ; Returns clearinghouse id for all (SEQ="")
  S IBXDATA="",IBM=$G(^DGCR(399,IBIFN,"M"))
  F Z=1:1:3 I $S('$G(SEQ):1,1:Z=SEQ) S Z0=$P(IBM,U,Z) I Z0 D  S:A'="" IBXDATA(Z)=A
  . S A=""
- . S IBINST=($$FT^IBCEF(IBIFN)=3) ;Is bill UB-04?
+ . S IBINST=($$FT^IBCEF(IBIFN)=3) ;Is bill UB-92?
  . ; EJK *296* Get IBEBI based on Prof. or Inst. claim
  . I IBINST S IBEBI=$P($G(^DIC(36,Z0,3)),U,4)
  . I 'IBINST S IBEBI=$P($G(^DIC(36,Z0,3)),U,2)
@@ -58,7 +57,7 @@ ALLPAYID(IBIFN,IBXDATA,SEQ) ; Returns clearinghouse id for all (SEQ="")
  . S A=$S($P(Z1,U,8)'=2:$P($G(^DIC(36,Z0,3)),U,$S(IBINST:4,1:2)),1:"")
  . S A=$$UP^XLFSTR(A)
  . ;
- . ; RPRNT = CMS-1500 Rx bills
+ . ; RPRNT = HCFA 1500 Rx bills
  . ; IPRNT = Inst MRA secondary claims
  . ; PPRNT = Prof MRA secondary claims
  . ; HPRNT = inst printed bills (non-MRA, force print at clearinghouse)
@@ -67,11 +66,10 @@ ALLPAYID(IBIFN,IBXDATA,SEQ) ; Returns clearinghouse id for all (SEQ="")
  . ; Default to appropriate 'xPRNT' if Rx bill or COB bill or forced to
  . ;    print - claims must print at clearinghouse
  . ;
- . ; Rx bills on CMS-1500
- . ;IB*2.0*432/TAZ Claims no longer print at clearinghouse
- . ;I 'IBINST,$$ISRX^IBCEF1(IBIFN) S A="RPRNT" Q
+ . ; Rx bills on HCFA 1500
+ . I 'IBINST,$$ISRX^IBCEF1(IBIFN) S A="RPRNT" Q
  . ;
- . ; Claim forced to print at clearinghouse (Field #27)
+ . ; Claim forced to print at clearinghouse
  . I $P(Z1,U,8)=2 S A=$S(IBINST:"H",1:"S")_"PRNT" Q
  . ;
  . ; EJK *296* Send IBEBI for MRA secondary claims if it exists
@@ -88,8 +86,7 @@ ALLPAYID(IBIFN,IBXDATA,SEQ) ; Returns clearinghouse id for all (SEQ="")
  . I A=84147 Q
  . ;
  . ; If not a primary bill force to print
- . ;IB*2.0*432/TAZ secondary bills will now be processed
- . ;I Z>1,Z=$$COBN^IBCEF(IBIFN) S A=$S(IBINST:"H",1:"S")_"PRNT" Q
+ . I Z>1,Z=$$COBN^IBCEF(IBIFN) S A=$S(IBINST:"H",1:"S")_"PRNT" Q
  . Q
  ;
  Q
@@ -143,27 +140,17 @@ ID1(LN,DX,CT) ;Special entrypoint for diagnoses to 'save' the fact
  ;      dx was not output
  ; CT = the ct on the 'DC' entry.  pass by reference, returned null if
  ;      the end of the valid dx codes has been reached
- N IBINS,VAL,CNT,DXIEN,DXQ,EDX,I,POA
+ N IBINS,VAL
  S IBINS=($$FT^IBCEF(IBXIEN)=3)
- S VAL="DC"_CT
+ S VAL="DC"_CT                     ; **232**
  S VAL=$E(VAL_" ",1,4)
- S EDX=($E($G(DX))="E") ; TRUE if e-code DX
- S I=$S(EDX:3,1:2)
- S:'EDX DXQ=$S(+$G(^TMP("DCX",$J,2))>0:"BF",1:"BK") ; first non e-code DX is principal (qulifier "BK"), the rest have qualifier "BF"
  I IBINS D
- .I CT>28 S CT="" Q     ; Max of 28 codes for institutional/UB
- .S DXIEN=$P(DX(CT),U,2) Q:DXIEN=""
- .S POA=$P($G(^IBA(362.3,DXIEN,0)),U,4) I POA="",$$INPAT^IBCEF(IBXIEN) S POA=1 ; POA indicator defaults to "1", if not present on inpatient claim
- .S:EDX DXQ="BN" ; e-code DX qualifier
- .Q
- I 'IBINS S:EDX DXQ="BF" S POA="" ; on CMS-1500 e-code DX qualifiers are "BF" and there's no POA
+ . I CT>8 S CT="" Q  ;Only 8 codes for institutional/UB  **232**
+ . ; Check for 'E-code'.  If there, don't extract the first one as a dx,
+ . ;     but as a special E-code
+ . I $G(IBXSAVE("DX-E"))="",$E($G(DX))="E" S IBXSAVE("DX-E")=DX,DX=""
  I 'IBINS,CT>8 S ^TMP("IBXSAVE",$J,"DX",IBXIEN)=$G(^TMP("IBXSAVE",$J,"DX",IBXIEN))+1,^TMP("IBXSAVE",$J,"DX",IBXIEN,$P(DX(+^TMP("IBXSAVE",$J,"DX",IBXIEN)),U,2))=$G(^TMP("IBXSAVE",$J,"DX",IBXIEN)) S DX="" Q
- I CT'="",DX'="" D
- .; populate ^TMP("DCX") scratch global
- .S ^TMP("DCX",$J,1)=CT,CNT=$G(^TMP("DCX",$J,I))+1,^TMP("DCX",$J,I)=CNT
- .S (^TMP("DCX",$J,I,CNT),^TMP("DCX",$J,1,CT))=DX_U_DXQ_U_POA
- .S LN=LN+1 D ID(LN,VAL) S ^TMP("IBXSAVE",$J,"DX",IBXIEN,$P(DX(LN),U,2))=LN,^TMP("IBXSAVE",$J,"DX",IBXIEN)=CT,CT=CT+1
- .Q
+ I CT'="",DX'="" S LN=LN+1 D ID(LN,VAL) S ^TMP("IBXSAVE",$J,"DX",IBXIEN,$P(DX(LN),U,2))=LN,^TMP("IBXSAVE",$J,"DX",IBXIEN)=CT,CT=CT+1 Q
  Q
  ;
 M(CT) ; Calculate multi-valued field for 837 extract

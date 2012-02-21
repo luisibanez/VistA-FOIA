@@ -1,12 +1,10 @@
 IBCSC4E ;ALB/ARH - ADD/ENTER PTF/OE DIAGNOSIS ;3/2/94
- ;;2.0;INTEGRATED BILLING;**8,106,121,124,210,266,403**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**8,106,121,124,210,266**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 DXINPT(IBIFN) ; display and ask user to select PTF diagnosis
  N IBLIST,IBPTFDX
- D PTFDSP(IBIFN),PTFASK I $D(IBLIST) D PTFADD(IBIFN,IBLIST) S POAEDIT=1
- ; get POA indicators from QuadraMed for UB-04 inpatient claims
- I $$FT^IBCEF(IBIFN)=3 D SETPOA^IBCSC4F(IBIFN)
+ D PTFDSP(IBIFN),PTFASK I $D(IBLIST) D PTFADD(IBIFN,IBLIST)
  K ^TMP($J,"IBDX")
  Q
  ;
@@ -60,7 +58,7 @@ PTFDSP(IBIFN) ; display PTF diagnosis within date range of the bill
  ; Output:  ^TMP($J,"IBDX") as defined by PTFDXDT^IBCSC4F   and
  ;          ^TMP($J,"IBDX","S",x) = DIAGNOSIS w/x=selection identifer for a dx
  N IB0,IBPTF,IBTF,IBU,IBFDT,IBTDT,IBDSCH,IBW,IBC,IBA,IBN,IBCNT,IBMCNT,IBMDT,IBMV,IBDT,IBLN,IBLABEL,IBDXCNT,IBI
- N IBDX,IBID,IBON,IBY,IBMDRG,X,IBDATE,IEN362,POA
+ N IBDX,IBID,IBON,IBY,IBMDRG,X,IBDATE
  ;
  K ^TMP($J,"IBDX") S IBW=41
  ;
@@ -86,10 +84,9 @@ PTFDSP(IBIFN) ; display PTF diagnosis within date range of the bill
  . ;
  . S (IBDXCNT,IBI)="" F  S IBI=$O(^TMP($J,"IBDX",IBN,IBMDT,IBI)) Q:'IBI  D
  .. S IBDX=^TMP($J,"IBDX",IBN,IBMDT,IBI),IBY=$$ICD9^IBACSV(+IBDX,IBDATE)
- .. S IEN362=$O(^IBA(362.3,"AIFN"_IBIFN,+IBDX,""))
- .. S IBDXCNT=IBDXCNT+1,IBID=IBA_IBDXCNT,IBON=$S(IEN362:"*",1:" ")
- .. S POA="" S:$P(IB0,U,19)=3 POA=$$GETPOA^IBCEU4(IEN362,1) S:POA'="" POA=" ("_POA_") "
- .. S IBLN=" "_IBON_IBID_" - "_$P(IBY,U,1)_POA_$J("",(7-$L($P(IBY,U,1))))_$E($P(IBY,U,3),1,23)
+ .. S IBDXCNT=IBDXCNT+1,IBID=IBA_IBDXCNT,IBON=$S($O(^IBA(362.3,"AIFN"_IBIFN,+IBDX,"")):"*",1:" ")
+ .. ;
+ .. S IBLN=" "_IBON_IBID_" - "_$P(IBY,U,1)_$J("",(7-$L($P(IBY,U,1))))_$E($P(IBY,U,3),1,23)
  .. S IBCNT=IBCNT+1,X(IBCNT)=$G(X(IBCNT))_$J("",IBW),X(IBCNT)=$E(X(IBCNT),1,IBC)_IBLN
  .. S ^TMP($J,"IBDX","S",IBID)=IBDX
  . ;
@@ -121,17 +118,4 @@ DELALL(IBIFN) ; ask/delete all diagnosis on a bill, including all CPT associated
  . S IBDXI=0 F  S IBDXI=$O(^IBA(362.3,IBXRF,IBDX,IBDXI)) Q:'IBDXI  D
  .. S DIK="^IBA(362.3,",DA=IBDXI D ^DIK K DIK,DA
  W " .... deleted"
- Q
- ;
-POAASK ; POA edit
- N DIR,DIRUT,DUOUT,DTOUT,DX,ORD,X,Y
- W !
- S DIR("?")="Enter Yes to edit POA indicators."
- S DIR("A")="Edit POA indicators"
- S DIR(0)="YO",DIR("B")="NO" D ^DIR K DIR Q:Y'=1
- S DIE="^IBA(362.3,",ORD="" F  S ORD=$O(^IBA(362.3,"AO",IBIFN,ORD)) Q:ORD=""  D  Q:$D(Y)  ;
- .S DA=$O(^IBA(362.3,"AO",IBIFN,ORD,"")),DX=$$GET1^DIQ(362.3,DA,.01),DR=".04 "_DX D ^DIE
- .Q
- K DA,DIE,DIR,DR
- D CLEAN^DILF
  Q

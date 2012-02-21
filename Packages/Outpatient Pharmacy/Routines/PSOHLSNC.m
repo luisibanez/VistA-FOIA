@@ -1,5 +1,5 @@
 PSOHLSNC ;BIR/RTR - Send CHCS message to CPRS ;07/03/02
- ;;7.0;OUTPATIENT PHARMACY;**111,157,143,225**;DEC 1997;Build 29
+ ;;7.0;OUTPATIENT PHARMACY;**111,157,143**;DEC 1997
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External reference to ^PS(51.2 supported by DBIA 2226
  ;External reference to ^PSDRUG( supported by DBIA 221
@@ -134,7 +134,7 @@ ZCL ;Build ZCL segment
  .F I=1:1:8 D
  ..Q:'$D(^PS(52.41,PSOPND,"ICD",I,0))
  ..S INODE="",INODE=^PS(52.41,PSOPND,"ICD",I,0)
- ..F JJJ=2:1:9 S EI=$P(INODE,U,JJJ) D
+ ..F JJJ=2:1:8 S EI=$P(INODE,U,JJJ) D
  ...S PSOXFLD(1)=I,PSOXFLD(2)=JJJ-1,PSOXFLD(3)=EI
  ...;I JJJ=4 S EI=$S(EI=1:"SC",EI=0:"NSC",1:"") S PSOXFLD(3)=EI
  ...D SEG
@@ -144,8 +144,8 @@ ZCL ;Build ZCL segment
  .D SEG
  .Q:'$D(^PS(52.41,PSOPND,"IBQ"))
  .S EI=^PS(52.41,PSOPND,"IBQ")
- .F I=2,3,4,1,5,6,7 S PSOXFLD(3)=$P(EI,U,I) D
- .. S PSOXFLD(2)=$S(I=2:1,I=3:2,I=4:4,I=1:5,I=5:6,I=6:7,I=7:8,1:"") D SEG
+ .F I=2,3,4,1,5,6 S PSOXFLD(3)=$P(EI,U,I) D
+ .. S PSOXFLD(2)=$S(I=2:1,I=3:2,I=4:4,I=1:5,I=5:6,I=6:7,1:"") D SEG
  Q
 ZSC ;Build ZSC segment
  S PSOLIMIT=6 X PSONFLD

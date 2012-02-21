@@ -1,5 +1,5 @@
 RCDPEX32 ;ALB/TMK - ELECTRONIC EOB EXCEPTION PROCESSING - FILE 344.4 ;10-OCT-02
- ;;4.5;Accounts Receivable;**173,249**;Mar 20, 1995;Build 2
+ ;;4.5;Accounts Receivable;**173**;Mar 20, 1995
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EDITNUM ; Edit invalid claim # to valid, refile EOB
@@ -47,7 +47,7 @@ EDITNUM ; Edit invalid claim # to valid, refile EOB
  .. I $P(Q0,U,2)=$P(RC0,U,5) S $P(Q0,U,2)=RCBILL(1)
  .. S ^TMP($J,"RCDP-EOB",1,Q,0)=Q0
  . S ^TMP($J,"RCDP-EOB",1,.5,0)="835ERA"
- . S RCEOB=$$DUP^IBCEOB("^TMP("_$J_",""RCDP-EOB"",1)",RCBILL) ; IA 4042
+ . S RCEOB=$$DUP^IBCEOB(RCBILL,"^TMP("_$J_",""RCDP-EOB"",1)") ; IA 4042
  . K ^TMP($J,"RCDP-EOB",1,.5,0)
  . I RCEOB D  Q
  .. N RCWHY S RCWHY(1)="EEOB already found on file while trying to change claim # and filing into IB"

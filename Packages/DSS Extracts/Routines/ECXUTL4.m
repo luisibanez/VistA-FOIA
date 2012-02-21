@@ -1,5 +1,5 @@
-ECXUTL4 ;ALB/ESD - Utilities for DSS Extracts ; 11/26/07 10:58am
- ;;3.0;DSS EXTRACTS;**39,41,46,49,78,92,105,112,120,127**;Dec 22,1997;Build 36
+ECXUTL4 ;ALB/ESD - Utilities for DSS Extracts ; 10/4/02 1:29pm
+ ;;3.0;DSS EXTRACTS;**39,41,46,49,78**;Dec 22,1997
  ;
 OBSPAT(ECXIO,ECXTS,DSSID) ;
  ; Get observation patient indicator from DSS TREATING SPECIALTY
@@ -22,9 +22,9 @@ OBSPAT(ECXIO,ECXTS,DSSID) ;
  . I ECXOBS'="" S ECXOBS=$S(ECXOBS="Y":"YES",1:"NO") Q
  .;
  .;- If outpatient and TS not in file, AND Feeder Key (CLI) or DSS ID
- .;- (MTL,IVP,ECQ,QSR,NOS,SUR) is 290-297, Observation Patient Ind=YES
+ .;- (MTL,IVP,ECQ,QSR,NOS,SUR) is 290-296, Observation Patient Ind=YES
  . I ECXIO="O",ECXOBS="",DSSID D
- .. I $E(DSSID,1,3)>289&($E(DSSID,1,3)<298) S ECXOBS="YES"
+ .. I $E(DSSID,1,3)>289&($E(DSSID,1,3)<297) S ECXOBS="YES"
  .. E  S ECXOBS="NO"
  Q $S(ECXOBS'="":ECXOBS,1:"NO")
  ;
@@ -98,7 +98,7 @@ ENCNUM(ECXIO,ECXSSN,ECXADT,ECXVDT,ECXTRT,ECXOBS,ECXEXT,ECXSTP,ECXSTP2) ;
  ... ;
  ... ;- Use 1st 3 chars of DSS ID for NOS and ECQ (feeder key for CLI)
  ... ;- Use observation stop code for IVP
- ... I ECXEXT="CLI"!(ECXEXT="NOS")!(ECXEXT="ECQ") S ECXSTCD=+$E(ECXSTP,1,3) Q:'ECXSTCD
+ ... I ECXEXT="CLI"!(ECXEXT="NOS")!(ECXEXT="ECQ")!(ECXEXT="IVP") S ECXSTCD=+$E(ECXSTP,1,3) Q:'ECXSTCD
  ... ;
  ... ;- Use cost center to obtain stop code for ECS
  ... I ECXEXT="ECS" D  Q:'ECXSTCD
@@ -109,13 +109,11 @@ ENCNUM(ECXIO,ECXSSN,ECXADT,ECXVDT,ECXTRT,ECXOBS,ECXEXT,ECXSTP,ECXSTP2) ;
  ... ;
  ... ;- These extracts have predetermined stop code values
  ... I ECXEXT="DEN" S ECXSTCD=180
- ... I ECXEXT="PRE"!(ECXEXT="UDP")!(ECXEXT="IVP") S ECXSTCD="PHA"
+ ... I ECXEXT="PRE"!(ECXEXT="UDP") S ECXSTCD=160
  ... I ECXEXT="LAB"!(ECXEXT="LAR")!(ECXEXT="LBB") S ECXSTCD=108
  ... I ECXEXT="MTL" S ECXSTCD=538
  ... I ECXEXT="NUR" S ECXSTCD=950
  ... I ECXEXT="PRO" S ECXSTCD=423
- ... I ECXEXT="NUT" S ECXSTCD="NUT"
- ... I ECXEXT="BCM" S ECXSTCD="BCM"
  ... ;
  ... ;- If Imaging Type fld=2, use 109 otherwise use 105
  ... I ECXEXT="RAD" S ECXSTCD=$S(ECXSTP=2:109,1:105)
@@ -260,45 +258,14 @@ HNCI(ECXDFN) ; Get head & neck cancer indicator
  Q ECXHNCI
  ;
 TSMAP(ECXTS) ;Determines DSS Identifier for the following observation
- ; treating specialty
+ ; treating speciality
  ; Input:
- ;   ECXTS - Observation Treating Specialty
+ ;   ECXTS - Observation Treating Speciality
  ;
  ; Output:
  ;   DSS Identifier (Stop Code)
  ;
  N TS,SC,I
- S TS="^18^23^24^41^65^94^108^",SC="^293^295^290^296^291^292^297^"
+ S TS="^18^23^24^36^41^65^94^",SC="^293^295^290^294^296^291^292^"
  F I=1:1:$L(TS) Q:$P(TS,"^",I)=ECXTS
  Q $P(SC,"^",I)_"000"
-OEFDATA ;
- ;get patient OEF/OIF status and date of return
- S (ECXOEF,ECXOEFDT)=""
- I $G(VASV(11))>0 S ECXOEF=ECXOEF_"OIF"
- I $G(VASV(12))>0 S ECXOEF=ECXOEF_"OEF"
- I $G(VASV(13))>0 S ECXOEF=ECXOEF_"UNK"
- I ECXOEF'="" D
- . S ECXOEFDT=""
- . I $G(VASV(11))>0 S ECXOEFDT=$P($G(VASV(11,$G(VASV(11)),3)),"^")
- . I $G(VASV(12))>0,$P($G(VASV(12,$G(VASV(12)),3)),"^")>ECXOEFDT S ECXOEFDT=$P($G(VASV(12,$G(VASV(12)),3)),"^")
- . I $G(VASV(13))>0,$P($G(VASV(13,$G(VASV(13)),3)),"^")>ECXOEFDT S ECXOEFDT=$P($G(VASV(13,$G(VASV(13)),3)),"^")
- . I ECXOEFDT>0 S ECXOEFDT=17000000+ECXOEFDT
- ;
- S ECXPAT("ECXOEF")=ECXOEF
- S ECXPAT("ECXOEFDT")=ECXOEFDT
- Q
- ;
-SHAD(ECXDFN) ; Get PROJ 112/SHAD indicator
- ;
- ; Input:
- ;   ECXDFN  - Patient DFN
- ;
- ;Output:
- ;             PROJ 112/SHAD DX (Y/N/U)
- ;             Error -1, missing parameter
- ;
- N ECXSHAD
- S ECXDFN=$G(ECXDFN)
- S ECXSHAD=$$GETSHAD^DGUTL3(ECXDFN)
- S ECXSHAD=$S(ECXSHAD=1:"Y",ECXSHAD=0:"N",ECXSHAD="":"U",1:-1)
- Q ECXSHAD

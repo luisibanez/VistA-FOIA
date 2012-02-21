@@ -1,5 +1,5 @@
 SDAMOC0 ;OIFO BAY PINES/TEH - AM MGT REPORTS STATISTICS BUILD GLOBAL ;5/25/93
- ;;5.3;Scheduling;**487**;Aug 13, 1993
+ ;;5.3;Scheduling;**389**;Aug 13, 1993
  ;
 STOPC ;  build global of action counts from division/stopcode in TMP
  S SDT=SDBEG F  S SDT=$O(^SCE("B",SDT)) Q:'SDT!(SDT>SDEND)  D

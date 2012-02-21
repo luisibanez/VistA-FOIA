@@ -1,5 +1,5 @@
 RAORD2 ;HISC/CAH,FPT,GJC,DAD AISC/RMO-Detailed Request Display ;9/3/99  13:48
- ;;5.0;Radiology/Nuclear Medicine;**5,10,51,45,75**;Mar 16, 1998;Build 4
+ ;;5.0;Radiology/Nuclear Medicine;**5,10,51,45**;Mar 16, 1998
  K XQADATA
  D HOME^%ZIS K DIC S DIC="^DPT(",DIC(0)="AEMQ"
  W ! D ^DIC G Q:Y<0
@@ -50,7 +50,6 @@ DISORD Q:'$D(^DPT(RADFN,0))  S RADPT0=^(0),RA("NME")=$P(RADPT0,"^"),RA("DOB")=$P
  S RA("CNCAT")="("_RA("PRCIT")_" "_RA("PRCTY")_" "_RA("CPT")_")"
  S $E(RA("PROC INFO"),38,60)=RA("CNCAT") K RA("CNCAT"),RA("PRCIT")
  K RA("PRCTY"),RA("CPT")
- S RA("STY_REA")=$P($G(^RAO(75.1,RAOIFN,.1)),U) ;P75
  K RA("MOD") F I=0:0 S I=$O(^RAO(75.1,RAOIFN,"M","B",I)) Q:'I  I $D(^RAMIS(71.2,+I,0)) S RA("MOD")=$S('$D(RA("MOD")):$P(^(0),"^"),1:RA("MOD")_", "_$P(^(0),"^"))
  S RA("OST")=$P($P(^DD(75.1,5,0),$P(RAORD0,"^",5)_":",2),";")_$S($P(RAOSTSYM,"^",$P(RAORD0,"^",5))="":"",1:" ("_$P(RAOSTSYM,"^",$P(RAORD0,"^",5))_")")
  S RA("PHY")=$S($D(^VA(200,+$P(RAORD0,"^",14),0)):$P(^(0),"^"),1:"")

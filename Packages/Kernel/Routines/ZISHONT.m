@@ -1,6 +1,7 @@
-%ZISH ;IHS/PR,SFISC/AC - Host File Control for Cache for VMS/NT/UNIX ;06/09/10  16:01
- ;;8.0;KERNEL;**34,65,84,104,191,306,385,440,518,524,546**;JUL 10, 1995;Build 9
- ;Per VHA Directive 2004-038, this routine should not be modified
+%ZISH ;IHS\PR,SFISC/AC - Host File Control for OpenM/Cache for NT/VMS ;12/13/2005
+ ;;8.0;KERNEL;**34,65,84,104,191,306,385**;JUL 10, 1995;Build 3
+ ;
+ ; **MODIFIED VERSION FOR CACHE/VMS -- 9/7/01**
  ;
 OPEN(X1,X2,X3,X4,X5,X6)    ;SR. Open Host File
  ;X1=handle name
@@ -16,22 +17,24 @@ OPEN(X1,X2,X3,X4,X5,X6)    ;SR. Open Host File
  ;The next line eliminates the <ENDOFFILE> error for sequential files for the current process.
  S %ZA=$ZUTIL(68,40,1) ;Work like DSM
  S %=X2_X3 O %:(%1):2 I '$T S POP=1 Q
+ ;U % S %ZA=$ZA ;Comment out, $ZA is for READ status
+ ;I %ZA=-1 U:%I]"" %I C % S POP=1 Q
  S IO=%,IO(1,IO)="",IOT="HFS",IOM=80,IOSL=60,POP=0 D SUBTYPE^%ZIS3($G(X6,"P-OTHER"))
  I $G(X1)]"" D SAVDEV^%ZISUTL(X1)
- ;I $L($G(%I)) U %I ;Would only needed if we had done a USE.
+ U $S(%I]"":%I,1:$P)
  Q
  ;
 OPNERR ;Handle open error
  S POP=1,$ECODE=""
- ;I $L($G(%I)) U %I
+ U:$P]"" $P
  Q
  ;
 CLOSE(X) ;SR. Close HFS device not opened by %ZIS.
  ;X=HANDLE NAME
  ;IO=Device
  N %
- I $L($G(IO)) C IO K IO(1,IO)
- I $L($G(X)) D RMDEV^%ZISUTL(X)
+ I $G(IO)]"" C IO K IO(1,IO)
+ I $G(X)]"" D RMDEV^%ZISUTL(X)
  ;Only reset home if one setup.
  I $D(IO("HOME"))!$D(^XUTL("XQ",$J,"IOS")) D HOME^%ZIS
  Q
@@ -39,63 +42,28 @@ CLOSE(X) ;SR. Close HFS device not opened by %ZIS.
 OPENERR ;
  Q 0
  ;
-DEL(%ZX1,%ZX2) ;ef,SR. Del files, return 1 if deleted all requested.
+DEL(%ZX1,%ZX2) ;ef,SR. Del fl(s)
  ;S Y=$$DEL^%ZISH("dir path",$NA(array))
- ; will invoke an OS command to delete file(s)
- ; UNIX: rm -f filespec[ ...]
- ; VMS: del filespec[,...]
- N %ZARG,%ZXDEL,%ZOS,%ZDELIM,%ZCOMND,%ZLIST
- S %ZARG="",%ZXDEL=1
- S %ZX1=$$DEFDIR($G(%ZX1))
- S %ZOS=$$OS^%ZOSV
- S %ZDELIM=$S(%ZOS="UNIX":" ",1:",")
- S %ZCOMND=$S(%ZOS="UNIX":"rm -f ",1:"del ")
- D
+ N %,%ZX,%ZXDEL,%ZISH,%ZOS
+ S %ZX1=$$DEFDIR($G(%ZX1)),%ZOS=$$OS^%ZOSV,%ZXDEL=1,%ZISH=""
+ F  S %ZISH=$O(@%ZX2@(%ZISH)) Q:%ZISH=""  D
  . N $ETRAP,$ESTACK S $ETRAP="D DELERR^%ZISH"
- . N %,%ZI,%ZISH,%ZX,%ZFOUND S %ZISH=""
- . F %ZI=1:1 S %ZISH=$O(@%ZX2@(%ZISH)) Q:%ZISH=""  D
- . . N $ETRAP,$ESTACK S $ETRAP="D DELERR^%ZISH"
- . . I %ZISH["*" S %ZXDEL=0 Q  ; Wild card not allowed.
- . . S %ZX=$S(%ZISH[%ZX1:%ZISH,1:%ZX1_%ZISH) ; prepend directory path
- . . I %ZOS="VMS",%ZX'[";" S %ZX=%ZX_";*"
- . . S %ZFOUND=$ZSEARCH(%ZX)]""  ; File exists
- . . S:%ZFOUND %ZARG=$S(%ZARG="":%ZX,1:%ZARG_%ZDELIM_%ZX) ; join files
- . . I $L(%ZARG)>2000 S %=$ZF(-1,%ZCOMND_%ZARG),%ZARG="" H 1 ; delete files at a time
- . ;
- . I $L(%ZARG) S %=$ZF(-1,%ZCOMND_%ZARG) ; delete remaining files
- ;
- I %ZXDEL S %ZXDEL='$$LIST(%ZX1,%ZX2,"%ZLIST")
+ . I %ZISH["*" S %ZXDEL=0 Q  ; Wild card not allowed.
+ . S %ZX=$S(%ZISH[%ZX1:%ZISH,1:%ZX1_%ZISH)
+ . I %ZOS="VMS",%ZX'[";" S %ZX=%ZX_";*"
+ . Q:$ZSEARCH(%ZX)']""  ; File doesn't exist
+ . S %=$ZF(-1,$S(%ZOS="UNIX":"rm ",1:"del ")_%ZX)
+ . I $ZSEARCH(%ZX)]"" S %ZXDEL=0 ; Delete was not successful.
  Q %ZXDEL
  ;
 DELERR ;Trap any $ETRAP error, unwind and return.
  S $ETRAP="D UNWIND^%ZTER"
- S %ZXDEL=0,%ZARG=""
+ S %ZXDEL=0
  D UNWIND^%ZTER
  Q
  ;
-DEL1(%ZX3) ;ef,SR. Delete one file
- N %ZI1,%ZI2
- D SPLIT(%ZX3,.%ZI1,.%ZI2) S %ZI2(%ZI2)=""
- Q $$DEL(%ZI1,$NA(%ZI2))
- ;
-SPLIT(%I,%O1,%O2) ;Split to path,file
- N %ZOS,%D,D S %ZOS=$$OS^%ZOSV
- I %ZOS["VMS" D  Q
- . S D=$S(%I["]":"]",1:":")
- . S %O1=$P(%I,D,1)_D,%O2=$P(%I,D,2)
- . Q
- S %D=$S(%ZOS="UNIX":"/",%ZOS="NT":"\",1:""),%O1="",%O2="" Q:%D=""
- S D=$L(%I,%D),%O1=$P(%I,%D,1,D-1),%O2=$P(%I,%D,D)
- Q
- ;
-FEXIST(%PATH,%FL) ;Check if files exsist.
- ;S Y=$$DTEST("/usr/var",$NA(array))
- N %ZISH,%ZISHY
- S %ZISH=$$LIST(%PATH,%FL,"%ZISHY")
- Q %ZISH
- ;
 LIST(%ZX1,%ZX2,%ZX3) ;ef,SR. Create a local array holding file names
- ;S Y=$$LIST^%ZISH("\dir\",$NA(array),$NA(return array)) Return 1 if found anything
+ ;S Y=$$LIST^ZOSHDOS("\dir\",$NA(array),$NA(return array)) Return 1 if found anything
  ;
  N %ZISH,%ZISHN,%ZX,%ZISHY,%ZY,%ZOS
  S %ZX1=$$DEFDIR($G(%ZX1)),%ZOS=$$OS^%ZOSV
@@ -106,7 +74,7 @@ LIST(%ZX1,%ZX2,%ZX3) ;ef,SR. Create a local array holding file names
  . I %ZOS="VMS",%ZISH'["." S %ZISH=%ZISH_".*" ;Allways upper
  . ;NT, display case, ignore for lookup
  . S %ZX=%ZX1_%ZISH
- . F %ZISHN=0:1 D  Q:(%ZX="")
+ . F %ZISHN=0:1 D  Q:(%ZX="") 
  . . S %ZX=$ZSEARCH($S(%ZISHN:"",1:%ZX))
  . . ;Q:(%ZX="")!($$UP^XLFSTR(%ZX)'[%ZISHY)!(%ZX?.E1.2".")
  . . Q:(%ZX="")!(%ZX?.E1.2".")
@@ -123,8 +91,6 @@ MV(X1,X2,Y1,Y2) ;ef,SR. Rename a fl
  S X1=$$DEFDIR($G(X1)),Y1=$$DEFDIR($G(Y1))
  S X=$ZSEARCH(X1_X2),Y=Y1_Y2 ;move X to Y
  I X="" Q 0
- ;Move to same place can delete file. Since at destination return 1
- I $P(X,";")=Y Q 1
  S %=$ZF(-1,$S(%ZOS="UNIX":"mv ",1:"copy ")_X_" "_Y) ;Use NT/VMS copy
  I %ZOS'="UNIX" D
  . S X2=$P(X,X1,2),%ZISHX(X2)=""
@@ -143,13 +109,12 @@ TRNLNM(PATH) ;ef. Expand logical path
  I %ZOS="VMS" D  Q PATH
  . S P1=PATH_$S(PATH[":":"*.*",1:":*.*")
  . S P2=$ZSEARCH(P1)
- . S:$L(P2) PATH=$S(P2["]":$P(P2,"]",1,$L(P2,"]")-1)_"]",1:$P(P2,":",1)_":")
+ . S:$L(P2) PATH=$S(P2["]":$P(P2,"]",1)_"]",1:$P(P2,":",1)_":")
  . Q
  I %ZOS="NT" D  Q PATH
  . S P1=PATH_$S($E(PATH,$L(PATH))'="\":"\*",1:"*"),P2=$ZSEARCH(P1)
  . S:$L(P2) PATH=$P(P2,"\",1,$L(P2,"\")-1)_"\"
  . Q
- ;Unix Cache $ZSEARCH uses % around an environment variable
  I %ZOS="UNIX" D  Q PATH
  . S P1=PATH_$S($E(PATH,$L(PATH))'="/":"/*",1:"*"),P2=$ZSEARCH(P1)
  . S:$L(P2) PATH=$P(P2,"/",1,$L(P2,"/")-1)_"/"
@@ -160,7 +125,7 @@ DEFDIR(DF) ;ef. Default Dir and frmt
  ;Need to handle NT, VMS and Linux
  N %ZOS,P1,P2 S %ZOS=$$OS^%ZOSV,DF=$G(DF)
  Q:DF="." "" ;Special way to get current dir.
- S:DF="" DF=$G(^XTV(8989.3,1,"DEV")),DF=$P(DF,"^",$S($$PRI^%ZOSV<2:1,1:2))
+ S:DF="" DF=$G(^XTV(8989.3,1,"DEV"))
  Q:DF="" ""
  ;Check syntax, VMS needs disk:[dir] or logical:
  I %ZOS="VMS" D
@@ -170,17 +135,16 @@ DEFDIR(DF) ;ef. Default Dir and frmt
  . I $L(P2) S:P2'["[" P2="["_P2 S:P2'["]" P2=P2_"]"
  . S DF=P1_P2 S:DF'[":" DF=DF_":"
  . Q
- ;Check syntax, Unix needs /mnt/fl, ./fl, ~/fl %HOME%/fl
+ ;Check syntax, Unix needs /mnt/fl, ./fl
  I %ZOS="UNIX" D
  . S DF=$TR(DF,"\","/")
  . S:$E(DF,$L(DF))'="/" DF=DF_"/"
  . Q
- ;Check syntax, NT needs c:\dir\ or \\server\folder\
+ ;Check syntax, NT needs c:\dir\ 
  I %ZOS="NT" D
  . N P1,P2
- . I '(DF?1(1A1":\",1"\\").E) S DF=$$DEFDIR("")
- . S P1="",P2=DF
  . I DF[":" S P1=$P(DF,":")_":",P2=$P(DF,":",2)
+ . E  S P1="",P2=DF
  . S P2=$TR(P2,"/","\")
  . I $L(P2) S:".\"'[$E(P2,1) P2="\"_P2 S:$E(P2,$L(P2))'="\" P2=P2_"\"
  . S DF=P1_P2
@@ -227,12 +191,12 @@ READNX ;Check for EOF
  Q
  ;
 FTG(%ZX1,%ZX2,%ZX3,%ZX4,%ZX5) ;ef,SR. Unload contents of host file into global
- ;p1=hostf file directory
+ ;p1=hostf file directory 
  ;p2=host file name
  ;p3= $NAME REFERENCE INCLUDING STARTING SUBSCRIPT
  ;p4=INCREMENT SUBSCRIPT
  ;p5=Overflow subscript, defaults to "OVF"
- N %ZA,%ZB,%ZC,%XX,%OVFCNT,%ZISHF,%ZISHO,POP,%ZISUB,$ES,$ET
+ N %ZA,%ZB,%ZC,X,%OVFCNT,%ZISHF,%ZISHO,POP,%ZISUB,$ES,$ET
  N I,%ZISH,%ZISH1,%ZISHI,%ZISHL,%ZISHOF,%ZISHOX,%ZISHS,%ZX,%ZISHY
  S %ZX1=$$DEFDIR($G(%ZX1)),%ZISHOF=$G(%ZX5,"OVF")
  D MAKEREF(%ZX3,%ZX4,"%ZISHOF")

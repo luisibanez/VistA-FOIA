@@ -1,6 +1,5 @@
-SDAMA300 ;BPOIFO/ACS-Filter API Validate Filters ; 9/14/05 7:49am
- ;;5.3;Scheduling;**301,347,508**;13 Aug 1993
- ;PER VHA DIRECTIVE 2004-038, DO NOT MODIFY THIS ROUTINE
+SDAMA300 ;BPOIFO/ACS-Filter API Validate Filters ; 12/13/04 3:26pm
+ ;;5.3;Scheduling;**301,347**;13 Aug 1993
  ;
  ;*****************************************************************
  ;              CHANGE LOG
@@ -12,7 +11,7 @@ SDAMA300 ;BPOIFO/ACS-Filter API Validate Filters ; 9/14/05 7:49am
  ;                        MADE (FIELD #16) AND 2 NEW FIELDS TO RETURN:
  ;                        1) AUTO-REBOOKED APPT DATE/TIME (FIELD #24)
  ;                        2) NO-SHOW/CANCEL APPT DATE/TIME (FIELD #25)
- ;02/22/07  SD*5.3*508    SEE SDAMA301 FOR CHANGE LIST
+ ;
  ;*****************************************************************
  ;
  ;*****************************************************************
@@ -33,7 +32,7 @@ VALARR(SDARRAY,SDFLTR) ;
  S SDQUIT=0,SDERR=115
  ;
  ;Set filter flags and validate input array entries
- F SDI="MAX","FLDS","FLTRS","SORT","VSTAPPTS","PURGED" Q:SDQUIT  D @SDI
+ F SDI="MAX","FLDS","FLTRS","SORT" Q:SDQUIT  D @SDI
  Q:(SDARRAY("CNT")=-1) -1
  ;filters allowed on these fields
  F SDI=1:1:4,13,16 Q:SDQUIT  D
@@ -45,7 +44,7 @@ VALARR(SDARRAY,SDFLTR) ;
  ;
  I SDQUIT=0 D
  . ;filters not allowed on these fields
- . F SDI=5:1:12,14,15,17:1:26,28:1:SDARRAY("FC") Q:SDQUIT  D NOFIL
+ . F SDI=5:1:12,14,15,17:1:SDARRAY("FC") Q:SDQUIT  D NOFIL
  Q SDARRAY("CNT")
  ;
  ;*****************************************************************
@@ -66,11 +65,9 @@ VALARR(SDARRAY,SDFLTR) ;
  . ; get each clinic IEN in the string and validate
  . F SDX=1:1:SDCOUNT Q:SDQUIT  D
  .. S SDDATA=$P(SDARRAY(2),";",SDX)
- .. I ($G(SDDATA)=""!'$D(^SC(SDDATA,0))) D ERROR(SDERR) Q
- .. D:$$CHKRSACL(SDDATA) ERROR(SDERR)    ;validate RSA Clinic (Type R)
+ .. I ($G(SDDATA)=""!'$D(^SC(SDDATA,0))) D ERROR(SDERR)
  ;Clinic list is in global or local array
  I SDARRAY("CLNGBL")=1 D
- . Q:SDARRAY(2)="^SC("   ; no validation required if clinic global
  . S SDX=SDARRAY(2)
  . ;check for existence of IENs
  . N SDIEN S SDIEN=$O(@(SDX_"0)")) I +$G(SDIEN)=0 D ERROR(SDERR)
@@ -78,8 +75,7 @@ VALARR(SDARRAY,SDFLTR) ;
  . S SDDATA=0
  . ; get each IEN in the array and validate
  . F  S SDDATA=$O(@(SDX_"SDDATA)")) Q:(($G(SDDATA)="")!(SDQUIT))  D
- .. I '$D(^SC(SDDATA,0)) D ERROR(SDERR) Q
- .. D:$$CHKRSACL(SDDATA) ERROR(SDERR)    ;validate RSA Clinic (Type R)
+ .. I '$D(^SC(SDDATA,0)) D ERROR(SDERR)
  Q
 3 ;SDARRAY(3): Appointment Status Code
  F SDX=1:1:SDCOUNT Q:SDQUIT  D
@@ -99,7 +95,6 @@ VALARR(SDARRAY,SDFLTR) ;
  .. Q:SDQUIT
  ;DFN list is in global or local array
  I SDARRAY("PATGBL")=1 D
- . Q:SDARRAY(4)="^DPT("
  . S SDX=SDARRAY(4)
  . ;check for existence of DFNs
  . N SDDFN S SDDFN=$O(@(SDX_"0)")) I +$G(SDDFN)=0 D ERROR(SDERR)
@@ -110,18 +105,19 @@ VALARR(SDARRAY,SDFLTR) ;
  .. I '$D(^DPT(SDDATA)) D ERROR(SDERR)
  .. Q:SDQUIT
  Q
-12 ;SDARRAY(12): Encounter Exists
- ;Unpublished and should not be used by other applications
- ;validate value
- ;S SDQUIT=$S(SDARRAY("ENCTR")="":0,SDARRAY("ENCTR")="Y":0,SDARRAY("ENCTR")="N":0,1:1)
- ;D:SDQUIT ERROR(SDERR)
- Q
 13 ;SDARRAY(13): Primary Stop Code
- ;primary stop code must exist on ^DIC(40.7,"C"
+ ;primary stop code must exist on ^DIC(40.7
+ N SDY,SDVALID
+ S SDVALID=0
  F SDX=1:1:SDCOUNT Q:SDQUIT  D
- . S SDDATA=$P(SDARRAY(13),";",SDX)
- . I '+SDDATA D ERROR(SDERR) Q
- . I '$D(^DIC(40.7,"C",SDDATA)) D ERROR(SDERR) Q
+ . S SDDATA=$P(SDARRAY(13),";",SDX) D
+ .. I (($G(SDDATA)<1)!($G(SDDATA)>999)) S SDQUIT=1 Q 
+ .. ;I '$D(^DIC(40.7,SDDATA)) S SDQUIT=1 Q
+ .. S SDVALID=0,SDY=0
+ .. F  S SDY=$O(^DIC(40.7,SDY)) Q:((SDY="")!(SDVALID=1))  D
+ ... I SDDATA=$P($G(^DIC(40.7,SDY,0)),"^",2) S SDVALID=1
+ .. I SDVALID=0 S SDQUIT=1
+ I SDQUIT D ERROR(SDERR)
  Q
 16 ;SDARRAY(16): Date Appointment Made
  ;validate from/to date(s)
@@ -131,42 +127,6 @@ VALARR(SDARRAY,SDFLTR) ;
  I $L(SDARRAY("DAMFR"))>7 D ERROR(SDERR)
  Q:SDQUIT
  I $L(SDARRAY("DAMTO"))>7 D ERROR(SDERR)
- Q
-CHKRSACL(SDCL) ;validate RSA clinics
- ;
- ;Input     SDCL - IEN of the clinic
- ;Output    0 - Clinic OK
- ;          1 - Clinic Error (Missing either Local Appointment
- ;              purpose Id or Resource Id entry)
- ;              
- ;initialize variables
- N SDRSA,SDRNODE,SDERR
- S SDERR=0
- ;quit if clinic is not of type "C" (Clinic)
- ; - RSA Clinic that has not completed migration
- Q:($P($G(^SC(SDCL,0)),"^",3)'="C") SDERR
- ;determine clinic (RSA or VistA)
- S SDRSA=$$RSACLNC^SDAMA307(SDCL)
- Q:SDRSA SDERR  ;valid RSA clinic (has both Resource/LAP Ids)
- ;check to ensure valid VistA clinic
- S SDRNODE=$G(^SC(SDCL,"RSA"))
- ;error if either resource or lap defined
- S SDERR=$S((($P(SDRNODE,"^",4)="")&($P(SDRNODE,"^",5)="")):0,1:1)
- Q SDERR
-VSTAPPTS ;validate parameter for retrieving only VistA Appointments
- ;This flag supports the RPC View for RSA - unpublished feature
- Q:($G(SDARRAY("VSTAPPTS"))="")
- D:($G(SDARRAY("VSTAPPTS"))'=1) ERROR(SDERR)
- Q
-PURGED ;validate parameter for retrieving PURGED VistA appts
- Q:($G(SDARRAY("PURGED"))="")  ;parameter not set/used
- D:($G(SDARRAY("PURGED"))'=1) ERROR(SDERR)
- Q:(SDQUIT)  ;quit if parameter not set correctly
- ;throw error if patient filter not defined or invalid field requested
- D:($G(SDARRAY(4))']"") ERROR(SDERR)
- Q:(SDQUIT)
- N SDI F SDI=5:1:9,11,22,28,30,31,33 Q:(SDQUIT)  D
- .D:((";"_$G(SDARRAY("FLDS"))_";")[(";"_SDI_";")) ERROR(SDERR)
  Q
 NOFIL ;No filter allowed
  I $G(SDARRAY(SDI))]"" D ERROR(SDERR)
@@ -187,6 +147,8 @@ CHKDTES(SDFROM,SDTO) ;validate date(/time)s
  .I $G(SDI)'="" D
  ..D FMDATE(SDI,SDERR)
  ..Q:SDQUIT
+ ..;date(/time) must be numeric
+ ..I SDI'=+(SDI) D ERROR(SDERR)
  ..;check for valid dates / leap yr dates
  ..I SDI'[9999999 D
  ...S X=$$FMTE^XLFDT(SDI)
@@ -213,7 +175,7 @@ MAX ;Maximum number of appointments requested
  . I SDARRAY("PATGBL")=0 S SDPCOUNT=$L(SDARRAY(4),";")
  . ;Get Number of Clinics passed in
  . I SDARRAY("CLNGBL")=1 S SDCCOUNT=$$CHKGBL(SDARRAY(2))
- . I SDARRAY("CLNGBL")=0 S SDCCOUNT=$L(SDARRAY(2),";")
+ . I SDARRAY("CLNGBL")=0 S SDCCOUNT=$L(SDARRAY(4),";")
  . I (SDPCOUNT>1)!(SDCCOUNT>1) S SDQUIT=1 Q
  . I SDPCOUNT=0,SDCCOUNT=0 S SDQUIT=1
  I SDQUIT D ERROR(SDERR)
@@ -227,7 +189,7 @@ FLDS ;Quit if field list is null
  S SDCOUNT=$L(SDFIELDS,";")
  F SDI=1:1:SDCOUNT Q:SDQUIT  D
  . S SDFIELD=$P(SDFIELDS,";",SDI)
- . I (($G(SDFIELD)'?.N)!($G(SDFIELD)<1)!($G(SDFIELD)=27)!($G(SDFIELD)>SDARRAY("FC"))) D ERROR(SDERR) S SDQUIT=1
+ . I (($G(SDFIELD)'?.N)!($G(SDFIELD)<1)!($G(SDFIELD)>SDARRAY("FC"))) D ERROR(SDERR) S SDQUIT=1
  Q
  ;
 FLTRS ;Quit if max filters exceeded
@@ -249,10 +211,10 @@ ERROR(SDERRNUM) ;Generate Error and put in ^TMP global
  S $P(^TMP($J,"SDAMA301",SDERRNUM),"^",1)=$P($T(@SDERRNUM),";;",2)
  Q
  ;
+ ;Error code 101 is not used yet
 101 ;;DATABASE IS UNAVAILABLE
 115 ;;INVALID INPUT ARRAY ENTRY
 116 ;;DATA MISMATCH
-117 ;;Fatal RSA error. See SDAM RSA ERROR LOG file.
  ;
 CHKGBL(SDGBL) ;Check Global for number of entries
  N SDIEN,SDCOUNT

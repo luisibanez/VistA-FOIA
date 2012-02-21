@@ -1,5 +1,5 @@
-DGPTOLC2 ;ALB/AS/ADL - SUMMARY BY ADM RPT, lists diagnoses,sur,pro (cont.) ; 11/15/06 3:15pm
- ;;5.3;Registration;**164,510,559,599,729**; Aug 13, 1993;Build 59
+DGPTOLC2 ;ALB/AS/ADL - SUMMARY BY ADM RPT, lists diagnoses,sur,pro (cont.) ; 2 AUG 88 @0700 [7/12/04 2:54pm]
+ ;;5.3;Registration;**164,510,559,599**; Aug 13, 1993
  ;;ADL;Update for CSV Project;;Mar 27, 2003
  ;
 EN D LO^DGUTL,NOW^%DTC S DGPT=0,DGDT=$TR($$FMTE^XLFDT(DT,"5DF")," ","0")_"@",%=$P(%,".",2),DGDT=DGDT_$E(%,1,2)_":"_$E(%_"0000",3,4)
@@ -26,7 +26,7 @@ S S DGF="S" F DGS=0:0 S DGS=$O(^DGPT(PTF,"S",DGS)) Q:DGS'>0  S DGSUR=^(DGS,0),X=
  W:DGFEE !,"Total LOS: ",$S(DGLOS>0:DGLOS,1:"1") W ! D:IOST?1"C-".E CONT Q
 C S DGPTTMP=$$ICDDX^ICDCODE(+$P(DGM,"^",DGC),$$GETDATE^ICDGTDRG(PTF),,1) Q:+DGPTTMP<0!('$P(DGPTTMP,U,10))  S DGICD=$P(DGPTTMP,U,2,99) D
  . I $Y>($S($D(IOSL):IOSL,1:66)-4) D CRT W !,"Diagnosis Codes, (cont.)"
- W:DGC=10 ?4,"PRINCIPAL DIAGNOSIS: " W:DGC'=10 ! W ?10,$P(DGICD,"^",3)_" ("_$P(DGICD,"^",1)_")" Q
+ W:DGC=10 ?4,"DXLS: " W:DGC'=10 ! W ?10,$P(DGICD,"^",3)_" ("_$P(DGICD,"^",1)_")" Q
 P1 S DGPTTMP=$$ICDOP^ICDCODE(+$P(DGSUR,"^",DGC),$$GETDATE^ICDGTDRG(PTF),,1) Q:+DGPTTMP<0!('$P(DGPTTMP,U,10))  S DGICD=$P(DGPTTMP,U,2,99) Q:DGICD']""  D
  . I $Y>($S($D(IOSL):IOSL,1:66)-4) D CRT W !,$S('$D(DGF):"Non-OR Procedures",DGF="S":"Surgery",1:"Non-OR Procedures") W " Codes, (cont.)"
  W !?10,$P(DGICD,"^",4)_" ("_$P(DGICD,"^")_")" Q

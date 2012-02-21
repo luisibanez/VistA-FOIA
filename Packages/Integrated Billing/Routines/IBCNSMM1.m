@@ -1,5 +1,5 @@
-IBCNSMM1 ;ALB/CMS -MEDICARE INSURANCE INTAKE (CONT) ; 11/8/06 9:32am
- ;;2.0;INTEGRATED BILLING;**103,359**;21-MAR-94;Build 9
+IBCNSMM1 ;ALB/CMS -MEDICARE INSURANCE INTAKE (CONT) ; 18-OCT-98
+ ;;2.0;INTEGRATED BILLING;**103**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
@@ -106,7 +106,7 @@ GETWNR() ; -- Find and return the MEDICARE (WNR) ien
  ;         -- Returns Error message or
  ;            DIC(36 IEN ^"MEDICARE (WNR)"^IBA(355.3 PART A IEN ^"PART A"^ IBA(355.3 PART B IEN ^"PART B"
  ;
- N IBWNR,IB0,IBP0,IBQ,IBPQ,IBPX,IBX,IBY,IBPGN
+ N IBWNR,IB0,IBP0,IBQ,IBPQ,IBPX,IBX,IBY
  S IBY="MEDICARE (WNR)",IBQ=0
  S IBX=0 F  S IBX=$O(^DIC(36,"B",IBY,IBX)) Q:('IBX)  D  Q:IBQ
  .S IB0=$G(^DIC(36,IBX,0))
@@ -124,9 +124,7 @@ GETWNR() ; -- Find and return the MEDICARE (WNR) ien
  .S IBPX=0 F  S IBPX=$O(^IBA(355.3,"B",IBX,IBPX)) Q:('IBPX)!(IBQ)  D
  ..S IBP0=$G(^IBA(355.3,IBPX,0))
  ..I $P(IBP0,U,11) Q  ;Inactive
- ..I $P(IBP0,U,14)'="A",$P(IBP0,U,14)'="B" Q  ;Not Plan Category Part A or B 
- ..S IBPGN=$TR($P(IBP0,U,3),"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
- ..I IBPGN'="PART A",IBPGN'="PART B" Q  ;excludes non PART A and PART B plans
+ ..I $P(IBP0,U,14)'="A",$P(IBP0,U,14)'="B" Q  ;Not Plan Category Part A or B
  ..S IBWNR($P(IBP0,U,14))=IBPX_U_$P(IBP0,U,3)
  ..I $G(IBWNR("A")),$G(IBWNR("B")) S IBQ=1
  ;

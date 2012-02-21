@@ -1,5 +1,5 @@
 DGENRPD2 ;ALB/CJM/EG -Veteran with Future Appts and no Enrollment App Report - Continue 01/19/2005 ; 1/20/05 1:27pm
- ;;5.3;Registration;**147,232,568,585,725,767**;Aug 13,1993;Build 2
+ ;;5.3;Registration;**147,232,568,585**;Aug 13,1993
  ;
 PRINT ;
  N CRT,QUIT,PAGE,SUBSCRPT
@@ -41,14 +41,14 @@ LINE(LINE) ;
  ;
 GETPAT ;
  ; Description: Gets patients to include in the report
- N BEGIN,END,DGARRAY,SDCNT,CATEGORY,DIVISION,NAM
- S BEGIN=DGENRP("BEGIN")_".0000",END=DGENRP("END")_".2359",DGARRAY(1)=BEGIN_";"_END
+ N BEGIN,END,DGARRAY,SDCNT,CATEGORY,DIVISION
+ S BEGIN=DGENRP("BEGIN")-.1,END=DGENRP("END")+.1,DGARRAY(1)=BEGIN_";"_END
  S DGARRAY("FLDS")="3;10",SDCNT=$$SDAPI^SDAMA301(.DGARRAY)
  ;
  ;there must be subscripts underneath the 101 level to be a
  ;valid appointment, else it is an error eg 01/20/2005
  ; Appointment Database is Unavailable
- I SDCNT<0 N X S X=$$FAPCHK I X'="" S NAM=X G ERR
+ I $D(^TMP($J,"SDAMA301",101))=1 G ERR101
  ;
  ; Get All records for report
  I DGENRP("ALL") D
@@ -80,11 +80,8 @@ GETPAT ;
  K DGARRAY,^TMP($J,"SDAMA301"),SDCNT
  Q
  ;
-ERR ;
+ERR101 S NAM="**Appointment Database is Unavailable**"
  ;^TMP($J,TYPE,DIVISION NAME,CLINIC NAME,CATEGORY,APPT DT/TM,DFN)
- I NAM["Appointment Database is unavailable. Please try again later." S NAM="**Appointment Database is Unavailable**"
- I NAM["Appointment request contains invalid values." S NAM="**Invalid appointment, call Help Desk**"
- I NAM["An error has occurred. Check the RSA Error Log." S NAM="**Error,  check RSA Error Log **"
  S ^TMP($J,"NOENREC"," ",NAM," ",DT," ")=""
  K DGARRAY,^TMP($J,"SDAMA301"),SDCNT,NAM
  Q
@@ -96,7 +93,7 @@ VALREC(CLINIC,DFN) ;
  .S JUSTONCE=+$G(DGENRP("JUSTONCE"))
  .; Exclude certain appointment statuses
  .S STATUS=$P($P(^TMP($J,"SDAMA301",CLINIC,DFN,APPT),U,3),";")
- .Q:"^NS^NSR^CC^CCR^CP^CPR^"[(U_STATUS_U)
+ .Q:"^N^NA^C^CA^PC^PCA^"[(U_STATUS_U)
  .;
  .; Don't include enrolled veterans or ones that have pending apps
  .S CATEGORY=$$CATEGORY^DGENA4(DFN)
@@ -191,9 +188,3 @@ DATE(DATE) ;
  ;
 LJ(STRING,LENGTH) ;
  Q $$LJ^XLFSTR($E(STRING,1,LENGTH),LENGTH)
- ;
-FAPCHK() ;
- N ERR
- S ERR=$O(^TMP($J,"SDAMA301",""))
- I $D(^TMP($J,"SDAMA301",ERR))=1 Q ^TMP($J,"SDAMA301",ERR)
- Q ""

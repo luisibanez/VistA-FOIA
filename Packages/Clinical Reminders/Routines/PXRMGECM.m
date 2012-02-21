@@ -1,9 +1,9 @@
-PXRMGECM ;SLC/JVS GEC-Score Reports-cont'd ;7/14/05  10:43
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMGECM ;SLC/JVS GEC-Score Reports-cont'd ;6/19/03  20:58
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  Q
 SUM ;By Summary by Patient
- N CAT,HF,DATE,DFN,Y,HFN,CNTREF,X,REFNUM,SUM,GSUM,CATDANA,PAGE
- N DATER,SDATE,SCNT
+ N CAT,HF,DATE,DFN,Y,HFN,CNTREF,X,REFNUM,SUM,GSUM,CATDANA
+ N DATER,SDATE
  D E^PXRMGECV("HS1",1,BDT,EDT,"F",DFNONLY)
  I FORMAT="D" S FOR=0
  I FORMAT="F" S FOR=1
@@ -44,7 +44,6 @@ DIS ;Start of Display
  I FOR W !,"Name",?22,"SSN",?33,"Date",?44,"IADL",?49,"ADL",?55,"Care",?63,"Behaviors",?73,"ACROSS"
  I 'FOR W !,"Name^SSN^Referral Date^IADL^Basic ADL^Skilled Care^Behaviors^Totals"
  W !,"=============================================================================="
- S PAGE=1
  N S1,S2,S3,S4,S5,S1T,S2T,S3T,S4T,S5T
  S (S1T,S2T,S3T,S4T,S5T,CNT)=0
  S DFN="" F  S DFN=$O(@REF@(DFN)) Q:DFN=""  D
@@ -61,12 +60,12 @@ DIS ;Start of Display
  .......S S4T=S4T+S4
  .......S S5="" F  S S5=$O(@REF@(DFN,SDATE,DATER,S1,S2,S3,S4,S5)) Q:S5=""  D
  ........S S5T=S5T+S5
- ........I FOR W !,$E($P(DFN," ",1,$L(DFN," ")-1),1,19),?20," ("_$P(DFN," ",$L(DFN," "))_")",?33,$P($$FMTE^XLFDT(DATER,"5ZM"),"@",1),?44,$J(S1,3),?49,$J(S2,3),?55,$J(S3,3),?63,$J(S4,3),?73,$J(S5,3) D PAGE^PXRMGECZ
- ........I 'FOR W !,$P(DFN," ",1,$L(DFN," ")-1),"^",$P(DFN," ",$L(DFN," ")),"^",$P($$FMTE^XLFDT(DATER,"5ZM"),"@",1),"^",S1,"^",S2,"^",S3,"^",S4,"^",S5 D PAGE^PXRMGECZ
+ ........I FOR W !,$E($P(DFN," ",1,$L(DFN," ")-1),1,19),?20," ("_$P(DFN," ",$L(DFN," "))_")",?33,$P($$FMTE^XLFDT(DATER,"5ZM"),"@",1),?44,$J(S1,3),?49,$J(S2,3),?55,$J(S3,3),?63,$J(S4,3),?73,$J(S5,3)
+ ........I 'FOR W !,$P(DFN," ",1,$L(DFN," ")-1),"^",$P(DFN," ",$L(DFN," ")),"^",$P($$FMTE^XLFDT(DATER,"5ZM"),"@",1),"^",S1,"^",S2,"^",S3,"^",S4,"^",S5
  Q:CNT=0
- I FOR W !,?44,"_________________________________" D PAGE^PXRMGECZ
- I FOR W !,?33,"Totals > >",?44,$J(S1T,3),?49,$J(S2T,3),?55,$J(S3T,3),?63,$J(S4T,3),?72,$J(S5T,4) D PAGE^PXRMGECZ
- I FOR W !,?34,"Means > >",?44,$J($FN(S1T/CNT,"",1),3),?49,$J($FN(S2T/CNT,"",1),3),?55,$J($FN(S3T/CNT,"",1),3),?63,$J($FN(S4T/CNT,"",1),3),?72,$J($FN(S5T/CNT,"",1),4) D PAGE^PXRMGECZ
+ I FOR W !,?44,"_________________________________"
+ I FOR W !,?33,"Totals > >",?44,$J(S1T,3),?49,$J(S2T,3),?55,$J(S3T,3),?63,$J(S4T,3),?72,$J(S5T,4)
+ I FOR W !,?34,"Means > >",?44,$J($FN(S1T/CNT,"",1),3),?49,$J($FN(S2T/CNT,"",1),3),?55,$J($FN(S3T/CNT,"",1),3),?63,$J($FN(S4T/CNT,"",1),3),?72,$J($FN(S5T/CNT,"",1),4)
  S (S1T,S2T,S3T,S4T,S5T,SCNT)=0
  N S1TDEV,S1TDEVT,S2TDEV,S2TDEVT,S3TDEV,S3TDEVT,S4TDEV,S4TDEVT,S5TDEV,S5TDEVT
  S (S1TDEVT,S2TDEVT,S3TDEVT,S4TDEVT,S5TDEVT)=0
@@ -85,8 +84,7 @@ DIS ;Start of Display
  ........S S5TDEV=(S5-(S5T/CNT))*(S5-(S5T/CNT)) S S5TDEVT=S5TDEVT+S5TDEV
  I FOR W !,?20,"Standard Deviations > >"
  I CNT<2 S CNT=CNT+1
- I FOR W ?44,$J($FN($$SQROOT(S1TDEVT/(CNT-1)),"",1),3),?49,$J($FN($$SQROOT(S2TDEVT/(CNT-1)),"",1),3),?55,$J($FN($$SQROOT(S3TDEVT/(CNT-1)),"",1),3),?63,$J($FN($$SQROOT(S4TDEVT/(CNT-1)),"",1),3)
- I FOR W ?72,$J($FN($$SQROOT(S5TDEVT/(CNT-1)),"",1),4) D PAGE^PXRMGECZ
+ I FOR W ?44,$J($FN($$SQROOT(S1TDEVT/(CNT-1)),"",1),3),?49,$J($FN($$SQROOT(S2TDEVT/(CNT-1)),"",1),3),?55,$J($FN($$SQROOT(S3TDEVT/(CNT-1)),"",1),3),?63,$J($FN($$SQROOT(S4TDEVT/(CNT-1)),"",1),3),?72,$J($FN($$SQROOT(S5TDEVT/(CNT-1)),"",1),4)
  K ^TMP("PXRMGEC",$J)
  D KILL^%ZISS
  Q

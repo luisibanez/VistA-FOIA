@@ -1,5 +1,5 @@
 PRCSFMS ;WISC/KMB-FMS TRANSACTIONS FOR CP RUNNING BALANCE ;10/16/97  1315
-V ;;5.1;IFCAP;**90**;Oct 20, 2000
+V ;;5.1;IFCAP;;Oct 20, 2000
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 BEGIN ;   this routine is called from PRCSP1A
  ;   find FMS transactions, for selected quarter, for CP
@@ -38,7 +38,7 @@ HOLD1 ;
  Q
 HDR1 ;
  S P1=1
- S P=P+1 W @IOF W "Control Point Balance - ",Z(0)_" "_$E($P(PRC("CP")," ",2),1,10),?50,RDATE1,?73,"PAGE ",P
+ S P=P+1 W @IOF W "Control Point Balance - ",Z(0)_" "_$E($P(PRC("CP")," ",2),1,10),?53,RDATE1,?76,"PAGE ",P
  W !,?40,"FMS Transactions",!
  W !,"TRANSMISSION",?32,"TRANS",?40,"TRANSACTION",?68,"UNOBLIG",!,"DATE",?13,"REFERENCE #",?32,"CODE",?40,"$ AMOUNT",?54,"CP BALANCE",?68,"BALANCE"
  S L="",$P(L,"=",IOM)="=" W !,L S L="" Q
@@ -50,7 +50,7 @@ HOLD2 ;
  Q
 HDR2 ;
  S P1=1
- S P=P+1 W @IOF W "Control Point Balance - ",Z(0)_" "_$E($P(PRC("CP")," ",2),1,10),?50,RDATE1,?73,"PAGE ",P
+ S P=P+1 W @IOF W "Control Point Balance - ",Z(0)_" "_$E($P(PRC("CP")," ",2),1,10),?54,RDATE1,?76,"PAGE ",P
  W !,?5,"__________PO TRANSACTIONS WITHOUT 2237______________",!
  W !,"PO/",?20,"PO ",?33,"COMMITTED",?58,"OBL/CEIL",?68,"UNOBLIG",!,"OBL#",?20,"DATE",?33,"(EST) COST",?44,"CP BALANCE",?58,"$ AMOUNT",?68,"BALANCE"
  S L="",$P(L,"=",IOM)="=" W !,L S L="" Q

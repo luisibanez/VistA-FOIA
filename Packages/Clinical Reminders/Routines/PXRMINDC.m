@@ -1,10 +1,10 @@
-PXRMINDC ; SLC/PKR - Index counting routines. ;11/02/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,17**;Feb 04, 2005;Build 102
+PXRMINDC ; SLC/PKR - Index counting routines. ;12/23/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;========================================================
 CNT5(FILENUM,COUNT) ;Get date counts for indexes where the date
  ;is at subscript 5. Works for file numbers:
- ;63, 70, 120.5, 601.2, 601.84,
+ ;63, 70, 120.5, 601.2,
  ;9000010.11, 9000010.12, 9000010.13, 9000010.16, 9000010.23
  N DAS,DATE,DFN,IND,ITEM,YEAR
  I '$D(ZTQUEUED) W !,"Counting file number "_FILENUM
@@ -127,7 +127,7 @@ COUNT ;Driver for making index counts.
  ;See if this should be tasked.
  S TASKIT=$$ASKTASK^PXRMSXRM
  I TASKIT D
- . W !,"Queue the Clinical Reminders Index count."
+ . W !,"Queue the Clinical Reminders index count."
  . D TASKIT(LIST,.GBL,.ROUTINE)
  E  D RUNNOW(LIST,.GBL)
  Q
@@ -135,7 +135,7 @@ COUNT ;Driver for making index counts.
  ;========================================================
 MESSAGE(FILENUM,COUNT,TOTAL,START,END) ;Build the MailMan message giving the
  ;count breakdown.
- N COFF,FROM,ML,NAME,NL,PERC,TEXT,TO,YEAR,XMSUB
+ N COFF,ML,NAME,NL,PERC,TEXT,YEAR,XMSUB
  K ^TMP("PXRMXMZ",$J)
  S ML=$$MAX^XLFMTH($L(TOTAL)+2,8)
  S COFF=ML-5
@@ -161,9 +161,7 @@ MESSAGE(FILENUM,COUNT,TOTAL,START,END) ;Build the MailMan message giving the
  I TOTAL>0,'$D(^PXRMINDX(FILENUM,"DATE BUILT")) D
  . S TEXT="Warning, the index for file "_NAME_" may be incomplete or corrupted!"
  . S NL=NL+1,^TMP("PXRMXMZ",$J,NL,0)=TEXT
- S FROM=$$GET1^DIQ(200,DUZ,.01)
- S TO(DUZ)=""
- D SEND^PXRMMSG("PXRMXMZ",XMSUB,.TO,FROM)
+ D SEND^PXRMMSG(XMSUB)
  K ^TMP("PXRMXMZ",$J)
  Q
  ;
@@ -178,7 +176,6 @@ RUNNOW(LIST,GBL) ;Run the routines now.
  S ROUTINE(100)="CNTSS^PXRMINDC"
  S ROUTINE(120.5)="CNT5^PXRMINDC"
  S ROUTINE(601.2)="CNT5^PXRMINDC"
- S ROUTINE(601.84)="CNT5^PXRMINDC"
  S ROUTINE(9000011)="CNTPL^PXRMINDC"
  S ROUTINE(9000010.07)="CNT6^PXRMINDC"
  S ROUTINE(9000010.11)="CNT5^PXRMINDC"
@@ -206,8 +203,7 @@ TASKIT(LIST,GBL,ROUTINE) ;Count the indexes as a tasked job.
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,MINDT,SDTIME,X,Y
  S MINDT=$$NOW^XLFDT
  S DIR("A",1)="Enter the date and time you want the job to start."
- S DIR("A",2)="It must be after "_$$FMTE^XLFDT(MINDT,"5Z")
- S DIR("A")="Start the task at: "
+ S DIR("A")="It must be after "_$$FMTE^XLFDT(MINDT,"5Z")_" "
  S DIR(0)="DAU"_U_MINDT_"::RSX"
  D ^DIR
  I $D(DIROUT)!$D(DIRUT) Q
@@ -219,7 +215,7 @@ TASKIT(LIST,GBL,ROUTINE) ;Count the indexes as a tasked job.
  S ZTSAVE("LIST")=""
  S ZTSAVE("GBL(")=""
  S ZTRTN="TASKJOB^PXRMINDC"
- S ZTDESC="Clinical Reminders Index count"
+ S ZTDESC="Clinical Reminders index count"
  S ZTDTH=SDTIME
  S ZTIO=""
  D ^%ZTLOAD

@@ -1,14 +1,14 @@
 IBECUSM ;DVAMC/RLM - TRICARE PHARMACY BILLING OPTIONS; 20-AUG-96
- ;;2.0;INTEGRATED BILLING;**52,162,240,347**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,162,240**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
 REV ; Reverse a claim already submitted to the Fiscal Intermediary.
  I '$P($G(^IBE(350.9,1,9)),"^",4) W !!,"Please note that your TRICARE Pharmacy billing interface is not running!",!
-REVA N X K DIC S DIC=52,DIC("A")="Enter the RX# you wish to reverse: ",DIC(0)="AEQMN"
- W ! D DIC^PSODI(52,.DIC) S IBRX=+Y K DIC
+REVA K DIR S DIR(0)="P^52",DIR("A")="Enter the RX# you wish to reverse"
+ W ! D ^DIR K DIR S IBRX=+Y
  I Y<1!($D(DUOUT))!($D(DIRUT)) G REVQ
- W !!,"Prescription: ",$P(Y,"^",2),!,"     Patient: ",$$FILE^IBRXUTL(+Y,2,"E")
+ W !!,"Prescription: ",$P(Y,"^",2),!,"     Patient: ",$P($G(^DPT(+$P($G(^PSRX(+Y,0)),"^",2),0)),"^")
  ;
  ; - has this prescription been billed?
  K IBARR,IBCAN S (IBKEY,IBKEYS)=IBRX_";"
@@ -23,7 +23,7 @@ REVA N X K DIC S DIC=52,DIC("A")="Enter the RX# you wish to reverse: ",DIC(0)="A
  I $O(IBCAN(IBKEY))="" S IBCHTRN=IBCAN(IBKEY) W !!,$S($P(IBKEY,";",2):"Refill #"_$P(IBKEY,";",2),1:"The original fill")," for this prescription can be cancelled." G OKAYC
  ;
  ; - more than 1; must select from the list
- W !!,"More than one fill for rx# ",$$FILE^IBRXUTL(IBRX,.01)," may be cancelled."
+ W !!,"More than one fill for rx# ",$P($G(^PSRX(IBRX,0)),"^")," may be cancelled."
  S IBREF=$$SEL^IBECUSMU(.IBCAN)
  I IBREF<0 G REVQ
  ;
@@ -44,11 +44,11 @@ REVQ K DIROUT,DIRUT,DTOUR,DUOUT,IBRX,IBARR,IBCAN,IBKEY,IBKEYS,IBCHTRN,IBREF
  ;
 RESUB ; Resubmit a claim to the Fiscal Intermediary.
  I '$P($G(^IBE(350.9,1,9)),"^",4) W !!,"Please note that your TRICARE Pharmacy billing interface is not running!",!
-RESUBA N X K DIC S DIC=52 S DIC(0)="AEQMN",DIC("A")="Enter the RX# you wish to resubmit: "
- W ! D DIC^PSODI(52,.DIC) S IBRX=+Y K DIC
+RESUBA K DIR S DIR(0)="P^52",DIR("A")="Enter the RX# you wish to resubmit"
+ W ! D ^DIR K DIR S IBRX=+Y
  I Y<1!($D(DUOUT))!($D(DIRUT)) G RESUBQ
- S DFN=$$FILE^IBRXUTL(+Y,2)
- W !!,"Prescription: ",$$FILE^IBRXUTL(IBRX,.01),!,"     Patient: ",$P($G(^DPT(DFN,0)),"^")
+ S DFN=+$P($G(^PSRX(+Y,0)),"^",2)
+ W !!,"Prescription: ",$P(Y,"^",2),!,"     Patient: ",$P($G(^DPT(DFN,0)),"^")
  ;
  ; - find all potential transactions
  K IBBIL D FINDB^IBECUSMU(IBRX,1,.IBBIL)
@@ -58,7 +58,7 @@ RESUBA N X K DIC S DIC=52 S DIC(0)="AEQMN",DIC("A")="Enter the RX# you wish to r
  I $O(IBBIL(IBKEY))="" W !!,$S($P(IBKEY,";",2):"Refill #"_$P(IBKEY,";",2),1:"The original fill")," for this prescription can be billed." G IBPSR
  ;
  ; - more than 1; must select from the list
- W !!,"More than one fill for rx# ",$$FILE^IBRXUTL(IBRX,.01)," may be billed."
+ W !!,"More than one fill for rx# ",$P($G(^PSRX(IBRX,0)),"^")," may be billed."
  S IBREF=$$SEL^IBECUSMU(.IBBIL)
  I IBREF<0 G RESUBQ
  ;
@@ -89,10 +89,10 @@ RESUBQ K DIROUT,DIRUT,DTOUR,DUOUT,IBRX,DFN,IBBIL,IBKEY,IBREF
  ;
 DREJ ; Delete an entry from the Reject (#351.52) file.
  I '$P($G(^IBE(350.9,1,9)),"^",4) W !!,"Please note that your TRICARE Pharmacy billing interface is not running!",!
-DREJA N X K DIC S DIC=52 S DIC(0)="AEQMN",DIC("A")="Enter the RX# of the rejected transmission: "
- W ! D DIC^PSODI(52,.DIC) S IBRX=+Y K DIC
+DREJA K DIR S DIR(0)="P^52",DIR("A")="Enter the RX# of the rejected transmission"
+ W ! D ^DIR K DIR S IBRX=+Y
  I Y<1!($D(DUOUT))!($D(DIRUT)) G DREJQ
- W !!,"Prescription: ",$P(Y,"^",2),!,"     Patient: ",$$FILE^IBRXUTL(+Y,2,"E")
+ W !!,"Prescription: ",$P(Y,"^",2),!,"     Patient: ",$P($G(^DPT(+$P($G(^PSRX(+Y,0)),"^",2),0)),"^")
  ;
  ; - is there a reject entry for this prescription?
  K IBARR S (IBKEY,IBKEYS)=IBRX_";"
@@ -104,7 +104,7 @@ DREJA N X K DIC S DIC=52 S DIC(0)="AEQMN",DIC("A")="Enter the RX# of the rejecte
  I $O(IBARR(IBKEY))="" S IBCHREF=+IBARR(IBKEY) W !!,$S($P(IBKEY,";",2):"Refill #"_$P(IBKEY,";",2),1:"The original fill")," for this prescription has been rejected." G OKAYD
  ;
  ; - more than 1; must select from the list
- W !!,"More than one fill for rx# ",$$FILE^IBRXUTL(IBRX,.01)," has a reject entry."
+ W !!,"More than one fill for rx# ",$P($G(^PSRX(IBRX,0)),"^")," has a reject entry."
  S IBREF=$$SEL^IBECUSMU(.IBARR)
  I IBREF<0 G DREJQ
  ;

@@ -1,10 +1,10 @@
-IBCEMRAB ;ALB/DSM - MEDICARE REMITTANCE ADVICE DETAIL-PART B ; 3/10/11 10:14am
- ;;2.0;INTEGRATED BILLING;**155,323,349,400,431**;21-MAR-94;Build 106
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCEMRAB ;ALB/DSM - MEDICARE REMITTANCE ADVICE DETAIL-PART B ; 12/29/05 9:58am
+ ;;2.0;INTEGRATED BILLING;**155,323**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  Q  ; this routine must be called at an entry point
  ;
- ;  This routine prints MRA Report for CMS-1500 (Part B) Form Type
+ ;  This routine prints MRA Report for HCFA 1500 (Part B) Form Type
 PRNT ;
  ; Claim Level Adjustments
  N DIC,Y,IBEOB,IBILL,IBILLU,IBTD,IBFD,TOT,PRFRMID
@@ -41,17 +41,27 @@ HDR ; Print Header
  ; Row 7
  W !!!!,"DEPT OF VETERANS AFFAIRS"
  ;
- N PRVDR,LINE,PTNM,PTLEN,RMKS,HIC
+ N PRVDR,LVL,STATE,LINE,PTNM,PTLEN,RMKS,HIC
+ ; Retrieve the Provider data from IB Site Parameters file - ^IBE(350.9)
+ S PRVDR=$G(^IBE(350.9,1,2))
+ ; ProviderName^AgentCashierAddress^City^State^Zip
  ;
- ; gather the pay-to provider information - IB*2*400
- S PRVDR=$$PRVDATA^IBJPS3($P(IBEOB(0),U,1))
+ F LVL=1:1:5 S PRVDR(LVL)=$P(PRVDR,U,LVL)
+ ; PRVDR(1)  Provider Name (Agent Cashier Mail Symbol)
+ ; PRVDR(2)  Agent Cashier Street Address
+ ; PRVDR(3)  Agent Cashier City
+ ; PRVDR(4)  Agent Cashier State
+ ; PRVDR(5)  Agent Cashier Zip
+ ;
+ ; resolve the State File Pointer in PRVDR(4) & get State Abbreviation
+ S STATE=$S(PRVDR(4)'="":$P($G(^DIC(5,PRVDR(4),0)),U,2),1:"")
  ;
  ; Row 8
- W !,$P(PRVDR,U,5),?97,"PROVIDER #:",?111,"VA0"_$P($$SITE^VASITE,U,3)
+ W !,PRVDR(2),?97,"PROVIDER #:",?111,"VA0"_$P($$SITE^VASITE,U,3)
  ; Row 9
- W !,$P(PRVDR,U,6),?97,"PAGE #:",?111,$J(IBPGN,3)
+ W !,PRVDR(1),?97,"PAGE #:",?111,$J(IBPGN,3)
  ; Row 10
- W !,$P(PRVDR,U,7),", ",$P(PRVDR,U,8)," ",$P(PRVDR,U,9),?97,"DATE:",?111,$$FMTE^XLFDT($P(IBEOB(0),U,6),5)
+ W !,PRVDR(3),", ",STATE," ",PRVDR(5),?97,"DATE:",?111,$$FMTE^XLFDT($P(IBEOB(0),U,6),5)
  ; Row 14
  W !!!!,"PERF PROV",?12,"SERV DATE",?25,"POS",?29,"NOS",?34,"PROC",?40,"MODS",?53,"BILLED",?63,"ALLOWED",?75,"DEDUCT"
  W ?87,"COINS",?93,"GRP-RC",?107,"AMT",?114,"PROV PD"
@@ -67,11 +77,7 @@ HDR ; Print Header
  ; Row 17
  ; Patient Name, HIC, ACNT, ICN, ASG
  W !!,"NAME",?7,PTNM,?31,"HIC",?35,HIC
- W ?49,"ACNT",?54,$P($$SITE^VASITE,U,3),"-",$P(IBILL,U)
- ; HIPAA 5010 Changes
- N ICN
- S ICN=$P(IBEOB(0),U,14)
- W ?76,"ICN",?80,ICN W:$L(ICN)>17 !
+ W ?49,"ACNT",?54,$P($$SITE^VASITE,U,3),"-",$P(IBILL,U),?76,"ICN",?80,$P(IBEOB(0),U,14)
  W ?97,"ASG",?101,$S($P(IBILLU,U,6):"Y",1:"N")
  ;
  ; MOA: Medicare Outpatient Remarks Code
@@ -79,7 +85,7 @@ HDR ; Print Header
  W ?104,"MOA   " I RMKS'?1."^" W $P(RMKS,U,1)," ",$P(RMKS,U,2)
  I $P(RMKS,U,3,5)'?1."^" S RMKS=$TR(RMKS,U," ") W !,RMKS
  ; Secondary Performing Provider ID
- ; On CMS-1500 Form Type reports, If Medicare WNR is Primary or Secondary, then set Performing Provider ID
+ ; On HCFA 1500 Form Type reports, If Medicare WNR is Primary or Secondary, then set Performing Provider ID
  I $$WNRBILL^IBEFUNC(IBIFN,1)!$$WNRBILL^IBEFUNC(IBIFN,2) S PRFRMID="V"_$$MCRSPEC^IBCEU4(IBIFN,1)_$P($$SITE^VASITE,U,3)
  Q  ;HDR
  ;
@@ -129,7 +135,7 @@ SRVPRNT ; Print Service Level Data of EOB file (#361.1 Level 15)
  . I SRVTDT'="" W ?17,$E("00",1,2-$L(+SRVTDT)),+SRVTDT,$E("00",1,2-$L($P(SRVTDT,"/",2))),$P(SRVTDT,"/",2),$E($P(SRVTDT,"/",3),3,4)
  . ; If To Date is Null, Print From Date with year (if not Null)
  . I SRVTDT="",SRVFDT'="" W ?17,SRVDT,$E($P(SRVFDT,"/",3),3,4)
- . ; Place of Service - from 837 Extract from CMS-1500 Service Line Level
+ . ; Place of Service - from 837 Extract from HCFA Service Line Level
  . W ?25,$P($G(IBZDATA(CLMLN)),U,3)
  . ; Print Units, Procedure Code Paid, Modifiers, Submitted Line Charge, Allowed Amt, Deductable, Coinsurance
  . W ?28,UNIT,?34,PRCD,?40,MOD,?49,$J(SRVCHRG,10,2),?60,$J(ALWD,10,2),?71,$J(SRVDED,10,2),?82,$J(SRVCOIN,10,2)

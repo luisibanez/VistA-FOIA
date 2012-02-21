@@ -1,5 +1,5 @@
-DICRW ;SFISC/XAK-SELECT A FILE ;8/11/06  05:51
- ;;22.0;VA FileMan;**149**;Mar 30, 1999;Build 2
+DICRW ;SFISC/XAK-SELECT A FILE ;9/5/97  10:49
+ ;;22.0;VA FileMan;;Mar 30, 1999
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 R D DT S D="OUTPUT FROM",DIC(0)="QEI",DIA=$S($D(^DISV(DUZ,"^DIC(")):^("^DIC("),1:"")
  D R1,DIC K DIAC,DIFILE,DIC("S") Q:$D(DTOUT)  G R:'$T,AU:+Y=1.1,A:+Y=.6
@@ -32,7 +32,6 @@ DT ;
 DTNOLF ; DT entry point without doing a line feed.
  S:$D(DUZ)#2-1 DUZ=0 S:$D(DUZ(0))#2-1 DUZ(0)="" S X=DUZ(0)="@" D 1
  I '$D(DTIME) S DTIME=300
- I '$D(DILOCKTM) S DILOCKTM=+$G(^DD("DILOCKTM"),1) ;DI*146
  K %DT,DT S:$D(IO(0))[0 IO(0)=$I D NOW^%DTC S DT=X,U="^"
  K DIK,DIC,%I,DICS Q
  ;

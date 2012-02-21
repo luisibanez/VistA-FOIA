@@ -1,5 +1,5 @@
 IBOHCT ;ALB/EMG - CHECK FOR IB CHARGES ON HOLD ; MAY 2 1997
- ;;2.0; INTEGRATED BILLING ;**70,95,347**; 21-MAR-94;Build 24
+ ;;2.0; INTEGRATED BILLING ;**70,95**; 21-MAR-94
  ;
 FIND(DFN,IBTRN) ;  find all related IB charges on hold for episodes of care
  ;  for this Claims Tracking entry with Reason Not Billable
@@ -64,9 +64,8 @@ LST ; Display individual IB Action.
  N IBND,IBND1,IBRXN,IBRX,IBRF,IBRDT,IENS
  S IBND=$G(^IB(IBN,0)),IBND1=$G(^IB(IBN,1)),(IBRXN,IBRX,IBRF,IBRDT)=0
  I $P(IBND,"^",4)["52:" S IBRXN=$P($P(IBND,"^",4),":",2),IBRX=$P($P(IBND,"^",8),"-"),IBRF=$P($P(IBND,"^",4),":",3)
- I $P(IBND,"^",4)["52:"  D
- .I IBRF>0 S IENS=+IBRF,IBRDT=$$SUBFILE^IBRXUTL(+IBRXN,+IENS,52,.01)
- .E  S IENS=+IBRXN,IBRDT=$$FILE^IBRXUTL(+IENS,22)
+ I IBRF>0 S IENS=+IBRF_","_+IBRXN_",",IBRDT=$$GET1^DIQ(52.1,IENS,.01,"I")
+ E  S IENS=+IBRXN_",",IBRDT=$$GET1^DIQ(52,IENS,22,"I")
  W !?1,$J(IBNUM,2),?7,$J(+IBND,9)
  W ?18,$S(IBRXN>0:"Rx #: "_IBRX_$S(IBRF>0:"("_IBRF_")",1:""),1:$P($G(^IBE(350.1,+$P(IBND,"^",3),0)),"^",8))
  W ?42,$P($P(IBND,"^",11),"-",2)

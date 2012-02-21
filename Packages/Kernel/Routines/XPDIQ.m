@@ -1,5 +1,5 @@
-XPDIQ ;SFISC/RSD - Install Questions ;03/21/2008
- ;;8.0;KERNEL;**21,28,58,61,95,108,399**;Jul 10, 1995;Build 12
+XPDIQ ;SFISC/RSD - Install Questions ;12/16/98  12:06
+ ;;8.0;KERNEL;**21,28,58,61,95,108**;Jul 10, 1995
  Q
 DIR(XPFR,XPFP) ;XPFR=prefix, XPFP=file no._# or Mail Group ien
  ;XPFP is for XPF  or XPM questions
@@ -97,14 +97,6 @@ XPI1 ;Inhibit Logons
  Q
 XPM1 ;mail groups
  S FLAG=XPDANS
- ;DIR("B") is null if first time here
- I DIR("B")="" D
- .;check if mail group already exist
- .S X=$$FIND1^DIC(3.8,"","XQf",XPDANS,"","","")
- .;get the current coordinator
- .Q:'X  S X=$P($G(^XMB(3.8,X,0)),U,7)
- .;set the default to current coordinator
- .I X,$D(^VA(200,X,0))#10 S DIR("B")=$P(^(0),U)
  D XPQ("XPM1")
  Q
 XPO1 ;rebuild menu trees

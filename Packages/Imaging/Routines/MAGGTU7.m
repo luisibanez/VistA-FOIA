@@ -1,6 +1,5 @@
-MAGGTU7 ;WOIFO/GEK/SG - Silent calls for Queing functions from GUI ; 3/9/09 12:52pm
- ;;3.0;IMAGING;**8,20,93**;Dec 02, 2009;Build 163
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGGTU7 ;WOIFO/GEK - Silent calls for Queing functions from GUI ; [ 06/20/2001 08:57 ]
+ ;;3.0;IMAGING;**8**;Sep 15, 2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -22,14 +21,11 @@ ONJBOX(MAGIEN,CODE) ;
  ;  before queuing it to be copied to HardDrive.
  ; We're testing to see if a pointer to the magnetic exists.
  ;  If not then we assume the Image is on JukeBox
- N ZNODE
- S ZNODE=$G(^MAG(2005,+MAGIEN,0))
- IF '$L(ZNODE) Q 0
- IF $$IMOFFLN^MAGFILEB($P(ZNODE,"^",2)) Q 0
- Q:((+$P(ZNODE,U,11))!(+$P(ZNODE,U,12))) 0
- IF CODE="A" Q '$P(ZNODE,U,4)
- IF CODE="F" Q '$P(ZNODE,U,3)
- IF CODE="B" Q $S('$P(^MAG(2005,+MAGIEN,"FBIG"),U,2):0,1:'$P(^MAG(2005,+MAGIEN,"FBIG"),U,1))
+ IF '$L($G(^MAG(2005,+MAGIEN,0))) Q 0
+ IF $$IMOFFLN^MAGFILEB($P(^MAG(2005,+MAGIEN,0),"^",2)) Q 0
+ IF CODE="A" Q '$P(^MAG(2005,+MAGIEN,0),U,4)
+ IF CODE="F" Q '$P(^MAG(2005,+MAGIEN,0),U,3)
+ IF CODE="B" Q '$P(^MAG(2005,+MAGIEN,"FBIG"),U,1)
  ;
  Q
 QUEIMAGE(MAGRY,CODE,MAGIEN) ;RPC [MAGG QUE IMAGE]
@@ -78,7 +74,7 @@ QUELIST(MAGRY,CODE,LIST) ;RPC [MAGG QUE LIST]
  ;     ["B" Big File
  ; LIST is an array of Image IEN's,  we queue images contained in CODE
  ;
- N Y,CT,XX
+ N Y,CT
  S CT=0
  S X="" F  S X=$O(LIST(X)) Q:X=""  D QUEIMAGE(.XX,CODE,X) S CT=CT+1
  S MAGRY=CT_"^"_CT_" Image"_$S(CT=1:"",1:"'s")_" Queued to copy from JukeBox"
@@ -96,7 +92,7 @@ QUEGROUP(MAGRY,CODE,MAGIEN,QCODE) ;RPC [MAGG QUE IMAGE GROUP]
  ; QCODE is a QUEUE code.  If = 1 then this is a prefetch
  ;   here we are queing the images contained in CODE
  ;   for all images in the group.
- N X,Y,Z,CT,XX
+ N X,Y,Z,CT
  S QCODE=$G(QCODE)
  I '$D(^MAG(2005,+MAGIEN,0)) S MAGRY="0^Invalid Image IEN. Queuing Canceled." Q
  S CT=0,X=0
@@ -114,11 +110,10 @@ QUEPAT(MAGRY,CODE,MAGDFN) ;RPC [MAGG QUE PATIENT]
  ;  this will queue a JBTOHD copy for all images for the patient.
  ;  images queued depend on what is contained in CODE
  ;
- N Y,I,XX
+ N Y,I
  I '$D(^MAG(2005,"AC",+MAGDFN)) S MAGRY="0^No Images on file for "_$P($G(^DPT(+MAGDFN,0)),U,1) Q
  S I="" F  S I=$O(^MAG(2005,"AC",+MAGDFN,I),-1) Q:'I  D
  . I $P(^MAG(2005,I,0),U,10) Q
- . Q:$$ISDEL^MAGGI11(I)
  . I $P(^MAG(2005,I,0),U,6)="11" D QUEGROUP(.XX,CODE,I,1) Q
  . D QPREFET(.XX,CODE,I)
  S MAGRY="1^"_$P(^DPT(+MAGDFN,0),U)_"'s Images will be copied from the JukeBox."

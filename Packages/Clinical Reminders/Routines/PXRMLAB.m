@@ -1,5 +1,5 @@
-PXRMLAB ; SLC/PKR - Handle laboratory test findings. ;03/02/2006
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMLAB ; SLC/PKR - Handle laboratory test findings. ;10/01/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;=============================================
 EVALFI(DFN,DEFARR,ENODE,FIEVAL) ;Evaluate lab findings.
@@ -53,8 +53,7 @@ OUTPUT(INDENT,IFIEVAL,NLINES,TEXT) ;Produce the clinical
  ;maintenance output.
  N DATE,FLAG,IND,JND,NOUT,TEMP,TEXTOUT,TEST,VALUE
  S TEST=IFIEVAL("TEST NAME")
- S TEMP="Laboratory test: "_TEST
- I $D(IFIEVAL("SPECIMEN")) S TEMP=TEMP_"; specimen: "_IFIEVAL("SPECIMEN")
+ S TEMP="Laboratory test: "_TEST_"; specimen: "_IFIEVAL("SPECIMEN")
  S NLINES=NLINES+1
  S TEXT(NLINES)=$$INSCHR^PXRMEXLC(INDENT," ")_TEMP
  S IND=0

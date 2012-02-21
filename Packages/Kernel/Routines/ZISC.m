@@ -1,6 +1,5 @@
-%ZISC ;SFISC/GFT,AC,MUS - CLOSE LOGIC FOR DEVICES  ;1/24/08  16:09
- ;;8.0;KERNEL;**24,36,49,69,199,216,275,409,440**;JUL 10, 1995;Build 13
- ;Per VHA Directive 2004-038, this routine should not be modified
+%ZISC ;SFISC/GFT,AC,MUS - CLOSE LOGIC FOR DEVICES  ;01/14/2002  09:06
+ ;;8.0;KERNEL;**24,36,49,69,199,216,275,409**;JUL 10, 1995;Build 3
 C0 ;
  N %,%E,%H,%ZISI,%ZISOS,%ZISX,%ZISV
  ;Clear IO var we will use for reporting
@@ -41,9 +40,11 @@ C0 ;
  I (IO'=IO(0)!$D(IO("C"))),$D(IO(1,IO)) D
  . U:$S($D(ZTQUEUED):0,'$L($G(IO(0))):0,$D(IO(1,IO(0)))#2:1,1:0) IO(0)
  . C IO K IO(1,IO) S IO("CLOSE")=IO ;close device
- ;Unlock global used to control access.
- S %=$G(^XUTL("XQ",$J,"lock",+$G(IOS))) I $L(%) L -@% K ^XUTL("XQ",$J,"lock",IOS)
  ;
+ ;
+ I $D(IOT),IOT="CHAN",$D(IOS) D
+ .S %=$G(^%ZIS(1,+IOS,"GBL"))
+ .I %]"" L @("-^"_%) ;unlock global used to control access to network channels.
  I $D(IO("SPOOL")) D CLOSE^%ZIS4 ;Special close for spool device
  ;
 SETIO ;

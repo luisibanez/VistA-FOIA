@@ -1,14 +1,12 @@
-PRCVREA ;WOIFO/VC-Transmit HL7 message to IFCAP for RIL(cont);11/24/03 ; 2/29/08 1:54pm
- ;;5.1;IFCAP;**81,119**;Oct 20, 2000;Build 8
- ;Per VHA Directive 2004-038, this routine should not be modified
+PRCVREA ;WOIFO/VC-Transmit HL7 message to IFCAP for RIL(cont);11/24/03 ; 4/26/05 2:42pm
+ ;;5.1;IFCAP;**81**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified
  ;
 CALLIT ;Call the IFCAP RIL build Routine
  ;
  D EN^PRCVRC1(PRCSUB)
  ;
 SETUP S PRCHD(1)=""
- ;Added 1,"T" node to stop crash
- S PRCHD(1,"T")="ORDER HEADER INFO"
  S PRCHD(2)="ORC"_PRCCS_PRCCS_3
  S PRCHD(2,"T")="FUND CONTROL POINT"
  S PRCHD(3)="ORC"_PRCCS_PRCCS_17

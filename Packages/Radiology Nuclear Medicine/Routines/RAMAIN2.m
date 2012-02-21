@@ -1,12 +1,6 @@
 RAMAIN2 ;HISC/GJC-Radiology Utility File Maintenance (Part Two) ;8/15/05 10:07am
- ;;5.0;Radiology/Nuclear Medicine;**45,62,71,65**;Mar 16, 1998;Build 8
+ ;;5.0;Radiology/Nuclear Medicine;**45,62**;Mar 16, 1998
  ; 08/12/2005 bay/kam Remedy Call 104630 Patch 62
- ; 03/02/2006 BAY/KAM Remedy Call 131482 Patch RA*5*71
- ; 
- ;Supported IA #10141 reference to MES^XPDUTL
- ;Supported IA #10142 reference to EN^DDIOL
- ;Supported IA #10103 reference to DT^XLFDT
- ; 
 2 ;;Procedure Enter/Edit
  ; *** This subroutine once resided in RAMAIN i.e, '2^RAMAIN'. ***
  ; RA PROCEDURE option
@@ -19,8 +13,7 @@ RAMAIN2 ;HISC/GJC-Radiology Utility File Maintenance (Part Two) ;8/15/05 10:07am
  . W ! D ^DIC K D,DD,DIC,DINUM,DLAYGO,DO
  . S:+Y<0 RAXIT=1 I $G(RAXIT) K D,X,Y Q
  . S (DA,RADA)=+Y,RAY=Y,RAFILE=71
- . ;RA*5*71 changed next line for Remedy Call 131482
- . S RANEW71=$S($P(Y,U,3)=1:1,1:0) ;used in template, edit CPT Code if new rec.
+ . S:$P(Y,U,3)=1 RANEW71=1 ;used in template, edit CPT Code if new rec.
  . L +^RAMIS(RAFILE,RADA):5
  . I '$T D  Q
  .. W !?5,"This record is currently being edited by another user."
@@ -174,7 +167,7 @@ VRDIO(RADA) ; Validate the 'Usual Dose' field within the 'Default Radiopha-
  . Q:$P(RANUC(0),"^",2)=""  ; no need to validate, nothing input
  . I '$$USUAL^RADD2(.RADA,$P(RANUC(0),"^",2)) D
  .. N RARRY S RARRY(1)="For Radiopharmaceutical: "
- .. S RARRY(1)=RARRY(1)_$$EN1^RAPSAPI(+$P(RANUC(0),"^"),.01)_$C(7)
+ .. S RARRY(1)=RARRY(1)_$$GET1^DIQ(50,+$P(RANUC(0),"^")_",",.01)_$C(7)
  .. S RARRY(2)="" D EN^DDIOL(.RARRY,"")
  .. Q
  . Q

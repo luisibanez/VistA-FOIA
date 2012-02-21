@@ -1,9 +1,8 @@
-MDHL7MCA ; HOIFO/REL-Routine to Decode HL7 for MEDICINE ; [05-07-2001 10:38]
- ;;1.0;CLINICAL PROCEDURES;**6**;Apr 01, 2004;Build 102
+MDHL7MCA ; HIRMFO/REL-Routine to Decode HL7 for MEDICINE ; [05-07-2001 10:38]
+ ;;1.0;CLINICAL PROCEDURES;;Apr 01, 2004
  ; Reference DBIA #10035 for DPT calls.
  ; Reference DBIA #10062 for VADPT calls.
  ; Reference DBIA #10106 for HL7 calls.
- ; Reference DBIA #10096 for ^%ZOSF calls.
 EN ; Entry Point for Message Array in MSG
  N MSG
  K ERRTX
@@ -37,6 +36,7 @@ PID ; Check PID
 LPOBR I $E(MSG(NUM),1,3)'="OBR" S NUM=NUM+1 G LPOBR
  ;I $E(MSG(NUM),1,3)="ORC" S NUM=NUM+1
 OBR ; Check OBR
+ W MSG(NUM)
  S X=$G(MSG(NUM)) I $E(X,1,3)'="OBR" S ERRTX="OBR not found when expected" D ^MDHL7MCX G KIL
  S SEG("OBR")=X
  S ORIFN=$P(X,"|",3),INST=$P(X,"|",25) I MCAPP="Instrument Manager",INST'="" S MCAPP=INST

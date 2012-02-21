@@ -1,7 +1,11 @@
 ONCSYMP ;Hines OIFO/GWB - LUNG AND COLON SYMPTOMS ;05/24/05
- ;;2.11;ONCOLOGY;**43,47**;Mar 07, 1995;Build 19
+ ;;2.11;ONCOLOGY;**43**;Mar 07, 1995
  ;
-LUNG S SECTION="Cancer Identification" D SECTION^ONCOAIP
+LUNG S HDL=$L("Cancer Identification"),TAB=(80-HDL)\2,TAB=TAB-1
+ W @IOF,DASHES
+ W !,?1,PATNAM,?TAB,"Cancer Identification",?SITTAB,SITEGP
+ W !,?1,SSN,?TOPTAB,TOPNAM," ",TOPCOD
+ W !,DASHES
  W !," SYMPTOMS AND INITIAL DIAGNOSTIC STUDIES"
  W !," ---------------------------------------"
  N DI,DIC,DR,DA,DIQ,ONC

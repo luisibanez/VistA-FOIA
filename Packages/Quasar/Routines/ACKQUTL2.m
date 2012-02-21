@@ -1,5 +1,5 @@
 ACKQUTL2 ;AUG/JLTP BIR/PTD HCIOFO/AG -QUASAR Utility Routine ; [ 04/25/96 10:03 ]
- ;;3.0;QUASAR;**15**;Feb 11, 2000;Build 2
+ ;;3.0;QUASAR;;Feb 11, 2000
  ;Per VHA Directive 10-93-142, this routine SHOULD NOT be modified.
  ;
  ;
@@ -162,7 +162,8 @@ CLNDIV(ACKCLN) ; returns the ien of the division that the clinic is in.
 ASPCLN(ACKCLN) ; returns true if ACKCLN is a valid clinic for ASP
  ; ACKCLN is the internal entry number from the hospital locations file
  ;  true returned if stop code is 203-Audiology, 204-Speech 
- ;   if stop code is invalid then the credit stop code field must be either 203 or 204.
+ ;   or 216-telephone support. if stop code is 216 then the credit stop
+ ;   code field must be either 203 or 204.
  N ACKSTOP,ACKCRDT,ACKSC
  ; get ien of stop code
  S ACKSTOP=$$GET1^DIQ(44,ACKCLN_",",8,"I")
@@ -172,6 +173,7 @@ ASPCLN(ACKCLN) ; returns true if ACKCLN is a valid clinic for ASP
  ; exit
  I ACKSC=203 Q 1  ; audiology
  I ACKSC=204 Q 1  ; speech pathology
+ I ACKSC'=216 Q 0  ; only other acceptable code is telephone support
  ; get clinic credit stop code
  S ACKCRDT=$$GET1^DIQ(44,ACKCLN_",",2503,"I")
  I ACKCRDT="" Q 0 ; no credit stop code

@@ -1,5 +1,5 @@
-DG53558 ;ALB/GN - DG*5.3*558 CLEANUP FOR DUPE MEANS TEST FILE ; 8/15/08 12:27pm
- ;;5.3;Registration;**558,579,688**;Aug 13, 1993;Build 29
+DG53558 ;ALB/GN - DG*5.3*558 CLEANUP FOR DUPE MEANS TEST FILE ; 7/16/04 11:17am
+ ;;5.3;Registration;**558,579**;Aug 13, 1993
  ;
  ; Read through the Mean Test file (#408.31) via the "C" xref.
  ; Search for duplicate & Bad tests and delete them.  Duplicates are
@@ -76,7 +76,7 @@ QUE ; Entry point for taskman (live mode)
  . S $P(^XTMP(NAMSPC,0,0),U,5)="NO LOCK GAINED"
  N QQ,ZTSTOP,XREC,MTIEN,DIK,DA,IVMTOT,IVMPUR,BEGTIME,PURGDT,IVMBAD
  N DFN,TMP,ICDT,MTST,IVMDUPE,COUNT,PRI,TYPE,TYPNAM,DELETED,IVMIEN,PRIM
- N SRCE,TMPIVM,XX,IVMCV,MAX,IVMIEND,IVMPFL,LINK,LTYP,LTNAM,MTVER
+ N SRCE,TMPIVM,XX,IVMCV,MAX,IVMIEND,IVMPFL,LINK,LTYP,LTNAM
  S TESTING=+$G(TESTING)
  ;
  ;get last run info if exists
@@ -110,7 +110,6 @@ QUE ; Entry point for taskman (live mode)
  . . S MTST=$P(^DGMT(408.31,MTIEN,0),"^",3)
  . . S PRI=+$G(^DGMT(408.31,MTIEN,"PRIM"))
  . . S SRCE=+$P(^DGMT(408.31,MTIEN,0),"^",23)
- . . S MTVER=+$P($G(^DGMT(408.31,MTIEN,2)),"^",11)
  . . S MAX=0
  . . S:$D(^DGMT(408.31,MTIEN,"C")) MAX=$O(^DGMT(408.31,MTIEN,"C",""),-1)
  . . S IVMCV=0               ;init IVM converted flag to no DG*5.3*579
@@ -126,16 +125,55 @@ QUE ; Entry point for taskman (live mode)
  . . . S:TYPE]"" TYPNAM=$G(^DG(408.33,TYPE,0))
  . . . D DELBAD(MTIEN,DFN,.IVMBAD,.DELETED)
  . . . Q:'DELETED
- . . . S ^XTMP(NAMSPC,DFN,ICDT,MTVER,999999,MTIEN,"BAD")=TYPE
- . . . S ^XTMP(NAMSPC_".DET",DFN,ICDT,MTVER,MTIEN,"BAD")=TYPNAM
+ . . . S ^XTMP(NAMSPC,DFN,ICDT,999999,MTIEN,"BAD")=TYPE
+ . . . S ^XTMP(NAMSPC_".DET",DFN,ICDT,MTIEN,"BAD")=TYPNAM
  . . . S $P(^XTMP(NAMSPC,0,0),U,7)=IVMBAD
  . . ;
  . . S COUNT=+$G(TMP(DFN,ICDT,MTST))+1
- . . S TMP(DFN,ICDT,MTVER,MTST)=COUNT
- . . S TMP(DFN,ICDT,MTVER,MTST,MTIEN)=PRI
- . . S:PRI TMP(DFN,ICDT,MTVER,MTST,"P")=MTIEN
+ . . S TMP(DFN,ICDT,MTST)=COUNT
+ . . S TMP(DFN,ICDT,MTST,MTIEN)=PRI
+ . . S:PRI TMP(DFN,ICDT,MTST,"P")=MTIEN
  . ;
- . D CLNDUPS^DG53558N(DFN)
+ . ;drive thru TMP and delete all dupes, but last one per day per sts
+ . S ICDT=""
+ . F  S ICDT=$O(TMP(DFN,ICDT)) Q:ICDT=""  D
+ . . S MTST=""
+ . . ;
+ . . ;if this is the IVM test that is set to not prim, then flip it
+ . . S IVMIEND=$G(TMPIVM(DFN,ICDT))                        ;DG*5.3*579
+ . . I IVMIEND D
+ . . . D SETPRIM(IVMIEND,1,.IVMPFL)
+ . . . S LINK=$P($G(^DGMT(408.31,IVMIEND,2)),"^",6)
+ . . . D:LINK SETPRIM(LINK,1,.IVMPFL)     ;set any linked test to PRIM
+ . . ;
+ . . F  S MTST=$O(TMP(DFN,ICDT,MTST)) Q:MTST=""  D
+ . . . ;keep at least one test per day per status, even if not PRIM
+ . . . D:'$D(TMP(DFN,ICDT,MTST,"P")) SETPRI(.TMP)
+ . . . ;    drive thru ien's and del dupes
+ . . . S MTIEN=0
+ . . . F  S MTIEN=$O(TMP(DFN,ICDT,MTST,MTIEN)) Q:'MTIEN  D
+ . . . . S PRIM=$G(^DGMT(408.31,MTIEN,"PRIM"))
+ . . . . S LINK=$P($G(^DGMT(408.31,MTIEN,2)),"^",6)
+ . . . . ;
+ . . . . ;if this ien is primary & it is not the IVM test or Linked to
+ . . . . ;the IVM test, then it should be flipped back to Not Primary
+ . . . . I IVMIEND,PRIM,MTIEN'=IVMIEND,LINK'=IVMIEND D     ;DG*5.3*579
+ . . . . . D SETPRIM(MTIEN,0,.IVMPFL)
+ . . . . . S TMP(DFN,ICDT,MTST,MTIEN)=0
+ . . . . ;
+ . . . . I TMP(DFN,ICDT,MTST,"P")'=MTIEN D
+ . . . . . S TYPE=$P($G(^DGMT(408.31,MTIEN,0)),"^",19),TYPNAM=""
+ . . . . . S:TYPE]"" TYPNAM=$G(^DG(408.33,TYPE,0))
+ . . . . . D DELMT^DG53558M(MTIEN,DFN,.IVMPUR,.DELETED,.LINK)
+ . . . . . Q:'DELETED
+ . . . . . S ^XTMP(NAMSPC_".DET",DFN,ICDT,MTIEN)=TYPNAM
+ . . . . . I LINK,'$D(^DGMT(408.31,LINK,0)) S LINK=0
+ . . . . . Q:'LINK
+ . . . . . S LTYP=$P($G(^DGMT(408.31,LINK,0)),"^",19),LTNAM=""
+ . . . . . S:LTYP LTNAM=$G(^DG(408.33,LTYP,0))
+ . . . . . S ^XTMP(NAMSPC_".DET",DFN,ICDT,LINK)=LTNAM
+ . . . . M ^XTMP(NAMSPC,DFN,ICDT,MTST)=TMP(DFN,ICDT,MTST)
+ . ;
  . ;update last processed info
  . S $P(^XTMP(NAMSPC,0,0),U,1,3)=DFN_U_IVMTOT_U_IVMPUR
  . S $P(^XTMP(NAMSPC,0,0),U,7,8)=IVMBAD_U_IVMPFL
@@ -153,7 +191,25 @@ QUE ; Entry point for taskman (live mode)
  L -^XTMP($$NAMSPC)
  Q
  ;
- ;DG*5.3*579 released SETPRIM and 688 moved it to DG53558M
+ ;DG*5.3*579
+SETPRIM(DA,PR,IVMP) ; set an Income Test (in #408.31) to either Prim or Not
+ Q:'$D(DA)!'$D(PR)
+ N DR,DIE,DGDATA,DGPRI
+ S DGPRI=$G(^DGMT(408.31,DA,"PRIM"))
+ Q:DGPRI=PR                               ;quit if already at that sts
+ S IVMP=$G(IVMP)+1
+ S DGDATA="FLIPPED TO "_$S(PR=0:"NOT PRIMARY",1:"PRIMARY")
+ S:$D(NAMSPC) ^XTMP(NAMSPC_".DET",DFN,ICDT,DA)=DGDATA
+ S DR="2////"_PR,DIE="^DGMT(408.31,"
+ D:'$G(TESTING) ^DIE
+ Q
+ ;
+SETPRI(TMP) ;indicate like a primary (in TMP) to avoid it from being deleted
+ N IEN
+ S IEN=$O(TMP(DFN,ICDT,MTST,""),-1)
+ S TMP(DFN,ICDT,MTST,IEN)=1
+ S TMP(DFN,ICDT,MTST,"P")=IEN
+ Q
  ;
 DELBAD(IEN,DFN,PUR,DELETED) ; Kill Bad test
  S DELETED=0

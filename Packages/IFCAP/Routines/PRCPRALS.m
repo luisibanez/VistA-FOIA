@@ -1,9 +1,8 @@
-PRCPRALS ;WISC/RFJ/DST-automatic level setter                           ;28 Dec 93
- ;;5.1;IFCAP;**98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPRALS ;WISC/RFJ-automatic level setter                           ;28 Dec 93
+ ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  D ^PRCPUSEL Q:'$G(PRCP("I"))
- N %,%DT,%I,DIR,GROUPALL,PRCPALLI,PRCPDNSL,PRCPFITM,PRCPFLAG,PRCPFSET,PRCPPESL,PRCPPORP,PRCPPSRP,PRCPSTDT,PRCPTDAY,X,X1,X2,XH,XP,Y
- N ODIS  ; for On-Demand Item display selection
+ N %,%DT,%I,DIR,GROUPALL,PRCPALLI,PRCPDNSL,PRCPFITM,PRCPFLAG,PRCPFSET,PRCPPESL,PRCPPORP,PRCPPSRP,PRCPSTDT,PRCPTDAY,X,X1,X2,Y
  K X S X(1)="The Automatic Level Setter will calculate and reset the Normal Stock Level, Emergency Stock Level, Standard Reorder Point, and Optional Reorder Point for selected items or items in selected group categories."
  D DISPLAY^PRCPUX2(40,79,.X)
  S DIR(0)="S^1:ITEM;2:GROUP CATEGORY",DIR("A")="Select Items BY",DIR("B")="ITEM" D ^DIR K DIR I Y'=1,Y'=2 Q
@@ -17,9 +16,6 @@ PRCPRALS ;WISC/RFJ/DST-automatic level setter                           ;28 Dec 
  ;  select individual items
  I PRCPFITM=1 D ITEMSEL^PRCPURS4 I '$O(^TMP($J,"PRCPURS4",0)),'$D(PRCPALLI) D Q Q
  W !
- ; Prompt for On-Demand Item selection, if not warehouse
- I PRCP("DPTYPE")'="W",('$D(^TMP($J,"PRCPURS4"))) S ODIS=$$ODIPROM^PRCPUX2(0)
- I PRCP("DPTYPE")'="W",('$D(^TMP($J,"PRCPURS4"))),('+$G(ODIS)) D Q Q
  ;
  K X S X(1)="The average daily usage will be calculated from the selected date to the current date." D DISPLAY^PRCPUX2(1,40,.X)
  S X1=DT,X2=-120 D C^%DTC S (X,Y)=$E(X,1,5)_"00" D DD^%DT
@@ -63,7 +59,7 @@ PRCPRALS ;WISC/RFJ/DST-automatic level setter                           ;28 Dec 
  ;
  W ! S %ZIS="Q" D ^%ZIS Q:POP  I $D(IO("Q")) D  D ^%ZTLOAD K IO("Q"),ZTSK Q
  .   S ZTDESC="Automatic Level Setter",ZTRTN="DQ^PRCPRALS"
- .   S ZTSAVE("PRCP*")="",ZTSAVE("GROUPALL")="",ZTSAVE("ODIS")="",ZTSAVE("^TMP($J,""PRCPURS1"",")="",ZTSAVE("^TMP($J,""PRCPURS4"",")="",ZTSAVE("ZTREQ")="@"
+ .   S ZTSAVE("PRCP*")="",ZTSAVE("GROUPALL")="",ZTSAVE("^TMP($J,""PRCPURS1"",")="",ZTSAVE("^TMP($J,""PRCPURS4"",")="",ZTSAVE("ZTREQ")="@"
  W !!,"<*> please wait <*>"
 DQ ;  queue starts here
  D PRINT^PRCPRAL1

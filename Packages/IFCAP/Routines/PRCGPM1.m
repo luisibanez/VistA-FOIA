@@ -1,6 +1,6 @@
 PRCGPM1 ;WIRMFO@ALTOONA/CTB/WIRMFO/PLT/BGJ - IFCAP PURGEMASTER PROCESS PRCGPM CONT. ;12/10/97  9:53 AM
-V ;;5.1;IFCAP;**95**;Oct 20, 2000
- ;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;This routine contains misc functions/tools to be used by the
  ;purge package
 ADD(X,Y,Z) ;PARAMETER CALL TO ADD NEW ENTRY TO PURGE MASTER FILE
@@ -59,14 +59,3 @@ REMIP(DA) ;PARAMETER CALL TO REMOVE RECORD 'DA' FROM FILE 443.3
  I $O(^PRC(443.3,0))="" S $P(^PRC(443.0),"^",3,4)="^"
  L -^PRC(443.3,0)
  QUIT
-CLN445 ;add line to delete
- S MYHLD=0,MYCOUNT=0,THISCNT=0
- F  S MYHLD=$O(^PRC(443.1,MYHLD)) Q:'MYHLD  S MYCOUNT=MYHLD
- S LAST=MYCOUNT+1
- S X="FIND445^PRCG238P"
- S THISCNT=$P(^PRC(443.1,0),U,4)
- S Y=""
- S:X'["^" X="^"_X
- I '$D(^PRC(443.1,LAST)) S ^PRC(443.1,LAST,0)=LAST_"^"_X_"^"_Y,$P(^PRC(443.1,0),"^",3,4)=(LAST_"^"_(THISCNT+1))
- K MYHLD,MYCOUNT,THISCNT
- Q

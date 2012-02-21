@@ -1,5 +1,5 @@
 IBECEA21 ;ALB/CPM-Cancel/Edit/Add... Edit Prompts;19-APR-93
- ;;2.0;INTEGRATED BILLING;**7,57,167,183,202,312**;21-MAR-94
+ ;;2.0;INTEGRATED BILLING;**7,57,167,183,202**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; Issue appropriate prompts for each charge type.  If the charge
@@ -7,7 +7,6 @@ IBECEA21 ;ALB/CPM-Cancel/Edit/Add... Edit Prompts;19-APR-93
  ; returning to IBECEA2.
  ;
  N IBSTOPDA,IBTYPE,IBGMT
- N IBSWINFO S IBSWINFO=$$SWSTAT^IBBAPI()                    ;IB*2.0*312
  S IBGMT=0
  ;
  ; Handle Outpatient Charges
@@ -50,24 +49,14 @@ IBECEA21 ;ALB/CPM-Cancel/Edit/Add... Edit Prompts;19-APR-93
  I IBXA=1!(IBXA=2) S IBDOLP=IBCLDOL-IBCHGP S:IBDOLP<0 IBDOLP=0
  ;
  ; - ask for 'Bill From' date
-FR D FR^IBECEAU2(IBFRP) G:IBY<0 END
- I +IBSWINFO,(IBFR+1)>$P(IBSWINFO,"^",2) D  G FR          ;IB*2.0*312
-   .W !!,"The 'Bill From' date cannot be on or AFTER "
-   .W "the PFSS Effective Date: ",$$FMTE^XLFDT($P(IBSWINFO,"^",2))
- ; 
- I IBFR<IBCLDT W !!,"The 'Bill From' date cannot preceed the Billing Clock Begin Date.",! G FR
+FR D FR^IBECEAU2(IBFRP) G:IBY<0 END I IBFR<IBCLDT W !!,"The 'Bill From' date cannot preceed the Billing Clock Begin Date.",! G FR
  S IBGMTR=0,IBGMT=$$ISGMTPT^IBAGMT(DFN,IBFR) ; GMT Status may change
  I IBXA=3 S IBDT=IBFR D COST^IBAUTL2 S:IBGMT>0 IBGMTR=1,IBCHG=$$REDUCE^IBAGMT(IBCHG) I 'IBCHG W !!,"Unable to determine the per diem rate. Please check your rate table." S IBY=-1 G END
  I IBXA=2 S IBDT=IBFR D COPAY^IBAUTL2 G:IBY<0 END S:IBGMT>0 IBGMTR=1,IBCHG=$$REDUCE^IBAGMT(IBCHG) I IBCHG+IBDOLP<IBMED W *7,"   ($",IBCHG,"/day)" W:IBGMTR " GMT Rate" G TO
  I IBXA=2,IBCHG=IBCHGP D CTBB^IBECEAU3 W !!,"No change was made!" S IBY=-1 G END
  ;
  ; - ask for 'Bill To' date
-TO D TO^IBECEAU2(IBTOP) G:IBY<0 END
- I +IBSWINFO,(IBTO+1)>$P(IBSWINFO,"^",2) D  G TO          ;IB*2.0*312
-  .W !!,"The 'Bill To' date cannot be on or AFTER "
-  .W "the PFSS Effective Date: ",$$FMTE^XLFDT($P(IBSWINFO,"^",2))
- ; 
- I $P(IBCLST,"^",10),IBTO>$P(IBCLST,"^",10) W !!,"The 'Bill To' date cannot exceed the Billing Clock End Date (",$$DAT1^IBOUTL($P(IBCLST,"^",10)),")." G TO
+TO D TO^IBECEAU2(IBTOP) G:IBY<0 END I $P(IBCLST,"^",10),IBTO>$P(IBCLST,"^",10) W !!,"The 'Bill To' date cannot exceed the Billing Clock End Date (",$$DAT1^IBOUTL($P(IBCLST,"^",10)),")." G TO
  S IBUNIT=$$FMDIFF^XLFDT(IBTO,IBFR)
  I $$FMDIFF^XLFDT(IBTOP,IBFRP)<IBUNITP!(IBFR=IBTO) S IBUNIT=IBUNIT+1
  I IBTO'=IBFR,IBXA>0,IBXA<4,$$ISGMTPT^IBAGMT(DFN,IBTO)'=$$ISGMTPT^IBAGMT(DFN,IBFR) W !!,"The patient changed GMT Copayment status during the specified period!",! G TO

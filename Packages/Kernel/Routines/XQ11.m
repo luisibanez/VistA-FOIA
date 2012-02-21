@@ -1,5 +1,5 @@
-XQ11 ;SEA/MJM - Menu Utilities ;1/08/2006
- ;;8.0;KERNEL;**155,372**;Jul 10, 1995;Build 3
+XQ11 ;SEA/MJM - Menu Utilities ;01/09/2001  13:28
+ ;;8.0;KERNEL;**155**;Jul 10, 1995
  ;
 COPY ;Make a copy of a menu-type option
  S XQA=$S(DUZ(0)["@":1,$D(^XUSEC("XUMGR",DUZ)):1,$D(^XUSEC("XUPROGMODE",DUZ)):1,1:0)
@@ -26,14 +26,14 @@ TXT ;Get the new menu text
  K DIR S DIR("?")="Please enter 10 to 50 characters describing what the new option does.",DIR(0)="19,1",DIR("A")="What will option say?"
  D ^DIR S XQUR0=X G:$D(DIRUT) OUT
  ;R XQUR0:DTIME S:'$T XQUR0=U G:XQUR0[U OUT G:'$L(XQUR0) TXT I $E(XQUR0,1)="?"!($L(XQUR0)<10)!($L(XQUR0)>50)!(XQUR0'?. W !!?5,"Please enter 10 to 50 characters describing what the new option does." G TXT
- S XQUP=$$UP^XLFSTR(XQUR0) ;F XQI=1:1 Q:XQUP?.NUP  S %=$A(XQUP,XQI) I %<123,%>96 S XQUP=$E(XQUP,1,XQI-1)_$C(%-32)_$E(XQUP,XQI+1,255)
+ S XQUP=XQUR0 S XQUP=$$UP^XLFSTR(XQUP) ;F XQI=1:1 Q:XQUP?.NUP  S %=$A(XQUP,XQI) I %<123,%>96 S XQUP=$E(XQUP,1,XQI-1)_$C(%-32)_$E(XQUP,XQI+1,255)
  ;
 FIL ;Get FileMan to put this all in.
- S DIR("?")="'Y' means create the new menu. 'N' means don't.",DIR(0)="YA",DIR("A")="Is everything OK? ",DIR("B")="No" D ^DIR G:$D(DIRUT) OUT I Y=0 D OUT G ^XQ11
+ S DIR("?")="'Y' means create the new menu. 'N' means don't.",DIR(0)="YA",DIR("A")="Is everything OK? ",DIR("B")="No" D ^DIR D:Y=0 OUT G:Y=0 ^XQ11 G:$D(DIRUT) OUT
  I 'XQF S DIC(0)="LMXZ",X=XQUR,DLAYGO=19 D FILE^DICN S XQYN=Y
  S %X="^DIC(19,"_+XQYO_",",%Y="^DIC(19,"_+XQYN_"," D %XY^%RCR
  ;S $P(^DIC(19,+XQYN,0),U)=XQUR S DIK="^DIC(19,",DA=+XQYN D IX^DIC
- S DIE="^DIC(19,",DR=".01///"_XQUR_";1///"_XQUR0_";3.6////"_DUZ_";",DA=+XQYN D ^DIE S ^DIC(19,+XQYN,"U")=$E(XQUP,1,30)
+ S DIE="^DIC(19,",DR=".01///"_XQUR_";1///"_XQUR0_";3.6///"_DUZ_";",DA=+XQYN D ^DIE S ^DIC(19,+XQYN,"U")=$E(XQUP,1,30)
  ;
 OUT K %,%1,%X,%Y,C,D,D0,DA,DDH,DI,DIC,DIE,DIG,DIH,DIK,DIR,DIU,DIV,DIW,DLAYGO,DQ,DR,X,XQA,XQD,XQF,XQF0,XQF1,XQH,XQI,XQUP,XQUR,XQUR0,XQYN,XQYO,Y
  Q

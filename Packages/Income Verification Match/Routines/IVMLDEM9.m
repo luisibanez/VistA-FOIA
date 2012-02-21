@@ -1,5 +1,5 @@
-IVMLDEM9 ;ALB/BRM/PHH - IVM ADDRESS UPDATES PENDING REVIEW RPT ; 09/23/08 13:35pm
- ;;2.0;INCOME VERIFICATION MATCH;**79,93,119,126,133**; 21-OCT-94;Build 2
+IVMLDEM9 ;ALB/BRM - IVM ADDRESS UPDATES PENDING REVIEW RPT ; 7/17/03 8:08am
+ ;;2.0;INCOME VERIFICATION MATCH;**79,93**; 21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  Q
@@ -40,7 +40,6 @@ LOOP(DTPARAM,FILDAT) ;main loop
  ...S X1=TODAY,X2=IVMDT D ^%DTC S DTDIFF=+$G(X)
  ...S NAME=$P($G(^DPT(DFN,0)),"^"),SSN=$P($G(^DPT(DFN,0)),"^",9)
  ...S X1=IVMDT,X2=14 D C^%DTC S UPLDT=$G(X)
- ...I '$D(^IVM(301.5,"ASEG","PID",IVMDA2)) Q
  ...S ^TMP("IVMLDEM9",$J,DTDIFF,SSN,IVMDA)=$G(NAME)_"^"_$P(IVMDT,".")_"^"_$P(UPLDT,".")_"^"_DFN_"^"_IVMDA2_"^"_IVMDA1
  Q
  ;
@@ -49,12 +48,10 @@ AUTOLOAD(DFN,IVMDA2,IVMDA1) ;auto-upload records that not been reviewed
  ;
  Q:('$G(DFN))!('$G(IVMDA2))!('$G(IVMDA1))
  N IVMI,IVMJ,IVMFIELD,IVMVALUE,IVMNODE,IVMFLAG,DUZ
- S DUZ=.5
+ S DUZ="IVM AUTO ADDR JOB"
  ;
  ; determine appropriate address change dt/tm to be used
  D ADDRDT^IVMLDEM6(DFN,IVMDA2,IVMDA1)
- ;
- N DGPRIOR D GETPRIOR^DGADDUTL(DFN,.DGPRIOR)
  ;
  ; loop through the record to be uploaded
  S IVMI=0 F  S IVMI=$O(^IVM(301.92,"AD",IVMI)) Q:IVMI']""  D
@@ -66,9 +63,6 @@ AUTOLOAD(DFN,IVMDA2,IVMDA1) ;auto-upload records that not been reviewed
  ..;
  ..; check for residence phone number -> do not auto-upload
  ..Q:(+IVMNODE=$O(^IVM(301.92,"B","PHONE NUMBER [RESIDENCE]",0)))
- ..;
- ..; do not auto-upload if there is an active prescription
- ..I $$PHARM^IVMLDEM6(+DFN) D REJTADD Q
  ..;
  ..; set upload parameters
  ..S IVMFIELD=$P($G(^IVM(301.92,+IVMNODE,0)),"^",5)
@@ -82,21 +76,6 @@ AUTOLOAD(DFN,IVMDA2,IVMDA1) ;auto-upload records that not been reviewed
  ..;
  ..; if no display or uploadable fields, delete PID segment
  ..I ('$$DEMO^IVMLDEM5(IVMDA2,IVMDA1,0))&('$$DEMO^IVMLDEM5(IVMDA2,IVMDA1,1)) D DELETE^IVMLDEM5(IVMDA2,IVMDA1," ")
- ;
- I +$G(IVMFLAG) D
- .N DGCURR
- .D GETUPDTS^DGADDUTL(DFN,.DGCURR)
- .D UPDADDLG^DGADDUTL(DFN,.DGPRIOR,.DGCURR)
- Q
-REJTADD ;Reject the address
- ; update the ADDRESS CHANGE DT/TM field #.118 in PATIENT file #2
- D UPDDTTM^DGADDUTL(DFN,"PERM")
- ;
- ; trigger the record to transmit the existing address on file to HEC
- N DGENUPLD   ; Used in SETSTAT^IVMPLOG to prevent filing.
- N DA,X,IVMX
- S (DA,X)=DFN
- S IVMX=X,X="IVMPXFR" X ^%ZOSF("TEST") D:$T DPT^IVMPXFR S X=IVMX
  Q
 PRINT ;report output
  N DAYS,SSN,DATA,EX,PAGE,IVMDA,DATA,IVMLN,XMY,XMSUB,XMDUZ,XMTEXT

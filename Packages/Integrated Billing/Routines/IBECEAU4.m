@@ -1,5 +1,5 @@
 IBECEAU4 ;ALB/CPM - Cancel/Edit/Add... Cancel Utilities ; 23-APR-93
- ;;2.0;INTEGRATED BILLING;**52,167,183,341**;21-MAR-94
+ ;;2.0;INTEGRATED BILLING;**52,167,183**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 CANCH(IBN,IBCRES,IBIND,IBCV) ; Cancel last transaction for a specific charge.
@@ -39,9 +39,7 @@ CANC(IBCN,IBCRES,IBINC) ; Cancel a charge, after passing all edits
  I IBSTOPDA S $P(IBCAN,"^",20)=IBSTOPDA
  S $P(^IB(IBN,0),"^",2,20)=$P(IBCAN,"^",2,20)
  I IBGMTR S $P(^IB(IBN,0),"^",21)=IBGMTR ; Set the 'GMT RELATED' flag
- ; DUZ may be null if this code is called by a process started by an HL7 multi-threaded listener
- ; if this condition occurs the approved fix is to use the Postmaster IEN.  2/27/06, IB*2.0*341
- S $P(^IB(IBN,1),"^")=$S(DUZ:DUZ,1:.5) ;
+ S $P(^IB(IBN,1),"^")=DUZ
  S DA=IBN,DIK="^IB(" D IX1^DIK
  W:$G(IBJOB)=4 " .. " D PASS
  ;

@@ -1,6 +1,6 @@
 IBCU1 ;ALB/MRL - BILLING UTILITY ROUTINE (CONTINUED) ;01 JUN 88 12:00
- ;;2.0;INTEGRATED BILLING;**27,52,106,138,51,182,210,266,309,320,347,405**;21-MAR-94;Build 4
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**27,52,106,138,51,182,210,266,309**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO DGCRU1
  ;
@@ -27,7 +27,7 @@ DISRC N Z0 W !?1,DGIFN,?4,$P(^DGCR(399.2,+Z,0),"^"),"-",$E($P(^DGCR(399.2,+Z,0),
  . W !,?5,"(Rx: ",$S($P(Z,U,11):$P($G(^IBA(362.4,$P(Z,U,11),0)),U),1:"Link Missing"),"  Procedure "_$S($P(Z,U,15):"#"_$P(Z,U,15)_" "_$$CPTNM^IBCRBH1(IBIFN,4,$P(Z,U,15)),1:"Link Missing"),")"
  Q
  ;
-RVCPRC(IBIFN,IBD0) ; returns 1 if CHAMPVA rate type + 2 if CMS-1500, 0 otherwise
+RVCPRC(IBIFN,IBD0) ; returns 1 if CHAMPVA rate type + 2 if HCFA 1500, 0 otherwise
  ; IBD0 - zero node of bill if available, not required
  N X S X=0
  I $G(IBD0)="" S IBD0=$G(^DGCR(399,+$G(IBIFN),0))
@@ -60,15 +60,15 @@ DXBSTAT(DIFN,IFN) ;returns a diagnosis' bill status (either DIFN or IFN can be p
  ;
 RXSTAT(DRUG,PIFN,FILLDT) ; returns status/definition of rx
  ; returns: ORIGINAL ^ RELEASED/RETURNED TO STOCK ^ DRUG DEA
- N IBX,IBY,IBZ,IBLN,IBNUM S IBLN="",DRUG=+$G(DRUG),PIFN=+$G(PIFN),FILLDT=+$G(FILLDT)
+ N IBX,IBY,IBZ,IBLN S IBLN="",DRUG=+$G(DRUG),PIFN=+$G(PIFN),FILLDT=+$G(FILLDT)
  ;
- S IBX=$$RXSEC^IBRXUTL($$FILE^IBRXUTL(PIFN,2),PIFN),IBZ="" I IBX'="",$P(IBX,U,2)=$G(FILLDT) D  I IBZ'="" S $P(IBLN,U,2)=IBZ
+ S IBX=$G(^PSRX(PIFN,2)),IBZ="" I IBX'="",$P(IBX,U,2)=$G(FILLDT) D  I IBZ'="" S $P(IBLN,U,2)=IBZ
  . S IBLN="ORG"
  . ;I +$G(^PS(59.7,1,49.99))<6 Q
  . I '$P(IBX,U,13) S IBZ="NR"
  . I +$P(IBX,U,15) S:IBZ'="" IBZ=IBZ_"-" S IBZ=IBZ_"RTS"
  ;
- I IBLN="" S IBNUM=$$RFLNUM^IBRXUTL(PIFN,FILLDT,1),IBX=$$ZEROSUB^IBRXUTL($$FILE^IBRXUTL(PIFN,2),PIFN,IBNUM),IBZ="" I IBX'="" D  I IBZ'="" S $P(IBLN,U,2)=IBZ
+ I IBLN="" S IBX=$O(^PSRX(PIFN,1,"B",FILLDT,0)),IBX=$G(^PSRX(PIFN,1,+IBX,0)),IBZ="" I IBX'="" D  I IBZ'="" S $P(IBLN,U,2)=IBZ
  . ;I +$G(^PS(59.7,1,49.99))<6 Q
  . I '$P(IBX,U,18) S IBZ="NR"
  . I +$P(IBX,U,16) S:IBZ'="" IBZ=IBZ_"-" S IBZ=IBZ_"RTS"
@@ -78,7 +78,6 @@ RXSTAT(DRUG,PIFN,FILLDT) ; returns status/definition of rx
  . I IBY["9" S IBZ="OTC"
  . I IBY["I" S:IBZ'="" IBZ=IBZ_"-" S IBZ=IBZ_"INV"
  . I IBY["S" S:IBZ'="" IBZ=IBZ_"-" S IBZ=IBZ_"SUP"
- . I IBY["N" S:IBZ'="" IBZ=IBZ_"-" S IBZ=IBZ_"NUT"
  K ^TMP($J,"IBDRUG")
  Q IBLN
  ;
@@ -135,62 +134,3 @@ QMED(IBRTN,IBIFN) ; DSS QuadraMed Interface: DSS/QuadraMed Available
  N IBON S IBON=0
  I +$G(IBIFN),$G(IBRTN)'="",$T(@IBRTN)'="" S IBON=1
  Q IBON
- ;
-ATTREND(IBIFN,IBIFN1,FIELD) ; This function is called from Mumps Cross References in the claim file 399 and 
- ; also the PROVIDER subfile 399.0222.
- ;
- ; IBIFN = IEN to claim file
- ; IBIFN1 = IEN to provider sub-file in claim file
- ; FIELD = Field in sub-file being modified (the triggering event).  If field has no value, all 6 fields are
- ; possibly updated
- ;  
- ; The following fields are the "triggering" events
- ; File 399
- ; #19 FORM TYPE - This triggers all 6 fields (122, 123, 124, 128, 129, 130).
- ; 
- ; Sub-File 399.0222
- ; #.05 PRIMARY INS CO ID NUMBER triggers 122
- ; #.06 SECONDARY INS CO ID NUMBER triggers 123
- ; #.07 TERTIARY INS CO ID NUMBER triggers 124
- ; #.12 PRIM INS PROVIDER ID TYPE triggers 128
- ; #.13 SEC INS PROVIDER ID TYPE triggers 129
- ; #.14 TERT INS PROVIDER ID TYPE triggers 130
- ; 
- ; The following fields are the ones being "triggered"
- ; #122 PRIMARY PROVIDER #
- ; #123 SECONDARY PROVIDER #
- ; #124 TERTIARY PROVIDER #
- ; #128 PRIMARY ID QUALIFER
- ; #129 SECONDARY ID QUALIFIER
- ; #130 TERTIARY ID QUALIFIER
- ;
- Q:$G(IBPRCOB)  ; this is set when creating an MRA scondary claim.  Don't want to be changing the data on
- ; a secondary claim
- ;
- N FT,DATA,I,PC,INS,IFUNC,ATTRENDD,IBDR
- S FT=$$FT^IBCEF(IBIFN)
- Q:'FT
- ;
- S IFUNC=$O(^DGCR(399,IBIFN,"PRV","B",$S(FT=3:4,1:3),""))
- I $G(IBIFN1),$G(IFUNC)'=IBIFN1 Q   ; if called from subfile, quits if att/rend provider was not the one being modified
- S ATTRENDD=$S('$G(IFUNC):"",1:$G(^DGCR(399,IBIFN,"PRV",IFUNC,0)))
- ;
- S PC=$S(FT=2:6,FT=3:8,1:"")  ; get the correct piece from the ins co dictionary
- Q:'+PC
- ;
- F I="I1","I2","I3" D
- . S INS=$P($G(^DGCR(399,IBIFN,I)),U)
- . Q:'+INS
- . Q:'$P($G(^DIC(36,INS,4)),U,PC)
- . D:I="I1"
- .. S:".05"[FIELD IBDR(399,IBIFN_",",122)=$S($P(ATTRENDD,U,5)]"":$P(ATTRENDD,U,5),1:"@")
- .. S:".12"[FIELD IBDR(399,IBIFN_",",128)=$S($P(ATTRENDD,U,12)]"":$P(ATTRENDD,U,12),1:"@")
- . D:I="I2"
- .. S:".06"[FIELD IBDR(399,IBIFN_",",123)=$S($P(ATTRENDD,U,6)]"":$P(ATTRENDD,U,6),1:"@")
- .. S:".13"[FIELD IBDR(399,IBIFN_",",129)=$S($P(ATTRENDD,U,13)]"":$P(ATTRENDD,U,13),1:"@")
- . D:I="I3"
- .. S:".07"[FIELD IBDR(399,IBIFN_",",124)=$S($P(ATTRENDD,U,7)]"":$P(ATTRENDD,U,7),1:"@")
- .. S:".14"[FIELD IBDR(399,IBIFN_",",130)=$S($P(ATTRENDD,U,14)]"":$P(ATTRENDD,U,14),1:"@")
- ;
- I $O(IBDR(0)) D FILE^DIE("","IBDR")
- Q

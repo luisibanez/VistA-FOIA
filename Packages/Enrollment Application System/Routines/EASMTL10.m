@@ -1,5 +1,5 @@
-EASMTL10 ;MIN/TCM ALB/SCK,AMA - AUTOMATED MEANS TEST LETTERS - RERUN LETTERS ; 7/17/01
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**3,15,28,80**;Mar 15, 2001;Build 1
+EASMTL10 ;MIN/TCM ALB/SCK - AUTOMATED MEANS TEST LETTERS - RERUN LETTERS ; 7/17/01
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**3,15,28**;Mar 15, 2001
  ;
 RERUN ;  Main entry point to rerun a processing date
  N EASDDD,EASLOC,EATYP,XX
@@ -64,8 +64,7 @@ AGN S EASDT=$$GETDT
  ;
  W !!,"To re-print "_$S(EATYP=2:30,EATYP=4:0,1:60)_"-day letters for "_$$FMTE^XLFDT(EASDT)
  W !,"the Search/Processing date of "_$$FMTE^XLFDT(EAX)_" will be used."
- ;EAS*1.0*80 -- to avoid confusion, changed "ALL" to "all valid"
- W !,"Please note: all valid "_$S(EATYP=2:30,EATYP=4:0,1:60)_"-day letters for this processing date will print"
+ W !,"Please note: ALL "_$S(EATYP=2:30,EATYP=4:0,1:60)_"-day letters for this processing date will print"
  ;
  S DIR(0)="YAO"
  S DIR("?")="Enter 'YES' to use the "_$$FMTE^XLFDT(EAX)_" date.  Enter 'NO' to select a different date."
@@ -112,7 +111,6 @@ LTRTYPE(EATYP) ;  Ask for a specific type of letter to print
  ;
 QUE1 ;  Queue off the print job
  K IOP,IO("Q")
- N POP  ;EAS*1.0*80
  ;
  S %ZIS="QP",%ZIS("B")=$$GET1^DIQ(713,1,5)
  D ^%ZIS K %ZIS
@@ -123,7 +121,7 @@ QUE1 ;  Queue off the print job
  Q
  ;
 QUEIT ;
- N ZTRTN,ZTDESC,EASX,ZTSAVE,ZTSK,ZTDTH,ZTQUEUED
+ N ZTRTN,ZTDESC,ZTSAVE,TSK,ZTDTH,ZTQUEUED
  ;
  S ZTRTN="EN1^EASMTL10"
  S ZTDESC="EAS MT LETTERS REPRINT"
@@ -179,10 +177,7 @@ BLD(EATYP,EASLOC,EASDDD,EASTMP) ;  Sort letters for processing date in groups by
  . Q:$$CHECKMT^EASMTUTL(EASPTR,EASIEN)  ; Quit if MT no longer required
  . Q:$$FUTMT^EASMTUTL(EASIEN)  ; Quit if future MT on file
  . Q:$$DECEASED^EASMTUTL(EASIEN)  ; Quit if patient deceased
- . I $$CHKADR^EASMTL6A(EASPTR),EATYP'=3 Q  ; Quit if bad address
- . ;EAS*1.0*80 -- copied User Enrollee check from BLD^EASMTL6
- . N EASUE S EASUE=$$UESTAT^EASUER(DFN)
- . Q:(EASUE'=1)  ; Quit if User Enrollee site is not this facility
+ . I $$CHKADR^EASMTL6A(EASPTR),EATYP'=3 Q
  . S @EASTMP@(EASIEN)=EATYP
  Q
  ;

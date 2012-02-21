@@ -1,12 +1,9 @@
-RORRP027 ;HCIOFO/SG - RPC: RORICR CDC SAVE ; 10/16/06 1:58pm
- ;;1.5;CLINICAL CASE REGISTRIES;**1,9**;Feb 17, 2006;Build 1
+RORRP027 ;HCIOFO/SG - RPC: RORICR CDC SAVE ; 11/22/05 4:28pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ;--------------------------------------------------------------------
  ; Registry: [VA HIV]
  ;--------------------------------------------------------------------
- ; 05/23/2009 BAY/KAM ROR*1.5*9 Remedy Call 319731 Correct AIDS OI 
- ;                              Checkbox populating incorrectly
- ;                              Remove 3 lines
  Q
  ;
  ;***** AIDS INDICATOR DISEASE (VIII)
@@ -24,9 +21,9 @@ AID(IENS) ;
  ;
  ;***** STORES THE AIDS INDICATOR DICEASES INTO THE FDA
 AIDSTORE() ;
- N CODE,DATE,DTMIN,II,NODE,RC,TMP
+ N CODE,II,NODE,RC,TMP
  S NODE=$$ROOT^DILFD(799.41,","_IENS,1)
- S RC=0,DTMIN=""
+ S RC=0
  ;--- Mark the old records for removal
  S CODE=0
  F  S CODE=$O(@NODE@(CODE))  Q:CODE'>0  D:'$D(RORAILST(CODE))
@@ -35,24 +32,16 @@ AIDSTORE() ;
  S II=+$O(RORIEN(""),-1)
  S CODE=0
  F  S CODE=$O(RORAILST(CODE))  Q:CODE'>0  D
- . S DATE=$P(RORAILST(CODE),U,2)
- . I DATE>0  S:(DATE<DTMIN)!(DTMIN'>0) DTMIN=DATE
  . ;--- Update the record
  . I $D(@NODE@(CODE))  D  Q
  . . S TMP=CODE_","_IENS
  . . S RORFDAFI(799.41,TMP,.02)=$P(RORAILST(CODE),U,1)
- . . S RORFDAFI(799.41,TMP,.03)=DATE
+ . . S RORFDAFI(799.41,TMP,.03)=$P(RORAILST(CODE),U,2)
  . ;--- Add the record
  . S II=II+1,RORIEN(II)=CODE,TMP="?+"_II_","_IENS
  . S RORFDAUP(799.41,TMP,.01)=CODE
  . S RORFDAUP(799.41,TMP,.02)=$P(RORAILST(CODE),U,1)
- . S RORFDAUP(799.41,TMP,.03)=DATE
- ;--- Populate the CLINICAL AIDS fields (if they are empty)
- ;
- ; Remedy call 319731 two lines removed to not populate the CLINICAL 
- ; AIDS fields unless trigged by an AIDS Indicator Disease (CDC form
- ; Section VIII)
- ;---
+ . S RORFDAUP(799.41,TMP,.03)=$P(RORAILST(CODE),U,2)
  Q RC
  ;
  ;***** CANCELS THE EDITING

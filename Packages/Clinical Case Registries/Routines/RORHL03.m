@@ -1,15 +1,16 @@
-RORHL03 ;HOIFO/CRT - HL7 PHARMACY: ORC,RXE ; 5/30/06 8:35am
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORHL03 ;HOIFO/CRT - HL7 PHARMACY: ORC,RXE ; 8/26/05 2:06pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
- ; Routines RORHL03* use the following IAs:
+ ; Routine's RORHL03* use the following IAs:
  ;
  ; #93-A         Get stop code from the file #44 (controlled)
- ; #1876         Read access to file #59
  ; #2400         OCL^PSOORRL and OEL^PSOORRL (controlled)
- ; #4820         RX^PSO52API (supported)
- ; #4826         PSS432^PSS55 and PSS436^PSS55 (supported)
  ; #10060        Read access to file #200 (supported)
  ; #10090        Read access to file #4 (supported)
+ ;
+ ; #1977         Read access to file #52
+ ; #1876         Read access to file #59
+ ; #2497         Read access to file #55
  ;
  Q
  ;
@@ -24,8 +25,6 @@ RORHL03 ;HOIFO/CRT - HL7 PHARMACY: ORC,RXE ; 5/30/06 8:35am
  ;       <0  Error Code
  ;        0  Ok
  ;       >0  Non-fatal error(s)
- ;
- ; The ^TMP("PS",$J) global node is used by this function.
  ;
 EN1(RORDFN,DXDTS) ;
  N ENDT,ERRCNT,IDX,RC,STDT
@@ -51,8 +50,10 @@ EN1(RORDFN,DXDTS) ;
  ;        0  Ok
  ;       >0  Non-fatal error(s)
  ;
+ ; The ^TMP("PS",$J) global node is used by this function.
+ ;
 EN2(RORDFN,RORSTDT,RORENDT) ;
- N ERRCNT,IEN55,II,RC,ROR55,ROR55SUB,RORII,RORINC,RORINDEX,RORMSG,RORORD,RORRXE,RORTMP,RORXII,TMP
+ N ERRCNT,IEN,IENS,II,RC,RORII,RORINC,RORINDEX,RORMSG,RORORD,RORRXE,RORTMP,RORXII,TMP
  S (ERRCNT,RC)=0
  ;
  ;--- Load the list of prescriptions
@@ -78,12 +79,10 @@ EN2(RORDFN,RORSTDT,RORENDT) ;
  K ^TMP("PS",$J)
  ;
  ;--- Browse through the list and generate the HL7 segments
- S ROR55=$$ALLOC^RORTMP(.ROR55SUB)
  S RORII=0
  F  S RORII=$O(@RORTMP@(RORII))  Q:'RORII  D  Q:RC<0
  . S RORORD=$P(@RORTMP@(RORII,0),U)
  . S RORXII=$P(RORORD,";"),RORXII=$E(RORXII,$L(RORXII))
- . S IEN55=+$P(RORORD,";")
  . ;
  . K ^TMP("PS",$J),RORRXE
  . D OEL^PSOORRL(RORDFN,RORORD)
@@ -91,7 +90,7 @@ EN2(RORDFN,RORSTDT,RORENDT) ;
  . M RORRXE=^TMP("PS",$J)
  . K ^TMP("PS",$J)
  . ;
- . I RORXII="R"  D               ;--- Outpatient Pharmacy
+ . I RORXII="R" D                ;--- Outpatient Pharmacy
  . . D REFILL
  . . ;--- Check if the original prescription or one of
  . . ;--- the refills is within date range
@@ -104,49 +103,42 @@ EN2(RORDFN,RORSTDT,RORENDT) ;
  . . . . K RORRXE(RORINDEX,II,0)
  . . Q:'RORINC
  . . ;---
- . . S TMP=$$ORC(IEN55,.RORRXE,RORDFN)
+ . . S IEN=+$P(RORORD,";")
+ . . S TMP=$$ORC(IEN,.RORRXE)
  . . I TMP  Q:TMP<0  S ERRCNT=ERRCNT+TMP
- . . S TMP=$$RXE^RORHL031(IEN55,.RORRXE,RORDFN)
- . . I TMP  Q:TMP<0  S ERRCNT=ERRCNT+TMP
- . . ;
- . I RORXII="U"  D               ;--- Unit Dose Inpatient Pharmacy
- . . N NODE  K @ROR55
- . . D PSS432^PSS55(RORDFN,IEN55,ROR55SUB)
- . . S NODE=$NA(@ROR55@(IEN55))
- . . ;---
- . . S TMP=$$ORC^RORHL07(NODE,.RORRXE)
- . . I TMP  Q:TMP<0  S ERRCNT=ERRCNT+TMP
- . . S TMP=$$RXE^RORHL07(NODE,.RORRXE)
+ . . S TMP=$$RXE^RORHL031(IEN,.RORRXE)
  . . I TMP  Q:TMP<0  S ERRCNT=ERRCNT+TMP
  . . ;
- . I RORXII="V"  D               ;--- IV Inpatient Pharmacy
- . . N NODE  K @ROR55
- . . D PSS436^PSS55(RORDFN,IEN55,ROR55SUB)
- . . S NODE=$NA(@ROR55@(IEN55))
- . . ;---
- . . S TMP=$$ORC^RORHL071(NODE,.RORRXE)
+ . I RORXII="U" D                ;--- Unit Dose Inpatient Pharmacy
+ . . S IENS=+$P(RORORD,";")_","_RORDFN_","
+ . . S TMP=$$ORC^RORHL07(IENS,.RORRXE)
  . . I TMP  Q:TMP<0  S ERRCNT=ERRCNT+TMP
- . . S TMP=$$RXE^RORHL071(NODE,.RORRXE)
+ . . S TMP=$$RXE^RORHL07(IENS,.RORRXE)
+ . . I TMP  Q:TMP<0  S ERRCNT=ERRCNT+TMP
+ . . ;
+ . I RORXII="V" D                ;--- IV Inpatient Pharmacy
+ . . S IENS=+$P(RORORD,";")_","_RORDFN_","
+ . . S TMP=$$ORC^RORHL071(IENS,.RORRXE)
+ . . I TMP  Q:TMP<0  S ERRCNT=ERRCNT+TMP
+ . . S TMP=$$RXE^RORHL071(IENS,.RORRXE)
  . . I TMP  Q:TMP<0  S ERRCNT=ERRCNT+TMP
  ;
- D FREE^RORTMP(ROR55),FREE^RORTMP(RORTMP)
+ D FREE^RORTMP(RORTMP)
  Q $S(RC<0:RC,1:ERRCNT)
  ;
  ;***** OUTPATIENT PHARMACY ORC SEGMENT BUILDER
  ;
- ; RORIEN        IEN of the record of the PRESCRIPTION file (#52)
+ ; RORIEN        IEN of Record in PrescPN. File #52
  ;
  ; .RORORC       Array with info (from OEL^PSOORRL)
- ;
- ; PTIEN         Patient IEN (DFN)
  ;
  ; Return Values:
  ;       <0  Error Code
  ;        0  Ok
  ;       >0  Non-fatal error(s)
  ;
-ORC(RORIEN,RORORC,PTIEN) ;
- N BUF,CS,ERRCNT,IEN,IENS59,RC,RORMSG,ROROUT,RORSEG,RORTMP,RORTS,TMP
+ORC(RORIEN,RORORC) ;
+ N BUF,CS,ERRCNT,IEN,IENS59,RC,RORMSG,ROROUT,RORSEG,TMP
  S (ERRCNT,RC)=0
  D ECH^RORHL7(.CS)
  ;
@@ -181,10 +173,9 @@ ORC(RORIEN,RORORC,PTIEN) ;
  ;
  ;--- ORC-17 - Division
  S RORSEG(17)=$$SITE^RORUTL03(CS)
- S RORTMP=$$ALLOC^RORTMP(.RORTS)
- D RX^PSO52API(PTIEN,RORTS,+RORIEN,,"2")
- S IENS59=+$G(@RORTMP@(PTIEN,+RORIEN,20))_","
- D FREE^RORTMP(RORTMP)
+ S IENS59=+$$GET1^DIQ(52,+RORIEN,20,"I",,"RORMSG")_","
+ I $G(DIERR)  D  S ERRCNT=ERRCNT+1
+ . D DBS^RORERR("RORMSG",-99,,,52,+RORIEN)
  I IENS59>0  D
  . D GETS^DIQ(59,IENS59,"100","IE","ROROUT","RORMSG")
  . I $G(DIERR)  D  S ERRCNT=ERRCNT+1  Q

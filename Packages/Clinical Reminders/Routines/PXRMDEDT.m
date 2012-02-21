@@ -1,5 +1,5 @@
-PXRMDEDT ; SLC/PJH - Edit PXRM reminder dialog. ;03/01/2010
- ;;2.0;CLINICAL REMINDERS;**4,6,12,17,16**;Feb 04, 2005;Build 119
+PXRMDEDT ; SLC/PJH - Edit PXRM reminder dialog. ;03/05/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;Used by protocol PXRM SELECTION ADD/PXRM GENERAL ADD
  ;
@@ -30,15 +30,15 @@ ADD N DA,DIC,Y,DTOUT,DUOUT,DTYP,DLAYGO,HED
  ..D ^DIE
  .;
  .;Edit Dialog
- .D EDIT(DTYP,DA,0)
+ .D EDIT(DTYP,DA)
  Q
  ;
  ;called by protocol PXRM DIALOG EDIT
  ;-----------------------------------
-EDIT(TYP,DA,OIEN) ;
+EDIT(TYP,DA) ;
  Q:'$$LOCK(DA)
  W IORESET
- N CS1,CS2,D1,DIC,DIDEL,DIE,DIK,DR,DTOUT,DUOUT,DINUSE,TYP,ODA,Y
+ N CS1,CS2,D1,DIC,DIDEL,DIE,DR,DTOUT,DUOUT,DINUSE,TYP,ODA,Y
  ;Save checksum
  S VALMBCK=""
  S CS1=$$FILE^PXRMEXCS(801.41,DA)
@@ -62,12 +62,11 @@ EDIT(TYP,DA,OIEN) ;
  I TYP="T" S DR="[PXRM RESULT ELEMENT]"
  ;Allows limited edit of national dialogs
  I $P($G(^PXRMD(801.41,DA,100)),U)="N" D
- .I TYP="T",+$P($G(^PXMRD(801.41,DA,100)),U,4)=0 Q
  .I $G(PXRMINST)=1,DUZ(0)="@" Q
  .S DR="[PXRM EDIT NATIONAL DIALOG]",DINUSE=1
  ;
- I "GEPFS"[TYP D
- .I '$D(^PXRMD(801.41,"AD",DA)),'$D(^PXRMD(801.41,"R",DA)),'$D(^PXRMD(801.41,"RG",DA)) W !,"Not used by any other dialog",! Q
+ I "GEPF"[TYP D
+ .I '$D(^PXRMD(801.41,"AD",DA)) W !,"Not used by any other dialog",! Q
  .I PXRMGTYP'="DLG" S DINUSE=1 Q
  .I PXRMGTYP="DLG" D  Q
  ..N SUB
@@ -75,31 +74,28 @@ EDIT(TYP,DA,OIEN) ;
  ..F  S SUB=$O(^PXRMD(801.41,"AD",DA,SUB)) Q:'SUB  Q:DINUSE  D
  ...I SUB'=PXRMDIEN S DINUSE=1
  I DINUSE D
- .W !,"Current dialog "_$S(TYP="S":"result group",1:"element/group")_" name: "_$P($G(^PXRMD(801.41,DA,0)),U)
- .I TYP="S" W !,"Used by:" D USE^PXRMDLST(DA,10,PXRMDIEN,"RG") Q
+ .W !,"Current dialog element/group name: "_$P($G(^PXRMD(801.41,DA,0)),U)
+ .I TYP="S" Q
  .I PXRMGTYP="DLGE" D
- ..W !,"Used by:" D USE^PXRMDLST(DA,10,"","AD")
+ ..W !,"Used by:" D USE^PXRMDLST(DA,10,"")
  ..I $D(^PXRMD(801.41,"R",DA))'>0 Q
- ..W !,"Used as a Replacement Element/Group for: " D USE^PXRMDLST(DA,10,"","R")
+ ..W !,"Used as a Replacement Element/Group for: " D REPLACE^PXRMDLST(DA,10,"")
  .I PXRMGTYP'="DLGE" D
- ..W !,"Used by:" D USE^PXRMDLST(DA,10,PXRMDIEN,"AD")
+ ..W !,"Used by:" D USE^PXRMDLST(DA,10,PXRMDIEN)
  ..I $D(^PXRMD(801.41,"R",DA))'>0 Q
- ..W !,"Used as a Replacement Element/Group for: " D USE^PXRMDLST(DA,10,PXRMDIEN,"R")
+ ..W !,"Used as a Replacement Element/Group for: " D REPLACE^PXRMDLST(DA,10,PXRMDIEN)
  ;
  ;Save list of components
  N COMP D COMP^PXRMDEDX(DA,.COMP)
  ;Edit dialog then unlock
- I TYP'="P" D ^DIE D UNLOCK(ODA) I $G(DA)="",$G(OIEN)>0 D
- .S DA=OIEN,DR="118////@" D ^DIE K DA
+ I TYP'="P" D ^DIE D UNLOCK(ODA)
  I TYP="P" D PROMPT(DA) D UNLOCK(ODA)
- ;I '$D(DUOUT)&($G(D1)'="") D  Q
- I $G(D1)'="" D
+ I '$D(DUOUT)&($G(D1)'="") D  Q
  . I $P($G(^PXRMD(801.41,DA,10,D1,0)),U,2)="" D  Q
  . . S DA(1)=DA,DA=D1 Q:'DA
  . . S DIK="^PXRMD(801.41,"_DA(1)_",10,"
  . . D ^DIK
- . . ;S VALMBG=1
- I $D(DUOUT) S VALMBG=1 Q
+ . . S VALMBG=1
  I '$D(DA) D  Q
  .;Clear any pointers from #811.9
  .I $D(PXRMDIEN) D PURGE(PXRMDIEN)
@@ -136,7 +132,7 @@ ESEL(PXRMDIEN,SEL) ;
  D SETSTART^PXRMCOPY(DIC)
  S DIC(0)="AEMQL"
  S DIC("A")="Select new DIALOG ELEMENT: "
- S DIC("S")="I ""EGPF""[$P(^PXRMD(801.41,Y,0),U,4)"
+ S DIC("S")="I ""EG""[$P(^PXRMD(801.41,Y,0),U,4)"
  S DIC("DR")="4///E"
  W !
  D ^DIC
@@ -159,12 +155,17 @@ ESEL(PXRMDIEN,SEL) ;
  ;Update dialog component multiple
  ;--------------------------------
 EADD(SEL,NSUB,PXRMDIEN) ;
- N ERRMSG,FDAIEN,FDA,IENS
- S IENS="+2,"_PXRMDIEN_","
- S FDA(801.412,IENS,.01)=SEL
- S FDA(801.412,IENS,2)=NSUB
- D UPDATE^DIE("","FDA","FDAIEN","ERRMSG")
- I $D(MSG) D AWRITE^PXRMUTIL("ERRMSG")
+ N DA,DATA,NEXT
+ S DATA=$G(^PXRMD(801.41,PXRMDIEN,10,0)),NEXT=$P(DATA,U,3)+1
+ I DATA="" S DATA="^801.412IA"
+ S DA=NSUB,DA(1)=PXRMDIEN
+ S ^PXRMD(801.41,PXRMDIEN,10,NEXT,0)=SEL_U_DA_"^^^^^^^"
+ ;Update next slot
+ S $P(DATA,U,4)=$P(DATA,U,4)+1,$P(DATA,U,3)=NEXT
+ S ^PXRMD(801.41,PXRMDIEN,10,0)=DATA
+ ;Re-index
+ N DIK,DA S DIK="^PXRMD(801.41,",DA=PXRMDIEN
+ D IX^DIK
  Q
  ;
  ;Change Dialog Element Type
@@ -272,8 +273,6 @@ LOCK(DA) ;Lock the record
  I '$$VEDIT^PXRMUTIL("^PXRMD(801.41,",DA) D
  .N DTYP
  .S DTYP=$P($G(^PXRMD(801.41,DA,0)),U,4)
- .;Allow limit edit of Result Elements that are not lock
- .I DTYP="T",+$P($G(^PXRMD(801.41,DA,100)),U,4)=0 Q
  .;Allow edit of findings but not component multiple on groups 
  .I DTYP="G",$G(PXRMDIEN),DA'=PXRMDIEN Q
  .I DTYP="G",$G(PXRMGTYP)="DLGE" Q

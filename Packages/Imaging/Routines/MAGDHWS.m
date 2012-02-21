@@ -1,6 +1,5 @@
-MAGDHWS ;WOIFO/PMK - Capture Consult/GMRC data ; 05/18/2007 11:23
- ;;3.0;IMAGING;**10,11,51,84,85,54**;03-July-2009;;Build 1424
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDHWS ;WOIFO/PMK - Capture Consult/GMRC data ; 24 Feb 2004  9:50 AM
+ ;;3.0;IMAGING;**10,11**;14-April-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDHWS ;WOIFO/PMK - Capture Consult/GMRC data ; 05/18/2007 11:23
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -15,49 +15,40 @@ MAGDHWS ;WOIFO/PMK - Capture Consult/GMRC data ; 05/18/2007 11:23
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
- ; Called from PROTOCOL called MAGD APPOINTMENT (^ORD(101,...))
- ; through the scheduling package
- ;
- N %,AFTERSTS,APTSCHED,CLINIC,CONSULTM,CUTOFF,DATETIME
+ENTRY ; entry point from scheduling package
+ N %,AFTERSTS,APTNUMB,APTSCHED,CLINIC,CONSULTM,CUTOFF,DATETIME
  N DEL,DEL2,DEL3,DEL4,DEL5,DFN,DIVISION,DONE,FILLER1,FMDATE,FMDATETM
  N GMRCIEN,HL,IGNORE,IREQ,ITYPCODE,ITYPNAME,MSGTYPE,REQUEST
  N SERVICE,STATUS,UNKNOWN,X,Y,Z
- ;
- Q:$P($G(SDATA("AFTER","STATUS")),"^",3)=""  ; Not a valid appointment
- ;
+ S APTNUMB=$P(SDATA,"^",1) I APTNUMB<1 Q  ; not a valid appointment
  D INIT^MAGDHW0 ; initialize variables
- S FMDATETM=$$NOW^XLFDT(),FMDATE=FMDATETM\1
- S CUTOFF=$$HTFM^XLFDT($H-90) ; cutoff date is 90 days ago
+ D NOW^%DTC S FMDATE=%\1,FMDATETM=%
+ S %H=%H-90 D TT^%DTC S CUTOFF=X ; cutoff date is 90 days ago
  S DFN=$P(SDATA,"^",2),DATETIME=$P(SDATA,"^",3),CLINIC=$P(SDATA,"^",4)
  S APTSCHED("CLINIC IEN")=CLINIC,APTSCHED("FM DATETIME")=DATETIME
  S AFTERSTS=SDATA("AFTER","STATUS"),X=$P(AFTERSTS,"^",3)
  ; appointment management transactions from ^SD(409.63)
- S FILLER1="" D  Q:FILLER1=""
- . I X["CHECK IN" S FILLER1="SDAM-CHECKIN" Q
- . I X["CHECKED IN" S FILLER1="SDAM-CHECKIN" Q
- . I X["CHECK OUT" S FILLER1="SDAM-CHECKOUT" Q
- . I X["CHECKED OUT" S FILLER1="SDAM-CHECKOUT" Q
- . I X["AUTO RE-" S FILLER1="SDAM-SCHEDULED" Q
- . I X["AUTO-RE" S FILLER1="SDAM-SCHEDULED" Q
- . I X["ACTION REQUIRED" S FILLER1="SDAM-SCHEDULED" Q
- . I X["ACT REQ" S FILLER1="SDAM-SCHEDULED" Q
- . I X["NON-COUNT" S FILLER1="SDAM-SCHEDULED" Q
- . I X["CANCELLED" S FILLER1="SDAM-CANCELLED" Q
- . I X["NO-SHOW" S FILLER1="SDAM-CANCELLED" Q
- . I X["DELETED" S FILLER1="SDAM-CANCELLED" Q
- . I X["FUTURE" S FILLER1="SDAM-FUTURE" Q
- . I X["NO ACTION TAKEN" S FILLER1="SDAM-SCHEDULED" Q
- . I X["NO ACT TAKN" S FILLER1="SDAM-SCHEDULED" Q
- . I X["INPATIENT" S FILLER1="SDAM-SCHEDULED" Q
- . ;
- . W !!,"Unexpected Status: """,X,""" in protocol MAGD APPOINTMENT."
- . W !,"Please notify Customer Support"
- . W !!,"Press <Enter> to continue: " R X:$G(DTIME,300)
+ I X["CHECKED IN" S FILLER1="SDAM-CHECKIN"
+ E  I X["CHECKED OUT" S FILLER1="SDAM-CHECKOUT"
+ E  I X["AUTO RE-BOOK" S FILLER1="SDAM-SCHEDULED"
+ E  I X["ACTION REQUIRED" S FILLER1="SDAM-SCHEDULED"
+ E  I X["NON-COUNT" S FILLER1="SDAM-SCHEDULED"
+ E  I X["CANCELLED" S FILLER1="SDAM-CANCELLED"
+ E  I X["NO-SHOW" S FILLER1="SDAM-CANCELLED"
+ E  I X["DELETED" S FILLER1="SDAM-CANCELLED"
+ E  I X="FUTURE" S FILLER1="SDAM-FUTURE"
+ E  I X="INPATIENT APPOINTMENT" S FILLER1="SDAM-SCHEDULED"
+ E  I X["NO ACTION TAKEN" S FILLER1="SDAM-SCHEDULED"
+ I  D  ; if one of the above condititions, do the following
+ . S APTSCHED("CLINIC NAME")=$S(CLINIC:$$GET1^DIQ(44,CLINIC,.01),1:"")
+ . Q
+ E  D  Q
+ . W !!,"Unknown Status: """,$P(AFTERSTS,"^",3),""""
+ . W !,"Please notify the Imaging Project"
+ . R !,"Push <Enter> to continue",X:$G(DTIME,300)
  . Q
  ;
- S APTSCHED("CLINIC NAME")=$S(CLINIC:$$GET1^DIQ(44,CLINIC,.01),1:"")
- ;
- ; find requests that can be performed in this clinic
+ ; find requests that can be perfomed in this clinic
  D SEARCH^MAGDGMRC(DFN,CUTOFF,CLINIC,.REQUEST)
  ;
  ; output an HL7 message for each request related to this appointment
@@ -100,7 +91,7 @@ MESSAGE(MSGTYPE) ; invoked above and also from ^MAGDHWC for the initial order
  D OUTPUT^MAGDHW0
  Q
  ;
-PV1() ; build a PV1 segment
+PV1() ; build a PV1 segement
  N X,Z
  S FROM=$$GET1^DIQ(123,GMRCIEN,.04,"I") ; patient location
  S Z=FROM_DEL3_$S(FROM:$$GET1^DIQ(44,FROM,.01),1:"")_DEL3_SERVICE

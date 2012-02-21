@@ -1,5 +1,5 @@
-DGENCDA1 ;ALB/CJM,RMM Zoltan,JAN,PHH,BRM,CKN - Catastrophic Disabilty API - File Data;Sep 16, 2002 ; 9/22/05 5:25pm
- ;;5.3;Registration;**121,147,232,302,356,387,475,451,653**;Aug 13,1993;Build 2
+DGENCDA1 ;ALB/CJM,RMM Zoltan,JAN,PHH,BRM - Catastrophic Disabilty API - File Data;Sep 16, 2002 ; 7/7/04 11:29am
+ ;;5.3;Registration;**121,147,232,302,356,387,475,451**;Aug 13,1993
  ;
 LOCK(DFN) ;
  ;Description: Locks the catastrophic disability record for a patient
@@ -160,9 +160,6 @@ DELETE(DFN) ;
  . S DR=DR_";.393////@"
  . S DR=DR_";.394////@"
  . S DR=DR_";.395////@"
- . S DR=DR_";.3951////@"
- . S DR=DR_";.3952////@"
- . S DR=DR_";.3953////@"
  . S DA=DFN
  . D ^DIE
  . N SIEN,SUBFILE

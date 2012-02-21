@@ -1,5 +1,5 @@
 IBSDU ;ALB/TMP - ACRP API UTILITIES ;16-SEP-97
- ;;2.0;INTEGRATED BILLING;**91,249,366**;21-MAR-94;Build 3
+ ;;2.0;INTEGRATED BILLING;**91,249**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 SCAN(IBINDX,IBVAL,IBFILTER,IBCBK,IBCLOSE,IBQUERY,IBDIR,IBZXERR) ; Scan encountrs
@@ -95,59 +95,5 @@ DISND(IBOE,IBOE0,PC,NODE) ; Returns the specific piece or all pieces of "DIS"
  I $G(IBOE0)="" S IBOE0=$$SCE(IBOE)
  S DATA=$G(^DPT(+$P(IBOE0,U,2),"DIS",+$$EPTR^IBSDU(IBOE),NODE))
  S:$G(PC) DATA=$P(DATA,U,+PC)
- Q DATA
- ;
-LAST(IBDFN) ; Returns the patient's Last Appointment
- ; ARRAYS IN DFN MUST BE LOCAL or ^TMP or ^UTILITY
- ; pass in single DFN or an open array reference (local or global)
- ; for array of patients, array will = last appt
- ; if '$d(array(dfn)) returned then unknown for that patient
- ; Unknown - cannot be determined, N/A - patient has none
- ; 
- ;
- N IBARRAY,DFN,DATA,X K ^TMP($J,"SDAMA301")
- I 'IBDFN,$E(IBDFN)="^",$E(IBDFN,1,5)'="^TMP(",$E(IBDFN,1,9)'="^UTILITY(" S DATA="INVALID DFN" G LASTQ
- I IBDFN,$$GETICN^MPIF001(IBDFN)<1!($$IFLOCAL^MPIF001(IBDFN)) S DATA="Unknown" G LASTQ
- I 'IBDFN S DFN=0 F  S DFN=$O(@(IBDFN_DFN_")")) Q:'DFN  I $$GETICN^MPIF001(DFN)<1!($$IFLOCAL^MPIF001(DFN)) K @(IBDFN_DFN_")")
- I 'IBDFN,$D(@($E(IBDFN,1,$L(IBDFN)-1)_$S(IBDFN[",":")",1:"")))<9 S DATA=0 G LASTQ
- S IBARRAY(1)=";"_DT
- S IBARRAY(3)="R;I;NT"
- S IBARRAY(4)=IBDFN
- S IBARRAY("FLDS")=1
- I IBDFN S IBARRAY("MAX")=-1
- S IBARRAY("PURGED")=1
- S IBARRAY("SORT")="P"
- S DATA=$$SDAPI^SDAMA301(.IBARRAY)
- I IBDFN S DATA=$S(DATA=0:"N/A",DATA=-1:-1,1:$O(^TMP($J,"SDAMA301",IBDFN,0)))
- I 'IBDFN S (DATA,DFN)=0 F  S DFN=$O(@(IBDFN_DFN_")")) Q:'DFN  S X=$O(^TMP($J,"SDAMA301",DFN,9999999),-1),@(IBDFN_DFN_")")=$S(X:X,1:"N/A"),DATA=DATA+1
- ;
-LASTQ K ^TMP($J,"SDAMA301")
- Q DATA
- ;
-NEXT(IBDFN) ; Returns the patient's Next Appointment
- ; ARRAYS IN DFN MUST BE LOCAL or ^TMP or ^UTILITY
- ; pass in single DFN or an open array reference (local or global)
- ; for array of patients, array will = next appt
- ; if '$d(array(dfn)) returned then unknown for that patient
- ; Unknown - cannot be determined, N/A - patient has none
- ; Pass DATA by reference for list or $$ return for single
- ; 
- ;
- N IBARRAY,DFN,DATA,X K ^TMP($J,"SDAMA301")
- I 'IBDFN,$E(IBDFN)="^",$E(IBDFN,1,5)'="^TMP(",$E(IBDFN,1,9)'="^UTILITY(" S DATA="INVALID DFN" G NEXTQ
- I IBDFN,$$GETICN^MPIF001(IBDFN)<1!($$IFLOCAL^MPIF001(IBDFN)) S DATA="Unknown" G NEXTQ
- I 'IBDFN S DFN=0 F  S DFN=$O(@(IBDFN_DFN_")")) Q:'DFN  I $$GETICN^MPIF001(DFN)<1!($$IFLOCAL^MPIF001(DFN)) K @(IBDFN_DFN_")")
- I 'IBDFN,$D(@($E(IBDFN,1,$L(IBDFN)-1)_$S(IBDFN[",":")",1:"")))<9 S DATA=0 G NEXTQ
- S IBARRAY(1)=DT
- S IBARRAY(3)="R;I;NT"
- S IBARRAY(4)=IBDFN
- S IBARRAY("FLDS")=1
- I IBDFN S IBARRAY("MAX")=1
- S IBARRAY("SORT")="P"
- S DATA=$$SDAPI^SDAMA301(.IBARRAY)
- I IBDFN S DATA=$S(DATA=0:"N/A",DATA=-1:-1,1:$O(^TMP($J,"SDAMA301",IBDFN,0)))
- I 'IBDFN S (DATA,DFN)=0 F  S DFN=$O(@(IBDFN_DFN_")")) Q:'DFN  S X=$O(^TMP($J,"SDAMA301",DFN,0)),@(IBDFN_DFN_")")=$S(X:X,1:"N/A"),DATA=DATA+1
- ;
-NEXTQ K ^TMP($J,"SDAMA301")
  Q DATA
  ;

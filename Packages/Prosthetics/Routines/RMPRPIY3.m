@@ -1,5 +1,5 @@
-RMPRPIY3 ;HINCIO/ODJ - PIP Data Entry - HCPCS prompt;3/8/01 ; 12/15/05 10:23am
- ;;3.0;PROSTHETICS;**61,93**;Feb 09, 1996;Build 6
+RMPRPIY3 ;HINCIO/ODJ - PIP Data Entry - HCPCS prompt;3/8/01
+ ;;3.0;PROSTHETICS;**61**;Feb 09, 1996
  Q
  ;
  ;***** HCPCS - Prompt for a HCPCS code from either
@@ -21,40 +21,25 @@ RMPRPIY3 ;HINCIO/ODJ - PIP Data Entry - HCPCS prompt;3/8/01 ; 12/15/05 10:23am
  ;               P - Prvious field
  ;               ^ - up arrow out
  ;
- ; AAC 12/13/05
- ; Modification to the DIC Lookup to perform any Lookup on a HCPC
- ; code that contains ONLY alph/numeric code for the HCPC code.
- ;
- ;
 HCPCS(RMPR5,RMPR1,RMPREXC) ;
  N RMPRERR,DIR,X,Y,DUOUT,DTOUT,DIROUT,DIRUT,DIC,DA,RMPRSTN
  N DIC
  S RMPRERR=0
- S (RMPREXC,RMPRY)=""
+ S RMPREXC=""
  S RMPR1("HCPCS")=$G(RMPR1("HCPCS"))
 HCPCS1 S RMPRSTN=RMPR5("STATION IEN")
- ; Change to DIC call is commented  above 12/13/05
- N DIC
- S DIC="^RMPR(661.1,"
- S DIC(0)="AEQM"
- ;
- ; New code for Patch 93 in Set DIC line below.
- ;
- S DIC("S")="I $P(^(0),U,5)=1&($P(^(0),U,1)?.AN)"
- D ^DIC
- ;
+ S DIR(0)="FOA"
+ S DIR("A")="Select HCPCS: "
+ S:RMPR1("HCPCS")'="" DIR("B")=RMPR1("HCPCS")
+ S DIR("?")="^D QM1^RMPRPIY3"
+ D ^DIR
  I $D(DTOUT) S RMPREXC="T" G HCPCSX
  I $D(DIROUT) S RMPREXC="P" G HCPCSX
  I X=""!(X["^")!$D(DUOUT) S RMPREXC="^" G HCPCSX
- ;
- ; Change to DIC call included taking this second DIC Lookup out and 
- ; including it in the above first DIC loopup.
- ;
- ;S DIC(0)="EMNZ",RMPRY=Y
- ;S DIC("S")="I $P(^(0),U,5)=1!($P(^(0),U,1)'[""="""
- ;S DIC=661.1
- ;D ^DIC
- ;
+ S DIC(0)="EMNZ"
+ S DIC("S")="I $P(^RMPR(661.1,+Y,0),U,5)=1"
+ S DIC=661.1
+ D ^DIC
  I $D(DTOUT) S RMPREXC="T" G HCPCSX
  I ($G(X)["^")!($D(DUOUT)) S RMPREXC="^" G HCPCSX
  I +Y'>0 D  G HCPCS1

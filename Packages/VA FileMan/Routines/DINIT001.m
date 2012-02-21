@@ -1,5 +1,5 @@
-DINIT001 ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS ;11:25 AM  22 Aug 2006
- ;;22.0;VA FileMan;**150**;Mar 30, 1999;Build 2
+DINIT001 ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS ; 3/30/99  10:41:48
+ ;;22.0;VA FileMan;;Mar 30, 1999
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) S @X=Y
 Q Q
@@ -42,7 +42,7 @@ Q Q
  ;;^DD(.84,0,"PT",1.52192,4)
  ;;=
  ;;^DD(.84,.01,0)
- ;;=DIALOG NUMBER^RNJ14,3X^^0;1^K:+X'=X!(X>9999999999.999)!(('$G(DIFROM))&(X<10000.001))!(X?.E1"."4N.N) X S:$G(X) DINUM=X
+ ;;=DIALOG NUMBER^RNJ13,3X^^0;1^K:+X'=X!(X>999999999.999)!(('$G(DIFROM))&(X<10000.001))!(X?.E1"."4N.N) X S:$G(X) DINUM=X
  ;;^DD(.84,.01,1,0)
  ;;=^.1
  ;;^DD(.84,.01,1,1,0)
@@ -52,7 +52,7 @@ Q Q
  ;;^DD(.84,.01,1,1,2)
  ;;=K ^DI(.84,"B",$E(X,1,30),DA)
  ;;^DD(.84,.01,3)
- ;;=Type a Number between 10000.001 and 9999999999.999, up to 3 Decimal Digits
+ ;;=Type a Number between 10000.001 and 999999999.999, up to 3 Decimal Digits
  ;;^DD(.84,.01,21,0)
  ;;=^^1^1^2940523^
  ;;^DD(.84,.01,21,1,0)

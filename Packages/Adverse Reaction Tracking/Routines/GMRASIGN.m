@@ -1,5 +1,5 @@
-GMRASIGN ;HIRMFO/WAA-ALLERGY/ADVERSE REACTION PATIENT SIGN OFF ;9/22/06  11:01
- ;;4.0;Adverse Reaction Tracking;**17,19,36**;Mar 29, 1996;Build 9
+GMRASIGN ;HIRMFO/WAA-ALLERGY/ADVERSE REACTION PATIENT SIGN OFF ;5/4/04  12:33
+ ;;4.0;Adverse Reaction Tracking;**17,19**;Mar 29, 1996
 SIGNOFF ; The signoff code
  N GMRAOUT,GMRACNTT S GMRAOUT=0 ;19
  S GMRASIGN=0
@@ -99,13 +99,8 @@ REMAIN ;Review remaining entries that were not signed off.  Entire section added
  S SIGNED=""
  S LCVJ=0 F  S LCVJ=$O(^TMP($J,"GMRASF",LCVJ)) Q:'+LCVJ  D
  .S GMRAPA=$O(^TMP($J,"GMRASF",LCVJ,0)) Q:'+GMRAPA  S GMRAPA(0)=^GMR(120.8,GMRAPA,0)
- .S DIR(0)="SB^Edit:Edit;Delete:Delete",DIR("B")="Edit" ;36
- .S DIR("?")="Select edit or delete" ;36
- .S DIR("?",1)="You must complete entry of this record.  Select edit to change" ;36
- .S DIR("?",2)="the record or delete to remove the record.  Previously existing" ;36
- .S DIR("?",3)="records will be marked as entered in error while records added" ;36
- .S DIR("?",4)="during this session will be deleted." ;36
- .S DIR("A")="For reactant "_$P(GMRAPA(0),U,2) D ^DIR K DIR S:$G(DIRUT) Y="E" ;36
+ .S DIR(0)="SB^Edit:Edit;Delete:Delete",DIR("B")="Edit",DIR("?")="You must edit or delete the entry.  Entering ^ will return you to editing."
+ .S DIR("A")="For reactant "_$P(GMRAPA(0),U,2) D ^DIR S:$G(DIRUT) Y="E"
  .I $E(Y)="D" Q  ;Do nothing if allergy is to be deleted
  .S GMRANEW=0
  .F  D  Q:DONE

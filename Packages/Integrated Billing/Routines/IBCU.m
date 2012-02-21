@@ -1,6 +1,6 @@
-IBCU ;ALB/MRL - BILLING UTILITY ROUTINE ;01 JUN 88 12:00
- ;;2.0;INTEGRATED BILLING;**52,106,51,191,232,323,320,384,432**;21-MAR-94;Build 192
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCU ;ALB/MRL - BILLING UTILITY ROUTINE ; 1/17/06 2:38pm
+ ;;2.0;INTEGRATED BILLING;**52,106,51,191,232,323**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO DGCRU
  ;
@@ -39,8 +39,8 @@ REV ;Input Transform for Revenue Code
  I '$D(IBC) I $D(^DGCR(399.2,X,0)) I '$P(^DGCR(399.2,X,0),"^",3) W !!,"Only ACTIVE Revenue Codes may be selected!!",!! K X Q
  Q
  ;
-YN S X=$E(X),X=$S(X=1:X,X=0:X,X="Y":1,X="y":1,X="n":0,X="N":0,1:2) I X'=2 D EN^DDIOL("  ("_$S(X:"YES",1:"NO")_")","","?0") Q
- D EN^DDIOL("NOT A VALID CHOICE!","","!?4") K X Q
+YN S X=$E(X),X=$S(X=1:X,X=0:X,X="Y":1,X="y":1,X="n":0,X="N":0,1:2) I X'=2 W "  (",$S(X:"YES",1:"NO"),")" Q
+ W !?4,"NOT A VALID CHOICE!",*7 K X Q
  Q
  ;
 NOPTF ; Input transform for file 399, field 159.5 (NON-VA ADMIT TIME)
@@ -115,8 +115,8 @@ CLNSCRN(IBDT,CLIFN) ; screen for a Procedures Associated Clinic  (399, 304, 6), 
  S IBX=$S($P(IBCL0,U,3)'="C":0,'$G(IBDT):0,'IBCLI:1,+IBCLI>+IBDT:1,'$P(IBCLI,U,2):0,1:$P(IBCLI,U,2)'>IBDT)
  Q IBX
  ;
-PRVNUM(IBIFN,IBINS,COB) ; Trigger code (399:122,123,124)
- ; on Primary Secondary/Tertiary Carrier (399:101,102,103)
+PRVNUM(IBIFN,IBINS,COB) ; Trigger code for Bill Primary/Secondary/Tertiary Provider # (399, 122, 123, 124)
+ ; on Primary Secondary/Tertiary Carrier (399, 101, 102, 103)
  ; returns the Provider Number for the Insurance Company
  ;         Hospital Provider Number for prov id in file 355.92
  ;         or Medicare A provider Number (psych/non-psych) if Medicare A
@@ -135,28 +135,10 @@ PRVNUM(IBIFN,IBINS,COB) ; Trigger code (399:122,123,124)
  ; claim and the billing provider # already exists, then leave it
  I $G(IBPRCOB),IBX'="" G PRVNQ
  ;
- ;patch 432 enh5:  The IB system shall no longer add the following default Billing Provider Secondary ID to all Medicare Part A (Institutional) general/psychiatric claims:  674499 Psychiatric, 670899 General
- ;I +$G(IBIFN),COB N DA S DA=IBIFN I $$MCRACK^IBCBB3(+IBIFN,$P($G(^DGCR(399,+IBIFN,"TX")),U,5),+COB) S IBX=$$MCRANUM^IBCBB3(+IBIFN) G PRVNQ
- ;
- ; WCJ - 1/17/06 - Some Insurances require certain electronic plan types to have no secondary ID
- ; Check if this plan type requires a blank sec id to go out for this insurance
- N NOSEC S NOSEC=0
- I $D(^DIC(36,IBINS,13)),$G(IBIFN) D
- . N PLAN,PLANTYPE
- . S PLAN=$P($G(^DGCR(399,IBIFN,"I"_COB)),U,18) Q:'PLAN
- . S PLANTYPE=$P($G(^IBA(355.3,PLAN,0)),U,15) Q:'PLANTYPE
- . Q:'$D(^DIC(36,IBINS,13,"B",PLANTYPE))
- . S NOSEC=1,IBX=""
- I NOSEC G PRVNQ
- ;
- ; If using attending/rendering secondary ID, don't do anything
- I $$FT^IBCEF(IBIFN)=2,$$GET1^DIQ(36,IBINS,4.06,"I") G PRVNQ
- I $$FT^IBCEF(IBIFN)=3,$$GET1^DIQ(36,IBINS,4.08,"I") G PRVNQ
+ I +$G(IBIFN),COB N DA S DA=IBIFN I $$MCRACK^IBCBB3(+IBIFN,$P($G(^DGCR(399,+IBIFN,"TX")),U,5),+COB) S IBX=$$MCRANUM^IBCBB3(+IBIFN) G PRVNQ
  ;
  S IBX=$$FACNUM^IBCEP2B(IBIFN,COB)
- ;
- ; PATCH 432 ENH5:  The IB system shall no longer add a default Billing Provider Secondary ID to a claim.
- ;I IBX="" S IBX=$$GET1^DIQ(350.9,1,1.05)
+ I IBX="" S IBX=$P($G(^DIC(36,IBINS,0)),U,$S($$FT^IBCEF(IBIFN)=3:11,1:17))
  ;
 PRVNQ Q IBX
  ;
@@ -165,55 +147,13 @@ BF() ; Returns ien of billing fac primary id type
  S IBX="",Z=0 F  S Z=$O(^IBE(355.97,Z)) Q:'Z  I $P($G(^(Z,1)),U,9) S IBX=Z Q
  Q IBX
  ;
-BILLPNS(IBIFN) ; Trigger Code that sets all Bill P/S/T Prov# and QUAL (399: .122,123,124,128,129,130)
- ; on Bill Form Type (399:.19)
+BILLPNS(IBIFN) ; Trigger Code that sets all Bill Primary/Secondary/Tertiary Provider # (399,.122, 123, 124)
+ ; on Bill Form Type (399, .19)
  N IBDR
  ;
- I +$G(^DGCR(399,+$G(IBIFN),"I1")) S IBDR(399,IBIFN_",",122)=$$PRVNUM(IBIFN,"",1),IBDR(399,IBIFN_",",128)=$$PRVQUAL(IBIFN,"",1)
- I +$G(^DGCR(399,+$G(IBIFN),"I2")) S IBDR(399,IBIFN_",",123)=$$PRVNUM(IBIFN,"",2),IBDR(399,IBIFN_",",129)=$$PRVQUAL(IBIFN,"",2)
- I +$G(^DGCR(399,+$G(IBIFN),"I3")) S IBDR(399,IBIFN_",",124)=$$PRVNUM(IBIFN,"",3),IBDR(399,IBIFN_",",130)=$$PRVQUAL(IBIFN,"",3)
+ I +$G(^DGCR(399,+$G(IBIFN),"I1")) S IBDR(399,IBIFN_",",122)=$$PRVNUM(IBIFN,"",1)
+ I +$G(^DGCR(399,+$G(IBIFN),"I2")) S IBDR(399,IBIFN_",",123)=$$PRVNUM(IBIFN,"",2)
+ I +$G(^DGCR(399,+$G(IBIFN),"I3")) S IBDR(399,IBIFN_",",124)=$$PRVNUM(IBIFN,"",3)
  ;
  I $O(IBDR(0)) D FILE^DIE("","IBDR")
  Q
- ;
-PRVQUAL(IBIFN,IBINS,COB) ; Trigger code for Bill P/S/T Prov QUAL (399:128,129,130)
- ; on P/S/T Carrier (399: 101,102,103)
- ; returns the Provider ID QUALIFIER
- ;
- ; Input   IBIFN - bill ifn
- ;         IBINS - insurance company ifn (opt)
- ;         COB   - 1 for primary, 2 for secondary, 3 for tertiary
- ;
- N IBX,IBB0,IBBF,IBFT,Z,Z0
- S:'$G(COB) COB=1
- S IBX=$P($G(^DGCR(399,+$G(IBIFN),"M1")),U,COB+9),IBB0=$G(^DGCR(399,+$G(IBIFN),0))
- I $G(IBINS)="" S IBINS=+$G(^DGCR(399,+$G(IBIFN),"I"_COB))
- G:'IBINS PRVQUALQ
- ;
- ; If an MRA is being processed into an MRA secondary claim and the
- ; billing provider qualifier already exists, then leave it alone
- I $G(IBPRCOB),IBX'="" G PRVQUALQ
- ;
- ; PATCH 432 ENH5:  The IB system shall no longer add a default Billing Provider Secondary ID to a claim.
- ;I +$G(IBIFN),COB N DA S DA=IBIFN I $$MCRACK^IBCBB3(+IBIFN,$P($G(^DGCR(399,+IBIFN,"TX")),U,5),+COB) S IBX=$$FIND1^DIC(355.97,,"MX","MEDICARE PART A") G PRVQUALQ
- ;
- ; Some Insurances require certain electronic plan types to have no secondary ID
- ; If this is the case, there is no qualifier
- N NOSEC S NOSEC=0
- I $D(^DIC(36,IBINS,13)),$G(IBIFN) D
- . N PLAN,PLANTYPE
- . S PLAN=$P($G(^DGCR(399,IBIFN,"I"_COB)),U,18) Q:'PLAN
- . S PLANTYPE=$P($G(^IBA(355.3,PLAN,0)),U,15) Q:'PLANTYPE
- . Q:'$D(^DIC(36,IBINS,13,"B",PLANTYPE))
- . S NOSEC=1,IBX=""
- I NOSEC G PRVQUALQ
- ;
- ; Leave qualifer blank if sending REND/ATT ID
- I $$FT^IBCEF(IBIFN)=2,$$GET1^DIQ(36,IBINS,4.06,"I") G PRVQUALQ
- I $$FT^IBCEF(IBIFN)=3,$$GET1^DIQ(36,IBINS,4.08,"I") G PRVQUALQ
- ;
- S IBX=$$FACNUM^IBCEP2B(IBIFN,COB,1)
- ;
- I IBX="",$$GET1^DIQ(350.9,1,1.05)=$P($G(^DGCR(399,IBIFN,"M1")),U,COB+1) S IBX=$$FIND1^DIC(355.97,,"MX","1J")
- ;
-PRVQUALQ Q IBX

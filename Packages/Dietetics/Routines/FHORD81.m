@@ -1,6 +1,5 @@
 FHORD81 ; HISC/REL/NCA - Diet Order Lists (cont) ;11/30/00  13:55
- ;;5.5;DIETETICS;**1,5,17**;Jan 28, 2005;Build 9
- ;patch 5 - added outpatiet SOs & SFs and outpt room-bed.
+ ;;5.5;DIETETICS;**1**;Jan 28, 2005
  K C,^TMP("FH",$J) F L=0:0 S L=$O(^FH(118,L)) Q:L<1  I '$D(^FH(118,L,"I")) S C(L)=$P(^(0),"^",1)
  D NOW^%DTC S NOW=%,DT=NOW\1,X1=DT,X2=-14 D C^%DTC S OLN=+X S X1=NOW,X2=-3 D C^%DTC S OLD=+X
  S X1=DT,X2=2 D C^%DTC S K3=+X
@@ -10,7 +9,6 @@ FHORD81 ; HISC/REL/NCA - Diet Order Lists (cont) ;11/30/00  13:55
 OUTP ;Outpatient data
  D GETOUT^FHOMRBL1
  S (ADM,DTP,FHPTSA,RM,FHLSAV,FHI)=""
- I SRT="R" D RMS   ;sort by room-bed
  F  S FHI=$O(^TMP($J,"FH",FHI)) Q:FHI=""  D
  .S FHJ="" F  S FHJ=$O(^TMP($J,"FH",FHI,FHJ)) Q:FHJ=""  D
  ..S FHPTSA=FHJ
@@ -21,40 +19,6 @@ OUTP ;Outpatient data
  ...D PROC
  W ! Q
  ;
-RMS ;SORT BY ROOM-BED
- M ^TMP($J,"FHR")=^TMP($J,"FH") K ^TMP($J,"FH")
- F  S FHI=$O(^TMP($J,"FHR",FHI)) Q:FHI=""  D
- .S FHJ="" F  S FHJ=$O(^TMP($J,"FHR",FHI,FHJ)) Q:FHJ=""  D
- ..S FHPTSA=FHJ
- ..F FHK=0:0 S FHK=$O(^TMP($J,"FHR",FHI,FHJ,FHK)) Q:FHK'>0  D
- ...S FHDAT=""
- ...S FHL=$O(^TMP($J,"FHR",FHI,FHJ,FHK,0))
- ...I $G(FHL) D RM1 Q
- ...D RM2
- K ^TMP($J,"FHR")
- Q
-RM1 F FHL=0:0 S FHL=$O(^TMP($J,"FHR",FHI,FHJ,FHK,FHL)) Q:FHL'>0  D
- .S FHDAT=^TMP($J,"FHR",FHI,FHJ,FHK,FHL)
- .S FHDFN=$P(FHDAT,U,2)
- .S RM=""
- .I $G(FHDFN),$D(^FHPT(FHDFN,"OP",FHL,0)) S RM=$P(^(0),U,18)
- .I $G(RM),$D(^DG(405.4,RM,0)) S RM=$P(^(0),U,1)
- .S:RM'="" RM=$E(RM,1,12)
- .S:RM="" RM=" "
- .S ^TMP($J,"FH",FHI,RM,FHK,FHL)=FHDAT
- Q
-RM2 S FHDAT=^TMP($J,"FHR",FHI,FHJ,FHK)
- S FHDFN=$P(FHDAT,U,2)
- S FHTYP=$P(FHDAT,U,1)
- S RM=""
- I $G(FHDFN),FHTYP="GM",$D(^FHPT(FHDFN,"GM",FHK,0)) S RM=$P(^(0),U,11)
- I $G(FHDFN),FHTYP="SM",$D(^FHPT(FHDFN,"SM",FHK,0)) S RM=$P(^(0),U,13)
- I $G(RM),$D(^DG(405.4,RM,0)) S RM=$P(^(0),U,1)
- S:RM'="" RM=$E(RM,1,12)
- S:RM="" RM=" "
- S ^TMP($J,"FH",FHI,RM,FHK)=FHDAT
- Q
- ;
 PROC ;process/print
  S FHPLD=0
  S:FHDAT="" FHDAT=^TMP($J,"FH",FHI,FHJ,FHK)
@@ -64,7 +28,6 @@ PROC ;process/print
  S FHSTA=$P(FHDAT,U,4)
  S FHMEAL=$P(FHDAT,U,5)
  S FHLOC=$P(FHDAT,U,6)
- S FHDAIN=$P(FHDAT,U,7)
  S (FHSERT,FHSERC,FHSERD,FHSER)=""
  I $G(FHLOC),$D(^FH(119.6,FHLOC,0)) D
  .S:$P(^FH(119.6,FHLOC,0),U,5) FHSERT="T"
@@ -77,44 +40,18 @@ PROC ;process/print
  I FHI'=FHLSAV S FHLSAV=FHI,WRDN=$E(FHI,3,$L(FHI)) D HDR
  S FHDIET=""
  D PATNAME^FHOMUTL
- S RM=""
- I FHCAT="OP",$D(^FHPT(FHDFN,"OP",FHDAIN,0)) S RM=$P(^(0),U,18)
- I FHCAT="GM",$D(^FHPT(FHDFN,"GM",FHDAIN,0)) S RM=$P(^(0),U,11)
- I FHCAT="SM",$D(^FHPT(FHDFN,"SM",FHDAIN,0)) S RM=$P(^(0),U,13)
- I $G(RM),$D(^DG(405.4,RM,0)) S RM=$P(^DG(405.4,RM,0),U,1)
  I FHLSAV'=FHI S FHLSAV=FHI D HDR
- W !!,$E(RM,1,12),?13,$E(FHPTNM,1,24),?38,FHBID,?67,FHSER
+ W !!,?13,$E($P(FHJ,"^",1),1,24),?38,FHBID,?67,FHSER
  I $Y>(IOSL-6) D HDR
  I $D(^FH(111,FHDIE,0)) S FHDIET=$P(^FH(111,FHDIE,0),U,7)
  S FHTYP=$S(FHCAT="OP":"Recurring",FHCAT="GM":"Guest",FHCAT="SM":"Special",1:"")
  S DTP=FHK D DTP^FH
  W !,?14,"Diet Order: ",FHDIET,?40,"Meal: ","(",FHMEAL,")"
  W !,?14,"Service Type: ",FHTYP,?40,"Date: ",DTP
- ;S FHDAIN=$O(^FHPT(FHDFN,""_FHCAT_"","B",FHK,0))
+ S FHDAIN=$O(^FHPT(FHDFN,""_FHCAT_"","B",FHK,0))
  I $G(FHDAIN),$D(^FHPT(FHDFN,""_FHCAT_"",FHDAIN,"TF")) D OUTF
- I $G(FHDAIN),FHCAT="OP",$D(^FHPT(FHDFN,"OP",FHDAIN,"SP")) D OSO
- I $G(FHDAIN),FHCAT="OP",$D(^FHPT(FHDFN,"OP",FHDAIN,"SF")) D OSF
  S FHPLD=1
  D:'$G(FHL) ^FHORD83
- Q
- ;
-OSO ;process outpt SOs.
- ;
- K N F K=0:0 S K=$O(^FHPT(FHDFN,"OP",FHDAIN,"SP",K)) Q:K'>0  S X=^(K,0) Q:$P(X,"^",6)  D
- .S M=$P(X,"^",3),N(M,K)=$P(X,"^",2,4),$P(N(M,K),"^",4,5)=$P(X,"^",8,9)
- F M="B","N","E" F K=0:0 S K=$O(N(M,K)) Q:K<1  S Z=+N(M,K) I Z D
- .I ($Y>(IOSL-6)) D HDR,FLNE^FHORD82
- .S M2=$S(M="B":"Break",M="N":"Noon",1:"Even") S QTY=$P(N(M,K),"^",4)
- .W !?13,"Stng. Order: ",M2,?38,$S(QTY:QTY,1:1)," ",$P($G(^FH(118.3,Z,0)),"^",1),$S($P(N(M,K),"^",5)'="Y":" (I)",1:"")
- .S X=$P(N(M,K),"^",3) D DT W ?72,X Q
- Q
- ;
-OSF ;process outpt SFs.
- S NM=$P($G(^FHPT(FHDFN,"OP",FHDAIN,"SF",0)),U,3) Q:'$G(NM)
- K L,N,M,M1,M2 Q:'NM  S Y=^FHPT(FHDFN,"OP",FHDAIN,"SF",NM,0) Q:$P(Y,"^",32)
- S L=4 F K1=1:1:3 S K=0,N(K1)="" F K2=1:1:4 S Z=$P(Y,U,L+1),Q=$P(Y,U,L+2),L=L+2 I Z'="" S:'Q Q=1 S:N(K1)'="" N(K1)=N(K1)_"; " S N(K1)=N(K1)_Q_" "_$S($D(C(Z)):C(Z),$D(^FH(118,+Z,0)):$P(^(0),"^",1),1:" ")
- S LST=$P(Y,"^",30)\1,X=LST,P1=0 D DT S:LST<OLN X=X_"*"
- F K1=1:1:3 I N(K1)'="" W !?13,$P("10AM; 2PM; 8PM",";",K1),?19,$E(N(K1),1,52) I 'P1 S P1=1 W ?72,X
  Q
  ;
 REC ;set/get recurring data
@@ -165,12 +102,12 @@ F0 ;
  S WRDN=$P(^FH(119.6,W1,0),"^",1),^TMP("FH",$J,K1_P0_$E(WRDN,1,26),W1)="" Q
 F2 S WRDN=$P(^FH(119.6,W1,0),"^",1)
  K ^TMP($J) F FHDFN=0:0 S FHDFN=$O(^FHPT("AW",W1,FHDFN)) Q:FHDFN<1  S ADM=^(FHDFN) D RM
- Q:'$D(^TMP($J,"FHSRT"))  S NX="" D HDR
-L2 S NX=$O(^TMP($J,"FHSRT",NX)) I NX="" W ! Q
+ Q:'$D(^TMP($J))  S NX="" D HDR
+L2 S NX=$O(^TMP($J,NX)) I NX="" W ! Q
  S FHDFN=""
 L3 ; Get Next Patient data
- S FHDFN=$O(^TMP($J,"FHSRT",NX,FHDFN)) G:FHDFN="" L2 S ADM=^(FHDFN)
- D PATNAME^FHOMUTL I DFN="" G L3
+ S FHDFN=$O(^TMP($J,NX,FHDFN)) G:FHDFN="" L2 S ADM=^(FHDFN)
+ D PATNAME^FHOMUTL I DFN="" Q
  G:ADM<1 L3 S Y(0)=^DPT(DFN,0) G:'$D(^DGPM(ADM,0)) L3
  G:'$D(^FHPT(FHDFN,"A",ADM,0)) L3 S LEN=0 D CUR^FHORD7 S MEAL=Y,X0=^FHPT(FHDFN,"A",ADM,0) S:$L(MEAL)>48 LEN=$L($E(MEAL,1,48),",")
  I SER'="A",$P(X0,"^",5)'=SER G L3
@@ -198,7 +135,7 @@ RM ;
  D PATNAME^FHOMUTL I DFN="" Q
  I SRT="R" S RM=$G(^DPT(DFN,.101))
  E  S RM=$P($G(^DPT(DFN,0)),"^",1)
- S:RM="" RM=" " S ^TMP($J,"FHSRT",RM,FHDFN)=ADM Q
+ S:RM="" RM=" " S ^TMP($J,RM,FHDFN)=ADM Q
 HDR ;W:'($E(IOST,1,2)'="C-"&'PG) @IOF S PG=PG+1,DTP=NOW D DTP^FH
  W @IOF S PG=PG+1,DTP=NOW D DTP^FH
  W !,DTP,?(67-$L(WRDN)\2),WRDN," DIET ORDERS",?72,"Page ",PG

@@ -1,5 +1,5 @@
 RCDPRECT ;WISC/RFJ-print a receipt ;1 Jun 99
- ;;4.5;Accounts Receivable;**114,148,217,244**;Mar 20, 1995
+ ;;4.5;Accounts Receivable;**114,148,217**;Mar 20, 1995
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
@@ -99,7 +99,7 @@ PRINT ;  print a receipt
  ;
  ;  type = 7 (credit card)
  I RCTYPE=7 D
- .   W !," Last 4 of Credit Card #: ",$E($P(DATA,"^",11),$L($P(DATA,"^",11))-3,$L($P(DATA,"^",11)))
+ .   W !," Credit Card #: ",$P(DATA,"^",11)
  .   W !," Confirmation#: ",$P(DATA,"^",2)
  ;
  W !,"Payment Amount: $ ",$J($P(DATA,"^",4),0,2)

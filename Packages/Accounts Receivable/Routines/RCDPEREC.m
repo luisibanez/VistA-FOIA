@@ -1,6 +1,5 @@
-RCDPEREC ;ALB/TMK/KML/PJH - RECONCILIATION REPORT FOR EDI LOCKBOX FMS DOCS  ; 8/2/10 4:17pm
- ;;4.5;Accounts Receivable;**208,244,269**;Mar 20, 1995;Build 113
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+RCDPEREC ;ALB/TMK - RECONCILIATION REPORT FOR EDI LOCKBOX FMS DOCS  ;19-APR-2004
+ ;;4.5;Accounts Receivable;**208**;Mar 20, 1995
  ;
 EN ; Entrypoint for producing the report
  N RCDDT,RCSEL,ZTRTN,ZTDESC,ZTSAVE,ZTSK,%ZIS,POP,DIR,DTOUT,DUOUT
@@ -14,16 +13,15 @@ EN ; Entrypoint for producing the report
  W !
  S %ZIS="QM" D ^%ZIS Q:POP
  I $D(IO("Q")) D  Q
- . S ZTRTN="ENQUE^RCDPEREC",ZTDESC="AR - CR/TR RELATED DOCUMENTS FOR e-PAYMENTS"
- . S ZTSAVE("RCDDT")="",ZTSAVE("RCSEL")=""
+ . S ZTRTN="ENQUE^RCDPEREC("_RCDDT_","_RCSEL_")",ZTDESC="AR - CR/TR RELATED DOCUMENTS FOR e-PAYMENTS"
  . D ^%ZTLOAD
  . W !!,$S($D(ZTSK):"Your task number"_ZTSK_" has been queued.",1:"Unable to queue this job.")
  . K ZTSK,IO("Q") D HOME^%ZIS
  U IO
- D ENQUE
+ D ENQUE(RCDDT,RCSEL)
  Q
  ;
-ENQUE ; Queued entrypoint for the report
+ENQUE(RCDDT,RCSEL) ; Queued entrypoint for the report
  ; RCDDT = starting EFT deposit date
  ; RCSEL = 'A' if all deposits included ... 'N' if only those not fully
  ;         transferred out of 8NZZ
@@ -31,7 +29,7 @@ ENQUE ; Queued entrypoint for the report
  N Z,Z0,RCSTOP,RCD,RCR,RCSTAT,RCDEP,RCEFT,RCEFT1,RCT,RC0,RC00,RC000,RCTOT,RCTOT1,RCTRANS
  K ^TMP($J,"RCDEP")
  ;
- S (RCSTOP,RCT)=0,RCDDT=RCDDT-.1
+ S RCSTOP=0,RCDDT=RCDDT-.1
  F  S RCDDT=$O(^RCY(344.3,"ADEP",RCDDT)) Q:'RCDDT!RCSTOP  S RCDEP=0 F  S RCDEP=$O(^RCY(344.3,"ADEP",RCDDT,RCDEP)) Q:'RCDEP  S RCEFT=0 F  S RCEFT=$O(^RCY(344.3,"ADEP",RCDDT,RCDEP,RCEFT)) Q:'RCEFT!RCSTOP  D
  . S RCTOT=0,RC0=$G(^RCY(344.3,RCEFT,0))
  . S RCD=$E(RCDDT_$J("",8),1,8)_RCDEP
@@ -73,9 +71,7 @@ ENQUE ; Queued entrypoint for the report
  .. ;
  .. S Z=$G(^RCY(344.31,+RC00,0))
  .. W !,?3,$E(+RC00_$J("",6),1,6)_"  "_$E($P(RC00,U,3)_$J("",10),1,10)_"  "_$E($P(Z,U,2)_$J("",30),1,30)_"  "_$E($P(Z,U,3)_$J("",20),1,20)
- ..; HIPAA 5010 - to accommodate the extended length of the Trace # field from 30 to 50 characters the Trace # will be printed on its own line.  
- .. W !,?13,$E($P(Z,U,4)_$J("",50),1,50)
- .. W !,?43,$E($P(RC00,U,5)_$J("",10),1,10),!,?15,$E($P(RC00,U,2)_$J("",10),1,10)_"  "_$E($P(RC00,U,4)_$J("",15),1,15)
+ .. W !,?13,$E($P(Z,U,4)_$J("",30),1,30)_"  "_$E($P(RC00,U,5)_$J("",10),1,10),!,?15,$E($P(RC00,U,2)_$J("",10),1,10)_"  "_$E($P(RC00,U,4)_$J("",15),1,15)
  ;
  I 'RCSTOP,RCPG D ASK(.RCSTOP)
  ;
@@ -126,9 +122,7 @@ HDR1(RCPG) ;Print report hdr
  S RCPG=$G(RCPG)+1_U_1
  W !,"EDI LOCKBOX FUND 5287.4/8NZZ RECONCILIATION REPORT",?55,$$FMTE^XLFDT(DT,2),?70,"Page: ",+RCPG
  W !!,"DEP DATE  ENTRY#  DEP #   TOTAL DEP AMT  POST DT   RECEIPT #",!,?5,"CR DOCUMENT           CR DOC STATUS"
- W !,?3,"EFT #   MATCHED TO  PAYER NAME                      PAYER ID            ",!,?13,"TRACE #"
- ; HIPAA 5010 - put receipt # on a separate line to accomodate the increased length of the TRACE # 
- W !,?20,"RECEIPT #"
+ W !,?3,"EFT #   MATCHED TO  PAYER NAME                      PAYER ID            ",!,?13,"TRACE #                         RECEIPT #"
  W !,?15,"TR DOCUMENT           TR DOC STATUS"
  W !,$TR($J("",IOM)," ","=")
  Q

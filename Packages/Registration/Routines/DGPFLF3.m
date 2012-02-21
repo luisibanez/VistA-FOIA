@@ -1,5 +1,5 @@
 DGPFLF3 ;ALB/RBS - PRF FLAG MANAGEMENT LM PROTOCOL ACTIONS CONT. ; 6/9/04 2:05pm
- ;;5.3;Registration;**425,554,650**;Aug 13, 1993 ;Build 3
+ ;;5.3;Registration;**425,554**;Aug 13, 1993 
  ;
  ;no direct entry
  QUIT
@@ -22,24 +22,30 @@ AF ;Entry point for DGPF ADD FLAG action protocol.
  N DGRESULT ;result of $$STOALL^DGPFALF1 api call
  N DGRDAY   ;review frequency var
  N DGNDAY   ;notification days var
- N DGERR    ;if error returned
+ N DGERR    ;if error returned from $$STOALL^DGPFALF1 api call
  N DGOK     ;ok flag to enter record flag entry & flag description
  N DGMSG    ;user message
  N DGQ      ;quit flag
  ;
- ;init vars
  S DGOK=1,(DGQ,DGABORT)=0
+ S DGMSG="W !?2,"">>> '""_$P($G(XQORNOD(0)),U,3)_""' action not allowed for Category II (Local) Flags."",*7"
  ;
  ;set screen to full scrolling region
  D FULL^VALM1
  W !
- ;
- ;check flag category (only Category II flags can be created)
+ ;check of Category var - Only Local Flags can be created
  I DGCAT=1 D
- . D BLD^DIALOG(261129,"Can not add 'Category I' flags.","","DGERR","F")
- . D MSG^DIALOG("WE","","","","DGERR") W *7
- . D PAUSE^VALM1
+ . W !?2,">>> '",$P($G(XQORNOD(0)),U,3),"' action not allowed for Category I (National) Flags.",*7
+ . W !?7,"Only Category II (Local) Flags may be created at the local site.",*7
  . S DGOK=0
+ . D PAUSE^VALM1
+ ;
+ ;check of security key
+ I DGOK,'$D(^XUSEC("DGPF LOCAL FLAG EDIT",DUZ)) D
+ . X DGMSG
+ . W !?7,"You do not have the appropriate Security Key.",*7
+ . S DGOK=0
+ . D PAUSE^VALM1
  ;
  ;user prompts
  D:DGOK

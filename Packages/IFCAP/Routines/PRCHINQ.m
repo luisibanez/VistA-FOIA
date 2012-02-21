@@ -1,6 +1,6 @@
 PRCHINQ ;WISC/AKS-Add/Edit Surrogate Users and inquire Card Info ;6/8/96  13:38
- ;;5.1;IFCAP;**18,117,126**;Oct 20, 2000;Build 2
- ;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;5.1;IFCAP;**18**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  QUIT
  ;
 INQ ;Display purchase card information and allow add/editting of users
@@ -23,40 +23,34 @@ MORE S DA(1)=PRCHDA,DIC="^PRC(440.5,"_DA(1)_",1,",DIC(0)="AEQLM"
  QUIT
 STAT ;Amendment/Adjustment statuses from the dd, called from field #50, sub-
  ;field #9 of file #443.6
- N MOPPC S MOPPC=0
- I $P($G(^PRC(443.6,PRCHPO,0)),U,2)=25 S MOPPC=1
  S DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=21:1,Z1=23:1,Z1=26:1,Z1=29:1,Z1=31:1,Z1=34:1,Z1=41:1,Z1=44:1,Z1=47:1,Z1=49:1,1:0)"
- S:MOPPC DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=21:1,Z1=23:1,Z1=26:1,Z1=29:1,Z1=31:1,Z1=34:1,Z1=44:1,Z1=47:1,Z1=49:1,1:0)"
  ;I $G(PRCHAUTH)=1 S DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=21:1,Z1=23:1,Z1=26:1,Z1=29:1,Z1=31:1,Z1=34:1,Z1=41:1,Z1=44:1,Z1=47:1,Z1=49:1,Z1=51:1,1:0)"
  I $G(PRCHAUTH)=1 D
- . S DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=23:1,Z1=26:1,Z1=31:1,1:0)"
+ . S DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=23:1,Z1=26:1,Z1=31:1,Z1=41:1,1:0)"
  . S PRCHOLD=$P($G(^PRC(443.6,PRCHPO,7)),U)
  . I $P($G(^PRCD(442.3,PRCHOLD,0)),"(")="Paid " D
  . . S DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=29:1,Z1=34:1,Z1=38:1,1:0)"
  . I $P($G(^PRCD(442.3,PRCHOLD,0)),"(")="Partial Payment " D
  . . S DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=44:1,Z1=47:1,Z1=49:1,1:0)"
- D ^DIC K DIC,PRCHOLD,MOPPC S DIC=DIE,X=+Y K:Y<0 X
+ D ^DIC K DIC,PRCHOLD S DIC=DIE,X=+Y K:Y<0 X
  QUIT
 EXIT ;Kill variables and quit
  K Y,%A,%B,%,DIC
  QUIT
 STAT1 ;Called from field #50, subfield #9, file #443.6
- N MOPPC S MOPPC=0
- I $P($G(^PRC(443.6,PRCHPO,0)),U,2)=25 S MOPPC=1
  S DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=21:1,Z1=23:1,Z1=26:1,Z1=29:1,Z1=31:1,Z1=34:1,Z1=41:1,Z1=44:1,Z1=47:1,Z1=49:1,1:0)"
- S:MOPPC DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=21:1,Z1=23:1,Z1=26:1,Z1=29:1,Z1=31:1,Z1=34:1,Z1=44:1,Z1=47:1,Z1=49:1,1:0)"
  ;I $G(PRCHAUTH)=1 S DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=21:1,Z1=23:1,Z1=26:1,Z1=29:1,Z1=31:1,Z1=34:1,Z1=41:1,Z1=44:1,Z1=47:1,Z1=49:1,Z1=51:1,1:0)"
  I $G(PRCHAUTH)=1 D
- . S DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=23:1,Z1=26:1,Z1=31:1,1:0)"
+ . S DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=23:1,Z1=26:1,Z1=31:1,Z1=41:1,1:0)"
  . S PRCHOLD=$P($G(^PRC(443.6,PRCHPO,7)),U)
  . I $P($G(^PRCD(442.3,PRCHOLD,0)),"(")="Paid " D
  . . S DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=29:1,Z1=34:1,Z1=38:1,1:0)"
  . I $P($G(^PRCD(442.3,PRCHOLD,0)),"(")="Partial Payment " D
  . . S DIC("S")="S Z1=$P(^(0),U,2) I $S(Z1=44:1,Z1=47:1,Z1=49:1,1:0)"
- K PRCHOLD,MOPPC
+ K PRCHOLD
  QUIT
 PAID ;To check if there is any payment made for this PO
- I $G(PRCHAUTH)=1!($P(^PRC(442,PRCHPO,0),U,2)=25) D
+ I $G(PRCHAUTH)=1 D
  . S PRCHOLD=$P($G(^PRC(443.6,PRCHPO,7)),U)
  . I $P($G(^PRCD(442.3,PRCHOLD,0)),"(")="Paid " S PAID=1
  . I $P($G(^PRCD(442.3,PRCHOLD,0)),"(")="Partial Payment " S PAID=1

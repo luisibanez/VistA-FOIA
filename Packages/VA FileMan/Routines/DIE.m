@@ -1,27 +1,23 @@
-DIE ;SFISC/GFT,XAK-PROC.DR-STR ;28MAR2006
- ;;22.0;VA FileMan;**1,4,8,11,59,95,159**;Mar 30, 1999;Build 8
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIE ;SFISC/GFT,XAK-PROC.DR-STR ;2:40 PM  17 Sep 2002
+ ;;22.0;VA FileMan;**1,4,8,11,59,95**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  N DG,DNM,DICRREC K DB I DIE S DIE=^DIC(DIE,0,"GL")
  Q:$D(@(DIE_DA_",-9)"))  Q:'$D(@(DIE_"0)"))  S U="^",DP=+$P(^(0),U,2) Q:$P($G(^DD($$FNO^DILIBF(DP),0,"DI")),U,2)["Y"&'$D(DIOVRD)&'$G(DIFROM)
-GO Q:DIE?1"^DIA(".E  Q:DA'>0  K DE,DOV,DIOV,DIEC,DTOUT N DIEDA D
+GO Q:DIE?1"^DIA(".E  K DE,DOV,DIOV,DIEC,DTOUT N DIEDA D
  . N %
  . F %=1:1 Q:'$G(DA(%))  S DIEDA(%)=DA(%)
  . S DIEDA=DA
  . Q
  I $D(DIETMP)[0 N DIETMP S DIETMP=$$GETTMP^DIKC1("DIE")
- N DIEFXREF,DIIENS,DIE1,DIE1N K DIEFIRE,DIEBADK,DIESP S DIIENS=$$IENS^DIKCU(DP,.DA)
- S DL=1,DIE1=1,D0=DA,DI=DP,DR(1,DP)=DR D INI I $E(DR)'="[" D DR^DIE17
+ N DIEFXREF,DIIENS K DIEFIRE,DIEBADK S DIIENS=$$IENS^DIKCU(DP,.DA)
+ S DL=1,D0=DA,DI=DP,DR(1,DP)=DR D INI I $E(DR)'="[" D DR^DIE17
  S DP=DI,DA=D0,(DQ,DIEL,DK,DP(0))=0 K DIC("S")
 MR S DK=DK+1,DH=$P(DR,";",DK) I +DH=DH S (DI,DM)=DH G S:$D(^DD(DP,DI)),MR
  S DI=$P(DH,":",1) I 'DI G K:DI=0,PB
 J I DH["//" S DE(DQ+1,0)=$P(DH,"//",2,9),DI=$P(DI,"//",1),DH=""
  G K:+DI=DI S DM=+DI,Y=$P(DI,DM,2,99),DI=DM G MR:Y=""!'$D(^DD(DP,DI,0)) S DQ=DQ+1,(DZ,DQ(DQ))=^(0),DIFLD(DQ)=DI
-SPC F %=1:1 S DIESP=$P(Y,$C(126),%) Q:DIESP=""  D
- .I DIESP="d"!(DIESP="R") S $P(DZ,U,2)=$P(DZ,U,2)_DIESP Q
- .I DIESP="T"!(DIESP="t") S:$G(^DD(DP,DI,.1))]"" $P(DZ,U)=^(.1) Q
- .S $P(DZ,U)=DIESP,DQ(DQ,"CAPTION")=DIESP
- S:DH'[$C(126) DH=DH_$C(126) S DQ(DQ)=DZ K DZ G Y
- ;
+ F %=1:1 S DIG=$P(Y,$C(126),%) Q:DIG=""  S DZ=$S(DIG="d"!(DIG="R"):$P(DZ,U,1,2)_DIG_U_$P(DZ,U,3,99),DIG="T":$S($D(^(.1)):^(.1),1:$P(DZ,U))_U_$P(DZ,U,2,99),1:DIG_U_$P(DZ,U,2,99))
+ S:DH'[$C(126) DH=DH_$C(126) S DQ(DQ)=DZ K DZ,DIG G Y
 K S DM=$P(DH,":",2),DM=$S(DM:DM,1:DI) I DI,$D(^DD(DP,DI)) G S
 NX S DI=$O(^DD(DP,DI)) S:DI="" DI=-1 G MR:DI'>0,MR:DI>DM
 S I DQ'<50,'$D(DE(DQ+1)) G H
@@ -39,42 +35,31 @@ EQ G MR:DI=DM,NX:DM S DM=DB K DB G D
  ;
 INI K DIC("S") S DIC=DIE,DU=-1,DC="DW=$D("_DIE_DA_",DG))"
 Q Q
- ;
- ;
-MORE ;from ^DIE1
- D INI G MR:DI=DM,NX:DI'[U,MR:'$D(^DD(DP,+DI)) S %=$P(DI,U,2),DI=+DI S:%]"" DQ(DQ+1,"CAPTION")=% G S
- ;
- ;
-JMP ;from ^DIE0
+MORE ;
+ D INI G MR:DI=DM,NX:DI'[U S DI=+DI G S:$D(^DD(DP,DI)),MR
+JMP ;
  D INI G J
  ;
-PB I DH="" G D:$D(DR(DIE1,DP))<9 S:'$D(DOV) DOV=0,DR(DIE1,DP)=DR S DOV=$O(DR(DIE1,DP,DOV)) S:DOV="" DOV=-1 G D:DOV'>0 S DR=DR(DIE1,DP,DOV),DK=0 G MR
- G MR:DH?1"@".N I 'DQ G TEM:DH?1"[".E S:"Q"'=DH DQ=1,DQ(0,1)=DH G MR:$A(DH)-94 S DC=$P(DH,U,1,4) X $P(DH,U,5,999) D DIE1N G O^DIE0
+PB I DH="" G D:$D(DR(DL,DP))<9 S:'$D(DOV) DOV=0,DR(DL,DP)=DR S DOV=$O(DR(DL,DP,DOV)) S:DOV="" DOV=-1 G D:DOV'>0 S DR=DR(DL,DP,DOV),DK=0 G MR
+ G MR:DH?1"@".N I 'DQ G TEM:DH?1"[".E S:"Q"'=DH DQ=1,DQ(0,1)=DH G MR:$A(DH)-94 S DC=$P(DH,U,1,4) X $P(DH,U,5,999) G O^DIE0
 E S DK=DK-1,(DI,DM)=1
 D G DQ^DIED
- ;
 H S DI=DI_U G D
- ;Multiple field
 M S Y=$P(DQ(DQ),U,2)_U_DG G DC:DW<9
  I $D(DSC(+Y))#2,$P(DSC(+Y),"I $D(^UTILITY(",1)="" S D=DIEL+1 D D1 X DSC(+Y) S D=$O(^(0)) S:D="" D=-1 S @DC S DC=$O(^(DG,0)) S:DC="" DC=-1 G DE
- I $D(^(DG,0)) S D=$P(^(0),U,3,4) S:$P(^(0),U,2)'=$P(Y,U) $P(^(0),U,2)=$P(Y,U) ;HMMM
+ I $D(^(DG,0)) S D=$P(^(0),U,3,4) S:$P(^(0),U,2)'=$P(Y,U) $P(^(0),U,2)=$P(Y,U)
  E  S D=$O(^(0)) S:D="" D=-1
-DE I D>0 S Y=Y_U_D I DP(0)-Y!($P(DP(0),U,2)-DK),$D(^(+D,0)) S DE(DQ)=$P(^(0),U) ;Default value if this isn't same multiple we were down in before
-DC S DC=$P(^DD(+Y,0),U,4)_U_Y,%=DQ(DQ),Y=^(.01,0)
-MUL I $P(Y,U,2)'["W" S DQ(DQ)=$P($$EZBLD^DIALOG(8042,$G(DQ(DQ,"CAPTION"),$P(Y,U))),": ")_U_1_$P(Y,U,2,99) D DIE1N G D ;MULTIPLE-FIELD LABEL
+DE I D>0 S Y=Y_U_D I DP(0)-Y,$D(^(+D,0)) S DE(DQ)=$P(^(0),U,1)
+DC S DC=$P(^DD(+Y,0),U,4)_U_Y,%=DQ(DQ),Y=^(.01,0) I $P(Y,U,2)'["W" S DQ(DQ)="Select "_$P(Y,U,1)_U_1_$P(Y,U,2,99) G D
  I DQ>1 K DQ(DQ) G E:$D(DE(DQ,0)),H
  D
  .Q:DH'[$C(126)
  .N DIEA S DIEA=$P($P(DH,+DH,2),$C(126)) Q:DIEA=""!(DIEA="d")!(DIEA="R")
- .I DIEA="T"!(DIEA="t") S:$D(^DD(+$P(%,U,2),.01,.1)) DQ(DQ,"CAPTION")=^(.1) Q
- .S DQ(DQ,"CAPTION")=DIEA
-DIWE S Y=$G(DQ(DQ,"CAPTION"),$P(%,U))_U_$P(Y,U,2) D DIEN^DIWE K DQ,DG,DE S DQ=0 G QY^DIE1:$D(DTOUT) G MORE ;WORD-PROCESSING FIELD LABEL
+ .S $P(%,U)=$S(DIEA="T"&$D(^DD(+$P(%,U,2),.01,.1)):^(.1),1:DIEA)
+ .Q
+ S Y=$P(%,U,1)_U_$P(Y,U,2) D DIEN^DIWE K DQ,DG,DE S DQ=0 G QY^DIE1:$D(DTOUT) G MORE
  ;
 D1 Q:D'>0  S:'$D(@("D"_D)) @("D"_D)=0 S D=D-1 G D1
- ;
-DIE1N N M,I S DIE1N="" F I=DK,DK+1 S M=$P(DR,";",I) I M?1"^"1.NP S DIE1N=$P(M,U,2) S:I>DK DK=DK+1 Q  ;WPB-0804-30857
- Q
- ;
  ;
 B K DQ(DQ) S DQ=DQ-1,DU=-9 G EQ
  ;

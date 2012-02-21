@@ -1,6 +1,6 @@
 BPSSCR01 ;BHAM ISC/SS - USER SCREEN ;10-MAR-2005
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5**;JUN 2004;Build 45
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;USER SCREEN
  Q
  ;User Screen header
@@ -82,7 +82,7 @@ INIT() ; -- init variables and list array*/
  ;S ^TMP("BPSSCR",$J,"VALM","LMIND",2.1,437272,7008778.00011,1)=""
  ;S ^TMP("BPSSCR",$J,"VALM","LMIND",2.2,437272,7009457.00001,2)=""
 LMARRAY(BPTMPGL,BPARR) ;*/
- N BPSRTVAL,BP59,BPSORT,BPLN,BPLM,BPSTR1,BPCLM,BPPREV
+ N BPSRTVAL,BP59,BPSORT,BPLN,BPLM,BPSTR1
  S BPLM=0 ;patient_AND_insurance level counter
  S BPCLM=0 ;claim level counter 
  S BP59=0
@@ -108,7 +108,7 @@ LMARRAY(BPTMPGL,BPARR) ;*/
  . . D SET^VALM10(BPLN,BPSTR1_$$LINE^BPSSCRU3(79-$L(BPSTR1),"-"),0)
  . . S BPLN=BPLN+1
  . I BPSORT="C" D
- . . S BPSTR1=$E("---- Reject code: "_$$GETRJNAM^BPSSCRU3(BPSRTVAL)_" ",1,79)
+ . . S BPSTR1="---- Reject code: "_$$GETRJNAM^BPSSCRU3(BPSRTVAL)_" "
  . . D SET^VALM10(BPLN,BPSTR1_$$LINE^BPSSCRU3(79-$L(BPSTR1),"-"),0)
  . . S BPLN=BPLN+1
  . S BP59=0
@@ -118,7 +118,7 @@ LMARRAY(BPTMPGL,BPARR) ;*/
  Q BPLN
  ;
 HELP ; -- help code
- N X S X="?" D DISP^XQORM1 W !!
+ S X="?" D DISP^XQORM1 W !!
  Q
  ;
 EXIT ; -- exit code

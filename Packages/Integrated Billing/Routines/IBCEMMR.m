@@ -1,5 +1,5 @@
 IBCEMMR ;ALB/ESG - IB MRA Report of Patients w/o Medicare WNR ;20-NOV-2003
- ;;2.0;INTEGRATED BILLING;**155,366**;21-MAR-94;Build 3
+ ;;2.0;INTEGRATED BILLING;**155**;21-MAR-94
  ;
  ; Find patients with Medicare supplemental insurance or Medigap
  ; insurance (etc.) but who do not have MEDICARE (WNR) on file as
@@ -38,36 +38,26 @@ SORTX ;
 COMPILE ; Entry point for both background and foreground task execution
  ;
  NEW RTN,DFN,CNT,MS,DPT,PTNM,SSN,APPT,APDTE,A
- NEW INS,GRP,PLN,INSNM,PLNTYP,SORT,X,IBNEXT
+ NEW INS,GRP,PLN,INSNM,PLNTYP,SORT
  S RTN="IBCEMMR"
- K ^TMP($J,RTN),^("IBCEPT"),^("IBSDNEXT"),^("IBDPT"),^("IBLAST")
+ KILL ^TMP($J,RTN)
  S DFN=" ",CNT=0
- F  S DFN=$O(^DPT(DFN),-1) Q:'DFN!($G(ZTSTOP))  D
+ F  S DFN=$O(^DPT(DFN),-1) Q:'DFN!$G(ZTSTOP)  D
  . S CNT=CNT+1
  . I '$D(ZTQUEUED),CNT#500=0 U IO(0) W "." U IO
  . I $D(ZTQUEUED),CNT#500=0,$$S^%ZTLOAD() S ZTSTOP=1 Q
  . I $P($G(^DPT(DFN,.35)),U,1) Q           ; date of death
  . I '$$PTINS(DFN,.MS) Q                   ; eligible for report
- . S ^TMP($J,"IBNEXT",DFN)=""
- . S ^TMP($J,"IBLAST",DFN)=""
- . S ^TMP($J,"IBDPT",DFN)=""
- ;
- S X=$$NEXT^IBSDU("^TMP($J,""IBNEXT"",")
- S X=$$LAST^IBSDU("^TMP($J,""IBLAST"",")
- ;
- S DFN=0 F  S DFN=$O(^TMP($J,"IBDPT",DFN)) Q:'DFN!($G(ZTSTOP))  D
- . I '$D(ZTQUEUED),CNT#500=0 U IO(0) W "." U IO
- . I $D(ZTQUEUED),CNT#500=0,$$S^%ZTLOAD() S ZTSTOP=1 Q
- . I '$$PTINS(DFN,.MS)  ; get MS data
  . S DPT=$G(^DPT(DFN,0))
  . S PTNM=$P(DPT,U,1)
  . I PTNM="" S PTNM="~UNKNOWN"
  . S SSN=$E($P(DPT,U,9),6,99)_" "
  . I SSN="" S SSN="~UNK"
- . S (APPT,IBNEXT)=$G(^TMP($J,"IBNEXT",DFN),"UNKNOWN")
- . I 'APPT S APPT=$G(^TMP($J,"IBLAST",DFN),"UNKNOWN")
- . S APDTE=$S(APPT:$$FMTE^XLFDT($P(APPT,"."),"2Z"),$L(IBNEXT):IBNEXT,$L(APPT):APPT,1:"N/A")
- . S APPT=+APPT
+ . S APPT=$O(^DPT(DFN,"S",DT))\1
+ . I 'APPT S APPT=$O(^DPT(DFN,"S",DT),-1)\1
+ . I 'APPT S APPT=0
+ . S APDTE="  n/a"
+ . I APPT S APDTE=$$FMTE^XLFDT(APPT,"2Z")
  . S A=0 F  S A=$O(MS(A)) Q:'A  D
  .. S INS=+$P(MS(A),U,1),GRP=+$P(MS(A),U,2)
  .. S PLN=+$P(MS(A),U,3)
@@ -82,13 +72,13 @@ COMPILE ; Entry point for both background and foreground task execution
  ;
  I '$G(ZTSTOP) D PRINT             ; print the report
  D ^%ZISC                          ; close the device
- K ^TMP($J,RTN),^("IBCEPT"),^("IBSDNEXT"),^("IBDPT"),^("IBLAST") ;cleanup
+ KILL ^TMP($J,RTN)                 ; kill scratch global
  I $D(ZTQUEUED) S ZTREQ="@"        ; purge the task record
 COMPX ;
  Q
  ;
 PRINT ; print the report to the device specified
- N MAXCNT,CRT,PAGECNT,STOP,SORT,PTNM,DFN,A,DATA,DIR,X,Y,DIRUT,DIROUT,IBX
+ NEW MAXCNT,CRT,PAGECNT,STOP,SORT,PTNM,DFN,A,DATA,DIR,X,Y,DIRUT,DIROUT
  I IOST["C-" S MAXCNT=IOSL-3,CRT=1
  E  S MAXCNT=IOSL-6,CRT=0
  S PAGECNT=0,STOP=0

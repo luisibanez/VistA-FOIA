@@ -1,5 +1,5 @@
 RCXVFTP ;DAOU/ALA-FTP AR Data Extract Batch Files ;08-SEP-03
- ;;4.5;Accounts Receivable;**201,256**;Mar 20, 1995;Build 6
+ ;;4.5;Accounts Receivable;**201**;Mar 20, 1995
  ;
  ;**Program Description**
  ;  This code will ftp a batch file
@@ -31,7 +31,7 @@ ARC ;  Directly FTP to the Boston Allocation Resource Center
  ;
  I $$GET1^DIQ(342,"1,",20.06,"I")'="P" D
  . S RCXVIP="MORPHEUS.ARC.MED.VA.GOV"
- . S RCXVUSR="cbotest1"
+ . S RCXVUSR="cbotest"
  . S RCXVPAS="1qaz2wsx"
  ;
  I RCXVSYS="VMS" D ^RCXVFTV

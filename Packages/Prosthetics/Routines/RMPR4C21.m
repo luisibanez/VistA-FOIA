@@ -1,6 +1,6 @@
 RMPR4C21 ;PHX/HNB-CANCEL A PURCHASE CARD TRANSACTION;3/1/1996
- ;;3.0;PROSTHETICS;**3,20,62,140**;Feb 09, 1996;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.0;PROSTHETICS;**3,20,62**;Feb 09, 1996
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;RVD patch #62 - pce interface
  ;
 EN ;entry point for Cancel a Transaction Option
@@ -24,7 +24,6 @@ A W !!,"Do you really want to CANCEL this Transaction" S %=0 D YN^DICN G:%<0!(%=
  S X=1
  S RMPR442=$P($G(^RMPR(664,RMPRA,4)),U,6)
  I RMPR442="" G BYPASS
- I $P($G(^PRC(442,RMPR442,7)),U)=45 W !!,"Purchase Card CANCELLED in IFCAP, will cancel open Pros PC order, hit return" R X:10 G BYPASS
  D CAN^PRCH7B(.X,RMPRA,RMPR442,0)
  I X="^" W !!,"NOT CANCELED You must say YES to 'Approve and print Amendment number'" G EXIT
  K RMPR442,X

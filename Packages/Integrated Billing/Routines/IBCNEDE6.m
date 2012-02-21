@@ -1,19 +1,12 @@
-IBCNEDE6 ;DAOU/DAC - eIV DATA EXTRACTS ;15-OCT-2002
- ;;2.0;INTEGRATED BILLING;**184,271,345,416**;21-MAR-94;Build 58
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCNEDE6 ;DAOU/DAC - IIV DATA EXTRACTS ;15-OCT-2002
+ ;;2.0;INTEGRATED BILLING;**184,271**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  Q    ; no direct calls allowed
- ;
- ; IB*2*416 removed the ability to perform Identification inquiries.
- ; However, this code is being left as is for future changes.
  ;
 INAC(IBCNCNT,MAXNUM,IBDDI,SRVICEDT,FDAYS,APPTFLG) ;Get Inactive Insurances
  ; DAOU/BHS - 10/15/2002 - Replaced VRFDT w/ FDAYS (fresh days value)
  ; APPTFLG - Appt extract flag ONLY set from IBCNEDE2 - optional 0/1
- ;
- ; IB patch 416 discontinued the practice of using eIV for fishing for insurance
- ; using the "No Insurance" extract or by doing Identification inquiries.
- Q 0
  ;
  NEW IDATA,INCP,IEN,TQIEN,INS,INACT,DATA1,DATA2,FRESHDT
  NEW PAYER,PAYERID,RESULT,FOUND,SIDARRAY,SIDACT,SIDCNT,SID,INREC
@@ -35,7 +28,7 @@ INAC(IBCNCNT,MAXNUM,IBDDI,SRVICEDT,FDAYS,APPTFLG) ;Get Inactive Insurances
  . S IEN="" F  S IEN=$O(^DPT(DFN,.312,"B",INCP,IEN)) Q:IEN=""  D
  .. S INS=$P(^DPT(DFN,.312,IEN,0),U)
  .. ;
- .. ;Check for Medicaid
+ .. ;Check for Medicare/Medicaid
  .. I $$EXCLUDE^IBCNEUT4($P($G(^DIC(36,INS,0)),U)) Q
  .. ;
  .. ;  Check for insurance company payer, etc.
@@ -75,10 +68,6 @@ INACX ;
 INACSET(SID,INREC) ; INAC. SET
  ; The hard coded '1' in the 3rd piece of DATA1 sets the Transmission
  ; status of file 365.1 to "Ready to Transmit"
- ;
- ; IB*2*416 removed the ability to perform identification inquiries
- Q
- ;
  N FRESH
  S FRESH=$$FMADD^XLFDT(SRVICEDT,-FDAYS)
  S DATA1=DFN_U_PAYER_U_1_U_""_U_SID_U_FRESH
@@ -150,12 +139,6 @@ BLANKTQ(SRVICEDT,FRESHDT,YDAYS,IBCNCNT) ;
  ;    YDAYS - 
  ;    IBCNCNT - updated - Counter for the extract
  ;
- ; IB*2*416 removed the ability to perform identification inquiries
- ;          - blank or otherwise
- Q
- ;
- I $$TFL^IBCNEDE6(DFN)=0 Q
- ;
  N PAYER,DATA1,DATA2,TQIEN
  ;
  S PAYER=$$FIND1^DIC(365.12,,"X","~NO PAYER")
@@ -184,11 +167,4 @@ BLANKTQ(SRVICEDT,FRESHDT,YDAYS,IBCNCNT) ;
 BLANKXT ;
  Q
  ;
-TFL(DFN) ; Examines treating facility list,
- ; value returned is 1 if patient has visited at least one other site
- N IBC,IBZ,IBS
- D TFL^VAFCTFU1(.IBZ,DFN) Q:-$G(IBZ(1))=1 0
- S IBS=+$P($$SITE^VASITE,"^",3),(IBZ,IBC)=0
- ; Look for remote facilities of type VAMC:
- F  S IBZ=$O(IBZ(IBZ)) Q:IBZ<1  I +IBZ(IBZ)>0,+IBZ(IBZ)'=IBS,$P(IBZ(IBZ),U,5)="VAMC" S IBC=1 Q
- Q IBC
+ ;

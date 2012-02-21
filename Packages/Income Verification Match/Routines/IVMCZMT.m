@@ -1,5 +1,5 @@
-IVMCZMT ;ALB/MLI/LD/CKN,TDM,EG,TDM - Creation of  HL7 ZMT (means test) segment ; 7/19/06 4:41pm
- ;;2.0;INCOME VERIFICATION MATCH;**17,53,49,58,81,89,104,105**;21-OCT-94;Build 2
+IVMCZMT ;ALB/MLI/LD/CKN/TDM,EG - Creation of  HL7 ZMT (means test) segment ;05/11/2005 7:18 AM
+ ;;2.0;INCOME VERIFICATION MATCH;**17,53,49,58,81,89,104**;21-OCT-94
  ;
  ; This routine returns the ZMT segment which contains means test
  ; data for a selected patient. It differs from the standard segment
@@ -93,7 +93,7 @@ EN(DFN,VAFSTR,VAFMTDT,VAFTYPE,SETID,DELETE,LIMIT)       ; Entry point to get ZMT
  . . I ($G(LIMIT)=1),($E(IVMIY,1,3)+1)'=$E(+NODE,1,3) S EC=1
  . . Q
  . Q
- I VAFTYPE'=4,EC S (NODE,NODE2,MTIEN,PRIM)=""   ;Q "ZMT"_HLFS_$G(VAFY)
+ I VAFTYPE'=4,EC S (NODE,NODE2,MTIEN,PRIM)="" Q "ZMT"_HLFS_$G(VAFY)
  ;
  ; Check for a current Primary Income Test
  I 'MTIEN S MTIEN=+$$LST^DGMTU(DFN,VAFMTDT,$S($G(VAFTYPE):VAFTYPE,1:1))
@@ -157,7 +157,6 @@ EN(DFN,VAFSTR,VAFMTDT,VAFTYPE,SETID,DELETE,LIMIT)       ; Entry point to get ZMT
  I VAFSTR[",26," S $P(VAFY,HLFS,26)=$S($P(NODE2,"^",3):$$GETCODE^DGMTH($P(NODE2,"^",3)),1:"") ; Test Determined Status
  I VAFSTR[",28," S $P(VAFY,HLFS,28)=$P(NODE,"^",27)  ;GMT Threshold
  I VAFSTR[",29," S $P(VAFY,HLFS,29)=$P(NODE2,"^",9)  ;Hardship Reason
- I VAFSTR[",30," S $P(VAFY,HLFS,30)=+$P(NODE2,"^",11) ; Test Version
  ;
  ;can only transmit the deletion of a hardship if the segment is for a means test - and the income years must match if there is a means test
  ;

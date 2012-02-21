@@ -1,5 +1,5 @@
-EASMTRP3 ; ALB/GAH - MEANS TEST ANV DATES BY APPT DATE ; 10/10/2006
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**3,15,46,64,77**;MAR 15,2001;Build 11
+EASMTRP3 ; ALB/SCK - MEANS TEST ANV DATES BY APPT DATE ; 6/21/05 3:01pm
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**3,15,46,64**;MAR 15,2001
  ;
 QUE ;  Que off the appointment list search by MT anniversary date
  N EASDT,ZTSAVE
@@ -15,7 +15,7 @@ QUE ;  Que off the appointment list search by MT anniversary date
  Q
  ;
 EN ;  Main entry point for appointment list by MT anniversary date
- N EASSC,ERROR,PAGE,ACNT,RCNT,DGARRAY,I,CLARR,SDCNT,DGADDF,DGMSGF,DGREQF
+ N EASSC,PAGE,ACNT,RCNT,DGARRAY,I,CLARR,SDCNT,DGADDF,DGMSGF,DGREQF
  K ^TMP("EASAP",$J)
  S PAGE=1,^TMP("EASAP",$J,"APDT")=EASDT
  ;
@@ -32,10 +32,7 @@ EN ;  Main entry point for appointment list by MT anniversary date
  F I=1:1 Q:'$D(CLARR(I))  D
  .S DGARRAY(2)=CLARR(I)
  .S SDCNT=$$SDAPI^SDAMA301(.DGARRAY)
- . I SDCNT>0 M ^TMP($J,"SDAMA")=^TMP($J,"SDAMA301")
- . I SDCNT<0 D 
- . . S ERROR=$O(^TMP($J,"SDAMA301",""))
- . . S ^TMP($J,"SDAMA",CLARR(I))=^TMP($J,"SDAMA301",ERROR)
+ .M ^TMP($J,"SDAMA")=^TMP($J,"SDAMA301")
  .K ^TMP($J,"SDAMA301")
  D LOOP,PRINT
  K DGARRAY,CLARR,I,^TMP($J,"SDAMA")
@@ -45,8 +42,6 @@ LOOP ; Loop through a clinic's appointment list
  N DFN,EASANV,EASAPT
  ;
  S EASSC=0 F  S EASSC=$O(^TMP($J,"SDAMA",EASSC)) Q:'EASSC  D
- .; Check for retrieval error
- .I $D(^TMP($J,"SDAMA",EASSC))=1 S ^TMP("EASAP",$J,"CLN",EASSC)=^TMP($J,"SDAMA",EASSC) Q
  .S DFN=0 F  S DFN=$O(^TMP($J,"SDAMA",EASSC,DFN)) Q:'DFN  D
  ..S EASAPT=0 F  S EASAPT=$O(^TMP($J,"SDAMA",EASSC,DFN,EASAPT)) Q:'EASAPT  D
  ...; Quit if appointment has been cancelled
@@ -67,17 +62,16 @@ LOOP ; Loop through a clinic's appointment list
  Q
  ;
 PRINT ;  Print Report
- N EACLN,ERROR,DFN,LASTMT,VA,ANVDT,PAGE,EASABRT,APDT,XX
+ N EACLN,DFN,LASTMT,VA,ANVDT,PAGE,EASABRT,APDT,XX
  ;
  I '$D(^TMP("EASAP",$J,"CLN")) D  Q
  . S PAGE=1 S XX=$$HDR("")
  . W !!?3,"No MT Anniversary dates found for this appointment date."
  ;
  W !
- S (EACLN,ERROR)=0
- F  S EACLN=$O(^TMP("EASAP",$J,"CLN",EACLN)) Q:'EACLN  D  Q:$G(EASABRT)!ERROR
+ S EACLN=0
+ F  S EACLN=$O(^TMP("EASAP",$J,"CLN",EACLN)) Q:'EACLN  D  Q:$G(EASABRT)
  . S PAGE=1 S EASABRT=$$HDR(EACLN) Q:$G(EASABRT)
- . I $D(^TMP("EASAP",$J,"CLN",EACLN))=1 S ERROR=1 W !,^TMP("EASAP",$J,"CLN",EACLN) Q
  . S DFN=0
  . F  S DFN=$O(^TMP("EASAP",$J,"CLN",EACLN,DFN)) Q:'DFN  D  Q:$G(EASABRT)
  . . S LASTMT=$$LST^DGMTU(DFN),ANVDT=$P(LASTMT,U,2)

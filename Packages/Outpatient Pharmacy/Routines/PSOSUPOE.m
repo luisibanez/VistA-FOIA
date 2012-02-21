@@ -1,5 +1,5 @@
 PSOSUPOE ;BIR/RTR - Suspense pull via Listman ;3/1/96
- ;;7.0;OUTPATIENT PHARMACY;**8,21,27,34,130,148,281,287,289,358**;DEC 1997;Build 35
+ ;;7.0;OUTPATIENT PHARMACY;**8,21,27,34,130,148**;DEC 1997
  ;External references PSOL and PSOUL^PSSLOCK supported by DBIA 2789
 SEL I '$G(PSOCNT) S VALMSG="This patient has no Prescriptions!" S VALMBCK="" Q
  N PSOGETF,PSOGET,PSOGETFN,ORD,ORN,MW,PDUZ,PSLST,PSOSQ,PSOSQRTE,PSOSQMTH,PSPOP,PSOX1,PSOX2,RXLTOP,RXREC,SFN,SORD,SORN,VALMCNT
@@ -39,10 +39,8 @@ BEGQ Q:'$D(^PSRX(+$G(RXREC),0))
  I '$D(RXPR(RXREC)) D
  . N ACTION,RFL S RFL=$G(RXFL(RXREC)) I RFL="" S RFL=$$LSTRFL^PSOBPSU1(RXREC)
  . D ECMESND^PSOBPSU1(RXREC,RFL,,"PP")
- . ; Quit if there is an unresolved Tricare non-billable reject code, PSO*7*358
- . I $$PSOET^PSOREJP3(RXREC,RFL) S ACTION="Q" Q
  . I $$FIND^PSOREJUT(RXREC,RFL) D
- . . S ACTION=$$HDLG^PSOREJU1(RXREC,RFL,"79,88","PP","IOQ","Q")
+ . . S ACTION=$$HDLG^PSOREJU1(RXREC,RFL,"79,88","PP","IOQ","I")
  ;
  D ULRX K PSOGET,PSOGETF
  Q
@@ -70,21 +68,13 @@ BBADD ;
  I $L(BBRX(PSOX2))+$L(RXREC)<220 S BBRX(PSOX2)=BBRX(PSOX2)_RXREC_"," Q
  S BBRX(PSOX2+1)=RXREC_","
  Q
-TRIC(PSOTRX) ;
- S PSOTRF=$$LSTRFL^PSOBPSU1(PSOTRX)
- S PSOTRIC="",PSOTRIC=$$TRIC^PSOREJP1(PSOTRX,PSOTRF,.PSOTRIC)
- S ESTAT=$P($$STATUS^PSOBPSUT(PSOTRX,PSOTRF),"^")
- I PSOTRIC S EACTION=$S(ESTAT["PAYABLE":1,ESTAT["Inactive ECME Tricare":1,ESTAT="":1,1:0)
- Q
 PPLADD ;
- N SZZ,SPSOX1,SPSOX2,LSFN,PSOTRF,PSOTRIC,PSOTRX,EACTION,ESTAT
+ N SZZ,SPSOX1,SPSOX2,LSFN
  I $G(PPL)'="",$E(PPL,$L(PPL))'="," S PPL=PPL_","
  F SZZ=0:0 S SZZ=$O(RXRS(SZZ)) Q:'SZZ  D
  .S LSFN=$O(^PS(52.5,"B",SZZ,0))
  .Q:'$G(LSFN)
  .Q:$G(^PS(52.5,LSFN,"P"))
- .D TRIC(SZZ)
- .I $G(PSOTRIC) Q:'$G(EACTION)  ;no labels for "In Progress" Tricare Rx's.
  .I $G(PPL)="" S PPL=SZZ_"," Q
  .I $L(PPL)+$L(SZZ)<220 S PPL=PPL_SZZ_"," Q
  .I $G(PSORX("PSOL",2))']"" S PSORX("PSOL",2)=SZZ_"," Q
@@ -103,12 +93,8 @@ SELONE ;Pull one Rx through Listman
  I +PSOLST(ORN)'=52 S VALMBCK="" Q
  I +PSOLST(ORN)=52,$P($G(^PSRX($P(PSOLST(ORN),"^",2),"STA")),"^")'=5 S VALMSG="Rx is not on Suspense!",VALMBCK="" Q
  I +PSOLST(ORN)=52,$D(RXRS($P(PSOLST(ORN),"^",2))) S VALMSG="Pull early has already been requested!",VALMBCK="" Q
- N EHOLDQ,ESIEN,ERXIEN S ERXIEN=$P(PSOLST(ORN),"^",2),ESIEN="",ESIEN=$O(^PS(52.5,"B",ERXIEN,ESIEN))
- I $G(ESIEN),$$GET1^DIQ(52.5,ESIEN,10)'="" D EHOLD Q:$G(EHOLDQ)
- K EHOLDQ,ESIEN,ERXIEN
  D SELQ I $G(PULLONE)=2 S VALMSG="Rx# "_$P($G(^PSRX($P(PSOLST(ORN),"^",2),0)),"^")_" not pulled from suspense!" Q
- I +PSOLST(ORN)=52 S RXREC=$P(PSOLST(ORN),"^",2)
- D BEGQ S VALMSG="Rx# "_$P($G(^PSRX(+$G(RXREC),0)),"^")_$S($G(PSOSQ):" pulled",1:" not pulled")_" from Suspense!"
+ I +PSOLST(ORN)=52 S RXREC=$P(PSOLST(ORN),"^",2) D BEGQ S VALMSG="Rx# "_$P($G(^PSRX(+$G(RXREC),0)),"^")_$S($G(PSOSQ):" pulled",1:" not pulled")_" from Suspense!"
  S VALMBCK="R"
  Q
 RESET ;
@@ -137,14 +123,3 @@ ULRX ;
  I '$G(RXREC) Q
  D PSOUL^PSSLOCK(RXREC)
  Q
-EHOLD ;
- Q:'$G(ERXIEN)
- Q:$$GET1^DIQ(52,ERXIEN,86)=""
- D FULL^VALM1
- W !,"This is an ePharmacy billable fill which is Suspended until "_$$GET1^DIQ(52.5,ESIEN,10)_", based"
- W !,"on the 3/4 Days rule.",!
- K DIR S EHOLDQ=0,DIR(0)="YA",DIR("A")="Do you wish to continue? "
- D ^DIR I $D(DIRUT)!('Y) S EHOLDQ=1 K DIR
- S VALMSG="No action taken.",VALMBCK="R"
- Q
- ;

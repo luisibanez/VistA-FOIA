@@ -1,5 +1,5 @@
-FHASM2D ; HISC/REL - Target Weight - Anthropometric/Hamwi ;4/10/90  08:16
- ;;5.5;DIETETICS;**8**;Jan 28, 2005;Build 28
+FHASM2D ; HISC/REL - Ideal Weight - Anthropometric/Hamwi ;4/10/90  08:16
+ ;;5.5;DIETETICS;;Jan 28, 2005
 A ; Anthropometric Weight Calculation (Chumlea, 1988)
  S EXT="Y" D ANT^FHASM3
  S Y="" I ACIR=""!(CCIR="") W *7,!!,"Need Arm & Calf Circumference, at a minimum, to compute weight." Q
@@ -22,7 +22,7 @@ K ;Estimating Stature from Knee Height for Persons 60 to 90
  S Y=$J(A1/2.54,0,0)
  S X1=$S(Y\12:Y\12_"'",1:"")_$S(Y#12:" "_(Y#12)_"""",1:""),X2=+$J(Y*2.54,0,0)_" cm"
  W "  (",$S(FHU'="M":X1,1:X2),")" Q
-H ; Hamwi tARGET Weight
+H ; Hamwi Ideal Weight
  ; Hamwi,George J. Therapy: Changing Dietary Concepts in Diabetes Mellitus:
  ; Diagnosis and Treatment, Vol. 1, Edited by T.S. Danowski.
  ; Amer. Diabetes Assn., 500 5th Ave, NYC, NY 10020, 1964, 73-78.
@@ -31,6 +31,6 @@ H ; Hamwi tARGET Weight
  I SEX="F" S IBW=HGT-60*5+100*A1
  G ED
 ED S X1=$S(FHU'="M":+$J(IBW,0,0)_" lb",1:+$J(IBW/2.2,0,1)_" kg")
-E1 W !!,"Select Target Body Weight: ",X1,"// " R X:DTIME I '$T!(X["^") S IBW="",FHQUIT=1 Q
+E1 W !!,"Select Ideal Body Weight: ",X1," // " R X:DTIME I '$T!(X["^") S IBW="" Q
  Q:X=""  D WGT^FHASM1 I Y<1 D WGP^FHASM1 G E1
  S:IBW'=+Y IBW=+Y,METH="E" Q

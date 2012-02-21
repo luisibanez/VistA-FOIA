@@ -1,5 +1,5 @@
-YSSR1 ;SLC/AFE-SECLUSION/RESTRAINT - Observation,Release & Review ; 1/27/04 11:17am
- ;;5.01;MENTAL HEALTH;**82**;Dec 30, 1994;Build 3
+YSSR1 ;SLC/AFE-SECLUSION/RESTRAINT - Observation,Release & Review
+ ;;5.01;MENTAL HEALTH;;Dec 30, 1994
 ENRLS ; Called from MENU option YSSR RELEASE
  ;
  ; Release of patient from S/R episode.
@@ -49,10 +49,8 @@ ENWO ; Called from MENU option YSSR W-ORDER
  W @IOF,!?IOM-$L("EDIT OF TYPE OF SECLUSION/RESTRAINT ORDER")\2,"EDIT OF TYPE OF SECLUSION/RESTRAINT ORDER",!
  W !,"SECLUSION/RESTRAINT EPISODES REQUIRING WRITTEN ORDERS:  ",!
  D HEADER^YSSR S A=0 F  S A=$O(^YS(615.2,"AF",A)) Q:'A  S A1=0 F  S A1=$O(^YS(615.2,"AF",A,A1)) Q:'A1  D PNAMES^YSSR S YSWN=1,YSA1=A1
+ I $D(YS01) W !!," * Written Order Required.",!
  I '$D(YSWN) W !!,"No patients listed as requiring a written order.",! D END^YSSR Q
- I $D(YS02) W !!," * Written Order Required.",!
- I $D(YS04) W:'$D(YS02) !! W " # Record incomplete, please contact IRM.",!
- K YS02,YS04
  D ^YSLRP I YSDFN'>0 D END^YSSR Q
 WOLKUP ;
  S YSA1=$O(^YS(615.2,"AF",YSDFN,0)) I 'YSA1 W !!,"Written order not required for this patient.",! D END^YSSR Q

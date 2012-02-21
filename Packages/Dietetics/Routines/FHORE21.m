@@ -1,6 +1,5 @@
 FHORE21 ; HISC/REL/NCA - List Early/Late Trays (cont) ;11/9/94  13:33 
- ;;5.5;DIETETICS;**5,8,15**;Jan 28, 2005;Build 2
- ;patch #5 - added outpt room-bed.
+ ;;5.5;DIETETICS;;Jan 28, 2005
  S D1=DTE,COUNT=0,LINE=1 K ^TMP($J) S ANS=""
 F2 S D1=$O(^FHPT("ADLT",D1)) G:D1<1!(D1\1'=DTE) P0 S FHDFN=0
 F3 S FHDFN=$O(^FHPT("ADLT",D1,FHDFN)) G:FHDFN<1 F2 S ADM=0
@@ -26,11 +25,11 @@ P1 S M2="Z",PG=0 D:'LAB HDR
  .I '$D(^TMP($J,N1)) Q
  .S N2="" F  S N2=$O(^TMP($J,N1,N2)) Q:N2=""!(ANS="^")  D
  ..S FHDATA=$G(^TMP($J,N1,N2)),FHLOC=$P(FHDATA,U,1),FHDFN=$P(FHDATA,U,2)
- ..S FHBAG=$P(FHDATA,U,3),(O1,FHDIET)=$P(FHDATA,U,4),RM=$P(FHDATA,U,5) D PATNAME^FHOMUTL
- ..S (WARD,FHLOCNM)=$E($P($G(^FH(119.6,FHLOC,0)),U,1),1,10)
- ..S FHIP=$P($G(^FHPT(FHDFN,0)),U,5),FHIPD="",IS=""
+ ..S FHBAG=$P(FHDATA,U,3),(O1,FHDIET)=$P(FHDATA,U,4) D PATNAME^FHOMUTL
+ ..S (WARD,FHLOCNM)=$E($P($G(^FH(119.6,FHLOC,0)),U,1),1,22)
+ ..S FHIP=$P($G(^FHPT(FHDFN,0)),U,5),FHIPD=""
  ..I FHIP'="" S (IS,FHIPD)=$P($G(^FH(119.4,FHIP,0)),U,2)_$P($G(^FH(119.4,FHIP,0)),U,3)
- ..S P1=FHPTNM,BID=FHBID,TIM=$P(N2,"~",1),M1=N1
+ ..S P1=FHPTNM,RM="",BID=FHBID,TIM=$P(N2,"~",1),M1=N1
  ..I LAB<1 D OUTP
  ..I LAB>0,LAB<3 D P3
  ..I LAB>2 D LL Q
@@ -46,24 +45,21 @@ P2 S FHDFN=+N2,WARD=$P(Y,"^",1),P0=$P(Y,"^",2),OLW=$P(Y,"^",3),IS=$P(Y,"^",4),O1
  I $Y>(IOSL-10) D HDR Q:ANS="^"  W !!?56,$S(M1="B":"Breakfast ",M1="N":"   Noon ",1:" Evening "),$J(TIM,6),! S M2=M1_TIM
  S X=M1_TIM I X'=M2 W !!?56,$S(M1="B":"Breakfast ",M1="N":"   Noon ",1:" Evening "),$J(TIM,6),! S M2=X
  W !,$S(WARD'="":$E(WARD,1,10),1:"")_$S(RM'="":"/"_$E(RM,1,10),1:""),?24,$E(P1,1,22),?50,BID,?61,$S(IS'="":IS,1:""),?67,$S(BAG="Y":"YES",1:""),?73,O1
- D ALG^FHCLN W !,"Allergies: ",$S(ALG="":"None on file",1:ALG)
  Q
 P3 S P1=$E(P1,1,22),WARD=$E(WARD,1,15),RM=$E(RM,1,10)
- D ALG^FHCLN
  W !,$S(M1="B":"Breakfast",M1="N":"  Noon ",1:" Evening"),?10,TIM,?(S1-12),L1 W:LAB=2 !
  W !,$E(P1,1,S1-5-$L(WARD)),?(S1-3-$L(WARD)),WARD
  W !,BID W:IS'="" ?(S1-3\2),IS W ?(S1-3-$L(RM)),RM W:LAB=2 !
- I $L(O1)<S1 W !,O1,$S(ALG="":"",1:" *ALG"),!!
- E  S L=$S($L($P(O1,",",1,3))<S1:3,1:2) W !,$P(O1,",",1,L),!,$E($P(O1,",",L+1,5),2,99),$S(ALG="":"",1:"*ALG"),!
+ I $L(O1)<S1 W !,O1,!!
+ E  S L=$S($L($P(O1,",",1,3))<S1:3,1:2) W !,$P(O1,",",1,L),!,$E($P(O1,",",L+1,5),2,99),!
  W:LAB=2 ! Q
 OUTP ;
  I $Y>(IOSL-10) D OPHDR Q:ANS="^"
  S NEW=N1_$P(N2,"~",1) I FHPREV'=NEW W !!?56,$S(N1="B":"Breakfast ",N1="N":"   Noon ",1:" Evening "),$J($P(N2,"~",1),6),!
  W !,FHLOCNM
- D PATNAME^FHOMUTL W "/"_RM,?24,FHPTNM,?50,FHBID
+ D PATNAME^FHOMUTL W ?24,FHPTNM,?50,FHBID
  W ?61,FHIPD,?67,$S(FHBAG="Y":"YES",1:"")
  W ?73,FHDIET
- D ALG^FHCLN W !,"Allergies: ",$S(ALG="":"None on file",1:ALG)
  S FHPREV=N1_$P(N2,"~",1)
  Q
 F7 K ^FHPT("ADLT",D1,FHDFN,ADM) G F4
@@ -88,7 +84,6 @@ OPHDR ; Print Header (OUTPATIENT)
  W !,$S('FHP:"Consolidated",1:$P(^FH(119.73,FHP,0),"^",1)),?61,L1,?121,"Page ",PG
  W !!,"Ward/Room",?24,"Patient",?50,"ID#",?61,"Iso   Bag   Current-Diet",! Q
 LL ;
- D ALG^FHCLN
  S FHCOL=$S(LAB=3:3,1:2)
  I LABSTART>1 F FHLABST=1:1:(LABSTART-1)*FHCOL D  S LABSTART=1
  .I LAB=3 S (PCL1,PCL2,PCL3,PCL4,PCL5,PCL6)="" D LL3^FHLABEL
@@ -96,7 +91,6 @@ LL ;
  .Q
  S SL1=$S(LAB=3:25,1:38)
  S MEALTM=$S(M1="B":"Breakfast",M1="N":"Noon",1:"Evening")_"  "_TIM
- S BID=BID_$S(ALG="":"",1:" *ALG")
  S BIDIS=BID_$E("        ",1,12-$L(BID))_IS
  S WARD=$E(WARD,1,15),WLN=$L(WARD),RM=$E(RM,1,10)
  I LAB=3 D

@@ -1,221 +1,261 @@
 BPSOSU ;BHAM ISC/FCS/DRS/FLS - Common utilities ;06/01/2004
- ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5,7,10**;JUN 2004;Build 27
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
  Q
- ; Common utilities called a lot.
+ ; some common utilities called a lot.
  ;
- ; SETSTAT - set status field for ^BPST(IEN59,
- ; Input:
- ;   IEN59   - BPS Transaction
+ ; SETSTAT - set status field for ^BPST(ABSBRXI,
+ ; Input: 
+ ;   ABSBRXI - This needs to be newed and defined by the calling routine
  ;   STATUS  - Value to set into BPS Transaction
-SETSTAT(IEN59,STATUS) ; EP - from many places
+SETSTAT(STATUS) ;EP - from many places
+ ; set ^BPST( status for ABSBRXI
  ;
- ; Lock the record - something is very wrong if you can't get the lock
- F  L +^BPST(IEN59):300 Q:$T  Q:'$$IMPOSS^BPSOSUE("L","RTI","LOCK +^BPST",,"SETSTAT",$T(+0))
- N DIE,DA,DR,X
- S DIE=9002313.59,DA=IEN59,DR="1///"_STATUS_";7///NOW" ; Status and Last Update
- I STATUS=0 S DR=DR_";15///NOW" ; If Status is 0, init START TIME
+ ; Timing problem:  if response got processed before the SETCSTAT
+ ; was sent for "waiting to process response",  don't reset it now.
+ I STATUS=80,$P(^BPST(ABSBRXI,0),U,2)>80 Q
+ ;
+ ; Perhaps other such detection would be a good idea here.
+ ;
+ ; LOCK the file - something is very wrong if you can't get the lock
+ F  L +^BPST(ABSBRXI):300 Q:$T  Q:'$$IMPOSS^BPSOSUE("L","RTI","LOCK +^BPST",,"SETSTAT",$T(+0))
+ N DIE,DA,DR,X S DIE=9002313.59,DA=ABSBRXI,DR="1///"_STATUS_";7///NOW"
+ I STATUS=0 S DR=DR_";15///NOW" ; START TIME, too.
  D ^DIE
- ;
- ; Verify that there no other statuses in the X-ref
- S X=""
- F  S X=$O(^BPST("AD",X)) Q:X=""  D
- . I X'=STATUS K ^BPST("AD",X,IEN59)
- I STATUS=99 D STATUS99(IEN59)
- L -^BPST(IEN59)
+ N X S X="" F  S X=$O(^BPST("AD",X)) Q:X=""  D
+ .I X'=STATUS K ^BPST("AD",X,ABSBRXI)
+ I STATUS=99 D STATUS99
+ L -^BPST(ABSBRXI)
  Q
  ;
  ; STATUS99 - Special activity when a claim reaches status 99
  ; Input:
- ;   IEN59 - BPS Transaction IEN
-STATUS99(IEN59) ;
- N IEN77,BPS57,CLMSTAT,BPNXTREQ,BPSCLNOD,BPTYPE
- ;
- ; Get the current request
- S IEN77=+$$GETRQST^BPSUTIL2(IEN59)
- D LOG^BPSOSL(IEN59,$T(+0)_"-Claim of the request "_IEN77_" has reached 99%")
- ;
- ; Create a copy in the BPS Log of Transaction
- S BPS57=$$NEW57(IEN59)
- D LOG^BPSOSL(IEN59,$T(+0)_"-Created BPS Log of Transaction record "_BPS57)
- ;
- ; This data is needed when closing the claim later but needs to be 
- ;   read now since $$REQST99^BPSOSRX5 will delete the request as part
- ;   of its processing
- S BPSCLNOD=$G(^BPS(9002313.77,IEN77,7))
- S BPTYPE=$P($G(^BPS(9002313.77,IEN77,1)),U,4)
+ ;   ABSBRXI - This is called by SETSTAT (above) and this variable is set
+STATUS99 ;
+ ; Transaction log in .57  (but not if it's a canceled transaction!)
+ N RX,RF,CLMSTAT
+ S RX=$P(ABSBRXI,"."),RF=+$E($P(ABSBRXI,".",2),1,4)
  ;
  ; Get status of the claim
- S CLMSTAT=$$CATEG^BPSOSUC(IEN59)
- S BPNXTREQ=$$REQST99^BPSOSRX5(IEN59,CLMSTAT)
+ S CLMSTAT=$$CATEG^BPSOSUC(ABSBRXI)
  ;
- ; Check if the BPS Claim should be closed
- I +BPSCLNOD=1,$P(BPSCLNOD,U,2)>0 D
- . N BPSCLA,BPLCK,BPDROP,ERROR,DA,DR,DIE
- . I $$SUCCESS^BPSOSRX7(BPTYPE,CLMSTAT)=0 Q
- . I BPNXTREQ>0 D LOG^BPSOSL(IEN59,$T(+0)_"-Cannot close after reversal due to sequential requests in the queue") Q
- . D LOG^BPSOSL(IEN59,$T(+0)_"-Closing the claim after accepted reversal")
- . S BPSCLA=$$GET1^DIQ(9002313.59,IEN59,3,"I"),BPLCK=0,BPDROP="N"
- . L +^BPSC(BPSCLA):0 I '$T D  Q
- . . D LOG^BPSOSL(IEN59,$T(+0)_"-Unable to close claim. Could not lock BPS CLAIMS file.") Q
- . D CLOSE^BPSBUTL(BPSCLA,IEN59,$P(^IBE(356.8,$P(BPSCLNOD,U,2),0),U),0,1,$P(BPSCLNOD,U,3),.ERROR)
- . I $D(ERROR) D  Q
- . . D LOG^BPSOSL(IEN59,$T(+0)_"Unable to close Bill in IB. "_ERROR)
- . . L -^BPSC(BPSCLA)
- . S DIE="^BPSC(",DA=BPSCLA,DR="901///1;902///"_$$NOW^XLFDT()_";903////"_DUZ_";904///"_$P(BPSCLNOD,U,2)_";905////"_BPDROP D ^DIE
- . L -^BPSC(BPSCLA)
- . Q
+ ; Canceled - shouldn't we restore old .57 into this .59?
+ I $P($G(^BPST(ABSBRXI,3)),U,2) D
+ . D LOG^BPSOSL($T(+0)_" - Cancellation succeeded.")
+ E  D
+ . N BPS57 S BPS57=$$NEW57(ABSBRXI)
+ . D TRANSACT^BPSOSBC(BPS57) ; hand it to posting
+ . D RECEIPT(BPS57) ; automatic receipt printing
  ;
+ ; If the Reverse Then Resubmit field is set to Resubmitting (2),
+ ;   then set to 'Done' (0)
+ I $P(^BPST(ABSBRXI,1),U,12)=2 S $P(^BPST(ABSBRXI,1),U,12)=0
  ;
- ; If claims completed normally, log its completion.
- ; Do not log error'ed or stranded claims as we don't want to show these in the
- ;   turn-around stats
- ; Needed for Turn-Around Stats - Do NOT delete/alter!!
- I CLMSTAT'["E OTHER",CLMSTAT'["E UNSTRANDED",CLMSTAT'["E REVERSAL UNSTRANDED" D LOG^BPSOSL(IEN59,$T(+0)_"-Claim Complete")
+ ; If resubmit flag is set to 'Reverse, then Resubmit' (1), see about
+ ;   doing a resubmit
+ I $P(^BPST(ABSBRXI,1),U,12)=1 D
+ . ;
+ . ; Slot stuff
+ . N OLDSLOT,SLOT,SKIP,SITE
+ . S OLDSLOT=$$GETSLOT^BPSOSL
+ . S SLOT=ABSBRXI D SETSLOT^BPSOSL(SLOT)
+ . D LOG^BPSOSL($T(+0)_" "_SLOT_" Reverse then Resubmit attempt:"_$J)
+ . ;
+ . ; Initialize the skip flag
+ . S SKIP=0
+ . ;
+ . ; Get Site info and make sure it exists
+ . I 'RF S SITE=$$GET1^DIQ(52,RX,20,"I")
+ . I RF S SITE=$$GET1^DIQ(52.1,RF_","_RX,8,"I")
+ . I '$G(SITE) D
+ .. D LOG^BPSOSL($T(+0)_" Cannot - No site information")
+ .. S SKIP=1
+ . ;
+ . ; Check the ECME switch for the site
+ . I $G(SITE),'$$ECMEON^BPSUTIL(SITE) D
+ . . D LOG^BPSOSL($T(+0)_" Cannot - Site not linked to a BPS Pharmacy")
+ . . S SKIP=1
+ . ;
+ . ; If reversal was not successful, log message and quit
+ . I CLMSTAT'="E REVERSAL ACCEPTED" D
+ . . D LOG^BPSOSL($T(+0)_" Cannot - Reversal failed - "_X)
+ . . S SKIP=1
+ . ;
+ . ; Check if the MOREDATA array is defined
+ . I '$D(^XTMP("BPSOSRB","MOREDATA",ABSBRXI,"RESUB")) D
+ . . D LOG^BPSOSL($T(+0)_" Cannot - MOREDATA array undefined")
+ . . S SKIP=1
+ . ;
+ . ; If skip flag is set, clear the resubmit flag and do nothing else
+ . ; Else resubmit the claim and set resubmit flag
+ . ;  to 'Resubmitting'
+ . I SKIP S $P(^BPST(ABSBRXI,1),U,12)=0
+ . E  D
+ . . K MOREDATA
+ . . M MOREDATA=^XTMP("BPSOSRB","MOREDATA",ABSBRXI,"RESUB")
+ . . K ^XTMP("BPSOSRB","MOREDATA",ABSBRXI,"RESUB")
+ . . D LOG^BPSOSL($T(+0)_" Now resubmit "_$J)
+ . . D CLAIM^BPSOSRB(RX,RF,ABSBRXI,.MOREDATA)
+ . D RELSLOT^BPSOSL
+ . I OLDSLOT D SETSLOT^BPSOSL(OLDSLOT)
+ ;
+ ; Check Auto-Reversed claims to see if they should be resubmitted, which
+ ;  should be done if the reversal was accepted and the RX/Fill was released
+ ;  while waiting for the payer response
+ ; Need to check for 'normal' auto-reversals
+ I CLMSTAT="E REVERSAL ACCEPTED",$$RXRLDT^PSOBPSUT(RX,RF) D
+ . N CLAIMIEN,AUTOREV
+ . S CLAIMIEN=$$GET1^DIQ(9002313.59,ABSBRXI,3,"I")
+ . I '$G(CLAIMIEN) Q
+ . S AUTOREV=$$GET1^DIQ(9002313.02,CLAIMIEN,.07,"I")
+ . I $G(AUTOREV)'=1 Q
+ . N BDOS,BRES,BMES,BMSG
+ . D LOG^BPSOSL($T(+0)_" Submit released auto-reversal")
+ . S BDOS=$$DOSDATE^BPSSCRRS(RX,RF)
+ . S BRES=$$EN^BPSNCPDP(RX,RF,BDOS,"ARES")
+ . D LOG^BPSOSL($T(+0)_" Response from BPSNCPDP: "_BRES)
+ . S BMSG=$P(BRES,U,2),BRES=+BRES
+ . S BMES="Submitted to ECME: Resubmit for released autoreversal"
+ . S BMES=BMES_$S(BRES=1:"-NO SUBMISSION VIA ECME",BRES=4:"-NOT PROCESSED",BRES=5:"-SOFTWARE ERROR",1:"")
+ . D ECMEACT^PSOBPSU1(RX,RF,BMES,.5)
+ . I BRES=2 D ECMEACT^PSOBPSU1(RX,RF,"Not ECME Billable: "_BMSG,.5)
+ ;
+ ; And at random times, winnow the log files 
+ I $R(10000)=0 D
+ . N ZTRTN,ZTIO,ZTSAVE,ZTDTH
+ . S ZTRTN="SILENT^BPSOSK(1)"
+ . S ZTIO="",ZTDTH=$$TADD^BPSOSUD(DT,1)_".0222" ; tomorrow early a.m.
+ . D ^%ZTLOAD
  Q
  ;
- ; NEW57 - Copy the BPS Transaction into BPS Log of Transaction
- ;  Input
- ;    IEN59 - BPS Transaction
- ;  Returns
- ;    BPS Log of Transaction IEN
-NEW57(IEN59) ;
+NEW57(RXI) ;EP - copy this ^BPST(RXI) into ^BPSTL(N)
  F  L +^BPSTL:300 Q:$T  Q:'$$IMPOSS^BPSOSUE("L","RTI","LOCK ^BPSTL",,"NEW57",$T(+0))
- ;
- ; Get next record number in BPS Log of Transactions
-NEW57A N N,C
- S N=$P(^BPSTL(0),U,3)+1
- S C=$P(^BPSTL(0),U,4)+1
+NEW57A N N S N=$P(^BPSTL(0),U,3)+1
+ N C S C=$P(^BPSTL(0),U,4)+1
  S $P(^BPSTL(0),U,3,4)=N_U_C
  I $D(^BPSTL(N)) G NEW57A ; should never happen
  L -^BPSTL
+ M ^BPSTL(N)=^BPST(RXI)
  ;
- ; Merge BPS Transaction into Log of Transactions
- M ^BPSTL(N)=^BPST(IEN59)
- ;
- ; Build fileman indices
+ ; Indexing - First, fileman indexing
  D
  . N DIK,DA S DIK="^BPSTL(",DA=N N N D IX1^DIK
  ;
- ; Quit with the new record number
+ ; The NON-FILEMAN index on RXI,RXR
+ D
+ . N INDEX,A,B,TYPE S TYPE=$E(RXI,$L(RXI))
+ . I TYPE=1!(TYPE=2) D
+ . . S A=$P(^BPSTL(N,1),U,11)
+ . . S B=$P(^BPSTL(N,1),U)
+ . . S INDEX=$S(TYPE=1:"RXIRXR",TYPE=2:"POSTAGE")
+ . E  I TYPE=3 D
+ . . S A=$P(^BPSTL(N,0),U,7)
+ . . S B=$P(^BPSTL(N,1),U,3) ; VCPT
+ . . S INDEX="OTHERS"
+ . E  D IMPOSS^BPSOSUE("DB,P","TI","Bad TYPE="_TYPE,"in RXI="_RXI,"NEW57",$T(+0))
+ . S ^BPSTL("NON-FILEMAN",INDEX,A,B,N)=""
  Q N
+ ; $$PREV57(point to 57) returns pointer to previous transaction
+ ; for the same RXI,RXR - returns "" if no such
+PREV57(N57) ; EP -
+ N RXI,RXR S RXI=$P(^BPSTL(N57,1),U,11)
+ S RXR=$P(^BPSTL(N57,1),U)
+ I RXI=""!(RXR="") Q ""
+ Q $O(^BPSTL("NON-FILEMAN","RXIRXR",RXI,RXR,N57),-1)
  ;
- ; ISREVES - Is this a reversal claim
- ; Input
- ;   CLAIMIEN - Pointer to BPS Claims
+ ; SETCSTAT - set the status for every prescription associated with
+ ; this claim
  ;
- ; Return Value
- ;   1 - Reversal claim
- ;   0 - Not a reversal claim
-ISREVERS(CLAIM) ;
- Q $P($G(^BPSC(CLAIM,100)),"^",3)="B2"
+SETCSTAT(CLAIM,STATUS)       ;EP - BPSOSAM
+ N ABSBRXI
+ I $$ISREVERS(CLAIM) D  Q  ; different for reversals
+ .S ABSBRXI=$$RXI4REV(CLAIM) I ABSBRXI D SETSTAT(STATUS)
+ S ABSBRXI=""
+ F  S ABSBRXI=$O(^BPST("AE",CLAIM,ABSBRXI)) Q:ABSBRXI=""  D
+ .D SETSTAT(STATUS)
+ Q
+ISREVERS(CLAIM) ;EP - BPSOSP2
+ ; is this a reversal claim?  $$ returns 1 or 0
+ Q $P($G(^BPSC(CLAIM,100)),"^",3)=11!($P($G(^BPSC(CLAIM,100)),"^",3)="B2")  ;LJE;9/19/03
+RXI4REV(REVCLAIM)  ; given IEN of reversal claim $$this to get RXI
+ ; The reversal claim must be associated with exactly one RXI.
+ N RET,MBN ; MBN=Must Be Null
+ S RET=$O(^BPST("AER",REVCLAIM,0)),MBN=$O(^(RET))
+ I 'RET D IMPOSS^BPSOSUE("DB,P","TI","REVCLAIM="_REVCLAIM_" and ""AER"" index",,"RXI4REV",$T(+0)) ; may not apply to certification testing!! SEE ABOVE.
+ I MBN'="" D IMPOSS^BPSOSUE("DB,P","TI","REVCLAIM="_REVCLAIM_" points back to multiple .59 entries",,"RXI4REV",$T(+0))
+ Q RET
  ;
- ; SETCSTAT - Set the status for every transaction associated with
- ;   this claim
-SETCSTAT(CLAIM,STATUS) ;
- N IEN59,INDEX
+ ; SETCOMMS - for each prescription associated with this claim,
+ ; point back to the log of the comms session wherein xmit/rcv happened
  ;
- ; Determine correct index
- I $$ISREVERS(CLAIM) S INDEX="AER"
- E  S INDEX="AE"
- ;
- ; Loop through the transactions and set the status
- S IEN59=""
- F  S IEN59=$O(^BPST(INDEX,CLAIM,IEN59)) Q:IEN59=""  D SETSTAT(IEN59,STATUS)
+SETCOMMS(CLAIM,POINTER) ;EP - BPSOSAM
+ N ABSBRXI S ABSBRXI=""
+ F  S ABSBRXI=$O(^BPST("AE",CLAIM,ABSBRXI)) Q:ABSBRXI=""  D
+ .S $P(^BPST(ABSBRXI,0),"^",12)=POINTER
  Q
  ;
- ; ERROR - Handle any errors
- ;   Log them into BPS Transactions
- ;   Change status to 99
- ;   Update the LOG
- ;   Increment the statistics
- ;   We should be okay for the resubmit flag since the STATUS
- ;     will be E OTHER instead of E REVERSAL ACCEPTED
- ; Input
- ;   RTN     - Routine reporting the error
- ;   IEN59   - BPS Transaction
- ;   ERROR   - Error Number (goes in RESULT CODE)
- ;   ERRTEXT - Error Text (goes in RESULT TEXT)
+ ; SETRESU - Set Result  into ^BPST(ABSBRXI,2)
  ;
- ; To prevent conflicts, set the error number to the first digit of
- ;   Status and a unique number for the status.
-ERROR(RTN,IEN59,ERROR,ERRTEXT) ;
+ ;    NOTE !!! NOTE !!! NOTE !!!  ABSBRXI must be set (not RXI) !!!
  ;
- ; Check parameters
- I '$G(IEN59) Q
- I '$G(ERROR) S ERROR=0
- I $G(ERRTEXT)="" S ERRTEXT="ERROR - see LOG"
- ;
- ; Set Error and Error Text in BPS Transaction
- D SETRESU(IEN59,ERROR,ERRTEXT)
- ;
- ; Log Message
- D LOG^BPSOSL(IEN59,RTN_" returned error - "_ERRTEXT)
- ;
- ; Update unbillable count in stats
- D INCSTAT^BPSOSUD("R",1)
- ;
- ; Update Status to complete
- D SETSTAT(IEN59,99)
- Q
- ;
- ; SETRESU - Set Result into ^BPST(IEN59,2)
- ; Input
- ;   IEN59 - BPS Transaction IEN
- ;   RESULT - Result Code
- ;   TEXT   - Result Text.  Semi-colons (";") should not in the text data as
- ;            this is used as a separator between current and previous text
- ;            messages.  If there is a semi-colon, it is converted to a dash.
-SETRESU(IEN59,RESULT,TEXT) ;
- ;
- ; First, store the Result Code
- S $P(^BPST(IEN59,2),U)=$G(RESULT)
- ;
- ; Second, store the Result Text
- ; Considerations:
- ;   Convert any semi-colons to dashes
- ;   Add semi-colon delimiter if needed
- ;   Truncate data if needed
+SETRESU(RESULT,TEXT)    ;EP - from many places
+ S $P(^BPST(ABSBRXI,2),U)=RESULT
  I $G(TEXT)]"" D
- . N X
- . S TEXT=$TR(TEXT,";","-")
- . S X=$P(^BPST(IEN59,2),U,2,99)
- . I X]"",$E(X)'=";" S X=";"_X
- . S X=$E(TEXT_X,1,255-$L(RESULT)-1)
- . S $P(^BPST(IEN59,2),U,2)=X
+ . N X,Y S X=^BPST(ABSBRXI,2)
+ . S Y=$P(X,U),X=$P(X,U,2,$L(X,U))
+ . I X="" S X=$E(TEXT,1,255-$L(Y)-1)
+ . E  D
+ .. I $E(X,1,12)'="[Previously:" D
+ ... D PREVISLY^BPSOSIZ(ABSBRXI)
+ ... S X=$P(^BPST(ABSBRXI,2),U,2)
+ .. S X=$E(TEXT_X,1,255-$L(Y)-1)
+ . S ^BPST(ABSBRXI,2)=Y_U_X
+ I RESULT=0 Q  ; look at the associated RESPONSE in ^BPSR(
+ ;
+ ; For other RESULT codes, put a textual explanation in 
  Q
  ;
- ; SETCRESU - set the result code for every transaction assoc'd with
- ;   this claim.  Note that this will only work for billing requests (B1)
- ; Input
- ;   CLAIMIEN - BPS Claim IEN
- ;   RESULT   - Result Code
- ;   TEXT     - Result Text
+ ; SETCRESU - set the result code for every prescription assoc'd with
+ ; this claim
 SETCRESU(CLAIM,RESULT,TEXT) ;
- N IEN59
- S IEN59=""
- F  S IEN59=$O(^BPST("AE",CLAIM,IEN59)) Q:IEN59=""  D SETRESU(IEN59,RESULT,$G(TEXT))
+ N ABSBRXI S ABSBRXI=""
+ F  S ABSBRXI=$O(^BPST("AE",CLAIM,ABSBRXI)) Q:ABSBRXI=""  D
+ .D SETRESU(RESULT,$G(TEXT))
  Q
  ;
  ; STATI(X) gives a text version of what status code X means.
- ;   For effeciency, put more common ones at the top.
- ; Also note that you should check the display on the stats screen if you
- ;   modify any of these.
-STATI(X) ;
+ ;
+STATI(X) ;EP - from many places ; perhaps should be a Fileman file
  I X=99 Q "Done"
- I X=60 Q "Transmitting"
+ I X=50 Q "Waiting for transmit"
+ I X=30 Q "Waiting for packet build"
  I X=0 Q "Waiting to start"
- I X=40 Q "Building the HL7 packet"
- I X=70 Q "Parsing response"
- I X=30 Q "Building the claim"
- I X=10 Q "Building the transaction"
- I X=90 Q "Processing response"
- I X=98 Q "Resubmitting" ; Used only by STATUS^BPSOSRX (Not stored in BPS Transactions)
- I X=50 Q "Preparing for transmit"
- I X=31 Q "Wait for retry (insurer asleep)"
+ I X=10 Q "Gathering claim info"
+ I X=40 Q "Packet being built"
+ I X=60 Q "Transmitting"
+ I X=61 Q "Transmitting"
+ I X=70 Q "Receiving response"
  I X=80 Q "Waiting to process response"
- I X=-99 Q "Waiting for activation (scheduled)" ; Used only by STATUS^BPSOSRX (Not stored in BPS Transactions)
- I X=-98 Q "Cancelled" ; Used only by STATUS^BPSOSRX (Not stored in BPS Transactions)
- I X=-97 Q "Inactive" ; Used only by STATUS^BPSOSRX (Not stored in BPS Transactions)
- I X=-96 Q "Processing request" ; Used only by STATUS^BPSOSRX (Not stored in BPS Transactions)
+ I X=90 Q "Processing response"
+ I X=51 Q "Wait for retry (comms error)"
+ I X=31 Q "Wait for retry (insurer asleep)"
+ I X=19 Q "Special grouping"
+ I X=98 Q "Resubmitting" ;Used only by STATUS^BPSOSRX (Not stored in BPS Transactions)
+ ; When you add new X=, account for these in FETSTAT^BPSOS2
  Q "?"_X_"?"
+ ;
+ ; RESULTI(X) gives a text version of what result code X means
+ ;
+RESULTI(X)         ;
+ I X=0 Q "See detail in BPS RESPONSES file" ; say more
+ Q "Result code "_X ; a catch-all default
+ ;
+RECEIPT(IEN57) ; This is where the receipt would go - taskman it to print in
+ ; background, somewhere, somehow
+ Q:'$$DORECEI
+ Q
+DORECEI() ; Should we print a receipt? 
+ ; Site-specific conditions needed.
+ ; example:  electronic claims only;
+ ;   only claims with co-pay;
+ ;   etc.
+ Q 0

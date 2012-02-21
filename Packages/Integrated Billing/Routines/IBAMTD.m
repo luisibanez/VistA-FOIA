@@ -1,14 +1,12 @@
-IBAMTD ;ALB/CPM - MOVEMENT EVENT DRIVER INTERFACE ;21-OCT-91
-V ;;2.0;INTEGRATED BILLING;**45,52,93,115,132,153,164,156,234,312,339**;21-MAR-94;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBAMTD ;ALB/CPM - MOVEMENT EVENT DRIVER INTERFACE ; 21-OCT-91
+V ;;2.0;INTEGRATED BILLING;**45,52,93,115,132,153,164,156,234**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  I $G(DGPMA)="",$G(DGPMP)="" Q
  ;
 EN ; Process events from the Movement Event Driver.
  ;
  ;S XRTL=$ZU(0),XRTN="IBAMTD-1" D T0^%ZOSV ;start rt clock
- ;
- Q:+$$SWSTAT^IBBAPI()                                      ;IB*2.0*312
  ;
  ; -- add admissions to claims tracking
  D INP^IBTRKR
@@ -40,14 +38,13 @@ EN ; Process events from the Movement Event Driver.
  .D ^IBAMTBU
  .I DGPMA="",$P(DGPMP,"^",2)=1,$O(^IBE(351.2,"AC",IBA,0)) S DA=$O(^(0)),DIK="^IBE(351.2," D ^DIK K DA,DIK
  ;
- ; - add a case record for admission of special (ao/ir/swa/mst/hnc/shad/cv) inpatients
+ ; - add a case record for admission of special (ao/ir/ec/mst/hnc) inpatients
  I $P(DGPMA,"^",2)=1 D  G END
  .N IBCLSF D CL^IBACV(DFN,IBADMDT,"",.IBCLSF)
  .S IBCLSF=$O(IBCLSF(0)) I IBCLSF,(IBCLSF<5) D ADM^IBAMTI(DFN,IBA,IBCLSF) Q
  .I $P($$GETSTAT^DGMSTAPI(DFN,IBADMDT),U,2)="Y" S IBCLSF=5,IBCLSF(5)="" D ADM^IBAMTI(DFN,IBA,IBCLSF) Q
- .I IBCLSF=6 D ADM^IBAMTI(DFN,IBA,IBCLSF) ; hnc
- .I IBCLSF=8 D ADM^IBAMTI(DFN,IBA,IBCLSF) ; shad
- .I IBCLSF=7 D ADM^IBAMTI(DFN,IBA,IBCLSF) ; CV has the lowest priority
+ .I IBCLSF=6 D ADM^IBAMTI(DFN,IBA,IBCLSF)
+ .I IBCLSF=7 D ADM^IBAMTI(DFN,IBA,IBCLSF) ;CV has the lowest priority
  ;
  ; - if adding a retro-active transfer or spec. transfer, send bulletin
  I ($P(DGPMA,"^",2)=2!($P(DGPMA,"^",2)=6)),+DGPMA<DT S IBJOB=6 D ^IBAMTBU

@@ -1,5 +1,5 @@
 ORWDFH ; SLC/KCM/JLI - Diet Order calls for Windows Dialogs ;12/12/00  14:44
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,92,141,187,215,243**;Dec 17, 1997;Build 242
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,92,141,187,215**;Dec 17, 1997
 TXT(LST,DFN)    ; Return text of current & future diets for a patient
  S LST(1)="Current Diet:  "_$$DIET^ORCDFH(DFN)
  N FUTLST D FUT(.FUTLST,DFN) I $D(FUTLST)>1 D
@@ -28,7 +28,7 @@ PARAM(ORLST,ORVP,ORLOC)  ; Return dietetics parameters for a patient at a locati
  N X,IEN,CURTM
  S ORVP=+ORVP_";DPT(",ORLOC=+ORLOC
  S CURTM=$$NOW^XLFDT
- I +$G(^SC(ORLOC,42)) S ORLOC=$G(^SC(ORLOC,42))_";DIC(42"
+ I $D(^SC(ORLOC,42)) S ORLOC=$G(^SC(ORLOC,42))_";DIC(42"
  E  S ORLOC=ORLOC_";SC("
  D EN1^FHWOR8(ORLOC,.ORLST)
  ;

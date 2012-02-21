@@ -1,5 +1,5 @@
-GMRAGUI1 ;SLC/DAN - CPRS GUI support ;2/9/09  09:45
- ;;4.0;Adverse Reaction Tracking;**21,25,36,38,42**;Mar 29, 1996;Build 4
+GMRAGUI1 ;SLC/DAN - CPRS GUI support ;6/8/05  14:26
+ ;;4.0;Adverse Reaction Tracking;**21,25**;Mar 29, 1996
  ;
  Q
 EN1 ; GETREC, cont'd
@@ -36,7 +36,7 @@ EIE(GMRAIEN,GMRADFN,GMRARRAY) ;Mark individual entry as entered in error
  N DIE,DA,DR,Y,DIK,DFN,OROLD,VAIN,X,GMRAOUT,GMRAPA
  L +^XTMP("GMRAED",GMRADFN):1 I '$T D MESS Q
  S GMRAPA=GMRAIEN
- S DIE="^GMR(120.8,",DA=GMRAPA,DR="15///1;22///1;23///"_@GMRARRAY@("GMRAERRDT")_";24////"_$G(@GMRARRAY@("GMRAERRBY"),.5) ;36
+ S DIE="^GMR(120.8,",DA=GMRAPA,DR="22///1;23///"_@GMRARRAY@("GMRAERRDT")_";24////"_$G(@GMRARRAY@("GMRAERRBY"),.5)
  D ^DIE ;Entered in error on date/time by user
  I $D(@GMRARRAY@("GMRAERRCMTS")) D ADCOM(GMRAPA,"E",$NA(@GMRARRAY@("GMRAERRCMTS"))) ;add comments
  I $$NKASCR^GMRANKA($P(^GMR(120.8,GMRAPA,0),U)) D
@@ -50,7 +50,6 @@ EIE(GMRAIEN,GMRADFN,GMRARRAY) ;Mark individual entry as entered in error
  D INP^VADPT S X=$$FIND1^DIC(101,,"BX","GMRA ENTERED IN ERROR")_";ORD(101,"
  D:X EN^XQOR ;Process protocols hanging off of "entered in error" protocol
  L -^XTMP("GMRAED",GMRADFN)
- S ORY=0_$S(+$G(GMRAPN)>0:("^"_+$G(GMRAPN)),1:"") ;38 Return IEN of progress note if created
  Q
  ;
 ADCOM(ENTRY,TYPE,GMRACOM) ;Add comments to allergies
@@ -84,7 +83,7 @@ NKA ;Change patient assessment to NKA
  Q
  ;
 UPDATE(GMRAIEN,DFN,GMRARRAY) ;Add/edit allergies
- N NEW,NKA,FDA,NODE,IEN,SUB,FILE,DA,DIK,SIEN,GMRAS0,GMRAIEN,GMRAL,GMRAPA,GMRAAR,GMRALL,GMRADFN,GMRAOUT,GMRAROT,GMRAPN
+ N NEW,NKA,FDA,NODE,IEN,SUB,FILE,DA,DIK,SIEN,GMRAS0,GMRAIEN,GMRAL,GMRAPA,GMRAAR,GMRALL,GMRADFN,GMRAOUT,GMRAROT
  S NEW='$G(GMRAIEN)
  I NEW,$$DUPCHK^GMRAOR0(DFN,$P(@GMRARRAY@("GMRAGNT"),U))=1 S ORY="-1^Patient already has a "_$P(@GMRARRAY@("GMRAGNT"),U)_" reaction entered.  No duplicates allowed." Q
  L +^XTMP("GMRAED",DFN):1 I '$T D MESS Q
@@ -144,7 +143,7 @@ UPDATE(GMRAIEN,DFN,GMRARRAY) ;Add/edit allergies
  ..I $G(@GMRARRAY@("GMRATYPE"))["D" S GMRAPA=GMRAIEN D EN1^GMRAPTB ;21 Send med-watch update
  .S GMRAAR=$P($G(@GMRARRAY@("GMRAGNT")),U,2),GMRAPA=GMRAIEN
  .D EN1^GMRAOR9 S ^TMP($J,"GMRASF",1,GMRAPA)="" D RANGE^GMRASIGN(1) ;add ingredients/classes send appropriate bulletins
- S ORY=0_$S(+$G(GMRAPN)>0:("^"_+$G(GMRAPN)),1:"") ;38 If note was created send back IEN
+ S ORY=0
  L -^XTMP("GMRAED",DFN)
  Q
  ;

@@ -1,5 +1,5 @@
-MAGDCCSS ;WOIFO/MLH - DICOM Correct - Clinical Specialties - Sort/print for 2006.575 ; 06/06/2005  09:13
- ;;3.0;IMAGING;**10,11,51**;26-August-2005
+MAGDCCSS ;WOIFO/MLH - DICOM Correct - Clinical Specialties - Sort/print for 2006.575 ; 01/30/2004  17:11
+ ;;3.0;IMAGING;**10,11**;14-April-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -16,7 +16,6 @@ MAGDCCSS ;WOIFO/MLH - DICOM Correct - Clinical Specialties - Sort/print for 2006
  ;; +---------------------------------------------------------------+
  ;;
  Q
- ;
 SRT ;Sort the file first by the patient name but only the unique entries.
  ;The "F" cross reference uses the gateway site and study uid number.
  N MAGSUID,MAGIEN,MAGPT ;
@@ -51,7 +50,6 @@ SRT ;Sort the file first by the patient name but only the unique entries.
  . . Q
  . Q
  Q
- ;
 SRTDT ;Provide sorting by date entry but only if NOT fixed and by unique suid
  N MAGSUID,MAGIEN,MAGDT
  N GWLOC ; -- gateway site
@@ -72,7 +70,7 @@ SRTDT ;Provide sorting by date entry but only if NOT fixed and by unique suid
  . . F  S MAGIEN=$O(^MAGD(2006.575,"F",GWLOC,MAGSUID,MAGIEN)) Q:'MAGIEN  D
  . . . ; if no failed image rec, then there's a xref problem -> bail
  . . . I '$D(^MAGD(2006.575,MAGIEN,0)) D  Q
- . . . . K ^MAGD(2006.575,"F",GWLOC,MAGSUID,MAGIEN)
+ . . . . K ^MAGD(2006.575,"F",MAGSUID,MAGIEN)
  . . . . Q
  . . . ; if entry has already been corrected, do not include in sort
  . . . I $D(^MAGD(2006.575,MAGIEN,"FIXD")),$P(^("FIXD"),"^") Q
@@ -86,27 +84,24 @@ SRTDT ;Provide sorting by date entry but only if NOT fixed and by unique suid
  . . Q
  . Q
  Q
- ;
 PRTDT(SORT,START,STOP) ;
  ;Print entries using the "AD" cross reference (date order)
  ; OR the "F" cross reference (unique study uid)
  I '$D(DUZ) W !,"DUZ variable not defined." Q
  I "DF"'[SORT Q  ;only the date or unique suid
  N DIC,BY,FLDS,L,FR,TO
+ ;I 'STOP!'START Q
  S L(0)=2
  I SORT="D" S SORT="AD" D
  . I $L($G(START))>1,$L($G(STOP))>1 S FR(0,1)=START,TO(0,1)=STOP
- . Q
  S DIC="^MAGD(2006.575,",BY(0)="^MAGD(2006.575,"""_SORT_""","
  S FLDS="[MAG FAILED IMAGES]",L=0
  D EN1^DIP
  Q
- ;
 ADATE() ;date
  N DIR,X,Y
  S DIR(0)="D^",DIR("A")=$G(MESSAGE) D ^DIR
  Q Y
- ;
 ASKDT ;Ask date range
  N MESSAGE
  S MESSAGE="Enter start date" S STR=$$ADATE
@@ -115,18 +110,16 @@ ASKDT ;Ask date range
  S MESSAGE="Enter stop date" S STP=$$ADATE
  I STP'?7N W "Wrong date format." Q
  Q
- ;
 PRNT ;
  N DIR,X,Y,BY
  S DIR(0)="S^D:Date;F:Unique Entries"
  D ^DIR
  Q:"DF"'[Y
- I Y="D" D  Q:'$D(STR)!'$D(STP)
+ I 
+ I Y="D" D  Q:'$D(STR)!'$D(STP) 
  . D ASKDT Q:'$D(STR)!'$D(STP)
  . W !,"Please hold sorting by Date. " D SRTDT
- . Q
  S BY=Y K DIR,X,Y,DTOUT,DIRUT,DTOUT
  D PRTDT(BY,$G(STR),$G(STP))
  K BY,STR,STP
  Q
- ;

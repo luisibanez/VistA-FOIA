@@ -1,6 +1,5 @@
-MAGDIR83 ;WOIFO/PMK - Read a DICOM image file ; 06/06/2005  09:20
- ;;3.0;IMAGING;**11,30,51,54**;03-July-2009;;Build 1424
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDIR83 ;WOIFO/PMK - Read a DICOM image file ; 05/06/2004  06:32
+ ;;3.0;IMAGING;**11,30**;16-September-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDIR83 ;WOIFO/PMK - Read a DICOM image file ; 06/06/2005  09:20
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -20,7 +20,7 @@ MAGDIR83 ;WOIFO/PMK - Read a DICOM image file ; 06/06/2005  09:20
  ;
  ; This routine is invoked by the ^MAGDIR8 to update handle DICOM
  ; CORRECT functions, that is, the "CORRECT" REQUEST item.
- ;
+ ; 
  ; This is a four-step process:
  ;
  ;    1) The "QUERY" record is sent, to obtain a list of corrected
@@ -35,7 +35,7 @@ MAGDIR83 ;WOIFO/PMK - Read a DICOM image file ; 06/06/2005  09:20
  ;       deleted from the list.  (This is called an RPC Callback.)
  ;    4) Finally, the gateway sends a "PROCESSED | STUDY" record back to
  ;       the server to delete the remainder of the study from the list.
- ;
+ ; 
 ENTRY ; update image acquisition statistics
  N LOCATION,MACHID,STATUS
  S STATUS=$P(ARGS,"|",1)
@@ -76,7 +76,7 @@ QUERY ; get the list of DICOM CORRECTED files
  ;
 QUERY1(DELTYPE) ; build one CORRECT Result PROCESS array node
  N FROMPATH,X
- S FROMPATH=$P($G(^MAGD(2006.575,IMAGEIEN,0)),"^",1) Q:FROMPATH=""
+ S FROMPATH=$P(^MAGD(2006.575,IMAGEIEN,0),"^",1)
  S X=$S(DELFLAG="D":"DELETE",1:"FIXED")
  S X=X_"|"_IMAGEIEN_"|"_STUDYIEN_"|"_DELTYPE_"|"_INSTNAME
  S X=X_"|"_FROMPATH_"|"_STUDYUID_"|"_NEWNAME_"|"_NEWPID_"|"_NEWACN
@@ -86,11 +86,10 @@ QUERY1(DELTYPE) ; build one CORRECT Result PROCESS array node
  ; -----------------------  RPC CALLBACK ------------------------------
  ;
 PROCESS ; delete the processed corrected entry from the ^MAGD(2006.575) file
- N DELTYPE,EXIST,FILEPATH,IMAGEIEN,LOCATION,RLATEIEN,STUDYIEN
+ N DELTYPE,FILEPATH,IMAGEIEN,LOCATION,RLATEIEN,STUDYIEN,X
  S IMAGEIEN=$P(ARGS,"|",2),STUDYIEN=$P(ARGS,"|",3)
  S DELTYPE=$P(ARGS,"|",4),FILEPATH=$P(ARGS,"|",6) ; ignore piece #5
  I DELTYPE'="NONE" D  ; don't delete the first image/study in the list
- . L +^MAGD(2006.575,0):1E9 ; Background process MUST wait
  . I DELTYPE="IMAGE" D  ; delete this image
  . . ; remove the related image cross-references
  . . S RLATEIEN=$O(^MAGD(2006.575,STUDYIEN,"RLATE","B",IMAGEIEN,""))
@@ -107,12 +106,10 @@ PROCESS ; delete the processed corrected entry from the ^MAGD(2006.575) file
  . . K ^MAGD(2006.575,"AFX",LOCATION,MACHID,STUDYIEN)
  . . K ^MAGD(2006.575,"F",LOCATION,STUDYUID,STUDYIEN)
  . . Q
- . ; Only subtract 1 from #entries, if we're actually deleting one:
- . S EXIST=$D(^MAGD(2006.575,IMAGEIEN))
  . K ^MAGD(2006.575,IMAGEIEN)
  . K ^MAGD(2006.575,"B",FILEPATH,IMAGEIEN)
- . S:EXIST $P(^(0),"^",4)=$P(^MAGD(2006.575,0),"^",4)-1
- . L -^MAGD(2006.575,0)
+ . S $P(^(0),"^",4)=$P(^MAGD(2006.575,0),"^",4)-1
  . Q
- D RESULT^MAGDIR8("CORRECT","COMPLETE|"_IMAGEIEN_"|"_STUDYIEN_"|"_DELTYPE)
+ S X="COMPLETE"_"|"_IMAGEIEN_"|"_STUDYIEN_"|"_DELTYPE
+ D RESULT^MAGDIR8("CORRECT",X)
  Q

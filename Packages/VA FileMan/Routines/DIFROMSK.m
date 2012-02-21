@@ -1,5 +1,5 @@
-DIFROMSK ;SCISC/DCL-DIFROM SERVER DELETE PARTS ;9:27 AM  4 Jan 2007
- ;;22.0;VA FileMan;**128,153**;Mar 30, 1999;Build 1
+DIFROMSK ;SCISC/DCL-DIFROM SERVER DELETE PARTS ;7:25 AM  31 Jul 2003
+ ;;22.0;VA FileMan;**128**;Mar 30, 1999
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
@@ -11,7 +11,6 @@ DEL(DIFRFILE,DIFRFLG,DIFRSA,DIFRMSGR) ;DELETE TEMPLATES
  ;     (Required) -
  ;                  Forms           .403   ^DIST(.403,   "DIST(.403,"
  ;                  Blocks          .404   ^DIST(.404,   "DIST(.404,"
- ;                  Note: only Forms can be deleted in KIDS
  ;                  Input Template  .402   ^DIE(         "DIE"
  ;                  Print Template  .4     ^DIPT(        "DIPT"
  ;                  Sort Template   .401   ^DIBT(        "DIBT"
@@ -42,7 +41,7 @@ DEL(DIFRFILE,DIFRFLG,DIFRSA,DIFRMSGR) ;DELETE TEMPLATES
  ;I $$NPT(
  F  S DIFRDA=$O(@DIFRSA@(DIFRDA)) Q:DIFRDA'>0  D:$D(@DIFRCR@(DIFRDA,0))
  .I DIFRFILE=.4!(DIFRFILE=.401)!(DIFRFILE=.402) D DT(DIFROOT,DIFRDA) Q
- .I DIFRFILE=.403 D DFB(DIFRDA) Q  ;22*153 .404 to .403
+ .I DIFRFILE=.404 D DFB(DIFRDA) Q
  .I DIFRFILE=.84,DIFRDA>10000 D DT(DIFROOT,DIFRDA) Q  ;22*128
  .Q
  Q
@@ -54,7 +53,7 @@ DT(DIK,DA) ;Delete Template or Dialog ;22*128
  D ^DIK
  Q
  ;
-DFB(DA) ;Delete Forms(.403) and Blocks(.404), within the specified form.
+DFB(DA) ;Delete Forms and Blocks, within the specified form.
  D EN^DDSDFRM(DA)
  Q
  ;

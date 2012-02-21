@@ -1,5 +1,5 @@
-ECSUM ;BIR/JLP,RHK-Category and Procedure Summary ;7 Nov 2007
- ;;2.0; EVENT CAPTURE ;**4,19,33,47,95**;8 May 96;Build 26
+ECSUM ;BIR/JLP,RHK-Category and Procedure Summary ;30 Apr 96
+ ;;2.0; EVENT CAPTURE ;**4,19,33,47**;8 May 96
 LOC K ECL S EC1=0 D ^ECL S:$D(LOC(2)) EC1=1 K LOC I '$D(ECL) S ECOUT=1 G END
 UNIT ;set var and sel dss unit
  S ECJLP=0
@@ -45,17 +45,9 @@ DEV W !! K IOP,POP,IO("Q"),%ZIS,ZTSK
  .D SAVE,^%ZTLOAD,HOME^%ZIS K ZTSK
  U IO
 START ;
- N ECI  ;generic index
- N ECL  ;location IEN
- N ECLN  ;location name
  S %H=$H D YX^%DTC S ECRDT=Y
- S ECOUT=0,ECPG=1
- S ECI=0
- F  S ECI=$O(ECLOC(ECI)) Q:'ECI  D
- . S ECL=$P(ECLOC(ECI),U),ECLN=$P(ECLOC(ECI),U,2)
- . I ECALL D
- . . D ^ECSUM1
- . E  D SUM2^ECSUM1
+ S ECOUT=0,ECPG=1 I ECALL D ^ECSUM1 G CLEAR
+ D SUM2^ECSUM1
 CLEAR I $E(IOST,1,2)'="C-" G END
  G:ECOUT END
  I ECPG W !!!!!,"Press <RET> to continue  " R X:DTIME I '$T!(X="^") S ECOUT=1 G END

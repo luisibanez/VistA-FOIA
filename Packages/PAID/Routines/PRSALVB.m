@@ -1,6 +1,5 @@
 PRSALVB ;HISC/REL,WIRMFO/JAH - Leave Balances ;09/21/01
- ;;4.0;PAID;**22,35,34,69,114**;Sep 21, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;**22,35,34,69**;Sep 21, 1995
 EMP ; Employee Entry Point
  S DFN="",SSN=$P($G(^VA(200,DUZ,1)),"^",9) I SSN'="" S DFN=$O(^PRSPC("SSN",SSN,0))
  I 'DFN W !!,$C(7),"Your SSN was not found in both the New Person & Employee File!" G EX
@@ -19,15 +18,11 @@ Q1 ; Show Balances
  W:$E(IOST,1,2)="C-" @IOF W !?29,"EMPLOYEE LEAVE BALANCES"
  ;
  ;  Display employee name and ssn
- ;  SSN defaults to display of last four digits
- ;    employee displays last four
- ;    timekeeper and supervisor display first digit+last four
  ;
  S X=$G(^PRSPC(DFN,0))
  W !!,$P(X,"^",1)
  S X=$P(X,"^",9)
- I X,'$G(PRSTLV)!($G(PRSTLV)=1) W ?67,"XXX-XX-",$E(X,6,9)
- I X,$G(PRSTLV)=2!($G(PRSTLV)=3) W ?67,$E(X),"XX-XX-",$E(X,6,9)
+ I X W ?67,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9)
  ;
  ; compare last pp processed to current pp
  ;

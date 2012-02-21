@@ -1,5 +1,5 @@
-PXRMORDR ; SLC/PKR - Handle orderable item findings. ;07/14/2006
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMORDR ; SLC/PKR - Handle orderable item findings. ;06/28/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;=========================================================
 EVALFI(DFN,DEFARR,ENODE,FIEVAL) ;Evaluate orderable item findings.
@@ -28,7 +28,6 @@ GETDATA(DAS,FIEVT) ;Return data, for a specified order file entry.
  S FIEVT("RELEASE DATE")=DATA("ORREL")
  S FIEVT("START DATE")=DATA("ORSTRT")
  S FIEVT("STOP DATE")=DATA("ORSTOP")
- S FIEVT("DURATION")=$$DURATION^PXRMDATE(FIEVT("START DATE"),FIEVT("STOP DATE"))
  Q
  ;
  ;=========================================================
@@ -67,7 +66,6 @@ OUTPUT(INDENT,IFIEVAL,NLINES,TEXT) ;Produce the clinical
  . S DATE=$G(IFIEVAL(IND,"STOP DATE"))
  . I DATE="" S DATE="missing"
  . S TEMP=TEMP_", Stop date: "_$$EDATE^PXRMDATE(DATE)
- . I $D(IFIEVAL(IND,"DURATION")) S TEMP=TEMP_"  Duration: "_IFIEVAL(IND,"DURATION")_" D"
  . D FORMATS^PXRMTEXT(INDENT+2,PXRMRM,TEMP,.NOUT,.TEXTOUT)
  . F JND=1:1:NOUT S NLINES=NLINES+1,TEXT(NLINES)=TEXTOUT(JND)
  S NLINES=NLINES+1,TEXT(NLINES)=""

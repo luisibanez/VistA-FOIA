@@ -1,6 +1,5 @@
 PRSROT11 ;HISC/JH-IND. OR ALL EMPLOYEE OT/CT REPORT (Continued) ;7/18/97
- ;;4.0;PAID;**2,21,28,34,114,117**;Sep 21, 1995;Build 32
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;**2,21,28,34**;Sep 21, 1995
  ;
  ; CP = "|"  CP = column PIPE character (used for vertical columns)
  ;
@@ -17,7 +16,7 @@ PRSROT11 ;HISC/JH-IND. OR ALL EMPLOYEE OT/CT REPORT (Continued) ;7/18/97
  .  F I=0:0 S DATT=$O(^TMP($J,"OT/CP",PP,DATT)) Q:DATT'>0  D  Q:POUT
  ..;
  ..  S INX=0
- ..  F I=0:0 S INX=$O(^TMP($J,"OT/CP",PP,DATT,INX)) Q:INX']""  D  Q:POUT
+ ..  F I=0:0 S INX=$O(^TMP($J,"OT/CP",PP,DATT,INX)) Q:INX'>0  D  Q:POUT
  ...;
  ...  S NAM=""
  ...  F I=0:0 S NAM=$O(^TMP($J,"OT/CP",PP,DATT,INX,NAM)) Q:NAM=""  S SW(3)=0 D  Q:POUT
@@ -26,9 +25,7 @@ PRSROT11 ;HISC/JH-IND. OR ALL EMPLOYEE OT/CT REPORT (Continued) ;7/18/97
  .....;
  .....  D:($Y>(IOSL-5)) HDR Q:POUT
  .....  D VLIN0:PP'=PP(1)
- .....  W !,CP,$S(PP'=PP(1):$J($P(PP,"-",2),2),1:""),?4,CP,$S(DATT'=DATT(1):DATT,1:""),?14,CP,NAM,?39,CP
- .....  I PRSTLV=3 W $E($P(TIME,"^")),"XX-XX-",$E($P(TIME,"^"),8,11),?52,CP
- .....  I PRSTLV=7 W $P(TIME,"^"),?52,CP
+ .....  W !,CP,$S(PP'=PP(1):$J($P(PP,"-",2),2),1:""),?4,CP,$S(DATT'=DATT(1):DATT,1:""),?14,CP,NAM,?39,CP,$P(TIME,"^"),?52,CP
  .....  W $J($P(TIME,"^",2),10,2),?64,CP,$J($P(TIME,"^",3),12,2),?79,CP,$J($P(TIME,"^",4),12,2),?94,CP
  .....  W $J($P(TIME,"^",5),12,2),?109,CP,$J($P(TIME,"^",6),17,2),?131,CP
  .....  S SAL(1)=SAL(1)+$P(TIME,"^",2),COMPU(1)=COMPU(1)+$P(TIME,"^",3),COMP(1)=COMP(1)+$P(TIME,"^",4),OTH(1)=OTH(1)+$P(TIME,"^",5),OTP(1)=OTP(1)+$P(TIME,"^",6),SW(1)=SW(1)+1
@@ -56,9 +53,9 @@ PRSROT11 ;HISC/JH-IND. OR ALL EMPLOYEE OT/CT REPORT (Continued) ;7/18/97
  D WTOT(2)
  I IOSL<66 D VLIN0
  Q
-WTOT(PERIOD) ;Write out pay period totals (1) OR running totals.
+WTOT(PERIOD) ;Write out week 1 total OR (both weeks = pay period total).
  S I=PERIOD
- W ?53,$J(SAL(I),10,2)
+ W ?53,$J(SAL(2),10,2)
  W ?65,$J(COMPU(I),12,2)
  W ?80,$J(COMP(I),12,2)
  W ?95,$J(OTH(I),12,2)

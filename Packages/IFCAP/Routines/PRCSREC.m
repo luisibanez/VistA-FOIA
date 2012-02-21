@@ -1,5 +1,5 @@
 PRCSREC ;WISC/KMB/DL-FMS 820 RECONCILIATION INTERCEPT ;12/28/99  11:06
-V ;;5.1;IFCAP;**96**;Oct 20, 2000
+V ;;5.1;IFCAP;;Oct 20, 2000
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;  add entry to file 417, update CP balance on File 420
  ;  finally, send 820 to designee at CP
@@ -36,12 +36,8 @@ PROCESS ;  check each transmission line sent
 FCPCHEC ;
  ;    if there is a PO number, get CP from 442 record
  S $P(STRING,"^",9)=$P(STRING,"^",21)
- S PODA=0,(FCP,FILE)="" S PONUM=$E(PONUM,4,9),PONUM=STATION_"-"_PONUM
- ;    if it is not an employee payroll transaction ok to search file 442
- I TRANCODE'="PR" D  I $D(^PRC(420,STATION,1,+FCP,4,FY)) D CONTINU Q
- .S:$D(^PRC(442,"B",PONUM)) PODA=$O(^PRC(442,"B",PONUM,0))
- .I +PODA'=0 S FCP=$P($G(^PRC(442,PODA,0)),"^",3),FCP=+$P(FCP," ")
- .Q
+ S PODA=0,(FCP,FILE)="" S PONUM=$E(PONUM,4,9),PONUM=STATION_"-"_PONUM S:$D(^PRC(442,"B",PONUM)) PODA=$O(^PRC(442,"B",PONUM,0))
+ I +PODA'=0 S FCP=$P($G(^PRC(442,PODA,0)),"^",3),FCP=+$P(FCP," ") I $D(^PRC(420,STATION,1,FCP,4,FY)) D CONTINU Q
  ;    if no PO match is found, use required fields table
  S ARRAY("BFY")=+$$YEAR^PRC0C($P(STRING,"^",2))
  S FILE=417.1

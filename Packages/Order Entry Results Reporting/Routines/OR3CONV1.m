@@ -1,5 +1,5 @@
 OR3CONV1 ;SLC/MLI-Conversion utilities and cleanup ;8/2/97 [5/25/99 9:33am]
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**14,40,296**;Dec 17, 1997;Build 19
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**14,40**;Dec 17, 1997
  ;
  ; Continuation calls from OR3CONV - used by OE/RR version 3 conversion
  ;

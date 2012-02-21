@@ -1,8 +1,7 @@
 DGDEATH ;ALB/MRL/PJR-PROCESS DECEASED PATIENTS ; 10/27/04 9:45pm
- ;;5.3;Registration;**45,84,101,149,392,545,595,568,563,725,772**;Aug 13, 1993;Build 4
+ ;;5.3;Registration;**45,84,101,149,392,545,595,568,563**;Aug 13, 1993
  ;
-GET N DGMTI,DATA
- S DGDTHEN="" W !! S DIC="^DPT(",DIC(0)="AEQMZ" D ^DIC G Q:Y'>0 S (DA,DFN)=+Y
+GET S DGDTHEN="" W !! S DIC="^DPT(",DIC(0)="AEQMZ" D ^DIC G Q:Y'>0 S (DA,DFN)=+Y
  S DGDOLD=$G(^DPT(DFN,.35))
  I $D(^DPT(DFN,.1)) W !?3,"Patient is currently in-house.  Discharge him with a discharge type of DEATH." G GET
  I $S($D(^DPT(DFN,.35)):^(.35),1:"") F DGY=0:0 S DGY=$O(^DGPM("ATID1",DFN,DGY)) Q:'DGY  S DGDA=$O(^(DGY,0)) I $D(^DGPM(+DGDA,0)),$P(^(0),"^",17)]"" S DGXX=$P(^(0),"^",17),DGXX=^DGPM(DGXX,0) I "^12^38^"[("^"_$P(DGXX,"^",18)_"^") G DIS
@@ -13,7 +12,7 @@ GET N DGMTI,DATA
  S DGDNEW=^DPT(DFN,.35)
  I $P(DGDNEW,"^",1)="",$P(DGDNEW,"^",2)'="" S DR=".352////@" D ^DIE
  I $P(DGDNEW,"^",1)="" K ^TMP("DEATH",$J) G GET
-SN I $P(DGDNEW,"^",1)'="" S DR=".353" D ^DIE I $P($G(^DPT(DFN,.35)),"^",3)']"" D SNDISP G SN
+ I $P(DGDNEW,"^",1)'="" S DR=".353" D ^DIE
  I DGDOLD'=DGDNEW D DISCHRGE
  I $P(DGDOLD,"^",1)'=$P(DGDNEW,"^",1) D XFR
  K ^TMP("DEATH",$J) G GET
@@ -42,17 +41,16 @@ XFR ; called from set x-ref of field .351 of file 2
  . D LINE($S($D(DGXFR0):"           Last Transfer: "_$S($D(^DIC(42,+$P(DGXFR0,"^",6),0)):$P(^(0),"^"),1:"UNKNOWN"),1:""))
  . D LINE("")
 F N DGARRAY,SDCNT S DGFAPT=DGDEATH,DGFAPTI=""
- S DGARRAY("FLDS")=3,DGARRAY(4)=DFN,DGARRAY("SORT")="P",DGARRAY(1)=DT,DGARRAY(3)="I;R"
+ S DGARRAY("FLDS")=3,DGARRAY(4)=DFN,DGARRAY("SORT")="P",DGARRAY(1)=DT
  S SDCNT=$$SDAPI^SDAMA301(.DGARRAY)
- ;
- I SDCNT>0 F  S DGFAPT=$O(^TMP($J,"SDAMA301",DFN,DGFAPT)) Q:'DGFAPT  S DGFAPT1=$G(^TMP($J,"SDAMA301",DFN,DGFAPT)) Q:DGFAPT1']""  D  Q:DGFAPTI
+ F  S DGFAPT=$O(^TMP($J,"SDAMA301",DFN,DGFAPT)) Q:'DGFAPT  S DGFAPT1=$G(^TMP($J,"SDAMA301",DFN,DGFAPT)) Q:DGFAPT1']""  D  Q:DGFAPTI
  .I $P($P(DGFAPT1,U,3),";")'["C" D LINE("NOTE: Patient has future appointments scheduled!!") S DGFAPTI=1
  S DGSCHAD=0 D SA I DGSCHAD D LINE("NOTE: Patient had scheduled admissions which have been cancelled!!")
  I 'DGVETS D LINE("Patient is a NON-VETERAN."_$S($D(^DIC(21,+$P($G(^DPT(DFN,.32)),"^",3),0)):"  ["_$P(^(0),"^",1)_"]",1:""))
  S DGPCMM=$$PCMMXMY^SCAPMC25(1,DFN,,,0) ;creates xmy array
  S DGCT=$$PCMAIL^SCMCMM(DFN,"DGTEXT",DT)
 Q1 S DGB=1 D ^DGBUL S X=DGDEATH
- K DGDEATH,DGSCHAD,DGI,Y,DGDDT,^TMP($J,"SDAMA301") D KILL^DGPATV K ADM,DG1,DGA1,DGCT,DGT,DGXX,DGY,Z Q
+ K DGDEATH,DGSCHAD,DGI,Y,DGDDT D KILL^DGPATV K ADM,DG1,DGA1,DGCT,DGT,DGXX,DGY,Z Q
 SA F DGI=0:0 S DGI=$O(^DGS(41.1,"B",DFN,DGI)) Q:'DGI  I $D(^DGS(41.1,DGI,0)),($P(^(0),"^",13)']""),($P(^(0),"^",17)']"") S $P(^(0),"^",13)=DGDEATH,$P(^(0),"^",14)=+DUZ,$P(^(0),"^",15)=1,$P(^(0),"^",16)=2,DGSCHAD=1
  Q
  ;
@@ -141,17 +139,4 @@ APTT3 ;Check to exclude "While an Inpatient" from DOD Bulletin
  S XIEN=$O(^DGPM("APTT3",DFN,DATE,"")) I 'XIEN Q
  S TYPE=$P($G(^DGPM(XIEN,0)),"^",4)
  I YES,'((TYPE=27)!(TYPE=32)) S DGDONOT=1
- Q
-SNDISP ; Source of Notification display choices
- N DIR,DTOUT,DUOUT,DIRUT,DIROUT,DGLIST,DGLNAME,I,X,Y
- S DGLIST=$P($G(^DD(2,.353,0)),"^",3)
- S Y=6
- S DIR("?",1)=" "
- S DIR("?",2)=" This is a required response. Please select from the following:"
- S DIR("?",3)=" Entering '^' will take you back to the Source of Notification prompt"
- S DIR("?",4)=" "
- S DIR("?",5)=" "
- F X=1:1 S DGLNAME=$P(DGLIST,";",X) Q:DGLNAME']""  S DIR("?",Y)="      "_$P(DGLNAME,":",1)_"      "_$P(DGLNAME,":",2) S Y=Y+1
- S DIR("?",Y)=" "
- F I=1:1 Q:'$D(DIR("?",I))  W !,DIR("?",I)
  Q

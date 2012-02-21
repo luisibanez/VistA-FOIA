@@ -1,6 +1,6 @@
-DIG ;SFISC/GFT-SUBTOTALS & SCATTERGRAM ;28SEP2004
- ;;22.0;VA FileMan;**2,144**;Mar 30, 1999;Build 5
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIG ;SFISC/GFT-SUBTOTALS & SCATTERGRAM ;08:21 PM  7 Oct 1999
+ ;;22.0;VA FileMan;**2**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  W ! I '$D(^DOSV(0,IO(0),2)) W "NO SUB-SUB TOTALS WERE RUN" Q
  N POP,IOP,ZTSK S:$D(^%ZTSK) %ZIS="QM" D ^%ZIS Q:POP
  G QUE:$D(IO("Q"))
@@ -136,7 +136,6 @@ DIGC N X,C
  ;
 E(VALUE,XY) ;2=Y,1=X
  N %DT,Y
- I $P(DIGC(XY),U,4)["-" S VALUE=-VALUE
  I DIGC(XY,0)["O" Q VALUE
  I VALUE,DIGC(XY,0)["D" S Y=VALUE D DD^%DT Q Y
  I DIGC(XY,0)["S" S Y=$P(DIGC(XY),U,2) S:'Y Y=$P($P(DIGC(XY),U,4),"+""",2) S:Y Y=$$EXTERNAL^DILFD(+DIGC(XY),Y,,VALUE,"%DT(0)") I Y]"" Q Y

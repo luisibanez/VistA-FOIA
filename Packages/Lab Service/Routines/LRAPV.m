@@ -1,5 +1,5 @@
 LRAPV ;AVAMC/REG/WTY - ANAT PATH REPORTS NOT VERIFIED ;1/17/02
- ;;5.2;LAB SERVICE;**72,201,259,317**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,201,259**;Sep 27, 1994
  ;
  ;Reference to ^DIC supported by IA #916
  ;
@@ -66,12 +66,8 @@ RPT ;Unverified reports
  .D W
  Q
 SUPP ;Unverified Supplementary Reports
- ;If RELEASE SUPPLEMENTARY REPORT is null, or if RELEASE SUPP
- ;  REPORT MODIFIED is set to 1, then supp report is unverified
  S (LRA,LRC)=0 F  S LRA=$O(@(LRFILE1_"LRA)")) Q:'LRA!(LRC)  D
  .I '$P(@(LRFILE1_"LRA,0)"),"^",2) S LRC=1
- .;Flag if released supp has been modified but not yet released
- .I 'LRC,$P(@(LRFILE1_"LRA,0)"),"^",3) S LRC=1
  I LRC D
  .S LRDATE=@(LRFILE_$S('LR("AU1"):",0)",1:")"))
  .D W

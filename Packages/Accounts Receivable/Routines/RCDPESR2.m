@@ -1,6 +1,6 @@
-RCDPESR2 ;ALB/TMK/DWA - Server auto-upd - EDI Lockbox ; 06/03/02
- ;;4.5;Accounts Receivable;**173,216,208,230,252,264,269,271**;Mar 20, 1995;Build 29
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+RCDPESR2 ;ALB/TMK - Server auto-upd - EDI Lockbox ;06/03/02
+ ;;4.5;Accounts Receivable;**173,216,208,230**;Mar 20, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ; IA 4042 (IBCEOB)
  ;
 TASKERA(RCTDA) ; Task to upd ERA
@@ -55,18 +55,18 @@ QNEW I RCTDA,'$P($G(^RCY(344.5,RCTDA,0)),U,8) D TEMPDEL^RCDPESR1(RCTDA) S RCTDA=
  Q
  ;
 UPDEOB(RCTDA,RCFILE,DUP) ;Upd 361.1 from ERA msg in 344.5 or .4
- ;RCTDA = ien ERA msg in 344.5 or ;subfile in 344.4
- ;RCFILE = 4 file 344.4, 5 if 344.5
- ;DUP = msg # if dup msg, but not same # or -1 if same msg #
+ ; RCTDA = ien ERA msg in 344.5 or ;subfile in 344.4
+ ; RCFILE = 4 file 344.4, 5 if 344.5
+ ; DUP = msg # if dup msg, but not same # or -1 if same msg #
  ;Returned for each bill in ERA:
- ;^TMP($J,"RCDPEOB",n)=Bill ien^AR bill#^SrvDt
- ;^TMP($J,"RCDPEOB",n,"EOB")=EOB ien^amt pd^ins co ptr^rev flg^EEOB pn^amtbld^^^^BPNPI^RNPI^ETQual^LN^FN
- ;^TMP($J,"RCDPEOB","ADJ",x)=adj rec ('02')
+ ; ^TMP($J,"RCDPEOB",n)=Bill ien^AR bill#^Service Date
+ ; ^TMP($J,"RCDPEOB",n,"EOB")=EOB ien^amt pd^ins co ptr^reversal flag^pt name on EEOB^amt billed
+ ; ^TMP($J,"RCDPEOB","ADJ",x)=adj rec ('02')
  ;Also:
- ;^TMP($J,"RCDPEOB","HDR")=hdr rec from txmn
- ;^TMP($J,"RCDPEOB","CONTACT")=ERA contact rec ('01')
+ ; ^TMP($J,"RCDPEOB","HDR")=hdr rec from txmn
+ ; ^TMP($J,"RCDPEOB","CONTACT")=ERA contact rec ('01')
  ;
- N RCGBL,RC,RC0,RCCT,RCCT1,RCEOB,RCBILL,RCDPBNPI,RCMNUM,RCIFN,RCIB,RCERR,RCSTAR,RCET,RCX,RCXMG,Z,Q,DA,DR,DIE,RCPAYER,RCFILED,RCEOBD,RCNOUPD,REFORM,RCSD,RCERR1,C5
+ N RCGBL,RC,RC0,RCCT,RCCT1,RCEOB,RCBILL,RCMNUM,RCIFN,RCIB,RCERR,RCSTAR,RCET,RCX,RCXMG,Z,Q,DA,DR,DIE,RCPAYER,RCFILED,RCEOBD,RCNOUPD,REFORM,RCSD,RCERR1,C5
  K ^TMP($J,"RCDP-EOB"),^TMP("RCDPERR-EOB",$J)
  ;
  S RCPAYER="",RCFILED=1,RCNOUPD=0
@@ -85,15 +85,14 @@ UPDEOB(RCTDA,RCFILE,DUP) ;Upd 361.1 from ERA msg in 344.5 or .4
  .S ^TMP($J,"RCDPEOB","HDR")=$G(^RCY(344.4,+RCTDA,1,+$P(RCTDA,";",2),1,1,0))
  ;
  S RCPAYER=$P($G(^TMP($J,"RCDPEOB","HDR")),U,6)
- S RCDPBNPI=$P($G(^TMP($J,"RCDPEOB","HDR")),U,18)
  ;
  ;srv dates
  S RCSD=$NA(^TMP($J,"RCSRVDT")) K @RCSD
- N CP5 S CP5="",RC=1,C5=0 ;retrofit 264 into 269
+ S RC=1,C5=0
  F  S RC=$O(@RCGBL@(RC)) Q:'RC  S RC0=$G(^(RC,0)) D
  .I RC0<5 Q
- .I +RC0=5 S C5=RC,CP5=$P(RC0,U,2) Q  ;retrofit 264 into 269
- .I +RC0=40,CP5?1.12N,C5,'$D(@RCSD@(C5)) S @RCSD@(C5)=$P(RC0,U,19) ;serv date for possible ECME# matching
+ .I +RC0=5 S C5=RC Q
+ .I +RC0=40,$P(RC0,U,2)?1.7N,C5,'$D(@RCSD@(C5)) S @RCSD@(C5)=$P(RC0,U,19) ;serv date
  ;
  S RC=1,(RCCT,RCCT1,RCX,REFORM)=0,RCBILL=""
  S RCERR1=$NA(^TMP("RCERR1",$J)) K @RCERR1
@@ -103,12 +102,10 @@ UPDEOB(RCTDA,RCFILE,DUP) ;Upd 361.1 from ERA msg in 344.5 or .4
  .;
  .I RCFILE=5,+RC0=2 D  Q
  ..S RCX=RCX+1,^TMP($J,"RCDPEOB","ADJ",RCX)=RC0
- .I RCFILE=5,+RC0=3 D  Q  ; Adding logic for line type 03,Patch 269,DWA
- ..S $P(^TMP($J,"RCDPEOB","ADJ",RCX),U,5)=$P(RC0,U,2)
  .;
  .I +RC0=5 S RCCT=RCCT+1,RCCT1=0 D
  ..S REFORM=0
- ..S Z=$$BILL^RCDPESR1($P(RC0,U,2),$G(@RCSD@(RC)),.RCIB)   ; look up claim ien by claim# or by ECME#
+ ..S Z=$$BILL^RCDPESR1($P(RC0,U,2),$G(@RCSD@(RC)),.RCIB)
  ..I Z S RCBILL=$P($G(^PRCA(430,Z,0)),U) I RCBILL'="",RCBILL'=$P(RC0,U,2) S REFORM=1,$P(RC0,U,2)=RCBILL
  ..S RCBILL=$P(RC0,U,2)
  ..S Z=$S(Z>0:$S($G(RCIB):Z,1:-1),1:-1)
@@ -120,10 +117,6 @@ UPDEOB(RCTDA,RCFILE,DUP) ;Upd 361.1 from ERA msg in 344.5 or .4
  .I +RC0=10 D  ;Save amt pd/billed, rev flg
  ..S $P(^TMP($J,"RCDPEOB",RCCT,"EOB"),U,2)=$S(+$P(RC0,U,11):$J($P(RC0,U,11)/100,"",2),1:0),$P(^TMP($J,"RCDPEOB",RCCT,"EOB"),U,6)=$J($P(RC0,U,11),"",2)
  ..I $P(RC0,U,6)="Y"!($P(RC0,U,7)=22) S $P(^TMP($J,"RCDPEOB",RCCT,"EOB"),U,4)=1
- ..S $P(^TMP($J,"RCDPEOB",RCCT,"EOB"),U,10,14)=RCDPBNPI_U_$P(RC0,U,16,19)
- .I +RC0=11 D  ; Save Rendering Provider information from new style message
- ..S $P(^TMP($J,"RCDPEOB",RCCT,"EOB"),U,10,14)=RCDPBNPI_U_$P(RC0,U,3,6)
- ..; End save of Rendering Provider
  .I RCBILL=$P(RC0,U,2) S RCCT1=RCCT1+1,^TMP($J,"RCDP-EOB",RCCT,RCCT1,0)=RC0
  ;
  S RCSTAR=$TR($J("",15)," ","*"),RCET=RCSTAR_"ERROR/WARNING EEOB DETAIL SEQ #"

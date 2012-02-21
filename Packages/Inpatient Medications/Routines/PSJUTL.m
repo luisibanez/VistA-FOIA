@@ -1,5 +1,5 @@
-PSJUTL ;BIR/MLM-MISC. INPATIENT UTILITIES ; 10/7/08 1:22pm
- ;;5.0; INPATIENT MEDICATIONS ;**9,47,58,80,110,136,157,177,134,179**;16 DEC 97;Build 45
+PSJUTL ;BIR/MLM-MISC. INPATIENT UTILITIES ;17 Mar 98 / 11:05 AM
+ ;;5.0; INPATIENT MEDICATIONS ;**9,47,58,80,110,136**;16 DEC 97
  ;
  ; Reference to ^DIC(42 is supported by DBIA 10039.
  ; Reference to ^PS(50.7 is supported by DBIA 2180.
@@ -158,11 +158,10 @@ EFDACT ;Call here if Editing Fields for an ACTIVE order
  F KEY=1:1 S ORDER=$P(PSGOEER,";",KEY) Q:'$L(ORDER)  I "10^34^41"[$P(ORDER,U,1) S ORDER(KEY)=$P(ORDER,U,1)
  ;If there are no entries in ORDER, then were Not Editing Start/Stop or Admin Times
  S LAST=$O(ORDER(99),-1) Q:'LAST
- ;BHW;PSJ*5*179;Remove "Display Once" logic.
- ;S LAST=ORDER(LAST)
- ;I LAST'=PSGF2 Q
+ ;Only display EFD once, so Quit if this call is not for the Last field in the Edit
+ S LAST=ORDER(LAST)
+ I LAST'=PSGF2 Q
  S INFO=($G(PSGSD))_U_($G(PSGFD))_U_($G(PSGSCH))_U_($G(PSGST))_U_($G(PSGPDRG))_U_($G(PSGS0Y))
- S PSGEFDMG="Next Dose Due"
  D EFDDISP
  QUIT
 EFDNV ;Call here if Editing Fields for a NON-VERIFIED order
@@ -184,33 +183,12 @@ EFDNV ;Call here if Editing Fields for a NON-VERIFIED order
  S INFO=($G(PSGSD))_U_($G(PSGFD))_U_($G(PSGSCH))_U_($G(PSGST))_U_($G(PSGPDRG))_U_($G(PSGS0Y))
  D EFDDISP
  QUIT
-EFDIV(PSGZZND) ;Set variables for EFD on IV orders.
- I $G(PSGZZND)="" D
- .N X,ZZND,LYN,PSGS0XT,PSGS0Y,PSGOES S PSGOES=1 S X=P(9) D EN^PSGS0 S:$G(ZZND)'="" PSGZZND=ZZND
- S PSGNESD=P(2),PSGNEFD=P(3),PSGSCH=P(9),PSGST=$P($G(PSGZZND),"^",5),PSGDRG=$P($G(P("PD")),"^"),PSGS0Y=P(11)
- ;BHW - PSJ*5*177 Add call to check stop date.  If it's in the past, Display Message
- D CHKSTOP
- D EFDNEW
- W !
- Q
 EFDDISP ;Display Expected First Dose
- N Y,Z
- Q:$G(PSGST)="OC"!($G(PSGST)="P")!($G(PSGST)="O")
- Q:$G(PSGSCH)["ON CALL"!($G(PSGSCH)["ON-CALL")!($G(PSGSCH)["ONCALL")
- Q:$G(PSGSCH)["PRN"
+ N Y
  I '$L($G(PSGP)) N PSGP S PSGP=""
+ ;
  S Y=$$ENQ^PSJORP2(PSGP,INFO)
  I 'Y S Y="Unable to Calculate"
  X ^DD("DD")
- ;BHW;PSJ*5*179;Add Variable Message. "Next Dose Due".  Default to "Expected First Dose"
- I '$D(PSGEFDMG) S PSGEFDMG="Expected First Dose"
- W !,PSGEFDMG,": ",Y H 3
- K PSGEFDMG
- Q
-CHKSTOP ;BHW - PSJ*5*177 Warn user if the Stop Date is < now.
- I '+$G(P(3)) Q
- N PSNOW,%,%H,%I,X D NOW^%DTC S PSNOW=%
- I +P(3)<PSNOW D  Q
- . W !,$C(7),"The Stop Date/Time is in the Past!!!  This order will",!,"automatically EXPIRE upon Verification!!",!
- . Q
+ W !,"Expected First Dose: ",Y H 2
  Q

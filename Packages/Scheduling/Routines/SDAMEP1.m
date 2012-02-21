@@ -1,5 +1,5 @@
-SDAMEP1 ;ALB/CAW - Expanded Display (Appt. Data) ; 16 May 2001  4:49 PM  ; Compiled August 22, 2008 12:24:32
- ;;5.3;Scheduling;**20,241,534**;Aug 13, 1993;Build 8
+SDAMEP1 ;ALB/CAW - Expanded Display (Appt. Data) ; 16 May 2001  4:49 PM
+ ;;5.3;Scheduling;**20,241**;Aug 13, 1993
  ;
 APDATA ; Appointment Data
  ;
@@ -60,23 +60,10 @@ APDATA ; Appointment Data
  D SET(X)
  ;
  S X=""
- N SDINFL S SDINFL=$L($G(SDSC(44.003,SDDA,3))) ; lenght of INFO STRING
- I SDINFL<64 D
- .S X=$$SETSTR^VALM1("          Other:",X,1,SDWIDTH)
- .S X=$$SETSTR^VALM1($G(SDSC(44.003,SDDA,3)),X,SDFSTCOL,63)
- I SDINFL>63&(SDINFL<143) D
- .S X=$$SETSTR^VALM1("          Other:",X,1,SDWIDTH)
- .S X=$$SETSTR^VALM1($E($G(SDSC(44.003,SDDA,3)),1,64),X,17,80)
- .D SET(X)
- .S X=$$SETSTR^VALM1("",X,1,0)
- .S X=$$SETSTR^VALM1($E($G(SDSC(44.003,SDDA,3)),65,150),X,1,80)
- I SDINFL>142 D
- .S X=$$SETSTR^VALM1("   Other:",X,1,10)
- .S X=$$SETSTR^VALM1($E($G(SDSC(44.003,SDDA,3)),1,70),X,11,80)
- .D SET(X)
- .S X=$$SETSTR^VALM1("",X,1,0)
- .S X=$$SETSTR^VALM1($E($G(SDSC(44.003,SDDA,3)),71,150),X,1,80)
+ S X=$$SETSTR^VALM1("     Other Info:",X,1,SDWIDTH)
+ S X=$$SETSTR^VALM1($G(SDSC(44.003,SDDA,3)),X,SDFSTCOL,60)
  D SET(X)
+ ;
  ;
  S (X,SDEIC)="" F SDI=0:0 S SDI=$O(^DPT(DFN,"DE",SDI)) Q:'SDI  I $P(^(SDI,0),U)=SDCL F SDX=0:0 S SDX=$O(^DPT(DFN,"DE",SDI,1,SDX)) Q:'SDX  S SDEN=$G(^DPT(DFN,"DE",SDI,1,SDX,0))
  D ENROLL

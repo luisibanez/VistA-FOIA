@@ -1,15 +1,12 @@
-IBAMTS ;ALB/CPM - APPOINTMENT EVENT DRIVER INTERFACE ;20-JUL-93
- ;;2.0;INTEGRATED BILLING;**52,115,132,153,164,156,171,247,312,341,339**;21-MAR-94;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBAMTS ;ALB/CPM - APPOINTMENT EVENT DRIVER INTERFACE ; 20-JUL-93
+ ;;2.0;INTEGRATED BILLING;**52,115,132,153,164,156,171,247**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; Main interface entry point.
  ;
- N IBSWINFO S IBSWINFO=$$SWSTAT^IBBAPI()                   ;IB*2.0*312
- I '$G(DUZ) D DUZ^XUP(.5)                                  ;IB*2.0*341 Setting of DUZ covered by IA 4129
- ;
  S IBJOB=5,IBWHER="",IBDUZ=DUZ,IBY=1
  ; Do Transfer Pricing
- I '+IBSWINFO D ^IBATEO                                    ;IB*2.0*312
+ D ^IBATEO
  ; Check Encounter Related to LTC
  N IBALTC D EN^IBAECO
  I '$$BILST^DGMTUB(DFN) G ENQ ; never Means Test billable
@@ -18,11 +15,7 @@ EN ; Main interface entry point.
  ; - process all parent outpatient encounters
  S IBORG=0 F  S IBORG=$O(^TMP("SDEVT",$J,SDHDL,IBORG)) Q:'IBORG  D
  .S IBOE=0 F  S IBOE=$O(^TMP("SDEVT",$J,SDHDL,IBORG,"SDOE",IBOE)) Q:'IBOE  S IBEVT=$G(^(IBOE,0,"AFTER")),IBEV0=$G(^("BEFORE")) D
- ..;
  ..S IBDT=$S(IBEVT:+IBEVT,1:+IBEV0),IBDAT=$P(IBDT,".")
- ..; Do NOT PROCESS on VistA if IBDAT>=Switch Eff Date    ;CCR-930
- ..I +IBSWINFO,(IBDAT+1)>$P(IBSWINFO,"^",2) Q             ;IB*2.0*312
- ..;
  ..S IBAPTY=$S(IBEVT:$P(IBEVT,"^",10),1:$P(IBEV0,"^",10))
  ..S IBBILLED=$$BFO^IBECEAU(DFN,IBDAT),IBY=1
  ..;
@@ -78,8 +71,7 @@ CLTY() ; Return the classification type
  I $D(IBARR(7)),+$$CVEDT^IBACV(DFN,IBDAT) S Y="CV" G CLTYQ
  I $D(IBARR(1)) S Y="Agent Orange" G CLTYQ
  I $D(IBARR(2)) S Y="Ionizing Radiation" G CLTYQ
- I $D(IBARR(4)) S Y="Southwest Asia" G CLTYQ
- I $D(IBARR(8)) S Y="Project 112/SHAD" G CLTYQ
+ I $D(IBARR(4)) S Y="Environmental Contaminants" G CLTYQ
  I $D(IBARR(5)) S Y="Military Sexual Trauma" G CLTYQ
  I $D(IBARR(6)) S Y="Head/Neck Cancer" G CLTYQ
 CLTYQ Q Y

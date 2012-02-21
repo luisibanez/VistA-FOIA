@@ -1,6 +1,6 @@
 IBCSC61 ;ALB/MJB - MCCR SCREEN UTILITY ;20 JUN 88 10:58
- ;;2.0;INTEGRATED BILLING;**52,80,106,51,210,230,309,389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,80,106,51,210,230,309**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO IBCSC61
  ;
@@ -34,7 +34,7 @@ NAME(TYPE,ITEM) ; if rx or pros or DRG or unassociated return name of the item
  .S IBNAME=$G(^TMP($J,"IBDRUG",+$P($G(^IBA(362.4,+ITEM,0)),U,4),.01))
  .K ^TMP($J,"IBDRUG")
  .Q
- I $G(TYPE)=5,+$G(ITEM) S IBNAME=$P($G(^IBA(362.5,+ITEM,0)),U,5)
+ I $G(TYPE)=5,+$G(ITEM) S IBNAME=$P($$PIN^IBCSC5B(+$P($G(^IBA(362.5,+ITEM,0)),U,3)),U,2)
  I $G(TYPE)=6,+$G(ITEM) S IBNAME=$P($$DRG^IBACSV(+ITEM),U,1)
  I $G(TYPE)=9,+$G(ITEM) S IBNAME=$P($G(^IBA(363.21,+ITEM,0)),U,1)
  Q IBNAME

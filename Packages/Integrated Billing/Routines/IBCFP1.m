@@ -1,12 +1,12 @@
 IBCFP1 ;ALB/ARH - PRINT AUTHORIZED BILLS IN ORDER ;6-DEC-94
- ;;2.0;INTEGRATED BILLING;**54,52,80,121,51,137,155,320,348,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**54,52,80,121,51,137,155**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
 QTASK ; 1st part sorts authorized bills into order requested by bill form type then queues off 1 job for each type to print bills
  ;
  D GCLEAN S IBXP=$$FMADD^XLFDT(DT,1)_"^"_DT_"^BATCH PRINT BILLS "_$$HTE^XLFDT($H)_" by "_$S($D(^VA(200,+$G(DUZ),0)):$P(^(0),"^"),1:"Unknown User")
-SORT ;sort authorized bills by form type and requested sort order (notice bill addendums only print for 1500's)
+SORT ;sort authorized bills by form type and requested sort order (notice bill addendums only print for HCFA 1500's)
  S (IBQ,IBIFN)=0 F  S IBIFN=$O(^DGCR(399,"AST",3,IBIFN)) Q:'IBIFN!IBQ  D  I $$STOP S IBQ=1 Q
  . Q:+$$TXMT^IBCEF4(IBIFN)=1  ;Exclude transmittable bills
  . S IBFT=$$FT^IBCU3(IBIFN) Q:$P($G(^IBE(353,+IBFT,0)),U,2)=""  I IBFT'?1N Q  ;No device for form type
@@ -21,8 +21,8 @@ SORT ;sort authorized bills by form type and requested sort order (notice bill a
  . ; Merge the data from ^XTMP("IBCFP" queue, into "IBMRA" queue
  . I +IBFT,$P($G(^IBE(353,+IBFT,0)),U,2)'="" S ^XTMP("IBMRA"_IBFT,0)=IBXP M ^XTMP("IBMRA"_IBFT,$J)=^XTMP("IBCFP"_XIBFT,$J)
  . ;
- . ; Print Bill Addendums only for 1500's
- . I $$FTN^IBCU3(XIBFT)'["CMS-1500" Q
+ . ; Print Bill Addendums only for HCFA 1500's
+ . I $$FTN^IBCU3(XIBFT)'["HCFA 1500" Q
  . S IBFT=$$FNT^IBCU3("BILL ADDENDUM")
  . I +IBFT,$P($G(^IBE(353,+IBFT,0)),U,2)'="" S ^XTMP("IBCFP"_IBFT,0)=IBXP,^XTMP("IBCFP"_IBFT,$J,IBS1,IBS2,IBS3,IBIFN)=""
  . Q
@@ -54,7 +54,6 @@ GCLEAN ; Clean up XTMP global for $J of IBCFP and IBMRA entries
 QBILL ; 2nd queued part will print all authorized bills for a specific form type
  N IBF,IBFORM,IBPNT
  S IBF=$P($G(^IBE(353,+IBFT,2)),U,8),IBPNT=1
- I $D(IBMCSPNT) S IBPNT=IBMCSPNT    ; IB*320 - MCS resubmit by print
  I IBF'="" S IBFORM=IBF D FORMOUT^IBCEFG7 Q  ;call formatter
  ;
 QB1 ; Entrypoint for output logic of formatter
@@ -80,21 +79,12 @@ QB1 ; Entrypoint for output logic of formatter
 ROUT(IBFT,IBPNT,IBIFN,IBCT,IBF) ; sub procedure to protect variables with new
  N IBBN,IBS1,IBS2,IBS3,IBQ,IBFTP,IBJ,IBXPARM,Z
  D BILLPARM^IBCEFG0(IBIFN,.IBXPARM)
- S IBF=$S($G(IBF)'="":IBF,1:$P($G(^IBE(353,+IBFT,2)),U,8))
- S IBCT=$G(IBCT)+1
- ;
- ; IBF exists - use the Output Formatter for printing
- ;     2.08 field in file 353 - PRINT FORM NAME
+ S IBF=$S($G(IBF)'="":IBF,1:$P($G(^IBE(353,+IBFT,2)),U,8)),IBCT=$G(IBCT)+1
  I IBF'="" S Z=$$EXTRACT^IBCEFG(IBF,IBIFN,.IBCT,.IBXPARM) G REX
- ;
- ; IBF does not exist - Obsolete VistA extract/print routines
  I IBFT=1 S DFN=$P($G(^DGCR(399,+IBIFN,0)),U,2) D ENP^IBCF1 W @IOF G REX
- I $$FTN^IBCU3(+IBFT)="HCFA 1500" D EN^IBCF2 W @IOF G REX
+ I IBFT=2 D EN^IBCF2 W @IOF G REX
  I $$FTN^IBCU3(+IBFT)="UB-92" D EN^IBCF3 W @IOF G REX
- ;
- ; print bill addendums
  I $$FTN^IBCU3(+IBFT)="BILL ADDENDUM" I +$$BILLAD^IBCF4(IBIFN) D EN^IBCF4 W @IOF G REX
- ;
 REX Q
  ;
 DATE(X) Q $E(X,4,5)_"/"_$E(X,6,7)_"/"_$E(X,2,3)

@@ -1,6 +1,6 @@
-DDS11(DDSBK,DDSNFO) ;SFISC/MLH,MKO-LOAD DATA ; 04 Jun 2007
- ;;22.0;VA FileMan;**151**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DDS11(DDSBK,DDSNFO) ;SFISC/MLH,MKO-LOAD DATA ;1:03 PM  14 May 1997
+ ;;22.0;VA FileMan;;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;Input variables:
  ;  DDSBK   = Block #
  ;  DDSPG   = Page # (needed for form-only fields)
@@ -59,7 +59,6 @@ L1 ;Get non-multiple field
  ;
  K @DDS1REFD@(DDS1FLD,"X")
  I Y="",$D(@DDS1REFD@(DDS1FLD,"F"))[0,$D(^DIST(.404,DDSBK,40,DDS1FO,3))#2 D DEF(^(3),$G(^(3.1)))
-MUMPS I $G(DUZ(0))'="@",DDS1DV["K" S $P(@DDS1REFD@(DDS1FLD,"A"),U,4)=1,Y=$TR($J("",$L(Y))," ","*") ;**151
  S @DDS1REFD@(DDS1FLD,"D")=Y
  ;
  ;Get key info

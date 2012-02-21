@@ -1,5 +1,5 @@
 RMPRN6PT ;HINES/HNC -PRINT NPPD NEW WORKSHEETS ;2/14/98
- ;;3.0;PROSTHETICS;**31,32,39,51,57,84,103,144**;Feb 09, 1996;Build 17
+ ;;3.0;PROSTHETICS;**31,32,39,51,57,84,103**;Feb 09, 1996
  ;
  ; AAC Patch 84, 02-25-04, additions, deletions and change descriptions for Groups and lines
  ; AAC Patch 84, 02-25-04, Change Description for 600
@@ -106,7 +106,6 @@ LBLG ;group description for final summary
  I $E(LINEP,0,3)=930 S GROUP=$E(LINEP,0,3)_" ADAPTIVE EQUIPMENT"
  I $E(LINEP,0,3)=940 S GROUP=$E(LINEP,0,3)_" HISA"
  I $E(LINEP,0,3)=960 S GROUP=$E(LINEP,0,3)_" SURGICAL IMPLANTS"
- I $E(LINEP,0,3)=970 S GROUP=$E(LINEP,0,3)_" BIOLOGICAL IMPLANTS"
  I $E(LINEP,0,3)=999 S GROUP=$E(LINEP,0,3)_" MISC"
  Q
 LBL ;label for group
@@ -126,7 +125,6 @@ LBL ;label for group
  I $E(LINE,0,3)=930 W !,"ADAPTIVE EQUIPMENT"
  I $E(LINE,0,3)=940 W !,"HISA"
  I $E(LINE,0,3)=960 W !,"SURGICAL IMPLANTS"
- I $E(LINE,0,3)=970 W !,"BIOLOGICAL IMPLANTS"
  I $E(LINE,0,3)=999,IOST'["C-" W @IOF D HDR W !,"MISC"
  I $E(LINE,0,3)=999,IOST["C-" W !,"MISC"
  Q

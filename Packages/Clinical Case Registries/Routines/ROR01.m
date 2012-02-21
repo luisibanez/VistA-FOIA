@@ -1,5 +1,5 @@
-ROR01 ;HCIOFO/SG - CLINICAL CASE REGISTRIES (TEMP. GLOBALS) ; 4/23/07 3:18pm
- ;;1.5;CLINICAL CASE REGISTRIES;**1,3**;Feb 17, 2006;Build 7
+ROR01 ;HCIOFO/SG - CLINICAL CASE REGISTRIES (TEMP. GLOBALS) ; 8/25/05 9:38am
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; ^TMP($J,"RORTMP-"_) - TEMPORARY STORAGE (see the ^RORTMP routine)
  ;
@@ -79,31 +79,6 @@ ROR01 ;HCIOFO/SG - CLINICAL CASE REGISTRIES (TEMP. GLOBALS) ; 4/23/07 3:18pm
  ;       Rule#)          Reference to a top-level selection rule
  ;                         ^01: Trigger date of the rule
  ;                         ^02: Institution IEN
- ;
- ; ^XTMP("RORLOCK") ---- LIST OF LOCK DESCRIPTORS
- ;
- ; ^XTMP("RORLOCK",
- ;   NodeNdx)            Lock Descriptor (see ^RORLOCK for details)
- ;                         ^01: Date/Time (FileMan)
- ;                         ^02: User/Process name
- ;                         ^03: User IEN (DUZ)
- ;                         ^04: $JOB
- ;                         ^05: Task number
- ;                         ^06: Lock counter
- ;
- ; ^XTMP("RORTHREAD") -- RPC THREAD DESCRIPTORS
- ;
- ; ^XTMP("RORTHREAD",
- ;
- ;   0)                  Node descriptor
- ;                         ^1: Purge date  (FileMan)
- ;                         ^2: Create date (FileMan)
- ;                         ^3: Description
- ;
- ;   Task#,              Task number returned by the Taskman
- ;     "RESULTS",
- ;       i,              Line of thread results (i>0)
- ;         j)            Continuation of the line (j>0)
  ;
  ; ^XTMP("RORUPD"_) ---- REGISTRY UPDATE TEMPORARY DATA (MULTITASK)
  ;

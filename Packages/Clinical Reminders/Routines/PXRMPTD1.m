@@ -1,5 +1,5 @@
-PXRMPTD1 ; SLC/PKR/PJH/AGP - Reminder Inquiry print template routines. ;04/15/2009
- ;;2.0;CLINICAL REMINDERS;**4,12**;Feb 04, 2005;Build 73
+PXRMPTD1 ; SLC/PKR/PJH/AGP - Reminder Inquiry print template routines. ;01/06/2003
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;=======================================
 AFREQ ; Print baseline FREQUENCY/AGE RANGE.
@@ -57,26 +57,22 @@ EDIT ;Print latest entry in edit history
  ;
  ;=======================================
 USAGE ;Format usage string
- W ?7,$$XFORM($P($G(^PXD(811.9,D0,100)),U,4))
+ W ?30,$$XFORM($P($G(^PXD(811.9,D0,100)),U,4))
  Q
  ;
  ;=======================================
 XFORM(Y) ;Print transform for field 103 in file #811.9
  ;If ALL
+ I Y["*" Q "CPRS, DATA EXTRACT, REPORTS"
+ ;Otherwise
  N ARRAY,IC,LIT,OUTPUT,X
- I Y["*" D
- . S ARRAY("CPRS")=""
- . S ARRAY("DATA EXTRACT")=""
- . S ARRAY("REPORTS")=""
- ;Look for others.
  F IC=1:1:$L(Y) D
- . S X=$E(Y,IC)
- . I X="*" Q
- . S LIT=$S(X="C":"CPRS",X="X":"DATA EXTRACT",X="R":"REPORTS",X="P":"PATIENT",X="L":"REMINDER PATIENT LIST",1:"")
- . I LIT'="" S ARRAY(LIT)=""
+ .S X=$E(Y,IC)
+ .S LIT=$S(X="C":"CPRS",X="X":"DATA EXTRACT",X="R":"REPORTS",X="P":"PATIENT",X="L":"REMINDER PATIENT LIST",1:"")
+ .I LIT'="" S ARRAY(LIT)=""
  ;
  S LIT="",OUTPUT=""
  F  S LIT=$O(ARRAY(LIT)) Q:LIT=""  D
- . S OUTPUT=OUTPUT_", "_LIT
+ .S OUTPUT=OUTPUT_", "_LIT
  Q $E(OUTPUT,3,$L(OUTPUT))
  ;

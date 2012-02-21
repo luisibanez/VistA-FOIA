@@ -1,5 +1,5 @@
-YSSR ;SLC/AFE-SECLUSION/RESTRAINT - Lookup & Entry ; 1/27/04 2:35pm
- ;;5.01;MENTAL HEALTH;**82**;Dec 30, 1994;Build 3
+YSSR ;SLC/AFE-SECLUSION/RESTRAINT - Lookup & Entry
+ ;;5.01;MENTAL HEALTH;;Dec 30, 1994
  ;
 ENLST ; Called from MENU option YSSR ENTRY
  ; Entry of basic S/R information
@@ -51,21 +51,15 @@ LKUP ; Called as ENTRY action from MENU option YSSR SEC/RES
  W !!,"The following patient(s) are currently listed as being in Seclusion/Restraint:  ",!
  D HEADER S A=0 F  S A=$O(^YS(615.2,"AC",A)) Q:'A  S A1=0 F  S A1=$O(^YS(615.2,"AC",A,A1)) Q:'A1  D PNAMES
  I $D(YS02) W !!," * Written order required.",!
- I $D(YS04) W:'$D(YS02) !! W " # Record incomplete, please contact IRM.",!
  I '$D(C1) W !?5," ** ",MSG1," ** " K C1 I $D(OPT) S YSQT=1
  S %DT="T",X="N" D ^%DT
- K YS02,YS04
  Q
 PNAMES ; Called by routine YSSR1
- K YS01,YS03 S DFN=A D DEM^VADPT,PID^VADPT S B=VADM(1),SSN=VA("BID") S C1=+1
- S Y=$P($G(^YS(615.2,A1,0)),"^",3) D DD^%DT
- D TTIME
- S JRBY=$P($G(^YS(615.2,A1,25)),"^")
- S JRBYN="" I JRBY S JRBYN=$P(^VA(200,JRBY,0),"^",1)
- S Y=$P($G(^YS(615.2,A1,0)),"^",3) D DD^%DT
+ K YS01 S DFN=A D DEM^VADPT,PID^VADPT S B=VADM(1),SSN=VA("BID") S Y=$P(^YS(615.2,A1,0),"^",3),C1=+1,JRBY=$P(^(25),"^",1) D DD^%DT
  I $D(^YS(615.2,"AF",A)) S (YS01,YS02)="*"
- I '$O(^YS(615.2,A1,5,0))!('$O(^YS(615.2,A1,6,0)))!($G(^YS(615.2,A1,7))']"")!('$O(^(10,0)))!('+$G(^YS(615.2,A1,25))) S (YS03,YS04)="#"
- W !?0,$E(B,1,20),?22,SSN W:$D(YS01) ?28,YS01 I $D(YS03) W ?29,YS03
+ D TTIME
+ S JRBYN=$P(^VA(200,JRBY,0),"^",1),Y=$P(^YS(615.2,A1,0),"^",3) D DD^%DT
+ W !?0,$E(B,1,20),?23,SSN I $D(YS01) W ?29,YS01
  W ?31,Y,?52,$E(JRBYN,1,18) I $D(JRTT) W ?71,JRTT
  K JRTT
  K VADM,VA,DFN

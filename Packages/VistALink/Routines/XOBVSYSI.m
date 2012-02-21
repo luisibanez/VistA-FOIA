@@ -1,6 +1,7 @@
 XOBVSYSI ;; ld,mjk/alb - VistaLink Interface Implementation ; 07/27/2002  13:00
- ;;1.6;VistALink;;May 08, 2009;Build 15
- ;Per VHA directive 2004-038, this routine should not be modified.
+ ;;1.5;VistALink;;Sep 09, 2005
+ ;;Foundations Toolbox Release v1.5 [Build: 1.5.0.026]
+ ;
 CALLBACK(CB) ; -- init callbacks implementation
  SET CB("STARTELEMENT")="ELEST^XOBVSYSI"
  QUIT
@@ -40,7 +41,7 @@ REQHDLR(XOBDATA) ; -- request handler implementation
  ; --  system info request 
  IF TYPE="systemInfo" DO SYSINFO(.TYPE) GOTO REQHDLRQ
  ;
- ; -- failure if processing get here
+ ; -- failue if processing get here
  DO RESPONSE(.TYPE,"failure")
  ;
 REQHDLRQ ;
@@ -51,8 +52,7 @@ ENV ; -- set env variable
  QUIT
  ;
 PSTANUM ; -- set primary station number
- SET XOBSYS("PRIMARY STATION#")=$$TRUNCCH($$STA^XUAF4($$KSP^XUPARAM("INST")))
- ; note: AAC 200M is truncated to 200
+ SET XOBSYS("PRIMARY STATION#")=+$$STA^XUAF4($$KSP^XUPARAM("INST"))
  QUIT
  ;
 INIT(TYPE) ; -- handle initialize request
@@ -152,7 +152,7 @@ SYSINFO(TYPE) ; -- build system info response
  ;
  SET XOBINTRO=$GET(XOBINFO("introductoryText"))
  ;
- ; -- build and send complete message
+ ; -- build and send complate message
  DO PRE^XOBVSKT
  DO WRITE^XOBVSKT($$VLHDR^XOBVLIB(4))
  DO WRITE^XOBVSKT("<Response type="""_$GET(TYPE)_""" status=""success"" >")
@@ -172,7 +172,7 @@ GETSINFO(XOBINFO) ; -- gather system info into array
  SET XOBINFO("version")=$PIECE($TEXT(XOBVSYSI+1),";",3)
  ;
  ; -- get build number
- SET XOBINFO("build")=$PIECE($TEXT(XOBVSYSI+1),";",7)
+ SET XOBINFO("build")=$PIECE($PIECE($TEXT(XOBVSYSI+2),"Build: ",2),"]")
  ;
  ; -- get application server connection timeout
  SET XOBINFO("appServerTimeout")=$$GETASTO^XOBVLIB()
@@ -194,19 +194,19 @@ GETSINFO(XOBINFO) ; -- gather system info into array
  SET XOBINFO("boxVolume")=$PIECE(Y,U,4)
  ;
  ; -- get M version (full name)
- SET XOBINFO("mVersion")=$$SYMENC^MXMLUTL($$VERSION^%ZOSV(1))
+ SET XOBINFO("mVersion")=$$VERSION^%ZOSV(1)
  ;
  ; -- get operating system
- SET XOBINFO("operatingSystem")=$$SYMENC^MXMLUTL($$SYSOS^XOBVLIB(XOBOS))
+ SET XOBINFO("operatingSystem")=$$SYSOS^XOBVLIB(XOBOS)
  ;
  ; -- get domain name
- SET XOBINFO("domainName")=$$SYMENC^MXMLUTL($$KSP^XUPARAM("WHERE"))
+ SET XOBINFO("domainName")=$$KSP^XUPARAM("WHERE")
  ;
  ; -- production or test
  SET XOBINFO("vistaProduction")=$S($$PROD^XUPROD(0):"true",1:"false")
  ;
  ; -- default institution
- SET XOBINFO("defaultInstitution")=$$SYMENC^MXMLUTL($$STA^XUAF4($$KSP^XUPARAM("INST"))_"/"_$$NAME^XUAF4($$KSP^XUPARAM("INST")))
+ SET XOBINFO("defaultInstitution")=$$STA^XUAF4($$KSP^XUPARAM("INST"))_"/"_$$NAME^XUAF4($$KSP^XUPARAM("INST"))
  ;
  ; -- get intro text
  D GETINTRO^XOBSCAV2("XOBINFO(""introductoryText"")",1)
@@ -225,10 +225,3 @@ RPC(XOBY) ;
  . SET XOBY(XOBLINE)=XOBX_"~"_XOBARR(XOBX)
  QUIT
  ;
-TRUNCCH(XOBSTR) ; truncate before first non-numeric char
- NEW XOBI,XOBSTOP,XOBSTR1
- SET XOBSTOP=0,XOBSTR1=""
- FOR XOBI=1:1:$L(XOBSTR) QUIT:XOBSTOP  DO
- . IF "0123456789"'[$E(XOBSTR,XOBI) SET XOBSTOP=1 QUIT
- . SET XOBSTR1=XOBSTR1_$E(XOBSTR,XOBI)
- QUIT XOBSTR1

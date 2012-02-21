@@ -1,5 +1,5 @@
-PXRMG2M1 ;SLC/JVS -GEC #2 MAIL MESSAGES ;7/14/05  08:12
- ;;2.0;CLINICAL REMINDERS;**2,4**;Feb 04, 2005;Build 21
+PXRMG2M1 ;SLC/JVS -GEC #2 MAIL MESSAGES ;2/13/05  20:07
+ ;;2.0;CLINICAL REMINDERS;**2**;Feb 04, 2005
  Q
  ;=================================================
 TASK ;Start queued option PXRM GEC QUARTERLY ROLLUP
@@ -73,7 +73,7 @@ TEXT ;Text added to the bottom of the mail message
  ;37; 17 Number that only met the criteria's 1 and 2 and 4
  ;38; 18 Number that only met the criteria's 1 and 3 and 4
  ;39; 19 Number that only met the criteria's 2 and 3 and 4
- ;40; 20 Number that met all criteria's 1 and 2 and 3 and 4
+ ;40; 20 Number that met all criteria's, 1 and 2 and 3 and 4
  ;41;
  ;42;--------------------------------------------------
  ;43;The Basic Criteria for Eligibility is shown below.
@@ -91,7 +91,6 @@ TEXT ;Text added to the bottom of the mail message
  ;55;           preceding 12 months.
  ;============================================
 EXIT ;Exit and Clean up Variables
- K ^TMP("PXRMGEC",$J)
  Q
 CALC ;Calculate the quarter number
  N MON,YER,CQTR,BCQTR,BQTR,BYER,FQTR
@@ -113,7 +112,8 @@ CALC ;Calculate the quarter number
  I BQTR=4 S FQTR=1
  S QUARTER=BQTR,FQUARTER=FQTR,YEAR=BYER,DFNONLY=0
  ;After april 1 2005 no test patients
- S TPAT=0
+ I DT>3050331 S TPAT=0
+ E  S TPAT=1
  Q
  ;
 CALCMON ;Calculate the quarter number for current quarter
@@ -125,8 +125,10 @@ CALCMON ;Calculate the quarter number for current quarter
  I MON=7!(MON=8)!(MON=9) S CQTR=3
  I MON=10!(MON=11)!(MON=12) S CQTR=4
  ;
- S BYER=YER
- S BQTR=CQTR
+ I CQTR=1 S BYER=YER
+ E  S BYER=YER
+ I CQTR=1 S BQTR=1
+ E  S BQTR=BCQTR
  ;
  I BQTR=1 S FQTR=2
  I BQTR=2 S FQTR=3
@@ -135,11 +137,11 @@ CALCMON ;Calculate the quarter number for current quarter
  ;
  S QUARTER=BQTR,FQUARTER=FQTR,YEAR=BYER,DFNONLY=0
  ;After april 1 2005 no test patients
- S TPAT=0
+ I DT>3050331 S TPAT=0
+ E  S TPAT=1
  S ZTREQ="@"
  ;
  Q
- ;
 POST ;Post installation routine
  ;add remote members to mail group
  D ADDMBRS^XMXAPIG(DUZ,"GEC2 NATIONAL ROLLUP","VAUGHN.SMITH@MED.VA.GOV")
@@ -151,7 +153,7 @@ TASKRPT ;This will task a monthy report for 4 month.
  N ZTRTN,ZTDESC,ZTDTH,ZTIO,MON,ZTREQ,ZTSK
  S MON=0
  Q:$D(^TMP("PXRMG2TSK"))
- F ZTDTH="3050508.0200","3050608.0200","3050808.0200","3050908.0200" D
+ F ZTDTH="3050408.0200","3050608.0200","3050808.0200","3050908.0200" D
  .S MON=MON+1
  .I MON=1 S MONTH="MAY"
  .I MON=2 S MONTH="JUNE"

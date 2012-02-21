@@ -1,5 +1,5 @@
 DGPTFM3 ;ALB/ADL - MASTER CPT RECORD ENTER/EDIT PART 2 ;5/5/05 7:35am
- ;;5.3;Registration;**517,590,594,635,696**;Aug 13, 1993
+ ;;5.3;Registration;**517,590,594,635**;Aug 13, 1993
 REQ ;CHECK FOR REQUIRED FIELDS IN CPT RECORDS.  RECORDS MISSING ONE OR MORE REQUIRED FIELDS ARE DELETED.
  S RFL=0 G REQQ:'$D(DGZPRF(DGZP,0))
  I '$P(^DGPT(PTF,"C",DGZPRF(DGZP,0),0),U,3) S DA(1)=PTF,DA=DGPSM,DIK="^DGPT("_PTF_",""C""," D  G REQQ
@@ -34,7 +34,6 @@ CHKGAP(DGNARAY) ;Function call to determine if an inside DGN code has been delet
  ;
 RESEQDGN(CPTINFO,DGNARAY)       ;Subroutine to shift down DGN codes to replace any inside DGN's that were deleted by the user
  ;
- N I
  S SEQ="" K NOTNULL
  F  S SEQ=$O(DGNARAY(SEQ)) Q:SEQ=""  I DGNARAY(SEQ)'="" S NOTNULL(SEQ)=DGNARAY(SEQ)
  K DGNARAY S SEQ=""

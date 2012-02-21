@@ -1,5 +1,5 @@
 IBECEAU3 ;ALB/CPM-Cancel/Edit/Add... Add New IB Action;11-MAR-93
- ;;2.0;INTEGRATED BILLING;**132,150,167,183,341**;21-MAR-94
+ ;;2.0;INTEGRATED BILLING;**132,150,167,183**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 ADD ; Add a new Integrated Billing Action entry.
@@ -37,9 +37,7 @@ ADD ; Add a new Integrated Billing Action entry.
  I $G(IBSTOPDA) S $P(IBND,"^",19)=IBSTOPDA
  S $P(^IB(IBN,0),"^",2,20)=IBND
  I $G(IBGMTR) S $P(^IB(IBN,0),"^",21)=1 ; GMT Related
- ; DUZ may be null if this code is called by a process started by an HL7 multi-threaded listener
- ; if this condition occurs the approved fix is to use the Postmaster IEN.  2/27/06, IB*2.0*341
- D NOW^%DTC S $P(^IB(IBN,1),"^")=$S(DUZ:DUZ,1:.5),$P(^(1),"^",3,5)=$S(DUZ:DUZ,1:.5)_"^"_%_$S($G(IBCVA):"^"_IBCVA,1:"")
+ D NOW^%DTC S $P(^IB(IBN,1),"^")=DUZ,$P(^(1),"^",3,5)=DUZ_"^"_%_$S($G(IBCVA):"^"_IBCVA,1:"")
  S DIK="^IB(",DA=IBN D IX1^DIK
 ADDQ Q
  ;

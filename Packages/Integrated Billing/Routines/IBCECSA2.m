@@ -1,5 +1,5 @@
 IBCECSA2 ;ALB/CXW - IB CLAIMS STATUS AWAITING RESOLUTION SCREEN ;28-JUL-1999
- ;;2.0;INTEGRATED BILLING;**137,181,197,320**;21-MAR-1994
+ ;;2.0;INTEGRATED BILLING;**137,181,197**;21-MAR-1994
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; -- claims status awaiting resolution detail
@@ -10,51 +10,42 @@ HDR ; -- header code
  ; IBA - EOB ien from summary selection
  N IBST,IBST0
  Q:'$G(IBA)
- S IBST0=$G(^IBM(361,+$P(IBA,U,2),0)),IBST=$P(IBST0,U,9)
- S VALMHDR(2)="Message Status = "_$$EXPAND^IBTRE(361,.09,IBST)
- I $P(IBST0,U,14) S VALMHDR(2)=VALMHDR(2)_"  (AUTOMATICALLY REVIEWED)"
+ S IBST=$G(^IBM(361,+$P(IBA,U,2),0)),IBST0=$P(IBST,U,9)
+ S VALMHDR(2)="Message Status= "_$S(IBST=1:$$EXPAND^IBTRE(361,.09,1),IBST=2:$S('$P(IBST0,U,14):$$EXPAND^IBTRE(361,.09,2),1:"REVIEW NOT NEEDED"),1:"NOT REVIEWED")
  S VALMHDR(1)=$J("",23)_"CLAIMS STATUS AWAITING RESOLUTION-DETAIL"
  Q
  ;
 INIT ; -- init variables and list array
- N I,X,Y,Z,ZZ,IBZ,IBZ0,IBX,IBCNT
+ N I,X,Y,Z,ZZ,IBZ,IBZ0,IBFST,IBX,IBCNT
  K ^TMP("IBCECSC",$J)
 SCR S VALMCNT=0,IBCNT=1
  S IBA=+$O(IBDAX(0)),IBA=$G(IBDAX(IBA))
  Q:IBA=""
  S X=""
- S IBX=$S($D(^TMP("IBCECSB",$J)):$G(^TMP("IBCECSB",$J,$P(IBA,U,3),$P(IBA,U,4),$P(IBA,U,6),$P(IBA,U,2))),1:"")
+ S IBX=$S($D(^TMP("IBCECSB",$J)):$G(^TMP("IBCECSB",$J,$P(IBA,U,3),$P(IBA,U,4),$P(IBA,U,2))),1:"")
  D SETL1^IBCECSA1(IBX,.X)
  D SET(X,IBCNT)
- D SET("",IBCNT)    ; blank line
- ;
- S X=$E("     Svc Loc: "_$P(IBX,U,7)_$J("",30),1,30)_$J("",14)_"Division: "_$E($P(IBX,U,8),1,26)
+ S X=$E("     Svc Loc: "_$P(IBX,U,7)_$J("",30),1,30)_"  "_$E("    Division: "_$P(IBX,U,8),1,40)
  D SET(X,IBCNT)
- S X=$E(" Biller Name: "_$P($P(IBX,U,9),"~")_$J("",30),1,30)_$J("",10)_"Days Pending: "_$P(IBX,U,11)
+ S X=$E(" Biller Name: "_$P($P(IBX,U,9),"~")_$J("",30),1,30)_"  "_"Days Pending: "_$P(IBX,U,11)
  D SET(X,IBCNT)
  S IBZ=$P(IBA,U,2),IBZ0=$G(^IBM(361,IBZ,0))
- S X=$E("  Date Rec'd: "_$$FMTE^XLFDT($P(IBZ0,U,2),"2Z")_$J("",30),1,30)_$J("",10)_"Dt Generated: "_$S($P(IBZ0,U,12):$$FMTE^XLFDT($P(IBZ0,U,12),"2Z"),1:"")
+ S X=$E("  Date Rec'd: "_$$FMTE^XLFDT($P(IBZ0,U,2),2)_$J("",30),1,30)_"  Dt Generated: "_$S($P(IBZ0,U,12):$$FMTE^XLFDT($P(IBZ0,U,12),2),1:"")
  D SET(X,IBCNT),SET("",IBCNT)
- ;
- D SET("Message Text:",IBCNT)
- S X=0 F  S X=$O(^IBM(361,IBZ,1,X)) Q:'X  D
- . S Y="  "_$G(^IBM(361,IBZ,1,X,0))
+ S (IBFST,X)=0 F  S X=$O(^IBM(361,IBZ,1,X)) Q:'X  D
+ . S Y=$$SETSTR^VALM1($S('IBFST:"Message Text: ",1:"")_$G(^IBM(361,IBZ,1,X,0)),"",2,$S('IBFST:185,1:200))
  . D SET(Y,IBCNT)
- . Q
+ . S IBFST=1
  D SET("",IBCNT)
- ;
- S ZZ="" F  S ZZ=$O(^IBM(361,IBZ,2,"B",ZZ),-1) Q:ZZ=""  S Z=0 F  S Z=$O(^IBM(361,IBZ,2,"B",ZZ,Z)) Q:'Z  D
- . S I=$G(^IBM(361,IBZ,2,Z,0))
+ S ZZ="" F  S ZZ=$O(^IBM(361,IBZ,2,"B",ZZ),-1) Q:ZZ=""  S Z=0 F  S Z=$O(^IBM(361,IBZ,2,"B",ZZ,Z)) Q:'Z  S I=$G(^IBM(361,IBZ,2,Z,0)) D
  . S Y=$$SETSTR^VALM1("Review Date: "_$$EXTERNAL^DILFD(361.02,.01,,ZZ),"",2,40)
  . D SET(Y,IBCNT)
- . I $P(I,U,2) S Y=$$SETSTR^VALM1("Reviewed By: "_$P($G(^VA(200,+$P(I,U,2),0)),U,1),"",2,70) D SET(Y,IBCNT)
- . D SET("    Comments:",IBCNT)
- . S X=0 F  S X=$O(^IBM(361,IBZ,2,Z,1,X)) Q:'X  D
- .. S Y="    "_$G(^IBM(361,IBZ,2,Z,1,X,0))
+ . I $P($G(^VA(200,+$P(I,U,2),0)),U)'="" S Y=$$SETSTR^VALM1("Reviewed By: "_$P($G(^VA(200,+$P(I,U,2),0)),U),"",2,50) D SET(Y,IBCNT)
+ . S (IBFST,X)=0 F  S X=$O(^IBM(361,IBZ,2,Z,1,X)) Q:'X  D
+ .. S Y=$$SETSTR^VALM1($S('IBFST:"Comments: ",1:"")_$G(^IBM(361,IBZ,2,Z,1,X,0)),"",2,$S('IBFST:190,1:200))
  .. D SET(Y,IBCNT)
- .. Q
+ .. S IBFST=1
  . D SET("",IBCNT)
- . Q
 INITQ Q
  ;
 HELP ; help code
@@ -136,16 +127,14 @@ STATUS ; Edit rev stat
  S VALMBCK="R"
  Q
  ;
-NOTECHG(IBDA,IBAUTO,IBNTEXT,IBUSER) ; Enter who/when review stat change was entered
+NOTECHG(IBDA,IBAUTO,IBNTEXT) ; Enter who/when review stat change was entered
  ; IBDA = ien of entry in file 361
  ; IBAUTO = flag to say auto-review was used (1=used, 0=not used)
  ; IBNTEXT = array containing the lines of text to store if not using the
  ;           default text  IBNTEXT = # of lines
- ; IBUSER = flag which says to also stuff the .02 reviewed by field
  N IBIEN,IBTEXT,DA,X,Y,DIC,DO,DLAYGO,DD
  S DA(1)=IBDA,DIC="^IBM(361,"_DA(1)_",2,",DIC(0)="L",DLAYGO=361.02
  S X=$$NOW^XLFDT
- I $G(IBUSER),$G(DUZ) S DIC("DR")=".02////"_$G(DUZ)
  D FILE^DICN K DIC,DD,DO,DLAYGO
  Q:Y'>0
  S DA(2)=DA(1),DA(1)=+Y,IBIEN=DA(1)_","_DA(2)_","
@@ -211,7 +200,7 @@ ADDCOM(IBDA,DUZ,IBCOM,ADD) ; Add review comment to file 361
  I '$G(ADD) D
  . K DO,DD
  . S DIC="^IBM(361,"_IBDA(1)_",2,",DA(1)=IBDA(1),X=$$NOW^XLFDT
- . W !,"New Review Date: "_$$FMTE^XLFDT(X,"2Z")
+ . W !,"New Review Date: "_$$FMTE^XLFDT(X,2)
  . S DIC("DR")=DR,DLAYGO=361.02
  . S DIC(0)="L",DIC("P")=$$GETSPEC^IBEFUNC(361,2)
  . D FILE^DICN K DIC,DD,DO,DLAYGO

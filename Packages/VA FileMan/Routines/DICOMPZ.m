@@ -1,6 +1,6 @@
-DICOMPZ ;SFISC/GFT-EVALUATE COMPUTED FLD EXPR ;9APR2007
- ;;22.0;VA FileMan;**6,76,114,152**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DICOMPZ ;SFISC/GFT-EVALUATE COMPUTED FLD EXPR ;05:07 PM  16 Jan 2003
+ ;;22.0;VA FileMan;**6,76,114**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 PRIOR ;from DICOMP -- PRIOR.. Functions get archived values
  N DIC,DICOMPSP,DICOMPXE,DICOPS
@@ -40,7 +40,6 @@ FOR N DICOR,DICOT
  S Y=T#100+1,D=$P($P(DICOT,U,4),";") I +D'=D S D=""""_D_""""
  S DICOMPXE="D,0))#2 "_DICOMPXE_" "_DICMX_" Q:'$D(D)  S D=D"_Y
  S DICOR=$$REF(T)_","_D_",",D="F D=0:0 S (D,D"_Y_")=$O("_DICOR
- I W=")",$D(DPS(DPS,"INTERNAL")) S D="S D=$G(DIWF) N DIWF S DIWF=D_""XL"" "_D ;**DI*22*152
  S %=+$P(DICOT,U,2)
  I $P($G(^DD(%,.01,0)),U,2)["W"!'$D(^DD(%,0,"IX","B",%,.01))
  E  I '$D(^DD(%,.01,1,1,0))
@@ -54,7 +53,7 @@ DICOXR S X=X_" S X="_$S(DIMW["m"!'$D(DICOXR):"""""",1:DICOXR)
  Q
  ;
 CONTAINS N DICON
- S DICON=W="'",%=$E(I,M+DICON) I %=""!(W=")") S Y=0 Q
+ S DICON=W="'",%=$E(I,M+DICON) I %="" S Y=0 Q
  I DICOPS[% S DICOPS=% D R($E(I,M+DICON+1,999)) Q:'$D(Y)  D  Q
  .S DICOXR=$$DGI^DICOMP
  .D DIMP("S Y=X "_X_" I Y"_DICOPS_"X S "_DICOXR_"="_'DICON_" K D") S DICMX=X

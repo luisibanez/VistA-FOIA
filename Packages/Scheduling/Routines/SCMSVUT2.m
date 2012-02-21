@@ -1,5 +1,5 @@
 SCMSVUT2 ;ALB/JLU;Utility routine for AMBCARE;06/28/99
- ;;5.3;Scheduling;**66,180,254,293,325,466,521**;AUG 13,1993;Build 1
+ ;;5.3;Scheduling;**66,180,254,293,325**;AUG 13,1993
  ;06/28/99 ACS Added CPT modifier validation
  ;
 COUNT(VALER) ;counts the number of errored encounters found.
@@ -9,16 +9,6 @@ COUNT(VALER) ;counts the number of errored encounters found.
  N VAR,CNT
  S VAR="",CNT=0
  F  S VAR=$O(@VALER@(VAR)) Q:VAR']""  S CNT=CNT+1
- Q CNT
- ;
-IPERR(VALER) ;counts the number of inpatient errored encounters found.
- ;INPUT VALER - The array containing the errors.
- ;OUTPUT the number of errors
- ;
- N VAR,CNT
- S VAR="",CNT=0
- F  S VAR=$O(@VALER@(VAR)) Q:VAR']""  D
- .I $$INPATENC^SCDXUTL(VAR) S CNT=CNT+1
  Q CNT
  ;
 FILEVERR(PTR,VALERR) ;files the errors found for an encounter
@@ -36,7 +26,7 @@ FILE(VALERR,SEG,PTR,FILE) ;
  N NBR
  S NBR=0
  F  S NBR=$O(@VALERR@(SEG,NBR)) Q:'NBR  DO
- .N CODPTR,CODE
+ .N CODPTR
  .S CODE=$G(@VALERR@(SEG,NBR))
  .I CODE']"" Q
  .S CODPTR=$O(^SD(409.76,"B",CODE,""))
@@ -194,10 +184,10 @@ CONFDT(DATA,SUB)    ;CONFIDENTIAL ADDRESS START/STOP DATE
  S ENDT=$P(DATA,SUB,2)
  I STDT="" Q 0
  S STDT=$$FMDATE^HLFNC(STDT)
- S X=STDT,%DT="X" D ^%DT I Y=-1 Q 0  ;SD/521 added %DT
+ S X=STDT D ^%DT I Y=-1 Q 0
  I ENDT="" Q 1
  S ENDT=$$FMDATE^HLFNC(ENDT)
- S X=ENDT,%DT="X" D ^%DT I Y=-1 Q 0  ;SD/521 added %DT
+ S X=ENDT D ^%DT I Y=-1 Q 0
  I $$FMDIFF^XLFDT(ENDT,STDT,1)<0 Q 0
  Q 1
  ;

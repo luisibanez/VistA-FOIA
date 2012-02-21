@@ -1,6 +1,6 @@
-FBPAY21 ;AISC/CMR-OUTPATIENT PAYMENT HISTORY SORT/PRINT ;21/NOV/2006
- ;;3.5;FEE BASIS;**4,32,69,101**;JAN 30, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+FBPAY21 ;AISC/CMR-OUTPATIENT PAYMENT HISTORY SORT/PRINT ;7/11/2001
+ ;;3.5;FEE BASIS;**4,32,69**;JAN 30, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
 PRINT ;write output
  S FBOUT=0 D:FBCRT&(FBPG) CR Q:FBOUT
  D HDR I FBSORT S FBPAT=FBPNAME I $D(^TMP($J,"FBTR")) S FBTRCK=1 D TRAV^FBPAY671
@@ -53,7 +53,7 @@ HDR ;main header
 SH ;subheader - vendor if fbsort; patient if 'fbsort, prints when name changed
  I ($Y+8)>IOSL D:FBCRT CR Q:FBOUT  D HDR
  I FBSORT W !!,"Vendor: ",$P(FBVI,";"),?41,"Vendor ID: ",$P(FBVI,";",2)
- I 'FBSORT W !!,"Patient: ",$P(FBPT,";"),?41,"Patient ID: ",$$SSNL4^FBAAUTL($$SSN^FBAAUTL($P(FBPT,";",2)))
+ I 'FBSORT W !!,"Patient: ",$P(FBPT,";"),?41,"Patient ID: ",$$SSN^FBAAUTL($P(FBPT,";",2))
  Q
 SH1 S FBPAT=$P(FBPT,";") I $D(^TMP($J,"FBTR",FBPAT)) S FBTRCK=1 D TRAV^FBPAY671
  Q

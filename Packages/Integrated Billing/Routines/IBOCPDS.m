@@ -1,5 +1,5 @@
 IBOCPDS ;ALB/ARH - CLERK PRODUCTIVITY REPORT (SUMMARY) ;10/8/91
- ;;2.0;INTEGRATED BILLING;**44,118,155,342**;21-MAR-94;Build 18
+ ;;2.0;INTEGRATED BILLING;**44,118,155**;21-MAR-94
  ;
 EN ; - Get parameters then run the report.
  D ORDER^IBOCPD I IBQUIT G EXIT
@@ -66,7 +66,7 @@ FILE ; - Save the data in sorted order in a temporary file.
  S IBNODE=$G(^TMP("IB",$J,"~~",IBRT)),$P(^(IBRT),U,1,4)=($P(IBNODE,U,1)+1)_U_($P(IBNODE,U,2)+IBTD)_U_($P(IBNODE,U,3)+$S('IBCANC:0,1:1))_U_($P(IBNODE,U,4)+$S('IBCANC:0,1:IBTD))
  ;
  ; 7/26/04 - ESG - MRA Project - Capture division data for MRA authorizer user
- I IBCLK["AUTHORIZER,IB MRA"!(IBCLK["POSTMASTER")  D
+ I IBCLK["AUTHORIZER,IB MRA" D
  . N DIV
  . S DIV=+$P($G(^DGCR(399,IFN,0)),U,22)    ; division pointer
  . S DIV=$P($G(^DG(40.8,DIV,0)),U,1)       ; division name

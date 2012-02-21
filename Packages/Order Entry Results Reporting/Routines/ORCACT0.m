@@ -1,7 +1,5 @@
-ORCACT0 ;SLC/MKB-Validate order action ;5/19/08
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,27,48,72,86,92,94,141,165,177,173,190,215,243,289**;Dec 17, 1997;Build 3
- ;
- ;Reference to REFILL^PSOREF supported by IA #2399
+ORCACT0 ;SLC/MKB-Validate order action ;2/24/03  10:35
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,27,48,72,86,92,94,141,165,177,173,190,215**;Dec 17, 1997
  ;
 VALID(IFN,ACTION,ERROR,NATR) ; -- Determines if action is valid for order IFN
  N OR0,OR3,ORA0,AIFN,PKG,DG,ORDSTS,ACTSTS,VER,X,Y,MEDPARM K ERROR
@@ -36,12 +34,7 @@ MN I ACTION="MN" D  G VQ ; manually release (delayed)
 GMRA I PKG="GMRA" S ERROR="This action is not allowed on an allergy/adverse reaction!" G VQ ; no actions allowed on Allergies
 MEDS I PKG="PS",'MEDPARM S ERROR="You are not authorized to enter med orders!" G VQ
 RW I ACTION="RW" D RW^ORCACT01 G VQ ; rewrite/copy
-XFR I ACTION="XFR" D  G VQ
- . N A
- . S A=""
- . F  S A=$O(^OR(100,+IFN,4.5,"ID","CONJ",A)) Q:'A  I ^OR(100,+IFN,4.5,A,1)="X" S ERROR="Orders with a conjunction of 'EXCEPT' may not be transferred." Q
- . I $G(ERROR)]"" Q
- . D XFR^ORCACT01 ; transfer to in/outpt
+XFR I ACTION="XFR" D XFR^ORCACT01 G VQ ; transfer to in/outpt
 RN I ACTION="RN" D RN^ORCACT01 G VQ ; renew
 TRM I $$DONE G VQ ; ORDSTS=1,2,7,12,13
 EV I ACTION="EV" D  G VQ ; change delay event
@@ -54,7 +47,7 @@ DC2 I ACTION="DC",ACTSTS="" D  G VQ ; DC released order
  .. S X=$O(^ORE(100.2,"AO",+IFN,0)) I X S:'$G(^ORE(100.2,X,1)) ERROR="Future event orders may not be auto-discontinued!" Q
  .. I $$GET1^DIQ(9.4,+$P(OR0,U,14)_",",1)="PSO",$G(DGPMT)=1 Q  ;177 If admission auto-dc and order is outpt med then no further checking needed
  .. I $G(DGPMT)=1,$P($G(^SC(+$P(OR0,U,10),0)),U,3)'="C" S ERROR="Only outpatient orders may be auto-discontinued!" Q
- .. I $G(DGPMT)'=1,$P($G(^SC(+$P(OR0,U,10),0)),U,3)="C",PKG'="PS" S ERROR="Only inpatient orders may be auto-discontinued!" Q
+ .. I $G(DGPMT)'=1,$P($G(^SC(+$P(OR0,U,10),0)),U,3)="C" S ERROR="Only inpatient orders may be auto-discontinued!" Q
  . I PKG="RA",ORDSTS=6 S ERROR="Active Radiology orders cannot be discontinued!" Q
  . I PKG="VBEC",ORDSTS=6 S ERROR="Active Blood Product orders cannot be discontinued!" Q
  . I PKG="LR" D  Q
@@ -63,9 +56,7 @@ DC2 I ACTION="DC",ACTSTS="" D  G VQ ; DC released order
  . I PKG="GMRC",ORDSTS=9 S ERROR="Consults orders with partial results cannot be discontinued!" Q
  . I DG="DO",$G(DGPMT)'=3,ORDSTS=6,'$$NPO(+IFN) S ERROR="Active Diets cannot be discontinued; please order a new diet!" Q
 RL I ACTION="RL" D  G VQ  ; release hold
- . I ORDSTS'=3 D  Q
- ..I $P(ORA0,U,4)=2 S ERROR="Providers has not yet signed the hold order and therefor it cannot yet be released" Q
- ..S ERROR="Orders not on hold cannot be released!" Q
+ . I ORDSTS'=3 S ERROR="Orders not on hold cannot be released!" Q
  . I ACTSTS S ERROR=$$ACTION($P(ORA0,U,2))_" orders cannot be released from hold!" Q
  . N NATR,ACT S ACT=$S($P(ORA0,U,2)="HD":AIFN,1:+$P(OR3,U,7))
  . S NATR=+$P($G(^OR(100,+IFN,8,ACT,0)),U,12),ACT=$P($G(^(0)),U,2)
@@ -74,7 +65,6 @@ AIFN S X=$P(ORA0,U,2) I AIFN>1,ACTSTS S ERROR="This action is not allowed on a "
 RF I ACTION="RF" D  G VQ
  . I DG'="O RX" S ERROR="Only Outpatient Med orders may be refilled!" Q
  . I ORDSTS=5 S ERROR="Pending orders may not be refilled!" Q
- . I ORDSTS=7 S ERROR="Expired orders may not be refilled!" Q
  . N X,PSIFN S PSIFN=$G(^OR(100,+IFN,4))
  . S X=$$REFILL^PSOREF(PSIFN) I X'>0 S ERROR=$P(X,U,2) Q
 CP I ACTION="CP" D  G VQ ; complete
@@ -83,9 +73,7 @@ CP I ACTION="CP" D  G VQ ; complete
 AL I ACTION="AL" D  G VQ
  . I PKG'="LR",PKG'="RA",PKG'="GMRC" S ERROR="This order does not generate results!" Q
  . I $P(OR3,U,10) S ERROR="This order is already flagged to alert the provider when resulted!" Q
-XX I ACTION="XX" D  G VQ ; edit/change
- . I ORDSTS=7 S ERROR="Expired orders may not be changed!" Q
- . D XX^ORCACT01
+XX I ACTION="XX" D XX^ORCACT01 G VQ ; edit/change
 HD I ACTION="HD" D  G VQ ; hold
  . I PKG="FH" S ERROR="Diet orders cannot be held!" Q
  . I PKG="LR" S ERROR="Lab orders cannot be held!" Q
@@ -118,7 +106,7 @@ COLLECTD() ; -- Lab order collected/active (incl all children)?
 DONE() ; -- sets ERROR if terminal status
  I ORDSTS=1 S ERROR="This order has been discontinued!" Q 1
  I ORDSTS=2 S ERROR="This order has been completed!" Q 1
- I ORDSTS=7,DG'="O RX" S ERROR="This order has expired!" Q 1
+ I ORDSTS=7 S ERROR="This order has expired!" Q 1
  I ORDSTS=12 S ERROR="This order has been changed!" Q 1
  I ORDSTS=13 S ERROR="This order has been cancelled!" Q 1
  I ORDSTS=14 S ERROR="This order has lapsed!" Q 1

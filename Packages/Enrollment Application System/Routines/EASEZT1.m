@@ -1,5 +1,5 @@
 EASEZT1 ;ALB/jap - Data Transformation Logic for 1010EZ Processing ;10/12/00  13:08
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**51,70**;Mar 15, 2001;Build 26
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**51**;Mar 15, 2001
  ;
  ;
 NAME(EASAPP,TYPE,MULTIPLE) ;get full name for person of interest
@@ -133,13 +133,4 @@ RACE(XDATA) ;
  ;
 LAST(XDATA) ; return LAST NAME, first middle
  Q $$UC($P($G(XDATA),","))
- ;
-COUNTRY(XDATA)  ;
- ;   Input:  3 character COUNTRY CODE (from file # 779.004)
- ;   Output: POSTAL NAME, if it exists
- ;           DESCRIPTION, if POSTAL NAME="<NULL>"
- ;           -1, if invalid
- N RSLT
- S RSLT=$$COUNTRY^DGADDUTL(XDATA)
- Q $S(RSLT=-1:"",1:RSLT)
  ;

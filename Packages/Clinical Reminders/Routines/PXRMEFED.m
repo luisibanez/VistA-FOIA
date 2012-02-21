@@ -1,18 +1,18 @@
-PXRMEFED ; SLC/PJH - Extract Counting Editor ;05/10/2006
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMEFED ; SLC/PJH - Extract Findings Editor ;09/06/2002
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
- ;Main entry point for PXRM COUNTING RULE EDIT/DISPLAY
+ ;Main entry point for PXRM LIST RULE EDIT/DISPLAY
 START(IEN) ;
  N PXRMDONE,VALMBCK,VALMCNT,VALMSG,X,XMZ,XQORM,XQORNOD
  S X="IORESET"
  D ENDR^%ZISS
  S VALMCNT=0
- D EN^VALM("PXRM EXTRACT COUNT RULE EDIT")
+ D EN^VALM("PXRM EXTRACT FINDING EDIT")
  Q
  ;
 BLDLIST(IEN) ;Build workfile
  N FLDS,GBL,PXRMROOT
- S FLDS="[PXRM EXTRACT COUNTING]"
+ S FLDS="[PXRM EXTRACT FINDING]"
  S GBL="^TMP(""PXRMEFED"",$J)"
  S GBL=$NA(@GBL)
  S PXRMROOT="^PXRM(810.7,"
@@ -48,28 +48,28 @@ INIT ;Init
  S VALMCNT=0
  Q
  ;
-PEXIT ;Protocol exit code
+PEXIT ;PXRM EXCH MENU protocol exit code
  S VALMSG="+ Next Screen   - Prev Screen   ?? More Actions"
  ;Reset after page up/down etc
  Q
  ;
 ADD ;Add Rule
  N DA,DIC,DONE,DTOUT,DUOUT,DLAYGO,HED,Y
- S HED="ADD EXTRACT COUNTING RULE",DONE=0
+ S HED="ADD EXTRACT FINDING",DONE=0
  W IORESET,!
  F  D  Q:$D(DTOUT)  Q:DONE
  .S DIC="^PXRM(810.7,"
  .;Set the starting place for additions.
  .D SETSTART^PXRMCOPY(DIC)
  .S DIC(0)="AELMQ",DLAYGO=810.7
- .S DIC("A")="Select EXTRACT COUNTING RULE to add: "
+ .S DIC("A")="Select EXTRACT FINDING to add: "
  .D ^DIC
  .I $D(DUOUT) S DTOUT=1
  .I ($D(DTOUT))!($D(DUOUT)) Q
  .I Y=-1 K DIC S DTOUT=1 Q
- .I $P(Y,U,3)'=1 W !,"This extract counting rule already exists" Q
+ .I $P(Y,U,3)'=1 W !,"This extract parameter name already exists" Q
  .S DA=$P(Y,U,1)
- .;Edit Extract Counting Rule
+ .;Edit Extract Parameter
  .D EDIT(DA)
  .S:$D(DA) DONE=1
  Q
@@ -85,9 +85,9 @@ EDIT(DA) ;Edit Rule
  ;Save checksum
  S CS1=$$FILE^PXRMEXCS(810.7,DA)
  ;
- S DIE="^PXRM(810.7,",DIDEL=810.7,ODA=DA,DR="[PXRM EXTRACT COUNTING]"
+ S DIE="^PXRM(810.7,",DIDEL=810.7,ODA=DA,DR="[PXRM EXTRACT FINDINGS]"
  ;
- ;Edit extract counting rule then unlock
+ ;Edit extract parameter then unlock
  D ^DIE,UNLOCK(ODA)
  ;Deleted ???
  I '$D(DA) S VALMBCK="Q" Q
@@ -107,7 +107,7 @@ EFEDIT ;Edit Rule
  D BLDLIST(IEN)
  Q
  ;
-EFGRP ;Counting Groups
+EFGRP ;Finding Groups
  D START^PXRMEGM(IEN)
  ;
  ;Rebiuld Workfile
@@ -117,7 +117,7 @@ EFGRP ;Counting Groups
  Q
  ;
 LOCK(DA) ;Lock the record
- L +^PXRM(810.7,DA):2 I  Q 1
+ L +^PXRM(810.7,DA):0 I  Q 1
  E  W !!,?5,"Another user is editing this file, try later" H 2 Q 0
  ;
 SCREEN ;validate rule type

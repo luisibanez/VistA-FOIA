@@ -1,6 +1,5 @@
 ORB3TIM2 ; slc/CLA - Routine to trigger time-related notifications ;3/30/01  07:41 [1/3/05 8:21am]
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**102,215,251,265**;Dec 17, 1997;Build 17
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**102,215,251**;Dec 17, 1997
  ;
 EXPIR ;trigger expiring order notifs
  N EDT,EXDT,EXORN,ORBDNR,ORPT,ORBRSLT,RXORD,ORLASTDT,X,Y,%DT
@@ -62,7 +61,6 @@ EXPIR ;trigger expiring order notifs
  ..S EXOI=$$OI^ORQOR2(EXORN) I +$G(EXOI)>0 D
  ...I $L(PTLOC),PTLOC'="OUTPT" D
  ....D ENVAL^XPAR(.ORBLST,"ORB OI EXPIRING - INPT","`"_EXOI,.ORBERR)
- ....I 'ORBERR,'$G(ORBLST) D ENVAL^XPAR(.ORBLST,"ORB OI EXPIRING - INPT PR","`"_EXOI,.ORBERR)
  ....I 'ORBERR,$G(ORBLST)>0 D
  .....S OITXT=$P(^ORD(101.43,EXOI,0),U)
  .....S ORSDT=$P(^OR(100,EXORN,0),U,8),ORSDT=$$FMTE^XLFDT(ORSDT,"2P")

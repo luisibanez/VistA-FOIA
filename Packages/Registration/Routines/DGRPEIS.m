@@ -1,5 +1,5 @@
-DGRPEIS ;ALB/MIR,ERC - INCOME SCREENING DATA FOR EDIT ; 1/23/06 2:37pm
- ;;5.3;Registration;**10,45,108,624,653,688**;Aug 13, 1993;Build 29
+DGRPEIS ;ALB/MIR - INCOME SCREENING DATA FOR EDIT ; 27 JAN 92
+ ;;5.3;Registration;**10,45,108,624**;Aug 13, 1993
  ; Handles editing of dependent info
  ; CHANGES TO THIS ROUTINE SHOULD BE COORDINATED WITH THE MEANS TEST
  ; DEVELOPER.  MANY CALLS IN THIS ROUTINE (ADD, EDIT, INACT, ETC.) ARE
@@ -14,29 +14,26 @@ EN S DGFL=0
  K DGSPFL,DGPREF
 Q Q
  ;
-ADD(DFN,DGTYPE,DGTSTDT,DGDEP) ; subroutine to add to files 408.12 & 408.13
+ADD(DFN,DGTYPE,DGTSTDT) ; subroutine to add to files 408.12 & 408.13
  ; In -- DFN as the IEN of file 2 for the vet
  ;       DGTYPE as C for mt children or D for all deps
  ;            S for spouse (default spouse)
  ;       DGTSTDT - optional test date
- ;       DGDEP - optional number of dependent children
  ;Out -- DGPRI as patient relation IEN
  ;       DGIPI as income person IEN
  ;       DGFL as -2 if time-out, -1 if '^', 0 otherwise
  N ANS,DA,PROMPT,SPOUSE,TYPE,DGVADD,DGSKIPST,DGSADD,DGIPIEN,DGUQTLP
  I '$D(DGTSTDT) N DGTSTDT S DGTSTDT=$S($D(DGMTDT):DGMTDT,1:DT)
  S DGFL=$G(DGFL)
- S:('$D(DGDEP)) DGDEP=""
  S DGTYPE=$G(DGTYPE),SPOUSE=$S(DGTYPE']"":1,DGTYPE="C":0,DGTYPE="D":0,1:1)
- S DGFL=$G(DGFL),PROMPT="NAME^SEX^DATE OF BIRTH^^^^^^SSN^PS SSN REASON^MAIDEN NAME^STREET ADDRESS [LINE 1]^STREET ADDRESS [LINE 2]^STREET ADDRESS [LINE 3]^CITY^STATE^ZIP^PHONE NUMBER"
+ S DGFL=$G(DGFL),PROMPT="NAME^SEX^DATE OF BIRTH^^^^^^SSN^^MAIDEN NAME^STREET ADDRESS [LINE 1]^STREET ADDRESS [LINE 2]^STREET ADDRESS [LINE 3]^CITY^STATE^ZIP^PHONE NUMBER"
  S TYPE=$S(SPOUSE:"SPOUSE'S ",DGTYPE="C":"CHILD'S ",1:"DEPENDENT'S ")
  S DGSKIPST=0 ;* Skip Add 2 and 3 prompts when Add 1 or 2 not entered
  S DGUQTLP=0
- F DGRPI=.01:.01:.03,.09,.1,1.1:.1:1.8 D  Q:DGVADD  Q:DGSADD  Q:DGUQTLP  I DGFL Q
+ F DGRPI=.01:.01:.03,.09,1.1:.1:1.8 D  Q:DGVADD  Q:DGSADD  Q:DGUQTLP  I DGFL Q
  . S (DGSADD,DGVADD,DGIPIEN)=0
  . ; Is spouse/dependent address same as patient address?
  . I +DGRPI=1.2 DO
- . . I $$FORIEN^DGADDUTL($P($G(^DPT(DFN,.11)),U,10)) G FOREIGN ; only ask next fields if address same if vet address is in USA
  . . K DIR
  . . S DIR(0)="YAO^^"
  . . S DIR("A")=TYPE_"STREET ADDRESS SAME AS PATIENT'S: "
@@ -46,7 +43,6 @@ ADD(DFN,DGTYPE,DGTSTDT,DGDEP) ; subroutine to add to files 408.12 & 408.13
  . . D ^DIR
  . . S DGVADD=+Y
  . . K Y,DIR
-FOREIGN . . ;tag to rejoin if vet address is not USA
  . . S DGIPIEN=$$SPSCHK(DFN)
  . . I 'DGVADD,(TYPE'="SPOUSE'S"),(DGIPIEN) DO
  . . . K DIR,Y
@@ -70,12 +66,10 @@ FOREIGN . . ;tag to rejoin if vet address is not USA
  . . S:+DGRPI<1 DIR("A")=TYPE_$P(PROMPT,"^",DGRPI*100)
  . . S:+DGRPI>1 DIR("A")=TYPE_$P(PROMPT,"^",DGRPI*10)
  . . I (+DGRPI'=1.1)!((+DGRPI=1.1)&(SPOUSE)&($G(ANS(.02))="F")) DO
- . . . ;if .1, check to see if SSN is a pseudo, if yes, require Reason
- . . . I DGRPI=.1 D REAS Q
  . . . I (+DGRPI=1.3)!(+DGRPI=1.4) D:('DGSKIPST) ^DIR
  . . . I (+DGRPI'=1.3)&(+DGRPI'=1.4) D ^DIR
- . . . I $D(DTOUT)!$D(DUOUT) S:(DGRPI=.09)!((DGRPI>1.1)&(DGRPI<1.9)) DGUQTLP=1
- . . . I $D(DTOUT)!$D(DUOUT) S DGFL=$S($D(DUOUT):$S((DGRPI>1.1)&(DGRPI<1.9):"",1:-1),1:-2) Q
+ . . . I $D(DTOUT)!$D(DUOUT) S:((DGRPI=.09)!((DGRPI>1.1)&(DGRPI<1.9))) DGUQTLP=1
+ . . . I $D(DTOUT)!$D(DUOUT) S DGFL=$S($D(DUOUT):$S((DGRPI=.09)!((DGRPI>1.1)&(DGRPI<1.9)):"",1:-1),1:-2) Q
  . . . I DGRPI=.01,(Y']"") S DGFL=-1 Q
  . . . S ANS(DGRPI)=Y
  . . . I (+DGRPI=1.2),(ANS(1.2)']"") S DGSKIPST=1
@@ -83,8 +77,8 @@ FOREIGN . . ;tag to rejoin if vet address is not USA
  . . . I DGRPI=.03,$D(ANS(.03)) S X2=ANS(.03),X1=DT D ^%DTC I 'SPOUSE S AGE=(X/365.25) W ?62,"(AGE: "_$P(AGE,".")_")" I AGE>17 D WRT^DGRPEIS3
  . . I DGRPI=.01,(Y']"") Q
  I '$D(ANS(.01)) S DGFL=0 G ADDQ
- I DGFL=-2!'$D(ANS(.09)) W !?3,*7,"Incomplete Entry...Deleted" G ADDQ
- S DGRP0ND=ANS(.01)_"^"_ANS(.02)_"^"_ANS(.03)_"^^^^^^"_$G(ANS(.09))_"^"_$G(ANS(.1))
+ I DGFL=-2!'$D(ANS(.03)) W !?3,*7,"Incomplete Entry...Deleted" G ADDQ
+ S DGRP0ND=ANS(.01)_"^"_ANS(.02)_"^"_ANS(.03)_"^^^^^^"_$G(ANS(.09))
  S DGRP1ND=$G(ANS(1.1))_"^"_$G(ANS(1.2))_"^"_$G(ANS(1.3))_"^"_$G(ANS(1.4))_"^"_$G(ANS(1.5))_"^"_$P($G(ANS(1.6)),"^",1)_"^"_$G(ANS(1.7))_"^"_$G(ANS(1.8))
  D NEWIP^DGRPEIS1
 ADDQ K DGRP0ND,DGRP1ND,DGRPI,DIR,DIRUT,DTOUT,DUOUT
@@ -154,13 +148,4 @@ EDIT(DGPREF,DGTYPE,DATE) ; edit demographic data for a dep
  ;   Output -- DGFL as -2 if timeout, -1 if '^', or 0 o/w
  N DOB,DGACT,RELATION,UPARROW,X,Y,DGEDDEP
  D EDIT^DGRPEIS3
- Q
-REAS ;require a Pseudo SSN Reason if the SSN is a Pseudo - DG*5.3*653 ERC
- Q:ANS(.09)'["P"
- S DIR(0)="408.13,.1^^"
- D ^DIR
- I $D(DUOUT) S DGFL=-2 Q
- I $D(DTOUT)!($D(DIRUT)) W !!,"Pseudo SSN Reason Required if the SSN is Pseudo." G REAS
- ;I $D(DUOUT) S DGFL=-2 Q
- S ANS(.1)=Y
  Q

@@ -1,13 +1,12 @@
-SROANEW ;BIR/MAM - CREATE NEW RISK ASSESSMENT ;01/18/07
- ;;3.0; Surgery ;**34,47,71,100,135,160**;24 Jun 93;Build 7
+SROANEW ;B'HAM ISC/MAM - CREATE NEW RISK ASSESSMENT ; [ 08/26/04 ]
+ ;;3.0; Surgery ;**34,47,71,100,135**;24 Jun 93
  W @IOF,!,?1,VADM(1)_"  "_VA("PID")
  W !! S (SRDT,CNT)=0 F I=0:0 S SRDT=$O(^SRF("ADT",DFN,SRDT)) Q:'SRDT!(SRSOUT)  S SRASS=0 F I=0:0 S SRASS=$O(^SRF("ADT",DFN,SRDT,SRASS)) Q:'SRASS!($D(SRTN))!(SRSOUT)  D LIST I $D(SRTN) G ASK
  I 'CNT W "No operations exist for this patient.  Assessment cannot be entered.",!!,"Press RETURN to continue... " R X:DTIME G END
 OPT W !!,"Select Operation: " R X:DTIME I '$T!("^"[X) S SRSOUT=1 G END
  I '$D(SRCASE(X)) W !!,"Enter the number of the desired operation" W $S('$D(SRNEWOP):".",1:", or '"_CNT_"' to enter a new case.") G OPT
  S SRTN=+SRCASE(X)
-ASK I SRATYPE="N" D EXCL^SROASS
- I $P($G(^SRF(SRTN,"RA")),"^",6)="N"!($P($G(^SRF(SRTN,"RA")),"^",7)'="") W !!,"This case is currently flagged as meeting Risk Assessment exclusion criteria.",$C(7)
+ASK I $P($G(^SRF(SRTN,"RA")),"^",6)="N"!($P($G(^SRF(SRTN,"RA")),"^",7)'="") W !!,"This case is currently flagged as meeting Risk Assessment exclusion criteria.",$C(7)
  W !!,"Are you sure that you want to create a Risk Assessment for this surgical",!,"case ?  YES// " R SRYN:DTIME I '$T!(SRYN["^") K SRTN S SRSOUT=1 Q
  S SRYN=$E(SRYN) I "YyNn"'[SRYN W !!,"Enter 'YES' to create an assessment for this surgical case, or 'NO' to quit",!,"this option." G ASK
  I "Yy"'[SRYN K SRTN S SRSOUT=1 Q

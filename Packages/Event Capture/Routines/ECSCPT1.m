@@ -1,8 +1,8 @@
-ECSCPT1 ;ALB/JAM - Event Code Screens with CPT Codes ; 8 Nov 07
- ;;2.0; EVENT CAPTURE ;**72,95**;8 May 96;Build 26
+ECSCPT1 ;ALB/JAM-Event Code Screens with CPT Codes;22 Jul 05
+ ;;2.0; EVENT CAPTURE ;**72**;8 May 96
 EN ;entry point
  N UCNT,ECDO,ECCO,ECNT,ECINDT,ECP0
- S (ECMORE,ECNT,ECDO,ECCO)=0,ECPG=$G(ECPG,1),ECCPT=$G(ECCPT,"B")
+ S (ECMORE,ECNT,ECDO,ECCO)=0,ECPG=1,ECCPT=$G(ECCPT,"B")
  ;Process all DSS Units
  I ECALL S ECD=0 D  G END
  .F  S ECD=$O(^ECJ("AP",ECL,ECD)) Q:'ECD  D  Q:ECOUT
@@ -13,7 +13,7 @@ EN ;entry point
  .I 'ECJLP S ECC=0,ECCN="None",ECCO=999
  .D PROC
 END I 'ECNT W !!!,"Nothing Found."
- S ECPG=$G(ECPG,1)
+ S ECPG=1
  Q
 SET ;set var
  S ECDN=$S($P($G(^ECD(+ECD,0)),"^")]"":$P(^(0),"^"),1:"UNKNOWN"),UCNT=0

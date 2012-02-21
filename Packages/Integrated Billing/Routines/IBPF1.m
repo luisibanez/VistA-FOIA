@@ -1,6 +1,6 @@
 IBPF1 ;ALB/CPM - FIND BILLING DATA TO ARCHIVE (CON'T.) ; 20-APR-92
- ;;2.0;INTEGRATED BILLING;**45,347**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;Version 2.0 ; INTEGRATED BILLING ;**45**; 21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 BILL ; Find all UB-82's which may be archived.  Check only those bills
  ; whose First Printed Date is prior to the last date on which a
@@ -51,11 +51,9 @@ RXFILE(IBND) ; Is the prescription still resident on-line?
  ;         Input:    IBND  --  zeroth node of IB Action
  ;         Output:     1   --  the rx is still on file
  ;                     0   --  the rx is no longer on file (archived)
- N IBSL,RXCHK
+ N IBSL
  S IBSL=$P(IBND,"^",4) I +IBSL'=52 Q 0
- S IBSL=$P(IBSL,":",2)
- S RXCHK=$$FILE^IBRXUTL(+IBSL,.01)
- I RXCHK'="" Q 1
+ I $D(^PSRX($P($P(IBSL,";"),":",2),0)) Q 1
  Q 0
  ;
 ALL(IBN,DATE) ; Are all bills for an episode of care closed before DATE?

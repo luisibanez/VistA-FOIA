@@ -1,5 +1,5 @@
-PXRMXSU ; SLC/PJH - Reminder Reports DIC Prompts;01/06/2006
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMXSU ; SLC/PJH - Reminder Reports DIC Prompts;01/10/2003
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;Called by PXRMXD
  ;
@@ -31,8 +31,6 @@ SEL(FILE,MODE,CNT,ARRAY,ONE,CHECK) ;
  .I CHECK=1 D FACT^PXRMXAP
  .I CHECK=2 S DIC("S")=DIC("S")_",'(+$P(^(0),U,6))"
  .I CHECK=3 S DIC("S")=DIC("S")_",$$OK^PXRMXS1(+Y)"
- .I CHECK=4 S DIC("S")=DIC("S")_",$P($G(^PXRMXP(810.5,+Y,30,0)),U,3)>0"
- .I CHECK=5 S DIC("S")=DIC("S")_",$P($G(^OR(100.21,+Y,10,0)),U,3)>0"
  .I CNT>0 S DIC("A")=LIT
  .D ^DIC
  .I X=(U_U) S DTOUT=1
@@ -90,7 +88,7 @@ HLOC N IEN,SC,X,Y,CHECK
  ..I '$D(PXRMFACN(FACILITY)) D  Q
  ...W !,"Location has a different facility code" Q
  ..;Check for duplicates
- ..I (NHL>0),$$DUP(IEN,.PXRMLCHL,2) W !,"Error - Duplicate entry" Q
+ ..I (NHL>0),$$DUP(IEN,.PXRMLCHL) W !,"Error - Duplicate entry" Q
  ..S NHL=NHL+1
  ..;Get the stop code.
  ..S X=$P(^SC(IEN,0),U,7)
@@ -111,7 +109,7 @@ HLOC N IEN,SC,X,Y,CHECK
  S NHL=$$SORT(NHL,"PXRMLCHL",2)
  ;Build array by IEN
  S IC=""
- F  S IC=$O(PXRMLCHL(IC)) Q:IC'>0  D
+ F  S IC=$O(PXRMLCHL(IC)) Q:IC=""  D
  .S PXRMLOCN($P(PXRMLCHL(IC),U,2))=IC
  Q
  ;---
@@ -130,7 +128,7 @@ FACILITY(SEL) ;Select facility (COPIED EX- PXRR)
  .I X=(U_U) S DTOUT=1
  .I '$D(DTOUT),('$D(DUOUT)),+Y'=-1 D
  ..;Check for duplicates
- ..I (NFAC>0),$$DUP($P(Y,U,1),.PXRMFAC,1) W !,"Error - Duplicate entry" Q
+ ..I (NFAC>0),$$DUP($P(Y(0,0),U),.PXRMFAC) W !,"Error - Duplicate entry" Q
  ..S NFAC=NFAC+1,PXRMFAC(NFAC)=Y_U_Y(0,0)
  .K DIC
  ;
@@ -161,7 +159,7 @@ LIST(TEMP) ; Patient List
  S DIC("A")="Select REMINDER PATIENT LIST: ",NLIST=0
  S DIC("?")="Select a patient list to run the reminder report against."
  S LIT="Select another PATIENT LIST: ",LIT1="You must select a list!"
- D SEL(810.5,"AEQMZ",.NLIST,.TEMP,"",4)
+ D SEL(810.5,"AEQMZ",.NLIST,.TEMP,"","")
  Q
  ;
  ; ---
@@ -176,7 +174,7 @@ OERR(TEAM) ; OE/RR teams
  N LIT,LIT1,DIC
  S DIC("A")="Select TEAM: ",NOTM=0
  S LIT="Select another TEAM: ",LIT1="You must select a team!"
- D SEL(100.21,"AEQMZ",.NOTM,.TEAM,"",5)
+ D SEL(100.21,"AEQMZ",.NOTM,.TEAM,"","")
  Q
  ; ---
 RCAT(REMCAT,REM) ;Reminder Category/Reminder selection
@@ -251,7 +249,6 @@ SORT(N,ARRAY,KEY)       ;Sort an ARRAY with N elements
  ;return the number of unique elements.  KEY is the piece of ARRAY on
  ;which to base the sort.  The default is the first piece.
  ;
- K ^TMP($J,"SORT")
  I (N'>0)!(N=1) Q N
  N IC,IND
  I '$D(KEY) S KEY=1
@@ -263,9 +260,9 @@ SORT(N,ARRAY,KEY)       ;Sort an ARRAY with N elements
  Q IC-1
  ;
  ;Check for duplicate entries
-DUP(VALUE,ARRAY,PIECE) ;
+DUP(VALUE,ARRAY) ;
  N IC,DUP
  S IC=0,DUP=0
  F  S IC=$O(ARRAY(IC)) Q:IC=""  D  Q:DUP
- .I $P(ARRAY(IC),U,PIECE)=VALUE S DUP=1
+ .I $P(ARRAY(IC),U,2)=VALUE S DUP=1
  Q DUP

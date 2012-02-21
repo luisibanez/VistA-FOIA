@@ -1,11 +1,11 @@
 IBCRBG ;ALB/ARH - RATES: BILL SOURCE EVENTS (INPT) ; 21 MAY 96
- ;;2.0;INTEGRATED BILLING;**52,80,106,51,142,159,210,245,382,389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,80,106,51,142,159,210,245**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 INPTPTF(IBIFN,CS) ; search PTF record for billable bedsections, transfer DRGs, and length of stay 
  ; - screens out days for pass, leave and SC treatment
  ; - adds charges for only one BS if the ins company does not allow multiple bedsections per bill (36,.06)
- ; Output: ^TMP($J,"IBCRC-INDT", BILLABLE DATE) = MOVE DT/TM ^ BILL BS ^ SC FLAG ^ DRG ^ DIV ^ SPECIALTY ^ MOVE #
+ ; Output:  ^TMP($J,"IBCRC-INDT", BILLABLE DATE) = MOVE DT/TM ^ BILL BS ^ SC FLAG ^ DRG ^ DIVISION ^ SPECIALTY
  ;
  N IB0,DFN,PTF,IBU,IBBDT,IBEDT,IBTF,IBADM,IBX,IBINSMBS
  K ^TMP($J,"IBCRC-PTF"),^TMP($J,"IBCRC-DIV"),^TMP($J,"IBCRC-INDT")
@@ -23,7 +23,6 @@ INPTPTF(IBIFN,CS) ; search PTF record for billable bedsections, transfer DRGs, a
  ;
  D PTF(PTF) ; get movements and bedsections
  D PTFDV(PTF) ; reset movements and bedsections for ward/division
- D PTFFY(PTF,IBBDT,IBEDT) ; reset movements for FY DRG change
  ;
  D BSLOS(IBBDT,IBEDT,IBTF,IBADM,IBINSMBS) ; calculate days in bedsections within timeframe of the bill
  ;
@@ -34,7 +33,7 @@ INPTPTF(IBIFN,CS) ; search PTF record for billable bedsections, transfer DRGs, a
  ;
 PTF(PTF) ; find all movements in PTF for the admission by date and billing bedsection (501 movement)
  ; the movement date is the date the patient left the bedsection
- ; Output: ^TMP($J,"IBCRC-PTF", MOVE DT/TM)=MOVE DT/TM ^ BILL BED ^ SC FLAG ^ TRANSFER DRG ^ ^ SPECIALTY ^ MOVE #
+ ; Output:  ^TMP($J,"IBCRC-PTF", MOVE DT/TM)=MOVE DT/TM ^ BILL BEDSECTION ^ SC FLAG ^ TRANSFER DRG ^ ^ SPECIALTY
  ;
  N IBMOVE,IBMVLN,IBBILLBS,IBENDDT,IBMSC,IBMDRG S PTF=+$G(PTF)
  S IBMOVE=0 F  S IBMOVE=$O(^DGPT(PTF,"M",IBMOVE)) Q:'IBMOVE  D
@@ -43,7 +42,7 @@ PTF(PTF) ; find all movements in PTF for the admission by date and billing bedse
  . S IBENDDT=+$P(IBMVLN,U,10) I 'IBENDDT S IBENDDT=DT ;                 movement date (last date in bedsection)
  . S IBMSC="" I +$P(IBMVLN,U,18)=1 S IBMSC=1 ;                          sc movement
  . S IBMDRG=$$MVDRG(PTF,IBMOVE) ;                                       movement DRG
- . S ^TMP($J,"IBCRC-PTF",IBENDDT)=IBENDDT_U_IBBILLBS_U_IBMSC_U_IBMDRG_U_U_+$P(IBMVLN,U,2)_U_IBMOVE
+ . S ^TMP($J,"IBCRC-PTF",IBENDDT)=IBENDDT_U_IBBILLBS_U_IBMSC_U_IBMDRG_U_U_+$P(IBMVLN,U,2)
  Q
  ;
 SPBB(SPCLTY) ; find the billable bedsection for a Specialty (42.4)
@@ -57,8 +56,8 @@ BSLOS(IBBDT,IBEDT,IBTF,IBADM,IBINSMBS) ; from the array of PTF movments get all 
  ; adds all days for first cronological bs if ins comp wants only a single bs per bill, even if not sequential
  ; the movement date is the date the patient left the bedsection, so admission date is not in PTF array
  ;
- ; Input:  ^TMP($J,"IBCRC-PTF", MOVE DT/TM) = MOVE DT/TM ^ BILL BS ^ SC FLAG ^ DRG ^ DIV ^ SPECIALTY ^ MOVE #
- ; Output: ^TMP($J,"IBCRC-INDT", BILLABLE DATE) = MOVE DT/TM ^ BILL BS ^ SC FLAG ^ DRG ^ DIV ^ SPECIALTY ^ MOVE #
+ ; Input:   ^TMP($J,"IBCRC-PTF", MOVE DT/TM) = MOVE DT/TM ^ BILL BS ^ SC FLAG ^ DRG ^ DIVISION ^ SPECIALTY
+ ; Output:  ^TMP($J,"IBCRC-INDT", BILLABLE DATE) = MOVE DT/TM ^ BILL BS ^ SC FLAG ^ DRG ^ DIVISION ^ SPECIALTY
  ;
  N IBSBDT,IBSEDT,IBS,IBLASTDT,IBX
  S IBSBDT=IBBDT+.3 ;                        discount any movements ending on or before the begin date
@@ -96,8 +95,8 @@ BBS(X) ; returns true if pointer passed in is a billable bedsection ^ bedsection
  ;
 PTFDV(PTF) ; find all ward/location transfers in PTF for the patient to determine the site/division the patient was in
  ; the division of the ward will be added to the PTF bedsection movements
- ; Input:  ^TMP($J,"IBCRC-PTF", move dt/tm) = move dt/tm ^ bill bs ^ sc flag ^ move drg ^ ^ specialty ^ move #
- ; Output: ^TMP($J,"IBCRC-PTF", move dt/tm) = move dt/tm ^ bill bs ^ sc flag ^ move drg ^ WARD DIV ^ spec ^ move#
+ ; Input:   ^TMP($J,"IBCRC-PTF", move dt/tm) = move dt/tm ^ bill bs ^ sc flag ^ move drg ^^ specialty
+ ; Output:  ^TMP($J,"IBCRC-PTF", move dt/tm) = move dt/tm ^ bill bs ^ sc flag ^ move drg ^ WARD DIV ^ specialty
  ;          ^TMP($J,"IBCRC-DIV", TRANSFER DATE/TIME) = WARD DIVISION
  N IBTRNSF,IBTRLN,IBENDDT,IBTRDV,IBMVDT,IBTRDT
  ;
@@ -123,23 +122,7 @@ PTFDV(PTF) ; find all ward/location transfers in PTF for the patient to determin
  . I +IBTRDV S $P(^TMP($J,"IBCRC-PTF",IBENDDT),U,5)=IBTRDV
  Q
  ;
-PTFFY(PTF,BEGDT,ENDDT) ; add movement for FY (10/1) if date range covers FY and DRG changes
- ; the DRG may change on FY so check and if necessary add movement for pre-FY with old DRG
- ; Input:  ^TMP($J,"IBCRC-PTF", move dt/tm) = move dt/tm ^ bill bs ^ sc flag ^ move drg ^ ^ specialty ^ move #
- ; Output: ^TMP($J,"IBCRC-PTF", move dt/tm) = move dt/tm ^ bill bs ^ sc flag ^ MOVE DRG ^ ward div ^ spec ^ move#
- N IBBEGDT,IBENDDT,IBYRB,IBYRE,IBYR,IBFY,IBMVLN,IBMVDRG,IBMOVE,IBFYDRG Q:'$G(PTF)
- Q:'$G(BEGDT)  S IBFY=$E(BEGDT,1,3)_"1001"
- ;
- S IBBEGDT=BEGDT,IBENDDT=BEGDT\1 F  S IBENDDT=$O(^TMP($J,"IBCRC-PTF",IBENDDT)) Q:'IBENDDT  D  S IBBEGDT=IBENDDT
- . S IBYRB=$E(IBBEGDT,1,3),IBYRE=$E(IBENDDT,1,3) I (IBYRE-IBYRB)>10 Q
- . F IBYR=IBYRB:1:IBYRE S IBFY=IBYR_"1001" I IBBEGDT<IBFY,IBENDDT>IBFY D
- .. S IBMVLN=$G(^TMP($J,"IBCRC-PTF",IBENDDT)),IBMVDRG=$P(IBMVLN,U,4),IBMOVE=$P(IBMVLN,U,7)
- .. S IBFYDRG=$$MVDRG(PTF,IBMOVE,IBYR_"0930")
- .. I IBMVDRG'=IBFYDRG S $P(IBMVLN,U,4)=IBFYDRG S ^TMP($J,"IBCRC-PTF",IBFY)=IBMVLN
- Q
- ;
-MVDRG(PTF,M,CDATE) ; Return the DRG for a specific PTF Movememt (M=move ifn)
- ; CDATE is optional, used if need to calculate DRG for some day within the move, not at the end date
+MVDRG(PTF,M) ; Return the DRG for a specific PTF Movememt (M=move ifn)
  N DPT0,PTF0,PTFM0,PTF70,IBBEG,IBEND,IBDSST,IBDX,IBPRC0,IBPRC,IBDRG,IBI,IBJ,IBP
  N SEX,AGE,ICDDX,ICDPRC,ICDEXP,ICDDMS,ICDTRS,ICDDRG,ICDMDC,ICDRTC,ICDDATE
  S IBDRG=""
@@ -174,7 +157,7 @@ MVDRG(PTF,M,CDATE) ; Return the DRG for a specific PTF Movememt (M=move ifn)
  . I +IBPRC0'<IBBEG,+IBPRC0'>IBEND D
  .. F IBI=5:1:9 S IBPRC=$P(IBPRC0,U,IBI) I +IBPRC,($$ICD0^IBACSV(+IBPRC)'="") S IBJ=IBJ+1,ICDPRC(IBJ)=+IBPRC
  ;
- S ICDDATE=$S(+$G(CDATE):CDATE,+$P(PTFM0,U,10):+$P(PTFM0,U,10),1:DT) ; date for the DRG Grouper versioning
+ S ICDDATE=$P(PTFM0,U,10) ; use the movement date for the DRG Grouper versioning
  D ^ICDDRG S IBDRG=$G(ICDDRG)
  ;
 MVDRGQ Q IBDRG

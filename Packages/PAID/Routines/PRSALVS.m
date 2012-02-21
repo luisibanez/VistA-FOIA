@@ -1,6 +1,5 @@
-PRSALVS ;HISC/REL-Display Leave Request ;11/21/06
- ;;4.0;PAID;**9,69,112**;Sep 21, 1995;Build 54
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRSALVS ;HISC/REL-Display Leave Request ;09/21/01
+ ;;4.0;PAID;**9,69**;Sep 21, 1995
  S DFN="",SSN=$P($G(^VA(200,DUZ,1)),"^",9) I SSN'="" S DFN=$O(^PRSPC("SSN",SSN,0))
  I 'DFN W !!,*7,"Your SSN was not found in both the New Person & Employee File!" G EX
  D HDR
@@ -47,12 +46,10 @@ B2 S LST=+$P($G(^PRSPC(DFN,"MISC4")),"^",16),D1=DT D PP^PRSAPPU S YR=$P(PPE,"-",
  I "AL SL"'[Z Q
  S EDT=$P($G(^PRST(458.1,DA,0)),"^",5) I EDT'>SDT G B3
  S X1=EDT,X2=SDT D ^%DTC S INC=X+13\14*$S(Z="AL":AINC,1:SINC)
- I NH=80,DB=2 S X1=EDT,X2=X+13\14*14-X D C^%DTC S INC=INC-$$RT(X,SDT) S:INC<0 INC=0
  I PRT W !,Z," Estimated Earnings: ",$J(INC,8,3)
  S LST=9999999-SDT,CNT=0
  F DTI=0:0 S DTI=$O(^PRST(458.1,"AD",DFN,DTI)) Q:DTI=""!(DTI>LST)  F RDA=0:0 S RDA=$O(^PRST(458.1,"AD",DFN,DTI,RDA)) Q:RDA=""  I $G(^(RDA))'>EDT D
  .S Z1=$G(^PRST(458.1,RDA,0)) S X1=$P(Z1,"^",7) S:"CB AD"[X1 X1="SL" Q:X1'=Z  Q:"AR"'[$P(Z1,"^",9)
- .I NH=72,DB=1 S $P(Z1,U,15)=$$LC($P(Z1,U,15))
  .S CNT=CNT+$P(Z1,"^",15)
  .I $P(Z1,"^",3)'<SDT,$P(Z1,"^",5)'>EDT Q
  .S X1=$P(Z1,"^",5),X2=$P(Z1,"^",3) D ^%DTC S Z3=$P(Z1,"^",15)/$S($G(X):X,1:1)
@@ -65,18 +62,7 @@ B3 S BAL=BAL+INC-CNT I PRT W !,Z," Projected Balance: ",$J(BAL,9,3)
  Q
 HDR ; Display Header
  W:$E(IOST,1,2)="C-" @IOF W !?26,"VA TIME & ATTENDANCE SYSTEM",!?32,"LEAVE REQUESTS"
- S X=$G(^PRSPC(DFN,0)) W !!,$P(X,"^",1) S X=$P(X,"^",9) I X W ?50,"XXX-XX-",$E(X,6,9) Q
+ S X=$G(^PRSPC(DFN,0)) W !!,$P(X,"^",1) S X=$P(X,"^",9) I X W ?50,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9) Q
 H1 I $E(IOST,1,2)="C-" R !!,"Press RETURN to Continue.",X:DTIME S:'$T!(X["^") QT=1 I 'QT W @IOF,!
  Q
 EX G KILL^XUSCLEAN
- ;Multiply leave request by 1.111 and round down to the quarter hour
- ;for 36/40 nurses
-LC(X) S X=X*1.111\.25*.25 Q X
- ;Calculate number of Recess hours scheduled for a 9-month AWS Nurse 
- ;before the date leave has been requested for
-RT(EDT,SDT) N SFY,EFY,T,WK
- S SFY=$E($P($$GETFSCYR^PRSARC04(SDT),U,2),3,6),EFY=$E($P($$GETFSCYR^PRSARC04(EDT),U,2),3,6)
- D RES^PRSARC05(.WK,DFN,SFY,EFY,SDT,EDT) S (I,T)=0 F  S I=$O(WK(I)) Q:I=""  S T=T+WK(I)
- ;Calculate the number of hours of leave that would have been
- ;accumulated for the time the nurse was on recess.
- Q T/80*$S(Z="AL":AINC,1:SINC)\.25*.25

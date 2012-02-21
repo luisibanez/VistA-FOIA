@@ -1,5 +1,5 @@
 PXCECPT ;ISL/dee,ISA/Zoltan,esw - Used to edit and display V CPT ;6/22/04 3:27pm
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**14,27,73,89,112,121,136,124,170,164,182**;Aug 12, 1996;Build 3
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**14,27,73,89,112,121,136,124,170,164**;Aug 12, 1996
  ;; ;
  Q
  ;
@@ -162,8 +162,7 @@ EPOV ;Edit the Associated DX
  K DIR,DA
  I X="@" S Y="@" S $P(PXCEAFTR($P(PXCETEXT,"~",1)),"^",$P(PXCETEXT,"~",2))=$P(Y,"^") Q
  I $D(DTOUT)!$D(DUOUT) S PXCEEND=1,PXCEQUIT=1 Q
- ;I '+Y S PXCEEND=1 Q  ;S:$P(PXCETEXT,"~",3)=".05" PXCEQUIT=1 Q
- I +Y'>0 S PXCEEND=1 Q  ;PX*1.0*182 for "^" or null entry from list
+ I '+Y S PXCEEND=1 Q  ;S:$P(PXCETEXT,"~",3)=".05" PXCEQUIT=1 Q
  ;See if this diagnosis is in the PXCEAFTR(0)
  I $P(PXCETEXT,"~",2)'=5,(+Y=$P($G(PXCEAFTR(0)),"^",5)) S PXCEEND=1
  I $P(PXCETEXT,"~",2)'=9,(+Y=$P($G(PXCEAFTR(0)),"^",9)) S PXCEEND=1

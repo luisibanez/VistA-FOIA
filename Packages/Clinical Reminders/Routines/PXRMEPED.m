@@ -1,18 +1,18 @@
-PXRMEPED ; SLC/PJH - Extract Definition Editor ;05/15/2006
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMEPED ; SLC/PJH - Extract Parameter Editor ;07/08/2002
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
- ;Main entry point for PXRM EXTRACT DEFINITION EDIT/DISPLAY
+ ;Main entry point for PXRM LIST RULE EDIT/DISPLAY
 START(IEN) ;
  N PXRMDONE,VALMBCK,VALMCNT,VALMSG,X,XMZ,XQORM,XQORNOD
  S X="IORESET"
  D ENDR^%ZISS
  S VALMCNT=0
- D EN^VALM("PXRM EXTRACT DEFINITION EDIT")
+ D EN^VALM("PXRM EXTRACT PARAMETER EDIT")
  Q
  ;
 BLDLIST(IEN) ;Build workfile
  N FLDS,GBL,PXRMROOT
- S FLDS="[PXRM EXTRACT DEFINITION]"
+ S FLDS="[PXRM EXTRACT PARAMETER]"
  S GBL="^TMP(""PXRMEPED"",$J)"
  S GBL=$NA(@GBL)
  S PXRMROOT="^PXRM(810.2,"
@@ -48,28 +48,28 @@ INIT ;Init
  S VALMCNT=0
  Q
  ;
-PEXIT ;Protocol exit code
+PEXIT ;PXRM EXCH MENU protocol exit code
  S VALMSG="+ Next Screen   - Prev Screen   ?? More Actions"
  ;Reset after page up/down etc
  Q
  ;
 ADD ;Add Rule
  N DA,DIC,DONE,DTOUT,DUOUT,DLAYGO,HED,Y
- S HED="ADD EXTRACT DEFINITION",DONE=0
+ S HED="ADD EXTRACT PARAMETER",DONE=0
  W IORESET,!
  F  D  Q:$D(DTOUT)  Q:DONE
  .S DIC="^PXRM(810.2,"
  .;Set the starting place for additions.
  .D SETSTART^PXRMCOPY(DIC)
  .S DIC(0)="AELMQ",DLAYGO=810.2
- .S DIC("A")="Select EXTRACT DEFINITION to add: "
+ .S DIC("A")="Select EXTRACT PARAMETER to add: "
  .D ^DIC
  .I $D(DUOUT) S DTOUT=1
  .I ($D(DTOUT))!($D(DUOUT)) Q
  .I Y=-1 K DIC S DTOUT=1 Q
- .I $P(Y,U,3)'=1 W !,"This extract definition name already exists" Q
+ .I $P(Y,U,3)'=1 W !,"This extract parameter name already exists" Q
  .S DA=$P(Y,U,1)
- .;Edit Extract Definition
+ .;Edit Extract Parameter
  .D EDIT(DA)
  .S:$D(DA) DONE=1
  Q
@@ -85,9 +85,9 @@ EDIT(DA) ;Edit Rule
  ;Save checksum
  S CS1=$$FILE^PXRMEXCS(810.2,DA)
  ;
- S DIE="^PXRM(810.2,",DIDEL=810.2,ODA=DA,DR="[PXRM EXTRACT DEFINITION]"
+ S DIE="^PXRM(810.2,",DIDEL=810.2,ODA=DA,DR="[PXRM EXTRACT PARAMETERS]"
  ;
- ;Edit extract definition then unlock
+ ;Edit extract parameter then unlock
  D ^DIE,UNLOCK(ODA)
  ;Deleted ???
  I '$D(DA) S VALMBCK="Q" Q

@@ -1,10 +1,13 @@
-LRSRVR ;DALOI/RLM/JMC - LAB DATA SERVER ; Aug 17, 2006
- ;;5.2;LAB SERVICE;**232,303,346**;Sep 27, 1994;Build 10
+LRSRVR ;DALOI/RLM/JMC - LAB DATA SERVER ; MAY 10, 2001
+ ;;5.2;LAB SERVICE;**232,303**;Sep 27, 1994
  ; Reference to ^%ZOSF supported by IA #10096
+ ; Reference to ^DPT supported by IA #10035
+ ; Reference to ^DD("DD" supported by IA #10017
  ; Reference to $$SITE^VASITE supported by IA #10112
+ ; Reference to $$FMTE^XLFDT() supported by IA #10103
  ;
 START ;
- N LRSITE,LRST,LRSUB,LRXMZ
+ N LRSITE,LRXMZ
  ;
  ; Save incoming server message id for cleanup
  S LRXMZ=XMZ
@@ -40,14 +43,6 @@ START ;
  ;
  ; Send RELMA mapper formatted message
  I LRSUB="RELMA" D SERVER^LRSRVR2 Q
- ; Process RELMA mapper Packman global message
- ;I LRSUB="RELMA MAPPING" D RMAP^LRSRVR5 Q
- ;
- ; Send SNOMED mapping formatted message
- I LRSUB="SNOMED" D SERVER^LRSRVR6 Q
- ;
- ; Send NLT/CPT mapping formatted message
- I LRSUB="NLT/CPT" D SERVER^LRSRVR7 Q
  ;
  ; If subject not understood by server, send a message to the sender
  ;  that the server can't understand their instructions.
@@ -87,31 +82,28 @@ CLEAN ; Cleanup and exit
  ;
 CSUM ;Calculate checksum for routines and transmit errors to LABTEAM group
  S X=$T(+0) X ^%ZOSF("RSUM") S ^TMP($J,"LRDATA",2)=X_" at "_LRSTN_" = "_Y
- S LRI=0
- F  S LRI=$O(^LAB(69.91,1,"ROU",LRI)) Q:'LRI  D
- . S X=$P(^LAB(69.91,1,"ROU",LRI,0),"^")
- . S LRA=$P(^LAB(69.91,1,"ROU",LRI,0),"^",4)
- . X ^%ZOSF("TEST") I '$T S ^TMP($J,"LRDATA",LRI+3)=X_" is missing." Q
- . X ^%ZOSF("RSUM") I +$G(Y)'=LRA S ^TMP($J,"LRDATA",LRI+3)=X_" should be "_LRA_" is "_+$G(Y)
+ S LRI=0 F  S LRI=$O(^LAB(69.91,1,"ROU",LRI)) Q:'LRI  S X=$P(^LAB(69.91,1,"ROU",LRI,0),"^"),LRA=$P(^LAB(69.91,1,"ROU",LRI,0),"^",4) D
+  . X ^%ZOSF("TEST") I '$T S ^TMP($J,"LRDATA",LRI+3)=X_" is missing." Q
+  . X ^%ZOSF("RSUM") I +$G(Y)'=LRA S ^TMP($J,"LRDATA",LRI+3)=X_" should be "_LRA_" is "_+$G(Y)
  S XMSUB="Lab Checksum data at "_LRSTN_" run on "_XQDATE
  D EXIT
  Q
- ;
  ;
 SUMLST ;Calculate checksum for routines and transmit to requestor
  K ^TMP($J,"LRDATA"),^TMP($J,"LRDTERR")
  S LRCLST=$P($$SITE^VASITE,"^",2),LINE=2,LINR=1,$P(FILL," ",8)=""
  S ^TMP($J,"LRDATA",1)="Lab Server triggered at "_LRCLST_" by "_XMFROM_" on "_XQDATE
- ;
- ; Check for a plus sign in front of the routine name.  Bypass the
- ; Test to see if the routine exists if it's there.
- ; DSM won't check %routines to make sure they exist, Cache will.
  F  X XMREC Q:XMER<0  S X=XMRG D
+  . ;check for a plus sign in front of the routine name.  Bypass the
+  . ;test to see if the routine exists if it's there.
+  . ;DSM won't check %routines to make sure they exist, Cache will.
   . I X'?1"+".E X ^%ZOSF("TEST") I '$T S ^TMP($J,"LRDATA",LINE)=X_$E(FILL,$L(X),8)_" is missing.",LINE=LINE+1 Q
   . ;Strip off the plus sign so that the checksum routine can find it.
   . S X=$TR(X,"+","")
   . X ^%ZOSF("RSUM") S ^TMP($J,"LRDATA",LINE)=X_$E(FILL,$L(X),8)_" is "_Y,LINE=LINE+1
  S XMSUB="Checksum data at "_LRCLST_" run on "_XQDATE
- S XMY(XQSND)=""
  D EXIT
  Q
+ ;
+ ;
+ZEOR ;LRSRVR

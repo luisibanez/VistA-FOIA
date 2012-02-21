@@ -1,6 +1,6 @@
 IBCD4 ;ALB/ARH - AUTOMATED BILLER (ADD NEW BILL - GATHER DX AND PROCEDURES)  ;9/5/93
- ;;2.0;INTEGRATED BILLING;**14,80,106,160,309,276,347**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**14,80,106,160,309,276**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
 IDX(PTF,DT1,DT2) ; find 501 movement Diagnosis and 701 Discharge Diagnosisfor a PTF record within bill range
@@ -51,20 +51,13 @@ IPRC(PTF,DT1,DT2) ;find 401 and 601 procedures for a PTF record
 IPRCE Q
  ;
 RXRF(PIFN,RIFN,IBDT) ; returns data on fill on date for rx (RX # ^ DRUG ^ DAYS SUPPLY ^ FILL DATE ^ QTY ^ NDC #)
- N X,Y,PLN,RLN,IBFILL,PDFN,LIST,NODE
- S X=""
- S PDFN=$$FILE^IBRXUTL(PIFN,2)
- S LIST="IBRXARR"
- S NODE="R^^"
- I +$G(PIFN) S PLN=$$RXZERO^IBRXUTL(PDFN,PIFN) I PLN'="" D
- . D RX^PSO52API(PDFN,LIST,PIFN,,NODE,,)
- . I $G(IBDT) D REF^PSO52EX($G(IBDT),$G(IBDT),LIST) S RIFN=$O(^TMP($J,LIST,"AD",IBDT,PIFN,""))
- . S RLN="",IBFILL="^^" I $G(RIFN)="" S X="" Q
- . I (RIFN=0)!(RIFN=-1) S RLN=$$RXSEC^IBRXUTL(PDFN,PIFN) Q:RLN=""  S IBFILL=$P(PLN,U,8)_"^"_$P(RLN,U,2)_"^"_$P(PLN,U,7)
- . I RIFN>0 S RLN=$$ZEROSUB^IBRXUTL(PDFN,PIFN,RIFN) Q:RLN=""  S IBFILL=$P(RLN,U,10)_"^"_$P(RLN,U,1)_"^"_$P(RLN,U,4)
+ N X,Y,PLN,RLN,IBFILL S X=""
+ I +$G(PIFN) S PLN=$G(^PSRX(+PIFN,0)) I PLN'="" D
+ . I +$G(IBDT) S RIFN=$O(^PSRX("AD",+IBDT,+PIFN,""))
+ . S RLN="",IBFILL="^^" I $G(RIFN)="" Q
+ . I RIFN=0 S RLN=$G(^PSRX(+PIFN,2)) Q:RLN=""  S IBFILL=$P(PLN,U,8)_"^"_$P(RLN,U,2)_"^"_$P(PLN,U,7)
+ . I +RIFN S RLN=$G(^PSRX(+PIFN,1,+RIFN,0)) Q:RLN=""  S IBFILL=$P(RLN,U,10)_"^"_$P(RLN,U,1)_"^"_$P(RLN,U,4)
  . S X=$P(PLN,U,1)_"^"_$P(PLN,U,6)_"^"_IBFILL_"^"_$$GETNDC^PSONDCUT(+PIFN,+RIFN)
- E  S X=""
- K ^TMP($J,LIST)
  Q X
  ;
 CHK() ;other checks

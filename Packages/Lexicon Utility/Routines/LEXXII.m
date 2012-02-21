@@ -1,40 +1,26 @@
-LEXXII ;ISL/KER - Lexicon Status (Install Info) ;01/03/2011
- ;;2.0;LEXICON UTILITY;**32,46,49,50,41,59,73**;Sep 23, 1996;Build 10
- ;              
- ; Variables NEWed or KILLed Elsewhere
- ;   LEXACCT  NEWed by LEXXFI sending message
- ;   LEXID    NEWed by LEXXFI sending message
- ;   LEXCRE   NEWed by LEXXGI loading data
- ;   LEXIGHF  NEWed by Post Install routine LEX20nnP
- ;   XPDA     NEWed by KIDS during Install
- ;              
+LEXXII ; ISL/KER - Lexicon Status (Install Info) ; 10/27/2003
+ ;;2.0;LEXICON UTILITY;**32**;Sep 23, 1996
+ ;            
  ; Global Variables
  ;   DBIA 10096  ^%ZOSF("PROD"
  ;   DBIA 10096  ^%ZOSF("UCI"
- ;   DBIA 10060  ^VA(200
- ;   ^LEXM(0
- ;   ^TMP("LEX*",$J    SACC 2.3.2.5.1
- ;              
+ ;   DBIA 10060  ^VA(200 
+ ;                           
  ; External References
  ;   DBIA 10103  $$FMTE^XLFDT
  ;   DBIA 10103  $$NOW^XLFDT
- ;   DBIA 10103  $$FMDIFF^XLFDT
  ;   DBIA  2056  $$GET1^DIQ (file #200)
- ;   DBIA  2051  FIND^DIC
- ;   DBIA  2056  GETS^DIQ
- ;              
+ ;                        
 EN ; Main Entry
- N LEXSUB S LEXSUB=$G(LEXID) S:LEXSUB="" LEXSUB="LEXXII" K ^TMP(LEXSUB,$J) D II
+ N LEXSUB S LEXSUB=$G(LEXID) S:LEXSUB="" LEXSUB="LEXXII" K ^TMP(LEXSUB,$J)
+ D II D:$D(TEST) ST
  Q
  ;                               
 II ; Install Information
- N LEXT,LEXA,LEXACT,LEXB,LEXD,LEXE,LEXL,LEXU,LEXN,LEXP,LEXPROF,LEXDA H 2
- S LEXA="",LEXACT=$G(LEXACCT),LEXPRO=$G(LEXPRO),LEXPRON=$G(LEXPRON)
- S:'$L(LEXPRON) LEXPRON="LEXICAL SERVICES UPDATE" S:'$L(LEXPRO) LEXPRO=$G(^LEXM(0,"PRO")) S:+LEXPRO>0 LEXPRO=$$ED(LEXPRO)
+ N LEXT,LEXA,LEXB,LEXD,LEXE,LEXL,LEXU,LEXN,LEXP,LEXDA H 2
  S LEXT="Lexicon/ICD/CPT Installation" D TL(LEXT)
  S LEXT="============================" D TL(LEXT),BL
  S LEXD=$$ASOF,LEXA=$$UCI,LEXU=$$USR,LEXN=$P(LEXU,"^",1)
- S:$L($P(LEXACT,"^",1))&($L($P(LEXACT,"^",1))) LEXA=LEXACT
  S LEXP=$P(LEXU,"^",2),LEXN=$$PM^LEXXFI7(LEXN)
  S:$L(LEXD) LEXT="  As of:       "_LEXD
  D:$L(LEXD) TL(LEXT)
@@ -51,14 +37,6 @@ II ; Install Information
  S:$L(LEXT)&($L($G(LEXCRE)))&($P($G(LEXCRE),".",1)?7N) LEXT=LEXT_" (Created "_$$ED($G(LEXCRE))_")"
  S:'$L(LEXT)&($L($G(LEXCRE)))&($P($G(LEXCRE),".",1)?7N) LEXT="  Created:     "_$$ED($G(LEXCRE))
  D:$L(LEXT) TL(LEXT)
- S LEXT="" I $O(LEXPROC(" "),-1)'>1,$L($G(LEXPRO))&($L($G(LEXPRON))),$O(LEXPROC(" "),-1)'>1 D
- . S LEXT="  Protocol:    "_LEXPRON D BL,TL(LEXT)
- . S LEXT="  Invoked:     "_LEXPRO D TL(LEXT)
- . K LEXPRO,LEXPRON,^LEXM(0,"PRO")
- I $O(LEXPROC(" "),-1)>1 D
- . N LEXT,LEXI,LEXC,LEXT S LEXT=$$TRIM($G(LEXPROC(1))) Q:'$L(LEXT)  D BL,TL(("  "_LEXT))
- . S LEXC=0,LEXI=1 F  S LEXI=$O(LEXPROC(LEXI)) Q:+LEXI'>0  D
- . . N LEXT S LEXT=$$TRIM($TR($G(LEXPROC(LEXI)),"'","")) Q:'$L(LEXT)  S LEXC=LEXC+1 D TL(("     "_LEXT))
  S LEXB=$$SS($G(LEXBUILD)),LEXE=$P(LEXB,"^",2),LEXL=$P(LEXB,"^",3),LEXB=$P(LEXB,"^",1)
  I $P(LEXB,".",1)?7N!($P(LEXB,".",2)?7N)!($P(LEXB,".",3)[":") D
  . D BL
@@ -68,16 +46,15 @@ II ; Install Information
  . . S LEXT="" S LEXT="  Finished:    "_$$ED($G(LEXE)) D TL(LEXT)
  . I $L(LEXL) D
  . . S LEXT="" S LEXT="  Elapsed:     "_$$ED($G(LEXL)) D TL(LEXT)
- I $L($G(LEXRES)) D
- . S LEXT="" S LEXT="  Data:        "_$G(LEXRES) D BL,TL(LEXT)
  D BL
  Q
  ;                             
  ; Miscellaneous
-UCI(X) ;   UCI where Lexicon is installed
- N LEXU,LEXP,LEXT,Y X ^%ZOSF("UCI") S LEXU=Y,LEXP="" S:LEXU=^%ZOSF("PROD")!($P(LEXU,",",1)=^%ZOSF("PROD")) LEXP=" (Production)"
- S:LEXU'=^%ZOSF("PROD")&($P(LEXU,",",1)'=^%ZOSF("PROD")) LEXP=" (Test)" S X="",$P(X,"^",1)=LEXU,$P(X,"^",2)=LEXP
- Q X
+UCI(LEX) ;   UCI where Lexicon is installed
+ N LEXU,LEXP,LEXT X ^%ZOSF("UCI") S LEXU=Y S:Y=^%ZOSF("PROD") LEXP=" (PROD)"
+ S:Y'=^%ZOSF("PROD") LEXP=" (TEST)" S:LEXU["VHA,ROU" LEXP=" (PROD)"
+ S:LEXU["DEM" LEXP=" (DEMO)" S LEX="",$P(LEX,"^",1)=LEXU,$P(LEX,"^",2)=LEXP
+ Q LEX
 USR(LEX) ;   User/Person
  N LEXDUZ,LEXPH,LEXNM
  S LEX=+($G(DUZ)),LEXNM=$$GET1^DIQ(200,+LEX,.01) Q:'$L(LEXNM) "UNKNOWN^"
@@ -89,15 +66,18 @@ SS(LEX) ;   Start/Stop Times
  S LEXBUILD=$G(LEX),LEXD=0 S:$L(LEXBUILD) LEXD=$$DDA(LEXBUILD)
  S LEXDA=+($G(XPDA))
  I +LEXDA>0 D
- . S LEXIENS=LEXDA_"," D GETS^DIQ(9.7,LEXIENS,"11;17","I","LEXOUT")
+ . S LEXIENS=LEXDA_","
+ . D GETS^DIQ(9.7,LEXIENS,"11;17","I","LEXOUT")
  . S LEXL=0,LEXB=$G(LEXOUT(9.7,LEXIENS,11,"I"))
- . S:$L($G(LEXSTART))&($P($G(LEXSTART),".",1)?7N) LEXB=$G(LEXSTART)
- . S LEXE=$$NOW^XLFDT S:+LEXB>0&(+LEXE>0) LEXL=$$EP(LEXB,LEXE)
+ . S LEXE=$G(LEXOUT(9.7,LEXIENS,17,"I"))
+ . S:+LEXE'>0 LEXE=$$NOW^XLFDT
+ . S:+LEXB>0&(+LEXE>0) LEXL=$$EP(LEXB,LEXE)
  . S LEX=LEXB_"^"_LEXE S:$L(LEXL) $P(LEX,"^",3)=LEXL
  I +LEXDA=0 D
- . S LEX="" S LEXDA=+($G(LEXD)) S LEXL="",LEXB=$P($G(LEXD),"^",2)
- . S:$L($G(LEXSTART))&($P($G(LEXSTART),".",1)?7N) LEXB=$G(LEXSTART)
- . S LEXE=$$NOW^XLFDT S:+LEXB>0&(+LEXE>0) LEXL=$$EP(LEXB,LEXE)
+ . S LEX="" S LEXDA=+($G(LEXD)) Q:+LEXDA'>0
+ . S LEXL="",LEXB=$P($G(LEXD),"^",2) Q:$P(LEXB,".",1)'?7N
+ . S LEXE=$P($G(LEXD),"^",3) Q:$P(LEXE,".",1)'?7N
+ . S:+LEXB>0&(+LEXE>0) LEXL=$$EP(LEXB,LEXE)
  . S LEX=LEXB_"^"_LEXE S:$L(LEXL) $P(LEX,"^",3)=LEXL
  Q LEX
 DDA(LEX) ;   Get Default DA of Build LEX
@@ -109,19 +89,21 @@ DDA(LEX) ;   Get Default DA of Build LEX
  Q:+($G(LEXI))'>0 ""  Q:+($G(LEXB))'>0 ""  S:+LEXE'>0 LEXE=$$NOW^XLFDT
  S LEX=LEXI_"^"_LEXB_"^"_LEXE
  Q LEX
-ASOF(LEX) ;   As of date/time
+ ;   Date
+ASOF(LEX) ;     As of date/time
  S X=$$ED($$NOW^XLFDT) Q X
-ED(LEX) ;   External Date MM/DD/YYYY TT:TT
+ED(LEX) ;     External Date MM/DD/YYYY TT:TT
  S LEX=$$FMTE^XLFDT($G(LEX),"1Z")
  S:LEX["@" LEX=$P(LEX,"@",1)_"  "_$P(LEX,"@",2,299) Q LEX
  Q LEX
-EP(X,Y) ;   Elapsed Time (Begin, End)
+ ;   Time
+EP(X,Y) ;     Elapsed Time (Begin, End)
  N LEXTIM,LEXBEG,LEXEND
  S LEXBEG=$G(X),LEXEND=$G(Y) Q:+LEXBEG'>0 ""  Q:+LEXEND'>0 ""
  S LEXTIM=$$FMDIFF^XLFDT(LEXEND,LEXBEG,2) Q:+LEXTIM'>0 "00:00:00"
  S LEXTIM=$$TIM(LEXTIM)
  Q LEXTIM
-TIM(X) ;   Format Time Elapsed
+TIM(X) ;     Format Time Elapsed
  N LEXD,LEXH,LEXM,LEXS,LEXT,LEXV S X=+($G(X)) Q:X'>0 "00:00:00"
  S LEXD=X\86400 S LEXV=LEXD*86400 S:+LEXV>0&(LEXV<X) X=X-LEXV
  S LEXH=X\3600 S LEXV=LEXH*3600 S:+LEXV>0&(LEXV<X) X=X-LEXV
@@ -132,9 +114,10 @@ TIM(X) ;   Format Time Elapsed
  S LEXT="" S:+LEXD>0 LEXT=+LEXD_" day"_$S(+LEXD>1:"s",1:"")_" "
  S LEXT=LEXT_LEXH_":"_LEXM_":"_LEXS,X=LEXT
  Q X
-BL ;   Blank Line
+ ;   Save Text
+BL ;     Blank Line
  D TL("") Q
-TL(LEXX) ;   Text Line
+TL(LEXX) ;     Text Line
  S LEXSUB=$G(LEXSUB) S:'$L(LEXSUB) LEXSUB="LEXXII"
  I '$D(^TMP(LEXSUB,$J,1)) S ^TMP(LEXSUB,$J,1)=" ",^TMP(LEXSUB,$J,0)=1
  N LEXNX S LEXNX=$O(^TMP(LEXSUB,$J," "),-1),LEXNX=LEXNX+1
@@ -144,9 +127,5 @@ ST ;   Show Temp Array
  S LEXSUB=$G(LEXSUB) S:'$L(LEXSUB) LEXSUB="LEXXII"
  N LEXN,LEXC S LEXN="^TMP("""_LEXSUB_""","_$J_")",LEXC="^TMP("""_LEXSUB_""","_$J_","
  F  S LEXN=$Q(@LEXN) Q:LEXN=""!(LEXN'[LEXC)  D
- . Q:LEXN[",0)"  W !,@LEXN
+ . Q:LEXN[",0)"  W ! W:$D(FULL) LEXN,"=" W @LEXN
  Q
-TRIM(X) ;   Trim Spaces
- S X=$G(X) Q:X="" X F  Q:$E(X,1)'=" "  S X=$E(X,2,$L(X))
- F  Q:$E(X,$L(X))'=" "  S X=$E(X,1,($L(X)-1))
- Q X

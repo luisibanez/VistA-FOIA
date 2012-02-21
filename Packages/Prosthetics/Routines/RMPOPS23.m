@@ -1,5 +1,5 @@
 RMPOPS23 ;HIN/RVD - HOME OXYGEN BILLING - POST TO 2319 ;5/18/99
- ;;3.0;PROSTHETICS;**29,44,41,110**;Feb 09, 1996;Build 10
+ ;;3.0;PROSTHETICS;**29,44,41**;Feb 09, 1996
  ;
  ;This routine will only post records already been posted in IFCAP.
  ;Patient records are sorted by fund control point (FCP), DFN and
@@ -87,7 +87,7 @@ F660 ;Post to file ^RMPR(660 for form 2319
  . S D6I=+Y,D6X=D6I_","
  . K DIE,DA,DR S DA(4)=RMPOXITE,DA(3)=RMPODATE,DA(2)=RMPOVDR,DA(1)=DFN
  . S DIE="^RMPO(665.72,"_DA(4)_",1,"_DA(3)_",1,"_DA(2)_",""V"","_DA(1)
- . S DIE=DIE_",1,",DA=ITM,DR="15////^S X=D6I" D ^DIE
+ . S DIE=DIE_",1,",DA=ITM,DR="15///"_D6I D ^DIE
  . S D660(660,D6X,.02)=DFN                 ;Patient name pointer
  . S D660(660,D6X,1)=TRXDT                 ;Request date
  . S D660(660,D6X,2)=$P(ITMD,U,14)         ;Type of transaction

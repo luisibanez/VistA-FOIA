@@ -1,5 +1,5 @@
 IBCEM3 ;ALB/TMP - IB ELECTRONIC MESSAGE MGMNT ACTIONS ;18-AUG-1999
- ;;2.0;INTEGRATED BILLING;**137,155,320**;21-MAR-1994
+ ;;2.0;INTEGRATED BILLING;**137,155**;21-MAR-1994
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 CANCEL(IBDA,IBIFN,IB364) ; Generic cancel bill action
@@ -51,18 +51,12 @@ EBILL(IBDA,IBIFN,IB364) ;Generic edit bill action
  . D UPDEDI^IBCEM(IB364,"E")
 EBILLQ Q
  ;
-DISP(IBIFN,FUNC,DISP,IBDEF,DIRUT)   ;Display bill detail
+DISP(IBIFN,FUNC,DISP)   ;Display bill detail
  ;  Returns 1 if function should continue, 0 if function should not
  ; IBIFN = Bill #
  ; FUNC = Text (lower case) to describe function to perform
  ; DISP = flag = 1 for return data, no display
- ;               format:  1^BILL #^PATIENT^BILL TYPE^DATES
- ; IBDEF = Default answer for Yes/No question here (1=Yes)
- ; DIRUT = output parameter is defined if passed by reference,
- ;       = this will be defined if the user enters a leading up-arrow
- ;       = or times out or enters a null response
- ;
- ; Function returns Y and DIRUT - used by IBCEMCA2 - DO NOT NEW THESE
+ ;   format = 1^BILL #^PATIENT^BILL TYPE^DATES
  ;
  N IBB0,IBBU,IBNO,STAT,DIR,DTOUT,DUOUT,IBV
  S IBB0=$G(^DGCR(399,IBIFN,0)),IBBU=$G(^("U")),IBNO=$P(IBB0,U)
@@ -77,11 +71,8 @@ DISP(IBIFN,FUNC,DISP,IBDEF,DIRUT)   ;Display bill detail
  . S DIR("A",4)=" Bill Type: "_IBV(2)
  . S DIR("A",5)="Bill Dates: "_IBV(3)
  . S DIR("A")="Are you sure this is the bill you want to "_FUNC_"? "
- . S DIR("B")="NO"
- . I $G(IBDEF) S DIR("B")="Yes"
- . S DIR(0)="YA" D ^DIR K DIR
+ . S DIR("B")="NO",DIR(0)="YA" D ^DIR K DIR
  . I $D(DTOUT)!$D(DUOUT)!'Y S STAT=0
  S STAT="1^"_IBNO_U_IBV(1)_U_IBV(2)_U_IBV(3)
-DISPQ ;
- Q STAT
+DISPQ   Q STAT
  ;

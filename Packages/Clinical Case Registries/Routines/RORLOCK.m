@@ -1,5 +1,5 @@
-RORLOCK ;HCIOFO/SG - LOCKS AND TRANSACTIONS ; 11/17/06 11:37am
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORLOCK ;HCIOFO/SG - LOCKS AND TYRANSACTIONS ; 10/1/03 4:36pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  Q
  ;
@@ -27,7 +27,7 @@ LDSC(NODELIST) ;
  . S $P(DESCR,U,2)=$$GET1^DIQ(200,IENS,.01,,,"RORMSG")
  . D:$G(DIERR) DBS^RORERR("RORMSG",-9,,,200,IENS)
  S:$P(DESCR,U,2)="" $P(DESCR,U,2)="UNKNOWN USER"
- Q $P(DESCR,U,1,5)
+ Q DESCR
  ;
  ;***** LOCKS THE (SUB)FILE, RECORD OR FIELD NODE
  ;
@@ -35,7 +35,6 @@ LDSC(NODELIST) ;
  ; [IENS]        IENS of the record or subfile
  ; [FIELD]       Field number
  ; [TO]          Timeout (1 sec, by default)
- ; [NAME]        Process name
  ;
  ; Return Values:
  ;       <0  Error code
@@ -48,45 +47,39 @@ LDSC(NODELIST) ;
  ;             ^04: $JOB
  ;             ^05: Task number
  ;
- ; If the third field is empty then the object is locked by a
- ; registry background process (see the name in the 2nd field).
+ ; If the fourth field is empty then the object is locked by unknown
+ ; user (see the name in the 2nd field).
+ ;
+ ; Otherwise, if the third field is empty then the object is locked
+ ; by a registry background process (see the name in the 2nd field).
  ;
 LOCK(FILE,IENS,FIELD,TO,NAME) ;
- N DESCR,NDX,NODELIST,NODE,PI,RC,TMP
+ N DESCR,NODELIST,NODE,PI,RC
  I $D(FILE)<10  S RC=0  D:$G(FILE)>0  Q RC
  . S RC=$$LOCK1(FILE,$G(IENS),$G(FIELD),$G(TO),$G(NAME))
  ;--- Compile the list of global nodes
  S RC=$$NODELIST(.NODELIST,.FILE,$G(IENS),$G(FIELD))
  Q:RC<0 RC  Q:NODELIST="" 0
  ;--- Try to lock the object(s)
- X "L +("_NODELIST_"):"_$S($G(TO)>0:TO,1:3)  E  Q $$LDSC(.NODELIST)
+ X "L +("_NODELIST_"):"_$S($G(TO)>0:TO,1:1)  E  Q $$LDSC(.NODELIST)
  ;--- Create the lock descriptor(s)
  S DESCR=$$NOW^XLFDT_U_$G(NAME)_U_U_$JOB_U_$G(ZTSK)
  S:$G(NAME)="" $P(DESCR,U,3)=$G(DUZ)
  S NODE=""
  F  S NODE=$O(NODELIST(NODE))  Q:NODE=""  D
- . S NDX=$$XLNDX(NODE)
- . ;--- Calculate the lock counter
- . S TMP=$G(^XTMP("RORLOCK",NDX))
- . S $P(DESCR,U,6)=$S($P(TMP,U,4)=$JOB:$P(TMP,U,6)+1,1:1)
- . ;--- Store the descriptor
- . S ^XTMP("RORLOCK",NDX)=DESCR
+ . S ^XTMP("RORLOCK",$$XLNDX(NODE))=DESCR
  Q 0
  ;
 LOCK1(FILE,IENS,FIELD,TO,NAME) ;
- N DESCR,NDX,NODE,TMP
+ N DESCR,NODE
  S NODE=$$NODE(FILE,$G(IENS),$G(FIELD))
  Q:NODE<0 NODE
  ;--- Try to lock the object
- L +@NODE:$S($G(TO)>0:TO,1:3)  E  Q $$LDSC(NODE)
+ L +@NODE:$S($G(TO)>0:TO,1:1)  E  Q $$LDSC(NODE)
  ;--- Create the lock descriptor
  S DESCR=$$NOW^XLFDT_U_$G(NAME)_U_U_$JOB_U_$G(ZTSK)
  S:$G(NAME)="" $P(DESCR,U,3)=$G(DUZ)
- ;--- Calculate the lock counter
- S NDX=$$XLNDX(NODE),TMP=$G(^XTMP("RORLOCK",NDX))
- S $P(DESCR,U,6)=$S($P(TMP,U,4)=$JOB:$P(TMP,U,6)+1,1:1)
- ;--- Store the descriptor
- S ^XTMP("RORLOCK",NDX)=DESCR
+ S ^XTMP("RORLOCK",$$XLNDX(NODE))=DESCR
  Q 0
  ;
  ;***** RETURNS THE GLOBAL NODE OF THE OBJECT
@@ -164,7 +157,7 @@ TEXT(LDSC) ;
  ;       D UNLOCK^RORLOCK(...) if you do not need its return value.
  ;
 UNLOCK(FILE,IENS,FIELD) ;
- N DESCR,NDX,NODELIST,NODE,PI,RC
+ N NODELIST,NODE,PI,RC
  I $D(FILE)<10  S RC=0  D:$G(FILE)>0  Q:$QUIT RC  Q
  . S RC=$$UNLOCK1(FILE,$G(IENS),$G(FIELD))
  ;--- Compile the list of global nodes
@@ -174,25 +167,17 @@ UNLOCK(FILE,IENS,FIELD) ;
  ;--- Remove the lock descriptor(s)
  S NODE=""
  F  S NODE=$O(NODELIST(NODE))  Q:NODE=""  D
- . S NDX=$$XLNDX(NODE),DESCR=$G(^XTMP("RORLOCK",NDX))
- . Q:$P(DESCR,U,4)'=$JOB
- . I $P(DESCR,U,6)>1  D
- . . S $P(^XTMP("RORLOCK",NDX),U,6)=$P(DESCR,U,6)-1
- . E  K ^XTMP("RORLOCK",NDX)
+ . K ^XTMP("RORLOCK",$$XLNDX(NODE))
  ;--- Unlock the object(s)
  X "L -("_NODELIST_")"
  Q:$QUIT 0  Q
  ;
 UNLOCK1(FILE,IENS,FIELD) ;
- N DESCR,NDX,NODE
+ N NODE
  S NODE=$$NODE(FILE,$G(IENS),$G(FIELD))
  Q:NODE<0 NODE
  ;--- Remove the lock descriptor
- S NDX=$$XLNDX(NODE),DESCR=$G(^XTMP("RORLOCK",NDX))
- D:$P(DESCR,U,4)=$JOB
- . I $P(DESCR,U,6)>1  D
- . . S $P(^XTMP("RORLOCK",NDX),U,6)=$P(DESCR,U,6)-1
- . E  K ^XTMP("RORLOCK",NDX)
+ K ^XTMP("RORLOCK",$$XLNDX(NODE))
  ;--- Unlock the object
  L -@NODE
  Q 0

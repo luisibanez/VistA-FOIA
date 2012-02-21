@@ -1,5 +1,5 @@
 FHORT5A ; HISC/REL/NCA/RVD - Tubefeeding Reports (cont) ;3/1/04  13:15
- ;;5.5;DIETETICS;**1,3,5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;**1,3**;Jan 28, 2005
  ;
 Q1 ; Print Tubefeeding Report
  S PG=0 D NOW^%DTC S (DTP,NOW)=% D DTP^FH K ^TMP($J)
@@ -10,9 +10,6 @@ OUTPAT ;get outpatient data, for today's date.
  F FHDFN=0:0  S FHDFN=$O(^FHPT("RM",DT,FHDFN)) Q:FHDFN'>0  F FHFIN=0:0 S FHFIN=$O(^FHPT("RM",DT,FHDFN,FHFIN)) Q:FHFIN'>0  D
  .;quit if TF is cancelled
  .I $D(^FHPT(FHDFN,"OP",FHFIN,3)),$P(^(3),U,5)="C" Q
- .S (FHRMB,RM)=" "
- .I $D(^FHPT(FHDFN,"OP",FHFIN,0)) S FHRMB=$P($G(^FHPT(FHDFN,"OP",FHFIN,0)),U,18)
- .I $G(FHRMB),$D(^DG(405.4,FHRMB,0)) S RM=$P(^DG(405.4,FHRMB,0),U,1)
  .F FHTF=0:0 S FHTF=$O(^FHPT(FHDFN,"OP",FHFIN,"TF",FHTF)) Q:FHTF'>0  D
  ..Q:'$D(^FHPT(FHDFN,"OP",FHFIN,"TF",FHTF,0))
  ..S YY=$G(^FHPT(FHDFN,"OP",FHFIN,"TF",FHTF,0))
@@ -21,7 +18,7 @@ OUTPAT ;get outpatient data, for today's date.
  ..S Z=$G(^FHPT(FHDFN,"OP",FHFIN,0))
  ..S XY=$G(^FHPT(FHDFN,"OP",FHFIN,3))
  ..S (Z1,Z2)="",W1=$P(Z,"^",3)
- ..S P0=$G(^FH(119.6,+W1,0)),Z3=$P(P0,"^",8),WARD=$E($P(P0,"^",1),U,12)
+ ..S P0=$G(^FH(119.6,+W1,0)),Z3=$P(P0,"^",8),WARD=$P(P0,"^",1)
  ..S CC=$P($G(^FH(119.73,+Z3,0)),"^",1)
  ..I FHXX="C" S D2=$P(P0,"^",8) I FHP,FHP'=D2 Q
  ..I FHXX="L" I FHP,FHP'=W1 Q
@@ -41,7 +38,7 @@ OUTPAT ;get outpatient data, for today's date.
  ..S PNOD=P0_"~"_WARD_"~"_FHDFN
  ..I "135"[FHOPT S:'$D(^TMP($J,"C",CNOD,TUN,0)) ^(0)="" S $P(^(0),"^",1)=$P(^(0),"^",1)+TU,$P(^(0),"^",2)=$P(^(0),"^",2)+1
  ..I "124"[FHOPT D
- ...S:'$D(^TMP($J,"T",TNOD,PNOD,0)) ^(0)=$E(FHPTNM,1,22)_"^"_FHBID_"^"_WARD_"^"_RM_"^"_$P(XY,"^",1,3)
+ ...S:'$D(^TMP($J,"T",TNOD,PNOD,0)) ^(0)=$E(FHPTNM,1,22)_"^"_FHBID_"^"_WARD_"^^"_$P(XY,"^",1,3)
  ...S ^TMP($J,"T",TNOD,PNOD,TF2,0)=$P(Y0,"^",1)_"^"_$P(Y0,"^",2)_"^"_TP_"^"_TW_"^"_TU_"^"_P1_"^"_STR_"^"_QUA_"^"_TUN
  ;
 PRT ;prints corresponding reports.

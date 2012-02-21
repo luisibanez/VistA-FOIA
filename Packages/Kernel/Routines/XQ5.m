@@ -1,7 +1,5 @@
-XQ5 ;SF/GFT,MJM,KLD - Menu edit utilities [XUEDITOPT] ;01/30/2008
- ;;8.0;KERNEL;**44,130,484**;Jul 10, 1995;Build 2
- ; Per VHA Directive 2004-038, this routine should not be modified.
- ; Option & Input Template: XUEDITOPT
+XQ5 ;SF/GFT,MJM,KLD - Menu edit utilities [XUEDITOPT] ;09/20/96  15:33
+ ;;8.0;KERNEL;**44,130**;Jul 10, 1995
 DIP ;
  K DIC S DIC=.4,DIC(0)="AEQMZ" I $D(^DIC(19,DA,63)),^(63)?1"[".E1"]" S DIC("B")=$E(^(63),2,$L(^(63))-1)
  S DUZ0=$S(DUZ(0)="@"!$D(^XUSEC("XUMGR",DUZ)):1,1:0) G:DUZ0 DIP1 S DIC("S")="I 1 Q:'$D(^DIC(+$P(^(0),U,4),0,""RD""))  F %=1:1:$L(^(""RD"")) I DUZ(0)[$E(^(""RD""),%) Q"
@@ -32,13 +30,10 @@ PUT S X=0 F  S X=$O(XQ(X)) Q:X'>0  S ^DIC(19,DA,X)=XQ(X)
 Q W *7,!,"NO CHANGE MADE TO OPTION LOGIC"
 Q1 K XQDIC,XQ,Y S DIC=DIE Q
  ;
-DIC S XQ=$P(^DIC(XQDIC,0),U,1),XQ(30)=$P(^(0,"GL"),U,2)
- S XQ(31)=$G(^DIC(19,DA,31)) S:XQ(31)="" XQ(31)="AEMQ"
+DIC S XQ=$P(^DIC(XQDIC,0),U,1),XQ(30)=$P(^(0,"GL"),U,2),XQ(31)="AEMQ"
  I $D(^DIC(XQDIC,0,"LAYGO")),DUZ(0)'="@" S Y=$L(^("LAYGO")) I Y F %=1:1 I DUZ(0)[$E(^("LAYGO"),%) G A:%>Y Q
  W !,"WHEN USER SELECTS AN ENTRY IN THE '"_XQ_"' FILE,",!,"WILL ADDING A NEW ENTRY AT THAT TIME ('LAYGO') BE ALLOWED"
- S %=$S(XQ(31)["L":0,1:2) D YN^DICN
- I %=1 I XQ(31)'["L" S XQ(31)=XQ(31)_"L"
- I %=2 I XQ(31)["L" S XQ(31)=$TR(XQ(31),"L")
+ S %=$S($D(^DIC(19,DA,31)):^(31)'["L"+1,1:0) D YN^DICN I %=1 S XQ(31)="AEMQL"
 A Q
  ;
 DIQ ;
@@ -47,9 +42,7 @@ DIQ ;
  I $D(^DIC(19,DA,30)),^(30)["(",@("$D(^"_^(30)_"0))") S DIC("B")=+$P(^(0),U,2)
  G:DUZ0 DIQ1 S DIC("S")="I 1 Q:'$D(^(0,""RD""))  F %=1:1:$L(^(""RD"")) I DUZ(0)[$E(^(""RD""),%) Q"
 DIQ1 ;
- D ^DIC K DIC G:Y<0 Q  S (XQ(80),XQ(30))=$P(^(0,"GL"),U,2)
- S XQ(31)=$G(^DIC(19,DA,31)) S:XQ(31)="" XQ(31)="AEMQ"
- D PUT G Q1
+ D ^DIC K DIC G:Y<0 Q S XQ(31)="AEMQ",(XQ(80),XQ(30))=$P(^(0,"GL"),U,2) D PUT G Q1
  ;
 NAME ;
  I $E(X,1)="A"!($E(X,1)="Z") S %=1,%1="Local" Q
@@ -66,28 +59,28 @@ CHKNAME ;Called from the input transform of the .01 field of the Option File
  ;
 PRNT W !,?16,"*** IMPORTANT PLEASE READ ***",!
  W !,"By selecting a new Print/Sort Template below, your defaults will"
- W !,"be changed. Your defaults are currently set as follows (see below)."
+ W !,"be changed. Your defaults are currently set as follows(see below)."
  W !,"Should you desire to keep the defaults as they are, or to revise"
  W !,"one or more, enter an '^' up-arrow, without selecting a new"
  W !,"template name."
  W !!,?23,"Default Values",!,?23,"==============",!
- W !,?5,"DIC {DIP}: "_$$GET1^DIQ(19,DA,60)
+ W !,?17,"DIC {DIP}: "_$$GET1^DIQ(19,DA,60)
  W ?40,"L.: "_$$GET1^DIQ(19,DA,62)
- W !,?5,"FLDS: "_$$GET1^DIQ(19,DA,63)
+ W !,?17,"FLDS: "_$$GET1^DIQ(19,DA,63)
  W ?40,"BY: "_$$GET1^DIQ(19,DA,64)
- W !,?5,"FR: "_$$GET1^DIQ(19,DA,65)
+ W !,?17,"FR: "_$$GET1^DIQ(19,DA,65)
  W ?40,"TO: "_$$GET1^DIQ(19,DA,66),!!
  Q
  ;
 SORT W !,?16,"*** IMPORTANT PLEASE READ ***",!
  W !,"By selecting a new Sort Template below, your defaults will be"
- W !,"changed. Your defaults are currently set as follows (see below)."
+ W !,"changed. Your defaults are currently set as follow(see below)."
  W !,"Should you desire to keep the defaults as they are, or to revise"
  W !,"one or more, enter an '^' up-arrow, without selecting a new Sort"
  W !,"Template."
  W !!,?23,"Default Values",!,?23,"==============",!
- W ?5,"BY: "_$$GET1^DIQ(19,DA,64)
- W !,?5,"FR: "_$$GET1^DIQ(19,DA,65)
+ W ?17,"BY: "_$$GET1^DIQ(19,DA,64)
+ W !,?17,"FR: "_$$GET1^DIQ(19,DA,65)
  W ?40,"TO: "_$$GET1^DIQ(19,DA,66),!!
  Q
 TEST W !,"Enter a name, and the computer will respond with the namespace to which",!,"that name belongs.  It does this by looking at the package file.",!!

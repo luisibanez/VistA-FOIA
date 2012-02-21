@@ -1,4 +1,4 @@
-NVSSTB ;slciofo/mdb-options for VMS/Cache systems to start TM/Broker/MailMan;
+NVSSTB ;slciofo/mdb-options for VMS/Cache systems to start TM/Broker/MailMan; 04/01/04
  ;;2.0;EMC SYSTEM UTILITIES; Apr 28, 2003
  ;
  ;Options to manually start and stop Taskman, Broker Listener(s) and the
@@ -7,9 +7,6 @@ NVSSTB ;slciofo/mdb-options for VMS/Cache systems to start TM/Broker/MailMan;
  ; *****NOTE*****
  ; additions made by MW@VISN20 on 9/9/04 to include options to
  ; stop TaskMan and Broker listener(s).
- ; 
- ; modified listing to indicate instance per item    jls             1/21/06  NOON
- ; 
  ; **************
  ;
  ; the function OS^%ZOSV is not present in DSM systems, check for DSM system...
@@ -18,7 +15,6 @@ NVSSTB ;slciofo/mdb-options for VMS/Cache systems to start TM/Broker/MailMan;
  I $$OS^%ZOSV()'="VMS" W !,"This routine is for VMS/Cache systems only." Q
  ;
  I $G(IOF)="" D HOME^%ZIS
- S NVSNODE=$ZU(110)
  S NVSVOL=$ZU(5)
  S NVSCFG=$P($ZU(86),"*",2)
  F  D  Q:$D(DIRUT)
@@ -29,16 +25,16 @@ NVSSTB ;slciofo/mdb-options for VMS/Cache systems to start TM/Broker/MailMan;
  .W !,$$CJ^XLFSTR("must be started by a call to a VMS command file to insure that",80)
  .W !,$$CJ^XLFSTR("these processes are started with the appropriate privileges.",80)
  .W !,$$CJ^XLFSTR("**********",80)
- .W !!?3,"Current Node : ",NVSNODE
+ .W !!?3,"Current Node : ",$ZU(110)
  .W !?3,"Namespace    : ",NVSVOL
  .W !?3,"Cache Config : ",NVSCFG
  .S DIR(0)="NA^1:7"
- .S DIR("A",1)="   1 = Start Task Manager for config "_NVSCFG_" on node "_NVSNODE
- .S DIR("A",2)="   2 = Start Broker Listener(s) for config "_NVSCFG_" on node "_NVSNODE
- .S DIR("A",3)="   3 = Start Network Mail Listener for config "_NVSCFG_" on node "_NVSNODE
- .S DIR("A",4)="   4 = Start All (TM, Broker, Network Mail) for config "_NVSCFG_" on node "_NVSNODE
- .S DIR("A",5)="   5 = Stop Task Manager and Sub-managers for config "_NVSCFG_" on node "_NVSNODE
- .S DIR("A",6)="   6 = Stop Broker Listener(s) for config "_NVSCFG_" on node "_NVSNODE
+ .S DIR("A",1)="   1 = Manually Start Task Manager"
+ .S DIR("A",2)="   2 = Manually Start Broker Listener(s)"
+ .S DIR("A",3)="   3 = Manually Start Network Mail Listener"
+ .S DIR("A",4)="   4 = Manually Start All (Task Manager, Broker, Network Mail Listener)"
+ .S DIR("A",5)="   5 = Stop Task Manager and Sub-managers"
+ .S DIR("A",6)="   6 = Stop Broker Listener(s)"
  .S DIR("A",7)="   7 = Exit"
  .S DIR("A",8)=" "
  .S DIR("A")="  Select OPTION NUMBER (1-7): "
@@ -58,7 +54,7 @@ NVSSTB ;slciofo/mdb-options for VMS/Cache systems to start TM/Broker/MailMan;
  ..D ML
  .I NVSANS=5 D STM Q
  .I NVSANS=6 D SBL
- K DIRUT,DTOUT,NVSANS,NVSCFG,NVSNODE,NVSVOL,X,Y
+ K DIRUT,DTOUT,NVSANS,NVSCFG,NVSVOL,X,Y
  Q
  ;
 TM ; start Task Manager...
@@ -68,9 +64,9 @@ TM ; start Task Manager...
  .W !,"TaskMan in VAH..."
  .S X=$ZF(-1,"SUBMIT/USER=CACHEMGR/QUE=SYS$BATCH USER$:[CACHEMGR]TASKMAN_START.COM")
  I NVSVOL'="VAH" D
- .W !!,"Submitting batch job for USER$:[CACHEMGR]",NVSVOL,"_TASKMAN_START.COM to"
+ .W !!,"Submitting batch job for USER$:[CACHEMGR]PLATINUM_TASKMAN_START.COM to"
  .W !,"start TaskMan in ",NVSVOL,"..."
- .S X=$ZF(-1,"SUBMIT/USER=CACHEMGR/QUE=SYS$BATCH USER$:[CACHEMGR]"_NVSVOL_"_TASKMAN_START.COM")
+ .S X=$ZF(-1,"SUBMIT/USER=CACHEMGR/QUE=SYS$BATCH USER$:[CACHEMGR]PLATINUM_TASKMAN_START.COM")
  ;I NVSVOL="TST" S X=$ZF(-1,"SUBMIT/USER=CACHEMGR/QUE=SYS$BATCH USER$:[CACHEMGR]TST_TASKMAN_START.COM")
  ;I NVSVOL'="VAH"&(NVSVOL'="TST") W !!,$C(7),"This Configuration is not VAH or TST."
  S DIR(0)="EA"
@@ -131,7 +127,7 @@ STM ; stop Task Manager and Sub-managers...
  .W !?2,"stopping any idle sub-manager(s)..."
  .D SSUB^ZTMKU(NVSTMNOD)
  .W "done."
- K DIRUT,DTOUT,NVSTMNOD,X,Y
+ K DIRUT,DTOUT,X,Y
  S DIR(0)="EA"
  S DIR("A")="Press <enter> to return to the main menu..."
  W ! D ^DIR K DIR

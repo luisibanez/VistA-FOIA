@@ -1,6 +1,5 @@
 RCXVDC ;DAOU/ALA-AR Data Extraction Data Creation ;02-JUL-03
- ;;4.5;Accounts Receivable;**201,228,256**;Mar 20, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.5;Accounts Receivable;**201,228**;Mar 20, 1995
  ;
  Q
 EN ; Entry Point
@@ -28,16 +27,15 @@ FILE ;
  I $G(^TMP($J,RCXVBLN,"3-399A"))'="" W "399:"_^TMP($J,RCXVBLN,"3-399A")_RCXVU_^TMP($J,RCXVBLN,"3-399B")_RCXVU_^TMP($J,RCXVBLN,"3-399C")_RCXVU_^TMP($J,RCXVBLN,"3-399D"),!
  S RCXVPC=0
  F  S RCXVPC=$O(^TMP($J,RCXVBLN,"4-399A",RCXVPC))  Q:'RCXVPC  D
- . I $G(^TMP($J,RCXVBLN,"4-399A",RCXVPC))'="" D
- .. W "399.0304:"
- .. W $G(^TMP($J,RCXVBLN,"4-399A",RCXVPC))
- .. W RCXVU
- .. F RCXVCP=1:1 Q:('$D(^TMP($J,RCXVBLN,"4-399A",RCXVPC,RCXVCP)))  D
- ... I RCXVCP>1 W "~"
- ... W $G(^TMP($J,RCXVBLN,"4-399A",RCXVPC,RCXVCP))
- ... Q
- .. W !
- . I $G(^TMP($J,RCXVBLN,"4-399B",RCXVPC))'="" W "399.042:"_$G(^TMP($J,RCXVBLN,"4-399B",RCXVPC)),!
+ . W "399.0304:"
+ . W $G(^TMP($J,RCXVBLN,"4-399A",RCXVPC))
+ . W RCXVU
+ . F RCXVCP=1:1 Q:('$D(^TMP($J,RCXVBLN,"4-399A",RCXVPC,RCXVCP)))  D
+ . . I RCXVCP>1 W "~"
+ . . W $G(^TMP($J,RCXVBLN,"4-399A",RCXVPC,RCXVCP))
+ . . Q
+ . W !
+ . I $D(^TMP($J,RCXVBLN,"4-399B",RCXVPC)) W "399.042:"_$G(^TMP($J,RCXVBLN,"4-399B",RCXVPC)),!
  . Q
  S RCXVI=""
  F  S RCXVI=$O(^TMP($J,RCXVBLN,"5-350A",RCXVI)) Q:RCXVI=""  D

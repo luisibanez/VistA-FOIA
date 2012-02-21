@@ -1,5 +1,5 @@
 RMPREOS ;HINES-CIOFO/HNC -Suspense Processing ; 2/25/04 10:26am
- ;;3.0;PROSTHETICS;**45,50,52,55,57,62,80,85,97,135**;Feb 09, 1996;Build 12
+ ;;3.0;PROSTHETICS;**45,50,52,55,57,62,80,85,97**;Feb 09, 1996
  ;
  ;  HNC - patch 52 - 9/22/00 Modify EN2 not to check for RMPRFLAG
  ;                           RMPRCLOS, or FLAG.
@@ -71,12 +71,12 @@ ENIA ;initial action note
  ;consult ien
  S GMRCO=$P(^RMPR(668,DA,0),U,15) Q:GMRCO=""
  ;note in array
- S RMPRCMT=0,GMRCMT=1
+ S RMPRCMT=0
  F  S RMPRCMT=$O(^RMPR(668,DA,3,RMPRCMT)) Q:RMPRCMT=""  D
  .S GMRCMT(RMPRCMT)=^RMPR(668,DA,3,RMPRCMT,0)
- I $G(GMRCMT(1))="" S GMRCMT(1)="nothing noted"
+ I $G(GMRCMT)="" S GMRCMT="nothing noted"
  ;call api
- D CMT^GMRCGUIB(GMRCO,.GMRCMT,DUZ,RMPREODT,DUZ)
+ S RMGMRCO=$$RC^GMRCGUIA(.GMRCO,DUZ,RMPREODT,.GMRCMT,DUZ)
  K RMPREODT,GMRCO,RMGMRCO,GMRCMT,RMPRCMT
  Q
 FORW ;forward consult

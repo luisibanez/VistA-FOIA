@@ -1,5 +1,5 @@
 PXBPPOV ;ISL/JVS - PROMPT POV ;8/31/05
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**11,28,92,121,149,124,170,182**;Aug 12, 1996;Build 3
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**11,28,92,121,149,124,170**;Aug 12, 1996
  ;
  ; VARIABLE LIST
  ; SELINE= Line number of selected item
@@ -38,8 +38,8 @@ P1 ;--Third entry point
  I DATA="^^" S PXBEXIT=0 G POVX
  ;---I Prompt can jump to others put symbols in here
  I DATA["^P" G POVX
- ;------PXBDPOV=DEFAULT POV---PX*1.0*182 - added variable EDATA
- I DATA="",$D(PXBDPOV) S DATA=$P($G(PXBDPOV),"--",1),EDATA=DATA
+ ;------PXBDPOV=DEFAULT POV---
+ I DATA="",$D(PXBDPOV) S DATA=$P($G(PXBDPOV),"--",1)
  I DATA="",'$D(PXBDPOV) S PXBUT=1,PXBSPL="",LEAVE=1 G POVX
  I PXBCNT>10&((DATA="+")!(DATA="-")) D DPOV4^PXBDPOV(DATA) G P
  ;

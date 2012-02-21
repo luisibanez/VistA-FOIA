@@ -1,18 +1,15 @@
-RORHL09 ;HOIFO/BH - HL7 OUTPATIENT DATA: PV1,OBR,OBX ; 3/13/06 9:24am
- ;;1.5;CLINICAL CASE REGISTRIES;**1,5**;Feb 17, 2006;Build 10
- ;
- ; 11/29/2007 BAY/KAM ROR*1.5*5 Rem Call 218601 Correct Outpatient
- ;                              CPTs not transmitting to the AAC
+RORHL09 ;HOIFO/BH - HL7 OUTPATIENT DATA: PV1,OBR,OBX ; 1/23/06 2:09pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
  ; #93       Get stop code from the file #44 (controlled)
  ; #1889     Use of the ENCEVENT^PXKENC API
  ; #1995     $$CODEC^ICPTCOD (supported)
- ; #2309     Read access to the 'AA' x-ref in VISIT file (#9000010)
+ ; #????     Read access to the 'AA' x-ref in VISIT file (#9000010)
  ; #3990     $$CODEC^ICDCODE (supported)
  ; #10060    Read access to the file #200 (supported)
- ; #2438     Access to the file #40.8 (field #1) (controlled)
+ ; #????     Access to the file #40.8 (field #1)
  ;
  Q
  ;
@@ -163,14 +160,11 @@ PROCS() ;
  . Q:PROC<0
  . ;---
  . S PRV=+$P($G(^TMP("PXKENC",$J,RORIEN,"CPT",K5,12)),U,4)
- . ;12/06/2007 BAY/KAM REM CALL 218601 Modified next 8 lines
+ . Q:PRV'>0
  . ;---
- . I PRV>0 D
- .. S $P(PRV,RORCS,13)=$$GET1^DIQ(200,PRV_",",53.5,"E",,"RORMSG")
- .. I $G(DIERR)  D  S ERRCNT=ERRCNT+1
- ... D DBS^RORERR("RORMSG",-99,,RORDFN,200,+PRV_",")
- . E  S PRV=""
- . ;----------> End of changes for 218601
+ . S $P(PRV,RORCS,13)=$$GET1^DIQ(200,PRV_",",53.5,"E",,"RORMSG")
+ . I $G(DIERR)  D  S ERRCNT=ERRCNT+1
+ . . D DBS^RORERR("RORMSG",-99,,RORDFN,200,+PRV_",")
  . ;---
  . D SETOBX(OID,PROC,PRV)
  Q ERRCNT

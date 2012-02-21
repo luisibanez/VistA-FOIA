@@ -1,5 +1,5 @@
-EASEZRPU ;ALB/AMA - Print utility for 10-10EZR ; 8/1/08 1:28pm
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**57,70**;Mar 15, 2001;Build 26
+EASEZRPU ;ALB/AMA - Print utility for 10-10EZR
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**57**;Mar 15, 2001
  ;
  Q
  ;
@@ -38,9 +38,6 @@ PAGE1 ;This function retrieves and formats the page 1 application data from
  S @ZDATA@("9C")=$$PROCESS("9C.")            ;State
  S @ZDATA@("9D")=$$PROCESS("9D.")            ;Zip
  S @ZDATA@("9E")=$$PROCESS("9E.")            ;County
- S @ZDATA@("9F")=$$PROCESS("9F.")            ;Province    - EAS*1.0*70
- S @ZDATA@("9G")=$$PROCESS("9G.")            ;Postal Code - EAS*1.0*70
- S @ZDATA@("9H")=$$PROCESS("9H.")            ;Country     - EAS*1.0*70
  S @ZDATA@(10)=$$PROCESS("10.1")             ;Home phone
  S @ZDATA@("11A")=$$PROCESS("11A.")          ;E-mail
  S @ZDATA@("11G")=$$PROCESS("11A1.")         ;Cell phone number

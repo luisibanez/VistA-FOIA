@@ -1,6 +1,5 @@
-SDAMA303 ;BPOIFO/ACS-Filter API By Patient ; 9/14/05 12:45pm
- ;;5.3;Scheduling;**301,347,508**;13 Aug 1993
- ;PER VHA DIRECTIVE 2004-038, DO NOT MODIFY THIS ROUTINE
+SDAMA303 ;BPOIFO/ACS-Filter API By Patient ;04 Dec 2003
+ ;;5.3;Scheduling;**301,347**;13 Aug 1993
  ;
  ;*****************************************************************
  ;              CHANGE LOG
@@ -9,7 +8,7 @@ SDAMA303 ;BPOIFO/ACS-Filter API By Patient ; 9/14/05 12:45pm
  ;--------  ----------    -----------------------------------------
  ;12/04/03  SD*5.3*301    ROUTINE COMPLETED
  ;08/06/04  SD*5.3*347    CHANGE CALL TO ^SDAMA305 TO SETARRAY
- ;02/22/07  SD*5.3*508    SEE SDAMA301 FOR CHANGE LIST
+ ;
  ;*****************************************************************
  ;
  ;*****************************************************************
@@ -80,18 +79,19 @@ GETINFO(SDPATIEN,SDAPPTDT,SDARRAY) ;
  ;appointment must match the "patient" filter values
  I $$MATCH^SDAMA304("P",.SDARRAY,.SDFLTR,.SDDV) D
  . ;set clinic appointment data to null and get clinic
- . S (SDARRAY("SC0"),SDARRAY("SCC"),SDARRAY("SCOB"),SDARRAY("SCONS"))=""
+ . S (SDARRAY("SC0"),SDARRAY("SCC"),SDARRAY("SCOB"))=""
  . S SDCLINIC=+$G(SDARRAY("DPT0"))
  . ;quit if clinic is null(0)
  . Q:SDCLINIC=0
+ . S SDARRAY("CLIN")=SDCLINIC
  . ;since "by patient", 2nd sort is clinic
  . S SDARRAY("SORT2")=SDCLINIC
- . ;quit if this is a migrated appointment
- . Q:'($$CLMIG^SDAMA307(SDCLINIC,.SDARRAY))
+ . ;make sure clinic has not migrated
+ . Q:($$CLMIG^SDAMA307(SDCLINIC))
  . S SDMATCH=1
- . ;if appointment is not cancelled on ^DPT and the PURGED parameter 
- . ;is not set, then find the corresponding appt on ^SC and get data
- . I ('+$G(SDARRAY("PURGED"))&(";C;CA;PC;PCA;"'[(";"_$P($G(SDARRAY("DPT0")),"^",2)_";"))) D
+ . ;if appointment is not cancelled on ^DPT, find corresponding appt on ^SC
+ . ;and get data
+ . I ";C;CA;PC;PCA;"'[(";"_$P($G(SDARRAY("DPT0")),"^",2)_";") D
  .. N SDCANCEL
  .. S SDQUIT=0,SDA=0,SDMATCH=0
  .. ;for current clinic and appt d/t, find matching appt on ^SC
@@ -108,11 +108,9 @@ GETINFO(SDPATIEN,SDAPPTDT,SDARRAY) ;
  ... S SDARRAY("SCC")=$G(^SC(SDCLINIC,"S",SDAPPTDT,1,SDA,"C"))
  ... ;get appointment "OB" node on ^SC
  ... S SDARRAY("SCOB")=$G(^SC(SDCLINIC,"S",SDAPPTDT,1,SDA,"OB"))
- ... ;get appointment "CONS" node on ^SC
- ... S SDARRAY("SCONS")=$G(^SC(SDCLINIC,"S",SDAPPTDT,1,SDA,"CONS"))
  ... ;Corresponding appointment found on ^SC
  ... S SDQUIT=1,SDMATCH=1
  . ;if appointment matches the clinic filters, put appointment data into output array
  . I SDMATCH D
- .. I $$MATCH^SDAMA304("C",.SDARRAY,.SDFLTR,.SDDV) D SETARRAY^SDAMA305(.SDARRAY)
+ .. I $$MATCH^SDAMA304("C",.SDARRAY,.SDFLTR,.SDDV) D SETARRAY^SDAMA305(.SDFLTR,.SDARRAY)
  Q

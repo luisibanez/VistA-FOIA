@@ -1,5 +1,5 @@
-OCXOZ0U ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
+OCXOZ0U ;SLC/RJS,CLA - Order Check Scan ;OCT 20,2005 at 22:40
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221**;Dec 17,1997
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
  ; ***************************************************************
@@ -33,7 +33,7 @@ R50R1B ; Send Order Check, Notication messages and/or Execute code for  Rule #50
  Q
  ;
 R50R2A ; Verify all Event/Elements of  Rule #50 'BIOCHEM ABNORMALITIES/CONTRAST MEDIA CHE...'  Relation #2 'CONTRAST MEDIA ORDER AND NO CREAT RESULTS W/IN X D...'
- ;  Called from EL130+6^OCXOZ0G, and EL133+5^OCXOZ0G.
+ ;  Called from EL130+6^OCXOZ0H, and EL133+5^OCXOZ0H.
  ;
  Q:$G(OCXOERR)
  ;
@@ -70,7 +70,7 @@ R50R2B ; Send Order Check, Notication messages and/or Execute code for  Rule #50
  Q
  ;
 R51R1A ; Verify all Event/Elements of  Rule #51 'RECENT CHOLECYSTOGRAM ORDER'  Relation #1 'RECENT CHOLECGRM'
- ;  Called from EL63+5^OCXOZ0G.
+ ;  Called from EL63+5^OCXOZ0H.
  ;
  Q:$G(OCXOERR)
  ;
@@ -198,8 +198,8 @@ R55R1B ; Send Order Check, Notication messages and/or Execute code for  Rule #55
  Q:$D(OCXRULE("R55R1B"))
  ;
  N OCXNMSG,OCXCMSG,OCXPORD,OCXFORD,OCXDATA,OCXNUM,OCXDUZ,OCXQUIT,OCXLOGS,OCXLOGD
- I ($G(OCXOSRC)="CPRS ORDER PRESCAN") S OCXCMSG=(+OCXPSD)_"^4^^Patient allergic to contrast media. ("_$$GETDATA(DFN,"66^",159)_") This procedure uses: "_$$GETDATA(DFN,"66^",66) I 1
- E  S OCXCMSG="Patient allergic to contrast media. ("_$$GETDATA(DFN,"66^",159)_") This procedure uses: "_$$GETDATA(DFN,"66^",66)
+ I ($G(OCXOSRC)="CPRS ORDER PRESCAN") S OCXCMSG=(+OCXPSD)_"^4^^Patient allergic to contrast media. This procedure uses: "_$$GETDATA(DFN,"66^",66) I 1
+ E  S OCXCMSG="Patient allergic to contrast media. This procedure uses: "_$$GETDATA(DFN,"66^",66)
  S OCXNMSG=""
  ;
  Q:$G(OCXOERR)

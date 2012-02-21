@@ -1,6 +1,6 @@
 IBATFILE ;LL/ELZ - TRANSFER PRICING FILLING  ; 22-JAN-1999
- ;;2.0;INTEGRATED BILLING;**115,389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**115**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
 PAT(DA,IBFAC,IBOVER) ; files patient in transfer pricing returns dfn
  Q:'$G(DA) 0
  I $D(^IBAT(351.6,DA,0)) Q DA
@@ -103,13 +103,13 @@ RX(DFN,IBEDT,IBPREF,IBSOURCE,IBDRUG,IBQTY,IBCOST) ; - files pharmacy data
 RMPR(DFN,IBEDT,IBPREF,IBSOURCE,IBPROS,IBCOST) ; - files prost. data
  ; DFN=dfn for patient, IBEDT=event date, IBPREF=enrolled facility
  ; IBSOURCE=source (prost ien;RMPR(660,
- ; IBPROS=ien from file 661 - removed in 389 no longer valid
+ ; IBPROS=ien from file 661
  ; IBCOST=item cost
- I '$G(DFN)!('$G(IBEDT))!('$G(IBPREF))!($G(IBSOURCE)="") Q 0
+ I '$G(DFN)!('$G(IBEDT))!('$G(IBPREF))!($G(IBSOURCE)="")!('$G(IBPROS)) Q 0
  N IBIEN
  S IBIEN=$$NEW(DFN,IBEDT,IBPREF,IBSOURCE) I 'IBIEN Q IBIEN
  S DIE="^IBAT(351.61,",DA=IBIEN
- S DR=".1////"_+IBEDT_";.05////"_$S($G(IBCOST):"P;4.05////"_+IBCOST_";.13////"_DT,1:"C")
+ S DR=".1////"_+IBEDT_";4.04////"_+IBPROS_";.05////"_$S($G(IBCOST):"P;4.05////"_+IBCOST_";.13////"_DT,1:"C")
  L +^IBAT(351.61,IBIEN):10 I '$T Q "0^Transaction Locked"
  D ^DIE D:$G(IBCOST) TOTAL^IBATCM(IBIEN)
  L -^IBAT(351.61,IBIEN)

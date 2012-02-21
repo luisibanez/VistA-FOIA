@@ -1,6 +1,6 @@
 FBNHEAUT ;AISC/DMK,GRR-ENTER/EDIT AUTHORIZATION ;08/07/02
- ;;3.5;FEE BASIS;**43,103**;JAN 30, 1995;Build 19
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.5;FEE BASIS;**43**;JAN 30, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  D SITEP^FBAAUTL Q:FBPOP  S FBAADDYS=+$P(FBSITE(0),"^",13),FBAAASKV=$P(FBSITE(1),"^"),FBPROG=$S($P(FBSITE(1),"^",6)="":"I 1",1:"I $P(^(0),U,3)=7") W !!
  ;
  S PRCS("TYPE")="FB",PRCS("A")="Select Obligation Number: " K PRCS("X") D EN1^PRCS58 G:Y<0 NOGOOD^FBNHEAU1 S FBOBN=$P(Y,"^",2) K PRCS("A")
@@ -19,11 +19,8 @@ GETVEN S FBPROG=7 D DATES^FBAAUTL2 G:FBBEGDT="" FBNHEAUT
  ;CREATE AN ENTRY IN FILE 161
  K DD,DO S DLAYGO=161,DA(1)=DFN,(DIE,DIC)="^FBAAA("_DA(1)_",1,",DIC(0)="LQ",X=FBBEGDT D FILE^DICN K DLAYGO S DA=+Y,FBAAADA=DA
  S DIE=DIC,FBPSADF=$S($D(FBSITE(1)):$P(^DIC(4,$P(FBSITE(1),"^",3),0),"^",1),1:"")
- ; fb*3.5*103  added REFERRING PROVIDER field (161.01,104) to DR string
- S DR=".02////^S X=FBENDDT;.03////^S X=7;S FBTYPE=7;100////^S X=DUZ;1////^S X=""YES"";.04////^S X=FBVEN;.095////1;101T;104;.065;.07;.021;.097;.08;S:X="""" Y="""";.085;S:X="""" Y="""";.086" D ^DIE
+ S DR=".02////^S X=FBENDDT;.03////^S X=7;S FBTYPE=7;100////^S X=DUZ;1////^S X=""YES"";.04////^S X=FBVEN;.095////1;101T;.065;.07;.021;.097;.08;S:X="""" Y="""";.085;S:X="""" Y="""";.086" D ^DIE
  I $D(DTOUT)!('$D(Y)=0) S DIC="^FBAAA("_DFN_",1," G DEL
- ; fb*3.5*103  assignment of REFERRING PROVIDER (161.01,104) for recording at 162.4,15 via the FBNH ENTER 7078 input template
- S FBRP=$$GET1^DIQ(161.01,FBAAADA_","_DFN,104,"I")
  S FBVEN=FBVEN_";FBAAV("
  ;
  S X=FBPAYDT D DAYS^FBAAUTL1 S FBATODT=$S($E(FBPAYDT,1,5)_"00"+X>FBENDDT:FBENDDT-1,1:$E(FBPAYDT,1,5)_"00"+X)

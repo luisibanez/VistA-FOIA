@@ -1,5 +1,5 @@
-LEXXST ; ISL/KER - Lexicon Status (Main/Files) ; 02/22/2007
- ;;2.0;LEXICON UTILITY;**4,5,8,25,27,49**;Sep 23, 1996;Build 3
+LEXXST ; ISL/KER - Lexicon Status (Main/Files) ; 10/27/2003
+ ;;2.0;LEXICON UTILITY;**4,5,8,25,27**;Sep 23, 1996
  ;            
  ; External References
  ;   DBIA 10096  ^%ZOSF("PROD"
@@ -30,9 +30,9 @@ SENDTO ; Send Status (Tasked)
  N LEXMAIL,LEXAO S (LEXMAIL,LEXAO)="" S:$D(ZTQUEUED) ZTREQ="@"
  D:'$D(LEXSHORT) N0 D DATA,SHOW Q
 DATA ; Get Data
- D TITLE Q:$D(LEXSHORT)
+ D TITLE D:$D(LEXSHORT) FS^LEXXST5 Q:$D(LEXSHORT)
  D FILES,PT^LEXXST2,RTT^LEXXST2
- D KIDS^LEXXST3,RTN^LEXXST3
+ D KIDS^LEXXST3,RTN^LEXXST3,FS^LEXXST5
  Q
 TITLE ; Title of display/message
  N LEXT,LEXA,LEXD,LEXU,LEXN,LEXP
@@ -48,12 +48,9 @@ TITLE ; Title of display/message
  . D:$L(LEXT) TT(LEXT),BL S:$L(LEXD) LEXT="  AS OF:       "_LEXD D:$L(LEXD) TL(LEXT) S LEXT="" S:$L(LEXA) LEXT="  IN ACCOUNT:  "_$S($L($P(LEXA,"^",1)):"[",1:"")_$P(LEXA,"^",1)_$S($L($P(LEXA,"^",2)):"]",1:"")
  . S:$L(LEXT)&($L($P(LEXA,"^",2))) LEXT=LEXT_"  "_$P(LEXA,"^",2) D:$L(LEXA) TL(LEXT) D BL
  Q
-U(X) ;   UCI where Lexicon is installed
- N LEXU,LEXP,LEXT,Y X ^%ZOSF("UCI") S LEXU=Y,LEXP=""
- S:LEXU=^%ZOSF("PROD")!($P(LEXU,",",1)=^%ZOSF("PROD")) LEXP=" (Production)"
- S:LEXU'=^%ZOSF("PROD")&($P(LEXU,",",1)'=^%ZOSF("PROD")) LEXP=" (Test)"
- S X="",$P(X,"^",1)=LEXU,$P(X,"^",2)=LEXP
- Q X
+U(LEX) ; UCI where Lexicon is installed
+ N LEXU,LEXP,LEXT X ^%ZOSF("UCI") S LEXU=Y S:Y=^%ZOSF("PROD") LEXP=" (PRODUCTION)"
+ S:Y'=^%ZOSF("PROD") LEXP=" (TEST)" S:LEXU["DEM" LEXP=" (DEMO)" S LEX="",$P(LEX,"^",1)=LEXU,$P(LEX,"^",2)=LEXP Q LEX
 FILES ; File version/contents
  N LEXCT,LEXT,LEXSP,LEXFI,LEXX,LEXGL,LEXNM,LEXVR,LEXLR,LEXTR,LEXRLR
  N LEXDDA,LEXPRD,LEXRN,LEXRD,LEXFCT

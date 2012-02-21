@@ -1,6 +1,6 @@
 IBRFN3 ;ALB/ARH - PASS BILL/CLAIM TO AR ;3/18/96
- ;;2.0;INTEGRATED BILLING;**61,133,210,309,389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**61,133,210,309**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;  Returns information on the bill passed in,  all data returned in external format, for AR's RC project
  ;
@@ -121,7 +121,7 @@ PD ; prosthetic items
  . S IBK=0 F  S IBK=$O(IBTMP(IBI,IBK)) Q:'IBK  D
  .. S IBX=IBTMP(IBI,IBK)
  .. S IBJ=IBJ+1,ARRAY("PRD")=IBJ
- .. S ARRAY("PRD",IBJ)=$$PINB^IBCSC5B(+IBX)_U_IBI
+ .. S ARRAY("PRD",IBJ)=$P($$PIN^IBCSC5B(IBK),U,2)_U_IBI
  ;
 CC ; condition related to employment, auto accident (place), other accident
  S IBI=0 F  S IBI=$O(^DGCR(399,IBIFN,"CC",IBI)) Q:'IBI  I $G(^(IBI,0))="02" S ARRAY("CRE")="EMPLOYMENT"

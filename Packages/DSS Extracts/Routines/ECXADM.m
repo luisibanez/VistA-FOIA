@@ -1,5 +1,5 @@
-ECXADM ;ALB/JAP,BIR/DMA,CML,PTD-Admissions Extract ; 10/15/07 12:14pm
- ;;3.0;DSS EXTRACTS;**1,4,11,8,13,24,33,39,46,71,84,92,107,105,120,127,132**;Dec 22, 1997;Build 18
+ECXADM ;ALB/JAP,BIR/DMA,CML,PTD-Admissions Extract ; 9/20/05 9:21am
+ ;;3.0;DSS EXTRACTS;**1,4,11,8,13,24,33,39,46,71,84**;Dec 22, 1997
 BEG ;entry point from option
  D SETUP I ECFILE="" Q
  D ^ECXTRAC,^ECXKILL
@@ -15,24 +15,16 @@ START ; start package specific extract
  Q
  ;
 GET ;gather extract data
- N ADM,W,X,ECXNPRFI,ECXATTPC,ECXPRVPC,ECXEST,ECXAOT
+ N ADM,W,X,ECXNPRFI,ECXATTPC,ECXPRVPC,ECXEST
  ;patient demographics
  S ECXERR=0 D PAT(ECXDFN,ECD,.ECXERR)
  Q:ECXERR
  I $$ENROLLM^ECXUTL2(ECXDFN)
  S ECXFAC=$P($G(^DIC(42,+$P(EC,U,6),0)),U,11)
- S ECXPDIV=$$GETDIV^ECXDEPT(ECXFAC)  ;Get production division
  ;admission data
  S ELGA=$P($G(^DIC(8,+$P(EC,U,20),0)),U,9)
  I ELGA S ELGA=$$ELIG^ECXUTL3(ELGA,ECXSVC)
- S (ECDRG,ECDIA,ECXSADM,ECXADMS,ECXAOT)="",ECPTF=+$P(EC,U,16) I ECPTF,$D(^DGPT(ECPTF,"M")) D PTF
- ;get encounter classification
- S (ECXAO,ECXECE,ECXIR,ECXMIL,ECXHNC,ECXSHAD)="",ECXVISIT=$P(EC,U,27)
- I ECXVISIT'="" D
- .D VISIT^ECXSCX1(ECXDFN,ECXVISIT,.ECXVIST,.ECXERR) I ECXERR K ECXERR Q
- .S ECXAO=$G(ECXVIST("AO")),ECXIR=$G(ECXVIST("IR"))
- .S ECXMIL=$G(ECXVIST("MST")),ECXHNC=$G(ECXVIST("HNC"))
- .S ECXECE=$G(ECXVIST("PGE")),ECXSHAD=$G(ECXVIST("SHAD"))
+ S (ECDRG,ECDIA,ECXSADM)="",ECPTF=+$P(EC,U,16) I ECPTF,$D(^DGPT(ECPTF,"M")) D PTF
  ;use movement record date & time
  S ADM=$$INP^ECXUTL2(ECXDFN,ECD)
  S ECXA=$P(ADM,U),ECXMN=$P(ADM,U,2),ECXSPC=$P(ADM,U,3)
@@ -43,15 +35,9 @@ GET ;gather extract data
  S ECXDATE=$$ECXDATE^ECXUTL(ECXDATE,ECXYM)
  S W=$P(ADM,U,9)
  S ECXWRD=$P(W,";",1),ECXFAC=$P(W,";",2),ECXDSSD=$P(W,";",3)
+ S ECXPDIV=$$GETDIV^ECXDEPT(ECXFAC)  ;Get production division
  S ECXPRV=$P(ADM,U,7),ECXPRNPI="",ECXATT=$P(ADM,U,8),ECXATNPI=""
  S ECXDOM=$P(ADM,U,10),ECXATTPC=$P(ADM,U,12),ECXPRVPC=$P(ADM,U,11)
- N ECXUSRTN
- S ECXUSRTN=$$NPI^XUSNPI("Individual_ID",$E(ECXATT,2,$L(ECXATT)),ECD)
- S:+ECXUSRTN'>0 ECXUSRTN=""
- S ECATTNPI=$P(ECXUSRTN,U)
- S ECXUSRTN=$$NPI^XUSNPI("Individual_ID",$E(ECXPRV,2,$L(ECXPRV)),ECD)
- S:+ECXUSRTN'>0 ECXUSRTN=""
- S ECPWNPI=$P(ECXUSRTN,U)
  ;
  ;- Observation patient indicator (YES/NO)
  S ECXOBS=$$OBSPAT^ECXUTL4(ECXA,ECXSPC)
@@ -92,26 +78,17 @@ PAT(ECXDFN,ECXDATE,ECXERR) ;get patient demographic data
  S ECXSTATE=ECXPAT("STATE")
  S ECXCNTY=ECXPAT("COUNTY")
  S ECXZIP=ECXPAT("ZIP")
- S ECXCNTRY=ECXPAT("COUNTRY")
  S ECXENRL=ECXPAT("ENROLL LOC")
  S ECXSVC=ECXPAT("SC%")
  S ECXPHI=ECXPAT("PHI")
  S ECXHI=+$$INSUR^IBBAPI(ECXDFN,ECXDATE)
  S ECXEST=ECXPAT("EC STAT")
  ;
- ;-OEF/OIF Data
- S ECXOEF=ECXPAT("ECXOEF")
- S ECXOEFDT=ECXPAT("ECXOEFDT")
- ;
  ;- Agent Orange location
  S ECXAOL=ECXPAT("AOL")
  ;
  ; - Head and Neck Cancer Indicator
  S ECXHNCI=$$HNCI^ECXUTL4(ECXDFN)
- ; - PROJ 112/SHAD Indicator
- S ECXSHADI=$$SHAD^ECXUTL4(ECXDFN)
- ; ******* - PATCH 127, ADD PATCAT CODE - ********
- S ECXPATCAT=$$PATCAT^ECXUTL(ECXDFN)
  ; - Race and Ethnicity
  S ECXETH=ECXPAT("ETHNIC")
  S ECXRC1=ECXPAT("RACE1")
@@ -124,8 +101,6 @@ PAT(ECXDFN,ECXDATE,ECXERR) ;get patient demographic data
  I $$CVEDT^ECXUTL5(ECXDFN,ECD)
  ;get national patient record flag if exist
  D NPRF^ECXUTL5
- ;get emergency response indicator (FEMA)
- S ECXERI=ECXPAT("ERI")
  Q
  ;
 PTF ; get admitting DRG, diagnosis, source of admission from PTF
@@ -136,9 +111,6 @@ PTF ; get admitting DRG, diagnosis, source of admission from PTF
  S ECDRG=$P($G(^DGPT(ECPTF,"M",EC,"P")),U)
  S ECDIA=$P($G(^ICD9(EC1,0)),U)
  S ECX=+$P($G(^DGPT(ECPTF,101)),U),ECXSADM=$P($G(^DIC(45.1,ECX,0)),U,11)
- S ECXADMS=$$GET1^DIQ(45.1,ECX,.01)
- ;if source of admission = admit outpatient treatment ('1P')
- S ECXAOT=$S(($$GET1^DIQ(45.1,ECX,.01)="1P"):"Y",1:"")
  Q
  ;
 FILE ;file the extract record
@@ -147,34 +119,20 @@ FILE ;file the extract record
  ;religion^employment status^health ins^state^county^zip^
  ;eligibility^vet^vietnam^agent orange^radiation^pow^
  ;period of service^means test^marital status^
- ;ward^treating specialty^attending physician^mov #^DRG^princ diagnosis^
+ ;ward^treating specialty^attending physician^mov #^DRG^diagnosis^
  ;time^primary care provider^race^primary ward provider
  ;node1
  ;mpi^dss dept^attending npi^pc provider npi^ward provider npi^
- ;admission elig^mst status^shad status^sharing payor^
+ ;admission elig^mst status^^sharing payor^
  ;sharing insurance^enrollment location^
  ;pc prov person class^assoc pc provider^assoc pc prov person class^
- ;assoc pc prov npi^dom^enrollment cat^enrollment stat^encounter
- ;shad^purple heart ind.^obs pat ind^encounter num^agent orange
+ ;assoc pc prov npi^dom^enrollment cat^enrollment stat^enrollment
+ ;priority^purple heart ind.^obs pat ind^encounter num^agent orange
  ;loc^production div^pow loc^source of admission^head & neck canc. ind
  ;^ethnicity^race1^enrollment priority_sub group^user enrollee^patient
  ;type^combat vet elig^combat vet elig end date^enc cv eligible^
  ;national patient record flag ECXNPRFI^att phy person class ECXATTPC
- ;^primary ward provider person class ECXPRVPC^environ contamin ECXEST
- ;^emergency response indicator(FEMA) ECXERI^agent orange indic ECXAO
- ;^environ contam ECXECE^encoun head/neck ECXHNC^encoun MST ECXMIL^rad
- ;encoun ECXIR^ OEF/OIF ECXOEF^ OEF/OIF return date ECXOEFDT
- ;^associate pc provider npi ECASNPI^attending physician npi ECATNPI^
- ;primary care provider npi ECPTNPI^primary ward provider npi ECPWNPI^
- ;admit outpatient treatment ECXAOT^country ECXCNTRY^pat cat ECXPATCAT^
- ;admit source ECXADMS 
- ;
- ;Convert specialty to PTF Code
- ;
- N ECXDATA
- S ECXDATA=$$TSDATA^DGACT(42.4,+ECXSPC,.ECXDATA)
- S ECXSPC=$G(ECXDATA(7))
- ;
+ ;^primary war dprovider person class ECXPRVPC^environ conatmin ECXEST
  N DA,DIK
  S EC7=$O(^ECX(ECFILE,999999999),-1),EC7=EC7+1
  S ECODE=EC7_U_EC23_U_ECXFAC_U_ECXDFN_U_ECXSSN_U_ECXPNM_U_ECXA_U_ECXDATE_U
@@ -184,21 +142,15 @@ FILE ;file the extract record
  S ECODE=ECODE_ECXPOS_U_ECXMNS_U_ECXMAR_U
  S ECODE=ECODE_ECXWRD_U_ECXSPC_U_ECXATT_U_ECDA_U_ECDRG_U_ECDIA_U
  S ECODE=ECODE_ECTM_U_ECPTPR_U_ECXRACE_U_ECXPRV_U
- S ECODE1=ECXMPI_U_ECXDSSD_U_""_U_""_U_""_U_ELGA_U
- S ECODE1=ECODE1_ECXMST_U_$S(ECXLOGIC<2005:ECXPRIOR,ECXLOGIC>2010:ECXSHADI,1:"")_U_U_U_ECXENRL_U_ECCLAS_U
- S ECODE1=ECODE1_ECASPR_U_ECCLAS2_U_U_ECXDOM_U_ECXCAT_U
- S ECODE1=ECODE1_ECXSTAT_U_$S(ECXLOGIC>2010:ECXSHAD,1:"")_U_ECXPHI_U_ECXOBS_U_ECXENC_U_ECXAOL_U
+ S ECODE1=ECXMPI_U_ECXDSSD_U_ECXATNPI_U_ECPTNPI_U_ECXPRNPI_U_ELGA_U
+ S ECODE1=ECODE1_ECXMST_U_U_U_U_ECXENRL_U_ECCLAS_U
+ S ECODE1=ECODE1_ECASPR_U_ECCLAS2_U_ECASNPI_U_ECXDOM_U_ECXCAT_U
+ S ECODE1=ECODE1_ECXSTAT_U_$S(ECXLOGIC<2005:ECXPRIOR,1:"")_U_ECXPHI_U_ECXOBS_U_ECXENC_U_ECXAOL_U
  S ECODE1=ECODE1_ECXPDIV_U_ECXPLOC_U_ECXSADM_U_ECXHNCI_U_ECXETH_U
  S ECODE1=ECODE1_ECXRC1
  I ECXLOGIC>2004 S ECODE1=ECODE1_U_ECXPRIOR_ECXSBGRP_U_ECXUESTA_U_ECXPTYPE_U_ECXCVE_U_ECXCVEDT_U_ECXCVENC_U_ECXNPRFI
  I ECXLOGIC>2005 S ECODE1=ECODE1_U_ECXATTPC_U_ECXPRVPC_U_ECXEST
- I ECXLOGIC>2006 S ECODE1=ECODE1_U_ECXERI_U_ECXAO_U_ECXECE_U_ECXHNC_U_ECXMIL_U_ECXIR_U
- I ECXLOGIC>2007 S ECODE2=ECXOEF_U_ECXOEFDT_U_ECASNPI_U_ECATTNPI_U_ECPTNPI_U_ECPWNPI
- I ECXLOGIC>2009 S ECODE2=ECODE2_U_ECXAOT_U_ECXCNTRY
- ; ***** ADDING PATCAT TO 9TH PIECE OF ECODE  *******
- I ECXLOGIC>2010 S ECODE2=ECODE2_U_ECXPATCAT
- I ECXLOGIC>2011 S ECODE2=ECODE2_U_ECXADMS
- S ^ECX(ECFILE,EC7,0)=ECODE,^ECX(ECFILE,EC7,1)=ECODE1,^ECX(ECFILE,EC7,2)=$G(ECODE2)
+ S ^ECX(ECFILE,EC7,0)=ECODE,^ECX(ECFILE,EC7,1)=ECODE1
  S ECRN=ECRN+1
  S DA=EC7,DIK="^ECX("_ECFILE_"," D IX1^DIK K DIK,DA
  Q

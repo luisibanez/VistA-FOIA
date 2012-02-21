@@ -1,5 +1,5 @@
 PSJLMUT2 ;BIR/JLC-DISPLAY UTILITIES ;22 Jun 05
- ;;5.0; INPATIENT MEDICATIONS ;**146,175,201**;16 DEC 97;Build 2
+ ;;5.0; INPATIENT MEDICATIONS ;**146**;16 DEC 97
  ;
 SHOR(PSJT,PSJI)       ;Display outpatient remote order checks.
  ;; PSJT = Type of order check in ^TMP

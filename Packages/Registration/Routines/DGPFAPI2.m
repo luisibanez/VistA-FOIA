@@ -1,5 +1,5 @@
-DGPFAPI2 ;ALB/RBS - PRF EXTERNAL API'S ; 6/7/05 4:44pm
- ;;5.3;Registration;**554,650**;Aug 13, 1993;Build 3
+DGPFAPI2 ;ALB/RBS - PRF EXTERNAL API'S ; 3/16/05 9:47am
+ ;;5.3;Registration;**554**;Aug 13, 1993
  ;
  Q  ;no direct entry
  ;
@@ -54,7 +54,7 @@ STOTIU(DGDFN,DGAIEN,DGHIEN,DGTIUIEN) ;store TIU Progress Note link
  . I '$$GETASGN^DGPFAA(DGAIEN,.DGPFA) S DGDIALOG=$$EZBLD^DIALOG(261102) Q
  . ;
  . ;check if current site is Owner Site
- . I '$$ISDIV^DGPFUT($P(DGPFA("OWNER"),U)) S DGDIALOG=$$EZBLD^DIALOG(261103) Q
+ . I $P($$SITE^VASITE,U)'=$P($G(DGPFA("OWNER")),U) S DGDIALOG=$$EZBLD^DIALOG(261103) Q
  . ;
  . ;file the TIU PN LINK
  . S DGRSLT=$$STOHIST(DGHIEN,DGTIUIEN)

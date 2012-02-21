@@ -1,13 +1,13 @@
 IBCNBES ;ALB/ARH-Ins Buffer: stuff new entries/data into buffer ;1 Jun 97
- ;;2.0;INTEGRATED BILLING;**82,184,345,438**;21-MAR-94;Build 52
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**82,184**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
 ADDSTF(IBSOURCE,DFN,IBDATA) ;  add new entry to Insurance Buffer file (355.33) and stuff the data passed in, no user interaction
  ;  IBSOURCE = source of information             (required)
  ;             1 = interview           2 = data match
  ;             3 = ivm                 4 = pre-registration
- ;             5 = eIV
+ ;             5 = eiiv
  ;  DFN      = patient's ifn in file 2           (required)
  ;  IBDATA   = data to file in Buffer in an array subscripted by field number of the data field in 355.33
  ;             ex:  IBDATA(20.01)="Insurance Company Name", etc,
@@ -27,10 +27,6 @@ ADDSTF(IBSOURCE,DFN,IBDATA) ;  add new entry to Insurance Buffer file (355.33) a
  ;
  S IBDATA(60.01)=+DFN
  ;
- ; Set up DUZ (interface user) so 60.01 field check can find 'valid reason' for sensitive
- ; patients and not set 60.01 to '0' with an error in tag FLDCHK
- I '$G(DUZ) D DUZ^XUP(.5)
- ;
  D EDITSTF(+IBBUFDA,.IBDATA)
  ;
  ; delete leftover ESGHP data if ESGHP? is not Yes
@@ -43,17 +39,9 @@ EDITSTF(IBBUFDA,IBDATA) ;  loop though data array and stuff each buffer field, n
  N IBFIELD,IBVALUE,IBARR,IBERR Q:'$G(^IBA(355.33,$G(IBBUFDA),0))
  ;
  S IBFIELD=0 F  S IBFIELD=$O(IBDATA(IBFIELD)) Q:'IBFIELD  D
- . ; have to file subscriber id last in order for real-time verification inquiry triggers to work properly
- . I IBFIELD=60.04 Q
  . S IBVALUE=$$FLDCHK(355.33,IBFIELD,IBDATA(IBFIELD)) Q:'IBVALUE
  . S IBARR(355.33,IBBUFDA_",",IBFIELD)=$P(IBVALUE,U,2)
  I $D(IBARR)>9 D FILE^DIE("E","IBARR","IBERR")
- ; file subscriber id
- I $G(IBDATA(60.04))'="" D
- .S IBVALUE=$$FLDCHK(355.33,60.04,IBDATA(60.04)) Q:'IBVALUE
- .K IBARR S IBARR(355.33,IBBUFDA_",",60.04)=$P(IBVALUE,U,2)
- .D FILE^DIE("E","IBARR","IBERR")
- .Q
  Q
  ;
 FLDCHK(FILE,FIELD,VALUE) ; minor checks on data: truncate if length too long, if pointer add ' so can be processed as external format

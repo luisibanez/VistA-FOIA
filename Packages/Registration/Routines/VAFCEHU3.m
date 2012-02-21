@@ -1,5 +1,5 @@
 VAFCEHU3 ;BIR/LTL,PTD-File utilities for 391.98 ;10/23/02
- ;;5.3;Registration;**149,295,384,474,477,479,620,756**;Aug 13, 1993;Build 5
+ ;;5.3;Registration;**149,295,384,474,477,479,620**;Aug 13, 1993
  ;
  ;Check for select fields that if edited can update without review
 EN ;
@@ -8,7 +8,7 @@ EN ;
  M VAFC=@VAFCB K @VAFCB
  F  S VAFCE=$P(VAFC(2,"FLD"),";",VAFCF) Q:'VAFCE  S VAFCF=VAFCF+1 D
  .Q:(VAFCE>.01&(VAFCE<.111))!(VAFCE>.219)
- .S @VAFCB@(2,VAFCE)=$G(VAFC(2,VAFCE)) ;**756 added $get
+ .S @VAFCB@(2,VAFCE)=VAFC(2,VAFCE)
  ;save the sending site's station number
  I $D(VAFC(2,"SENDING SITE")) S @VAFCB@(2,"SENDING SITE")=VAFC(2,"SENDING SITE")
 ED ;D:$D(VAFCB) EDIT^VAFCPTED(PAT,VAFCB_"(2)",".01") ;**295 auto-updated fields - removed .111;.112;.113;.114;.115;.1112;.117;.131;.132;.211;.219 ;**474 stop all auto-updates
@@ -50,11 +50,11 @@ CH ;Any differences?
  ;COUNTY CODE - .117 - VAPA(7)
  ;I @VAFCB@(2,.117),(@VAFCB@(2,.117)'=$P(VAPA(7),U)) S VAFCQ=1 G CHQ ;**479
  ;PHONE HOME - .131 - VAPA(8)
- I ($G(@VAFCB@(2,.131))'="""@"""),'$$COMP^VAFCUTL($$HLPHONE^HLFNC(VAPA(8)),$$HLPHONE^HLFNC($G(@VAFCB@(2,.131)))) S VAFCQ=1 G CHQ ;**384 ;**756 added $get's
+ I (@VAFCB@(2,.131)'="""@"""),'$$COMP^VAFCUTL($$HLPHONE^HLFNC(VAPA(8)),$$HLPHONE^HLFNC(@VAFCB@(2,.131))) S VAFCQ=1 G CHQ ;**384
  ;Get the rest
  D GETS^DIQ(2,DFN_",",".132;.211;.219;.2403;.301;.302;.31115;.323;.361;391;1901","","VAPA")
  ;PHONE WORK - .132 - VAPA(2,DFN,.132)
- I ($G(@VAFCB@(2,.132))'="""@"""),'$$COMP^VAFCUTL($$HLPHONE^HLFNC(VAPA(2,DFN_",",.132)),$$HLPHONE^HLFNC($G(@VAFCB@(2,.132)))) S VAFCQ=1 G CHQ ;**384 ;**756 added $get's
+ I (@VAFCB@(2,.132)'="""@"""),'$$COMP^VAFCUTL($$HLPHONE^HLFNC(VAPA(2,DFN_",",.132)),$$HLPHONE^HLFNC(@VAFCB@(2,.132))) S VAFCQ=1 G CHQ ;**384
  ;K-NAME - .211 - VAPA(2,DFN,.211)
  I $S(VAPA(2,DFN_",",.211)="":0,1:1) S DGNAME=VAPA(2,DFN_",",.211) D STDNAME^XLFNAME(.DGNAME,"P") S DGNAME=$$FORMAT^XLFNAME7(.DGNAME,3,35),VAPA(2,DFN_",",.211)=DGNAME ;**384 **477
  I $S(@VAFCB@(2,.211)="":0,@VAFCB@(2,.211)["@":0,1:1) S DGNAME=@VAFCB@(2,.211) D STDNAME^XLFNAME(.DGNAME,"P") S DGNAME=$$FORMAT^XLFNAME7(.DGNAME,3,35),@VAFCB@(2,.211)=DGNAME ;**384 **477

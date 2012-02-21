@@ -1,5 +1,5 @@
-ECRPRSN ;ALB/JAP - Procedure Reasons Report;24 JAN 07
- ;;2.0; EVENT CAPTURE ;**5,18,47,63,72,91**;8 May 96;Build 2
+ECRPRSN ;ALB/JAP - Procedure Reasons Report;18 Aug 97
+ ;;2.0; EVENT CAPTURE ;**5,18,47,63,72**;8 May 96
 EN ;entry point from menu option
  N JJ
  W ! S JJ=$$ASKLOC^ECRUTL I 'JJ G EXIT
@@ -39,6 +39,7 @@ ASKREAS()        ; Ask reasons
  ..I ECREAS(R)="" K ECREAS(R),ECLINK(LINK)
  K S
  ;ask the user to include all reasons or selected reasons
+ ;already have all reasons in ecreas array
  S ASK=1
  S DIR(0)="YA",DIR("A")="Do you want to print this report for all Procedure Reasons? "
  S DIR("B")="YES" W ! D ^DIR K DIR I Y=0,'$G(DIRUT) D SPECR
@@ -188,8 +189,8 @@ LOOP ;print the section of the ^tmp global for a specific location/unit
  Q
 LOOP1 S ECPATN="" F  S ECPATN=$O(^TMP("ECREAS",$J,ECLOCA,ECUNIT,ECREASN,ECPN,ECMOD,ECPATN)) Q:ECPATN=""  Q:QFLAG  D
  .S ECDT="" F  S ECDT=$O(^TMP("ECREAS",$J,ECLOCA,ECUNIT,ECREASN,ECPN,ECMOD,ECPATN,ECDT)) Q:ECDT=""  Q:QFLAG  D
- ..S ECPRVN=^(ECDT),PTNAME=$P(ECPRVN,"^",3),PTNAME=$E(PTNAME,1,22)
- ..S SSN=$P(ECPRVN,"^",4),ECPRVN=$P(ECPRVN,"^",2)
+ ..S ECPRVN=^(ECDT),PTNAME=$P(ECPRVN,"^",2),PTNAME=$E(PTNAME,1,22)
+ ..S SSN=$P(ECPRVN,"^",3),ECPRVN=$P(ECPRVN,"^")
  ..S Y=ECDT D DD^%DT S DATE=$E(Y,1,18),PROVN=$E(ECPRVN,1,22)
  ..D:($Y+3>IOSL) HEAD Q:QFLAG  W !,?6,PTNAME,?30,SSN,?37,DATE,?57,PROVN
  W !

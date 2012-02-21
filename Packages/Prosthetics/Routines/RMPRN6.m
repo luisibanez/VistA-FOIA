@@ -1,5 +1,5 @@
 RMPRN6 ;Hines OIFO/HNC-PRINT NPPD LOCAL DATA ;3/17/03  11:38
- ;;3.0;PROSTHETICS;**31,32,34,36,39,48,51,70,77,90,144,165**;Feb 09, 1996;Build 4
+ ;;3.0;PROSTHETICS;**31,32,34,36,39,48,51,70,77,90**;Feb 09, 1996
  ;RVD 3/17/03 patch #77 - fix undefined and closing device.
  ;SPS 5/24/05 Patch #90 - check for type of 5 Rental.
  D DIV4^RMPRSIT G:$D(X) EXIT
@@ -35,7 +35,6 @@ ENL ;entry point for one line
  D GNPCC,EXIT
  Q
 GNP ;gather nppd data
- N SORTERR
  S $P(LN,"-",IOM)=""
  S DATE=DATE(1)-1
  K ^TMP($J)
@@ -46,22 +45,14 @@ GNP ;gather nppd data
  ..S REC=$G(^RMPR(660,RMPRB,0)) Q:REC=""
  ..Q:$P(REC,U,15)["*"
  ..Q:$P(REC,U,10)'=RMPR("STA")
- ..;RMPR*3.0*165 corrected logic for new/used reporting criteria
- ..;check for USED ONLY pip
- ..;if USED pip sort, not pip or not 'va', quit
- ..S SORTERR=0
- ..I $G(RMPRDET)=2!($G(RMPRDET)=5) D  Q:SORTERR
- ... I $P($G(^RMPR(660,RMPRB,1)),U,5)="" S SORTERR=1
- ... I $P(REC,U,14)'="V" S SORTERR=1
- ..;check for NEW ONLY pip
- ..;if NEW pip sort, pip, va, quit
- ..I $G(RMPRDET)=1!($G(RMPRDET)=4) D  Q:SORTERR
- ... I $P($G(^RMPR(660,RMPRB,1)),U,5)="" Q
- ... I $P(REC,U,14)="V" S SORTERR=1
+ ..;check for used pip
+ ..;if used pip sort, not pip, not va, quit
+ ..I $G(RMPRDET)=2&($P($G(^RMPR(660,RMPRB,1)),U,5)'="")&($P(REC,U,14)'="V") Q
+ ..I $G(RMPRDET)=5&($P($G(^RMPR(660,RMPRB,1)),U,5)'="")&($P(REC,U,14)'="V") Q
  ..S TYPE=$P(REC,U,4)
  ..S TY=$S(TYPE="X":2,TYPE=5:2,TYPE="I":1,1:3)
  ..S MR=$P($G(^RMPR(660,RMPRB,1)),U,4)
- ..I $P(^RMPR(660,RMPRB,0),U,17)'=""&($P(^(0),U,26)="") S TY=2,LINE="R99 A",MR=2676
+ ..I $P(^RMPR(660,RMPRB,0),U,17)'=""&($P(^(0),U,26)="") S TY=2,LINE="R90 A",MR=2676
  ..;PICKUP AND DELIVERY
  ..I $P(^RMPR(660,RMPRB,0),U,26)'="" S TY=2,LINE="R80 D",MR=2951
  ..Q:MR=""
@@ -71,7 +62,7 @@ GNP ;gather nppd data
  ..I TY'=2&($G(LINE)="") D
  ...; I TYPE=5 Q
  ...S ERR=""
- ...S LINE=$P(^RMPR(661.1,MR,0),U,6) S:MR=2676 LINE="R99 A"
+ ...S LINE=$P(^RMPR(661.1,MR,0),U,6)
  ...S TYPE="X"
  ...S DIE="^RMPR(660,",DA=RMPRB,DR="2///^S X=TYPE"
  ...L +^RMPR(660,RMPRB):1 I '$T S ERR=1
@@ -80,7 +71,7 @@ GNP ;gather nppd data
  ...I ERR=1 S ^TMP($J,"RMPRA",RMPRB)="NO UPDATE!"
  ...I ERR="" S ^TMP($J,"RMPRA",RMPRB)="NEW TO REPAIR"
  ...S B=RMPRB D DATA^RMPRN6XM
- ..I TY=2 S LINE=$P(^RMPR(661.1,MR,0),U,6) S:MR=2676 LINE="R99 A"
+ ..I TY=2 S LINE=$P(^RMPR(661.1,MR,0),U,6)
  ..I TY=2&($G(LINE)="") D
  ...; I TYPE=5 Q
  ...S ERR=""
@@ -226,7 +217,7 @@ REP ;calculate repair cost
  ;.I SSN'="" S ^TMP($J,"A",SSN)=""
  ;.K SSN
  S LINE=CODE
- I LINE="R99 A" S SOURCE="C",QTY=1
+ I LINE="R90 A" S SOURCE="C",QTY=1
  I $G(^TMP($J,"R",STN,LINE))="" S ^TMP($J,"R",STN,LINE)=""
  I SOURCE["V" S $P(^TMP($J,"R",STN,LINE),U,1)=$P(^TMP($J,"R",STN,LINE),U,1)+QTY
  I SOURCE["C" S $P(^TMP($J,"R",STN,LINE),U,2)=$P(^TMP($J,"R",STN,LINE),U,2)+QTY

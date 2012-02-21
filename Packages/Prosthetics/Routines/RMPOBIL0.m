@@ -1,5 +1,5 @@
 RMPOBIL0 ;EDS/MDB/HINES CIOFO/HNC - HOME OXYGEN BILLING TRANSACTIONS ;7/24/98  07:34
- ;;3.0;PROSTHETICS;**29,46,50,147**;Feb 09, 1996;Build 4
+ ;;3.0;PROSTHETICS;**29,46,50**;Feb 09, 1996
  ;
  ; ODJ - patch 50 - 7/25/00 fix DIR date call in PREBILL sub. so as to
  ;                          interpret 2 digit entry as month
@@ -104,8 +104,7 @@ OK2BLD(VENDOR) ; Determine whether to include trx for RMPODFN
  Q:'RMPORX -5
  ;
  ; Quit if the Rx Expiration Date is before the billing period
- ; Expiration date check removed with patch *147  6/24/2008
- ;Q:$P(^RMPR(665,RMPODFN,"RMPOB",RMPORX,0),U,3)<(RMPODATE) -6
+ Q:$P(^RMPR(665,RMPODFN,"RMPOB",RMPORX,0),U,3)<(RMPODATE) -6
  ;
  ; Quit if there are no items.
  Q:$O(^RMPR(665,RMPODFN,"RMPOC",0))'>0 -7

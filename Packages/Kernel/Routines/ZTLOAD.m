@@ -1,12 +1,12 @@
-%ZTLOAD ;ISF/RDS,RWF - TaskMan: Programmer Interface: Entry Points ;07/26/2006
- ;;8.0;KERNEL;**67,118,127,339,381**;JUL 10, 1995;Build 2
+%ZTLOAD ;ISF/RDS,RWF - TaskMan: Programmer Interface: Entry Points ;10/19/2005
+ ;;8.0;KERNEL;**67,118,127,339**;JUL 10, 1995;Build 3
  ;
 QUEUE ;queue a task (create, schedule) (Entry Point = ^%ZTLOAD)
  G ^%ZTLOAD1
  ;
 S(MSG) ;Entry Point: extrinsic variable returns boolean: should task stop?
+ I $D(MSG),$G(ZTQUEUED)>.5 S ^%ZTSK(ZTQUEUED,.11)=MSG,$P(^%ZTSK(ZTQUEUED,.1),"^",2)=$H
  I $G(ZTQUEUED)>.5,$D(^%ZTSCH("TASK",ZTQUEUED)) S ^%ZTSCH("TASK",ZTQUEUED,1)=$H
- I $D(MSG),$G(ZTQUEUED)>.5 S ^%ZTSK(ZTQUEUED,.11)=MSG
  N ZTSTOP S ZTSTOP=0
  I $G(ZTQUEUED)>.5,$L($P($G(^%ZTSK(ZTQUEUED,.1)),"^",10)) S ZTSTOP=1
  Q ZTSTOP

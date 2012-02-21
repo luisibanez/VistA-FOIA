@@ -1,5 +1,5 @@
 PXKFVST ;ISL/JVS - Fields for VISIT file ;7/29/96
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,56,111,130,124,164,168**;Aug 12, 1996;Build 14
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,56,111,130,124,164**;Aug 12, 1996
  ;
  ;  Adding or Editing of data in a particular field can be controlled
  ;by adding a ~ as a delimiter and the letters A and/or E to the
@@ -80,7 +80,6 @@ ADD ;Add an entry to the file
  ;;80005///^S X=$G(~ ;added 6/17/98 for MST enhancement
  ;;80006///^S X=$G(~ ;PX*1*111 - added for HNC enhancement
  ;;80007///^S X=$G(~ ;PX*1*130
- ;;80008///^S X=$G(~ ;PX*1*168
 812 ;;
  ;;81201///^S X=$G(
  ;;81202////^S X=$G(
@@ -108,15 +107,15 @@ UPD ;Up date visit file using visit tracking
  N PXP,PXV,PXN
  ;AO, IR, and EC not applicable if SC answered YES (1)
  ;I $G(PXKAV(800,1))=1 F PXP=2:1:4 S PXKAV(800,PXP)="@"
- F PXP=1:1:8 D
+ F PXP=1:1:7 D
  .S PXV=$G(PXKAV(800,PXP))
- .S PXN=$P("SC^AO^IR^EC^MST^HNC^CV^SHAD","^",PXP)
+ .S PXN=$P("SC^AO^IR^EC^MST^HNC^CV","^",PXP)
  .I PXV'="" S VSIT(PXN)=PXV
  D UPD^VSIT
  K VSIT("DSS"),VSIT("COD"),VSIT("SC"),VSIT("AO"),VSIT("IR"),VSIT("EC")
  K VSIT("LOC"),VSIT("INS"),VSIT("ELG"),VSIT("MDT")
  ;PX*1*111 - added for HNC enhancement
- K VSIT("MST"),VSIT("HNC"),VSIT("CV"),VSIT("SHAD")
+ K VSIT("MST"),VSIT("HNC"),VSIT("CV")
  Q
 SPEC ;
  Q

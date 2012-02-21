@@ -1,6 +1,6 @@
 IBCVA1 ;ALB/MJB - SET MCCR VARIABLES CONT. ;09 JUN 88 14:49
- ;;2.0;INTEGRATED BILLING;**52,80,109,51,137,210,349,371**;21-MAR-94;Build 57
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,80,109,51,137,210**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO DGCRVA1
  ;
@@ -76,7 +76,7 @@ ALLPROC(IBIFN,IBPROC) ; Returns all procedures for bill IBIFN in array IBPROC
  ;  IBPROC = # of procedures found
  ;  IBPROC(prnt order)=0-node of 'CP' entry with piece 15 = the
  ;                      modifiers separated by commas
- ;  IBPROC(prnt order,"AUX")="AUX" node of 'CP' entry for CMS-1500 forms
+ ;  IBPROC(prnt order,"AUX")="AUX" node of 'CP' entry for HCFA 1500 forms
  ; Pass IBPROC by reference
  ;
  N IB
@@ -88,7 +88,7 @@ VC ;returns a bills value codes, IBIFN must be defined: IBVC=count,IBVC(VIFN)=CO
  N IBY,IBX,IBZ S IBVC=0 Q:'$D(^DGCR(399,IBIFN,"CV"))
  S IBX=0 F  S IBX=$O(^DGCR(399,IBIFN,"CV",IBX)) Q:'IBX  S IBY=$G(^DGCR(399,IBIFN,"CV",IBX,0)) I +IBY D
  . S IBVC=IBVC+1,IBZ=$G(^DGCR(399.1,+IBY,0)) Q:IBZ=""
- . S IBVC(+IBY)=$P(IBZ,U,2)_U_$P(IBZ,U,1)_U_$S($P(IBY,U,2)="":"",+$P(IBZ,U,12):$J($P(IBY,U,2),0,2),1:$P(IBY,U,2))_U_$P(IBZ,U,12)
+ . S IBVC(+IBY)=$P(IBZ,U,2)_U_$P(IBZ,U,1)_U_$S(+$P(IBZ,U,12):$J($P(IBY,U,2),0,2),1:$P(IBY,U,2))_U_$P(IBZ,U,12)
  Q
  ;
 SETMODS(IBMOD,IBZ,IBXSAVE) ; Set modifiers into IBXSAVE

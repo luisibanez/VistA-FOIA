@@ -1,12 +1,8 @@
 RAPXRM ;HOIFO/SWM - API for Clinical Reminders ;10/1/03  09:33
- ;;5.0;Radiology/Nuclear Medicine;**33,56**;Mar 16, 1998;Build 3
+ ;;5.0;Radiology/Nuclear Medicine;*33**;Mar 16, 1998
  ; IA #3731 documents entry point EN1
  ; IA #4113 grants use of rtn PXRMSXRM
  ; IA #4114 grants use of direct Set and Kill, use of ^PXRMINDX(70
- ;Supported IA #2056 GET1^DIQ
- ;Supported IA #2052 GET1^DID
- ;Supported IA #10141 BMES^XPDUTL, MES^XPDUTL
- ;Supported IA #10103 NOW^XLFDT
 EN1(RADAS,RARM) ;retrieve data from Clin. Rem.'s new style index "ACR"
  ; Input:
  ; RADAS = last subscript of (required), for example:
@@ -20,12 +16,11 @@ EN1(RADAS,RARM) ;retrieve data from Clin. Rem.'s new style index "ACR"
  ; RARM("PROCEDURE") = Procedure name
  ; RARM("INTERPRETING PHYSICIAN") = Primary Staff; else Primary Resident
  ;     If exam node doesn't exist, then RARM is undefined
- ; RARM("RPT STATUS") = Report status name
  ;
  K RARM ; clear output var
  ; validate RADAS string
  Q:$P(RADAS,";",2)'="DT"  Q:$P(RADAS,";",4)'="P"  Q:$P(RADAS,";",6)'="0"
- N RA0,RADFN,RADTI,RACNI,X,I,J,RARPT
+ N RA0,RADFN,RADTI,RACNI,X,I,J
  S RADFN=$P(RADAS,";"),RADTI=$P(RADAS,";",3),RACNI=$P(RADAS,";",5)
  S RA0=$G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0))
  Q:RA0=""
@@ -41,7 +36,6 @@ EN1(RADAS,RARM) ;retrieve data from Clin. Rem.'s new style index "ACR"
  ; RARM("SDX",n)=Secondary DX text at ^RADPT(-,"DT",-,"P",-,"DX",n,0)
  ;             the n may have gaps if a Secondary DX was deleted
  ;
- S RARPT=$P(RA0,U,17) S RARM("RPT STATUS")=$$UL^RAO7PC1A($$RSTAT^RAO7PC1A())
  S:$P(RA0,U,13)'="" RARM("PDX")=$P($G(^RA(78.3,+$P(RA0,U,13),0)),U)
  S I=0
  F  S I=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"DX",I)) Q:'I  I $D(^(I,0)) S J=+$G(^(0)) I J S RARM("SDX",I)=$P($G(^RA(78.3,J,0)),U)

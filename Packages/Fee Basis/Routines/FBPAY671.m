@@ -1,6 +1,6 @@
-FBPAY671 ;AISC/DMK,TET-CH/CNH PAYMENT HISTORY PRINT ;21/NOV/2006
- ;;3.5;FEE BASIS;**4,32,55,69,101**;JAN 30, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+FBPAY671 ;AISC/DMK,TET-CH/CNH PAYMENT HISTORY PRINT ;7/18/2001
+ ;;3.5;FEE BASIS;**4,32,55,69**;JAN 30, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
 PRINT ;print data from tmp global
  S FBOUT=0 D:FBCRT&(FBPG) CR Q:FBOUT
  S FBHEAD=$S(FBSORT:"VETERAN",1:"VENDOR")
@@ -83,7 +83,7 @@ HDR ;main header
 SH ;subheader - vendor if fbsort; patient if 'fbsort, prints when name changed
  I ($Y+7)>IOSL D:FBCRT CR Q:FBOUT  D HDR
  I FBSORT W !!,"Vendor: ",$P(FBVI,";"),?41,"Vendor ID: ",$P(FBVI,";",2)
- I 'FBSORT W !!,"Patient: ",$P(FBPT,";"),?41,"Patient ID: ",$$SSNL4^FBAAUTL($$SSN^FBAAUTL($P(FBPT,";",2)))
+ I 'FBSORT W !!,"Patient: ",$P(FBPT,";"),?41,"Patient ID: ",$$SSN^FBAAUTL($P(FBPT,";",2))
  Q
 SHA ;ancillary subheader
  I ($Y+14)>IOSL D PAGE Q:FBOUT

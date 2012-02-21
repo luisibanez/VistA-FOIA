@@ -1,5 +1,5 @@
-PXCEPAT ;ISL/dee,ISA/KWP - Creates the List Manager display of visit for a patient ; 6/3/03 10:47am  ; Compiled January 5, 2007 14:12:43
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**1,5,14,30,70,147,160,161,183,188**;Aug 12, 1996;Build 3
+PXCEPAT ;ISL/dee,ISA/KWP - Creates the List Manager display of visit for a patient ; 6/3/03 10:47am
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**1,5,14,30,70,147,160,161**;Aug 12, 1996
  Q
  ;
 NEWPAT2 ;Entry point of changing patient from Update Encounter
@@ -102,12 +102,10 @@ PATIENT(PXCEDATA) ; Select a patient
  D FULL^VALM1
  S DIC=2,DIC(0)="AEMQ" D ^DIC
  S PXCEDATA=+Y
-PAT1 S %=1 I Y>0 W !,"   ...OK" D YN^DICN I %=0 W "   Answer With 'Yes' or 'No'" G PAT1
+PAT1 S %=1 W !,"   ...OK" D YN^DICN I %=0 W "   Answer With 'Yes' or 'No'" G PAT1
  I %'=1!$D(DIRUT) S (Y,PXCEDATA)=-1
- I +Y'>0 D  Q
- . I $G(DFN)'>0 S VALMSG=$C(7)_"Patient has not been selected." W !!,$G(VALMSG) H 1
- I +Y>0 S DFN=+Y D 2^VADPT I +VADM(6) N DIR D  I $D(DIRUT) S PXCEDATA=-1
- . S DIR(0)="E",DIR("A")="Enter RETURN to continue or '^' to exit"
+ I +Y>0 S DFN=+Y D 2^VADPT I +VADM(6) D  S:$D(DIRUT) PXCEDATA=-1
+ . K DIR S DIR(0)="E",DIR("A")="Enter RETURN to continue or '^' to exit"
  . S DIR("A",1)="WARNING "_VADM(7) D ^DIR
  Q
  ;
@@ -133,7 +131,7 @@ PATINFO(PXCEDATA) ;
  Q
  ;
 DTHINFO ;DEATH WARNING
- D 2^VADPT N DIR I +VADM(6) D
+ D 2^VADPT K DIR I +VADM(6) D  K DIR
  . S DIR(0)="E",DIR("A")="Enter RETURN to continue or '^' to Quit"
  . S DIR("A",2)="WARNING "_VADM(7),DIR("A",1)=" ",DIR("A",3)=" " D ^DIR
  Q
@@ -147,7 +145,7 @@ PATNAME(PXCEDATA) ;
  Q
  ;
 PATKILL ;
- K PXCEPAT,DFN,SDFN,ORVP,VADM,VAEL,VALMSG
+ K PXCEPAT,DFN,SDFN,ORVP
  ; Kill IHS patient variables
  D KILL^AUPNPAT
  Q

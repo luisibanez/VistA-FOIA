@@ -1,6 +1,5 @@
 PSBOPE ;BIRMINGHAM/EFC-PRN EFFECTIVENESS WORKSHEET ;Mar 2004
- ;;3.0;BAR CODE MED ADMIN;**5,23,32**;Mar 2004;Build 32
- ;Per VHA Directive 2004-038 (or future revisions regarding same), this routine should not be modified.
+ ;;3.0;BAR CODE MED ADMIN;**5,23**;Mar 2004
  ;
  ; Reference/IA
  ; ^DPT/10035
@@ -36,7 +35,7 @@ PRINT ; Print meds stored in ^TMP("PSB",$J,DFN,....
  ; Print by Patient
  ;
  D:$P(PSBRPT(.1),U,1)="P"
- .S PSBHDR(1)="PRN EFFECTIVENESS LIST for "_$$FMTE^XLFDT(PSBSTRT)_" to "_$$FMTE^XLFDT(PSBSTOP)
+ .S PSBHDR(1)="PRN EFFECTIVENESS LIST from "_$$FMTE^XLFDT(PSBSTRT)_" thru "_$$FMTE^XLFDT(PSBSTOP)
  .S DFN=$P(PSBRPT(.1),U,2)
  .W $$PTHDR()
  .I '$O(^TMP("PSB",$J,DFN,0)) W !,"No PRN Medications Found",$$PTFTR^PSBOHDR() Q

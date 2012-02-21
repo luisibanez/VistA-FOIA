@@ -1,5 +1,5 @@
-MAGDFB ;WOIFO/EdM - Call MAGFILEB ; 04/29/2005  08:55
- ;;3.0;IMAGING;**11,51**;26-August-2005
+MAGDFB ;WOIFO/EdM - Call MAGFILEB ; 01/30/2004  07:17
+ ;;3.0;IMAGING;**11**;14-April-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -21,11 +21,13 @@ MAGDFB ;WOIFO/EdM - Call MAGFILEB ; 04/29/2005  08:55
  ; in such a way that all parameters are passed in or out,
  ; and such that all internal variables of MAGFILEB are NEWed
  ;
-FILEFIND(MAGXX,FILETYPE,MAGJBCP,VERBOSE,MAGFILE1,MAGFILE2,MAGFILE) ;
+ ; After patch 3 has been released, this call should be changed to:
+ ;FILEFIND(MAGXX,FILETYPE,MAGJBCP,MAGWRITE,MAGFILE1,MAGFILE2,MAGFILE,MAGPLACE,MAGINST) ;
+FILEFIND(MAGXX,FILETYPE,MAGJBCP,MAGWRITE,MAGFILE1,MAGFILE2,MAGFILE) ;
  ; Input:
- ;  MAGXX     -- IEN into file 2005, ^MAG(2005,IEN,0)
+ ;  IEN       -- IEN into file 2005, ^MAG(2005,IEN,0)
  ;  FILETYPE  -- "FULL", "ABSTRACT" or "BIG"
- ;  MAGJBCP   -- Flag: do or don't copy from JukeBox to HardDisk
+ ;  COPY      -- Flag: do or don't copy from JukeBox to HardDisk
  ;  VERBOSE   -- Flag: do or don't display interactive error messages
  ; Output:
  ;  MAGFILE1  -- filename
@@ -34,7 +36,8 @@ FILEFIND(MAGXX,FILETYPE,MAGJBCP,VERBOSE,MAGFILE1,MAGFILE2,MAGFILE) ;
  ;  MAGPLACE  -- pointer to ^MAG(2006.1) for "place" where image is stored
  ;  MAGINST   -- pointer to ^DIC(4) that corresponds to MAGPLACE
  ;
- N MAGJBOL,MAGOFFLN,MAGPREF,MAGTYPE
+ N MAGJBOL,MAGOFFLN,MAGPREF,MAGTYPE,VERBOSE
+ S VERBOSE=0
  D FINDFILE^MAGFILEB
  S MAGFILE2=$G(MAGPREF)_MAGFILE1,MAGFILE=MAGFILE2_$C(0)
  Q

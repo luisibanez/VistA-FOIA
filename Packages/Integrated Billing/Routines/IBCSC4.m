@@ -1,12 +1,13 @@
 IBCSC4 ;ALB/MJB - MCCR SCREEN 4 (INPT. EOC) ;27 MAY 88 10:17
- ;;2.0;INTEGRATED BILLING;**52,51,210,245,155,287,349,403,400**;21-MAR-94;Build 52
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,51,210,245,155,287**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO DGCRSC4
  ;
 EN I $P(^DGCR(399,IBIFN,0),"^",5)>2 G EN^IBCSC5
  I $D(IBASKCOD) K IBASKCOD D CODMUL^IBCU7 I $$BILLCPT^IBCRU4(IBIFN) D ASK^IBCU7A(IBIFN) S DGRVRCAL=1
  I $D(DGRVRCAL) D ^IBCU6 K DGRVRCAL
+ L ^DGCR(399,IBIFN):1
  D ^IBCSCU S IBSR=4,IBSR1="",IBV1="0000000"_$S($$FT^IBCEF(IBIFN)'=2:0,1:1),IBUC="UNSPECIFIED CODE"
  S:IBV IBV1="11111111"
  D H^IBCSCU F I=1:1:4 S Y="Q"_I_"^IBCVA" D @Y
@@ -14,38 +15,33 @@ EN I $P(^DGCR(399,IBIFN,0),"^",5)>2 G EN^IBCSC5
  S IBBT=$P(IB(0),"^",4)_$P(IB(0),"^",5)_$P(IB(0),"^",6)
  D:DGPT(0)]"" DX^IBCSC4A D OCC^IBCVA1
  I '$P(DGPT(0),U,6) W !?26,$S('DGPT(0):"No PTF record for this ADMISSION",1:"PTF record status: OPEN")
- S J=$P(IB("U"),U,20),J=$S(J=99:"",J="":"",J=0:"",$L(J)=1:".0"_J,1:"."_J)
+ S J=$P(IB("U"),U,20),J=$S(J=99:"",J="":"",$L(J)=1:".0"_J,1:"."_J)
  S Z=1 X IBWW W " Admission  : " S I=$S($P(DGPT(0),U,2)]"":$P(DGPT(0),U,2),1:$P(IBIP,U,2)_J) S:$P(I,".",2)=""&I $P(I,".",2)="2400"
  S Y=$$FMTE^XLFDT(I,"1P")
  W Y,?49,"Accident Hour: ",$S($P(IB("U"),U,10)=99:IBU,$P(IB("U"),U,10)'="":$P(IB("U"),U,10),1:IBU)
  W !?4,"Source     : " S I=$P(^DD(399,159,0),U,3),I=$P($P(I,";",($P(IB("U"),U,9))),":",2) W I
- ;
- ; IB*2*400 - new values added to field# 158
- N ATIN,ATEX
- S ATIN=+$P($G(IB("U")),U,8),ATEX=""
- I ATIN S ATEX=$$EXTERNAL^DILFD(399,158,,ATIN)
- I ATIN=9 S ATEX="INFO NOT AVAIL"    ; so it fits on the screen
- I ATEX="" S ATEX=IBU
- W ?58,"Type: ",ATEX
- ;
+ W ?58,"Type: ",$S($P(IB("U"),U,8)=3:"ELECTIVE",$P(IB("U"),U,8)=1:"EMERGENCY",$P(IB("U"),U,8)=2:"URGENT",1:IBU)
  D OT
  S Z=2 X IBWW
  W " Discharge  : " S Y=$S($P(IBIP,U,6)>0:$P(IBIP,U,6),1:"") X ^DD("DD") W $S(Y]"":Y,1:IBU)
  W !?4,"Status     : ",$S($P(IB("U"),U,12)]""&($D(^DGCR(399.1,(+$P(IB("U"),"^",12)),0))):$P(^(0),"^",1),1:IBU)
- N IBPOARR,IBDATE,NEEDPOA,POA
+ N IBPOARR,IBDATE
  D SET^IBCSC4D(IBIFN,"",.IBPOARR)
  S IBDATE=$$BDATE^IBACSV(+$G(IBIFN)) ; The EVENT DATE of the bill
- S NEEDPOA=$$INPAT^IBCEF(IBIFN)&($$FT^IBCEF(IBIFN)=3)
- S Z=3,IBW=1 X IBWW W " Prin. Diag.: " S Y=$$DX(0,IBDATE),POA="" S:NEEDPOA&(Y'="") POA=$P(IBPOARR(+Y),U,3)
- W $S(Y'="":$P(Y,U,4)_" - "_$P(Y,U,2)_$S(POA=""!(POA=1):"",1:" ("_POA_")"),$$DXREQ(IBIFN):IBU,1:IBUN)
- F I=1:1:4 S Y=$$DX(+Y,IBDATE) Q:Y=""  D
- .S POA="" S:NEEDPOA POA=$P(IBPOARR(+Y),U,3)
- .W !?4,"Other Diag.: ",$P(Y,U,4)_" - "_$P(Y,U,2)_$S(POA=""!(POA=1):"",1:" ("_POA_")")
- .Q
+ S Z=3,IBW=1 X IBWW W " Prin. Diag.: " S Y=$$DX(0,IBDATE) W $S(Y'="":$P(Y,U,4)_" - "_$P(Y,U,2),$$DXREQ(IBIFN):IBU,1:IBUN)
+ F I=1:1:4 S Y=$$DX(+Y,IBDATE) Q:Y=""  W !?4,"Other Diag.: ",$P(Y,U,4)_" - "_$P(Y,U,2)
  I +Y S Y=$$DX(+Y,IBDATE) I +Y W !?4,"***There are more diagnoses associated with this bill.***"
+ ;F I=15:1:18 I $P(IB("C"),U,I)]"" W !?4,"Other Diag.: ",$S($D(^ICD9($P(IB("C"),U,I),0)):$P(^(0),U,3)_" - "_$P(^(0),U,1),1:IBU)
  S Z=4,IBW=1,DGPCM=$P(IB(0),U,9) X IBWW W " Cod. Method: ",$S(DGPCM="":IBUN,DGPCM=9:"ICD-9-CM",DGPCM=4:"CPT-4",1:"HCPCS")
  D:$D(IBPROC) WRT^IBCSC5
-OCC ;
+ ;I DGPCM="" W !?4,"Pro. Code  : ",IBUN G OCC
+ ;I $D(IBCPT),DGPCM=4 F I=1:1:3 I $D(IBCPT(I)) W !?4,"CPT Code   : ",$P(^ICPT(IBCPT(I),0),U,2)," - ",$P(^(0),U),?55,"Date: " S Y=$P(IB("C"),U,(I+10)) D DT^DIQ
+ ;I DGPCM=4 W:'$D(IBCPT) !?4,"Pro. Code  : ",IBUN G OCC
+ ;I $D(IBICD),DGPCM=9 F I=4:1:6 I $D(IBICD(I)) W !?4,"ICD Code   : ",$S($D(^ICD0(IBICD(I),0)):$E($P(^(0),U,4),1,20)_" - "_$P(^(0),U,1),1:IBUC),?55,"Date: " S Y=$P(IB("C"),U,(I+7)) D DT^DIQ
+ ;I DGPCM=9 W:'$D(IBICD) !?4,"Pro. Code  : ",IBUN G OCC
+ ;I $D(IBHC),DGPCM=5 F I=7:1:9 I $D(IBHC(I)) W !?4,"HCFA Code  : ",$P(^ICPT(IBHC(I),0),U,2)," - ",IBHCN(I),?55,"Date: " S Y=$P(IB("C"),U,(I+4)) D DT^DIQ
+ ;I DGPCM=5 W:'$D(IBHC) !?4,"Pro. Code  : ",IBUN
+OCC ;I $O(^DGCR(399,IBIFN,"CP",0)) S I=0 F I1=1:1 S I=$O(^DGCR(399,IBIFN,"CP",I)) D:I1>9 MORE Q:'I  W !,?17 S Y=$P(^(I,0),"^",2) D:+Y D^DIQ D OCC1
  S Z=$S($P(IB(0),U,5)<3:5,1:6)
  S IBW=1 X IBWW W " Pros. Items: " S Y=$$PD^IBCSC5 I 'Y W IBUN
  S Z=$S($P(IB(0),U,5)<3:6,1:7) X IBWW
@@ -97,8 +93,8 @@ DXREQ(IBIFN) ; Is the principle diagnosis code required or not?
  ; Function returns true (1) if DX is required for this bill, otherwise 0
  NEW REQ,IBFT
  S REQ=0,IBFT=$$FT^IBCEF(IBIFN)
- I IBFT=2 S REQ=1 G DXREQX                            ; required for CMS-1500
- I IBFT=3,$$WNRBILL^IBEFUNC(IBIFN) S REQ=1 G DXREQX   ; UB with Medicare (WNR) current payer
+ I IBFT=2 S REQ=1 G DXREQX                            ; required for HCFA-1500
+ I IBFT=3,$$WNRBILL^IBEFUNC(IBIFN) S REQ=1 G DXREQX   ; UB92 with Medicare (WNR) current payer
 DXREQX ;
  Q REQ
  ;

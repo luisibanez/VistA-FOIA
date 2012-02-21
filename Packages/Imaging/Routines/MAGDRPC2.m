@@ -1,6 +1,5 @@
-MAGDRPC2 ;WOIFO/EdM - Imaging RPCs ; 05/18/2007 11:23
- ;;3.0;IMAGING;**11,30,51,50,54**;03-July-2009;;Build 1424
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDRPC2 ;WOIFO/EdM - Imaging RPCs ; 07/06/2004  11:52
+ ;;3.0;IMAGING;**11,30**;16-September-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDRPC2 ;WOIFO/EdM - Imaging RPCs ; 05/18/2007 11:23
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -65,7 +65,6 @@ IMAGE(OUT,D0) ; RPC = MAG DICOM GET BASIC IMAGE
  ;
 GRPIMG(OUT,D0) ; RPC = MAG DICOM GET IMAGE GROUP
  N I,D1,X
- D CHK^MAGGSQI(.OUT,D0) I +$G(OUT(0))'=1 Q  ; patient safety
  K OUT S I=1
  S D1=0 F  S D1=$O(^MAG(2005,D0,1,D1)) Q:'D1  D
  . S X=$P($G(^MAG(2005,D0,1,D1,0)),"^",1) Q:'X
@@ -106,27 +105,25 @@ ROUTEDAY ; Scan for Routing Activity
  N BUCKET ;- Daily tallies
  N D0 ;----- Image pointer for child of current parent
  N D1 ;----- Pointer to multiple in image file
- N D4 ;----- Loop counter
  N DAY ;---- Current FileMan date
  N DAYTIM ;- Current FileMan timestamp
  N DEST ;--- Destination
  N FIRST ;-- First date for scan
  N FSTX ;--- First transmission for current study
+ N %H ;----- $Horolog timestamp
  N IMAGE ;-- Image Pointer for current image
  N LAST ;--- Last date for scan
  N LSTQ ;--- Timestamp for last queue entry in current study
  N P3 ;----- Highest IEN in statistics file
  N P4 ;----- Number of entries in statistics file
  N PARENT ;- Image Pointer for parent of current image
- N R ;------ Retention Period
  N X ;------ Scratch
  N XMIT ;--- Total duration of transmissions for current study
  ;
  K ^TMP("MAG",$J,"RTD1")
  K ^TMP("MAG",$J,"RTD2")
- K ^TMP("MAG",$J,"RTD3")
- S FIRST=$$HTFM^XLFDT($H-4)
- S LAST=$$HTFM^XLFDT($H+2)
+ S %H=$H-4 D YMD^%DTC S FIRST=X
+ S %H=$H+2 D YMD^%DTC S LAST=X
  ;
  S DEST="" F  S DEST=$O(^MAG(2005,"ROUTE",DEST)) Q:DEST=""  D
  . S NAME(DEST)=$P($G(^MAG(2005.2,DEST,0)," ? "_DEST),"^",1)
@@ -134,15 +131,13 @@ ROUTEDAY ; Scan for Routing Activity
  . . S DAY=DAYTIM\1
  . . S IMAGE="" F  S IMAGE=$O(^MAG(2005,"ROUTE",DEST,DAYTIM,IMAGE)) Q:IMAGE=""  D
  . . . S PARENT=$P($G(^MAG(2005,IMAGE,0)),"^",10)
- . . . I PARENT,$G(^TMP("MAG",$J,"RTD3",PARENT)) S PARENT=0
- . . . S:PARENT ^TMP("MAG",$J,"RTD3",PARENT)=1
  . . . S (XMIT,LSTQ)=0,FSTX=1E9
  . . . S D0=IMAGE,D1=0 D  I PARENT F  S D1=$O(^MAG(2005,PARENT,1,D1)) Q:'D1  S D0=+$P($G(^MAG(2005,PARENT,1,D1,0)),"^",1) D
  . . . . Q:'D0
  . . . . Q:$D(^TMP("MAG",$J,"RTD1",D0,D1))
  . . . . S ^TMP("MAG",$J,"RTD1",D0,D1)=""
- . . . . S D4=0 F  S D4=$O(^MAG(2005,D0,4,D4)) Q:'D4  D
- . . . . . S X=$G(^MAG(2005,D0,4,D4,0))
+ . . . . S D1=0 F  S D1=$O(^MAG(2005,D0,4,D1)) Q:'D1  D
+ . . . . . S X=$G(^MAG(2005,D0,4,D1,0))
  . . . . . Q:$P($P(X,"^",1),".",1)'=DAY
  . . . . . Q:$P(X,"^",2)'=DEST
  . . . . . S:$P(X,"^",6)>LSTQ LSTQ=$P(X,"^",6)
@@ -186,7 +181,7 @@ ROUTEDAY ; Scan for Routing Activity
  . Q
  ; Purge old entries
  S R=$G(^MAGDICOM(2006.563,1,"RETAIN ROUTING STATISTICS")) S:R<1 R=30
- S DAY=$$HTFM^XLFDT($H-R)
+ S %H=$H-R D YMD^%DTC S DAY=X
  S D0=0 F  S D0=$O(^TMP("MAG",$J,"RTD2",D0)) Q:'D0  Q:D0'<DAY  D
  . K ^TMP("MAG",$J,"RTD2",D0) S P4=P4-1
  . Q
@@ -207,7 +202,6 @@ ROUTEDAY ; Scan for Routing Activity
  . Q
  K ^TMP("MAG",$J,"RTD1")
  K ^TMP("MAG",$J,"RTD2")
- K ^TMP("MAG",$J,"RTD3")
  Q
  ;
 DELTA(START,STOP) N D,D1,D2,T1,T2
@@ -215,6 +209,11 @@ DELTA(START,STOP) N D,D1,D2,T1,T2
  S T1=START*1E6#1E6,T2=STOP*1E6#1E6
  S T1=T1\10000*60+(T1\100#100)*60+(T1#100)
  S T2=T2\10000*60+(T2\100#100)*60+(T2#100)
- S D=0 S:D1'=D2 D=$$FMTH^XLFDT(D2)-$$FMTH^XLFDT(D1)
+ S D=0 D:D1'=D2
+ . N %H,%T,%Y,X
+ . S X=D1 D H^%DTC S D1=%H
+ . S X=D2 D H^%DTC S D2=%H
+ . S D=D2-D1
+ . Q
  Q D*86400+T2-T1
  ;

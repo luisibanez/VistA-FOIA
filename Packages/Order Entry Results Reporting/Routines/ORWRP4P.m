@@ -1,5 +1,5 @@
 ORWRP4P  ; slc/dcm - OE/RR HDR Report Extract RPC's Outpatient Pharmacy ;9/21/05  13:21
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**215,243**;Dec 17, 1997;Build 242
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**215**;Dec 17, 1997
 PSO ;Outpatient RX for HDR
  N IFN,IFN1,IFN2,X,X1,X2,X3,X10,X16,X17,XIFN,ORX,COL,CODE,I1,CNT,%DT,Y,FAC,FACU
  K ^TMP("ORXS",$J)
@@ -29,7 +29,7 @@ PSO ;Outpatient RX for HDR
  .. D XSET^ORWRP4("10^"_$P(X,"^",12)) ; Refills
  .. D XSET^ORWRP4("11^"_$P(X,"^",13)) ; Provider
  .. D XSET^ORWRP4("12^"_$P(X,"^",14)) ; Cost/Fill
- .. D XSET^ORWRP4("13^"_$S($L($P(X,"^",15))>60:"[+]",1:"")) ; [+]
+ .. D XSET^ORWRP4("13^") ; [+]
  .. D XSET^ORWRP4("14^"_$P(X,"^",15)) ; SIG
  K ^XTMP(HANDLE,"D") M ^XTMP(HANDLE,"D")=^TMP("ORXS1",$J) K ^TMP("ORXS",$J),^TMP("ORXS1",$J)
  Q

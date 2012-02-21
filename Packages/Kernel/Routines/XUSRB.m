@@ -1,6 +1,5 @@
-XUSRB ;ISCSF/RWF - Request Broker ;02/03/10  16:07
- ;;8.0;KERNEL;**11,16,28,32,59,70,82,109,115,165,150,180,213,234,238,265,337,395,404,437,523**;Jul 10, 1995;Build 16
- ;Per VHA Directive 2004-038, this routine should not be modified
+XUSRB ;ISCSF/RWF - Request Broker ;06/28/2005  16:45
+ ;;8.0;KERNEL;**11,16,28,32,59,70,82,109,115,165,150,180,213,234,238,265,337,395**;Jul 10, 1995;Build 4
  Q  ;No entry from top
  ;
  ;RPC BROKER calls, First parameter is always call-by-reference
@@ -9,7 +8,7 @@ VALIDAV(RET,AVCODE) ;Check a users access
  ; R(2)=verify needs changing, R(3)=Message, R(4)=0, R(5)=msg cnt, R(5+n)
  ; R(R(5)+6)=# div user must select from, R(R(5)+6+n)=div
  ;
- N X,XUSER,XUNOW,XUDEV,XUM,XUMSG,%1,VCCH K DUZ
+ N X,XUSER,XUF,XUNOW,XUDEV,XUM,XUMSG,%1,VCCH K DUZ
  S U="^",RET(0)=0,RET(5)=0,XUF=$G(XUF,0),XUM=0,XUMSG=0,XUDEV=0
  S DUZ=0,DUZ(0)="",VCCH=0 D NOW
  S XOPT=$$STATE^XWBSEC("XUS XOPT")
@@ -72,19 +71,17 @@ POST(CVC) ;Finish setup partition, I CVC don't log yet
  D:'$G(CVC) POST2
  Q 0
  ;
-POST2 ;Finish User Setup for silent log-on
- D:'$D(XUNOW) NOW
+POST2 D:'$D(XUNOW) NOW
  D DUZ^XUS1A,SAVE^XUS1,LOG^XUS1,ABT^XQ12
  D KILL^XWBSEC("XUS XOPT"),CLRFAC^XUS3($G(IO("IP"))) ;p265
- D SETTIME^XWBTCPM() ;Set normal Broker time-out
- S DTIME=$$DTIME^XUP(DUZ) ;See DTIME set for user
+ I $T(SETTIME^XWBTCPC)]"" D SETTIME^XWBTCPC() ;Clear sign-on time-out
  K:$G(XWBVER)<1.106 XQY,XQY0 ;Delete the sign-on context.
  K XUTEXT,XOPT,XUEON,XUEOFF,XUTT,XUDEV,XUSER
  Q
  ;
 INHIBIT() ;Is Logon to this system Inhibited?
  I $$INHIB1() Q 1
- I $$INHIB2() Q 2
+ I $$INHIB2() Q 1
  Q 0
  ;
 INHIB1() ;The LOGON check
@@ -106,9 +103,9 @@ LOGOUT ;Finish logout of user.
  D BYE^XUSCLEAN,XUTL^XUSCLEAN ;Mark the sign-on log, File cleanup.
  Q
  ;D1,D2 are place holders for now
-SETUP(RET,XWBUSRNM,ASOSKIP,D2) ;sets up environment for GUI signon
- N X1 K DUZ
- S XWBUSRNM=$G(XWBUSRNM),ASOSKIP=$G(ASOSKIP)
+SETUP(RET,XWBUSRNM,D1,D2) ;sets up environment for GUI signon
+ K DUZ
+ S XWBUSRNM=$G(XWBUSRNM)
  I $L($G(XWBTIP)) S IO("IP")=XWBTIP
  S IO("CLNM")=$$LOW^XLFSTR($G(XWBCLMAN)) D ZIO^%ZIS4
  ;Setup needed variables
@@ -120,18 +117,29 @@ SETUP(RET,XWBUSRNM,ASOSKIP,D2) ;sets up environment for GUI signon
  S RET(3)=$I,RET(4)=$P(XOPT,U,2),RET(5)=0
  S RET(6)=$G(^XMB("NETNAME")) ;DBIA #1131
  S RET(7)=$$PROD^XUPROD ;Tell if production.
- S X1=$$INHIBIT() I X1 S XWBERR=$S(X1=1:"Logons Inhibited",1:"Max Users") Q  ;p523
- ; Code for DBA Capri Type Program
- I (+XWBUSRNM<-30),$$CHKUSER^XUSBSE1(XWBUSRNM) S RET(5)=1 D POST2 Q  ;p523 BSE CHANGE
+ I $$INHIBIT() Q
+ ; Code for DBA Capri Program
+ I +XWBUSRNM=-31,XWBUSRNM["DVBA_" N XVAL D  I XVAL S RET(5)=1 Q
+ . S XVAL=$$PUT^XUESSO1($P(XWBUSRNM,U,3,99)) Q:'XVAL  ; Sign in as Visitor
+ . I $$FIND1^DIC(200.03,","_DUZ_",","X","DVBA CAPRI GUI")'>0 D
+ . . ; Have to give the user a delegated option
+ . . N YARR S YARR(200.19,"+1,"_DUZ_",",.01)="DVBA CAPRI GUI"
+ . . D UPDATE^DIE("E","YARR")
+ . . ; And now he can give himself the context option
+ . . N XARR S XARR(200.03,"+1,"_DUZ_",",.01)="DVBA CAPRI GUI"
+ . . D UPDATE^DIE("E","XARR") ; Give context option as a secondary menu item
+ . . ; But now we have to remove the delegated option
+ . . S OPT=$$FIND1^DIC(200.19,","_DUZ_",","X","DVBA CAPRI GUI")
+ . . K XARR S XARR(200.19,(OPT_","_DUZ_","),.01)="@"
+ . . D FILE^DIE("E","XARR")
+ . . Q
+ . Q
  ; End of Code for DBA Capri Program
  ;Auto sign-on check only for Broker v1.1
- I $G(ASOSKIP) S XQXFLG("ASO")=1 ;Skip the ASO check, Not for VISITORS p523
  I $G(XWBVER)<1.1 S XQXFLG("ZEBRA")=-1 ;Disable for v1.0
- I $L(IO("CLNM")),'$G(DUZ) S DUZ=$$AUTOXWB^XUS1B() ;Only check when 1.1 CL.
- I $G(DUZ)>0 D  ;p523
- . I '$D(XUSER(0)),DUZ D USER^XUS(DUZ)
- . N %T S %T=$$USER^XUS1A I %T S DUZ=0 Q
- . D NOW,POST2 S RET(5)=1
+ I $L(IO("CLNM")) S DUZ=$$AUTOXWB^XUS1B() ;Only check when 1.1 CL.
+ I DUZ>0 D NOW S XUMSG=$$POST(0) I XUMSG>0 S DUZ=0
+ S:DUZ>0 RET(5)=1
  Q
  ;
 OWNSKEY(RET,LIST,IEN) ;Does user have Key

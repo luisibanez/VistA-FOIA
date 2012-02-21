@@ -1,5 +1,5 @@
-ECXUTL3 ;ALB/GTS - Utilities for DSS Extracts ; 9/28/07 1:38pm
- ;;3.0;DSS EXTRACTS;**11,24,32,33,35,37,39,42,46,92,105,120**;Dec 22,1997;Build 43
+ECXUTL3 ;ALB/GTS - Utilities for DSS Extracts ; 10/3/02 3:50pm
+ ;;3.0;DSS EXTRACTS;**11,24,32,33,35,37,39,42,46**;Dec 22,1997
  ;
 OUTPTTM(ECXDFN,ECXDT) ;* Return PC Team from PCMM files or DPT
  ; Variables -
@@ -57,20 +57,18 @@ PAT(ECXDFN,ECXDATE,ECXDATA,ECXPAT) ;Return basic patient data for extract
  ;                  3 - ELIG^VADPT (eligibility & enrollment location)
  ;                  4 - OPD^VADPT (other patient data)
  ;                  5 - SVC^VADPT & GETSTAT^DGMSTAPI (service & MST inf)
- ;         ECXPAT(- Passed by reference; required
+ ;         ECXPAT(- Passed by referece; required
  ;
  ;  Output:
  ;         ECXPAT   0 error or test patient no data in ECXPAT array
- ;                  1 data returned in ECXPAT array
+ ;                  1 data returneed in ECXPAT array
  ;         ECXPAT(  Local array with patient data.
  ;
  N SSN,I,ECXCOD,ECXDAT,DFN,VAPA,VADM,VAEL,VAPD,VASV,STR,ECXAR,DIC,DIQ,RCNUM,RCVAL,COLMETH
  N DA,DR,PELG,MELIG,ZIP,MPI
  I ECXDFN="" Q 0
  S SSN=$$GET1^DIQ(2,ECXDFN,.09,"I"),DFN=ECXDFN,ECXPAT=0
- I $E(SSN,1,3)="000"!(SSN="") K ECXPAT Q 0  ;test patient
- ;test patient extended checks; mtl extract excluded
- I $G(ECHEAD)'="MTL",'$$SSN^ECXUTL5(SSN) K ECXPAT Q 0
+ I $E(SSN,1,5)="00000"!(SSN="") K ECXPAT Q 0  ;test patient
  S STR="NAME;SSN;DOB;SEX;RACE;RELIGION;STATE;COUNTY;ZIP;SC%;MEANS;ELIG;"
  S STR=STR_"EMPLOY;AO STAT;IR STAT;EC STAT;POW STAT;POW LOC;MST STAT;"
  S STR=STR_"ENROLL LOC;MPI;VIETNAM;POS;MARITAL"
@@ -114,9 +112,7 @@ PAT(ECXDFN,ECXDATE,ECXDATA,ECXPAT) ;Return basic patient data for extract
  . S DIC=5,DA=+VAPA(5),DR=3,DR(5.01)=2,DA(5.01)=+VAPA(7),DIQ="ECXAR"
  . S DIQ(0)="I" D EN^DIQ1
  . S ECXPAT("COUNTY")=$G(ECXAR(5.01,DA(5.01),2,"I"))
- . S ECXPAT("ZIP")=$P(VAPA(11),U,2)
- . S ECXPAT("COUNTRY")=$$GET1^DIQ(779.004,+$P($G(VAPA(25)),U),.01)
- . S ECXPAT=1
+ . S ECXPAT("ZIP")=$P(VAPA(11),U,2),ECXPAT=1
  D  ;get eligibility information
  . I ECXDATA'="",'$D(ECXCOD(3)) Q
  . D ELIG^VADPT
@@ -132,8 +128,6 @@ PAT(ECXDFN,ECXDATE,ECXDATA,ECXPAT) ;Return basic patient data for extract
  . S ECXDAT=$G(ECXAR(2,ECXDFN,DR,"I")) I ECXDAT K ECXAR D
  . . S DIC=4,DA=ECXDAT,DR=99,DIQ="ECXAR",DIQ(0)="I" D EN^DIQ1
  . . S ECXPAT("ENROLL LOC")=ECXAR(4,ECXDAT,DR,"I")
- . ;get Emergency Response Indicator (FEMA)
- . S ECXPAT("ERI")=$$GET1^DIQ(2,ECXDFN,.181,"I")
  D  ;get other patient information
  . I ECXDATA'="",'$D(ECXCOD(4)) Q
  . D OPD^VADPT
@@ -148,11 +142,9 @@ PAT(ECXDFN,ECXDATE,ECXDATA,ECXPAT) ;Return basic patient data for extract
  . S ECXPAT("POW STAT")=$S(VASV(4):"Y",VASV(4)=0:"N",1:"U")
  . S ECXPAT("POW LOC")=$P(VASV(4,3),U),ECXPAT=1
  . S ECXPAT("PHI")=$S(VASV(9)=1:"Y",VASV(9)=0:"N",1:"")
+ . ;
  . ;- Agent Orange Location (K=Korean DMZ,V=Vietnam)
  . S ECXPAT("AOL")=$P($G(VASV(2,5)),U)
- . ;get patient OEF/OIF status and date of return
- . D OEFDATA^ECXUTL4
- . ;
  . ;get patient current MST status
  . I ECXDATE'="",ECXDATE'["." S ECXDATE=ECXDATE+.9
  . S X="DGMSTAPI" X ^%ZOSF("TEST") I $T D
@@ -208,7 +200,7 @@ ELGTXT ;Eligibility codes
  ;;END
  ;
 CPT(ECXCPT,ECXMOD,ECXQUA) ;Returns a str with CPT code and modifier codes
- ;Return string is composed of a 5 character CPT code 2 character quantity
+ ;Return string is composed of a 5 character CPT code 2 character quanity
  ;plus up to 5 modifier codes, 2 characters each.
  ; Variables -
  ;  Input  ECXCPT  - Pointer value to the CPT file (#81)
@@ -218,7 +210,7 @@ CPT(ECXCPT,ECXMOD,ECXQUA) ;Returns a str with CPT code and modifier codes
  ;
  ;  Output:
  ;         CPTMOD  - String of up to 17 characters, 5 character CPT
- ;                   code 2 character qty plus up to 5 2-character
+ ;                   code 2 character quanity plus up to 5 2-character
  ;                   code modifiers.
  ;
  N CPT,MOD,I,CPTMOD

@@ -1,6 +1,6 @@
 IBCSC5 ;ALB/MJB - MCCR SCREEN 5 (OPT. EOC) ;27 MAY 88 10:15
- ;;2.0;INTEGRATED BILLING;**52,125,51,210,266,288,287,309,389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,125,51,210,266,288,287,309**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO DGCRSC5
  ;
@@ -57,7 +57,8 @@ PD() ;prints prosthetic device in external form, returns 0 if there are none
  N IBX,IBY,IBZ,IBN,X S X=0 S IBX=0 F  S IBX=$O(^IBA(362.5,"AIFN"_IBIFN,IBX)) Q:'IBX  D  Q:X>5
  . S IBY=0 F  S IBY=$O(^IBA(362.5,"AIFN"_IBIFN,IBX,IBY)) Q:'IBY  S IBZ=$G(^IBA(362.5,IBY,0)) I IBZ'="" D  Q:X>5
  .. S X=X+1 I X>5 W !,?17,"*** There are more Pros. Items associated with this bill.***" Q
- .. W:X'=1 ! W ?17,$E($P(IBZ,U,5),1,40),?67,$$FMTE^XLFDT(+IBZ)
+ .. ;S IBN=$G(^RMPR(661,+$P(IBZ,U,3),0)) W:X'=1 ! W ?17,$E($$PIN^IBCSC5B(+IBN),1,35)," - ",$P(IBN,U,1),?65,$$FMTE^XLFDT(+IBZ)
+ .. S IBN=$$PIN^IBCSC5B(+$P(IBZ,U,3)) W:X'=1 ! W ?17,$E($P(IBN,U,2),1,35)," - ",$P(IBN,U,1),?65,$$FMTE^XLFDT(+IBZ)
  Q X
  ;
 RX() ;prints RX REFILLS in external form, returns 0 if there are none

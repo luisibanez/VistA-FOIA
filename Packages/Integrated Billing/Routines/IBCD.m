@@ -1,5 +1,5 @@
-IBCD ;ALB/ARH - AUTOMATED BILLER ;8/6/93
- ;;2.0;INTEGRATED BILLING;**312**;21-MAR-94
+IBCD ;ALB/ARH - AUTOMATED BILLER ; 8/6/93
+ ;;Version 2.0 ; INTEGRATED BILLING ;; 21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;This routine is the begining of the auto biller.  No variables are required on entry.  It is be called by the
@@ -11,7 +11,6 @@ IBCD ;ALB/ARH - AUTOMATED BILLER ;8/6/93
  ;
 EN ;begin process of finding and creating bills
  ;determine if auto biller should run, check site parameters (350.9,7.01-7.02)
- N IBSWINFO,IBPFSS S IBSWINFO=$$SWSTAT^IBBAPI()            ;IB*2.0*312
  S IBPAR7=$G(^IBE(350.9,1,7)) G:'$P(IBPAR7,U,1) EXIT
  I +IBPAR7,+$P(IBPAR7,U,2),$$FMADD^XLFDT(+$P(IBPAR7,U,2),+IBPAR7)>DT G EXIT
  S IBAUTO=1
@@ -26,14 +25,6 @@ EN ;begin process of finding and creating bills
  .... S IBX=$$EVBILL^IBCU81(IBTRN) I 'IBX!(IBX>DT) D TEABD(IBTRN,+IBX) D:$P(IBX,U,2)'="" TERR(IBTRN,0,$P(IBX,U,2)) Q
  .... S IBX=$$EVNTCHK^IBCU82(IBTRN) I +IBX D TEABD(IBTRN,0) D TERR(IBTRN,0,$P(IBX,U,2)) Q
  .... S IBTRND=$G(^IBT(356,IBTRN,0))
- .... I +IBSWINFO D  Q:IBPFSS                               ;IB*2.0*312
-   ..... S IBPFSS=1                                         ;IB*2.0*312
-   ..... ; Do NOT PROCESS on VistA if DT>=Switch Eff Date   ;CCR-930
-   ..... I ($P(IBTRND,"^",6)+1)>$P(IBSWINFO,"^",2) Q        ;IB*2.0*312
-   ..... I $P($G(^DPT(IBDFN,.1)),"^")'="" Q                 ;IB*2.0*312
-   ..... Q:$$CHKDIS()                                       ;CCR-1081
-   ..... S IBPFSS=0     ;Before EffDt & Discharged          ;IB*2.0*312
- .... ;
  .... S ^TMP("IBCAB",$J,IBDFN,IBTYP,+$P(IBTRND,U,6),IBTRN)=""
  K IBDFN,IBTYP,IBEABD,IBTRN,IBTRND,IBX
  ;
@@ -44,13 +35,6 @@ EN ;begin process of finding and creating bills
  F IBX=1:1:10 K ^TMP(("IBC"_IBX),$J)
 EXIT K IBX,IBPAR7,DIE,DA,DR,IBAUTO,IBBS,IBSC,IBT
  Q
-CHKDIS() ; Returns 1 if discharge was on or after effective date   ;CCR-1081
- N IBADMLNK,IBDISLNK
- S IBADMLNK=$P(IBTRND,"^",5) G:'IBADMLNK CHKDISQ
- S IBDISLNK=$P($G(^DGPM(IBADMLNK,0)),"^",17) G:'IBDISLNK CHKDISQ
- ;
- I (^DGPM(IBDISLNK,0)+1)>$P(IBSWINFO,"^",2) Q 1
-CHKDISQ Q 0
  ;
 TEABD(TRN,IBDT) ;array contains the list of claims tracking events that need EABD updated, and the new date
  S IBDT=+$G(IBDT),^TMP("IBEABD",$J,TRN,+IBDT)=""

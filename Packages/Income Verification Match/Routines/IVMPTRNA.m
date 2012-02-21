@@ -1,5 +1,5 @@
-IVMPTRNA ;ALB/CKN/BRM,TDM - HL7 FULL DATA TRANSMISSION (Z07) BUILDER(CONTINUED);30 AUG 2001 ; 5/17/06 1:57pm
- ;;2.0;INCOME VERIFICATION MATCH;**46,58,76,105**; 21-OCT-94;Build 2
+IVMPTRNA ;ALB/CKN/BRM - HL7 FULL DATA TRANSMISSION (Z07) BUILDER(CONTINUED);30 AUG 2001 ; 3/20/03 11:07am
+ ;;2.0;INCOME VERIFICATION MATCH;**46,58,76**; 21-OCT-94
  Q
 NTROBX(DGNTARR) ;
  N NTRTEMP,I,CS,RS,SS
@@ -34,36 +34,26 @@ NTROBX(DGNTARR) ;
  . S $P(NTROBX(16),CS,14)=SS_$P($G(^DIC(4,DGNTARR("HSIT"),99)),"^")
  I $G(DGNTARR("VER"))'="" S NTROBX(17)=$G(NTRTEMP("VER",$G(DGNTARR("VER"))))
  Q
-RF1(DFN,RF1TYP) ; create RF1 segment
- ;  Input:
- ;        DFN - Patient IEN
- ;     RF1TYP - RF1 Type
- ;              SAD = Street Address Change (Default)
- ;              CAD = Confidential Address Change
- ;              CPH = Cell Phone Number Change
- ;              PNO = Pager Number Change
- ;              EAD = E-Mail Address Change
- ;
- ;  Output: RF1 segment
- ;
- N X,Y,ADDRSRC,ADRSRC,ADRSIT,ADTDT,I,CS,RS,SS,HLQ,RETURN,RFDAT,ERR
+RF1(DFN) ; create RF1 segment
+ N X,Y,ADDRSRC,ADRSRC,ADRSIT,ADTDT,I,CS,RS,SS,RETURN,RFDAT,ERR
  I $G(HLECH)'="~|\&" N HLECH S HLECH="~|\&"
  I $G(HLFS)'="^" N HLFS S HLFS="^"
- S CS=$E(HLECH,1),SS=$E(HLECH,4),RS=$E(HLECH,2),HLQ=""""
- S:$G(RF1TYP)="" RF1TYP="SAD"   ;Set type to 'SAD' if no value passed
+ S CS=$E(HLECH,1),SS=$E(HLECH,4),RS=$E(HLECH,2)
  ; initialize the RETURN variable
- S RETURN="RF1",$P(RETURN,HLFS,4)=RF1TYP,$P(RETURN,HLFS,11)=""
+ S RETURN="RF1",$P(RETURN,HLFS,11)=""
  Q:'$G(DFN) RETURN
- ;I RF1TYP="SAD",$$BADADR^DGUTL3(DFN) Q RETURN
- D RF1LOAD(RF1TYP) Q:$D(ERR) RETURN
- I RF1TYP'="SAD",$G(ADRDT)="" Q ""
- ; RF1 SEQ 1-2 are not currently used
- ; RF1 SEQ 3
- S $P(RETURN,HLFS,4)=RF1TYP
- ; RF1 SEQ 4-5 are not currently used
+ Q:$$BADADR^DGUTL3(DFN) RETURN
+ ; get patient data to be used in this message
+ D GETS^DIQ(2,DFN_",",".118;.119;.12","IE","RFDAT","ERR")
+ Q:$D(ERR) RETURN
+ S ADRDT=$$FMTHL7^XLFDT($G(RFDAT(2,DFN_",",.118,"I")))
+ S ADRSRC=$$EXTERNAL^DILFD(2,.119,"",$G(RFDAT(2,DFN_",",.119,"I")))
+ ; only populate the Address Change Site if the Source = VAMC
+ I ADRSRC="VAMC" S ADRSIT=$G(RFDAT(2,DFN_",",.12,"I")) S:ADRSIT]"" ADRSIT=$$GET1^DIQ(4,ADRSIT_",",99)
+ S ADRSRC=$$ADDRCNV(ADRSRC)  ;convert source to HL7 format
+ ; RF1 SEQ 1-5 are not currently used
  ; RF1 SEQ 6
- S $P(RETURN,HLFS,7)=$G(ADRSIT)
- S:$G(ADRSRC)'="" $P(RETURN,HLFS,7)=$P(RETURN,HLFS,7)_CS_ADRSRC
+ S $P(RETURN,HLFS,7)=$G(ADRSIT)_CS_$G(ADRSRC)
  ; RF1 SEQ 7
  S $P(RETURN,HLFS,8)=$G(ADRDT)
  ; RF1 SEQ 8-11 are not currently used
@@ -79,24 +69,4 @@ ADDRCNV(ADDRSRC) ;convert Address Source to HL7 format
  Q:ADDRSRC="BVA" "USVABVA"
  Q:ADDRSRC="VAINS" "USVAINS"
  Q:ADDRSRC="USPS" "USPS"
- Q:ADDRSRC="LACS" "LACS"
  Q ""
- ;
-RF1LOAD(RF1TYP) ;
- N RFDT,RFSRC,RFSIT,GETFLDS,RFDAT,ERR
- K ADRDT,ADRSRC,ADRSIT
- I RF1TYP="SAD" S RFDT=.118,RFSRC=.119,RFSIT=.12
- I RF1TYP="CAD" S RFDT=.14112,RFSRC="",RFSIT=.14113
- I RF1TYP="CPH" S RFDT=.139,RFSRC=.1311,RFSIT=.13111
- I RF1TYP="PNO" S RFDT=.1312,RFSRC=.1313,RFSIT=.1314
- I RF1TYP="EAD" S RFDT=.136,RFSRC=.137,RFSIT=.138
- S GETFLDS=RFDT S:RFSRC'="" GETFLDS=GETFLDS_";"_RFSRC S GETFLDS=GETFLDS_";"_RFSIT
- D GETS^DIQ(2,DFN_",",GETFLDS,"IE","RFDAT","ERR") Q:$D(ERR)
- S ADRDT=$$FMTHL7^XLFDT($G(RFDAT(2,DFN_",",RFDT,"I")))
- S:RFSRC'="" ADRSRC=$$EXTERNAL^DILFD(2,RFSRC,"",$G(RFDAT(2,DFN_",",RFSRC,"I")))
- ; only populate Change Site if Source=VAMC or NO Source Field
- I ($G(ADRSRC)="VAMC")!(RFSRC="") D
- . S ADRSIT=$G(RFDAT(2,DFN_",",RFSIT,"I"))
- . S:ADRSIT]"" ADRSIT=$$GET1^DIQ(4,ADRSIT_",",99)
- S ADRSRC=$$ADDRCNV($G(ADRSRC))  ;convert source to HL7 format
- Q

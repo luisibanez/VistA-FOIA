@@ -1,5 +1,5 @@
 PSORN52A ;IHS/DSD/JCM/SAB/FLS-Break up of PSORN52 ;08/09/93
- ;;7.0;OUTPATIENT PHARMACY;**157,148,268,225,306**;DEC 1997;Build 3
+ ;;7.0;OUTPATIENT PHARMACY;**157,148**;DEC 1997
  Q  ; Call from tag
  ;
 IBHLD ;
@@ -9,7 +9,6 @@ IBHLD ;
  I $P(PSOIBHLD,"^",5)="" S $P(PSOIBHLD,"^",5)=$S($P(PSOLDIBQ,"^",5)=1:1,$P(PSOLDIBQ,"^",5)=0:0,1:"")
  I $P(PSOIBHLD,"^",6)="" S $P(PSOIBHLD,"^",6)=$S($P(PSOLDIBQ,"^",6)=1:1,$P(PSOLDIBQ,"^",6)=0:0,1:"")
  I $P(PSOIBHLD,"^",7)="" S $P(PSOIBHLD,"^",7)=$S($P(PSOLDIBQ,"^",7)=1:1,$P(PSOLDIBQ,"^",7)=0:0,1:"")
- I $P(PSOIBHLD,"^",8)="" S $P(PSOIBHLD,"^",8)=$S($P(PSOLDIBQ,"^",8)=1:1,$P(PSOLDIBQ,"^",8)=0:0,1:"")
  Q
  ;
 FILE ; - Filling ^PSRX and ^PS(55 entries
@@ -23,7 +22,7 @@ FILE ; - Filling ^PSRX and ^PS(55 entries
  S $P(PSOX("NRX0"),"^",11)=$S(PSOX("FILL DATE")>DT&($P(PSOPAR,"^",6)):"M",$D(PSOX("MAIL/WINDOW")):PSOX("MAIL/WINDOW"),1:$P(PSOX("NRX0"),"^",11))
  S $P(PSOX("NRX0"),"^",13)=PSOX("ISSUE DATE"),$P(PSOX("STA"),"^")=PSOX("STATUS"),$P(PSOX("NRX0"),"^",16)=$S($G(PSOX("CLERK CODE"))]"":PSOX("CLERK CODE"),1:DUZ)
  S $P(PSOX("NRX0"),"^",17)=$G(PSODRUG("COST"))
- S $P(PSOX("NRX2"),"^")=PSOX("LOGIN DATE"),$P(PSOX("NRX2"),"^",2)=PSOX("FILL DATE"),$P(PSOX("NRX2"),"^",3)="",$P(PSOX("NRX2"),"^",4)="",$P(PSOX("NRX2"),"^",5)=PSOX("DISPENSED DATE")
+ S $P(PSOX("NRX2"),"^")=PSOX("LOGIN DATE"),$P(PSOX("NRX2"),"^",2)=PSOX("FILL DATE"),$P(PSOX("NRX2"),"^",3)="",$P(PSOX("NRX2"),"^",5)=PSOX("DISPENSED DATE")
  S $P(PSOX("NRX2"),"^",6)=PSOX("STOP DATE"),$P(PSOX("NRX2"),"^",7)=$S($G(PSOX("NDC"))]"":PSOX("NDC"),1:$G(PSODRUG("NDC")))
  S $P(PSOX("NRX2"),"^",8)=$S($G(PSOX("MANUFACTURER"))]"":PSOX("MANUFACTURER"),1:$G(PSODRUG("MANUFACTURER")))
  S $P(PSOX("NRX2"),"^",9)=+PSOSITE,$P(PSOX("NRX2"),"^",10)=""
@@ -47,7 +46,7 @@ FILE ; - Filling ^PSRX and ^PS(55 entries
  K PSOX1
  ;
  ; - File data into ^PS(55)
-F55 L +^PS(55,PSODFN,"P"):$S(+$G(^DD("DILOCKTM"))>0:+^DD("DILOCKTM"),1:3) S:'$D(^PS(55,PSODFN,"P",0)) ^(0)="^55.03PA^^"
+F55 L +^PS(55,PSODFN,"P"):2 S:'$D(^PS(55,PSODFN,"P",0)) ^(0)="^55.03PA^^"
  F PSOX1=$P(^PS(55,PSODFN,"P",0),"^",3):1 Q:'$D(^PS(55,PSODFN,"P",PSOX1))
  S PSOX("55 IEN")=PSOX1
  S ^PS(55,PSODFN,"P",PSOX1,0)=PSOX("IRXN"),$P(^PS(55,PSODFN,"P",0),"^",3,4)=PSOX1_"^"_($P(^PS(55,PSODFN,"P",0),"^",4)+1)

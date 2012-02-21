@@ -1,6 +1,5 @@
-PRSASC ; HISC/MGD - Supervisor Certification ;01/22/05
- ;;4.0;PAID;**15,43,93**;Sep 21, 1995;Build 7
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRSASC ; HISC/REL-Supervisor Certification ;6/23/95  08:32
+ ;;4.0;PAID;**15,43**;Sep 21, 1995
  W:$E(IOST,1,2)="C-" @IOF W !?26,"VA TIME & ATTENDANCE SYSTEM",!?28,"SUPERVISOR'S APPROVALS"
  S PRSTLV=3 D ^PRSAUTL G:TLI<1 EX S QT=0
  S LVT=";"_$P(^DD(458.1,6,0),"^",3),LVS=";"_$P(^DD(458.1,8,0),"^",3) K AP
@@ -25,20 +24,8 @@ CHK ; Check for needed approvals
  I $D(^PRST(458,"AXR",DFN)) F PPI=0:0 S PPI=$O(^PRST(458,"AXR",DFN,PPI)) Q:PPI<1  F AUN=0:0 S AUN=$O(^PRST(458,"AXR",DFN,PPI,AUN)) Q:AUN<1  S DA=DFN_"~"_PPI_"~"_AUN D PP G:QT C1
 C1 Q
 LV ; Leave Request
- N PRSX
  D:'HDR HDR S (NUM,CNT)=0,PRT=1 W ! D BAL^PRSALVS W ! D LST^PRSALVS
- S PRSX=$$OKALVR^PRSPLVU(DA)
- I PRSX'>0 D
- . W !!,"This leave request can not be approved because the employee is"
- . W !,"a part-time physician with a memorandum of service level"
- . W !,"expectations, and the leave request may impact a time card for"
- . W !,"pay period "_$P($G(^PRST(458,+$P(PRSX,U,2),0)),U)_" that has a status of Payroll."
- . W !,"The request can be approved once the time card status changes."
- . W !,"(i.e. returned to Timekeeper or transmitted to Austin)",!
- S COM="" D LVOK Q:QT
- I ACT="A",PRSX'>0 W !,"Approved action can't be accepted at this time" Q
- S:ACT'="" AP(1,DA)=DFN_"^"_ACT_"^"_COM
- Q
+ S COM="" D LVOK Q:QT  S:ACT'="" AP(1,DA)=DFN_"^"_ACT_"^"_COM Q
 OT ; Overtime/CompTime Request
  D:'HDR HDR S (NUM,CNT)=0 W ! D LST^PRSAOTS S COM="" D OK Q:QT  I ACT'="" S:ACT="A" ACT="S" S AP(2,DA)=DFN_"^"_ACT_"^"_COM
  Q

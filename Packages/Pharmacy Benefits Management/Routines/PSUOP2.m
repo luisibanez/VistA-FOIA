@@ -1,5 +1,5 @@
-PSUOP2 ;BIR/CFL - PSU PBM Outpatient Pharmacy Data Collection for Version 7.0 ; 7/11/06 4:21pm
- ;;4.0;PHARMACY BENEFITS MANAGEMENT;**6,8,9**;MARCH, 2005;Build 6
+PSUOP2 ;BIR/CFL - PSU PBM Outpatient Pharmacy Data Collection for Version 7.0 ; 01 May 2001  10:57 AM
+ ;;4.0;PHARMACY BENEFITS MANAGEMENT;**6**;MARCH, 2005
  ;
  ;DBIAs
  ; Reference to ^PSRX( file # 52 supported by DBIAs 465, 2512
@@ -75,9 +75,8 @@ NEW ; New Rx
 NEWX1 ;I PSUCMOP="Y" Q:((PSURELDT="")!(PSURELDT<PSUSDT)!(PSURELDT>PSUEDTM))
 NEWX2 ;I PSUCMOP="N",((PSUFD<PSUSDT)!(PSUFD\1>PSUEDT)) Q
  S PSUR1=^TMP("PSOR",$J,PSURXIEN,1)
- ; MOVE NEXT 2 LINES TO COMMON VARIABLE AREA
- ;S PSUCLN=$P($P(PSUR1,U,4),";",2)          ;AMIS data clinic
- ;S PSUFP=$P($P(PSUR1,U,9),";",1)           ;AMIS finishing person
+ S PSUCLN=$P($P(PSUR1,U,4),";",2)          ;AMIS data clinic
+ S PSUFP=$P($P(PSUR1,U,9),";",1)           ;AMIS finishing person
  S PSUPRID=$P($P(PSUR1,U,1),";",1)
  S PSURXP=$P($P(PSUR1,U,5),";",1)
  S PSUMW=$P($P(PSUR1,U,6),";",1)
@@ -98,9 +97,6 @@ REF ; Refills
  .S PSUTYP="R"
  .S PSUCMOP=$S($D(PSUCMA(PSUFLN)):"Y",1:"N")
  .S PSUR0=^TMP("PSOR",$J,PSURXIEN,"REF",PSUFLN,0)
- .N PSUCLN,PSUR1
- .S PSUR1=^TMP("PSOR",$J,PSURXIEN,1)
- .S PSUCLN=$P($P(PSUR1,U,4),";",2)
  .S PSUWPC="N"
  .S PSUFD=$P(PSUR0,U,1)
  .S PSUPRID=$P($P(PSUR0,U,2),";",1)
@@ -130,9 +126,6 @@ PAR ; Partials
  S PSUFLN=""
  F  S PSUFLN=$O(^TMP("PSOR",$J,PSURXIEN,"RPAR",PSUFLN)) Q:PSUFLN=""  D
  .S PSUR0=^TMP("PSOR",$J,PSURXIEN,"RPAR",PSUFLN,0)
- .N PSUCLN,PSUR1
- .S PSUR1=^TMP("PSOR",$J,PSURXIEN,1)
- .S PSUCLN=$P($P(PSUR1,U,4),";",2)
  .S PSUTYP="P"
  .S PSUCMOP="N"
  .S PSUWPC="N"
@@ -161,9 +154,6 @@ COMVAR ; set variables that are common between all record types
  S PSUSIG=$P($G(^TMP("PSOR",$J,PSURXIEN,"SIG",1,0)),U,1)
  S PSURXP=$P($P(^TMP("PSOR",$J,PSURXIEN,1),U,5),";",1)
  S PSURXN=$P(^TMP("PSOR",$J,PSURXIEN,0),U,5)
- ; PSU*4*9 - INSERT NEXT 2 LINES
- S PSUCLN=$P($P(^TMP("PSOR",$J,PSURXIEN,1),U,4),";",2)   ;AMIS CLINIC
- S PSUFP=$P($P(^TMP("PSOR",$J,PSURXIEN,1),U,9),";",1)  ;FINISHING PERSON
  D GETDRUG^PSUOP3 ; loads data from file #50 using PSUDR as ien
 COMVARQ Q
  ;

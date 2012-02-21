@@ -1,9 +1,6 @@
 RMPREOU ;HINES/HNC -Suspense Processing Utility  ;2-2-2000
- ;;3.0;PROSTHETICS;**45,55,59,135,83**;Feb 09, 1996;Build 20
+ ;;3.0;PROSTHETICS;**45,55,59**;Feb 09, 1996
  ; Add new function for working days M-F.
- ;
- ;HNC - #83, add free text ordering provider to tag WHO 3/11/05
- ;
  Q
  ;
 ITEM(DA,RL) ;psas hcpcs space item name
@@ -70,15 +67,8 @@ STATUS(DA,RL) ;status of suspense, open, pending, closed
  I $G(RL) S STATUS=$E(STATUS,0,RL)
  K RE Q STATUS
  ;
-WHO(DA,RL,RMPRA) ;requestor or provider
- ;DA ien to file 200
- ;RL length of return string
- ;RMPRA ien to file 668
+WHO(DA,RL) ;requestor or provider
  N DIC,DIQ,DR,WHO
- S WHO=""
- I DA="" S WHO=$P($G(^RMPR(668,RMPRA,"IFC1")),U,3)
- I (WHO'="")&($G(RL)'="") S WHO=$E(WHO,0,RL)
- I WHO'="" Q WHO
  S DIC=200,DIQ="RE",DR=.01,DIQ(0)="EN" D EN^DIQ1
  S WHO=$G(RE(200,DA,.01,"E"))
  I $G(RL) S WHO=$E(WHO,0,RL)
@@ -111,16 +101,6 @@ CWRKDAY(DA) ;working days based on today for open records.
  S RB=$P($G(^RMPR(668,DA,0)),U,1)
  Q:RB="" 0
  S RE=DT
- D WDAY
- Q RMTO
-CANWKDY(DA) ;*135 working days between create and cancel date for cancel w/o initial action records.
- ;holidays are counted as working days
- ;parm 1=ien 668, DA
- N RMTO,RB,RE
- S RB=$P($G(^RMPR(668,DA,0)),U)
- Q:RB="" 0
- S RE=$P(^RMPR(668,DA,5),U)
- Q:RE="" 0
  D WDAY
  Q RMTO
 WDAY ;       RB - begining date

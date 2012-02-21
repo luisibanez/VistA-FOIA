@@ -1,5 +1,5 @@
-DGBT2 ;ALB/GAH - BENEFICIARY TRAVEL SCREEN 2 ; 10/11/2006
- ;;1.0;Beneficiary Travel;**7,8,13**;September 25, 2001;Build 11
+DGBT2 ;ALB/LM - BENEFICIARY TRAVEL SCREEN 2 ; 07/09/2004
+ ;;1.0;Beneficiary Travel;**7,8**;September 25, 2001
  Q
 SCREEN ;
  W @IOF
@@ -10,10 +10,7 @@ SCREEN ;
  S DGBTAS="" S:DGBTAD DGBTAS=$S($P(DGBTDD,".")=$P(DGBTDTI,"."):"D",$P(DGBTAD,".")=$P(DGBTDTI,"."):"A",$P(DGBTAD,".")&'$P(DGBTDD,"."):"I",$P(DGBTAD,".")&($P(DGBTDTI,".")'>$P(DGBTDD,".")):"II",1:"")
  I DGBTAS]"" W $S(DGBTAS="A":" * * * * ADMITTED ON THIS DATE * * * *",DGBTAS="D":" * * * * DISCHARGED ON THIS DATE * * * *",DGBTAS="I":" * * * * CURRENTLY AN INPATIENT * * * *",DGBTAS="II":" * * * INPATIENT STATUS * * *",1:"")
  I DGBTAS]"" W !!," Admitted On: " S Y=+DGBTAD X ^DD("DD") W Y K Y W:$D(^DPT(DFN,.1)) ?40,"Ward Location: ",^DPT(DFN,.1) I DGBTDD W ?40,"Discharge Date: " S Y=+DGBTDD X ^DD("DD") W Y K Y
- W !!,"Appointments: " W:'$D(DGBTCL) "NONE RECORDED FOR THIS DATE"
- D
- . I $D(DGBTCL("ERROR")) W ?14,DGBTCL("ERROR") Q
- . I $D(DGBTCL) F I=0:0 S I=$O(DGBTCL(I)) Q:'I  D APPT
+ W !!,"Appointments: " W:'$D(DGBTCL) "NONE RECORDED FOR THIS DATE" I $D(DGBTCL) F I=0:0 S I=$O(DGBTCL(I)) Q:'I  D APPT
  N DGVAL,DGCBK,DGDT1
  ;
  S DGVAL("DFN")=DFN,DGVAL("BDT")=DGBTDTI\1,DGVAL("EDT")=DGVAL("BDT")_".9999"
@@ -39,7 +36,7 @@ ADM S DGBTAN=$S($D(^DPT(DFN,.105)):^(.105),1:"")
  K %,DGBTDI,DGBTDN Q
 STOP I $D(DGBTCS) W ?65,$E($S($D(^SD(409.1,+$P(DGBTCSN,"^",10),0)):$P(^(0),"^"),1:"REGULAR"),1,15),!
  Q
-APPT ;
+APPT I $D(DGBTCL(101)) W ?14,DGBTCL(101) Q
  I $D(DGBTCL) D
  .W ?14,$P(DGBTCL(I),U)," ("_$$FMTE^DILIBF(I,"5U")_")"
  .S X=$P(DGBTCL(I),U,2)

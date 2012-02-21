@@ -1,7 +1,7 @@
-PXRMEGM ; SLC/PKR/PJH - Extract Counting Group Management ;08/03/2006
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMEGM ; SLC/PKR/PJH - Extract Finding Group Management ;03/25/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
- ;Main entry point for PXRM EXTRACT COUNTING GROUPS
+ ;Main entry point for PXRM EXTRACT FINDING GROUPS
 START(EFIEN) ;
  N EFCLASS,EFNAME,PXRMDONE,GROUP
  N VALMBCK,VALMCNT,VALMSG,X,XMZ,XQORM,XQORNOD
@@ -12,7 +12,7 @@ START(EFIEN) ;
  .S EFNAME=$P($G(^PXRM(810.7,EFIEN,0)),U)
  .S EFCLASS=$P($G(^PXRM(810.7,EFIEN,100)),U)
  .S EFCLASS=$S(EFCLASS="N":"National",EFCLASS="V":"VISN",1:"Local")
- D EN^VALM("PXRM EXTRACT COUNTING GROUPS")
+ D EN^VALM("PXRM EXTRACT FINDING GROUPS")
  Q
  ;
 BLDLIST ;Build workfile
@@ -53,17 +53,17 @@ INIT ;Init
  S VALMCNT=0
  Q
  ;
-PEXIT ;Protocol exit code
+PEXIT ;PXRM EXCH MENU protocol exit code
  S VALMSG="+ Next Screen   - Prev Screen   ?? More Actions"
  ;Reset after page up/down etc
  D XQORM
  Q
  ;
-XQORM S XQORM("#")=$O(^ORD(101,"B","PXRM EXTRACT COUNTING GROUP SELECT ENTRY",0))_U_"1:"_VALMCNT
+XQORM S XQORM("#")=$O(^ORD(101,"B","PXRM EXTRACT FINDING GROUP SELECT ENTRY",0))_U_"1:"_VALMCNT
  S XQORM("A")="Select Item: "
  Q
  ;
-XSEL ;PXRM EXTRACT COUNTING GROUP SELECT ENTRY validation
+XSEL ;PXRM EXTRACT FINDING SELECT ENTRY validation
  N SEL,IEN
  S SEL=$P(XQORNOD(0),"=",2)
  ;Remove trailing ,
@@ -78,7 +78,7 @@ XSEL ;PXRM EXTRACT COUNTING GROUP SELECT ENTRY validation
  ;
  ;Get the list ien.
  S IEN=^TMP("PXRMEGM",$J,"IDX",SEL,SEL)
- ;Display/Edit Extract Counting Group
+ ;Display/Edit Extract Finding
  D START^PXRMEGED(IEN)
  ;
  D BLDLIST
@@ -89,7 +89,7 @@ XSEL ;PXRM EXTRACT COUNTING GROUP SELECT ENTRY validation
 HELP(CALL) ;General help text routine
  N HTEXT
  I CALL=1 D
- .S HTEXT(1)="Select DE to display or edit a rule."
+ .S HTEXT(1)="Select DR to display or edit a rule."
  .S HTEXT(2)="Select ED to edit a rule"
  ;
  D HELP^PXRMEUT(.HTEXT)
@@ -109,7 +109,7 @@ EGADD ;Add Rule Option
  S VALMBCK="R"
  Q
  ;
-EGINQ ;Counting Group Inquiry - PXRM EXTRACT COUNTING GROUP DISPLAY/EDIT entry 
+EGINQ ;Finding Group Inquiry - PXRM EXTRACT FINDING GROUP DISPLAY/EDIT entry 
  N IND,FGIEN,VALMY
  D EN^VALM2(XQORNOD(0))
  ;
@@ -127,8 +127,7 @@ EGINQ ;Counting Group Inquiry - PXRM EXTRACT COUNTING GROUP DISPLAY/EDIT entry
  S VALMBCK="R"
  Q
  ;
-LIST(RLIST,IEN,EFIEN) ;Build a list of extract counting groups for 
- ;extract definition.
+LIST(RLIST,IEN,EFIEN) ;Build a list of extract findings for parameter.
  N EPCLASS,IND,FNAME,NAME,PLIST
  ;If called for a selected extract finding build list of groups
  I EFIEN D
@@ -143,7 +142,7 @@ LIST(RLIST,IEN,EFIEN) ;Build a list of extract counting groups for
  S NAME=""
  F  S NAME=$O(^PXRM(810.8,"B",NAME)) Q:NAME=""  D
  .S IND=$O(^PXRM(810.8,"B",NAME,"")) Q:'IND
- .;For extract counting rule only include finding counting groups
+ .;For extract finding rule only include finding rule's groups
  .I EFIEN,'$D(GROUP(IND)) Q
  .S FNAME=$P($G(^PXRM(810.8,IND,0)),U)
  .S EPCLASS=$P($G(^PXRM(810.8,IND,100)),U)

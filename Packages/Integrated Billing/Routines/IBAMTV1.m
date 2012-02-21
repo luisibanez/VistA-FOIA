@@ -1,5 +1,5 @@
 IBAMTV1 ;ALB/CPM - BUILD ARRAY OF BILLABLE EPISODES ; 31-MAY-94
- ;;2.0;INTEGRATED BILLING;**15,33,91,132,153,293**;21-MAR-94;Build 1
+ ;;2.0;INTEGRATED BILLING;**15,33,91,132,153**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 CARE ; Build an array of episodes to be back-billed.
@@ -54,8 +54,8 @@ CARE ; Build an array of episodes to be back-billed.
  ... S Z=$O(IBPB(0)) Q:'Z
  ...;
  ... ;Check any visits for that date for dispositions, add-edits
- ... I Z=3 Q:$D(^TMP("IBAMTV",$J,IBOE0\1))
- ... I Z=2 Q:$S($D(^TMP("IBAMTV",$J,IBOE0\1)):1,1:$$NBCSC^IBEFUNC($P(IBOE0,U,3),IBOE0\1))
+ ... I Z=3 Q:$D(^TMP("IBOE",$J,1,IBOE0\1))!($D(^TMP("IBOE",$J,2,IBOE0\1)))
+ ... I Z=2 Q:$S($D(^TMP("IBOE",$J,1,IBOE0\1)):1,1:$$NBCSC^IBEFUNC($P(IBOE0,U,3),IBOE0\1))
  ...;
  ... S ^TMP("IBAMTV",$J,IBOE0\1)=IBOE0\1_U_U_IBOE
  K ^TMP("IBOE",$J)

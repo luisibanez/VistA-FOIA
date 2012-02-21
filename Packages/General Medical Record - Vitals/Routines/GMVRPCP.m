@@ -1,5 +1,5 @@
 GMVRPCP ;HOIFO/DP-RPC for GMV_PtSelect.pas ; 7/8/05 8:05am
- ;;5.0;GEN. MED. REC. - VITALS;**1,3,22**;Oct 31, 2002;Build 22
+ ;;5.0;GEN. MED. REC. - VITALS;**1,3**;Oct 31, 2002
  ; Integration Agreements:
  ; IA# 510 [Controlled] Calls to set ^DISV
  ; IA# 3027 [Supported] Calls to DGSEC4
@@ -20,7 +20,7 @@ ADD(X) ; [Procedure] Add line to @RESULTS@(...
  Q
  ;
 LOGSEC ; [Procedure] Log Security
- D NOTICE^DGSEC4(.GMVRET,DFN,DATA,3)
+ D NOTICE^DGSEC4(.GMVRET,DFN,DATA,1)
  S @RESULTS@(0)=$S(GMVRET:"1^Logged",1:"-1^Unable to log")
  Q
  ;
@@ -85,7 +85,7 @@ SELECT ; [Procedure] Select patient
  ;  GMVRET: [Private] Scratch
  ;  GMVX: [Private] Scratch
  ; New private variables
- NEW IENS,GMVCNT,GMVDFN,GMVFLD,GMVHLIEN,GMVI,GMVID,GMVIDS,GMVRET,GMVX,GMVIDIEN
+ NEW IENS,GMVDFN,GMVFLD,GMVID,GMVIDIEN,GMVIDS,GMVRET,GMVX
  I '$D(^DPT(+$G(DFN),0))#2 S @RESULTS@(0)="-1^No such patient" Q
  S ^DISV(DUZ,"^DPT(")=DFN ;spacebar return
  S @RESULTS@(0)="1^Required Identifiers & messages"
@@ -107,6 +107,7 @@ SELECT ; [Procedure] Select patient
  S GMVID=GMVID_U_$$GET1^DIQ(2,IENS,.1)
  S GMVIDIEN=$P(GMVID,U,3)
  S GMVIDIEN=$$IDIEN(GMVIDIEN)
+ S GMVID=GMVID_U_GMVIDIEN
  S @RESULTS@($O(@RESULTS@(""),-1)+1)=GMVID
  S GMVID="$$PTID^"_$$GET1^DID(2,.101,"","LABEL")
  S GMVID=GMVID_U_$$GET1^DIQ(2,IENS,.101)
@@ -150,9 +151,7 @@ SELECT ; [Procedure] Select patient
 IDIEN(GMVIEN) ;
  S GMVIEN=$G(GMVIEN)
  I GMVIEN="" Q ""
- S GMVIEN=$O(^DIC(42,"B",GMVIEN,0))
- I 'GMVIEN Q ""
- S GMVIEN=$P($G(^DIC(42,+GMVIEN,44)),"U",1)
+ S GMVIEN=$O(^SC("B",GMVIEN,0))
  Q GMVIEN
  ;
 CCOW ; Return CCOW site and production indicator

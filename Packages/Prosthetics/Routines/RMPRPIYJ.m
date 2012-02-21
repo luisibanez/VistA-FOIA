@@ -1,5 +1,5 @@
 RMPRPIYJ ;HINCIO/RVD-ISSUE FROM STOCK / CONT. ;9/18/02  07:39
- ;;3.0;PROSTHETICS;**61,128**;Feb 09, 1996
+ ;;3.0;PROSTHETICS;**61**;Feb 09, 1996
  ; RVD #61 - pip INVENTORY PHASE IIIa
  ;
  ;Per VHA Directive 10-93-142, this routine should not be modified.
@@ -8,7 +8,6 @@ QTY K DIR,Y S DIR(0)="660,5",DIR("B")=1 S:$P(R1(0),U,7) DIR("B")=$P(R1(0),U,7)
  I $D(DTOUT) X CK2 G ^RMPRPIYI
  I $D(DIRUT) G ^RMPRPIYI
  I $G(RMUBA),((RMUBA-Y)<0) D LOWBA^RMPRPIYI G 2^RMPRPIYI
- I $G(RMITQTY),RMITQTY<Y W !,"Issue quantity exceeds on-hand (",RMITQTY,") for scanned item bar code!!",! G QTY
  S $P(R1(0),U,7)=Y,$P(R1(0),U,16)=Y*RMPRUCST K DIR
  ;
 DATE ;delivery date is set to today's date

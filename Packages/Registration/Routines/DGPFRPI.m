@@ -1,5 +1,5 @@
 DGPFRPI ;ALB/RBS - PRF PRINCIPAL INVEST REPORT ; 7/26/05 3:39pm
- ;;5.3;Registration;**554,730**;Aug 13, 1993;Build 2
+ ;;5.3;Registration;**554**;Aug 13, 1993
  ;
  ;This routine will be used for selecting sort parameters to produce
  ;the DGPF PRINCIPAL INVEST REPORT for Patient Record Flags.
@@ -62,19 +62,16 @@ EN ;Entry point
  S:DGASK="A" DGSORT("DGPRINC")="A"
  ;
  D:DGASK="S"
- .S (DGQ,DGABORT)=0
- .N DIC,D,X,Y,I
- .S DIC="^DGPF(26.11,"
- .S DIC(0)="AEQZ"
- .S D="C"
- .S DIC("A")="Select Principal Investigator's name: "
- .D IX^DIC
- .I Y<0 S DGABORT=1 Q
- .S I=0
- .F  S I=$O(^DGPF(26.11,+Y,2,"B",I)) Q:'I  I $P(^VA(200,I,0),U)[X Q
- .I '$G(I) S DGABORT=1 Q
- .S DGSORT("DGPRINC")=I_U_$$EXTERNAL^DILFD(26.112,.01,"F",I)
- .S DGQ=1
+ . S (DGQ,DGABORT)=0
+ . S DGDIRA="Select Principal Investigator",DGDIRB=""
+ . S DGDIRH="Enter the Principal Investigator name"
+ . S DGDIRO="P^200:EMZ"
+ . S DGDIRS="I $D(^DGPF(26.11,""C"",+Y))"
+ . F  D  Q:(DGQ!DGABORT)
+ . . S DGASK=$$ANSWER^DGPFUT(DGDIRA,DGDIRB,DGDIRO,DGDIRH,DGDIRS)
+ . . I DGASK<1 S DGABORT=1 Q
+ . . S DGSORT("DGPRINC")=DGASK_U_$$EXTERNAL^DILFD(26.112,.01,"F",DGASK)
+ . . S DGQ=1
  ;
  Q:$G(DGABORT)
  ;

@@ -1,5 +1,5 @@
 IBCB1 ;ALB/AAS - Process bill after enter/edited ;2-NOV-89
- ;;2.0;INTEGRATED BILLING;**70,106,51,137,161,182,155,327,432**;21-MAR-94;Build 192
+ ;;2.0;INTEGRATED BILLING;**70,106,51,137,161,182,155**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO DGCRB1
@@ -26,8 +26,27 @@ IBCB1 ;ALB/AAS - Process bill after enter/edited ;2-NOV-89
  ;
 AUTH S IBMRA=$$REQMRA^IBEFUNC(IBIFN)
  S IBEND=0
- I IBMRA["R" D AUTH^IBCB11 G:IBEND END ;MRA normally required, but MEDIGAP ins co
- ;                         doesn't want/need it or MRA parameter off
+ I IBMRA["R" D  G:IBEND END ;MRA normally required, but MEDIGAP ins co
+ . ;                         doesn't want/need it or MRA parameter off
+ . N DIR,Y,X,IBINS,NXTINS
+ . S NXTINS=+$$POLICY^IBCEF(IBIFN,1,$$COBN^IBCEF(IBIFN)+1)  ; next ins
+ . S IBINS=$P($G(^DIC(36,NXTINS,0)),U)   ; name of next insurance
+ . Q:$$MCRWNR^IBEFUNC(NXTINS)            ; quit if its Medicare
+ . ;
+ . S DIR(0)="YO",DIR("B")="YES",DIR("A",1)=" "
+ . S DIR("A",2)="This bill has prior insurance of MEDICARE, but"
+ . I +$P($G(^IBE(350.9,1,8)),U,10)'<2 D
+ .. S DIR("A",3)="Ins Co, "_IBINS_", does not want/need an MRA."
+ . E  D
+ .. S DIR("A",3)="the site parameter for MRA Requests is turned off."
+ . S DIR("A",4)=" "
+ . S DIR("A")="Do you want this bill to go directly to "_IBINS
+ . S DIR("?",1)="If you answer NO, the bill will not be authorized."
+ . S DIR("?")="If you answer YES, this bill will automatically become a "_$P("secondary^tertiary",U,$$COBN^IBCEF(IBIFN))_" bill."
+ . D ^DIR K DIR
+ . I 'Y S IBEND=1 W !,"Can't continue",! Q
+ . D COBCHG^IBCCC2(IBIFN,+$$CURR^IBCEF2(IBIFN))
+ . Q
  ;
  W !!,"THIS BILL WILL "_$P("NOT ^",U,$$TXMT^IBCEF4(IBIFN)+1)_"BE TRANSMITTED ELECTRONICALLY"
  W !!,"WANT TO ",$S('IBMRA:"AUTHORIZE BILL",1:"REQUEST AN MRA")," AT THIS TIME" S %=2 D YN^DICN G:%=-1!(%=2) END
@@ -93,9 +112,7 @@ GENTX I %'=1 D:+$G(IBAC)=1 END,CTCOPY^IBCCCB(IBIFN) G END
  . I $D(IBTXPRT) D TXPRTS
  . D EN1^IBCF
  . I $D(IBTXPRT) D TXPRT
- . ;D MRA^IBCEMU1(IBIFN)       ; Printing the MRA ;WCJ;IB*2.0*432;MRA may have a diffierent claim number if this is tertiary
- . D MRA^IBCEMU1($$GETMRACL^IBCAPR(IBIFN))  ;WCJ;IB*2.0*432;see above
- . I $G(IBMRANOT) D EOBALL^IBCAPR2(IBIFN)  ;WCJ;IB*2.0*432 print all the EOBs (ask device once)
+ . D MRA^IBCEMU1(IBIFN)       ; Printing the MRA
  . I +$G(IBAC)=1 D END,CTCOPY^IBCCCB(IBIFN)
  . Q
  ;

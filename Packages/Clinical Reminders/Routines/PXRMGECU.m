@@ -1,8 +1,9 @@
-PXRMGECU ;SLC/AGP,JVS - CLINICAL REMINDERS ;7/14/05  10:45
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMGECU ;SLC/AGP,JVS - CLINICAL REMINDERS ;5/15/03  14:15
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  Q
 FINISHED(DFN,ANS) ;Delete 801.5 entries if finished
  ;ANS=Answer to YES/NO button should be 1 or will quit
+ ;if ANS =1 then will delete entries in 801.5
  Q:DFN=""
  Q:ANS=0
  S PATDA="" F  S PATDA=$O(^PXRMD(801.5,"B",DFN,PATDA)) Q:PATDA=""  D
@@ -31,9 +32,12 @@ CON(IEN,DFN) ;CHECK TO see if 2 DIA ARE DONE to display consult
 DEL(NOTEIEN) ;Delete HF and 801.5 Called from DELETE^TIUEDI1
  N DFN,TIUNODE,FILEIEN,GEC,ENCDT,GECNODE,GECT,GECDA,HFDA
  N HFARY
+ ;-Quits if noteien is not in 801.5-Means not GEC note
  Q:'$D(^PXRMD(801.5,"ACOPY",NOTEIEN))
  S DFN=$O(^PXRMD(801.5,"ACOPY",NOTEIEN,0))
+ ;-Get the Encounter Date and Time for DFN
  S ENCDT=$O(^PXRMD(801.5,"ACOPY",NOTEIEN,DFN,0))
+ ;-Save IEN's in 801.5 to delete
  I $D(^PXRMD(801.5,"ANOTE",NOTEIEN)) D
  .S GEC="" F  S GEC=$O(^PXRMD(801.5,"ANOTE",NOTEIEN,GEC)) Q:GEC=""  D
  ..S FILEIEN=0 F  S FILEIEN=$O(^PXRMD(801.5,"ANOTE",NOTEIEN,GEC,FILEIEN)) Q:FILEIEN=""  D
@@ -87,49 +91,27 @@ GECDT(DFN,GEC,VISIT,NOTEIEN) ;Get Date/Time from file
  S DFNDT=$O(^PXRMD(801.5,"AC",DFN,0))
  Q DFNDT
  ;
-NEWADD ;-Set Data into File 801.5 and 801.55 (history)
+NEWADD ;-Set Data into File 801.5
  Q:STOP=1
- D
- .Q:$D(^PXRMD(801.5,"AD",DFN,GEC))
- .S GEX(1,801.5,"+1,",.01)=DFN
- .S GEX(1,801.5,"+1,",.02)=$$NOW^XLFDT
- .S GEX(1,801.5,"+1,",.03)=GEC
- .S GEX(1,801.5,"+1,",.04)=+$G(NOTEIEN)
- .S GEX(1,801.5,"+1,",.05)=DUZ
- .S GEX(1,801.5,"+1,",.06)=DT
- .S ^PXRMD(801.5,"ACOPY",+$G(NOTEIEN),DFN,$G(GEX(1,801.5,"+1,",.02)),GEC,DT)=""
- .D UPDATE^DIE("","GEX(1)")
- ;--HISTORY FILE
- S GEX(2,801.55,"+1,",.01)=DFN
- S GEX(2,801.55,"+1,",.02)=$$NOW^XLFDT
- S GEX(2,801.55,"+1,",.03)=GEC
- S GEX(2,801.55,"+1,",.04)=+$G(NOTEIEN)
- S GEX(2,801.55,"+1,",.05)=DUZ
- S GEX(2,801.55,"+1,",.06)=DT
- D UPDATE^DIE("","GEX(2)")
+ Q:$D(^PXRMD(801.5,"AD",DFN,GEC))
+ S GEX(1,801.5,"+1,",.01)=DFN
+ S GEX(1,801.5,"+1,",.02)=$$NOW^XLFDT
+ S GEX(1,801.5,"+1,",.03)=GEC
+ S GEX(1,801.5,"+1,",.04)=+$G(NOTEIEN)
+ S ^PXRMD(801.5,"ACOPY",+$G(NOTEIEN),DFN,$G(GEX(1,801.5,"+1,",.02)),GEC,DT)=""
+ D UPDATE^DIE("","GEX(1)")
  K GEX
  S STOP=1
  Q
-CURADD ;-Set Data into File 801.5 and 801.55 (history)
+CURADD ;-Set Data into File 801.5
  Q:STOP=1
- D
- .Q:$D(^PXRMD(801.5,"AD",DFN,GEC))
- .S GEX(1,801.5,"+1,",.01)=DFN
- .S GEX(1,801.5,"+1,",.02)=$O(^PXRMD(801.5,"AC",DFN,0))
- .S GEX(1,801.5,"+1,",.03)=GEC
- .S GEX(1,801.5,"+1,",.04)=+$G(NOTEIEN)
- .S GEX(1,801.5,"+1,",.05)=DUZ
- .S GEX(1,801.5,"+1,",.06)=DT
- .S ^PXRMD(801.5,"ACOPY",+$G(NOTEIEN),DFN,$G(GEX(1,801.5,"+1,",.02)),GEC,DT)=""
- .D UPDATE^DIE("","GEX(1)")
- ;--HISTORY FILE
- S GEX(2,801.55,"+1,",.01)=DFN
- S GEX(2,801.55,"+1,",.02)=$O(^PXRMD(801.5,"AC",DFN,0))
- S GEX(2,801.55,"+1,",.03)=GEC
- S GEX(2,801.55,"+1,",.04)=+$G(NOTEIEN)
- S GEX(2,801.55,"+1,",.05)=DUZ
- S GEX(2,801.55,"+1,",.06)=DT
- D UPDATE^DIE("","GEX(2)")
+ Q:$D(^PXRMD(801.5,"AD",DFN,GEC))
+ S GEX(1,801.5,"+1,",.01)=DFN
+ S GEX(1,801.5,"+1,",.02)=$O(^PXRMD(801.5,"AC",DFN,0))
+ S GEX(1,801.5,"+1,",.03)=GEC
+ S GEX(1,801.5,"+1,",.04)=+$G(NOTEIEN)
+ S ^PXRMD(801.5,"ACOPY",+$G(NOTEIEN),DFN,$G(GEX(1,801.5,"+1,",.02)),GEC,DT)=""
+ D UPDATE^DIE("","GEX(1)")
  K GEX
  S STOP=1
  Q

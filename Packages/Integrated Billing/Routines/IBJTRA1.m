@@ -1,6 +1,6 @@
 IBJTRA1 ;ALB/AAS,ARH - TPI CT INSURANCE COMMUNICATIONS BUILD ; 4/1/95
- ;;2.0;INTEGRATED BILLING;**39,91,347,389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**39,91**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; copyed from IBTRC with modifications to show reviews for multiple events
  ;
@@ -60,7 +60,7 @@ EVNT(IBTRND) ; return line for display on event
  S IBTYP=+$P(IBTRND,U,18)
  S X=$$EXSET^IBJU1(IBTYP,356,.18)
  I IBTYP=2 S X=X_" of "_$P($G(^DIC(40.7,+$$SCE^IBSDU(+$P(IBTRND,U,4),3),0)),U,1)
- I IBTYP=3 S X=X_" of "_$P($$PIN^IBCSC5B(+$P(IBTRND,U,9)),U,2)
- I IBTYP=4 S X=X_" of "_$$FILE^IBRXUTL(+$P(IBTRND,U,8),.01)
+ I IBTYP=3 S Y=+$P($G(^RMPR(660,+$P(IBTRND,U,9),0)),U,6),X=X_" of "_$$EXSET^IBJU1(Y,660,4)
+ I IBTYP=4 S X=X_" of "_$P($G(^PSRX(+$P(IBTRND,U,8),0)),U,1)
  S X=X_" on "_$$DAT1^IBOUTL($P(IBTRND,U,6),"2P")
 EVNTQ Q X

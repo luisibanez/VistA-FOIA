@@ -1,5 +1,5 @@
-RORHL04 ;HOIFO/CRT,SG - HL7 RADIOLOGY: OBR,OBX ; 4/26/07 12:53pm
- ;;1.5;CLINICAL CASE REGISTRIES;**3**;Feb 17, 2006;Build 7
+RORHL04 ;HOIFO/CRT,SG - HL7 RADIOLOGY: OBR,OBX ; 10/27/05 11:19am
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
@@ -8,7 +8,6 @@ RORHL04 ;HOIFO/CRT,SG - HL7 RADIOLOGY: OBR,OBX ; 4/26/07 12:53pm
  ; #118-D        Read access to file #72 (controlled)
  ; #1995         $$CPT^ICPTCOD (supported)
  ; #2043         EN1^RAO7PC1 (supported)
- ; #2265         EN3^RAO7PC1 (supported)
  ; #10060        Read access to the file #200 (supported)
  ; #10090        Read access to the file #4 (supported)
  ;
@@ -28,8 +27,7 @@ RORHL04 ;HOIFO/CRT,SG - HL7 RADIOLOGY: OBR,OBX ; 4/26/07 12:53pm
  ;        0  Ok
  ;       >0  Non-fatal error(s)
  ;
- ; The ^TMP($J,"RAE1") and ^TMP($J,"RAE2") global nodes are used by
- ; this function.
+ ; The ^TMP($J,"RAE1") global node is used by the function.
  ;
 EN1(RORDFN,DXDTS) ;
  N CNI,DTI,ERRCNT,EXAMID,IDX,IENS,IENS74,RACN0,RC,RORENDT,RORSTDT,STR1,TMP
@@ -58,19 +56,15 @@ EN1(RORDFN,DXDTS) ;
  Q $S(RC<0:RC,1:ERRCNT)
  ;
  ;*****
-LOOP(ROR8NODE,OID,PREFIX) ;
+LOOP(TEXT,OID) ;
  N BR,CNT,I,I1,TMP
  S BR=$E(HLECH,3)_".br"_$E(HLECH,3)
  S RORSEG(3)=OID
  K RORSEG(5)
  ;---
- S I=$O(@ROR8NODE@("")),CNT=0
- D:$G(PREFIX)'=""
- . S CNT=CNT+1
- . S RORSEG(5,CNT)=$$ESCAPE^RORHL7(PREFIX)_$S(I'="":BR,1:"")
- ;---
- F  Q:I=""  S I1=$O(@ROR8NODE@(I))  D  S I=I1
- . S TMP=$$ESCAPE^RORHL7(@ROR8NODE@(I))
+ S I=$O(TEXT("")),CNT=0
+ F  Q:I=""  S I1=$O(TEXT(I))  D  S I=I1
+ . S TMP=$$ESCAPE^RORHL7(TEXT(I))
  . S CNT=CNT+1,RORSEG(5,CNT)=$S(I1'="":TMP_BR,1:TMP)
  ;---
  D:$D(RORSEG(5)) ADDSEG^RORHL7(.RORSEG)
@@ -167,18 +161,11 @@ OBR(RORIENS,RACN0) ;
  ;       >0  Non-fatal error(s)
  ;
 OBX(RORIENS,IENS74) ;
- N CASEIEN,RAENODE,ERRCNT,PTIEN,RC,RFS,RORBUF,RORSEG,RORTXT,TMP
+ N ERRCNT,RC,RORMSG,ROROUT,RORSEG,RORTXT,TMP
  S (ERRCNT,RC)=0
  D ECH^RORHL7(.CS)
  ;--- Check the parameters
  S:$E(RORIENS,$L(RORIENS))'="," RORIENS=RORIENS_","
- ;
- ;--- Load the data into the ^TMP($J,"RAE2")
- S CASEIEN=$P(IENS,","),PTIEN=$P(IENS,",",3)
- D EN3^RAO7PC1(PTIEN_U_$P(IENS,",",2)_U_CASEIEN)
- S TMP=$O(^TMP($J,"RAE2",PTIEN,CASEIEN,""))
- Q:TMP="" $$ERROR^RORERR(-100,,,PTIEN,"Nothing","EN3^RAO7PC1")
- S RAENODE=$NA(^TMP($J,"RAE2",PTIEN,CASEIEN,TMP))
  ;
  ;--- Initialize the segment
  S RORSEG(0)="OBX"
@@ -190,21 +177,24 @@ OBX(RORIENS,IENS74) ;
  S RORSEG(11)="F"
  ;
  ;-- Get the Report Text
- S TMP=$NA(@RAENODE@("R"))
- D:$D(@TMP)>1 LOOP(TMP,"RT"_CS_"Report Text"_CS_"VA080")
+ S TMP=$$GET1^DIQ(74,IENS74,200,,"RORTXT","RORMSG")
+ I $G(DIERR)  D  S ERRCNT=ERRCNT+1
+ . D DBS^RORERR("RORMSG",-99,,,74,IENS74)
+ I $D(RORTXT)>1  D  K RORTXT
+ . D LOOP(.RORTXT,"RT"_CS_"Report Text"_CS_"VA080")
  ;
  ;--- Get the Impression Report
- S TMP=$NA(@RAENODE@("I"))
- D:$D(@TMP)>1 LOOP(TMP,"IT"_CS_"Impression Text"_CS_"VA080")
+ S TMP=$$GET1^DIQ(74,IENS74,300,,"RORTXT","RORMSG")
+ I $G(DIERR)  D  S ERRCNT=ERRCNT+1
+ . D DBS^RORERR("RORMSG",-99,,,74,IENS74)
+ I $D(RORTXT)>1  D  K RORTXT
+ . D LOOP(.RORTXT,"IT"_CS_"Impression Text"_CS_"VA080")
  ;
- ;--- Get the Reason for Study and Clinical History
- S TMP=$NA(@RAENODE@("H")),RFS=$G(@RAENODE@("RFS"))
- D:($D(@TMP)>1)!(RFS'="")
- . S:RFS'="" RFS="Reason for Study: "_RFS
- . D LOOP(TMP,"CH"_CS_"Clinical History"_CS_"VA080",RFS)
- ;
- ;--- Get the Reason for Study (alternative approach)
- ;S RORBUF(1)=$G(@RAENODE@("RFS"))
- ;D:RORBUF(1)'="" LOOP("RORBUF","RS"_CS_"Reason for Study"_CS_"VA080")
+ ;--- Get the Clinical History
+ S TMP=$$GET1^DIQ(70.03,RORIENS,400,,"RORTXT","RORMSG")
+ I $G(DIERR)  D  S ERRCNT=ERRCNT+1
+ . D DBS^RORERR("RORMSG",-99,,,70.03,RORIENS)
+ I $D(RORTXT)>1  D  K RORTXT
+ . D LOOP(.RORTXT,"CH"_CS_"Clinical History"_CS_"VA080")
  ;
  Q ERRCNT

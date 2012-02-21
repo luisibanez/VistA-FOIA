@@ -1,6 +1,6 @@
 IBATO1 ;LL/ELZ - TRANSFER PRICING REPORTS CONT. ; 18-DEC-98
- ;;2.0;INTEGRATED BILLING;**115,266,389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**115,266**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 PAGE() ; performs page reads and returns 1 if quiting is needed
  N DIR,X,Y,DTOUT,DUOUT,DIRUT,DIROUT
@@ -39,7 +39,7 @@ DES(IBA,IBD,IBO) ; sets IBD subscripted with description for IBA
  I $P(IBA(0),"^",12)["PSRX(" D  Q
  . S IBD(1,IBO,IBB)=$E($$EX^IBATUTL(351.61,4.01,+IBA(4)),1,18)
  I $P(IBA(0),"^",12)["RMPR(660," D  Q
- . S IBD(1,IBO,IBB)=$E($P($$PIN^IBATUTL(+$P(IBA(0),"^",12)),U,2),1,18)
+ . S IBD(1,IBO,IBB)=$E($$EX^IBATUTL(351.61,4.04,$P(IBA(4),"^",4)),1,18)
  S IBDATE=$P($G(^IBAT(351.61,IBIEN,0)),U,4) ; Event Date
  S IBX=0 F  S IBX=$O(^IBAT(351.61,IBA,3,IBX)) Q:IBX<1  D
  . S IBX(0)=^IBAT(351.61,IBIEN,3,IBX,0)

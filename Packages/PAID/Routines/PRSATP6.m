@@ -1,5 +1,5 @@
-PRSATP6 ;HISC/MGD-Timekeeper Post Absence ;04/18/06
- ;;4.0;PAID;**102,108**;Sep 21, 1995
+PRSATP6 ;HISC/MGD-Timekeeper Post Absence ;12/12/05
+ ;;4.0;PAID;**102**;Sep 21, 1995
  ;       
 DBH(PPIP,DFN,WDAY,DBH,QUIT) ;
  ; Find Day Before Holiday
@@ -61,5 +61,4 @@ DBH(PPIP,DFN,WDAY,DBH,QUIT) ;
  . Q:EEND'=TEND  ; not last 15 minutes
  . I ETOT'="NP"&(ETOT'="WP") S QUIT=1 Q  ; last 15 wasn't non-pay
  . S DBH=PPIP_U_WDAY_U_ETOT
- I DBH="" S QUIT=1
  Q

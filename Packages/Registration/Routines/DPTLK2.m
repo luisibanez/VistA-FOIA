@@ -1,5 +1,5 @@
-DPTLK2 ;ALB/RMO,ERC - MAS Patient Look-up Add New Patient ; 07/07/06
- ;;5.3;Registration;**32,197,214,244,532,578,615,620,647,680,702,653**;Aug 13, 1993;Build 2
+DPTLK2 ;ALB/RMO - MAS Patient Look-up Add New Patient ; 2/8/05 8:13am
+ ;;5.3;Registration;**32,197,214,244,532,578,615,620,647,680**;Aug 13, 1993
  N DPTCT,DGVV,DPTLIDR,DGCOL S DGCOL=0
  I $D(DDS) D CLRMSG^DDS S DX=0,DY=DDSHBX+1 X DDXY
  I '$D(DUZ(0)) W:DIC(0)["Q" !?3,*7,"Unable to Add Patient. Your Fileman Access Code is undefined." S DPTDFN=-1 G Q
@@ -18,7 +18,6 @@ DPTLK2 ;ALB/RMO,ERC - MAS Patient Look-up Add New Patient ; 07/07/06
  I +Y>0 W ?24,"...new patient added",!?3
  S DPTDFN=Y S:$L(DPT("NO^")) DIE("NO^")=DPT("NO^")
  ;offer prompt of patient file components
- K DA,DIE,DR
  S DIE="^DPT(",DA=+Y,DR="S DIE(""NO^"")=""BACK"";.01///^S (X,DPTZNV)=$$NCEDIT^DPTNAME(DA,1,.DG20NAME)"
  D ^DIE K DR
  ;look for other (local) identifiers
@@ -49,10 +48,8 @@ CHKID1 I $D(^DD(2,DPTID,0)) S DPT("DR")=$S('$D(DPT("DR")):DPTID,1:DPT("DR")_";"_
 ASKID N DGREC W !?3,"PATIENT ",$P(DPTID0,U),": " R X:DTIME D  I $D(DTOUT)!$G(DUOUT)!($G(DGREC)=1) W !?6,*7,"<'",DPTX,"'> NOT ADDED" K X Q
  .S:'$T DTOUT=U
  .S:X="^" DUOUT=1
- .Q:$D(DTOUT)!($G(DUOUT))!(X["^")
+ .Q:$D(DTOUT)!($G(DUOUT))
  .I DPTID=.09 D
- ..;added with DG*5.3*653 - ERC
- ..I X="P"!(X="p") S DPTGID=$P(DPTGID,".09",1)_".09^.0906"_$P(DPTGID,".09",2)
  ..N DGNEWPT
  ..S DGNEWPT=1
  ..D REC^DGSEC

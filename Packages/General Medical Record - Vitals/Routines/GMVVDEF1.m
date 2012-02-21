@@ -1,5 +1,5 @@
 GMVVDEF1 ;BPOIFO/JG,HIOFO/FT - BUILD HL7 ORU^R01 MESSAGE FOR VITALS ; 20 Sep 2005  4:36 PM
- ;;5.0;GEN. MED. REC. - VITALS;**5,8,12,17,11**;Oct 31, 2002
+ ;;5.0;GEN. MED. REC. - VITALS;**5,8,12,17**;Oct 31, 2002
  ;11/30/2005 KAM/BAY Remedy Calls 121661 and 122742 changes for HL7 message
 VALID ;;VDEF HL7 MESSAGE BUILDER
  ; Creates HL7 V2.4 ORU^R01 message for vitals
@@ -74,7 +74,7 @@ ORC S S=S+1,OUTX="RE"
  ;
  ; Enterer's location
  I $P(VTLDAT,U,5)'="" D
- . S X=$G(^SC($P(VTLDAT,U,5),0)),VAL=$$HL7RC($P(X,U,2))_HLCM_$P(VTLDAT,U,5)
+ . S X=$G(^SC($P(VTLDAT,U,5),0)),VAL=$$HL7RC($P(X,U,2))
  . S $P(VAL,HLCM,9)=$$HL7RC($P(X,U)),$P(OUTX,HLFS,13)=VAL
  . I +$P(X,U,15) S X=$$SITE^VASITE($P(VTLDAT,U),$P(X,U,15)) S:X=-1 X=""
  . E  S X=""

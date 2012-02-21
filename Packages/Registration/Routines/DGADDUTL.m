@@ -1,5 +1,5 @@
-DGADDUTL ;ALB/PHH,EG,BAJ,ERC,CKN,TDM-PATIENT ADDRESS ; 4/2/09 2:29pm
- ;;5.3;Registration;**658,695,730,688,808**;Aug 13, 1993;Build 4
+DGADDUTL ;ALB/PHH,EG-PATIENT ADDRESS; 12/06/2005
+ ;;5.3;Registration;**658,695**;Aug 13, 1993
  Q
 ADDR ; validate/edit Patient address (entry for DG ADDRESS UPDATE option)
  N %,QUIT,DIC,Y,DFN,USERSEL
@@ -11,7 +11,6 @@ ADDRLOOP ;
  Q:Y'>0
  ;
  S DFN=+Y,QUIT=0
- L +^DPT(DFN):3 E  W !!,"Patient is being edited. Try again later."  G ADDR
  F  D  Q:QUIT
  .W !!,"Do you want to update the (P)ermanent Address, (T)emporary Address, or (B)oth? "
  .R USERSEL:300
@@ -23,7 +22,6 @@ ADDRLOOP ;
  .I USERSEL="P"!(USERSEL="B") W ! D UPDATE(DFN,"PERM")
  .I USERSEL="T"!(USERSEL="B") D UPDATE(DFN,"TEMP")
  .S QUIT=1
- L -^DPT(DFN)
  G ADDRLOOP
 ADD(DFN) ; validate/edit Patient address (entry point for routine DGREG)
  ;         Input  -- DFN
@@ -65,25 +63,43 @@ UPDATE(DFN,TYPE) ; Update the Address
  Q
 UPDDTTM(DFN,TYPE) ; Update the PATIENT file #2 with the current date and time
  ;
- D UPDDTTM^DGADDUT2(DFN,TYPE)
+ N %H,%,X,%Y,%D,%M,%I,ADDDTTM,DIE,DA,DR
+ D NOW^%DTC
+ S ADDDTTM=%,DIE="^DPT(",DA=DFN
+ ;
+ ; If it's the Temporary Address, the field is .12113
+ ; If not, it should be the Permanent Address and the default field is .118
+ S DR=$S(TYPE="TEMP":".12113///^S X=ADDDTTM",1:".118///^S X=ADDDTTM")
+ D ^DIE
  Q
 ADDRED(DFN,FLG) ; Address Edit (Code copied from DGREGAED and modified)
  ;Input:
- ;  DFN (required) - Internal Entry # of Patient File (#2)
+ ;  DFN (required) - Interal Entry # of Patient File (#2)
  ;  FLG (optional) - Flags of 1 or 0; if null, 0 is assumed. Details:
  ;    FLG(1) - if 1, let user edit phone numbers (field #.131 and #.132)
  ;    FLG(2) - if 1, display before & after address for user confirmation
- N SRC,%,DGINPUT,I,X,Y
- S SRC="ADDUTL"
- D EN^DGREGAED(DFN,.FLG,SRC)
- ;
+ K EASZIPLK
+ N DGINPUT,I,X,Y,%
+ I $G(DFN)="" Q
+ I ($G(DFN)'?.N) Q
+ S FLG(1)=$G(FLG(1)),FLG(2)=$G(FLG(2))
+ D INPUT^DGREGAED(.DGINPUT,DFN)
+ I $G(DGINPUT)=-1 Q
+ I $G(FLG(2))=1 D COMPARE^DGREGAED(.DGINPUT,DFN)
+ I '$$CONFIRM^DGREGAED() W !,"Change aborted." D EOP^DGREGAED Q
+ N DGPRIOR
+ D GETPRIOR(DFN,.DGPRIOR)
+ D SAVE^DGREGAED(.DGINPUT,DFN)
+ Q:'$$FILEYN(.DGPRIOR,.DGINPUT)
+ D GETUPDTS(DFN,.DGINPUT)
+ D UPDADDLG(DFN,.DGPRIOR,.DGINPUT)
  ; Update the Date/Time Stamp
  D UPDDTTM(DFN,TYPE)
  Q
 GETPRIOR(DFN,DGPRIOR) ; Get prior address fields.
  N DGCURR,DGN,DGARRY,DGCIEN,DGST,DGCNTY
- D GETS^DIQ(2,DFN_",",".111;.112;.113;.114;.115;.117;.1112;.131;.132;.121;.118;.119;.12;.122;.1171:.1173","I","DGCURR")
- F DGN=.111,.112,.113,.114,.115,.117,.1112,.131,.132,.121,.118,.119,.12,.122,.1171,.1172,.1173 D
+ D GETS^DIQ(2,DFN_",",".111;.112;.113;.114;.115;.117;.1112;.131;.132;.121;.118;.119;.12;.122","I","DGCURR")
+ F DGN=.111,.112,.113,.114,.115,.117,.1112,.131,.132,.121,.118,.119,.12,.122 D
  . S DGARRY("OLD",DGN)=$G(DGCURR(2,DFN_",",DGN,"I"))
  M DGPRIOR=DGARRY("OLD")
  Q
@@ -100,38 +116,41 @@ FILEYN(DGOLD,DGNEW) ; Determine whether or not to file to #301.7
  D
  .I DGOLD(.111)'=$G(DGNEW(.111)) S RETVAL=1 Q
  .I DGOLD(.112)'=$G(DGNEW(.112)) S RETVAL=1 Q
- .I DGOLD(.113)'=$G(DGNEW(.113)) S RETVAL=1 Q
  .I DGOLD(.114)'=$G(DGNEW(.114)) S RETVAL=1 Q
  .I DGOLD(.115)'=$P($G(DGNEW(.115)),"^",2) S RETVAL=1 Q
  .I DGOLD(.1112)'=$G(DGNEW(.1112)) S RETVAL=1 Q
  .I DGOLD(.117)'=$P($G(DGNEW(.117)),"^",2) S RETVAL=1 Q
  .I DGOLD(.131)'=$G(DGNEW(.131)) S RETVAL=1 Q
- .I DGOLD(.1171)'=$G(DGNEW(.1171)) S RETVAL=1 Q
- .I DGOLD(.1172)'=$G(DGNEW(.1172)) S RETVAL=1 Q
- .I DGOLD(.1173)'=$P($G(DGNEW(.1173)),"^",2) S RETVAL=1 Q
- .I DGOLD(.121)'=$G(DGNEW(.121)) S RETVAL=1 Q
  Q RETVAL
-FOREIGN(DFN,CIEN,FILE,FIELD,COUNTRY) ;
- ; ** NOTE we have to default the value for "US" into the prompt if it is blank
- N FORGN,DA,DIR,DTOUT,DUOUT,DIROUT,DONE,INDX
- S:'$G(FILE) FILE=2  I '$G(FIELD) S FIELD=.1173
- S DIR(0)=FILE_","_FIELD,DA=DFN,DONE=0
- S DIR("B")=$E($$CNTRYI^DGADDUTL(CIEN),1,19) I DIR("B")=-1 S DIR("B")="UNKNOWN COUNTRY"
- F  D  Q:DONE
- . D ^DIR
- . I $D(DTOUT) S DONE=1,FORGN=-1 Q
- . I $D(DUOUT)!$D(DIROUT) W !,"EXIT NOT ALLOWED" Q
- . I $D(DIRUT) W !,"This is a required response." Q
- . S COUNTRY=$P($G(Y),"^",2),FORGN=$$FORIEN($P($G(Y),"^")),DONE=1
- Q FORGN
 UPDADDLG(DFN,DGPRIOR,DGINPUT) ; Update the IVM ADDRESS CHANGE LOG file #301.7
  ;
- D UPDADDLG^DGADDUT2(DFN,.DGPRIOR,.DGINPUT)
+ N DGDATA
+ ; Zero node:
+ S DGDATA(.01)=DGINPUT(.118)
+ S DGDATA(1)=DFN
+ S DGDATA(2)=DGINPUT(.122)
+ S DGDATA(3)=DGINPUT(.119)
+ S DGDATA(3.5)=DGINPUT(.12)
+ ;
+ ; One node:
+ S DGDATA(4)=DGPRIOR(.118)
+ S DGDATA(5)=DGPRIOR(.122)
+ S DGDATA(6)=DGPRIOR(.12)
+ S DGDATA(7)=DGPRIOR(.119)
+ S DGDATA(8)=DGPRIOR(.131)
+ S DGDATA(9)=DGPRIOR(.111)
+ S DGDATA(10)=DGPRIOR(.112)
+ S DGDATA(11)=DGPRIOR(.114)
+ S DGDATA(12)=DGPRIOR(.117)
+ S DGDATA(13)=DGPRIOR(.115)
+ S DGDATA(14)=DGPRIOR(.1112)
+ ;
+ I $$ADD^DGENDBS(301.7,,.DGDATA) ;
  Q
 EDITTADR(DFN) ; Edit Temporary Address
  N DGPRIOR,DGCH,DGRPAN,DGDR,DGRPS
  I $G(DFN)="" Q
- ;I ($G(DFN)'?.N) Q
+ I ($G(DFN)'?.N) Q
  ;
  ; Get the current Temporary Address and display it
  D GETTADR(DFN,.DGPRIOR)
@@ -146,14 +165,14 @@ EDITTADR(DFN) ; Edit Temporary Address
  Q
 GETTADR(DFN,DGPRIOR) ; Get prior temporary address fields.
  N DGCURR,DGN,DGARRY,DGCIEN,DGST,DGCNTY
- D GETS^DIQ(2,DFN_",",".1211;.1212;.1213;.1214;.1215;.1216;.1217;.1218;.12105;.1219;.12111;.12112;.12113;.12114;.1221:.1223","I","DGCURR")
- F DGN=.1211,.1212,.1213,.1214,.1215,.1216,.1217,.1218,.12105,.1219,.12111,.12112,.12113,.12114,.1221,.1222,.1223 D
+ D GETS^DIQ(2,DFN_",",".1211;.1212;.1213;.1214;.1215;.1216;.1217;.1218;.12105;.1219;.12111;.12112;.12113;.12114","I","DGCURR")
+ F DGN=.1211,.1212,.1213,.1214,.1215,.1216,.1217,.1218,.12105,.1219,.12111,.12112,.12113,.12114 D
  .S DGARRY("OLD",DGN)=$G(DGCURR(2,DFN_",",DGN,"I"))
  M DGPRIOR=DGARRY("OLD")
  Q
 DISPTADR(DFN,DGARRY) ; Display Temporary Address
  N DGADRACT,DGADR1,DGADR2,DGADR3,DGCITY,DGSTATE,DGZIP
- N DGCOUNTY,DGPHONE,DGFROMDT,DGTODT,DGPROV,DGPCODE,DGCNTRY,DGFORN
+ N DGCOUNTY,DGPHONE,DGFROMDT,DGTODT
  ;
  S DGADRACT=$G(DGARRY(.12105))
  S DGADR1=$G(DGARRY(.1211))
@@ -167,11 +186,6 @@ DISPTADR(DFN,DGARRY) ; Display Temporary Address
  .S DGCOUNTY=$P(^DIC(5,DGSTATE,1,DGCOUNTY,0),"^")_" ("_$P(^DIC(5,DGSTATE,1,DGCOUNTY,0),"^",4)_")"
  I DGADRACT'="Y" S DGCOUNTY="NOT APPLICABLE"
  I DGSTATE'="",$D(^DIC(5,DGSTATE,0)) S DGSTATE=$P(^DIC(5,DGSTATE,0),"^",2)
- S DGPROV=$G(DGARRY(.1221))
- S DGPCODE=$G(DGARRY(.1222))
- S DGCNTRY=$G(DGARRY(.1223))
- S DGFORN=$$FORIEN(DGCNTRY)
- I DGCNTRY]"" S DGCNTRY=$$CNTRYI(DGCNTRY)
  S DGPHONE=$G(DGARRY(.1219))
  S DGFROMDT=$$FMTE^XLFDT($G(DGARRY(.1217)))
  S DGTODT=$$FMTE^XLFDT($G(DGARRY(.1218)))
@@ -181,9 +195,6 @@ DISPTADR(DFN,DGARRY) ; Display Temporary Address
  .W:DGADR1'="" !?9,DGADR1
  .W:DGADR2'="" !?9,DGADR2
  .W:DGADR3'="" !?9,DGADR3
- .I DGFORN=0 D
- ..W !?9,$S(DGCITY'="":DGCITY,1:"")_$S(DGCITY'="":",",1:" ")_$S(DGSTATE'="":DGSTATE,1:"")_" "_$S(DGZIP'="":DGZIP,1:"")
- .I DGFORN W !?9,$S(DGPCODE'="":DGPCODE,1:"")_" "_$S(DGCITY'="":DGCITY,1:"")_$S(DGCITY'="":",",1:" ")_$S(DGPROV'="":DGPROV,1:"")
  .W !?9,$S(DGCITY'="":DGCITY,1:"")_","_$S(DGSTATE'="":DGSTATE,1:"")_" "_$S(DGZIP'="":DGZIP,1:"")
  .W !," County: "_DGCOUNTY
  .W !,"  Phone: "_DGPHONE
@@ -196,48 +207,3 @@ DISPTADR(DFN,DGARRY) ; Display Temporary Address
  .W !,"  Phone: NOT APPLICABLE"
  .W !,"From/To: NOT APPLICABLE"
  Q
-COUNTRY(DGC) ;
- ;where DGC is the external value of the country
- ;return value is in upper case display mode
- ;if DGC is invalid, return -1
- N DGCC,DGIEN
- ; if input is NULL change to US
- I $G(DGC)="" S DGC="USA"
- ; Get IEN from B index, error if not found
- S DGIEN=$O(^HL(779.004,"B",DGC,"")) Q:DGIEN']"" -1
- ; xlate IEN to POSTAL NAME
- S DGCC=$P(^HL(779.004,DGIEN,"SDS"),U,3)
- ; if POSTAL NAME = "<NULL>" return DESCRIPTION
- I DGCC="<NULL>" D
- . S DGCC=$$UPPER^DGUTL($P(^HL(779.004,DGIEN,0),U,2))
- Q DGCC
-FOR(DGC) ;returns a 1 if address is foreign, a 0 if domestic, -1 if DGC is not valid
- ; DGC is the external value of the country (.01 field of file 779.004)
- N DGFOR
- S DGFOR=0
- I $G(DGC)="" Q DGFOR
- I '$D(^HL(779.004,"B",DGC)) Q -1
- I DGC'="USA" S DGFOR=1
- Q DGFOR
-CNTRYI(DGIEN) ;where DGC is the internal value of the country
- ;return DGC as the display value for the country
- ;if the input value is not a valid IEN, return -1
- ;if the input value is null, return null
- N DGCC
- I $G(DGIEN)="" Q ""
- I '$D(^HL(779.004,DGIEN,0)) Q -1
- ; xlate IEN to POSTAL NAME
- S DGCC=$P(^HL(779.004,DGIEN,"SDS"),U,3)
- ; if POSTAL NAME = "<NULL>" return DESCRIPTION
- I DGCC="<NULL>" D
- . S DGCC=$$UPPER^DGUTL($P(^HL(779.004,DGIEN,0),U,2))
- Q DGCC
-FORIEN(DGC) ;returns a 1 if address is foreign, a 0 if domestic, -1 if DGC is invalid
- ;DGC is the IEN of the country file (#779.004)
- N DGFOR
- S DGFOR=0
- I $G(DGC)="" Q DGFOR
- I DGC'?1.3N Q -1
- I '$D(^HL(779.004,DGC,0)) Q -1
- I DGC]"",(DGC'=$O(^HL(779.004,"B","USA",""))) S DGFOR=1
- Q DGFOR

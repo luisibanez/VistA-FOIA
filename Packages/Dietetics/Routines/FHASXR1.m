@@ -1,5 +1,5 @@
 FHASXR1 ; HISC/REL - Print Screening (cont) ;4/20/95  08:53
- ;;5.5;DIETETICS;**8**;Jan 28, 2005;Build 28
+ ;;5.5;DIETETICS;;Jan 28, 2005
 Q1 ; Print assessment
  I $G(DFN)="" Q
  S X="T",%DT="X" D ^%DT S DT=Y,Y=^DPT(DFN,0),NAM=$P(Y,"^",1),SEX=$P(Y,"^",2),DOB=$P(Y,"^",3)
@@ -14,52 +14,24 @@ Q1 ; Print assessment
  D ALG^FHCLN W !?4,"Food Allergies: " S ALG=$S(ALG="":"None on file",1:ALG) D LNE
  I $P(FHAP,"^",5)'="" W !?4,$P(FHAP,"^",5)
 Q2 W !!,"O:  Current Diet: " G:WARD="" Q21 I $D(^FHPT(FHDFN,"A",ADM,0)) D CUR^FHORD7 W Y
- S X(0)=$G(^FHPT(FHDFN,"A",ADM,0))
- I Y'="",FHORD>0 I $D(^FHPT(FHDFN,"A",ADM,"DI",FHORD,1)) S COM=^(1) W:COM'="" !?4,"Comment: ",COM
- S TYP=$P(X,"^",8) I TYP'="" W !?4,"Service: ",$S(TYP="T":"Tray",TYP="D":"Dining Room",1:"Cafeteria")
- S DTP=$P(X(0),"^",3) I DTP D DTP^FH W !?4,"Expires: ",DTP
- S TF=$P(X(0),"^",4) G:TF<1 F2
- S Y=^FHPT(FHDFN,"A",ADM,"TF",TF,0)
- S DTP=$P(Y,"^",1),COM=$P(Y,"^",5),TQU=$P(Y,"^",6),CAL=$P(Y,"^",7)
- D DTP^FH W !?4,"Tubefeed Ordered: ",DTP
- F TF2=0:0 S TF2=$O(^FHPT(FHDFN,"A",ADM,"TF",TF,"P",TF2)) Q:TF2<1  S XY=^(TF2,0) D LP
- W !?4,"Total Quantity: ",TQU," ml",?42,"Total KCAL: ",CAL
- W:COM'="" !?4,"Comment: ",COM
-F2 S X=$P($G(^DGPM(ADM,0)),"^",10) W !?4,"Adm. Dx: ",$E(X,1,27)
+ S X=$P($G(^DGPM(ADM,0)),"^",10) W !?4,"Adm. Dx: ",$E(X,1,27)
  S DTP=$P($G(^DGPM(ADM,0)),"^",1) D DTP^FH W ?41,"Adm. Date:   ",?59,DTP
 Q21 W !?4,"Age: ",AGE,?18,"Sex: ",SEX,?41,"Prior Assessment:" S ASN=$O(^FHPT(FHDFN,"N",0)) I ASN>0 S DTP=9999999-ASN D DTP^FH W ?59,DTP
  S Y=$S(ASN>0:^FHPT(FHDFN,"N",ASN,0),1:"")
  S HGT=$P(Y,"^",4),WGT=$P(Y,"^",6),DWGT=$P(Y,"^",8),UWGT=$P(Y,"^",9),IBW=$P(Y,"^",10),FRM=$P(Y,"^",11),AMP=$P(Y,"^",12),HGP=$P(Y,"^",5),WGP=$P(Y,"^",7)
  I HGT'="" S X1=$S(HGT\12:HGT\12_"'",1:"")_$S(HGT#12:" "_(HGT#12)_"""",1:""),X2=+$J(HGT*2.54,0,0)_" cm"
- S (FHHT,FHWWT,FHDWT,FHX1,FHX2)=""
- I DFN S GMRVSTR="WT" D EN6^GMRVUTL S FHDWT=$P(X,"^",1),FHWWT=$P(X,"^",8),GMRVSTR="HT" D EN6^GMRVUTL S FHHT=$P(X,"^",8)
- I FHHT'="" S FHX1=$S(FHHT\12:FHHT\12_"'",1:"")_$S(FHHT#12:" "_(FHHT#12)_"""",1:""),FHX2=+$J(FHHT*2.54,0,0)_" cm"
- W !?4,"Vitals Height:",?18 W:FHX2'="" FHX2
- W:FHX1'="" " (",FHX1,")"
- S (FHX1,FHX2)=""
+ W !?4,"Height:" I HGT'="" W ?18,X2 W:HGP'="" " ",HGP W " (",X1,")"
  W ?41,"Frame Size:",?59,$S(FRM="S":"Small",FRM="M":"Medium",FRM="L":"Large",1:"")
- I FHWWT'="" S FHX1=FHWWT_" lbs",FHX2=+$J(FHWWT/2.2,0,1)_" kg"
- W !?4,"Vitals Weight:" W:FHX2'="" ?18,FHX2 W:FHX1'="" " (",FHX1,")"
- W ?41,"Weight Taken:"
- S DTP=""
- I FHDWT'="" S DTP=FHDWT D DTP^FH
- W ?59,DTP
- S DTP=DWGT D:DTP'="" DTP^FH
- ;W ?41,"Amputation %:",?59,AMP
- S (X1,X2)=""
+ W !?4,"Curr. Weight:",?41,"Amputation %:",?59,AMP
  I WGT'="" S X1=WGT_" lbs",X2=+$J(WGT/2.2,0,1)_" kg"
  W !?4,"Last Weight:" I WGT'="" W ?18,X2 W:WGP'="" " ",WGP W " (",X1,")"
- W ?41,"Weight Taken:"
- S DTP=DWGT D DTP^FH W:WGT'="" ?59,DTP
+ W ?41,"Weight Taken:" I DWGT'="" S DTP=DWGT D DTP^FH W ?59,DTP
  I UWGT'="" S X1=UWGT_" lbs",X2=+$J(UWGT/2.2,0,1)_" kg"
  W !?4,"Usual Weight:" I UWGT'="" W ?18,X2," (",X1,")"
- W ?41,"Last Weight/Usual Wt: " W:UWGT ?59,$J(WGT/UWGT*100,3,0),"%"
+ W ?41,"Weight/Usual Wt: " W:UWGT ?59,$J(WGT/UWGT*100,3,0),"%"
  I IBW'="" S X1=IBW_" lbs",X2=+$J(IBW/2.2,0,1)_" kg"
- W !?4,"Target Weight:" I IBW'="" W ?18,X2," (",X1,")"
- W ?41,"Last Weight/TBW:" W:IBW ?59,$J(WGT/IBW*100,3,0),"%"
- S BMI=""
- I FHWWT,FHHT S A2=FHHT*.0254,BMI=+$J(FHWWT/2.2/(A2*A2),0,1)
- W !?4,"Body Mass Index: ",BMI,?41,"Amputation %:",?59,AMP
+ W !?4,"Ideal Weight:" I IBW'="" W ?18,X2," (",X1,")"
+ W ?41,"Weight/IBW:" W:IBW ?59,$J(WGT/IBW*100,3,0),"%"
 Q3 S PX=4 D LAB^FHASM4
  W !!?32,"Laboratory Data",!?5,"Test",?30,"Result    units",?51,"Ref.   range",?67,"Date",!
  S N1=0 F K=0:0 S K=$O(LRTST(K)) Q:K=""  D LAB
@@ -97,5 +69,3 @@ FOOT ; Page Footer
 PAUSE ; Pause to Scroll
  I IOST?1"C".E R !!,"Press RETURN to continue." R X:DTIME S:'$T!(X["^") ANS="^" Q:ANS="^"  I "^"'[X W !,"Enter a RETURN to Continue." G PAUSE
  Q
-LP S TUN=$P(XY,"^",1),STR=$P(XY,"^",2),QUA=$P(XY,"^",3)
- W !?7,$P($G(^FH(118.2,TUN,0)),"^",1),", ",$S(STR=4:"Full",STR=1:"1/4",STR=2:"1/2",1:"3/4")," Str., ",QUA Q

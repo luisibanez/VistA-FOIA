@@ -1,5 +1,5 @@
-DGBTE1 ;ALB/SCK/GAH - BENEFICIARY TRAVEL FIND OLD CLAIM DATES  ; 10/10/06 11:17am
- ;;1.0;Beneficiary Travel;**8,12,13**;September 25, 2001;Build 11
+DGBTE1 ;ALB/SCK/EG - BENEFICIARY TRAVEL FIND OLD CLAIM DATES  ; 1/28/05 11:17am
+ ;;1.0;Beneficiary Travel;**8,12**;September 25, 2001
 DATE ;  get date for claim, either new or past date
  K ^TMP("DGBT",$J),^TMP("DGBTARA",$J),DIR
  I 'DGBTNEW S DIR("A",2)="Enter a 'P' to display Past CLAIM dates for editing."
@@ -70,18 +70,15 @@ CERT ;  get last BT certification,  get date, then get eligibility
  . X ^DD("DD") ; date conversion, y=cert date (internal)
  . S DGBTCD=Y,X=DGBTCA,X2="0$",X3=8 K Y D COMMA^%DTC S DGBTCA=X K X,X2,X3
 APPTS ;  search patient file for appointments through claim date (DTI+1),  adddates to array DGBTCL 
- N ERRCODE,DGARRAY,CLIEN,APTDT S DGARRAY("FLDS")="2;3;10;18"
+ N DGARRAY,CLIEN,APTDT S DGARRAY("FLDS")="2;3;10;18"
  S DGARRAY(4)=DFN,I=$$SDAPI^SDAMA301(.DGARRAY)
- ; I<0 = Error, I<0 = # of Records retrieved
- I I<0 S ERRCODE=$O(^TMP($J,"SDAMA301","")),I1=1,DGBTCL("ERROR")=^TMP($J,"SDAMA301",ERRCODE)
- I I>0 D
- .S CLIEN=""
- .F  S CLIEN=$O(^TMP($J,"SDAMA301",DFN,CLIEN)) Q:'CLIEN  D
- ..S APTDT=DGBTDTI\1
- ..F  S APTDT=$O(^TMP($J,"SDAMA301",DFN,CLIEN,APTDT)) Q:'APTDT!(APTDT>(DGBTDTI+1))  D
- ...S SDATA=^TMP($J,"SDAMA301",DFN,CLIEN,APTDT)
- ...S DGBTCL(APTDT)=$P($P(^TMP($J,"SDAMA301",DFN,CLIEN,APTDT),U,2),";",2)_U_$P($P(SDATA,U,3),";")
- ...S DGBTCL(APTDT)=DGBTCL(APTDT)_U_$P($P(SDATA,U,18),";")_U_$P($P(SDATA,U,10),";")
+ ;if dfn = 101, e.g., it's not clear if it is an error or clinic or patient
+ ;if an error, there will be no lower subscripts eg 01/20/2005
+ I $D(^TMP($J,"SDAMA301",101))=1 S I1=1,DGBTCL(101)="** Appointment Database Unavailable **"
+ I $D(^TMP($J,"SDAMA301",101))'=1 D
+ .S CLIEN="" F  S CLIEN=$O(^TMP($J,"SDAMA301",DFN,CLIEN)) Q:'CLIEN  D
+ ..S APTDT=DGBTDTI\1 F  S APTDT=$O(^TMP($J,"SDAMA301",DFN,CLIEN,APTDT)) Q:'APTDT!(APTDT>(DGBTDTI+1))  D
+ ...S DGBTCL(APTDT)=$P($P(^TMP($J,"SDAMA301",DFN,CLIEN,APTDT),U,2),";",2)_U_$P($P(^TMP($J,"SDAMA301",DFN,CLIEN,APTDT),U,3),";")_U_$P($P(^TMP($J,"SDAMA301",DFN,CLIEN,APTDT),U,18),";")_U_$P($P(^TMP($J,"SDAMA301",DFN,CLIEN,APTDT),U,10),";")
  K ^TMP($J,"SDAMA301"),DGARRAY,CLIEN,APTDT
 EXIT ; exit routine
  Q

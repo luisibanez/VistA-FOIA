@@ -1,5 +1,5 @@
 SCRPW18 ;RENO/KEITH/MRY - ACRP encounter consistency checker ; 21 JUL 2000  2:17 PM
- ;;5.3;Scheduling;**139,144,155,222,387,466**;AUG 13, 1993;Build 2
+ ;;5.3;Scheduling;**139,144,155,222,387**;AUG 13, 1993
 CHEK(ENCPTR,SDARY,SDSTR) ;Consistency checker for outpatient encounter transactions
  ;Required input: ENCPTR=OUTPATIENT ENCOUNTER record IEN
  ;Required input: SDARY=array (passed by reference) of HL7 segments to 
@@ -65,7 +65,7 @@ PP1 S SDPT0=^TMP("SCRPW",$J,SDIV,3,DFN),SDPTNA=$P(SDPT0,U),SDSN=$P(SDPT0,U,3)
  Q
  ;
 PP2 S SDCT=2,SDI="" F  S SDI=$O(^TMP("SCRPW",$J,SDIV,1,SDCG,SDCLN,SDORD,DFN,SDOE,SDI)) Q:SDI=""  S SDCT=SDCT+1
- D:$Y>(IOSL-SDCT) HDR(.SDT,"D") Q:SDOUT  W !!,$E(SDPTNA,1,24),?26,SDSN S Y=$P(SDOE0,U) X ^DD("DD") W ?39,$P(Y,":",1,2),?58,SDTY,?81,$E(SDCI,1,25),?107,$E(SDCO,1,25),!,?26,"Status: ",$P($G(^SD(409.63,+$P(SDOE0,U,12),0)),U)
+ D:$Y>(IOSL-SDCT) HDR(.SDT,"D") Q:SDOUT  W !!,$E(SDPTNA,1,24),?26,SDSN S Y=$P(SDOE0,U) X ^DD("DD") W ?39,$P(Y,":",1,2),?58,SDTY,?81,$E(SDCI,1,25),?107,$E(SDCO,1,25)
  S SDCT=0,SDI="" F  S SDI=$O(^TMP("SCRPW",$J,SDIV,1,SDCG,SDCLN,SDORD,DFN,SDOE,SDI)) Q:SDI=""!SDOUT  D
  .W ! W:'SDCT ?8,"Required elements:" S SDX=^TMP("SCRPW",$J,SDIV,1,SDCG,SDCLN,SDORD,DFN,SDOE,SDI) W ?27,$$DEF(SDX,104) S SDCT=SDCT+1
  .Q

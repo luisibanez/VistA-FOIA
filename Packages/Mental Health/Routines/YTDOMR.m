@@ -1,5 +1,5 @@
-YTDOMR ;ALB/ASF-DEPRESSION OUTCOME MODULE REPORT ; 5/7/07 10:39am
- ;;5.01;MENTAL HEALTH;**31,85**;Dec 30, 1994;Build 48
+YTDOMR ;ALB/ASF-DEPRESSION OUTCOME MODULE REPORT ;2/23/99  15:09
+ ;;5.01;MENTAL HEALTH;**31**;Dec 30, 1994
 EN81 ;
  D ^YTDOMR1
  S (YSCR,YSDEP,YSPA,YSPB,YSSEV,YSNOT)=0
@@ -77,10 +77,9 @@ ENG ;geriatric screen
  W !,"Felt depressed: " S YSI=2 D ENGQ
  W !,"Felt fearful: " S YSI=3 D ENGQ
  W !,"Sleep was restless: " S YSI=4 D ENGQ
- W !,"Felt hopeless about the future: " S YSI=5 D ENGQ
+ W !,"Felt hopeful about the future: " S YSI=5 D ENGQ
  S X=^YTD(601.2,YSDFN,1,YSET,1,YSED,1)
- S (YSMISS,YSDEP)=0 F I=1:1:4 S YSDEP=YSDEP+$E(X,I) S:$E(X,I)="X" YSMISS=YSMISS+1 ; ASF 10/20/06
- S:$E(X,5)?1N YSDEP=YSDEP+(3-$E(X,5)) S:$E(X,5)="X" YSMISS=YSMISS+1
+ S (YSMISS,YSDEP)=0 F I=1:1:5 S YSDEP=YSDEP+$E(X,I) S:$E(X,I)="X" YSMISS=YSMISS+1
  I YSMISS=1 S YSDEP=YSDEP+(YSDEP/4)
  I YSMISS>1 W !!,"The validity of this test is compromised as "_YSMISS_" of the 5 questions",!,"were not answered." Q
  W !!,"Score: "_YSDEP

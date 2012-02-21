@@ -1,6 +1,5 @@
-SDRPA00 ;BP-OIFO/OWAIN,ESW - Patient Appointment Information Transmission  ; 11/2/04 11:09am  ; 2/24/08 11:25am
- ;;5.3;Scheduling;**290,333,349,376,491**;Aug 13,1993;Build 53
- ;SD/491 - calling SRPA03 instead of SDRPA04  (dupl)
+SDRPA00 ;BP-OIFO/OWAIN,ESW - Patient Appointment Information Transmission  ; 11/2/04 11:09am
+ ;;5.3;Scheduling;**290,333,349,376**;Aug 13,1993
  Q
 EN ;manual entry
  N SDI,Y,ZTSK,ZTRTN,ZTDESC,ZTDTH,ZTIO,ZTSAVE,RUNID,REC
@@ -13,7 +12,7 @@ EN ;manual entry
  .S ZTDTH=Y,ZTRTN="START^SDRPA00",ZTIO=""
  .S ZTDESC="PAIT"
  .I RUNID I $P(^SDWL(409.6,RUNID,0),U,7)="" S SDCON=0 D
- ..W !,"The previous run errored out, not repaired!",!,"Please address a problem and use SD-PAIT REPAIR to fix the run."
+ ..W !,"The previous run errored out, not repaired!",!,"Please address a problem and then use option SD-PAIT REPAIR to fix the run."
  .Q:'SDCON
  .F SDI=1:1:20 D ^%ZTLOAD Q:$G(ZTSK)
  .I $G(ZTSK) W !,"Task # "_ZTSK_" queued!"
@@ -65,19 +64,18 @@ START ;Tasked entry
  ..N SDADT S SDADT=0 ;appt date/time
  ..S SDADT=0
  ..F  S SDADT=$O(^DPT("ASADM",SDDAM,DFN,SDADT)) Q:+SDADT'=SDADT!SDOUT  D
- ...I SDADT'>3030000 Q  ;only appointment scheduled for 2003 and later; sd/491
  ...I SDDAM'=$$GET1^DIQ(2.98,SDADT_","_DFN_",",20,"I") Q  ;compare creation dates
  ...; Check for 'stop task' request
- ...S SDCNT=SDCNT+1 I SDCNT#500=0 S SDOUT=$$S^%ZTLOAD I SDOUT D  N SDBCID,SDMCID,SDSTOP D SNDS19^SDRPA07(ZTSK,.SDBCID,.SDMCID) S SDSTOP=1 D MSGT^SDRPA04(CRUNID,SDPEN,SDFIN,,SDSTOP) K ^TMP("SDDPT",$J) Q
+ ...S SDCNT=SDCNT+1 I SDCNT#500=0 S SDOUT=$$S^%ZTLOAD I SDOUT D  N SDBCID,SDMCID,SDSTOP D SNDS19^SDRPA07(ZTSK,.SDBCID,.SDMCID) S SDSTOP=1 D MSGT^SDRPA03(CRUNID,SDPEN,SDFIN,,SDSTOP) K ^TMP("SDDPT",$J) Q
  ....N DA,DIE,DR,SDD,SDLAST D
  ....S SDLAST=$O(^SDWL(409.6,CRUNID,1,"B"),-1) S SDD=$P(^SDWL(409.6,CRUNID,1,SDLAST,0),U,7)-1
  ....S DA=CRUNID,DIE=409.6,DR="1.2///"_SDD D ^DIE
  ...N SDCL,SDSTAT,SDSTTY
  ...S SDCL=$$GET1^DIQ(2.98,SDADT_","_DFN_",",.01,"I")
- ...Q:SDCL=""  ; If this happens, there's something wrong.
+ ...Q:SDCL=""  ; If this happens, there's something wrong. Do we need to handle exceptions like this?
  ...;
  ...; Check status.
- ...; Appoinment made only before Sep 1, 2003
+ ...; If the appointment is finalized and it is the first run, do not send if the date appoinment made is before Sep 1, 2003
  ...; If it is not the first run, send but don't create a pending file
  ...; Otherwise add to pending file.
  ...D NOW^%DTC N STODAY S STODAY=X
@@ -110,10 +108,8 @@ START ;Tasked entry
  .F  S APPTID=$O(^SDWL(409.6,"AE","Y",RUNID,APPTID)) Q:APPTID=""!SDOUT  S REC=$G(^SDWL(409.6,RUNID,1,APPTID,0)) D
  ..IF REC="" K ^SDWL(409.6,"AE","Y",RUNID,APPTID) Q  ;anticipate
  ..S DFN=$P(REC,"^"),SDADT=$P(REC,"^",2)
- ..;evaluate SDADT - appt date/time for possible removal from sending
- ..I SDADT'>3030000 N DIK S DIK="^SDWL(409.6,"_RUNID_",1,",DA(1)=RUNID,DA=APPTID D ^DIK ;delete entry; not to be sent; sd/491
  ..; Check for 'stop task'
- ..S SDCNT=SDCNT+1 I SDCNT#500=0 S SDOUT=$$S^%ZTLOAD I SDOUT N SDBCID,SDMCID,SDSTOP D SNDS19^SDRPA07(ZTSK,.SDBCID,.SDMCID) S SDSTOP=1 D MSGT^SDRPA04(CRUNID,SDPEN,SDFIN,,SDSTOP) K ^TMP("SDDPT",$J) Q  ;
+ ..S SDCNT=SDCNT+1 I SDCNT#500=0 S SDOUT=$$S^%ZTLOAD I SDOUT N SDBCID,SDMCID,SDSTOP D SNDS19^SDRPA07(ZTSK,.SDBCID,.SDMCID) S SDSTOP=1 D MSGT^SDRPA03(CRUNID,SDPEN,SDFIN,,SDSTOP) K ^TMP("SDDPT",$J) Q  ;
  ..N SDCL,SDCLO,SDCE,SDSTAT,SDREJ,SDDAM,SDDAMO
  ..S SDCLO=$P(REC,"^",10)
  ..S SDREJ=$P(REC,"^",8),SDDAMO=$P(REC,"^",7) ;esw
@@ -146,19 +142,22 @@ START ;Tasked entry
  ...S DIC="^SDWL(409.6,"_CRUNID_",1,",DA(1)=CRUNID,DIC("P")=409.69,DIC(0)="X"
  ...K DO S X=DFN D FILE^DICN
  ...S DA=+Y,DIE=DIC,DA=+Y,DR="1///"_SDADT_";4///"_SDRET_";5///"_SD6A_";6///"_SDDAM_";8///"_SD8A_";9////"_SDCL D ^DIE
+ ...Q
  ..N DIC,DA D
  ...; not rejected can be sent only as 'S'- sent as final
  ...N SDRET S SDRET=$S(SDREJ'="":"R",1:"S") ; indicates that it was: R - sent as rejected, S - sent as final
  ...S DIC="^SDWL(409.6,"_RUNID_",1,",DA(1)=RUNID
  ...S DA=APPTID,DIE=DIC,DR="4////"_SDRET D ^DIE
+ ...Q
  ..D APPT^SDRPA08(DFN,SDADT,$$DTCONV^SDRPA08(SDDAM),SDCL,SDSTAT)
  ..S SDFF=$P(SDSTAT,"^",4) D STAT(SDSTTY,SDFF,.SDFIN,.SDPEN,.SDF)
  ..S SDTR=SDTR+1 I SDTR=5000 D SNDS19^SDRPA07(ZTSK,.SDBCID,.SDMCID) K ^TMP("SDDPT",$J) S SDTR=0
+ ..Q
  .Q
  Q:SDOUT
  I $O(^TMP("SDDPT",$J,"")) D SNDS19^SDRPA07(ZTSK,.SDBCID,.SDMCID)
  K ^TMP("SDDPT",$J)
- D MSGT^SDRPA04(CRUNID,SDPEN,SDFIN)
+ D MSGT^SDRPA03(CRUNID,SDPEN,SDFIN)
  Q
 STMES ;generate start message
  N SDS,SD870,SD87
@@ -180,10 +179,9 @@ STMES ;generate start message
  S SDAMX(3)=SDST_"  |"_SDDT_" |"_SDSTAT_"    |"_ZTSK
  ;
  I SDSTAT="Shutdown" S XMY("VHACIONHD@MED.VA.GOV")="" D
- .S SDAMX(4)=" Please start a REMEDY ticket for station "_SDST
+ .S SDAMX(4)=" Please start NOIS call for station "_SDST
  .S SDAMX(5)="SD-PAIT Logical Link has to be started."
- .S SDAMX(6)="Refer the ticket to Scheduling PAIT."
- .S SDAMX(7)=""
+ .S SDAMX(6)=""
  D ^XMD
  Q
  ;

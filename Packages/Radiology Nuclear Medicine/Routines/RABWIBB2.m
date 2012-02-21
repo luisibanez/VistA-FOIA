@@ -1,5 +1,5 @@
 RABWIBB2 ;HOIFO/MDM - Radiology Billing Awareness ;12/20/04 12:55am
- ;;5.0;Radiology/Nuclear Medicine;**57,70**;Mar 16, 1998;Build 7
+ ;;5.0;Radiology/Nuclear Medicine;**57**;Mar 16, 1998
  ; $$GETACCT^IBBAPI uses DBIA #4664
  ; Calls referencing PFSS Account Referance (field 90 file #75.1)) uses DBIA #4741
  ;
@@ -36,11 +36,11 @@ GA(RAOIFN) ; Get Account Reference
  ; CLINICAL INDICATORS RELATED TO PRIMARY DX
  ; Initialize gathering process variables.
  S S1="",RADX(92)=3,RADX(93)=1,RADX(94)=2,RADX(95)=4,RADX(96)=5
- S RADX(97)=6,RADX(99)=7,RADX(100)=8
+ S RADX(97)=6,RADX(99)=7
  S RABADAT=$G(^RAO(75.1,+RAOIFN,"BA"))
  S IBBDG1(1,3)=$P(RABADAT,U,1)                     ; PRIMARY DIAGNOSIS CODE
  S IBBZCL=""
- F P1=92:1:97,99,100 S RABAFLD=$P($P(^DD(75.1,P1,0),U,4),";",2) I $P(RABADAT,U,RABAFLD)]"" D
+ F P1=92:1:97,99 S RABAFLD=$P($P(^DD(75.1,P1,0),U,4),";",2) I $P(RABADAT,U,RABAFLD)]"" D
  . S S1=S1+1
  . ; IBBZCL(n,2)=clin. Indic. type, IBBZCL(n,3)={0,1,null}
  . S IBBZCL(S1,2)=RADX(P1)

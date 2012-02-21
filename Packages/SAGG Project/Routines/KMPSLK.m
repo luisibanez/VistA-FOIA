@@ -1,5 +1,5 @@
-KMPSLK ;OAK/KAK - Thru The Looking Glass ;5/1/07  10:29
- ;;2.0;SAGG;;Jul 02, 2007
+KMPSLK ;OAK/KAK - Thru The Looking Glass ;27 AUG 97 2:07 pm
+ ;;1.8;SAGG PROJECT;**1,2,3**;Jul 26, 2004
  ;
 EN(SESSNUM,SITENUM) ;
  ;---------------------------------------------------------------------
@@ -18,12 +18,8 @@ ZER ;-- collect zeroth node information
  .Q:'$D(^DIC(FNUM,0,"GL"))
  .S GNAM=$G(^DIC(FNUM,0,"GL")) Q:GNAM=""
  .;
- .; file# = ^ piece 1: file_name
- .;                 2: # of entries
- .;                 3: global_name
- .;                 4: file_version
- .;                 5: last id number
- .;                 6: global_name (GNAM) has embedded '^' - no extra 'U' needed
+ .; file# = file_name^# of entries^global_name^file_version^last id number
+ .; global_name (GNAM) has embedded '^' - no extra 'U' needed
  .S ^XTMP("KMPS",SITENUM,SESSNUM,"@ZER",FNUM)=$P(^DIC(FNUM,0),U)_U_$P($G(@(GNAM_"0)")),U,4)_GNAM_U_$G(^DD(+$P(^DIC(FNUM,0),U,2),0,"VR"))_U_$P($G(@(GNAM_"0)")),U,3)
  ;
 PKG ;-- collect package file information
@@ -45,6 +41,39 @@ SYS ;  Collect volume set (@VOL) and system (@SYS) information
  D EN^%ZOSVKSD(SITENUM,SESSNUM,.KMPSVOLS,OS),@OS
  ;
  K KMPSD,KMPSNM,KMPSV,KMPSVL
+ Q
+ ;
+DSM ;-- for DSM platform
+ ;
+ N CLSTRMEM,CSID,CSIDARRY,NODEARRY,NODENM,X
+ ;
+ S ^XTMP("KMPS",SITENUM,SESSNUM,"@SYS")=$ZV_U_$ZC(%GETSYI,"VERSION")
+ S CLSTRMEM=$ZC(%GETSYI,"CLUSTER_MEMBER")
+ I 'CLSTRMEM D  Q
+ .S NODENM=$ZC(%GETSYI,"NODENAME")
+ .S ^XTMP("KMPS",SITENUM,SESSNUM,"@SYS",NODENM)=$ZC(%GETSYI,"HW_NAME")_U_$ZC(%GETSYI,"ACTIVECPU_CNT")
+ D CLSTR
+ S NODENM=""
+ F  S NODENM=$O(NODEARRY(NODENM)) Q:NODENM=""  D
+ .S CSID=NODEARRY(NODENM)
+ .S ^XTMP("KMPS",SITENUM,SESSNUM,"@SYS",NODENM)=$ZC(%GETSYI,"HW_NAME",CSID)_U_$ZC(%GETSYI,"ACTIVECPU_CNT",CSID)
+ S X="ERR1^KMPSGE",@^%ZOSF("TRAP")
+ Q
+ ;
+CLSTR ;  Call $GETSYI using wild card to get CSID and NODENAME for all nodes
+ ;
+ S X="ERRCLU^KMPSLK",@^%ZOSF("TRAP"),$ZE=""
+ K CSIDARRY,NODEARRY
+ S CSIDARRY($ZC(%GETSYI,"NODE_CSID",-1))=""
+ F  S CSIDARRY($ZC(%GETSYI,"NODE_CSID",""))=""
+ERRCLU I $ZE'["NOMORENODE" ZQ
+ S CSID=""
+ F  S CSID=$O(CSIDARRY(CSID)) Q:CSID=""  S NODEARRY($ZC(%GETSYI,"NODENAME",CSID))=CSID
+ Q
+ ;
+MSM ;
+MSMV4 ;
+ S ^XTMP("KMPS",SITENUM,SESSNUM,"@SYS")=$ZV_U_$ZOS(4)
  Q
  ;
 CVMS ;-- for Cache for VMS platform

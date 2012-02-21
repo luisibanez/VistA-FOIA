@@ -1,6 +1,5 @@
 IBCEU2 ;ALB/TMP - EDI UTILITIES FOR AUTO ADD OF CODES ON BILL ;20-OCT-99
- ;;2.0;INTEGRATED BILLING;**51,137,155,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**51,137,155**;21-MAR-94
  ;
 AUTOCK(IBIFN,IBQUIET) ; Auto add any codes necessary based on data
  ; existing on bill, if needed.
@@ -17,7 +16,7 @@ AUTOCK(IBIFN,IBQUIET) ; Auto add any codes necessary based on data
  ;
  ; If outpatient bill and no discharge status, add code 01 as default
  I '$$INPAT^IBCEF(IBIFN,1),$$FT^IBCEF(IBIFN)=3 D
- . ;Default discharge status for outpt UB to '01'
+ . ;Default discharge status for outpt UB92 to '01'
  . D F^IBCEF("N-PATIENT STATUS","IBZ",,IBIFN)
  . I IBZ="" D
  .. N Z S Z=0 F  S Z=$O(^DGCR(399.1,"C","01",Z)) Q:'Z  I $P($G(^DGCR(399.1,Z,0)),U,6) Q

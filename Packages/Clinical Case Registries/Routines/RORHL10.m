@@ -1,9 +1,10 @@
-RORHL10 ;HOIFO/BH - HL7 SURGICAL PATHOLOGY DATA: OBR,OBX ; 3/13/06 9:24am
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORHL10 ;HOIFO/BH - HL7 SURGICAL PATHOLOGY DATA: OBR,OBX ; 8/25/05 11:27am
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
  ; #525          Read access to the multiple #63.08 (controlled)
+ ; #2503         LRDFN^LR7OR1 (controlled)
  ; #4343         $$SPATH^LA7UTL03 (controlled)
  ;
  Q

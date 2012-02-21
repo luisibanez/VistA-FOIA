@@ -1,21 +1,10 @@
-MHV7B1B ;WAS/GPM - HL7 message builder RTB^K13 Rx Profile ; 10/13/05 7:52pm [12/24/07 5:39pm]
- ;;1.0;My HealtheVet;**2**;Aug 23, 2005;Build 22
+MHV7B1B ;WAS/GPM - HL7 message builder RTB^K13 Rx Profile ; [8/22/05 11:45pm]
+ ;;1.0;My HealtheVet;;Aug 23, 2005
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  Q
  ;
-RDF(MSGROOT,CNT,LEN,HL) ;  Build RDF segment for Rx Profile data
- ;
- ;  Input:
- ;   MSGROOT - Root of array holding the message
- ;       CNT - Current message line counter
- ;       LEN - Current message length
- ;        HL - HL7 package array variable
- ;
- ;  Output:
- ;           - Populated message array
- ;           - Updated LEN and CNT
- ;
+RDF(HL) ;  Build RDF segment for Rx Profile data
  N RDF
  S RDF(0)="RDF"
  S RDF(1)=20
@@ -39,34 +28,26 @@ RDF(MSGROOT,CNT,LEN,HL) ;  Build RDF segment for Rx Profile data
  S RDF(2,18,1)="MHV Request Status Date",RDF(2,18,2)="TS",RDF(2,18,3)=26
  S RDF(2,19,1)="Remarks",RDF(2,19,2)="ST",RDF(2,19,3)=75
  S RDF(2,20,1)="SIG",RDF(2,20,2)="TX",RDF(2,20,3)=1024
+ Q $$BLDSEG^MHV7U(.RDF,.HL)
  ;
- S CNT=CNT+1
- S @MSGROOT@(CNT)=$$BLDSEG^MHV7U(.RDF,.HL)
- S LEN=LEN+$L(@MSGROOT@(CNT))
- Q
+RDT(MSGROOT,DATAROOT,CNT,HL) ;  Build RDT segments for Rx Profile data
  ;
-RDT(MSGROOT,DATAROOT,CNT,LEN,HL) ;  Build RDT segments for Rx Profile data
- ;
- ; Walks data in DATAROOT to populate MSGROOT with RDT segments
+ ; Walks data in DATAROOT to popoulate MSGROOT with RDT segments
  ; sequentially numbered starting at CNT
  ;
  ;  Integration Agreements:
- ;        10103 : FMTHL7^XLFDT
- ;         3065 : HLNAME^XLFNAME
+ ;         3065 : $$HLNAME^XLFNAME
  ;
  ;  Input:
  ;   MSGROOT - Root of array holding the message
  ;  DATAROOT - Root of array to hold extract data
  ;       CNT - Current message line counter
- ;       LEN - Current message length
  ;        HL - HL7 package array variable
  ;
  ;  Output:
  ;           - Populated message array
- ;           - Updated LEN and CNT
  ;
- N I,RX,RX0,RXP,RXN,RXD,RDT,SIG,SEG,PIEN,NAME,WPLEN
- D LOG^MHVUL2("MHV7B1B","BEGIN RDT","S","TRACE")
+ N I,RX,RX0,RXP,RXN,RXD,RDT,SIG,SEG,PIEN,NAME
  F I=1:1 Q:'$D(@DATAROOT@(I))  D
  . S RX=@DATAROOT@(I)
  . S RX0=@DATAROOT@(I,0)
@@ -88,9 +69,15 @@ RDT(MSGROOT,DATAROOT,CNT,LEN,HL) ;  Build RDT segments for Rx Profile data
  . S RDT(10)=$P(RX0,"^",7)                     ;Days Supply
  . S RDT(11)=$P(RX0,"^",4)                     ;Number of Refills
  . I PIEN D
- .. D FMTNAME2^MHV7BU(PIEN,200,.NAME,.HL,"XCN")
- .. M RDT(12,1)=NAME
- .. S RDT(12,1,1)=PIEN                            ;Provider IEN
+ .. S RDT(12,1,1)=PIEN                         ;Provider IEN
+ .. S NAME("FILE")=200,NAME("FIELD")=.01,NAME("IENS")=PIEN_","
+ .. S NAME=$$HLNAME^XLFNAME(.NAME,"","^")
+ .. S RDT(12,1,2)=$$ESCAPE^MHV7U($P(NAME,"^"),.HL)     ;family
+ .. S RDT(12,1,3)=$$ESCAPE^MHV7U($P(NAME,"^",2),.HL)   ;given
+ .. S RDT(12,1,4)=$$ESCAPE^MHV7U($P(NAME,"^",3),.HL)   ;middle
+ .. S RDT(12,1,5)=$$ESCAPE^MHV7U($P(NAME,"^",4),.HL)   ;suffix
+ .. S RDT(12,1,6)=$$ESCAPE^MHV7U($P(NAME,"^",5),.HL)   ;prefix
+ .. S RDT(12,1,7)=$$ESCAPE^MHV7U($P(NAME,"^",6),.HL)   ;degree
  .. Q
  . S RDT(13)=$$ESCAPE^MHV7U($P(RX0,"^",11),.HL)   ;Placer Order Number
  . S RDT(14)=$P(RXN,"^",3)                        ;Mail/Window
@@ -101,13 +88,10 @@ RDT(MSGROOT,DATAROOT,CNT,LEN,HL) ;  Build RDT segments for Rx Profile data
  . S RDT(19)=$$ESCAPE^MHV7U($P(RXN,"^",4),.HL)    ;Remarks
  . S CNT=CNT+1
  . S @MSGROOT@(CNT)=$$BLDSEG^MHV7U(.RDT,.HL)
- . S LEN=LEN+$L(@MSGROOT@(CNT))
  . Q:'SIG(0)
- . K SEG,WPLEN
- . D BLDWP^MHV7U(.SIG,.SEG,1024,0,.WPLEN,.HL)
+ . K SEG
+ . D BLDWPSEG^MHV7U(.SIG,.SEG,1024,.HL)
  . M @MSGROOT@(CNT)=SEG
- . S LEN=LEN+WPLEN
  . Q
- D LOG^MHVUL2("MHV7B1B","END RDT","S","TRACE")
  Q
  ;

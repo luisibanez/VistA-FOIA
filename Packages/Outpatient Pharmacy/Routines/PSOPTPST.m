@@ -1,10 +1,9 @@
 PSOPTPST ;BIR/DSD - Post Patient Selection Action ;07/25/96
- ;;7.0;OUTPATIENT PHARMACY;**7,71,88,146,157,143,225**;DEC 1997;Build 29
+ ;;7.0;OUTPATIENT PHARMACY;**7,71,88,146,157,143**;DEC 1997
  ;External reference to SDCO22 supported by DBIA 1579
  ;External reference to IBE(350.1,"ANEW" supported by DBIA 592
  ;External reference to PS(55 supported by DBIA 2228
  ;External reference to IBARX supported by DBIA 125
- ;External reference to $$GETSHAD^DGUTL3 supported by DBIA 4462
 START S PSOQFLG=0
  D GET ; Gets data from Patient file
  D DEAD G:PSOQFLG END ; Checks to see if patient still alive
@@ -89,7 +88,6 @@ QST ;Ask new questions for Copay
  I $$AO^SDCO22(PSODFN) S PSOIBQS(PSODFN,"VEH")=""
  I $$IR^SDCO22(PSODFN) S PSOIBQS(PSODFN,"RAD")=""
  I $$EC^SDCO22(PSODFN) S PSOIBQS(PSODFN,"PGW")=""
- I $L($T(GETSHAD^DGUTL3)) S:$$GETSHAD^DGUTL3(PSODFN)=1 PSOIBQS(PSODFN,"SHAD")=""
  I $P($$GETSTAT^DGMSTAPI(PSODFN),"^",2)="Y" S PSOIBQS(PSODFN,"MST")=""
  I $T(GETCUR^DGNTAPI)]"" N PSONCP,PSONCPX S PSONCPX=$$GETCUR^DGNTAPI(PSODFN,"PSONCP") I $P($G(PSONCP("IND")),"^")="Y" S PSOIBQS(PSODFN,"HNC")=""
  Q

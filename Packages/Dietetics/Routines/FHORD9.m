@@ -1,7 +1,7 @@
 FHORD9 ; HISC/REL/NCA/RVD - Diet Order Census ;7/1/94  14:24 
- ;;5.5;DIETETICS;**5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;;Jan 28, 2005
  ;
- ;patch #5 - added screen for cancelled guest meals.
+ ;RVD 2/17/04 -added Outpatient meals.
  ;
  D NOW^%DTC S DT=%\1 K %,^TMP($J)
  D DIV^FHOMUTL G:'$D(FHSITE) KIL
@@ -121,7 +121,6 @@ GUEST ;for guest meals.
  .I (FHPLNM'=""),(FHN'=FHPLNM) Q
  .F FHK=0:0 S FHK=$O(@FHTMPS@(FHN,FHI,FHJ,FHK)) Q:(FHK'>0)!(FHK>FHDT)  D
  ..S (FHRDAT,FHIJKDAT)=@FHTMPS@(FHN,FHI,FHJ,FHK)
- ..I $P(FHRDAT,U,7)="C" Q
  ..S (FHPDIET,FHDIET,FHSER,FHLOC)="***"
  ..S:$D(^FH(119.6,"B",FHI)) FHLOC=$O(^FH(119.6,"B",FHI,0))
  ..S:$G(FHLOC) FHSER=$P($G(^FH(119.6,FHLOC,0)),U,5)

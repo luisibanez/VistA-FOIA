@@ -1,5 +1,5 @@
 RGADT1 ;HIRMFO/GJC-BUILD ADT MESSAGES (A01/A03) ;09/21/99
- ;;1.0;CLINICAL INFO RESOURCE NETWORK;**4,14,17,27,28,31,34,45**;30 Apr 99;Build 9
+ ;;1.0;CLINICAL INFO RESOURCE NETWORK;**4,14,17,27,28,31,34**;30 Apr 99
  Q  ; quit if called from the top
  ;
 EN ; entry point to build/transmit ADT messages
@@ -165,8 +165,7 @@ BUILD ; build the ADT message
  I RGTYPE'=1&(RGTYPE'=3) S HLA("HLS",4)=$$EN^VAFHLPV1("",,RGFSTR,,HL("Q"),HL("FS"))
  S HLA("HLS",4)=$$FAC(HLA("HLS",4))
  ; adding ZPD segment for POW Status - patch P
- S HLA("HLS",5)=$$EN1^VAFHLZPD(DFN,"1,17,21,34") ;**45 changed to EN1 call and added PSEUDO SSN REASON TO ZPD SEGMENT
- ;**45 added 21 and 1 to ZPD call also
+ S HLA("HLS",5)=$$EN^VAFHLZPD(DFN,17)
  Q
 COMMANUM(FROM,TO) ;Build comma seperated list of numbers
  ;Input  : FROM - Starting number (default = 1)

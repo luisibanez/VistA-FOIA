@@ -1,5 +1,5 @@
 PSGCAPP ;BIR/CML3-PRINT DATA FOR ACTION PROFILE ;05 Oct 98 / 10:21 AM
- ;;5.0; INPATIENT MEDICATIONS ;**8,20,60,111,149,169**;16 DEC 97
+ ;;5.0; INPATIENT MEDICATIONS ;**8,20,60,111,149**;16 DEC 97
 LOOP ;
  D NOW^%DTC S PSGDT=%,PSGPDT=$$ENDTC2^PSGMI(PSGDT),CML=IO'=IO(0)!($E(IOST,1,2)'="C-")
  U IO I '$D(^TMP($J)) D  G DONE
@@ -10,7 +10,7 @@ LOOP ;
  . F  S PN=$O(^TMP($J,S1,WD,PN)) Q:PN=""!$D(PSJDLW)  S PI=$G(^(PN)) S:PI="" PI=$G(^TMP($J,S1,"zz",PN)) D H1
  ;
 DONE ;PSJ*5*149 Add WD1 to killed variables.
- W:CML&($Y) @IOF K AD,ALN,CML,DF,LINE,LN,MF,N,PG,PI,PPN,PS1,PSGPDT,RCT,RF,PID,TD,WD,PSJDLW,PSGVAMC,WD1,PSJCNTR,PSJAMO Q
+ W:CML&($Y) @IOF K AD,ALN,CML,DF,LINE,LN,MF,N,PG,PI,PPN,PS1,PSGPDT,RCT,RF,PID,TD,WD,PSJDLW,PSGVAMC,WD1 Q
  ;
 H1 ; first header for patient
  ; PSJ*5*149 Use WD1 to preserve value of WD
@@ -25,11 +25,7 @@ END ;
  S DF=1 W:'$D(PSJDLW) !!?16,LN,?40,LN_LN,!?16,"Date AND Time",?40,"PROVIDER'S SIGNATURE"
  D:$Y+10>IOSL NP1 W:'$D(PSJDLW) !!!?10,"MULTIDISCIPLINARY REVIEW",!?16,"(WHEN APPROPRIATE)",?40,LN_LN,!?40,"PHARMACIST'S SIGNATURE"
  D:$Y+6>IOSL NP1 W:'$D(PSJDLW) !!?40,LN_LN,!?40,"NURSE'S SIGNATURE"
- ; PSJ*5*169 Standardize AMO section to 10 lines.
- N PSJCNTR,PSJAMO
- I IOSL-$Y>10 D
- . W !!?3,"ADDITIONAL MEDICATION ORDERS:"
- . F PSJCNTR=1:1:10 W !!,LINE S PSJAMO=0 I $Y+9>IOSL S PSJAMO=1 D NP1
+ I IOSL-$Y>10 W !!?3,"ADDITIONAL MEDICATION ORDERS:" F  W !!,LINE Q:$Y+9>IOSL
  I  W:'$D(PSJDLW) !!?16,LN,?40,LN_LN,!?16,"Date AND Time",?40,"PROVIDER'S SIGNATURE",!
  E  F Q=$Y+5:1:IOSL-1 W !
  W:'$D(PSJDLW) !?2,PPN,?40,PID,?78-$L(PDOB),PDOB Q
@@ -42,8 +38,8 @@ ORDP ;
  W ?5,PSG(1),?46,$P(DRG,"^"),?49,$P(ND,"^",2),?55,$P(ND,"^",3),?61,$P(ND,"^") I NF!SM!$P(ND,"^",4) W ?65 W:NF "NF " W:$P(ND,"^",4) "WS " W:SM $E("HSM",SM,3)
  N X F X=1:0 S X=$O(PSG(X)) Q:'X  W !?5,PSG(X)
  I SI]"" W !?8,"Special Instructions: " F X=1:1:$L(SI," ") S Y=$P(SI," ",X) W:$X+$L(Y)>78 !?31 W Y," "
-ORDP1 ;*** Also being called from ^PSGCAPIV.   PSJ*5*169 Don't allow RENEW on one-time orders.
- W !!?5,"__TAKE NO ACTION     __DISCONTINUE     "_$S($P(DRG,"^")="O"!($G(QST)="O"):"       ",1:"__RENEW")_"   COST/DOSE: ",DCU,!?2,"------------------------------------------------------------------------",! Q
+ORDP1 ;*** Also being called from ^PSGCAPIV.
+ W !!?5,"__TAKE NO ACTION     __DISCONTINUE     __RENEW   COST/DOSE: ",DCU,!?2,"------------------------------------------------------------------------",! Q
  ;
 NP ;
  W:'$D(PSJDLW) !!?16,LN,?40,LN_LN,!?16,"Date AND Time",?40,"PROVIDER'S SIGNATURE"
@@ -57,8 +53,6 @@ NP1 ;
  W !?26,"UNIT DOSE ACTION PROFILE #2",?73-$L(PG),"Page: "_PG
  W !?+PSGVAMC,$P(PSGVAMC,U,2)
  W !?1,PPN,?40,PID,?60,PDOB
- I DF D  Q
- . I $G(PSJAMO)=1 W !!,"ADDITIONAL MEDICATION ORDERS (CONTINUED):",! Q
- . W !!,LINE
+ I DF W !!,LINE Q
  W !!," No. Action",?16,"Drug",?46,"ST Start Stop  Status/Info",!,ALN
  Q

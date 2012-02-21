@@ -1,6 +1,5 @@
-PRSALVR ;HISC/REL - Leave Request ;11/30/2004
- ;;4.0;PAID;**61,93**;Sep 21, 1995;Build 7
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRSALVR ;HISC/REL-Leave Request ;7-AUG-2000
+ ;;4.0;PAID;**61**;Sep 21, 1995
  S DFN="",SSN=$P($G(^VA(200,DUZ,1)),"^",9) I SSN'="" S DFN=$O(^PRSPC("SSN",SSN,0))
  I 'DFN W !!,*7,"Your SSN was not found in both the New Person & Employee File!" G EX
  S TLE=$P($G(^PRSPC(DFN,0)),"^",8) S:TLE="" TLE="   " S TLI=+$O(^PRST(455.5,"B",TLE,0))
@@ -14,32 +13,11 @@ N1 S DA=$P(^PRST(458.1,0),"^",3)+1 I $D(^PRST(458.1,DA)) S $P(^PRST(458.1,0),"^"
  S ZOLD=^PRST(458.1,DA,0) D ED
  K DIR S DIR("A")="Do you wish to enter another Leave Request? ",DIR(0)="YA",DIR("B")="No" W ! D ^DIR G PRSALVR:Y,EX Q
 ED ; Edit Leave Request
- ;
- N PPLCK,PPLCKE,SKIP
- ; if request is approved and employee has any part-time physician memos
- ; then lock appropriate pay periods
- S SKIP=0
- I $P(ZOLD,U,12),$$PTP^PRSPUT3($P(ZOLD,U,2)) D
- . ; lock applicable time cards
- . D LCK^PRSPAPU($P(ZOLD,U,2),$$FMADD^XLFDT($P(ZOLD,U,3),-1),$P(ZOLD,U,5),.PPLCK,.PPLCKE)
- . ; if problem locking time cards
- . I $D(PPLCKE) D
- . . S SKIP=1 ; set flag to skip edit of leave
- . . D TCULCK^PRSPAPU($P(ZOLD,U,2),.PPLCK) ; unlock any locked PP
- . . D RLCKE^PRSPAPU(.PPLCKE) ; report problems
- Q:SKIP  ; don't proceed with edit
- ;
  S $P(^PRST(458.1,DA,0),"^",16)=$S(ENT["D":"D",1:"H") S X="IOUON;IOUOFF" D ENDR^%ZISS
  S Y15=IOUON_"Number of "_$S(ENT["D":"Days",1:"Hours")_IOUOFF_":"
  S DDSFILE=458.1,DR="[PRSA LV REQ]" D ^DDS K DS
  I '$P(^PRST(458.1,DA,0),"^",3) S DIK="^PRST(458.1," D ^DIK K DIK Q
  I ZOLD=^PRST(458.1,DA,0) Q
- ;
- ; if timecards were locked (PTP), unpost the leave and remove the locks
- I $D(PPLCK) D
- . D ULR^PRSPLVA(ZOLD)
- . D TCULCK^PRSPAPU($P(ZOLD,U,2),.PPLCK)
- ;
  D NOW^%DTC S $P(^PRST(458.1,DA,0),"^",9,11)="R^"_DUZ_"^"_%,^PRST(458.1,"AR",DFN,DA)=""
  I $P(ZOLD,"^",12) S $P(^PRST(458.1,DA,0),"^",12,14)="^^" K ^(1)
  S Z1=$P($G(^PRST(458.1,DA,0)),"^",7) I "AL SL CB AD"[Z1 S PRT=0 D BAL^PRSALVS I BAL<0 D OK

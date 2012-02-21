@@ -1,7 +1,5 @@
-ECMFECS ;ALB/JAM - Event Capture Management - Event Code Screen Filer ;1 Jul 08
- ;;2.0; EVENT CAPTURE ;**25,33,47,55,65,95,100**;8 May 96;Build 21
- ;
- I $G(ECL0)'="" D MULTLOC Q  ;multiple location filing
+ECMFECS ;ALB/JAM-Event Capture Management - Event Code Screen Filer;27 Nov 00
+ ;;2.0; EVENT CAPTURE ;**25,33,47,55,65**;8 May 96
  ;
 FILE ;Used by the RPC broker to file EC Code Screens in file #720.3
  ;     Variables passed in
@@ -21,8 +19,6 @@ FILE ;Used by the RPC broker to file EC Code Screens in file #720.3
  ;       ^TMP($J,"ECMSG",n)=Success or failure to file in #720.3^Message
  ;
  N ECCH,ECERR,ECX,ECY,ECFLG,ECR,ECI,X,Y,DIK,DIE
- N ECLOC  ;protect from XREF reuse & kills
- N ECRES  ;prevent ECREAS overwrite
  S ECERR=0 D CHKDT I ECERR Q
  D VALDATA I ECERR Q
  I ECIEN'="" S ECFLG=0,ECX=$G(^ECJ(ECIEN,0)),ECY=$P(ECX,U) D  I ECERR Q
@@ -38,28 +34,20 @@ FILE ;Used by the RPC broker to file EC Code Screens in file #720.3
  .I $D(^ECJ("B",ECCH)) D  Q
  ..S ECERR=1,^TMP($J,"ECMSG",1)="0^EC Screen Exist" Q
  .D NEWIEN
- S DA=ECIEN,DIK="^ECJ(",ECRES=$S(ECREAS="Y":1,1:0) D IX^DIK
+ S DA=ECIEN,DIK="^ECJ(",ECREAS=$S(ECREAS="Y":1,1:0) D IX^DIK
  S ^ECJ("AP",ECL,ECD,ECC,ECP,ECIEN)="",^ECJ("APP",ECL,ECD,ECP,ECIEN)=""
- S $P(^ECJ(ECIEN,"PRO"),U)=ECP
+ S $P(^ECJ(ECIEN,"PRO"),U)=ECP,ECAC=$S($G(ECAC)'="":ECAC,1:"@")
  S DR="53////"_$S($G(ECSYN)'="":ECSYN,1:"@")_";54////"_$G(ECVOL,1)
- S DR=DR_";55////"_$S($G(ECAC)'="":ECAC,1:"@")_";56////"_ECRES,DIE="^ECJ(",DA=ECIEN
+ S DR=DR_";55////"_$G(ECAC)_";56////"_ECREAS,DIE="^ECJ(",DA=ECIEN
  D ^DIE K DA,DR,DIE
  I $D(DTOUT) D RECDEL S ^TMP($J,"ECMSG",1)="0^Record not Filed" Q
- I ECRES D
- .N ECLARR,ECLIEN
+ I ECREAS D
  .K DIC,DA,DR,ECX S DIC="^ECL(",DIC(0)="L",DLAYGO=720.5,ECR=0
  .F ECI=0:1 S ECX="ECRES"_ECI Q:'$D(@ECX)  S ECR=(@ECX) D
  ..Q:ECR=""  I '$D(^ECR(ECR,0)) Q
- ..S ECLARR(ECR)=""  ; control of valid passed in Procedure Reason Codes
  ..I '$D(^ECL("AD",ECIEN,ECR)) S X=ECR,DIC("DR")=".02////"_ECIEN
  ..K DD,DO,DLAYGO D FILE^DICN
- .;kill nodes no Procedure Reason Code passed in but "AD" Xref exists 
- .K DIK S DIK="^ECL(",DA=""
- .S ECR=0 F  S ECR=$O(^ECL("AD",ECIEN,ECR)) Q:ECR=""  D
- ..I $D(ECLARR(ECR)) Q  ;procedure reason code passed in - don't remove
- ..S ECLIEN=0 F  S ECLIEN=$O(^ECL("AD",ECIEN,ECR,ECLIEN)) Q:ECLIEN=""  S DA=ECLIEN D ^DIK
  S ^TMP($J,"ECMSG",1)="1^Record Filed"_U_ECIEN
- K DIC,DA,DR,ECX,DIK
  Q
  ;
 VALDATA ;validate data
@@ -91,7 +79,7 @@ RECDEL ; Delete record
  ;
 NEWIEN ;Create new IEN in file #720.3
  N DIC,DA,DD,DO
- L +^ECJ(0):10 I '$T S ECERR=1,^TMP($J,"ECMSG",1)="0^Another user is editing this file." Q
+ L +^ECJ(0)
  S X=ECCH,DIC="^ECJ(",DIC(0)="L",DLAYGO=720.3 D FILE^DICN
  L -^ECJ(0)
  S ECIEN=+Y,$P(^ECJ(ECIEN,0),U,3)=DT,$P(^ECJ(ECIEN,"PRO"),U)=ECP
@@ -125,7 +113,7 @@ REASON ;Used by the RPC broker to file EC Reasons in file #720.4
  I ECIEN="" D  I ECERR K ECST Q
  .I $D(^ECR("B",ECRES)) S ECERR=1,^TMP($J,"ECMSG",1)="0^Reason Exist" Q
  .K DIE,DR,DA
- .L +^ECR(0):10 I '$T S ECERR=1,^TMP($J,"ECMSG",1)="0^Another user is editing this file." Q
+ .L +^ECR(0)
  .S X=ECRES,DIC="^ECR(",DIC(0)="L",DLAYGO=720.4 D FILE^DICN
  .L -^ECR(0)
  .S ECIEN=+Y
@@ -133,62 +121,4 @@ REASON ;Used by the RPC broker to file EC Reasons in file #720.4
  I ECST'=ECOST D
  .S DIE=DIC,DA=ECIEN,DR=".02////"_ECST D ^DIE
  S ^TMP($J,"ECMSG",1)="1^Reason Filed"_U_ECIEN K ECST
- Q
- ;
-MULTLOC ;Entry point for multiple locations
- ;  Input:
- ;    ECL0..n - locations IEN
- ;    ECIEN - IEN for edits; "" for new records
- ;    See FILE tag for other variables passed in
- ;
- ;  Output:
- ;    ^TMP($J,"ECMSG",n)=Success or failure
- ;
- N ECERR  ;error flag
- N ECI    ;generic index
- N ECL    ;location IEN
- N ECLN   ;location name
- N ECLOC  ;array of locations
- N ECX    ;variable name (ex. ECL1)
- ;
- ;short circuit when IEN passed w/multiple locations
- I (+$G(ECIEN)>0)&(ECL0="ALL"!($D(ECL1))) D  Q
- . S ^TMP($J,"ECMSG",1)=0_U_"Multiple location edits not allowed"
- ;
- I ECL0="ALL" D
- . D LOCARRY^ECRUTL  ;returns all sites in ECLOC(n)=IEN^name format
- E  D
- . F ECI=0:1 S ECX="ECL"_ECI Q:'$D(@ECX)  D
- . . S ECLN=$$GET1^DIQ(4,@ECX_",",.01,"")
- . . S ECLOC(ECI+1)=@ECX_U_ECLN
- ;
- S ECI=0
- F  S ECI=$O(ECLOC(ECI)) Q:'ECI  D
- . I ECL0="ALL"!($D(ECL1)) N ECIEN S ECIEN=""  ;reset IEN for multiple
- . S ECL=+ECLOC(ECI)
- . D FILE^ECMFECS
- . I $P(^TMP($J,"ECMSG",1),U)=0 S ECERR(ECI)=ECLOC(ECI)_U_$P(^TMP($J,"ECMSG",1),U,2)
- ;
- ;process results
- I '$D(ECERR) S ^TMP($J,"ECMSG",1)=1_U_"Records filed for all locations"
- E  D PROCERR(.ECERR)
- Q
- ;
-PROCERR(ECERR) ;process multiple location errors
- ;  Input:
- ;    ECERR - array of location errors
- ;
- ;  Output:
- ;    ^TMP($J,"ECMSG" - RPC results global array
- ;    Format:  ^TMP($J,"ECMSG",1)="0^One or more locations did not file"
- ;             ^TMP($J,"ECMSG",n)=Location_IEN^Location_name^Error_text
- ;
- Q:'$D(ECERR)
- ;
- N ECCNT,ECI
- S ECCNT=1
- S ^TMP($J,"ECMSG",ECCNT)=0_U_"One or more locations did not file"
- S ECI=0
- F  S ECI=$O(ECERR(ECI)) Q:'ECI  S ECCNT=ECCNT+1 D
- . S ^TMP($J,"ECMSG",ECCNT)=$P(ECERR(ECI),U)_U_$P(ECERR(ECI),U,2)_U_$P(ECERR(ECI),U,3)
  Q

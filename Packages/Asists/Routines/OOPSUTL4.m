@@ -1,5 +1,5 @@
 OOPSUTL4 ;HINES/WAA-Utilities Routines ;3/24/98
- ;;2.0;ASISTS;**7,15**;Jun 03, 2002;Build 9
+ ;;2.0;ASISTS;**7**;Jun 03, 2002
 DTVAL(DATE,FLD1,FLD2) ;
  ; this subroutine called from ^DD so date error checking on fields
  ; 143, 144, 145 (if CA1) and 254, 255 (if CA2).  returns a valid date 
@@ -15,9 +15,8 @@ DTVAL(DATE,FLD1,FLD2) ;
  I %DT'["R" S DTE2=DTE2\1
  I DTE2>DATE!'$G(DTE2) S VAL=""
  I 'VAL D
- .;V2_P15 changed direct writes with call to EN^DDIOL
- .I '$G(DTE2) D EN^DDIOL($$GET1^DID(2260,FLD2,"","LABEL")_" cannot be blank if date entered in "_$$GET1^DID(2260,FLD1,"","LABEL"),"","!!!?5")
- .D EN^DDIOL($$GET1^DID(2260,FLD1,"","LABEL")_" must be on or after the "_$$GET1^DID(2260,FLD2,"","LABEL"),"","!!!?5")
+ .I '$G(DTE2) W !!?5,$$GET1^DID(2260,FLD2,"","LABEL")_" cannot be blank if date entered in "_$$GET1^DID(2260,FLD1,"","LABEL"),! Q
+ .W !!?5,$$GET1^DID(2260,FLD1,"","LABEL")_" must be on or after the "_$$GET1^DID(2260,FLD2,"","LABEL"),!
  Q VAL
 VALIDATE(IEN,FORM,CALLER,VALID) ;
  ; Input: IEN    = Internal Entry Number of entry in file 2260

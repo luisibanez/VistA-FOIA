@@ -1,5 +1,5 @@
 SDAMEP ;ALB/CAW - Extended Display ; 16 May 2001  1:46 PM
- ;;5.3;Scheduling;**241,334,480**;Aug 13, 1993
+ ;;5.3;Scheduling;**241,334**;Aug 13, 1993
  ;
 EN ; Selection of appointment
  K ^TMP("SDAMEP",$J)
@@ -27,7 +27,7 @@ HDR ; Header
 INIT ;
  N VA,VAERR,SDFSTCOL,SDSECCOL
  D PID^VADPT
- S SDT=$P(^TMP("SDAMIDX",$J,SDW),U,3),DFN=$P(^(SDW),U,2),SDCL=$P(^(SDW),U,4),SDDA=$P(^(SDW),U,5),SDLN=0  ;added DFN SD*5.3*480
+ S SDT=$P(^TMP("SDAMIDX",$J,SDW),U,3),SDCL=$P(^(SDW),U,4),SDDA=$P(^(SDW),U,5),SDLN=0
  D INIT^SDAMEP1
  D APDATA^SDAMEP1 ;        Appointment Data
  D APLOG^SDAMEP3 ;         Appointment Event Log

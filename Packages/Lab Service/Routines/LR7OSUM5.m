@@ -1,5 +1,5 @@
 LR7OSUM5 ;slc/dcm - Silent Patient cum cont. ;8/11/97
- ;;5.2;LAB SERVICE;**121,187,228,241,250,251,256,356,372**;Sep 27, 1994;Build 11
+ ;;5.2;LAB SERVICE;**121,187,228,241,250,251,256**;Sep 27, 1994
 TS ;from  LR7OSUM3
  N A,B,I,J,LRII,LRCTR,LRFALT,LRCL,LRCW,LRTLOC,X,XZ,Z
  I LRACT'=0 S X="",$P(X,"=",GIOM)="" D LN S ^TMP("LRC",$J,GCNT,0)=X
@@ -13,17 +13,11 @@ TS ;from  LR7OSUM3
  S LRJS=(I-1)
  S:LRACT=LRPL LRJS=LRJS+1
  F I=J:1:LRJS Q:'$D(^LAB(64.5,"A",1,LRMH,LRSH,I(I)))  S Z=^(I(I)) S:$L($P(Z,U,2))!$L($P(Z,U,11)) LRFALT=1
- I LRFALT D
- . D LN S ^TMP("LRC",$J,GCNT,0)="" D
- . . S LRCL=20
- . . S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(CCNT,CCNT,$S($L($P(^LAB(64.5,"A",1,LRMH,LRSH,I(J)),U,11)):"Therapeutic low",1:"Ref range low"))_$$S^LR7OS(LRCL,CCNT,"")
- . . D TS1
- . D LN S ^TMP("LRC",$J,GCNT,0)="" D
- . . S LRCL=20
- . . S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(CCNT,CCNT,$S($L($P(^LAB(64.5,"A",1,LRMH,LRSH,I(J)),U,11)):"Therapeutic high",1:"Ref range high"))_$$S^LR7OS(LRCL,CCNT,"")
- . . D TS2
+ S LRCL=20
+ I LRFALT D LN S ^TMP("LRC",$J,GCNT,0)="" D
+ . S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(CCNT,CCNT,$S($L($P(^LAB(64.5,"A",1,LRMH,LRSH,I(J)),U,11)):"Therapeutic",1:"Ref range"))_$$S^LR7OS(LRCL,CCNT,"") D TS1
  F I=J:1:LRJS Q:'$D(^LAB(64.5,"A",1,LRMH,LRSH,I(I)))  S:$L($P(^(I(I)),U,7)) LRFALT=1
- I LRFALT S LRCL=20 D LN S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(LRCL,CCNT,"") F I=J:1:LRJS D TS3
+ I LRFALT S LRCL=20 D LN S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(LRCL,CCNT,"") F I=J:1:LRJS D TS2
  S LRFALT=0,XZ="",$P(XZ,"-",GIOM)=""
  D LN
  S ^TMP("LRC",$J,GCNT,0)=XZ
@@ -65,7 +59,7 @@ TXT ;from LR7OSUM4
 LRLO ;from LR7OSUM4
  S @("LRLO="_$S($L($P(^LAB(64.5,"A",1,LRMH,LRSH,I(I)),U,2)):$P(^(I(I)),U,2),$L($P(^LAB(64.5,"A",1,LRMH,LRSH,I(I)),U,11)):$P(^(I(I)),U,11),1:""""""))
 LRHI S @("LRHI="_$S($L($P(^LAB(64.5,"A",1,LRMH,LRSH,I(I)),U,3)):$P(^(I(I)),U,3),$L($P(^LAB(64.5,"A",1,LRMH,LRSH,I(I)),U,12)):$P(^(I(I)),U,12),1:"""""")),P7=$P(^(I(I)),U,7)
- S LRLOHI=$$EN^LRLRRVF(LRLO,LRHI)
+ S LRLOHI=$S($L(LRHI):LRLO_"-"_LRHI_" ",1:LRLO)
  Q
 TXT1 ;from LR7OSUM3, LR7OSUM4
  S XZ="",$P(XZ,"=",GIOM)=""
@@ -98,20 +92,12 @@ C2(X,X2) ;
  N X3
  F X3=1:1:$L(X) I $E(X,X3)'=" " S X=$E(X,1,X3-2)_X2_$E(X,X3,$L(X)) Q
  Q
-TS1 ;Print low therapeutic or reference range values
- F I=J:1:LRJS S LRCW=$P(^LAB(64.5,1,1,LRMH,1,LRSH,1,I(I),0),U,2),LRCL=LRCL+LRCW D
- . S @("LRLO="_$S($L($P(^LAB(64.5,"A",1,LRMH,LRSH,I(I)),U,2)):$P(^(I(I)),U,2),$L($P(^LAB(64.5,"A",1,LRMH,LRSH,I(I)),U,11)):$P(^(I(I)),U,11),1:""""""))
- . S A=$L(LRLO)\2,B=LRCW\2
- . S ^(0)=^TMP("LRC",$J,GCNT,0)_$$S^LR7OS(CCNT,CCNT,$J(LRLO,(A+B))),^(0)=^(0)_$$S^LR7OS(LRCL,CCNT,"")
+TS1 F I=J:1:LRJS S LRCW=$P(^LAB(64.5,1,1,LRMH,1,LRSH,1,I(I),0),U,2),LRCL=LRCL+LRCW D
+ . D LRLO
+ . S A=$L(LRLOHI)\2,B=LRCW\2
+ . S ^(0)=^TMP("LRC",$J,GCNT,0)_$$S^LR7OS(CCNT,CCNT,$J(LRLOHI,(A+B))),^(0)=^(0)_$$S^LR7OS(LRCL,CCNT,"")
  Q
-TS2 ;Print high therapeutic or reference range values
- F I=J:1:LRJS S LRCW=$P(^LAB(64.5,1,1,LRMH,1,LRSH,1,I(I),0),U,2),LRCL=LRCL+LRCW D
- . S @("LRHI="_$S($L($P(^LAB(64.5,"A",1,LRMH,LRSH,I(I)),U,3)):$P(^(I(I)),U,3),$L($P(^LAB(64.5,"A",1,LRMH,LRSH,I(I)),U,12)):$P(^(I(I)),U,12),1:"""""")),P7=$P(^(I(I)),U,7)
- . S A=$L(LRHI)\2,B=LRCW\2
- . S ^(0)=^TMP("LRC",$J,GCNT,0)_$$S^LR7OS(CCNT,CCNT,$J(LRHI,(A+B))),^(0)=^(0)_$$S^LR7OS(LRCL,CCNT,"")
- Q
-TS3 ;Print units
- S LRCW=$P(^LAB(64.5,1,1,LRMH,1,LRSH,1,I(I),0),U,2)
+TS2 S LRCW=$P(^LAB(64.5,1,1,LRMH,1,LRSH,1,I(I),0),U,2)
  Q:(GIOM-LRCL)<LRCW
  S LRCL=LRCL+LRCW,A=$L($P(^LAB(64.5,"A",1,LRMH,LRSH,I(I)),U,7))\2,B=LRCW\2,X=^(I(I))
  S ^(0)=^TMP("LRC",$J,GCNT,0)_$$S^LR7OS(CCNT,CCNT,$J($P(X,U,7),(A+B)))

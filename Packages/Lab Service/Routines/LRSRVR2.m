@@ -1,5 +1,5 @@
-LRSRVR2 ;DALIO/FHS - LAB DATA SERVER CONT'D RELMA EXTRACT ; Jan 9, 2006
- ;;5.2;LAB SERVICE;**303,346**;Sep 27, 1994;Build 10
+LRSRVR2 ;DALIO/FHS - LAB DATA SERVER CONT'D RELMA EXTRACT ; Aug 26, 2004
+ ;;5.2;LAB SERVICE;**303**;Sep 27, 1994
  ; Produces LOINC RELMA extract - via LRLABSERVER or option
  ;
 EN ; Called by option [LR LOINC EXTRACT RELMA FORMAT]
@@ -14,28 +14,30 @@ EN ; Called by option [LR LOINC EXTRACT RELMA FORMAT]
  W !
  S LRL=0
  F  S LRL=$O(^TMP($J,"LRDATA",LRL)) Q:LRL<1  W !,^(LRL)
- D CLEAN^LRSRVR2A
+ D CLEAN
  Q
  ;
  ;
 SERVER ; Server entry Point
- N I,LRCNT,LREND,LRL,LRMSUBJ,LRTXT,LRX,LRY
+ N I,LRCNT,LREND,LRL,LRTXT,LRX,LRY
  S LRTXT=0
  D BUILD
- S LRMSUBJ=LRST_" "_LRSTN_" RELMA EXTRACT "_$$HTE^XLFDT($H,"1M")
- D MAILSEND^LRSRVR6(LRMSUBJ)
- D CLEAN^LRSRVR2A
+ S XMSUB=LRST_" "_LRSTN_" RELMA EXTRACT "_$$HTE^XLFDT($H,"1M")
+ S XMY(XQSND)="",XMTEXT="^TMP($J,""LRDATA"","
+ S XMDUN="Lab Server",XMDUZ=".5"
+ D ^XMD
+ D CLEAN
  Q
  ;
  ;
 BUILD ; Build extract
- N I,LR6206,LR64,LRCNT,LRCRLF,LRLEN,LRQUIT,LRROOT,LRSTNOTE,LRSS,LRSTR,LRSTUB,LRVAL
+ N I,LR6206,LR64,LRCNT,LRCRLF,LRLEN,LRQUIT,LRROOT,LRSS,LRSTR,LRSTUB,LRVAL
  S LRVAL=$$SITE^VASITE,LRST=$P(LRVAL,"^",3),LRSTN=$P(LRVAL,"^",2)
  I LRST="" S LRST="???"
  K ^TMP($J,"LRDATA"),^TMP($J,"LR60")
  S LRCNT=0,LRCRLF=$C(13,10),LRSTR=""
  F I=0,1,2,3 S LRCNT(I)=0
- D HDR^LRSRVR2A
+ D HDR
  ;
  ; Step down the B X-ref - exclude synomyms
  S LRROOT="^LAB(60,""B"")"
@@ -48,17 +50,14 @@ BUILD ; Build extract
  F  S LR6206=$O(^LAB(62.06,LR6206)) Q:'LR6206  D
  . S LR64=$$GET1^DIQ(62.06,LR6206_",",64,"I")
  . S LRX=$$MICRO^LRSRVR3(LR64)
- . S LRSTUB=$P(LRX,"|",5)_"||||"_$P(LRX,"|",3)_"|"_$P(LRX,"|",1)_"|||"_$P(LRX,"|",20)_"|"_$P(LRX,"|",19)_"|||||||||||"
- . I LR64 S LRSTUB=LRSTUB_$$GET1^DIQ(64,LR64_",",25)
- . S LRSTUB=LRSTUB_"|1.1|" ; Set extract version number
+ . S LRSTUB=$P(LRX,"|",5)_"||||"_$P(LRX,"|",3)_"|"_$P(LRX,"|",1)_"|||"_$P(LRX,"|",20)_"|"_$P(LRX,"|",19)
  . S LRSTR=LRSTR_LRST_"-"_LR64_"-"_"AB"_LR6206_"|"_LRSTUB
- . I 'LRTXT S LRSTR=LRSTR_LRCRLF
- . D SETDATA S LRCNT=LRCNT+1,LRCNT(3)=LRCNT(3)+1
+ . D SETDATA S LRCNT(3)=LRCNT(3)+1
  ;
  ; Set the final info into the ^TMP message global
  I 'LRTXT D
- . S LRNODE=$O(^TMP($J,"LRDATA",""),-1)
- . I LRSTR'="" S LRNODE=LRNODE+1,^TMP($J,"LRDATA",LRNODE)=$$UUEN^LRSRVR4(LRSTR)
+ . S LRNODE=$O(^TMP($J,"LRDATA",""),-1)+1
+ . I LRSTR'="" S ^TMP($J,"LRDATA",LRNODE)=$$UUEN^LRSRVR4(LRSTR)
  . S ^TMP($J,"LRDATA",LRNODE+1)=" "
  . S ^TMP($J,"LRDATA",LRNODE+2)="end"
  ;
@@ -71,93 +70,106 @@ BUILD ; Build extract
  Q
  ;
  ;
+CLEAN ;
+ K ^TMP($J,"LR60")
+ K ERR,LR60IEN,LR60NM,LR6421,LR64IEN,LR64N,LR64NM
+ K LRACTION,LRCC,LRCCNX,LOINCDTA,LRRNLT,LRCDEF,LREND
+ K LRL,LRLNC,LRLNC80,LRLNCN,LRLNCX,LRNODE,LROUT,LROUT1,LRR64
+ K LRSPEC,LRSPEC60,LRSPECHL,LRSPECN,LRSPECTA,LRSPCN,LRST,LRSTN,LRSTR
+ K LRTA,LRUNIT,LRX,LRY,X,Y
+ D CLEAN^LRSRVR
+ D ^%ZISC
+ Q
+ ;
+ ;
 TEST ; Pull out test info
- N LA7TREE,LR60,LRBATTY,LRBATTYN,LRTSTTYP
+ N LA7TREE,LR60,LRBATTY,LRBATTYN
  K LROUT,LRSPEC,ERR
  S LR60NM=$QS(LRROOT,3),LR60IEN=$QS(LRROOT,4)
- S LR60NM=$$TRIM^XLFSTR(LR60NM,"RL"," ")
- S LRTSTTYP=$P(^LAB(60,LR60IEN,0),"^",3)
  ;
  ; Bypass "neither" type tests.
- I LRTSTTYP="N" Q
+ I $P(^LAB(60,LR60IEN,0),"^",3)="N" Q
  ; Bypass "workload" type tests.
  I $P(^LAB(60,LR60IEN,0),"^",4)="WK" Q
  ;
  S LRBATTY=LRST_"-"_LR60IEN,LRBATTYN=LR60NM
- S LRBATTY=$$TRIM^XLFSTR(LRBATTY,"RL"," ")
  ; Panel test
- ; Bypass "output panel" type tests - usually used for display only.
  I $O(^LAB(60,LR60IEN,2,0)) D  Q
- . I $P(^LAB(60,LR60IEN,0),"^",3)="O" Q
  . D UNWIND^LA7ADL1(LR60IEN,9,0)
  . S LR60=0
  . F  S LR60=$O(LA7TREE(LR60)) Q:'LR60  D
  . . I $D(^TMP($J,"LR60",LR60)) Q
  . . S LR60IEN=LR60,LR60NM=$P(^LAB(60,LR60IEN,0),"^")
- . . S LRTSTTYP=$P(^LAB(60,LR60IEN,0),"^",3)
- . . ; Bypass "neither" type tests.
- . . I LRTSTTYP="N" Q
- . . ; Bypass "workload" type tests.
- . . I $P(^LAB(60,LR60IEN,0),"^",4)="WK" Q
- . . S LRR64=+$P($G(^LAB(60,+LR60IEN,64)),U,2)
+ . . S LRRNLT="",LRR64=+$P($G(^LAB(60,+LR60IEN,64)),U,2)
+ . . I LRR64 S LRRNLT=$$GET1^DIQ(64,LRR64_",",1,"E")
  . . D SPEC
  ;
  I $D(^TMP($J,"LR60",LR60IEN)) Q
  ; Not a panel test
  ; Get result NLT code
- S LRR64=+$P($G(^LAB(60,+LR60IEN,64)),U,2)
+ S LRRNLT="",LRR64=+$P($G(^LAB(60,+LR60IEN,64)),U,2),LR6421=0
+ I LRR64 D
+ . S LRRNLT=$$GET1^DIQ(64,LRR64_",",1,"E")
+ . S LR6421=$$GET1^DIQ(64,LRR64_",",13,"I")
  D SPEC
  Q
  ;
  ;
 SPEC ; Check each specimen for this test
  K LRSPEC,LROUT
- S (LRCDEF,LRSPEC,LRSPECN,LRLNC,LRLNCN,LRLNCX,LRLNC80,LRUNIT,Y)=""
- D SITENOTE^LRSRVR2A
- D SYNNOTE^LRSRVR2A
+ S (LRCDEF,LRSPEC,LRSPECHL,LRSPECN,LRLNC,LRLNCN,LRLNCX,LRLNC80,Y)=""
+ S (LR64NM,LR64N,LRSPECHL,LRUNIT)="",LRTA="POINT"
  S LRSPEC60=0
  F  S LRSPEC60=$O(^LAB(60,+LR60IEN,1,LRSPEC60)) Q:'LRSPEC60  D
- . Q:'($D(^LAB(60,+LR60IEN,1,LRSPEC60,0))#2)
- . S LRUNIT=$P(^LAB(60,+LR60IEN,1,LRSPEC60,0),U,7)
- . S X=$G(^LAB(61,LRSPEC60,0))
- . S LRSPECN=$P(X,"^"),LRSPECTA=$P(X,"^",10)
- . S LRSPEC(LRSPEC60_"-0")=LRSPEC60_U_LRSPECN_U_LRSPECTA_U_LRUNIT_U_LRR64
- . I LRR64,$P($$GET1^DIQ(64,LRR64_",",1,"E"),".",2)="0000" D SUFFIX^LRSRVR2A
+ . Q:'$D(^LAB(60,+LR60IEN,1,LRSPEC60,0))#2
+ . S LRUNIT=$$TRIM^XLFSTR($P(^(0),U,7)," ","RL")
+ . K LROUT,ERR
+ . D GETS^DIQ(61,LRSPEC60_",",".01;.09;.0961","E","LROUT","ERR")
+ . S LRSPECN=$G(LROUT(61,LRSPEC60_",",.01,"E"))
+ . S LRSPECHL=$G(LROUT(61,LRSPEC60_",",.09,"E"))
+ . S LRSPECTA=$G(LROUT(61,LRSPEC60_",",.0961,"E"))
+ . S LRSPEC(LRSPEC60)=LRSPEC60_U_LRSPECN_U_LRSPECHL_U_LRSPECTA_U_LRUNIT
  D SPECLOOP
  Q
  ;
  ;
 SPECLOOP ; Check to see if specimen has been linked to LOINC
  ;
- N LR64,LR6421,LRINDX,LRLNTA,LRRNLT,LRTA,LRX,X
- S LRINDX=0
- F  S LRINDX=$O(LRSPEC(LRINDX)) Q:'LRINDX  D
- . S X=LRSPEC(LRINDX)
- . S LRSPEC=$P(X,U),LRSPECN=$P(X,U,2),LRLNTA=$P(X,U,3),LR64=$P(X,U,5),LRUNIT=$$TRIM^XLFSTR($P(X,U,4),"RL"," ")
- . S (LR6421,LRLNC,LRRNLT,LRTA)=""
- . I LR64 D
- . . S LRRNLT=$$GET1^DIQ(64,LR64_",",1,"E")
- . . S LR6421=$$GET1^DIQ(64,LR64_",",13,"I")
- . . S LRX=""
- . . I LRSPEC,LRLNTA S LRX=$P($G(^LAM(LR64,5,LRSPEC,1,LRLNTA,1)),"^")
- . . I LRX="",LRSPEC D
- . . . S X=$O(^LAM(LR64,5,LRSPEC,1,0))
- . . . I X S LRLNTA=X,LRX=$P($G(^LAM(LR64,5,LRSPEC,1,X,1)),"^")
- . . I LRX'="" S LRLNC=$$GET1^DIQ(95.3,LRX_",",.01,"E")
- . . I LRLNTA S LRTA=$$GET1^DIQ(64.061,LRLNTA_",",.01,"E")
- . D WRT
+ S LRSPEC=0
+ F  S LRSPEC=$O(LRSPEC(LRSPEC)) Q:'LRSPEC  D
+ . K Y
+ . S LRSPCN=$P(LRSPEC(LRSPEC),U),LRSPECN=$P(LRSPEC(LRSPEC),U,2)
+ . S LRTA=$P(LRSPEC(LRSPEC),U,4)
+ . S LRUNIT=$$TRIM^XLFSTR($P(LRSPEC(LRSPEC),U,5),"RL"," ")
+ . S LRLNCX=$$RNLT^LRVER1(LR60IEN),LRLNC=$P(LRLNCX,"!",2)
+ . D VAL
+ Q
+ ;
+ ;
+VAL ; Get LOINC code info
+ S LRLNC80="" I 'LRLNC D WRT Q
+ N ERR,LROUT1,X,Y
+ D GETS^DIQ(95.3,LRLNC_",",".01;80","E","LROUT1","ERR")
+ I LRTXT,$D(ERR) W !,LRLNC_"  *  LOINC LOOKUP ERR",! Q
+ S LRLNC=LROUT1(95.3,+LRLNC_",",.01,"E")
+ S LRLNC80=LROUT1(95.3,+LRLNC_",",80,"E")
+ D WRT
  Q
  ;
  ;
 WRT ; Set ^TMP( with extracted data
- N LRJ,LREN,LRQUIT,LRSS,X,Y
+ N LRQUIT,LRLEN,LRSS,X,Y
  ;
  ; Set flag that this file #60 test has been processed - avoid duplicate
  ; processing as component of panel and individual test
  S ^TMP($J,"LR60",LR60IEN)=""
  ;
- S LRSTR=LRSTR_LRST_"-"_LR60IEN_"-"_LRINDX
- S LRSTR=LRSTR_"|"_LR60NM_"|"_LRSPECN_"|"_LRTA_"|"_LRUNIT_"|"_LRLNC_"|"_LRRNLT_"|"_LRBATTY_"|"_LRBATTYN_"|"
+ S:LRTA="" LRTA="POINT"
+ S LR60NM=$$TRIM^XLFSTR(LR60NM,"RL"," ")
+ S LRBATTY=$$TRIM^XLFSTR(LRBATTY,"RL"," ")
+ S LRSTR=LRSTR_LRST_"-"_LR60IEN_"-"_LRSPEC
+ S LRSTR=LRSTR_"|"_LR60NM_"|"_LRSPECN_"|"_LRTA_"|"_LRUNIT_"|"_LRLNC_"|"_$P(LRLNCX,"!")_"|"
+ S LRSTR=LRSTR_LRBATTY_"|"_LRBATTYN_"|"
  ;
  ; Lab section specified for this NLT code.
  S LRSTR=LRSTR_$S($G(LR6421)>0:$$GET1^DIQ(64.21,LR6421_",",1),1:"")_"|"
@@ -167,53 +179,41 @@ WRT ; Set ^TMP( with extracted data
  S LRSTR=LRSTR_LRSS_"|"
  ; Test info - data type, help prompt
  I LRSS'="CH" S LRSTR=LRSTR_"||"
- I LRSS="CH" S X=$$TSTTYP^LRSRVR3($$GET1^DIQ(60,LR60IEN_",",13)) S LRSTR=LRSTR_$P(X,"|")_"|"_$P(X,"|",2)_"|"
+ I LRSS="CH" S LRSTR=LRSTR_$$TSTTYP^LRSRVR3($$GET1^DIQ(60,LR60IEN_",",13))_"|"
  ;
  ; Test reference low|reference high|therapeutic low|therapeutic high|
  S X=$G(^LAB(60,LR60IEN,1,LRSPEC,0))
  S Y=$P(X,"^",2)_"|"_$P(X,"^",3)_"|"_$P(X,"^",11)_"|"_$P(X,"^",12)
  S LRSTR=LRSTR_$TR(Y,$C(34),"")
- ; Use for reference lab testing
- S X=$G(^LAB(60,LR60IEN,1,LRSPEC,.1))
- S LRSTR=LRSTR_"|"_$S($P(X,"^")=1:"YES",1:"NO")_"|"
- ; 
- ; Send site's test notes on first record for this test.
- I LRSTNOTE D
- . D SETDATA
- . S LRJ="LRSTNOTE"
- . F  S LRJ=$Q(@LRJ) Q:LRJ=""  D
- . . S X=@LRJ I X["|" S X=$TR(X,"|","~")
- . . S LRSTR=LRSTR_X D SETDATA
- . S LRSTNOTE=0
- S LRSTR=LRSTR_"|"
- ;
- ; Send site's test synonym's on first record for this test.
- I LRSTSYN D
- . D SETDATA
- . S LRJ="LRSTSYN"
- . F  S LRJ=$Q(@LRJ) Q:LRJ=""  S LRSTR=LRSTR_@LRJ_"^" D SETDATA
- . S LRSTSYN=0
- ;
- ; Send file #60 test type
- S LRSTR=LRSTR_"|"_LRTSTTYP_"|"
- ;
- ; Send default LOINC code
- I LR64 S LRSTR=LRSTR_$$GET1^DIQ(64,LR64_",",25)
- ;
- ; Set extract version number
- S LRSTR=LRSTR_"|1.1|"
- ;
- I 'LRTXT S LRSTR=LRSTR_LRCRLF
- D SETDATA
- ;
- S LRCNT=LRCNT+1,LRCNT(0)=LRCNT(0)+1
+ S LRCNT(0)=LRCNT(0)+1
  I LRLNC'="" S LRCNT(1)=LRCNT(1)+1
- I LR64 S LRCNT(2)=LRCNT(2)+1
- Q
+ I $P(LRLNCX,"!")'="" S LRCNT(2)=LRCNT(2)+1
  ;
  ;
 SETDATA ; Set data into report structure
+ I 'LRTXT S LRSTR=LRSTR_LRCRLF
+ S LRCNT=LRCNT+1
  S LRNODE=$O(^TMP($J,"LRDATA",""),-1)
  I LRTXT S LRNODE=LRNODE+1,^TMP($J,"LRDATA",LRNODE)=LRSTR,LRSTR="" Q
  I 'LRTXT D ENCODE^LRSRVR4(.LRSTR)
+ Q
+ ;
+ ;
+HDR ; Set the header information
+ S ^TMP($J,"LRDATA",1)="Report Generated.......: "_$$FMTE^XLFDT($$NOW^XLFDT)_" at "_LRSTN
+ S ^TMP($J,"LRDATA",2)="Report requested.......: "_LRSUB
+ S ^TMP($J,"LRDATA",3)="LOINC version..........: "_$$GET1^DID(95.3,"","","PACKAGE REVISION DATA")
+ S ^TMP($J,"LRDATA",4)="VistA File version.....: "_$G(^LAB(95.3,"VR"))
+ F I=5,11,12 S ^TMP($J,"LRDATA",I)=" "
+ S ^TMP($J,"LRDATA",13)="Legend:"
+ S X="Station #-60 ien-Spec ien|Test Name|Spec|Time Aspect|Units|LOINC|NLT #|Battery Code|Battery Description|Lab Section|Subscript|Comments|Data Type|Reference low|Reference high|Therapeutic low|Therapeutic high|"
+ S ^TMP($J,"LRDATA",14)=X
+ S X="           1             |    2    |  3 |     4     |  5  |  6  |  7  |    8       |     9             |     10    |   11    |    12   |     13 |   14        |     15       |      16       |       17       |"
+ S ^TMP($J,"LRDATA",15)=X
+ S ^TMP($J,"LRDATA",16)=$$REPEAT^XLFSTR("-",$L(X))
+ S ^TMP($J,"LRDATA",17)=" "
+ I 'LRTXT D
+ . S LRFILENM=$TR(LRSTN," ","_")_"-"_LRSUB_"-"_$P($$FMTHL7^XLFDT($$NOW^XLFDT),"-")_".TXT"
+ . S ^TMP($J,"LRDATA",11)="Attached LMOF file.....: "_LRFILENM
+ . S ^TMP($J,"LRDATA",18)="begin 0644 "_LRFILENM
  Q

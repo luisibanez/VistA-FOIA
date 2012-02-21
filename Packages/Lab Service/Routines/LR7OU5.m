@@ -1,5 +1,5 @@
-LR7OU5 ;DALOI/DCM/FHS-NLT LINKING UTILITY SEMI-MANUAL ; 2/23/07 6:53am
- ;;5.2;LAB SERVICE;**127,201,272,334**;Sep 27, 1994;Build 12
+LR7OU5 ;DALOI/DCM/FHS-NLT LINKING UTILITY SEMI-MANUAL ;8/11/97
+ ;;5.2;LAB SERVICE;**127,201,272**;Sep 27, 1994
  ; Reference to ^%ZIS supported by IA #10086
  ; Reference to ^%ZISC supported by IA #10089
  ; Reference to ^%ZTLOAD supported by IA #10063
@@ -16,7 +16,7 @@ EN ;
  . W !?20,"[LR70 60-64 AUTO]",!
  . W !,"IT IS STRONGLY RECOMMENDED YOU RUN THE AUTOMATIC OPTION FIRST",!!
  W !,$$CJ^XLFSTR("This option will allow you to make links between file 64 (NLT) and file 60.",80)
- W !,$$CJ^XLFSTR("You may select ANY NLT code to create ",80)
+ W !,$$CJ^XLFSTR("You must select a GENERIC NLT (.0000 suffix) code to create ",80)
  W !,$$CJ^XLFSTR("a linkage of entries between these two files. ",80)
  W !,$$CJ^XLFSTR("Tests with the type of NEITHER or null will be skipped in the Auto Mode.",80)
  W !,$$CJ^XLFSTR("ONLY ORDERABLE LAB TEST NEED TO BE LINKED TO WKLD CODES.",80),!
@@ -31,7 +31,7 @@ START W ! K DIR S DIR("A")="Select Linking Method ",DIR(0)="S^M:Manual;S:Semi-Au
  W !!,$$CJ^XLFSTR(DIR("A"),80)
  F I=1:1 S LN=$P($T(TXT+I),";;",2) Q:LN="END"  S DIR("?",I)=LN W !,$$LJ^XLFSTR(LN,80)
  W !! K LN D ^DIR K DIR G:$D(DIRUT)!($D(DTOUT))!($D(DUOUT)) END G:Y="M" SEL
-LIST ;Print LOINC Code Status
+LIST ;
  K DIR W !!?5,"Select a starting TEST NAME " R LRN:DTIME G:'$T!($E(LRN)=U) END
 LK ;
  W ! S AUTO=0 S:$L(LRN)>1 LRN=$E(LRN,1,($L(LRN)-1))
@@ -42,24 +42,23 @@ LAB ;
  G END
  Q
 CHECK ;
- K DIC Q:'($D(^LAB(60,LRIEN,0))#2)!($G(^LAB(60,LRIEN,64)))!($G(END))
+ K DIC Q:'$D(^LAB(60,LRIEN,0))#2!($G(^LAB(60,LRIEN,64)))!($G(END))
  S LRDATA=$P(^LAB(60,LRIEN,0),U),LRTY=$P(^(0),U,3) Q:LRTY=""!(LRTY="N")
- D  I $G(LRMIEN) S:($D(^LAM(LRMIEN,0))#2) Y=LRMIEN,Y(0)=^(0),LRCODE=$P(Y(0),U,2),LRMNAME=$P(Y(0),U) G OK
+ D  I $G(LRMIEN) S:$D(^LAM(LRMIEN,0))#2 Y=LRMIEN,Y(0)=^(0),LRCODE=$P(Y(0),U,2),LRMNAME=$P(Y(0),U) G OK
  . K LRMIEN D 91^LR7OU4
- . Q:'$G(LRMIEN)!'($D(^LAM(+$G(LRMIEN),0))#2)  S LRCODE=$P($P(^(0),U,2),".",1)_".0000 " I 'LRCODE W !,"Database is corrupted for WKLD CODE ",LRCODE S LRMIEN="" Q
- . S LRMIEN=$O(^LAM("C",LRCODE,0)) Q:('LRMIEN)!'($D(^LAM(LRMIEN,0))#2)
- K DIC S DIC="^LAM(",DIC(0)="AQEZNM"
+ . Q:(('$G(LRMIEN))!('$D(^LAM(+$G(LRMIEN),0))#2))  S LRCODE=$P($P(^(0),U,2),".",1)_".0000 " I 'LRCODE W !,"Database is corrupted for WKLD CODE ",LRCODE S LRMIEN="" Q
+ . S LRMIEN=$O(^LAM("C",LRCODE,0)) Q:('LRMIEN)!('$D(^LAM(LRMIEN,0))#2)
+ K DIC S DIC="^LAM(",DIC(0)="AQEZNM",DIC("S")="I '$P($P(^(0),U,2),""."",2)"
  W !,$$CJ^XLFSTR("Select NLT code to be linked with LAB TEST",80),!,$$CJ^XLFSTR(LRDATA,80),!
  D ^DIC S:$E(X)=U END=1 Q:$G(END)!(Y<1)
  S LRMIEN=+Y,LRMNAME=$P(Y(0),U),LRCODE=$P(Y(0),U,2)
-OK I '($D(^LAM(LRMIEN,0))#2) W !!,"Database is corrupted for IEN ",LRMIEN Q
+OK I '$D(^LAM(LRMIEN,0))#2 W !!,"Database is corrupted for IEN ",LRMIEN Q
  W !!,"60 = ",LRDATA,!,"64 = ",LRMNAME_"   "_LRCODE
  D LINK^LR7OU4(LRIEN,LRMIEN,AUTO)
  Q
 END ;
- K LREND,LRANS,LRN,LRTY,ZTSAVE D END^LR7OU4
- K LINKED,LRMNAME,LRNLT,POP,ZTRTN,ZTDESC,ZTQUEUED
- K DIROUT,DIRUT,DTOUT,DUOUT,ZTDESC,X1,X60,X64,Y64 Q
+ K LREND,LRANS,LRN,LRTY,ZTSAVE G END^LR7OU4
+ Q
 SEL ;
  S AUTO=0
  K DIC,DIR S DIC("A")="You may select any test in LABORATORY TEST FILE: "
@@ -67,8 +66,8 @@ SEL ;
  S LRDATA=$P(Y(0),U),(LRIEN,X60)=+Y
  I $G(^LAB(60,X60,64)),$D(^LAM(+^(64),0)) S Y64=^(0) D
  . W !!?5,"Currently linked to [ ",$P(Y64,U)_" ]   "_$P(Y64,U,2),!!
- W !!,"Now select ANY WKLD CODE for "_LRDATA,!!
- K DIC S DIC="^LAM(",DIC(0)="AEQZNM",DIC("A")="WKLD CODE: "
+ W !!,"Now select a WKLD CODE for "_LRDATA,!!
+ K DIC S DIC="^LAM(",DIC(0)="AEQZNM",DIC("A")="WKLD CODE: ",DIC("S")="I '$P($P(^(0),U,2),""."",2)"
  D ^DIC G:Y<1 SEL S (LRMIEN,X64)=+Y,LRMNAME=$P(Y(0),U),LRCODE=$P(Y(0),U,2)
  D OK G SEL
 TXT ;;

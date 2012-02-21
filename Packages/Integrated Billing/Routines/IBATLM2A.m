@@ -1,6 +1,6 @@
 IBATLM2A ;LL/ELZ - TRANSFER PRICING PT TRANSACTION DETAIL ; 15-SEP-1998
- ;;2.0;INTEGRATED BILLING;**115,210,266,309,389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**115,210,266,309**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  N IBX,IBY K ^TMP("IBATEE",$J)
  F IBX=0,4,5,6 S IBDATA(IBX)=$G(^IBAT(351.61,IBIEN,IBX))
@@ -149,8 +149,8 @@ RX ; -- detail display for rx
 RMPR ; -- detail display for prosthetic
  D SETVALM(.VALMCNT,"")
  D SET("Prosthetic Item:",.IBY,5,16)
- D SET($P($$PIN^IBATUTL(+$P(IBDATA(0),"^",12)),U,2),.IBY,23,30) ; dbia 374
- D SET($FN($P(IBDATA(4),"^",5),",",2),.IBY,58,15)
+ D SET($$GET1^DIQ(661,$P(IBDATA(4),"^",4),.01),.IBY,12,40) ; dbia 374
+ D SET($FN($P(IBDATA(4),"^",5),",",2),.IBY,55,15)
  D SETVALM(.VALMCNT,.IBY)
  D SETVALM(.VALMCNT,"")
  Q

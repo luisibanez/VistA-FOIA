@@ -1,5 +1,5 @@
 PXBAPI1 ;ISL/JVS,dee - PCE's API - interview questions ;5/6/05 2:59pm
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**1,9,23,56,104,111,113,122,116,130,147,151,124,164,182,168**;Aug 12, 1996;Build 14
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**1,9,23,56,104,111,113,122,116,130,147,151,124,164**;Aug 12, 1996
  ;;
  Q
  ;
@@ -59,9 +59,6 @@ ADDEDIT1 ;
  ;
  D CPT(.PXBEXIT)
  G:PXBEXIT<1 ADDEDIT2
- I PXBVST>0,'$D(^AUPNVCPT("AD",PXBVST)) D ADDEDIT3   ;PX*1.0*182
- Q   ; PX*1.0*182 added quit, otherwise user is forced to delete enc.
- ;
 ADDEDIT2 ;
  I PXBVST>0,'$D(^AUPNVCPT("AD",PXBVST)),'$D(^AUPNVSIT("AD",PXBVST)) D  I PXANS'=1 S PXBEXIT=1 G ADDEDIT1
  . N DIR,X,Y
@@ -75,18 +72,6 @@ ADDEDIT2 ;
  . Q:PXANS'=1
  . I $$DELVFILE^PXAPIDEL("ALL",PXBVST,"","","","","")=1 S PXBEXIT=-1
  I PXBVST>0,'$D(^AUPNVSIT(PXBVST,0)) S PXBVST=""
- Q
- ;
-ADDEDIT3 ;added PX*1.0*182
- N DIR,X,Y
- W !!
- S DIR(0)="Y"
- S DIR("A",1)="Must have a STOP CODE or a PROCEDURE to complete this action."
- S DIR("A")="Do you want to delete this encounter"
- S DIR("B")="NO"
- D ^DIR
- Q:Y'=1
- I $$DELVFILE^PXAPIDEL("ALL",PXBVST,"","","","","")=1 S PXBVST=""
  Q
  ;
 ADQ(PXBEXIT) ;Ask the Administration questions
@@ -168,7 +153,7 @@ SCC(PXBEXIT) ;Ask the user the Service connected conditions
  ;D CLASS^PXBAPI21(PXBOUTEN,PXBPAT,PXBVSTDT,PXBHLOC)
  D CLASS^PXBAPI21(PXBOUTEN,PXBPAT,PXBVSTDT,PXBHLOC,PXBVST)
  ;PX*1*111 - Add HNC
- F PXBCLASS=1:1:8 I $G(PXBDATA("ERR",PXBCLASS))=4 S PXBEXIT=-1 Q  ; changed 6/17/98 for MST enhancement
+ F PXBCLASS=1:1:7 I $G(PXBDATA("ERR",PXBCLASS))=4 S PXBEXIT=-1 Q  ; changed 6/17/98 for MST enhancement
  Q:PXBEXIT<1
  I $G(PXDOD) S PXBEXIT=-1 Q
  S PXB800(1)=$P($G(PXBDATA(3)),"^",2)
@@ -179,7 +164,6 @@ SCC(PXBEXIT) ;Ask the user the Service connected conditions
  ;PX*1*111 - Add HNC
  S PXB800(6)=$P($G(PXBDATA(6)),"^",2)
  S PXB800(7)=$P($G(PXBDATA(7)),"^",2)
- S PXB800(8)=$P($G(PXBDATA(8)),"^",2)
  Q
  ;
 VISIT(PXBEXIT) ;Creat or edit the Visit
@@ -208,7 +192,6 @@ VISIT(PXBEXIT) ;Creat or edit the Visit
  ;PX*1*111 - Add HNC
  S $P(PXBAFTER(800),"^",6)=$G(PXB800(6))
  S $P(PXBAFTER(800),"^",7)=$G(PXB800(7))
- S $P(PXBAFTER(800),"^",8)=$G(PXB800(8))
  I $D(PXELAP)#2 D
  . S $P(PXBAFTER(0),"^",21)=+PXELAP
  F PXBNODE=0,21,150,800,811,812 D

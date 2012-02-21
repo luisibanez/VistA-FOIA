@@ -1,5 +1,5 @@
 MPIF001 ;ALB/RJS/CMC-UTILITY ROUTINE OF APIS ;JUL 12, 1996
- ;;1.0; MASTER PATIENT INDEX VISTA ;**1,3,9,16,18,21,27,33,35,41,45,48**;30 Apr 99;Build 6
+ ;;1.0; MASTER PATIENT INDEX VISTA ;**1,3,9,16,18,21,27,33,35,41,45**;30 Apr 99
  ;
  ; Integration Agreements Utilized:
  ;  ^DPT( - #2070
@@ -19,7 +19,7 @@ GETICN(DFN) ; This function returns the ICN, including checksum for a given
  I '$D(^DPT(DFN,"MPI")) S RETURN="-1^NO MPI NODE" G EXIT1
  S NODE=$G(^DPT(DFN,"MPI"))
  I $P(NODE,"^",1)'>0 S RETURN="-1^NO ICN" G EXIT1
- S RETURN=$P(NODE,"^",1)_"V"_$$CHECKDG^MPIFSPC($P(NODE,"^",1)) ;**48
+ S RETURN=$P(NODE,"^",1)_"V"_$P(NODE,"^",2)
  I '$D(^DPT("AICN",$P(NODE,"^"),DFN)) S ^DPT("AICN",$P(NODE,"^"),DFN)=""
  ; ^ set AICN x-ref if missing one
 EXIT1 ;

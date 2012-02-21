@@ -1,5 +1,5 @@
 XPDR ;SFISC/RSD - Routine File Edit ;09/17/96  10:05
- ;;8.0;KERNEL;**1,2,44,393**;Jul 10, 1995;Build 12
+ ;;8.0;KERNEL;**1,2,44**;Jul 10, 1995
  Q
 UPDT ;update routine file
  N DIR,DIRUT,XPD,XPDI,XPDJ,XPDN,X,X1,Y,Y1,% W !
@@ -31,16 +31,15 @@ UPDT ;update routine file
  Q
 VER ;verify Routine file
  N DIR,DIRUT,X,Y
- W !,"I will delete all local entries in the Routine File in which",!,"the Routine no longer exist on this system!",!
+ W !,"I will delete all entries in the Routine File in which",!,"the Routine no longer exist on this system!",!
  S DIR(0)="Y",DIR("A")="OK to continue",DIR("B")="YES" D ^DIR
  Q:'Y!$D(DIRUT)  D DELRTN
  W "    ...Done.",!
  Q
 DELRTN ;delete routine file entries
  N DA,DIK,Y
- W !,"Routines listed as National will not be deleted!"
  S DIK="^DIC(9.8,",DA=0
- F  S DA=$O(^DIC(9.8,DA)) Q:'DA  S Y=$G(^(DA,0)) I "R"=$P(Y,U,2),$G(^DIC(9.8,DA,6))<2,$T(^@$P(Y,U))="" D ^DIK
+ F  S DA=$O(^DIC(9.8,DA)) Q:'DA  S Y=$G(^(DA,0)) I $P(Y,U,2)="R",$T(^@$P(Y,U))="" D ^DIK
  Q
 PURGE ;purge file
  N DA,DIK,DIR,DIRUT,X,XPD,XPDF,XPDI,XPDJ,XPDL,XPDN,XPDPG,XPDS,XPDUL,Y,Z

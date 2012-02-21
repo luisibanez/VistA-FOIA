@@ -1,11 +1,11 @@
 IBCEF72 ;WOIFO/SS - FORMATTER AND EXTRACTOR SPECIFIC BILL FUNCTIONS ;8/6/03 10:56am
- ;;2.0;INTEGRATED BILLING;**232,320,349,432**;21-MAR-94;Build 192
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**232**;21-MAR-94
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
  ;Input:
  ;IBINSCO - ptr to #36
- ;IBFRMTYP 0=unknwn/both,1=UB,2=1500
+ ;IBFRMTYP 0=unknwn/both,1=UB92,2=HCFA 1500
  ;IBCARE - 0=unknwn or both inp/outp,1=inpatient, 2=outpatient, 3 -RX
  ;Output: X12 IDtype^ID^ID TYPE ptr to file 355.97
 CH35591(IBINSCO,IBFRMTYP,IBCARE) ;
@@ -81,25 +81,20 @@ NONVAQ I IBTYPE,IBX="",$P(IBU2,U,12)'="" S IBX=$P(IBU2,U,12) ; pull from 399
  ;Output:
  ; IBDATA with formatted output
 PROVSEQ(IBXIEN,IBSAVE,IBDATA,IBFUNC,IBSEGM) ;
- N IB1,IBINS,IBFL
- ;S IBFL=$S(IBFUNC=3!(IBFUNC=4):1,1:0)
+ N IB1,IB2,IBINS,IBFL
+ S IBFL=$S(IBFUNC=3!(IBFUNC=4):1,1:0)
  F IB1=1,2 D
- . I '$$ISINSUR^IBCEF71($G(IBSAVE("PROVINF",IBXIEN,"O",IB1)),IBXIEN) Q  ;don't create anything if there is no such insurance
- . ;*432/TAZ - Removed. Attending and Rendering can be on same bill now.
- . ;I IBFL S IBFUNC=$S($O(IBSAVE("PROVINF",IBXIEN,"O",IB1,3,0)):3,1:4)
- . I '$O(IBSAVE("PROVINF",IBXIEN,"O",IB1,IBFUNC,0)) Q
- . S IBDATA(IB1)=$G(IBSAVE("PROVINF",IBXIEN,"O",IB1))
- . I $G(IBSEGM)'="" D ID^IBCEF2(IB1,IBSEGM)
+ . Q:'$$ISINSUR^IBCEF71($G(IBSAVE("PROVINF",IBXIEN,"O",IB1)),IBXIEN)  ;don't create anything if there is no such insurance
+ . I IBFL S IBFUNC=$S($O(IBSAVE("PROVINF",IBXIEN,"O",IB1,3,0)):3,1:4)
+ . S:$O(IBSAVE("PROVINF",IBXIEN,"O",IB1,IBFUNC,0)) IBDATA(IB1)=$G(IBSAVE("PROVINF",IBXIEN,"O",IB1))
+ . I $G(IBSEGM)'="" D:$O(IBSAVE("PROVINF",IBXIEN,"O",IB1,IBFUNC,0)) ID^IBCEF2(IB1,IBSEGM)
  Q
  ;
 OUTPRVID(IBXIEN,IBXSAVE) ; Extract the outside provider or facility ids
  ; into IBXSAVE array
  ; Function returns 1 if person or 2 if facility ids or "" if neither
  N Z,IBXDATA,IBPERSON,TAG
- ;WCJ;11/1/2005 Extract the first 3 chars of Z instead.
- S Z=$E($$PSPRV^IBCEF7(IBXIEN),1,3),IBPERSON=""
- ;EJK 8/23/05 IB*320 - CHANGED Z=101 TO Z=1010. Z WILL ALWAYS BE A 4 DIGIT #. 
- ; WCJ 11/1/2005 ; Removed EJK's change and added above change
+ S Z=$$PSPRV^IBCEF7(IBXIEN),IBPERSON=""
  I Z=111!(Z=101) S TAG=$S(Z=101:"OUTSIDE FAC PROVIDER INF",1:"CUR/OTH PROVIDER INFO") D F^IBCEF("N-ALL "_TAG) S IBPERSON=$S('$E(Z,2):2,1:1)
  Q IBPERSON
  ;
@@ -130,7 +125,7 @@ OTHINS(IB399,IBRES) ;
 OTHINSID(IB399,IBRES) ;insurance EDI 
  N IBFRMTYP,IBZ,Z0,Z1,Z4
  S IBFRMTYP=$$FT^IBCEF(IB399),IBFRMTYP=$S(IBFRMTYP=2:2,IBFRMTYP=3:1,1:0)
- S Z4=$S(IBFRMTYP=1:4,1:2) ;UB - piece4,1500 or BOTH -piece 2
+ S Z4=$S(IBFRMTYP=1:4,1:2) ;UB2 - piece4,HCFA or BOTH -piece 2
  D OTHINS(IB399,.IBZ)
  S Z1=0
  F Z0=1:1:2 I $G(IBZ(Z0)) S IBRES(Z0)=$S($$MCRWNR^IBEFUNC(+IBZ(Z0)):$S(IBFRMTYP=1:"12M61",1:"SMTX1"),1:$P($G(^DIC(36,+IBZ(Z0),3)),U,Z4))
@@ -184,12 +179,7 @@ SFIDQ(IBXIEN,IBXSAVE,IBXDATA) ; Find the service facility id qualifier for
  . D F^IBCEF("N-RENDERING INSTITUTION")
  . S:IBXDATA'="" IBXSAVE("IBFAC")=IBXDATA
  I $P($G(IBXSAVE("IBFAC")),U,2)'=1 K IBXDATA Q
- S Z=$$PSPRV^IBCEF7(IBXIEN)
- ;WCJ 11/04/2005 If a Non-VA facility 
- I $E(Z) D
- . S IBXSAVE("NVID")=$$NONVAID^IBCEF72(IBXIEN,.B,$E(Z),1)
- .; S IBXSAVE("NVID")=$$NONVAID^IBCEF72(IBXIEN,.B,'$E(Z,2),1)
- . S IBXDATA=$P("^34^24",U,$P(IBXSAVE("NVID"),U,2)+1)
+ S Z=$$PSPRV^IBCEF7(IBXIEN),IBXSAVE("NVID")=$$NONVAID^IBCEF72(IBXIEN,.B,'$E(Z,2),1),IBXDATA=$P("^34^24",U,$P(IBXSAVE("NVID"),U,2)+1)
  ;S Z=$$PSPRV^IBCEF7(IBXIEN),IBXSAVE("NVID")=$$NONVAID^IBCEF72(IBXIEN,.B,'$E(Z,2),1),IBXDATA=24
  Q
  ;

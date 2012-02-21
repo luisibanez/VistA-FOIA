@@ -1,9 +1,11 @@
-PXRMDLL ;SLC/PJH - REMINDER DIALOG LOADER ;11/02/2009
- ;;2.0;CLINICAL REMINDERS;**10,6,12,17**;Feb 04, 2005;Build 102
+PXRMDLL ;SLC/PJH - REMINDER DIALOG LOADER ;07/29/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
 OK(DIEN) ;Check if mental health test is for GUI
- I 'DIEN Q 0
- Q $$MH^PXRMDLG5(DIEN)
+ I 'DFIEN Q 0
+ I $P($G(^YTT(601.6,DFIEN,0)),U,4)="Y" Q 1
+ I $P($G(^YTT(601,DFIEN,0)),U)="GAF" Q 1
+ Q 0
  ;
 TXT ;Format text
  N NULL
@@ -66,7 +68,6 @@ GROUP(DIEN,DSUB) ;Dialog group
  S DEXC=$P($G(^PXRMD(801.41,DIEN,2)),U,3)
  ;
  S OCNT=OCNT+1,ORY(OCNT)=1_U_DIEN_U_DSUB_U_DCHK_U_DEXC
- S $P(ORY(OCNT),U,8)=$$AHIS(DIEN)
  S $P(ORY(OCNT),U,15)=DHIDE,$P(ORY(OCNT),U,16)=DIND
  S $P(ORY(OCNT),U,17)=DSHARE,$P(ORY(OCNT),U,18)=DENTRY
  S $P(ORY(OCNT),U,19)=DBOX,$P(ORY(OCNT),U,20)=DCAP
@@ -82,8 +83,6 @@ GROUP(DIEN,DSUB) ;Dialog group
  .S DGSUB=$O(^PXRMD(801.41,DIEN,10,"B",DGSEQ,"")) Q:'DGSUB
  .S DATA=$G(^PXRMD(801.41,DIEN,10,DGSUB,0))
  .S DGIEN=$P(DATA,U,2) Q:'DGIEN
- .;Check if element is disabled/invalid
- .I $$ISDISAB(DGIEN)=1 Q
  .;Branching logic call to determine if element should be suppress,
  .;replace or left as is
  .N TERMNODE,TERMSTAT
@@ -96,13 +95,12 @@ GROUP(DIEN,DSUB) ;Dialog group
  .I $P($G(^PXRMD(801.41,DGIEN,0)),U,16)'["WHR" D
  ..K DTXT S SUB=0 F  S SUB=$O(^PXRMD(801.41,DGIEN,25,SUB)) Q:'SUB  D
  ...S DTXT(SUB)=$G(^PXRMD(801.41,DGIEN,25,SUB,0))
- .S DATA=$G(^PXRMD(801.41,DGIEN,0))
+ .;Check if element is disabled/invalid
+ .S DATA=$G(^PXRMD(801.41,DGIEN,0)) Q:DATA=""  Q:$P(DATA,U,3)]""
  .;If the actual element is exclude from P/N override
  .I $P($G(^PXRMD(801.41,DGIEN,2)),U,3) S DEXC=1
  .S DTYP=$P(DATA,U,4),DSUPP=$P(DATA,U,11) Q:"EG"'[DTYP
- .S DMHEX=$P(DATA,U,14)
- .S DRESL=$$RESGROUP^PXRMDLLB(DGIEN)
- .;S DRESL=$P(DATA,U,15)
+ .S DMHEX=$P(DATA,U,14),DRESL=$P(DATA,U,15)
  .S DRES=$P($G(^PXRMD(801.41,DGIEN,1)),U,3)
  .;Done Elsewhere (historical)
  .S DHIS=$$AHIS(DGIEN)
@@ -128,47 +126,13 @@ GROUP(DIEN,DSUB) ;Dialog group
  ..S OCNT=OCNT+1,ORY(OCNT)=2_U_DGIEN_U_DGRP_U_TEXT
  Q
  ;
-ISDISAB(PXRMIEN) ;
- N PXRMDATA
- S PXRMDATA=$G(^PXRMD(801.41,PXRMIEN,0))
- I +$P(PXRMDATA,U,3)=0 Q 0
- I +$P(PXRMDATA,U,3)=2 Q 1
- N ZTDESC,ZTDTH,ZTRTN,ZTSAVE,ZTIO
- S ZTDESC="Reminder Dialog disable check"
- S ZTRTN="ISQDISB^PXRMDLL"
- S ZTSAVE("PXRMDATA")=""
- S ZTSAVE("PXRMIEN")=""
- S ZTIO=""
- S ZTDTH=$$NOW^XLFDT
- D ^%ZTLOAD
- Q 1
-ISQDISB ;
- N CNT,MSG,MSGCNT,RESULT,STDFILES,STR,TYPE
- S TYPE=$P(PXRMDATA,U,4)
- S CNT=1
- S TYPE=$S(TYPE="E":"Element",TYPE="G":"Group",TYPE="R":"Result Group",1:"Item")
- S STR="Disabled Dialog Item is being used in CPRS."
- S ^TMP("PXRMXMZ",$J,CNT,0)="Reminder Dialog "_TYPE_" "_$P(PXRMDATA,U)_" is inactive."
- D DIALDSAR^PXRMFRPT(.STDFILES) I '$D(STDFILES) G ISQDISBX
- S RESULT=$$DISABCHK^PXRMDLG6(PXRMIEN,.STDFILES,.MSG)
- I '$D(MSG) G ISQDISBX
- S CNT=CNT+1,^TMP("PXRMXMZ",$J,CNT,0)="",CNT=CNT+1
- S MSGCNT=0
- F  S MSGCNT=$O(MSG(MSGCNT)) Q:MSGCNT'>0  D
- .S CNT=CNT+1
- .S ^TMP("PXRMXMZ",$J,CNT,0)="    "_$G(MSG(MSGCNT))
- ;
-ISQDISBX ;
- D SEND^PXRMMSG("PXRMXMZ",STR)
- Q
- ;
 LOAD(DIEN,DFN) ;Load dialog questions into array
  N DARRAY,DATA,DITEM,DFIND,DFIEN,DFTYP,DPCE,DRES,DSEQ,DSUB,DTXT,DTYP,OCNT
  N DDIS,DEXC,DHIDE,DCHECK,DDIS,DHIS,DMHEX,DRESL,DSUPP,SUB,IDENT,TXTCNT
  ;Check Status of dialog
  S DATA=$G(^PXRMD(801.41,DIEN,0)) Q:DATA=""
  ;If disabled ignore
- I $$ISDISAB(DIEN)=1 Q
+ I $P(DATA,U,3)]"" Q
  ;Ignore if not a reminder dialog
  I $P(DATA,U,4)'="R" Q
  ;
@@ -180,7 +144,7 @@ LOAD(DIEN,DFN) ;Load dialog questions into array
  S DARRAY("AUTTSK(")="SK"
  S DARRAY("GMRD(120.51,")="VIT"
  S DARRAY("ORD(101.41,")="Q"
- S DARRAY("YTT(601.71,")="MH"
+ S DARRAY("YTT(601,")="MH"
  S DARRAY("ICD9(")="POV"
  S DARRAY("ICPT(")="CPT"
  S DARRAY("PXD(811.2,")="T"
@@ -193,7 +157,7 @@ LOAD(DIEN,DFN) ;Load dialog questions into array
  .S DATA=$G(^PXRMD(801.41,DIEN,10,DSUB,0))
  .S DITEM=$P(DATA,U,2) Q:DITEM=""
  .;Ignore disabled elements
- .S DATA=$G(^PXRMD(801.41,DITEM,0)) Q:DATA=""  Q:$$ISDISAB(DITEM)=1
+ .S DATA=$G(^PXRMD(801.41,DITEM,0)) Q:DATA=""  Q:$P(DATA,U,3)]""
  .;Branching logic call to determine if element should be suppress,
  .;replace or left as is
  .S TERMNODE=$G(^PXRMD(801.41,DITEM,49))
@@ -202,9 +166,7 @@ LOAD(DIEN,DFN) ;Load dialog questions into array
  ..S TERMSTAT=1
  ..D REPLACE^PXRMDLLB(DFN,TERMNODE,.DITEM,.DATA,.TERMSTAT)
  .S DTYP=$P(DATA,U,4),DSUPP=$P(DATA,U,11)
- .S DMHEX=$P(DATA,U,14)
- .S DRESL=$$RESGROUP^PXRMDLLB(DITEM)
- .;S DRESL=$P(DATA,U,15)
+ .S DMHEX=$P(DATA,U,14),DRESL=$P(DATA,U,15)
  .K DTXT S SUB=0
  .F  S SUB=$O(^PXRMD(801.41,DITEM,25,SUB)) Q:'SUB  D
  ..S DTXT(SUB)=$G(^PXRMD(801.41,DITEM,25,SUB,0))

@@ -1,9 +1,9 @@
 IBCEFG7 ;ALB/TMP - OUTPUT FORMATTER GENERIC FORM PROCESSING ;06-MAR-96
- ;;2.0;INTEGRATED BILLING;**52,84,96,51,137,191,320**;21-MAR-94
+ ;;2.0;INTEGRATED BILLING;**52,84,96,51,137,191**;21-MAR-94
  ;
  Q
  ;
-FORM(IBFORM,IBQUE,IBNOASK,IBQDT,ZTSK,IBABORT) ;For ien IBFORM, extract data using
+FORM(IBFORM,IBQUE,IBNOASK,IBQDT,ZTSK) ;For ien IBFORM, extract data using
  ;    output generater
  ; IBQUE = the output queue for transmitted forms or the printer queue
  ;          for printed output
@@ -13,17 +13,13 @@ FORM(IBFORM,IBQUE,IBNOASK,IBQDT,ZTSK,IBABORT) ;For ien IBFORM, extract data usin
  ;
  ; Sets ZTSK only if job is queued
  ;
- ; IBABORT = output parameter which says user aborted forms output.
- ;           Pass by reference.  The $$QUEUE function returned false.
- ;
  N IBF2,IBTYP,POP,ZTIO,ZTRTN,ZTDESC,ZTSAVE,ZTREQ,ZTDTH,ZTREQ
- S IBTYP=$P($G(^IBE(353,IBFORM,2)),U,2),IBQUE=$G(IBQUE),IBABORT=0
+ S IBTYP=$P($G(^IBE(353,IBFORM,2)),U,2),IBQUE=$G(IBQUE)
  G:$S(IBTYP'="S":$G(^IBE(353,IBFORM,"EXT"))=""&($G(^IBE(353,+$P($G(^IBE(353,IBFORM,2)),U,5),"EXT"))=""),1:'$G(IBIFN)) FORMQ
  I IBTYP="P",IBQUE="" D DEV(IBFORM) G:$G(POP) FORMQ
- I IBTYP="T" D:$G(IBNOASK)  Q:$G(IBNOASK)  I '$$QUEUE(IBFORM) S:$O(^TMP("IBRESUBMIT",$J,0)) ^TMP("IBRESUBMIT",$J)="ABORT" S IBABORT=1 Q
+ I IBTYP="T" D:$G(IBNOASK)  Q:$G(IBNOASK)  I '$$QUEUE(IBFORM) S:$O(^TMP("IBRESUBMIT",$J,0)) ^TMP("IBRESUBMIT",$J)="ABORT" Q
  . S ZTRTN="FORMOUT^IBCEFG7",ZTIO="",ZTDESC="OUTPUT FORMATTER - FORM: "_$P($G(^IBE(353,IBFORM,0)),U),ZTSAVE("IB*")="",ZTDTH=$S($G(IBQDT):IBQDT,1:$$NOW^XLFDT())
  . S:$D(^TMP("IBRESUBMIT",$J)) ZTSAVE("^TMP(""IBRESUBMIT"",$J)")="",ZTSAVE("^TMP(""IBNOT"",$J)")="",ZTSAVE("^TMP(""IBRESUBMIT"",$J,")="",ZTSAVE("^TMP(""IBNOT"",$J,")=""
- . I $D(^TMP("IBSELX",$J)) S ZTSAVE("^TMP(""IBSELX"",$J,")="",ZTSAVE("^TMP(""IBSELX"",$J)")=""
  . S:'$G(DUZ) DUZ=.5
  . D ^%ZTLOAD
  I '$G(ZTSK) D FORMOUT
@@ -147,9 +143,8 @@ QUEUE(IBFORM) ; Ask to queue transmission
  W !!,"Please enter the date and time to execute this job...",!
  S ZTRTN="FORMOUT^IBCEFG7",ZTIO="",ZTDESC="OUTPUT FORMATTER - FORM: "_$P($G(^IBE(353,IBFORM,0)),U),ZTSAVE("IB*")=""
  S:$D(^TMP("IBRESUBMIT",$J)) ZTSAVE("^TMP(""IBRESUBMIT"",$J)")="",ZTSAVE("^TMP(""IBNOT"",$J)")="",ZTSAVE("^TMP(""IBRESUBMIT"",$J,")="",ZTSAVE("^TMP(""IBNOT"",$J,")=""
- I $D(^TMP("IBSELX",$J)) S ZTSAVE("^TMP(""IBSELX"",$J,")="",ZTSAVE("^TMP(""IBSELX"",$J)")=""
  D ^%ZTLOAD
- I $G(ZTSK) W !!,"This job has been queued.  The task number is "_ZTSK_"."
+ I $D(ZTSK) W !!,"This job has been queued.  The task number is "_ZTSK_"."
 QUEQ Q OKAY
  ;
 FPRE(IBFORM,IBPAR,IBXERR) ; Executes pre-processor

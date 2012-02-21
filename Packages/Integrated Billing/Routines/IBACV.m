@@ -1,14 +1,14 @@
 IBACV ;WOIFO/SS-COMBAT VET UTILITIES ;7-AUG-03
- ;;2.0;INTEGRATED BILLING;**234,247,275,339,347** ;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**234,247,275**;21-MAR-94
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;To replace CL^SDCO21 with CL^IBACV that wraps out both CL^SDCO21 and $$CVEDT^DGCV
 CL(IBDFN,IBSDDT,IBSDOE,IBSDCLY) ;Build Classification Array
- ; Input -- DFN Patient file IEN 
- ; SDDT Date/Time [Optional]
- ; SDOE Outpatient Encounter file IEN [Optional]
- ; Output -- SDCLY Classification Array
- ; Subscripted by Class. Type file (#409.41) IEN
+ ; Input  -- DFN      Patient file IEN  
+ ;   SDDT     Date/Time [Optional]
+ ;   SDOE     Outpatient Encounter file IEN  [Optional]
+ ; Output -- SDCLY    Classification Array
+ ;    Subscripted by Class. Type file (#409.41) IEN
  ;
  D CL^SDCO21(IBDFN,$G(IBSDDT),$G(IBSDOE),.IBSDCLY)
  Q
@@ -17,23 +17,17 @@ CL(IBDFN,IBSDDT,IBSDOE,IBSDCLY) ;Build Classification Array
  ; current_CV_status^end_date^if_ever_had_CV_status
 CVEDT(IBDFN,IBDT) ;
  N IBRET S IBRET=$$CVEDT^DGCV($G(IBDFN),$G(IBDT))
- Q (+$P(IBRET,"^",3))_"^"_(+$P(IBRET,"^",2))_"^"_(+$P(IBRET,"^",1)) ;swop
+ Q (+$P(IBRET,"^",3))_"^"_(+$P(IBRET,"^",2))_"^"_(+$P(IBRET,"^",1))  ;swop
  ;
  ;/**
  ;Return the classification description of code sets for #.03 in #351.2.
- ; Input:
- ; X -- Patient class [1-ao|2-ir|3-swa|4-sc|5-mst|6-hnc|7-cv|8-SHAD]
+ ;  Input:
+ ; X  --  Patient class [1-ao|2-ir|3-ec|4-sc|5-mst|6-hnc|7-cv]
  ; IBCASE -- "M" - mixed case (the first letter is uppercase and others-lowercase)
 PATTYPE(X,IBCASE) ; */
  N IBZ
- S IBZ=$S(X=1:"AGENT ORANGE",X=2:"IONIZING RADIATION",X=3:"SOUTHWEST ASIA",X=4:"SERVICE CONNECTED",X=5:"MILITARY SEXUAL TRAUMA",X=6:"HEAD/NECK CANCER",X=7:"COMBAT VETERAN",X=8:"PROJECT 112/SHAD",1:"SPECIAL")
+ S IBZ=$S(X=1:"AGENT ORANGE",X=2:"IONIZING RADIATION",X=3:"ENVIRONMENTAL CONTAMINANT",X=4:"SERVICE CONNECTED",X=5:"MILITARY SEXUAL TRAUMA",X=6:"HEAD/NECK CANCER",X=7:"COMBAT VETERAN",1:"SPECIAL")
  Q:$G(IBCASE)="M" $$LOWER^VALM1(IBZ)
- Q IBZ
- ;
-PATTYAB(X) ; Return External Abbreviation of Special Inpatient Billing Case Patient Type (#351.2,.03)
- ; Input: 351.2, .03 internal value
- N IBZ S X=$G(X)
- S IBZ=$S(X=1:"AO",X=2:"IR",X=3:"SWA",X=4:"SC",X=5:"MST",X=6:"HNC",X=7:"CV",X=8:"SHAD",1:"UNK")
  Q IBZ
  ;
  ;if Combat Vet sends e-mail to mailgroup "IB COMBAT VET RX COPAY"
@@ -53,16 +47,16 @@ EMAIL(DFN,IBEFDT,IBEXPDT,IBRX) ;
  . D DEM^VADPT
  . S IBPAT=$G(VADM(1))
  . S IBSSN=$P($G(VADM(2)),"^",2)
- I $G(IBRX) S IBRX=$$FILE^IBRXUTL(IBRX,.01) ;get RX number
+ S IBRX=$P($G(^PSRX(+$G(IBRX),0)),"^",1) ;get RX number
  S:IBPAT="" IBPAT="Unknown"
  S XMSUB="COMBAT VET RX COPAY REVIEW NEEDED"
  S XMY("G.IB COMBAT VET RX COPAY")=""
  S XMTEXT="IBT(",XMDUZ="INTEGRATED BILLING PACKAGE"
  S IBT(1,0)="PATIENT: "_IBPAT
- I $G(IBEXPDT)>0 S Y=IBEXPDT X ^DD("DD") S IBT(1,0)=IBT(1,0)_" COMBAT VET until: "_Y
+ I $G(IBEXPDT)>0 S Y=IBEXPDT X ^DD("DD") S IBT(1,0)=IBT(1,0)_"  COMBAT VET until: "_Y
  S IBT(2,0)="SSN: "_IBSSN
  S IBT(3,0)=""
- S IBT(4,0)=$S($G(IBRX)'="":"RX#: "_$G(IBRX),1:"")
+ S IBT(4,0)=$S(IBRX'="":"RX#: "_IBRX,1:"")
  S IBT(5,0)="RX RELEASE DATE: "_IBTODAY
  S IBT(6,0)=""
  S IBT(7,0)="The above patient has a Combat Veteran status. Please review this"
@@ -75,8 +69,8 @@ EMAIL(DFN,IBEFDT,IBEXPDT,IBRX) ;
  ;is called from PROC^IBAMTC for each active inpatient
 IFCVEXP(IBDFN,IBNJDT,IB405) ;
  ;Input:IBDFN1 - patient's ien in PATIENT file
- ; IBNJDT - Nightly Job date 
- ; IB405 - ptr to #405
+ ;      IBNJDT  - Nightly Job date 
+ ;      IB405 - ptr to #405
  N IBTSTDT,IBPAT,IBZ,IBEXPIR,IBADM
  S IBPAT=$$PT^IBEFUNC(IBDFN)
  S (IBZ,IBEXPIR)=0
@@ -88,7 +82,7 @@ IFCVEXP(IBDFN,IBNJDT,IB405) ;
  S IBTSTDT=$$XTMPLST()
  ;if ^XTMP is not there then make the last CV check date as TODAY-7
  I IBTSTDT=0 S IBTSTDT=$$CHNGDATE^IBAHVE3(IBNJDT,-7) D SETXTMP0(IBTSTDT)
-  S IBADM=+$G(^DGPM(IB405,0))\1 ;admission/movement date
+ S IBADM=+$G(^DGPM(IB405,0))\1 ;admission/movement date
  I IBTSTDT'<IBNJDT Q
  ;check for all the days since the last check date thru today
  F  D  Q:(IBTSTDT'<IBNJDT)!(IBTSTDT=IBEXPIR)
@@ -104,9 +98,10 @@ XTMPLST() ;get the last CV check date in ^XTMP
  ;
 SETXTPM(IBDFN,IBCHKDT,IBEXP,IBADMIS,IBPT) ;save info in ^XTMP
  ;Input:IBDFN - patient's ien in PATIENT file
- ; IBEXP - CV expiration date
- ; IBADMIS - admission/movement date
- ; IBPT - patient's info
+ ;  IBCHKDT - check date
+ ;  IBEXP - CV expiration date
+ ;  IBADMIS - admission/movement date
+ ;  IBPT - patient's info
  S ^XTMP("IBCVEXPDT",IBDFN)=IBDFN_"^"_IBCHKDT_"^"_IBEXP_"^"_IBADMIS_"^"_$P(IBPT,"^",1,2)
  Q
  ;

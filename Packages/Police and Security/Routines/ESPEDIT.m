@@ -1,5 +1,5 @@
 ESPEDIT ;WASH/ERC - Police Officer Add/Edit ; 5 Apr 00 11:56 AM
- ;;1.0;POLICE & SECURITY;**31,44**;Mar 31, 1994;Build 1
+ ;;1.0;POLICE & SECURITY;**31**;Mar 31, 1994
  ; Routine will allow Police personnel to add/edit the Police Officer
  ; Rank and Badge Numer fields.
  ; (Previously an edit type option, changed with patch 31)
@@ -9,7 +9,7 @@ EN ;
  W !!!,"This option will allow the editing of Badge Number and Rank on those",!,"people holding the ESP POLICE security key.",!
 EN1 ;
  S DIC="^VA(200,"
- S DIC(0)="AEQ"
+ S DIC(0)="AEMQ"
  S DIC("A")="Select POLICE NAME: "
  S D="AK.ESP POLICE"
  D IX^DIC

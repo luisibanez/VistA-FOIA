@@ -1,5 +1,5 @@
 PRCHAMU ;WISC/AKS-Modules helpful in amendments ;8/18/97  9:12
- ;;5.1;IFCAP;**21,117**;Oct 20, 2000;Build 2
+ ;;5.1;IFCAP;**21**;Oct 20, 2000
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  W !,"Call at the appropriate entry point",$C(7)
  Q
@@ -113,7 +113,6 @@ UPDATE ;Update Delivery date, Original Delivery Date, Amendment status and
  .K PRCHDT
  S POSTAT=+$G(^PRC(443.6,PRCHPO,7))
  S AMSTAT=$S(POSTAT=25:26,POSTAT=30:31,POSTAT=40:71,POSTAT=6:83,POSTAT=84:85,POSTAT=86:87,POSTAT=90:91,POSTAT=92:93,POSTAT=94:95,POSTAT=96:97,POSTAT=45:45,1:POSTAT)
- I $G(PRCHAUTH)=1,(AMSTAT=40!(AMSTAT=71)) S AMSTAT=83
  S AMSTAT=$P(^PRCD(442.3,AMSTAT,0),U)
  S DIE="^PRC(443.6,PRCHPO,6,",DA(1)=PRCHPO,DA=PRCHAM,DR="9//^S X=AMSTAT;16"
  N AAREPO S AAREPO=$O(^PRC(443.6,PRCHPO,6,PRCHAM,3,"AC",32,0))

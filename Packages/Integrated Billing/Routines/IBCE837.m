@@ -1,6 +1,5 @@
 IBCE837 ;ALB/TMP - OUTPUT FOR 837 TRANSMISSION ;8/6/03 10:48am
- ;;2.0;INTEGRATED BILLING;**137,191,197,232,296,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,191,197,232,296**;21-MAR-94
  ;
 EN ; Auto-txmt
  N IBSITE8,IBRUN,X,X1,X2,DA,DIE,DR
@@ -47,7 +46,7 @@ SETUP(IBEXTRP) ; Txmn set up
  ..S ^TMP("IBONE",$J,"IBXERR",2)=$P("S^Res",U,IB)_"ubmit was attempted by: "_$P($G(^VA(200,DUZ,0)),U)_" ("_DUZ_")"
  Q
  ;
-FIND ; Find/sort by CMS-1500/UB-04, test/live, ins ID # & div
+FIND ; Find/sort by HCFA 1500/UB92, test/live, ins ID # & div
  ;
  N IBX,IB0,IBCBH,IBINS,IBXIEN,IBNID,IBGBL,IBTXTEST,IBBTYP,IB837R,IBDIV,IBNOTX,IBTXST,IBTEST,IBSEC
  K ^TMP($J,"BILL"),^TMP("IBICT",$J)

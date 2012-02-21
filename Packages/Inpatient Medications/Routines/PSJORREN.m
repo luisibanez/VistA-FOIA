@@ -1,5 +1,5 @@
 PSJORREN ;BIR/MV-RENEWAL FLAG ;6 DEC 00 / 3:11 PM 
- ;;5.0; INPATIENT MEDICATIONS ;**50,70,58,89,91,110,127,134**;16 DEC 97;Build 124
+ ;;5.0; INPATIENT MEDICATIONS ;**50,70,58,89,91,110,127**;16 DEC 97
  ;
  ; Reference to ^PS(50.7 supported by DBIA #2180
  ; References to ^PS(52.6 supported by DBIA #1231
@@ -15,7 +15,6 @@ ACTIVE(DFN,ON) ;
  ;          note: with PSJ*5*70 - instead of 2, IV order will return 0
  ;        1 (OK to renew)
  NEW PSJRT,PSJEXP
- I '$D(^PS(53.1,+ON))&'$D(^PS(55,+DFN,5,+ON,0))&'$D(^PS(55,+DFN,"IV",+ON,0)) S PSJRT="0^Invalid Package Reference" Q $G(PSJRT)
  D:ON["U" UD
  D:ON["V" IV
  I (+$G(PSJRT)=1) S PSJEXP=$$EXPIRED^PSGOER(DFN,ON) I PSJEXP S PSJRT="0^Expired Time Limit Exceeded"
@@ -81,6 +80,7 @@ IV ;
  .. I PSJOIACT S PSJRT(3)="0^Inactive Orderable Item"
  I $D(PSJRT(1)) S PSJRT=1 Q
  I $D(PSJRT(3)) S PSJRT=PSJRT(3) Q
+ ;I $D(PSJRT(2)),PSJCNT=1 S PSJRT=PSJRT(2) Q
  I $D(PSJRT(2)),PSJCNT=1 S PSJRT="0^New Orderable Item" Q
  S PSJRT="0^Inactive drug"
  Q

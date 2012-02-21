@@ -1,6 +1,5 @@
-MAGDRPC5 ;WOIFO/EdM - Routing RPCs ; 06/08/2007 10:12
- ;;3.0;IMAGING;**11,30,51,85,54**;03-July-2009;;Build 1424
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDRPC5 ;WOIFO/EdM - Routing RPCs ; 08/10/2004  07:35
+ ;;3.0;IMAGING;**11,30**;16-September-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDRPC5 ;WOIFO/EdM - Routing RPCs ; 06/08/2007 10:12
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -20,7 +20,10 @@ MAGDRPC5 ;WOIFO/EdM - Routing RPCs ; 06/08/2007 10:12
 START(OUT,LOCATION,RULES) ; RPC = MAG DICOM ROUTE EVAL START
  N I,LOC,X,ZTDESC,ZTDTH,ZTRTN,ZTSAVE
  ;
- D XTINIT
+ S X=$G(^XTMP("MAGEVAL",0))
+ S $P(X,"^",2)=DT
+ S $P(X,"^",3)="Routing Rule Evaluator Log - Can be purged at any time"
+ S ^XTMP("MAGEVAL",0)=X
  ;
  I '$G(LOCATION) S OUT="-1,No Location Specified" Q
  I '$O(RULES("")) S OUT="-2,No Routing Rules Specified" Q
@@ -47,7 +50,7 @@ STOP(OUT) ; RPC = MAG DICOM ROUTE EVAL STOP
  Q
  ;
 XMIT(OUT,LOCATION,DEST,PRIOR,MECH,DESTS) ; RPC = MAG DICOM ROUTE NEXT FILE
- N D0,DIR,DL,IM,M,NOW,OK,PLACE,TP,VP,X
+ N D0,DIR,DL,IM,M,OK,PLACE,TP,X
  ;
  S PLACE=$$PLACE^MAGDRPC2(LOCATION)
  S $P(^MAG(2006.1,PLACE,"LASTROUTE"),"^",1)=DT
@@ -55,26 +58,19 @@ XMIT(OUT,LOCATION,DEST,PRIOR,MECH,DESTS) ; RPC = MAG DICOM ROUTE NEXT FILE
  K OUT S OUT(1)=0,OK=0
  S:'$G(MECH) MECH=1 I MECH'=1,MECH'=2 S MECH=1
  I '$G(LOCATION) S OUT(1)="-1,No Location Specified" Q
- S VP(1)=";MAG(2005.2,"
- S VP(2)=";MAG(2006.587,"
- S:$G(DEST) DEST=+DEST_VP(MECH)
  S M="" F  S M=$O(DESTS(M)) Q:M=""  D
  . S X=DESTS(M) Q:X'["^"  Q:$P(X,"^",1)'=MECH  Q:'$P(X,"^",2)
- . S DL($P(X,"^",2)_VP(MECH))=""
+ . S DL($P(X,"^",2))=""
  . Q
  I $O(DL(""))="" S OUT(1)="-2,No Valid Destinations Specified" Q
  S:'$G(DEST) (PRIOR,DEST)=""
  I $G(PRIOR) D
  . I DEST S X=0 F  D  Q:X
- . . N NXT
- . . I $P($G(^MAG(2005.2,+DEST,0)),"^",6) S X=1 Q
- . . S NOW=$$NOW^XLFDT()*1E6
- . . S X=$P($G(^MAG(2005.2,+DEST,3)),"^",6)*1E6
- . . I NOW-X>1500 D ONOFLINE(.X,+DEST,1) Q
- . . S X=0,NXT=0
- . . F  S DEST=$O(^MAGQUEUE(2006.035,"STS",LOCATION,"WAITING",PRIOR,DEST)) Q:DEST=""  D  Q:NXT
- . . . S:$D(DL(DEST)) NXT=1
- . . . Q
+ . . I $P($G(^MAG(2005.2,DEST,0)),"^",6) S X=1 Q
+ . . D NOW^%DTC S %=%*1E6
+ . . S X=$P($G(^MAG(2005.2,DEST,3)),"^",6)*1E6
+ . . I %-X>1500 D ONOFLINE(.X,DEST,1) Q
+ . . S X=0,DEST=$O(^MAGQUEUE(2006.035,"STS",LOCATION,"WAITING",PRIOR,DEST))
  . . S:'DEST X=1
  . . Q
  . I 'DEST S (PRIOR,DEST)="" Q
@@ -97,24 +93,24 @@ XMIT(OUT,LOCATION,DEST,PRIOR,MECH,DESTS) ; RPC = MAG DICOM ROUTE NEXT FILE
  . . . ; Interrupt only if we're transmitting there
  . . . Q:'$D(DL(D))
  . . . ;
- . . . D:'$P(^MAG(2005.2,+D,0),"^",6)
- . . . . S NOW=$$NOW^XLFDT()*1E6
- . . . . S X=$P($G(^MAG(2005.2,+D,3)),"^",6)*1E6 Q:NOW-X<1500
- . . . . D ONOFLINE(.X,+D,1)
+ . . . D:'$P(^MAG(2005.2,D,0),"^",6)
+ . . . . D NOW^%DTC S %=%*1E6
+ . . . . S X=$P($G(^MAG(2005.2,D,3)),"^",6)*1E6 Q:%-X<1500
+ . . . . D ONOFLINE(.X,D,1)
  . . . . Q
- . . . S:$P(^MAG(2005.2,+D,0),"^",6) PRIOR=0
+ . . . S:$P(^MAG(2005.2,D,0),"^",6) PRIOR=0
  . . . Q
  . . Q
  . Q
  I '$G(PRIOR) F  D  Q:OK  Q:'PRIOR
  . S PRIOR=" " F  S PRIOR=$O(^MAGQUEUE(2006.035,"STS",LOCATION,"WAITING",PRIOR),-1) Q:'PRIOR  D  Q:OK
  . . S DEST="" F  S DEST=$O(^MAGQUEUE(2006.035,"STS",LOCATION,"WAITING",PRIOR,DEST)) Q:DEST=""  D:$D(DL(DEST))  Q:OK
- . . . D:'$P(^MAG(2005.2,+DEST,0),"^",6)
- . . . . S NOW=$$NOW^XLFDT()*1E6
- . . . . S X=$P($G(^MAG(2005.2,+DEST,3)),"^",6)*1E6 Q:NOW-X<1500
- . . . . D ONOFLINE(.X,+DEST,1)
+ . . . D:'$P(^MAG(2005.2,DEST,0),"^",6)
+ . . . . D NOW^%DTC S %=%*1E6
+ . . . . S X=$P($G(^MAG(2005.2,DEST,3)),"^",6)*1E6 Q:%-X<1500
+ . . . . D ONOFLINE(.X,DEST,1)
  . . . . Q
- . . . Q:'$P(^MAG(2005.2,+DEST,0),"^",6)
+ . . . Q:'$P(^MAG(2005.2,DEST,0),"^",6)
  . . . S D0="" F  S D0=$O(^MAGQUEUE(2006.035,"STS",LOCATION,"WAITING",PRIOR,DEST,D0)) Q:D0=""  D  Q:OK
  . . . . S M=$P($G(^MAGQUEUE(2006.035,D0,0)),"^",4) I M'=1,M'=2 S M=1
  . . . . I M=MECH S OK=1 Q
@@ -128,15 +124,13 @@ XMIT(OUT,LOCATION,DEST,PRIOR,MECH,DESTS) ; RPC = MAG DICOM ROUTE NEXT FILE
  ;
  S X=^MAGQUEUE(2006.035,D0,0),IM=$P(X,"^",1),TP=$P(X,"^",3)
  I 'IM D STATUS(X,D0,"SENT",LOCATION) S OUT(1)=2 Q
- S OUT(2)=+DEST,OUT(3)=PRIOR,OUT(4)=MECH,OUT(9)=D0
- S X=$G(^MAG(2005.2,+DEST,2)),OUT(5)=$P(X,"^",1),OUT(6)=$P(X,"^",2)
+ S OUT(2)=DEST,OUT(3)=PRIOR,OUT(4)=MECH,OUT(9)=D0
+ S X=$G(^MAG(2005.2,DEST,2)),OUT(5)=$P(X,"^",1),OUT(6)=$P(X,"^",2)
  D STATUS(X,D0,"SENDING",LOCATION)
- S OUT(10)=$P(^MAG(2005.2,+DEST,0),"^",2)
- S DIR=$P($G(^MAG(2005.2,+DEST,4)),"^",2)
- S OUT(11)=$G(^MAG(2005.2,+DEST,3))
- S OUT(12)=IM
- S OUT(13)=$P($G(^MAGQUEUE(2006.035,D0,1)),"^",3)
- S OUT(14)=$P($G(^MAG(2005.2,+DEST,1)),"^",7) S:OUT(14)="" OUT(14)="NONE"
+ S OUT(10)=$P(^MAG(2005.2,DEST,0),"^",2)
+ S DIR=$P($G(^MAG(2005.2,DEST,4)),"^",2)
+ S OUT(11)=$G(^MAG(2005.2,DEST,3))
+ S OUT(12)=IM,OUT(13)=$P($G(^MAGQUEUE(2006.035,D0,1)),"^",3)
  D XMIT^MAGDRPC6 ; Routine grew over 10,000 characters
  I MECH=2 S OUT(2)=OUT(2)_"^"_$P($G(^MAG(2006.587,+DEST,0)),"^",1)
  Q
@@ -144,9 +138,9 @@ XMIT(OUT,LOCATION,DEST,PRIOR,MECH,DESTS) ; RPC = MAG DICOM ROUTE NEXT FILE
 PURGE(OUT,LOCATION,DEST,MAX,DONE) ; RPC = MAG DICOM ROUTE GET PURGE
  N D0,D1,FILE,FMFILE,I,LIMIT,MORE,NOW,RETAIN,STAMP,STATUS,X
  ;
- S NOW=$$NOW^XLFDT()
+ D NOW^%DTC S NOW=%
  K OUT S OUT(1)=1
- S:$D(^MAG(2005.2,DEST,0)) $P(^MAG(2005.2,DEST,3),"^",4)=DT
+ S $P(^MAG(2005.2,DEST,3),"^",4)=DT
  S X=^MAG(2005.2,DEST,3)
  S RETAIN=$P(X,"^",1) S:RETAIN="" RETAIN=32 S:RETAIN<0 RETAIN=0
  S LIMIT=$H-RETAIN
@@ -170,7 +164,10 @@ PURGE(OUT,LOCATION,DEST,MAX,DONE) ; RPC = MAG DICOM ROUTE GET PURGE
  . S MORE=""
  . Q
  ;
- S LIMIT=$$HTFM^XLFDT(LIMIT,1)
+ D
+ . N %,%H,%I
+ . S %H=LIMIT D TT^%DTC S LIMIT=X
+ . Q
  ;
  S MAX=$G(MAX) S:MAX<1 MAX=100
  F FMFILE=2005,2005.1 D  Q:OUT(1)'<MAX
@@ -203,8 +200,6 @@ STATUS(OUT,D0,STATUS,LOCATION) ; RPC = MAG DICOM ROUTE STATUS
  N PRIOR ;--- Priority
  N TYPE ;---- File Type (Big, Text, DICOM, etc)
  N X0,X1 ;--- Queue data
- ;
- I '$G(D0) S OUT="-1,Invalid queue identifier: """_$G(D0)_"""." Q
  ;
  S X0=$G(^MAGQUEUE(2006.035,D0,0))
  S X1=$G(^MAGQUEUE(2006.035,D0,1))
@@ -254,17 +249,8 @@ ONOFLINE(OUT,DEST,STATUS) ; RPC = MAG DICOM NETWORK STATUS
  K ^MAG(2005.2,"C",NET,1,DEST)
  S ^MAG(2005.2,"C",NET,STATUS,DEST)=""
  S $P(^MAG(2005.2,DEST,0),"^",6)=STATUS
- S $P(^MAG(2005.2,DEST,3),"^",6)=$S(STATUS:"",1:$$NOW^XLFDT())
+ D NOW^%DTC
+ S $P(^MAG(2005.2,DEST,3),"^",6)=$S(STATUS:"",1:%)
  S OUT=1
- Q
- ;
-XTINIT N NODE
- D DT^DICRW
- F NODE="MAGEVAL","MAGEVALSTUDY" D
- . S X=$G(^XTMP(NODE,0))
- . S $P(X,"^",2)=DT
- . S $P(X,"^",3)="Routing Rule Evaluator Log - Can be purged at any time"
- . S ^XTMP(NODE,0)=X
- . Q
  Q
  ;

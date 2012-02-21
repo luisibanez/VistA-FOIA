@@ -1,14 +1,15 @@
-IBNCPDPL ;DALOI/SS - for ECME RESEARCH SCREEN ELIGIBILITY VIEW ;3/6/08  16:22
- ;;2.0;INTEGRATED BILLING;**276,384**;21-MAR-94;Build 74
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+IBNCPDPL ;DALOI/SS - for ECME RESEARCH SCREEN ELIGIBILITY VIEW ;05-APR-05
+ ;;2.0;INTEGRATED BILLING;**276**;21-MAR-94
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ;
  Q
  ;
  ; -- main entry point for IBNCPDP LSTMN ELIGIBILITY
- ;entry point for ECME "VE View Eligibility" menu option
+ ;entry point for ECME "VE View Eligibility" menu option 
  ;of the main ECME User Screen
 EN1(DFN) ;
+ Q:$$PFSSON^IBNCPDPI()  ;quit if PFSS is ON
  I $G(DFN)>0 D EN^VALM("IBNCPDP LSTMN ELIGIBILITY")
  Q
  ;

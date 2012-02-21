@@ -1,22 +1,21 @@
-MDRPCOP ; HOIFO/DP - Object RPCs (TMDPatient) ;8/3/09  10:39
- ;;1.0;CLINICAL PROCEDURES;**4,6,11,20**;Apr 01, 2004;Build 9
+MDRPCOP ; HOIFO/DP - Object RPCs (TMDPatient) ; [01-09-2003 15:21]
+ ;;1.0;CLINICAL PROCEDURES;;Apr 01, 2004
  ; Integration Agreements:
- ; IA# 2054 [Supported] DILF call
- ; IA# 2056 [Supported] DIQ calls
- ; IA# 2263 [Supported] XPAR calls
  ; IA# 3027 [Supported] Calls to DGSEC4
  ; IA# 2981 [Subscription] Calls to GUI~GMRCP5
  ; IA# 2548 [Supported] ACRP Interface Toolkit APIs.
  ; IA# 2552 [Supported] AIT API to provide outpatient encounter data.
  ; IA# 10061 [Supported] VADPT calls.
  ; IA# 3468 [Subscription] Use GMRCCP APIs.
+ ; IA# 3266 [Subscription] Call to DPTLK1
  ; IA# 10103 [Supported] Call to XLFDT
  ; IA# 10039 [Supported] Ward Location File (#42) Access.
  ; IA# 10035 [Supported] DPT references
+ ; IA# 3267 [Subscription] Call to DPTLK1
+ ; IA# 3593 [Supported] Access to routine DPTLK6 utilities for lookup
  ; IA# 3613 [Private] GETVST^MDRPCOP API call
  ; IA# 10099 [Supported] GMRADPT call
  ; IA# 1096 [Controlled Subscription] ^DGPM("ATID1" x-ref loop
- ; IA# 358 [Controlled Subscription] FILE 405 references
  ;
 ADD(X) ; [Procedure] Add line to @RESULTS@(...
  S @RESULTS@(+$O(@RESULTS@(""),-1)+1)=X
@@ -39,8 +38,6 @@ CHKIN ; [Procedure] Check In Study
  .S MDFDA(702,"+1,",.01)=DFN
  .S MDFDA(702,"+1,",.02)=$$NOW^XLFDT()
  .S MDFDA(702,"+1,",.03)=DUZ
- .S MDPC=$P(DATA,"^",5),MDPC=$S($L(MDPC,";")=1:MDPC,1:$P(MDPC,";",2))
- .S MDFDA(702,"+1,",.14)=MDPC
  .D UPDATE^DIE("","MDFDA","MDIEN","MDERR") Q:$D(MDERR)
  .S MDIENS=MDIEN(1)_",",MDHL7=$$SUB^MDHL7B(MDIEN(1))
  .I +MDHL7=-1 S MDFDA(702,MDIENS,.09)=2,MDFDA(702,MDIENS,.08)=$P(MDHL7,U,2)
@@ -53,14 +50,6 @@ CHKIN ; [Procedure] Check In Study
  .I +MDHL7=-1 S MDFDA(702,MDIENS,.09)=2,MDFDA(702,MDIENS,.08)=$P(MDHL7,U,2)
  .I +MDHL7=1 S MDFDA(702,MDIENS,.09)=5,MDFDA(702,MDIENS,.08)=""
  .D:$D(MDFDA) FILE^DIE("","MDFDA","MDERR")
- ; Patch 6 - Renal Check-In
- D:+$G(MDIENS)
- .S X=+$P(^MDD(702,+MDIENS,0),U,4) Q:'X
- .I $P(^MDS(702.01,X,0),U,6)=2 D  Q  ; Renal Check-In
- ..D CP^MDKUTLR(+MDIENS)
- ..S MDFDA(702,+MDIENS_",",.09)=5
- ..D FILE^DIE("","MDFDA","MDERR")
- ; Patch 6 - Renal Check-In
  I '$D(MDERR) S @RESULTS@(0)="1^OK" Q
  D ERROR^MDRPCU(RESULTS,.MDERR)
  Q
@@ -71,25 +60,13 @@ DISPCON ; [Procedure] Display a consult
  Q
  ;
 GETCONS ; [Procedure] Get available consults for patient
- K ^TMP("MDTMP",$J) N MDCDT,MDDY,X1,X2,X
- S MDDY=$$GET^XPAR("SYS","MD COMPL PROC DISPLAY DAYS",1)
- S X1=DT,X2=-$S(MDDY>0:+MDDY,1:365) D C^%DTC S MDCDT=X
+ K ^TMP("MDTMP",$J)
  D CPLIST^GMRCCP(DFN,,$NA(^TMP("MDTMP",$J)))
  S MDX=0
  F  S MDX=$O(^TMP("MDTMP",$J,MDX)) Q:'MDX  D:"saprc"[$P(^(MDX),U,4)
  .S Y="123;"_$P(^TMP("MDTMP",$J,MDX),U,5)
- .I $P($G(^TMP("MDTMP",$J,MDX)),U,4)="c" Q:$P($G(^TMP("MDTMP",$J,MDX)),U,1)<MDCDT
  .F X=2,3,4,1,6,5 S Y=Y_U_$P(^TMP("MDTMP",$J,MDX),U,X)
  .S Y=Y_U_+$O(^MDD(702,"ACON",+$P(^TMP("MDTMP",$J,MDX),U,5)))
- .;
- .; Patch MD*1.0*4 - Return number of times checked in at piece 9
- .;
- .S (X,Z)=0,MDY=+$P(^TMP("MDTMP",$J,MDX),U,5)
- .F  S X=$O(^MDD(702,"ACON",MDY,X)) Q:'X  S Z=Z+1
- .S $P(Y,U,9)=Z
- .;
- .; End Patch MD*1.0*4
- .;
  .D ADD(Y)
  S @RESULTS@(0)=+$O(@RESULTS@(""),-1)
  K ^TMP("MDTMP",$J)
@@ -102,7 +79,7 @@ GETHDR ; [Procedure] Get Pt Header
  Q
  ;
 GETOBJ ; [Procedure] Get information for TMDPATIENT object
- D DEM^VADPT,INP^VADPT Q:'$D(VADM)
+ D DEM^VADPT,INP^VADPT
  S @RESULTS@(0)=DFN
  S @RESULTS@(1)=VADM(1)
  S @RESULTS@(2)=$P(VADM(2),U,2)
@@ -127,43 +104,22 @@ GETRES ; [Procedure] Get results report
  Q
  ;
 GETTRAN ; [Procedure] Get a patients transactions
- K ^TMP("MDTMP",$J),^TMP("MDCONL",$J) N MDCDT,MDCDY,MDCOM,MDMULT,MDMULN,MDNUM,MDREQ,MDREQDT,MDYR,X1,X2,X
- S MDNUM=$$GET^XPAR("SYS","MD DAYS TO RETAIN COM STUDY",1) S (MDCDY,MDCOM)=0
- S MDMULN=$$GET^XPAR("SYS","MD DAYS TO RET COM MULT",1)
- I +MDNUM>0 S X1=DT,X2=-MDNUM D C^%DTC S MDCOM=X
- I +MDMULN>0 S X1=DT,X2=-MDMULN D C^%DTC S MDCDY=X
- D CPLIST^GMRCCP(DFN,,$NA(^TMP("MDTMP",$J)))
- S X1=DT,X2=-365 D C^%DTC S MDCDT=X
- S MDX=0 F  S MDX=$O(^TMP("MDTMP",$J,MDX)) Q:'MDX  D:"saprc"[$P(^(MDX),U,4)
- .I $P($G(^TMP("MDTMP",$J,MDX)),U,4)="c" Q:$P($G(^TMP("MDTMP",$J,MDX)),U,1)<MDCDT
- .S ^TMP("MDCONL",$J,$P($G(^TMP("MDTMP",$J,MDX)),U,5))=$P($G(^TMP("MDTMP",$J,MDX)),U,1)
- K ^TMP("MDTMP",$J)
  F MDX=0:0 S MDX=$O(^MDD(702,"B",DFN,+MDX))_"," Q:'MDX  D
- .Q:'$$GET1^DIQ(702,MDX,.05,"I")
- .Q:$G(^TMP("MDCONL",$J,+$$GET1^DIQ(702,MDX,.05,"I")))=""
- .S MDMULT=+$$GET1^DIQ(702,MDX,".04:.12","I")
- .S MDYR=$S(MDMULT<1:MDCOM,1:MDCDT)
- .I MDNUM Q:$$GET1^DIQ(702,MDX,.09,"I")=3&($$GET1^DIQ(702,MDX,.02,"I")<MDYR)
- .I MDMULT=1&(+MDMULN>0) Q:$$GET1^DIQ(702,MDX,.09,"I")=3&($$GET1^DIQ(702,MDX,.02,"I")<MDCDY)
- .S MDREQDT="" I +$$GET1^DIQ(702,MDX,.05,"I") S MDREQDT=$G(^TMP("MDCONL",$J,+$$GET1^DIQ(702,MDX,.05,"I")))
- .I MDREQDT'="" S MDREQDT=$$FMTE^XLFDT(MDREQDT,"1P")
- .S MDREQ=$$GET1^DIQ(702,MDX,.04)_"  "_+MDX_"  (Consult #:"_$$GET1^DIQ(702,MDX,.05,"I")_$S(MDREQDT'="":" Requested: "_MDREQDT,1:"")_")"
- .S Z=$$GET1^DIQ(702,MDX,".04:.02","I")_U_MDREQ_U_$$GET1^DIQ(702,MDX,.02,"I")_U_$$GET1^DIQ(702,MDX,.09)_U_$$GET1^DIQ(702,MDX,.11)_U_$$GET1^DIQ(702,MDX,.991)
+ .S Z=$$GET1^DIQ(702,MDX,".04:.02","I")_U_$$GET1^DIQ(702,MDX,.04)_U_$$GET1^DIQ(702,MDX,.02,"I")_U_$$GET1^DIQ(702,MDX,.09)_U_$$GET1^DIQ(702,MDX,.11)_U_$$GET1^DIQ(702,MDX,.991)
  .S Y=$O(@RESULTS@(""),-1)+1
  .S @RESULTS@(Y)="702;"_+MDX_U_Z
  S @RESULTS@(0)=+$O(@RESULTS@(""),-1)
- K ^TMP("MDCONL",$J)
  Q
  ;
 GETVST ; [Procedure] Return list of visits
- N BEG,END,VAERR,VASD,BDT,DTM,EDT,LOC,NOW,MDQUERY,MDLST,MDTDF,STI,STS,TODAY,I,J,K,XI,XE,X
- S NOW=$$NOW^XLFDT(),TODAY=$P(NOW,".",1),MDTDF=DFN
- S BEG=$$X2FM($$GETBEG),END=$$X2FM($$GETEND)+0.2359
+ N BEG,END,VAERR,VASD,BDT,DTM,EDT,LOC,NOW,MDQUERY,MDLST,STI,STS,TODAY,I,J,K,XI,XE,X
+ S NOW=$$NOW^XLFDT(),TODAY=$P(NOW,".",1)
+ S BEG=$$X2FM("T-200"),END=$$X2FM("T")+0.2359
  S MDLST="",MDSTOP=""
  I END>NOW D   ; get future encounters, past cancels/no-shows from VADPT
  .S VASD("F")=BEG
  .S VASD("T")=END
- .S VASD("W")="129"
+ .S VASD("W")="123456789"
  .D SDA^VADPT
  .S I=0 F  S I=$O(^UTILITY("VASD",$J,I)) Q:'I  D
  ..S XI=^UTILITY("VASD",$J,I,"I"),XE=^("E")
@@ -185,10 +141,10 @@ GETVST ; [Procedure] Return list of visits
  .I '$$ERRCHK^SDQUT() D SCAN^SDQ(.MDQUERY,"FORWARD")
  .D CLOSE^SDQ(.MDQUERY)
  N TIM,MOV,MDX0,Y,MTIM,XTYP,XLOC,XLOCI,HLOC,EARLY,DONE ; admits
- S EARLY=BEG,DONE=0 S:$G(DFN)="" DFN=MDTDF
+ S EARLY=BEG,DONE=0
  S TIM="" F  S TIM=$O(^DGPM("ATID1",DFN,TIM)) Q:TIM'>0  D  Q:DONE
  .S MOV=0  F  S MOV=$O(^DGPM("ATID1",DFN,TIM,MOV)) Q:MOV'>0  D  Q:DONE
- ..D GETS^DIQ(405,+MOV_",",".01;.04;.06","IE","MDX0") S MTIM=$G(MDX0(405,MOV_",",".01","I"))
+ ..D GETS^DIQ(405,+MOV_",","*","IE","MDX0") S MTIM=$G(MDX0(405,MOV_",",".01","I"))
  ..S XTYP=$G(MDX0(405,+MOV_",",".04","E"))
  ..S XLOC=$G(MDX0(405,+MOV_",",".06","E"))
  ..S XLOCI=+$G(MDX0(405,+MOV_",",".06","I")),HLOC=+$G(^DIC(42,+XLOCI,44))
@@ -198,19 +154,12 @@ GETVST ; [Procedure] Return list of visits
  .S J="" F  S J=$O(MDLST(I,J)) Q:J=""  D
  ..S K=0 F  S K=$O(MDLST(I,J,K)) Q:'K  D
  ...S @RESULTS@($O(@RESULTS@(""),-1)+1)=MDLST(I,J,K)
- S:$G(DFN)="" DFN=MDTDF S @RESULTS@(0)=+$O(@RESULTS@(""),-1)_U_($$GET1^DIQ(2,DFN_",",.1)]"")
+ S @RESULTS@(0)=+$O(@RESULTS@(""),-1)_U_($$GET1^DIQ(2,DFN_",",.1)]"")
  Q
  ;
-GETBEG() ; Get Beginning Date Range
- I $$GET^XPAR("SYS","MD APPOINT START DATE",1)>1 Q "T-"_$$GET^XPAR("SYS","MD APPOINT START DATE",1)
- Q "T-200"
-GETEND() ; Get Ending Date Range
- I $$GET^XPAR("SYS","MD APPOINT END DATE",1)>1 Q "T+"_$$GET^XPAR("SYS","MD APPOINT END DATE",1)
- Q "T"
 LOGSEC ; [Procedure] Log Security
- N RES
- D NOTICE^DGSEC4(.RES,DFN,DATA,1)
- S @RESULTS@(0)=$S(+RES:"1^Logged",1:"-1^Unable to log")
+ D NOTICE^DGSEC4(.RESULTS,DFN,DATA,1)
+ S @RESULTS@(0)=$S(RESULTS:"1^Logged",1:"-1^Unable to log")
  Q
  ;
 RPC(RESULTS,OPTION,DFN,DATA) ; [Procedure] Main RPC call tag
@@ -222,8 +171,58 @@ RPC(RESULTS,OPTION,DFN,DATA) ; [Procedure] Main RPC call tag
  Q
  ;
 SELECT ; [Procedure] Select patient
- ; Moved to continuation routine at MD*1.0*6 due to routine size
- D SELECT^MDRPCOP1
+ I '$D(^DPT(+$G(DFN),0))#2 S @RESULTS@(0)="-1^No such patient" Q
+ S @RESULTS@(0)="1^Required Identifiers & messages"
+ S IENS=DFN_","
+ D FILE^DID(2,,"REQUIRED IDENTIFIERS","MDIDS")
+ F MDX=0:0 S MDX=$O(MDIDS("REQUIRED IDENTIFIERS",MDX)) Q:'MDX  D
+ .S MDFLD=MDIDS("REQUIRED IDENTIFIERS",MDX,"FIELD")
+ .S MDID="$$PTID^"_$$GET1^DID(2,MDFLD,"","LABEL")
+ .S MDID=MDID_U_$$GET1^DIQ(2,IENS,MDFLD)
+ .D:MDFLD=.03
+ ..S MDID=MDID_" ("_$$GET1^DIQ(2,IENS,.033)_")"
+ ..S MDID=MDID_U_$$DOB^DPTLK1(+IENS)
+ .D:MDFLD=.09
+ ..S X=$P(MDID,U,3),X=$E(X,1,3)_"-"_$E(X,4,5)_"-"_$E(X,6,10)
+ ..S $P(MDID,U,3)=X,$P(MDID,U,4)=$$SSN^DPTLK1(+IENS)
+ .S @RESULTS@($O(@RESULTS@(""),-1)+1)=MDID
+ S MDID="$$PTID^"_$$GET1^DID(2,.1,"","LABEL")
+ S MDID=MDID_U_$$GET1^DIQ(2,IENS,.1)
+ S @RESULTS@($O(@RESULTS@(""),-1)+1)=MDID
+ S MDID="$$PTID^"_$$GET1^DID(2,.101,"","LABEL")
+ S MDID=MDID_U_$$GET1^DIQ(2,IENS,.101)
+ S @RESULTS@($O(@RESULTS@(""),-1)+1)=MDID
+ K MDRET
+ D GUIBS5A^DPTLK6(.MDRET,DFN) D:MDRET(1)=1
+ .D ADD("$$MSGHDR^2^SAME LAST NAME AND LAST 4")
+ .S MDX=1
+ .F  S MDX=$O(MDRET(MDX)) Q:'MDX!(+$G(MDRET(MDX)))  D
+ ..D ADD($P(MDRET(MDX),U,2))
+ .D ADD(" ")
+ .S MDX=1
+ .F  S MDX=$O(MDRET(MDX)) Q:'MDX  D:+MDRET(MDX)
+ ..S MDDFN=+$P(MDRET(MDX),U,2)
+ ..D ADD($$GET1^DIQ(2,MDDFN_",",.01)_"    "_$$DOB^DPTLK1(MDDFN)_"    "_$$SSN^DPTLK1(MDDFN))
+ .D ADD(" ")
+ .D ADD("Please review carefully before continuing")
+ .D ADD("$$MSGEND")
+ K MDRET
+ D PTSEC^DGSEC4(.MDRET,DFN) D:MDRET(1)'=0
+ .D:MDRET(1)=3
+ ..D ADD("$$MSGHDR^0^CAN'T ACCESS YOUR OWN RECORD!!")
+ .D:MDRET(1)=-1
+ ..D ADD("$$MSGHDR^0^INCOMPLETE INFORMATION - CAN'T PROCEED")
+ .D:MDRET(1)=1
+ ..D ADD("$$MSGHDR^1^SENSITIVE RECORD ACCESS")
+ .D:MDRET(1)'=-1&(MDRET(1)'=3)&(MDRET(1)'=1)
+ ..D ADD("$$MSGHDR^3^SENSITIVE RECORD ACCESS")
+ .S MDX=1
+ .F  S MDX=$O(MDRET(MDX)) Q:'MDX  D ADD($TR(MDRET(MDX),"*"," "))
+ .D ADD("$$MSGEND")
+ D GUIMTD^DPTLK6(.MDRET,DFN) D:MDRET(1)=1
+ .D ADD("$$MSGHDR^1^NOTICE")
+ .F MDX=1:0 S MDX=$O(MDRET(MDX)) Q:'MDX  D ADD(MDRET(MDX))
+ .D ADD("$$MSGEND")
  Q
  ;
 X2FM(X) ; [Function] return FM date given relative date

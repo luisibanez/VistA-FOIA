@@ -1,5 +1,5 @@
-LRAPR ;DALOI/REG/WTY/KLL/CKA - ANAT RELEASE REPORTS ;10/30/01
- ;;5.2;LAB SERVICE;**72,248,259,317,365**;Sep 27, 1994;Build 9
+LRAPR ;AVAMC/REG/WTY- ANAT RELEASE REPORTS ;10/30/01
+ ;;5.2;LAB SERVICE;**72,248,259**;Sep 27, 1994
  ;
  N LRESSW
  D SWITCH
@@ -20,13 +20,11 @@ LRAPR ;DALOI/REG/WTY/KLL/CKA - ANAT RELEASE REPORTS ;10/30/01
  S DR=DR_"Cannot release."" S Y=0;"
  S DR=DR_"I 'LRZ(2) D NMPATH^LRAPR;"
  S DR=DR_"I LRZ(2) D RINFO^LRAPR S Y=0;"
- ;Perform supp edit regardless if date rept released since supp rpt
- ; is added to released report
- S DR=DR_"D SUPCHK^LRAPR;"
+ S DR=DR_"I 'LRZ(2) D SUPCHK^LRAPR;"
  S DR=DR_"S DIR(0)=""YA"",DIR(""A"")=""Release report? """
  S DR=DR_",DIR(""B"")=""NO"" D ^DIR K:Y Y S:$D(Y) Y=0;"
  S DR=DR_".11////^D NOW^%DTC S X=%;.13////^S X=DUZ;"
- S DR=DR_"S LRELSD=1 W !!,""Report released..."""
+ S DR=DR_"W !!,""Report released..."""
  D ^LRAPDA
  D END
  Q
@@ -41,15 +39,12 @@ B ;Autopsy
  S DR=DR_"I 'LRZ(4),'LRZ W $C(7),!,""Provisional date or date report completed required.   "
  S DR=DR_"Cannot release."" S Y=0;"
  S DR=DR_"I 'LRZ(2) D NMPATH^LRAPR;"
- S DR=DR_"I LRZ(2) D RINFO^LRAPR S Y=0;"
- ;Perform supp edit regardless if date rept released since supp rpt
- ; is added to released report
- S DR=DR_"D SUPCHK^LRAPR;"
+ S DR=DR_"I LRZ(2) D RINFO^LRAPR;"
+ S DR=DR_"I 'LRZ(2) D SUPCHK^LRAPR;"
  S DR=DR_"D RELEASE^LRAPR;"
  S DR=DR_"D NOW^%DTC S LRDTE=%;"
  S DR=DR_"14.7////^S X=$S(LRZ(2):""@"",1:LRDTE);"
  S DR=DR_"14.8////^S X=$S(LRZ(2):""@"",1:DUZ);"
- S DR=DR_"S:'LRZ(2) LRELSD=1 "
  S DR=DR_"W !!,""Report "" W:LRZ(2) ""un"" W ""released..."";K LRDTE"
  D ^LRAPDA
  D END
@@ -58,16 +53,8 @@ EN ;Supplementary Report Entry Point
  N LRESSW
  D SWITCH
  W !!?20,"Release Supplementary Pathology Reports",!
- ;D A
- ;Section prompt replaces the line above
- S LRQUIT=0
- D SECTION^LRAPRES
+ D A
  I '$D(LRSS) D END Q
- ;Verify User ID has access to release supp. reports
- S LREND=0
- I LRESSW D CLSSCHK^LRAPRES1(DUZ,.LREND)
- Q:LREND
- ;
  W !!,"Data entry for ",LRH(0)," "
  S %=1 D YN^LRU G:%<1 END
  I %=2 D  G:Y<1 END
@@ -97,7 +84,7 @@ REST W "  for ",LRH(0)
  ..I $D(^LR(LRDFN,LRSS,LRI,.1,X,0)),$L(^(0)) W !,^(0)
 DIE ;Define default supplementary report
  N LRFILE,LRIENS,LRIENS1,LRX,LRRLS,LRFDA,LRLKFL,LRDA,LRQUIT,LRNOSP
- N LRMSG,LRSRFL,LRFDA2,LRSRMD,LRRLM
+ N LRMSG,LRSRFL
  S DIC("B")="",LRNOSP=0
  I LRSS'="AU" D
  .S LRFILE=+$$GET1^DID(LRSF,1.2,"","SPECIFIER")
@@ -106,9 +93,7 @@ DIE ;Define default supplementary report
  .S LRX=0 F  S LRX=$O(^LR(LRDFN,LRSS,LRI,1.2,LRX)) Q:'LRX  D
  ..S LRIENS=LRX_","_LRIENS1
  ..S LRSRFL=$$GET1^DIQ(LRFILE,LRIENS,.02,"I")
- ..;LRSRMD-set to 1 if supp rpt modified and requires release
- ..S LRSRMD=$$GET1^DIQ(LRFILE,LRIENS,.03,"I")
- ..Q:LRSRFL&('LRSRMD)
+ ..Q:LRSRFL
  ..S DIC("B")=$$GET1^DIQ(LRFILE,LRIENS,.01,"I")
  I LRSS="AU" D
  .S LRFILE=63.324,LRIENS1=LRDFN_","
@@ -116,9 +101,7 @@ DIE ;Define default supplementary report
  .S LRX=0 F  S LRX=$O(^LR(LRDFN,84,LRX)) Q:'LRX  D
  ..S LRIENS=LRX_","_LRIENS1
  ..S LRSRFL=$$GET1^DIQ(LRFILE,LRIENS,.02,"I")
- ..;LRSRMD-set to 1 if supp rpt modified and requires release
- ..S LRSRMD=$$GET1^DIQ(LRFILE,LRIENS,.03,"I")
- ..Q:LRSRFL&('LRSRMD)
+ ..Q:LRSRFL
  ..S DIC("B")=$$GET1^DIQ(LRFILE,LRIENS,.01,"I")
  I LRNOSP D  Q
  .K LRMSG
@@ -129,7 +112,7 @@ DIE ;Define default supplementary report
  .S LRMSG=$C(7)_"All supplementary reports have been released."
  .D EN^DDIOL(LRMSG,"","!!")
 DIE1 ;
- S (LRQUIT,LRRLM)=0
+ S LRQUIT=0
  F  D  Q:LRQUIT
  .W !
  .S:LRSS="AU" (LRLKFL,DIC)="^LR(LRDFN,84,"
@@ -141,13 +124,8 @@ DIE1 ;
  .S LRDA=+Y
  .S LRIENS=LRDA_","_LRIENS1
  .S LRRLS=+$$GET1^DIQ(LRFILE,LRIENS,.02,"I")
- .;If E-Sign OFF, must check LRRLM.  LRRLM=1 if supp rpt has been
- .;  modified and requires release
- .S LRRLM=+$$GET1^DIQ(LRFILE,LRIENS,.03,"I")
- .I LRESSW,LRRLS D  Q
+ .I LRRLS D  Q
  ..W !!,"This supplementary report has already been released.",!
- .I 'LRESSW,LRRLS D  Q:'LRRLM
- ..I 'LRRLM W !!,"This supplementary rept has already been released.",!
  .W !
  .I LRESSW D  Q
  ..D ESIG Q:LRQUIT
@@ -156,9 +134,6 @@ DIE1 ;
  .D ^DIR K DIR
  .Q:'Y
  .D UPDATE
- .;If E-sign switch OFF and orig report released, must verify all
- .;  supp reports released before release main report.
- .I LRCKREL,'LRESSW D CHKSUP^LRAPR1
  Q
  ;
 A D ^LRAP G:'$D(Y) END
@@ -196,26 +171,14 @@ UPDATE ;
  .S LRMSG=LRMSG_"Please wait and try again."
  .D EN^DDIOL(LRMSG,"","!!")
  S LRFDA(LRFILE,LRIENS,.02)=1
- S LRFDA2(LRFILE,LRIENS,.02)="@" ;Set but don't file unless unrel needed
  ;File signer ID and Date/time of released supp report
- D CKSIGNR^LRAPR1
+ D CKSIGNR
  D FILE^DIE("","LRFDA")
  W "...Released"
  L -@(LRLKFL)
- I LRSS="AU" D
- .S LRA=^LR(LRDFN,"AU")
- .S LRAC=$$GET1^DIQ(63,LRDFN_",",14,"I")
- .S LRI=$P(LRA,U)
- I LRSS'="AU" D
- .S LRA=^LR(LRDFN,LRSS,LRI,0)
- .S LRAC=$$GET1^DIQ(LRSF,LRIENS,.06,"I")
- D MAIN^LRAPRES1(LRDFN,LRSS,LRI,LRSF,LRP,LRAC)
- ;If all supp reports released, and E-Sign switch is ON, proceed to
- ;  release main report
- S LRCKREL=0
- S:LRSS'="AU" LRCKREL=$P(^LR(LRDFN,LRSS,LRI,0),"^",11)
- S:LRSS="AU" LRCKREL=$P(^LR(LRDFN,LRSS),"^",15)
- I LRCKREL,LRESSW D RELMN
+ ;If all supp reports released, and signer is same person for both
+ ;  supp and main reports, allow release of main report at this point
+ I LRESSW D RELMN
  Q
 SUPCHK ;Check for unreleased supplementary reports
  N LRSR,LRSR1,LRSR2
@@ -266,33 +229,77 @@ RELMN ;Allow release of main report as long as all supp reports are
  ;  released, and signer is same person for main and supp report(s)
  ;Make sure all supp reports signed out
  S LRQT=0
- D RELCHK^LRAPR1
+ D RELCHK
  Q:LRQT
- ;
- ;Continue with electronic signature and storage in TIU
- S LRAU=$S(LRSS="AU":1,1:0)
- I 'LRAU D
- .S LRPAT=+$$GET1^DIQ(LRSF,LRIENS1,.02,"I")
- .S LRZ=$$GET1^DIQ(LRSF,LRIENS1,.03,"I")
- .S LRZ(1)=$$GET1^DIQ(LRSF,LRIENS1,.13,"I")
- .S LRZ(1.1)=$$GET1^DIQ(LRSF,LRIENS1,.13)
- .S LRZ(2)=$$GET1^DIQ(LRSF,LRIENS1,.11,"I")
- I LRAU D
- .S LRPAT=+$$GET1^DIQ(63,LRDFN_",",13.6,"I")
- .S LRZ=$$GET1^DIQ(63,LRDFN_",",13,"I")
- .S LRZ(1)=$$GET1^DIQ(63,LRDFN_",",14.8,"I")
- .S LRZ(1.1)=$$GET1^DIQ(63,LRDFN_",",14.8)
- .S LRZ(2)=$$GET1^DIQ(63,LRDFN_",",14.7,"I")
- W !!,?25,"*** Main Report Release ***",!
- D NOW^%DTC S LRNTIME=%
- D TIUPREP^LRAPRES
- D STORE^LRAPRES
- I LRQUIT D FILE^DIE("","LRFDA2") Q
- D UNRLSE^LRAPR1
- D RELEASE^LRAPRES
- I LRQUIT D FILE^DIE("","LRFDA2") Q
- D OERR^LR7OB63D
+ ;Prompt for release of main report
+ S DIR(0)="YA",DIR("B")="YES"
+ S DIR("A")="Release main report?  "
+ D ^DIR K DIR
+ Q:'Y
+ ;User signing out the main report must equal the Path on the report
+ N LRPAT
+ ;S LRSIGNR=$$GET1^DIQ(200,DUZ_",",.01)
+ I LRSS'="AU" D 
+ . S LRIENS=LRI_","_LRDFN_","
+ . S LRPAT=+$$GET1^DIQ(LRSF,LRIENS,.02,"I")
+ I LRSS="AU" S LRPAT=+$$GET1^DIQ(63,LRDFN_",",13.6,"I")
+ I 'LRPAT D  Q
+ .S LRMSG(1)="Pathologist or Cytotechnologist entry is missing.",LRMSG(1,"F")="!!"
+ .S LRMSG(2)="  Cannot release the main report.",LRMSG(2,"F")="!"
+ .D EN^DDIOL(.LRMSG) K LRMSG
+ I LRPAT'=DUZ D  Q:LRQUIT
+ .S DIR(0)="Y",DIR("B")="YES",DIR("A")="CONTINUE  "
+ .S DIR("A",1)=""
+ .S DIR("A",2)="Supplemental release User ID does not match the."
+ .S DIR("A",3)="  Pathologist/Cytotechnologist User ID on the main report."
+ .S DIR("A",4)="Do you want to proceed with release of the main report?"
+ .S DIR("A",5)=""
+ .D ^DIR K DIR
+ .I Y=0 S LRQUIT=1
+ ;Release main report
+ D ^LRAPRES
  S LRQUIT=1
+ Q
+RELCHK ;Check to make sure all supp reports are released
+ N LRFILE,LRIENS,LRIENS1,LRX,LRRLS,LRFDA,LRLKFL,LRDA,LRNOSP
+ N LRMSG,LRSRFL
+ S DIC("B")=""
+ I LRSS'="AU" D
+ .S LRFILE=+$$GET1^DID(LRSF,1.2,"","SPECIFIER")
+ .S LRIENS1=LRI_","_LRDFN_","
+ .S LRX=0 F  S LRX=$O(^LR(LRDFN,LRSS,LRI,1.2,LRX)) Q:'LRX  D
+ ..S LRIENS=LRX_","_LRIENS1
+ ..S LRSRFL=$$GET1^DIQ(LRFILE,LRIENS,.02,"I")
+ ..Q:LRSRFL
+ ..S DIC("B")=$$GET1^DIQ(LRFILE,LRIENS,.01,"I")
+ I LRSS="AU" D
+ .S LRFILE=63.324
+ .S LRX=0 F  S LRX=$O(^LR(LRDFN,84,LRX)) Q:'LRX  D
+ ..S LRIENS=LRX_","_LRDFN_","
+ ..S LRSRFL=$$GET1^DIQ(LRFILE,LRIENS,.02,"I")
+ ..Q:LRSRFL
+ ..S DIC("B")=$$GET1^DIQ(LRFILE,LRIENS,.01,"I")
+ I $G(DIC("B")) S LRQT=1
+ Q
+CKSIGNR ;Update supp report with Releaser ID and Date/time
+ N LRIEN2,LRFLE
+ S LRQUIT=0
+ I LRSS'="AU" D
+ .S (A,B)=0 F  S A=$O(^LR(LRDFN,LRSS,LRI,1.2,LRDA,2,A)) Q:'A  D
+ ..S B=A
+ .I '$D(^LR(LRDFN,LRSS,LRI,1.2,LRDA,2,B,0)) S LRQUIT=1 Q
+ .S LRIEN2=B_","_LRDA_","_LRI_","_LRDFN_","
+ .S LRFLE=$S(LRSS="SP":63.8172,LRSS="CY":63.9072,LRSS="EM":63.2072,1:"")
+ I LRSS="AU" D
+ .S (A,B)=0 F  S A=$O(^LR(LRDFN,84,LRDA,2,A)) Q:'A  D
+ ..S B=A
+ .I '$D(^LR(LRDFN,84,LRDA,2,B,0)) S LRQUIT=1 Q
+ .S LRIEN2=B_","_LRDA_","_LRDFN_","
+ .S LRFLE=$S(LRSS="AU":63.3242,1:"")
+ Q:LRQUIT
+ S LRFDA(LRFLE,LRIEN2,.03)=DUZ
+ D NOW^%DTC
+ S LRFDA(LRFLE,LRIEN2,.04)=%
  Q
 END ;
  D V^LRU

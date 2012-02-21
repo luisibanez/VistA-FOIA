@@ -1,5 +1,5 @@
-DGRPECE ;ALB/MRY,ERC,BAJ - REGISTRATION CATASTROPHIC EDITS ; 10/4/06 3:27pm
- ;;5.3;Registration;**638,682,700,720,653,688,750,831**;Aug 13, 1993;Build 10
+DGRPECE ;ALB/MRY - REGISTRATION CATASTROPHIC EDITS ; 11/16/04 9:00am
+ ;;5.3;Registration;**638,682,700**;Aug 13, 1993
  ;
 CEDITS(DFN) ;catastrophic edits  - buffer values, save after check
  ;Input;
@@ -8,9 +8,9 @@ CEDITS(DFN) ;catastrophic edits  - buffer values, save after check
  ;responses into a buffer space.  User will be alerted on catastrophic
  ;edits on the following conditions:
  ; 1. Two or more catastrophic edits will generate a warning message.
- ; 2. Acceptance of two or more catastrophic edits will generate an alert
+ ; 2. Acceptance of two or more catatrophic edits will generate an alert
  ; to appropriate supervising staff holding the DG CATASTROPHIC EDIT key.
- ; 3. Acceptance of <2 catastrophic edits will process normally.
+ ; 3. Acceptance of <2 catatrophic edits will process normally.
  ;
  ; Arrays: BEFORE - Holds patient values before the edit process
  ;                  (before snapshot).
@@ -18,7 +18,7 @@ CEDITS(DFN) ;catastrophic edits  - buffer values, save after check
  ;                  (after snapshot).
  ;         SAVE   - holds only edited changes for filing into file #2.
  ;
- N DA,DIR,DIRUT,Y,BUFFER,BEFORE,SAVE,DG20IEN,XUNOTRIG
+ N DA,DIR,DIRUT,Y,BUFFER,BEFORE,SAVE,DG20IEN
  D BEFORE(DFN,.BEFORE,.BUFFER) ;retrieve before patient values
  ;buffer - get name
  K DG20NAME
@@ -33,52 +33,26 @@ CEDITS(DFN) ;catastrophic edits  - buffer values, save after check
  I $D(DG20NAME("PREFIX")) S BUFFER("PREFIX")=DG20NAME("PREFIX")
  I $D(DG20NAME("DEGREE")) S BUFFER("DEGREE")=DG20NAME("DEGREE")
  K DG20NAME
- ;DG*5.3*688 BAJ if SSN is verified, do not allow edits
- I BEFORE("SSNV")="VERIFIED" D  G DOB
- . S BUFFER("SSN")=BEFORE("SSN")
- . W !,"SSN: "_BUFFER("SSN")
- . W !,"SOCIAL SECURITY NUMBER "_BUFFER("SSN")_" has been verified by SSA --NO EDITING"
- ;
  ;buffer - get ssn
  S DIR(0)="2,.09^^"
  S DA=DFN D ^DIR
  I $D(DIRUT) D CECHECK Q
  S BUFFER("SSN")=Y
- ;if SSN is pseudo, Pseudo SSN Reason is req. - DG*5.3*653, ERC
- I $G(BUFFER("SSN"))["P" D  I $D(DIRUT) D CECHECK Q
-REAS . ;
- . N DGREA,DGQSSN,DIR
- . S DGQSSN=0
- . S DGREA=$P($G(^DPT(DFN,"SSN")),U)
- . S DIR(0)="2,.0906^^"
- . S DA=DFN
- . D ^DIR
- . I ($D(DUOUT)!($D(DTOUT))!($D(DIRUT))),($G(BUFFER("SSNREAS"))']"") D
- . . W !?10,"PSSN Reason Required if SSN is a Pseudo."
- . . I $G(BEFORE("SSN"))["P" G REAS
- . . I $G(BEFORE("SSN"))']"" G REAS
- . . S DIR(0)="YA",DIR("A")="          Delete Pseudo SSN?: ",DIR("?")="If the SSN is a Pseudo SSN there must be a Pseudo SSN Reason.",DIR("B")="YES"
- . . D ^DIR
- . . I Y=1 S BUFFER("SSN")=BEFORE("SSN"),DGQSSN=1,Y="" Q
- . . G REAS
- . I DGQSSN=1 Q
- . S BUFFER("SSNREAS")=Y
- . I $D(DIRUT)!('$D(BUFFER("SSN"))) D CECHECK Q
-DOB ;buffer - get dob
+ ;buffer - get dob
  S DIR(0)="2,.03^^"
  S DA=DFN D ^DIR
  I $D(DIRUT) D CECHECK Q
  S BUFFER("DOB")=Y
-SEX ;buffer - get sex
+ ;buffer - get sex
  S DIR(0)="2,.02^^"
  S DA=DFN D ^DIR
  I $D(DIRUT) D CECHECK Q
  S BUFFER("SEX")=Y
-MBI ; buffer - get MBI (multiple birth indicator)
+ ; buffer - get MBI (multiple birth indicator)
  S DIR(0)="2,994^^"
  S DA=DFN D ^DIR
- S BUFFER("MBI")=Y
  I $D(DIRUT) D CECHECK Q
+ S BUFFER("MBI")=Y
 CECHECK ;do catastrophic edit checks, alert, and save
  N DGCNT,DGCEFLG
  ;Compare before/buffer arrays, putting edits into save array.
@@ -100,7 +74,6 @@ SAVE(DFN) ;store accepted/edited values into patient file
  I $D(SAVE("DOB")) S FDATA(2,+DFN_",",.03)=SAVE("DOB")
  I $D(SAVE("SEX")) S FDATA(2,+DFN_",",.02)=SAVE("SEX")
  I $D(SAVE("SSN")) S FDATA(2,+DFN_",",.09)=SAVE("SSN")
- I $D(SAVE("SSNREAS")) S FDATA(2,+DFN_",",.0906)=SAVE("SSNREAS")
  I $D(SAVE("MBI")) S FDATA(2,+DFN_",",994)=SAVE("MBI")
  D FILE^DIE("","FDATA","DIERR")
  K FDATA,DIERR
@@ -110,7 +83,6 @@ SAVE(DFN) ;store accepted/edited values into patient file
  .S FDATA(20,+DG20IEN_",",2)=BUFFER("GIVEN")
  .S FDATA(20,+DG20IEN_",",3)=BUFFER("MIDDLE")
  .S FDATA(20,+DG20IEN_",",5)=BUFFER("SUFFIX")
- .S XUNOTRIG=1
  .D FILE^DIE("","FDATA","DIERR")
  .K FDATA,DIERR
  I $D(BUFFER("PREFIX")) S FDATA(20,+DG20IEN_",",4)=BUFFER("PREFIX")
@@ -121,19 +93,16 @@ SAVE(DFN) ;store accepted/edited values into patient file
  K FDATA,DIERR
  Q
  ;
-BEFORE(IEN,BEF,BUF) ;save original name, ssn, dob, sex, mbi, prefix, degree
+BEFORE(IEN,BEF,BUF) ;save original name, ssn, dob, sex
  N DG20
  S BEF("NAME")=$$GET1^DIQ(2,+IEN_",",.01),BUF("NAME")=BEF("NAME")
  S BEF("SSN")=$$GET1^DIQ(2,+IEN_",",.09),BUF("SSN")=BEF("SSN")
- ;Get SSN Verification flag DG*5.3*688 BAJ 11/22/2005
- S BEF("SSNV")=$$GET1^DIQ(2,+IEN_",",.0907),BUF("SSNV")=BEF("SSNV")
- S BEF("SSNREAS")=$$GET1^DIQ(2,+IEN_",",.0906),BUF("SSNREAS")=BEF("SSNREAS")
  S BEF("DOB")=$$GET1^DIQ(2,+IEN_",",.03,"I"),BUF("DOB")=BEF("DOB")
  S BEF("SEX")=$$GET1^DIQ(2,+IEN_",",.02,"I"),BUF("SEX")=BEF("SEX")
  S BEF("MBI")=$$GET1^DIQ(2,+IEN_",",994,"I"),BUF("MBI")=BEF("MBI")
  D GETS^DIQ(2,+IEN_",",1.01,"I","DG20")
  S BEF("FAMILY")="",BEF("GIVEN")="",BUF("FAMILY")="",BUF("GIVEN")=""
- S BEF("MIDDLE")="",BEF("SUFFIX")="",BUF("MIDDLE")="",BUF("SUFFIX")=""
+ S BEF("MIDDLE")="",BEF("SUFFIX")="",BUF("MIDDLE")="",BUF("MIDDLE")=""
  S BEF("PREFIX")="",BEF("DEGREE")="",BUF("PREFIX")="",BUF("DEGREE")=""
  S DG20IEN=DG20(2,+IEN_",",1.01,"I")
  I $$GET1^DIQ(20,+DG20IEN_",",.03)[+IEN D
@@ -157,9 +126,9 @@ AFTER(BEF,BUF,SAV) ;prevent catastrophic edit checks
  I $D(BUF("GIVEN")),BUF("GIVEN")'="",BUF("GIVEN")'=BEF("GIVEN") D
  . S DG20CNT=DG20CNT+1
  . S SAV("NAME")=BUF("NAME")
- I $D(BUF("MIDDLE")),BUF("MIDDLE")'=BEF("MIDDLE") D
+ I $D(BUF("MIDDLE")),BUF("MIDDLE")'="",BUF("MIDDLE")'=BEF("MIDDLE") D
  . S SAV("NAME")=BUF("NAME") ; minor change doesn't count
- I $D(BUF("SUFFIX")),BUF("SUFFIX")'=BEF("SUFFIX") D
+ I $D(BUF("SUFFIX")),BUF("SUFFIX")'="",BUF("SUFFIX")'=BEF("SUFFIX") D
  . S SAV("NAME")=BUF("NAME") ; minor change doesn't count
  I DG20CNT>0 S DGCNT=1
  I $D(BUF("PREFIX")),BUF("PREFIX")'=BEF("PREFIX") D
@@ -172,29 +141,13 @@ AFTER(BEF,BUF,SAV) ;prevent catastrophic edit checks
  . S SAV("SEX")=BUF("SEX"),DGCNT=DGCNT+1
  I $D(BUF("SSN")),BUF("SSN")'="",BUF("SSN")'=BEF("SSN") D
  . S SAV("SSN")=BUF("SSN"),DGCNT=DGCNT+1
- I $D(BUF("SSNREAS")),BUF("SSNREAS")'="",BUF("SSNREAS")'=BEF("SSNREAS") D
- . S SAV("SSNREAS")=BUF("SSNREAS")
- I $D(BUF("MBI")),BUF("MBI")'=BEF("MBI") D
- . S SAV("MBI")=BUF("MBI")
+ I $D(BUF("MBI")),BUF("MBI")'="",BUF("MBI")'=BEF("MBI") D
+ . S SAV("MBI")=BUF("MBI"),DGCNT=DGCNT+1
  I DGCNT=0,$D(SAV("NAME")) Q 1 ;minor name change (i.e. middle name or suffix)
  I DGCNT=0,$D(SAV("PREFIX"))!($D(SAV("DEGREE"))) Q 1 ; prefix or degree change
- I DGCNT=0,$D(SAV("MBI")) Q 1 ; multiple birth indicator change
  I DGCNT=0 Q 0 ;no changes
- ;DG*750 check audit file for previous changes made during the current day
- I DGCNT=1 D DGAUD^DGRPAUD(DFN,.DGCNT)
- ;Use temp file created in DGRPAUD to get information for other changes
- ;that were made during the day to print on the alert.
- N DGAUDIEN,DGFLD,DGTYP
- S DGAUDIEN=0
- F   S DGAUDIEN=$O(^TMP("DGRPAUD",$J,DFN,DGAUDIEN)) Q:'DGAUDIEN  D
- .S DGFLD=$P(^TMP("DGRPAUD",$J,DFN,DGAUDIEN),U,2),DGTYP=$P(^TMP("DGRPAUD",$J,DFN,DGAUDIEN),U,5)
- .I DGFLD=.01 S BEF("NAME")=DGTYP
- .I DGFLD=.09 S BEF("SSN")=DGTYP
- .I DGFLD=.02 S BEF("SEX")=DGTYP
- .I DGFLD=.03 S BEF("DOB")=DGTYP
- I DGCNT<2 Q 1 ;make one change w/o CE message
- I DGCNT>1 Q 2 ;more than 1 change, send CE message
- K ^TMP("DGRPAUD")
+ I DGCNT<2 Q 1 ;make one change w/o alert
+ I DGCNT>1 Q 2 ;more than 1 change, send warning message
  ;
 WARNING() ;CE warning message
  ;Output     0  = exit without saving changes

@@ -1,6 +1,6 @@
 FBAADEM1 ;AISC/DMK-DISPLAY PATIENT DEMOGRAPHICS ;14MAY92
- ;;3.5;FEE BASIS;**13,51,103**;JAN 30, 1995;Build 19
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.5;FEE BASIS;**13,51**;JAN 30, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
 EN N FBDX,FBFDT,FBI,FBRR,FBT,FBTYPE,FBV,FBZ,PSA
  S:'$D(FBPROG) FBPROG="I 1"
  ;
@@ -19,11 +19,7 @@ EN N FBDX,FBFDT,FBI,FBRR,FBT,FBTYPE,FBV,FBZ,PSA
  . . . S FBDX=$G(^FBAAA(DFN,1,FBI,3)) W !?7,"TO: " S Y=$P(X,"^",2) D PDF W Y,!?25,"Authorization Type: " D
  . . . . S FBTYPE=$P(X,"^",3),FBTYPE=$S(FBTYPE=2:"Outpatient - "_$S(FBT=1:"Short Term",FBT=2:"Home Health",FBT=3:"ID Card",1:""),$D(^FBAA(161.8,+FBTYPE,0)):$P(^(0),"^"),1:"Unknown")
  . . . W FBTYPE W:$P(X,"^",7) !,?11,"Purpose of Visit: ",$P($G(^FBAA(161.82,$P(X,"^",7),0)),"^") I $P(X,"^",9)["FB583(" W !?25,">> Unauthorized Claim <<"
- . . . ; PRXM/KJH - Patch 103. Add Referring Provider and NPI to the display.
- . . . W !?11,"DX: ",$P(X,"^",8) W ?40,"REF: "
- . . . I $P(X,"^",21)'="" W $$GET1^DIQ(200,$P(X,"^",21),.01)
- . . . W !?11,"REF NPI: ",$$REFNPI^FBCH78($P(X,"^",21)),!
- . . . W:$P(FBDX,"^")]"" !?15,$P(FBDX,"^") W:$P(FBDX,"^",2)]"" !?15,$P(FBDX,"^",2)
+ . . . W !?11,"DX: ",$P(X,"^",8) W:$P(FBDX,"^")]"" !?15,$P(FBDX,"^") W:$P(FBDX,"^",2)]"" !?15,$P(FBDX,"^",2)
  . . . S FBAUT($P(X,"^"))=$P(X,"^",2)
  . . . W !?7,"County: ",FBCOUNTY,?40,"PSA: ",$S($D(^DIC(4,+PSA,0)):$P(^(0),"^"),1:"Unknown"),!
  . . . S FBDEL=$G(^FBAAA(DFN,1,FBI,"ADEL")) I FBDEL]"" S Y=$P(FBDEL,"^",2) D PDF W ?12,">> DELETE MRA SENT TO AUSTIN ON - ",Y," >>",!

@@ -1,6 +1,5 @@
 IVMUPAR ;ALB/CPM - IVM PARAMETER ENTER/EDIT ; 14-JUN-94
- ;;2.0;INCOME VERIFICATION MATCH;**111**; 21-OCT-94
- ;;Version 2.0 ; INCOME VERIFICATION MATCH ;**111**; 21-OCT-94
+ ;;Version 2.0 ; INCOME VERIFICATION MATCH ;; 21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; Entry point for IVM Parameter Enter/Edit
@@ -15,6 +14,6 @@ EN ; Entry point for IVM Parameter Enter/Edit
  .K %,DA,DIC,DIE,X,Y
  ;
  ;
- S DIE="^IVM(301.9,",DA=1,DR=".03//0;.05//0" D ^DIE
+ S DIE="^IVM(301.9,",DA=1,DR=".03//0;.04//0;.05//0" D ^DIE
  K DIE,DR,DA
  Q

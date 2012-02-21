@@ -1,6 +1,6 @@
 IBOVOP2 ;ALB/CPM-Opt/Reg Events Report Print Utilities ; 30-AUG-93
- ;;2.0;INTEGRATED BILLING;**52,132,153,156,167,176,234,247,339**;21-MAR-94;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,132,153,156,167,176,234,247**;21-MAR-94
+ ;; Per VHA Directive 10-93-142, this routine should not be modified
  ;
 PRINT ; Retrieve data for printing.
  N IBCOMBAT
@@ -50,5 +50,5 @@ CLSF(IBOE) ; Display classification results.
  ;  Input:    IBOE  --  Pointer to Outpatient Encounter in file #409.68
  I '$G(IBOE) G CLSFQ
  N I,IBCLS,IBCLSD,IBF S IBF=0,IBCLSD=$$ENCL^IBAMTS2(IBOE)
- I IBCLSD]"" F I=1,2,3,4,5,6,7,8 S IBCLS=$P(IBCLSD,"^",I) I IBCLS]"" W:'IBF !?6 W:IBF "  " W "Care related to ",$S(I=1:"AO",I=2:"IR",I=3:"SC",I=4:"SWA",I=5:"MST",I=6:"HNC",I=7:"CV",I=8:"SHAD",1:"??"),"? ",$S(IBCLS:"YES",1:"NO") S IBF=1
+ I IBCLSD]"" F I=1,2,3,4,5,6,7 S IBCLS=$P(IBCLSD,"^",I) I IBCLS]"" W:'IBF !?6 W:IBF "  " W "Care related to ",$S(I=1:"AO",I=2:"IR",I=3:"SC",I=4:"EC",I=5:"MST",I=6:"HNC",I=7:"CV",1:"??"),"? ",$S(IBCLS:"YES",1:"NO") S IBF=1
 CLSFQ Q

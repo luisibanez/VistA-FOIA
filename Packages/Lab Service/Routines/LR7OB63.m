@@ -1,5 +1,5 @@
 LR7OB63 ; DALOI/dcm - Get Lab data from 63 ;8/11/97
- ;;5.2;LAB SERVICE;**121,187,286,372,406**;Sep 27, 1994;Build 1
+ ;;5.2;LAB SERVICE;**121,187,286**;Sep 27, 1994
  ;
 63(CTR,LRDFN,SS,IVDT,CORRECT) ;Get data from file 63
  ;CTR=Counter
@@ -29,7 +29,7 @@ CH ;Chem, Hem, Tox, Ria, Ser, etc.
  ;
  S IFN=1
  F  S IFN=$O(^LR(LRDFN,"CH",IVDT,IFN)) Q:IFN<1  S X=^(IFN) I $D(TSTY(IFN))!($D(BYPASS)),$S('$D(LRSB):1,$D(LRSB(IFN)):1,1:0) D
- . I $D(LRSB(IFN)),$D(LRSA(IFN)),'$D(LRSA(IFN,2)),'$D(LRSA(IFN,3)) Q  ;Only re-transmit changed results
+ . I $D(LRSB(IFN)),$D(LRSA(IFN)),'$D(LRSA(IFN,2)) Q  ;Only re-transmit changed results
  . S Y1=IFN,Y1=$O(^LAB(60,"C","CH;"_Y1_";1",0)),Y2=$P(X,"^"),Y3=$P(X,"^",2),Y12=$P(X,"^",4)
  . S:Y2="pending" Y6="P" ;Set result status to P for pending results
  . Q:"IN"[$P(^LAB(60,Y1,0),"^",3)  S Y15=$P($G(^LAB(60,Y1,.1)),"^")
@@ -37,7 +37,7 @@ CH ;Chem, Hem, Tox, Ria, Ser, etc.
  . I $P($G(^LAB(60,Y1,64)),"^") S Y9=$P(^(64),"^"),Y9=$P(^LAM(Y9,0),"^",2),Y10=$P(^(0),"^"),Y11="99NLT"
  . ;D UNIT(Y1,$P(X0,"^",5),SEX,DOB,AGE)
  . S LRX=$$TSTRES^LRRPU(LRDFN,"CH",IVDT,IFN,Y1)
- . S Y2=$P(LRX,"^"),Y3=$P(LRX,"^",2),Y4=$P(LRX,"^",5),Y5=$$EN^LRLRRVF($P(LRX,"^",3),$P(LRX,"^",4))
+ . S Y2=$P(LRX,"^"),Y3=$P(LRX,"^",2),Y4=$P(LRX,"^",5),Y5=$P(LRX,"^",3)_$S($P(LRX,"^",4)'="":"-"_$P(LRX,"^",4),1:"")
  . I $P(LRX,"^",7) S Y14="T"
  . S Y2=$$TRIM^XLFSTR($$RESULT(Y1,Y2),"LR"," ")
  . S ^TMP("LRX",$J,69,CTR,63,IFN)=Y1_"^"_Y2_"^"_Y3_"^"_Y4_"^"_Y5_"^"_Y6_"^^^"_Y9_"^"_Y10_"^"_Y11_"^"_Y12_"^^"_Y14_"^"_Y15_"^"_Y16_"^"_Y17_"^"_Y18

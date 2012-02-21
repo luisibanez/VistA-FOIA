@@ -1,17 +1,16 @@
-DIO1 ;SFISC/GFT,TKW-BUILD P-ARRAY (OR LINES IN COMPILED SORT) WHICH CREATES SORTED DATA ;20MAR2005
- ;;22.0;VA FileMan;**2,97,113,144**;Mar 30, 1999;Build 5
- ;Per VHA Directive 2004-038, this routine should not be modified.
- ;
+DIO1 ;SFISC/GFT,TKW-BUILD P-ARRAY (OR LINES IN COMPILED SORT) WHICH CREATES SORTED DATA ;09:03 AM  21 Aug 2002
+ ;;22.0;VA FileMan;**2,97,113**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  F DJ=0:1:7 F DX=-1:0 S DX=$O(Y(DJ,DX)) Q:DX=""  F DPR=-1:0 S DPR=$O(Y(DJ,DX,DPR)) D  Q:DPR=""
  .I DPR="" D:$D(DIBTPGM) SETU("Q") Q
  .S X=0
 A .F  S X=$O(Y(DJ,DX,DPR,X)) Q:X=""  D
-B ..N DL,DIF,W,DICOND,Z,%,BACKWARD
- ..S DL=Y(DJ,DX,DPR,X),W="DISX("_DL_")",DICOND="=""""",D2="" I $P(DPP(DL),U,4)["-" S BACKWARD="-"
- ..I 'X,DL>$G(DPP(0)) S:'$D(DPP(DL,"CM")) W=$G(BACKWARD)_"D"_V(DX),DICOND="<0"
+B ..N DL,DIF,W,DICOND,Z,%
+ ..S DL=Y(DJ,DX,DPR,X),W="DISX("_DL_")",DICOND="=""""",D2=""
+ ..I 'X,DL>$G(DPP(0)) S:'$D(DPP(DL,"CM")) W="D"_V(DX),DICOND="<0"
  ..I X S Z=$P($P(^DD(DX,+X,0),U,4),";",2) S:$E(Z)="E" DICOND="?."" """
  ..S Z="" S:$C(63,122)=$P($G(DPP(DL,"F")),U) Z=1 S:$P($G(DPP(DL,"T")),U)="@" Z=Z+2 ;From NULL:Z=1  To NULL:Z=2   Both:Z=3
- ..S DIF=$S($D(BACKWARD):BACKWARD,$P(DPP(DL),U,10)=2:"+",1:"")_$S($D(DE(DL)):"$E("_W_",1,"_DE(DL)_")",1:W) ;DE array was set in ^DIOS
+ ..S DIF=$S($P(DPP(DL),U,4)["-":"999999999-",$P(DPP(DL),U,10)=2:"+",1:"")_$S($D(DE(DL)):"$E("_W_",1,"_DE(DL)_")",1:W) ;DE array was set in ^DIOS
  ..I Z S DIF="$S("_W_"'"_DICOND_":"_DIF_",1:""  EMPTY"")"
  ..S J(DL)=W
  ..I Z=3 S J(DL)=""" """ K DIF ;if just looking for NULLs
@@ -41,10 +40,9 @@ DX F X=-1:0 S X=$O(DX(X)),DX=X Q:X=""  D
  .S:B ^TMP("DIBTC",$J,X,B)=A S DX(X)="D "_$P(A," ")
 0 S DX(0)=DX(DP),DX=0,DPQ=0 K:DP DX(DP)
  ;
-2 K D,%,I D 2^DIO D  I $G(DIERR) G IXK^DIO
- .I $G(DIERR),$D(^UTILITY($J,0))>0 D CLEAN^DILF
+2 K D,%,I D 2^DIO I $G(DIERR) G IXK^DIO
  K DIOVFL,P,V,Y,D0,D1,D2,D3 K:'$D(DIB) DIS S:$D(DIBTPGM) DIBTPGM=""
-DIOO1 S V="I $D(^UTILITY($J,0" K DPP(0,"F"),DPP(0,"T") F X=1:1:DPP K DPP(X,"F"),DPP(X,"T") S V=V_",DIOO"_(DPP-X+1)
+DIOO1 S V="I $D(^UTILITY($J,0" K DPP(0,"F"),DPP(0,"T") F X=1:1:DPP K DPP(X,"F"),DPP(X,"T") S V=V_",DIOO"_(DPP-X+1) ;$E(",DDDDDDDDDDD",1,DPP+3-X)_0
  F X=-1:0 S X=$O(DX(X)) Q:X=""  I $D(DX(X,U)) S DSC(X)=V_DX(X,U)_$S($D(DSC(X)):" "_DSC(X),1:"")
  K DX S DX=^UTILITY($J,"DX"),DJ=^("F"),%=$O(^("DX",-1)) S:%="" %=-1 F %=%:0 S DX(%)=^(%),%=$O(^(%)) I %="" G GO^DIO
  ;

@@ -1,6 +1,6 @@
 IBCU83 ;ALB/ARH - THIRD PARTY BILLING UTILITES (BILL-CT) ; 3/10/96
- ;;2.0;INTEGRATED BILLING;**48,347**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;Version 2.0 ; INTEGRATED BILLING ;**48**; 21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 IFNTRN(IBIFN,ARRAY,ARR2) ; find CT records for events on a bill: sched adm, inpt adm, outpt vsts, rx refills, prosthetics
  ; sets ARRAY=COUNT, ARRAY(IBTRN)=EV TYPE, if bill passed in defined
@@ -36,7 +36,7 @@ OPT ; -- outpatient visits (all CT visits on bills's opt visit dates)
 RX ; -- rx refills (matches rx's (52: (362.4,.05)=(356,.08)) for refill dates on bill)
  S IBTYP=4,IBI=0 F  S IBI=$O(^IBA(362.4,"C",IBIFN,IBI)) Q:'IBI  D
  . S IBRX=$G(^IBA(362.4,IBI,0)),IBDT=$P(IBRX,U,3),IBRXN=$P(IBRX,U,5)
- . I 'IBRXN S DIC=52,DIC(0)="BO",X=$P(IBRX,"^") D DIC^PSODI(52,.DIC,X) S IBRXN=+Y K DIC,X,Y Q:IBRXN=-1
+ . I 'IBRXN S IBRXN=$O(^PSRX("B",$P(IBRX,U,1),0)) Q:'IBRXN
  . S IBBDT=$E(IBDT,1,7)-.00001,IBEDT=$E(IBDT,1,7)+.7
  . F  S IBBDT=$O(^IBT(356,"APTY",DFN,IBTYP,IBBDT)) Q:'IBBDT!(IBBDT>IBEDT)  D
  .. S IBTRN=0 F  S IBTRN=$O(^IBT(356,"APTY",DFN,IBTYP,IBBDT,IBTRN)) Q:'IBTRN  D

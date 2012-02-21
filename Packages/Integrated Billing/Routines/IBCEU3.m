@@ -1,8 +1,7 @@
-IBCEU3 ;ALB/TMP - EDI UTILITIES FOR 1500 CLAIM FORM ;12/29/05 9:58am
- ;;2.0;INTEGRATED BILLING;**51,137,155,323,348,371,400,432**;21-MAR-94;Build 192
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCEU3 ;ALB/TMP - EDI UTILITIES FOR HCFA 1500 ; 12/29/05 9:58am
+ ;;2.0;INTEGRATED BILLING;**51,137,155,323**;21-MAR-94
  ;
-BOX19(IBIFN) ; Returns the text that should print in box 19 of the CMS-1500
+BOX19(IBIFN) ; Returns the text that should print in box 19 of the HCFA 1500
  ;   for bill ien IBIFN
  ; Data is derived from a combo of data throughout
  ; the system and is limited to 80 characters.  The hierarchy for
@@ -21,7 +20,7 @@ BOX19(IBIFN) ; Returns the text that should print in box 19 of the CMS-1500
  ;   REMARKS FOUND IN BILL COMMENT FOR THE CLAIM, INCLUDING PROSTHETICS
  ;     DETAIL
  ;
- N IBGO,IBHOSP,IBID,IBLSDT,IBXDATA,IB19,IBHAID,IBXRAY,IBSPEC,Z,Z0,IBSUB,IBPRT,IBREM,IBSPI
+ N IBGO,IBHOSP,IBID,IBLSDT,IBXDATA,IB19,IBHAID,IBXRAY,IBSPEC,Z,Z0,IBSUB,IBPRT,IBREM
  S IB19="",IBGO=1
  S IBSUB=$S('$G(^TMP("IBTX",$J,IBIFN)):"BOX24",1:"OUTPT")
  I $D(IBXSAVE(IBSUB)) N IBXSAVE
@@ -29,10 +28,6 @@ BOX19(IBIFN) ; Returns the text that should print in box 19 of the CMS-1500
  ;
  S IBSPEC=$$BILLSPEC(IBIFN)
  G:'IBPRT NPRT
- ; Check for chiropractic services
- I $P($G(^DGCR(399,IBIFN,"U3")),U,5)'="" S:$P($G(^DGCR(399,IBIFN,"U3")),U,4)'="" IBGO=$$LENOK("Last X-ray: "_$TR($$DATE^IBCF2($P(^DGCR(399,IBIFN,"U3"),U,4))," ","/"),.IB19)
- G:'IBGO BOX19Q
- ;
  I "^25^65^73^67^48^"[(U_IBSPEC_U) D
  . K IBXDATA D F^IBCEF("N-DATE LAST SEEN",,,IBIFN)
  . I IBXDATA'="" S IBID="",IBLSDT=$$DATE^IBCF2(IBXDATA,0,1) D  I IBLSDT'="" S IBGO=$$LENOK("Date Last Seen:"_IBLSDT_IBID,.IB19)
@@ -58,14 +53,18 @@ BOX19(IBIFN) ; Returns the text that should print in box 19 of the CMS-1500
  .. S IBHAID=1,IBGO=$$LENOK("Testing for hearing aid",.IB19) Q
  . ;
  . Q:'IBGO
- . I 'IBHOSP,$P($G(IBXSAVE(IBSUB,Z,"AUX")),U,3) S IBHOSP=1,IBGO=$$LENOK("Attending physician,not hospice employee",.IB19) Q
+ . I 'IBHOSP,$P($G(IBXSAVE(IBSUB,Z,"AUX")),U,3) D  Q
+ .. S IBHOSP=1,IBGO=$$LENOK("Attending physician,not hospice employee",.IB19)
+ . ;
+ . Q:'IBGO
+ . I 'IBXRAY,IBSPEC=35,$G(IBXSAVE(IBSUB,Z,"AUX"))'="" D  Q
+ .. ; Check for chiropratic services in claim type or specialty
+ .. S IBXRAY=1
+ .. S IBGO=$$LENOK($S($P(IBXSAVE(IBSUB,Z,"AUX"),U,2):"Last Xray:"_$$DATE^IBCF2($P(IBXSAVE(IBSUB,Z,"AUX"),U,2),0,1)_" ",1:"")_$S($P(IBXSAVE(IBSUB,Z,"AUX"),U,4)'="":"Level of Sublux:"_$P(IBXSAVE(IBSUB,Z,"AUX"),U,4),1:""),.IB19)
+ ;
  G:'IBGO BOX19Q
  K IBXDATA D F^IBCEF("N-SPECIAL PROGRAM",,,IBIFN)
  I IBXDATA=30 G:'$$LENOK("Medicare demonstration project for lung volume reduction surgery study",.IB19) BOX19Q
- ;
- ; SPECIAL PROGRAM INDICATOR field code.
- S IBSPI=$$GET1^DIQ(399,IBIFN_",",238,"E")
- I IBSPI'="" S IBGO=$$LENOK(IBSPI,.IB19)
  ;
  G:'IBGO BOX19Q
 NPRT K IBXDATA D F^IBCEF("N-HCFA 1500 BOX 19 RAW DATA",,,IBIFN)
@@ -85,9 +84,9 @@ LENOK(IBDATA,IB19) ; Add text IBDATA to box 19 string (IB19 passed by ref)
  I $L(IB19)'<96 S OK=0,IB19=$E(IB19,1,96) G LENOKQ
 LENOKQ Q OK
  ;
-ASK19(IBIFN) ; Ask to display CMS-1500 box 19 data for current IBIFN
+ASK19(IBIFN) ; Ask to display HCFA 1500 box 19 data for current IBIFN
  N DIR,DIC,X,Y,DIE,DR,Z
- S DIR(0)="YA",DIR("B")="NO",DIR("A")="DISPLAY THE FULL CMS-1500 BOX 19?: "
+ S DIR(0)="YA",DIR("B")="NO",DIR("A")="DISPLAY THE FULL HCFA 1500 BOX 19?: "
  D ^DIR
  I Y=1 S Z=$$BOX19(IBIFN) W !!,?4,"19",?20,$E(Z,1,32) W:$L(Z)>32 !,?4,$E(Z,33,80),!
  Q
@@ -101,7 +100,7 @@ ONLAB(IBIFN) ; Functions returns 1 if the bill IBIFN is outside non-lab
  ;
 TEXT24(FLD,IBXSAVE,IBXDATA,IBSUB) ; Format the text line of box 24 by fld
  ; INPUT:
- ;   FLD = the letter of the field in box 24 (A-J)
+ ;   FLD = the letter of the field in box 24 (A-K)
  ;   IBXSAVE = passed by reference = extracted data for the box 24 lines
  ;   IBSUB = the subscript of the IBXSAVE array to use.
  ;           If null, use "BOX24"
@@ -109,106 +108,35 @@ TEXT24(FLD,IBXSAVE,IBXDATA,IBSUB) ; Format the text line of box 24 by fld
  ;   IBXDATA = passed by reference, set to the correct part of the
  ;             text that will print in the field's positions
  ;
- ; esg - 8/14/06 - modified for the new cms-1500 form - IB*2*348
- ;
- N Z,IBLINE,IBVAL,IBS,IBE,IBTEXT,IBAUX,IBDAT,IBZ,IBREN,IBRENQ,IBRENNPI,IBRENSID
+ N Z,IBLINE,IBVAL,IBS,IBE,IBTEXT,IBAUX,IBDAT,IBZ
  K IBXDATA
  S (IBLINE,Z)=0 S:$G(IBSUB)="" IBSUB="BOX24"
- ;
- I FLD="I"!(FLD="J") D   ; extract the Rendering provider data
- . I '$G(IBXIEN) Q       ; assume that the claim# exists
- . S IBREN=$$CFIDS^IBCEF77(IBXIEN)
- . S IBRENQ=$P(IBREN,U,1)    ; qual
- . S IBRENSID=$P(IBREN,U,2)  ; id
- . S IBRENNPI=$P(IBREN,U,3)  ; npi
- . Q
  ;
  F  S Z=$O(IBXSAVE(IBSUB,Z)) Q:'Z  D
  . S IBDAT=$G(IBXSAVE(IBSUB,Z))
  . S IBAUX=$G(IBXSAVE(IBSUB,Z,"AUX"))
  . S IBTEXT=$G(IBXSAVE(IBSUB,Z,"TEXT"))
- . S IBZ=$P(IBAUX,U,9)
- . I IBZ="" S IBZ="  "
- . S IBTEXT=IBZ_IBTEXT
- . ;
  . I $S($G(IBAC)=4:$S($D(IBXSAVE(IBSUB,Z,"ARX")):1,1:$D(IBXSAVE(IBSUB,Z,"A"))),$D(IBXSAVE(IBSUB,Z,"RX")):0,1:$G(IBNOSHOW)) S IBTEXT=""
- . ;
- . I FLD="AF" S IBVAL=$P(IBDAT,U),IBS=1,IBE=9 D   ; From date of service
- .. S IBVAL=$E(IBVAL,1,2)_" "_$E(IBVAL,3,4)_" "_$E(IBVAL,7,8)
- .. Q
- . ;
- . I FLD="AT" S IBVAL=$S($P(IBDAT,U,2):$P(IBDAT,U,2),1:$P(IBDAT,U)),IBS=10,IBE=18 D    ; To date of service
- .. S IBVAL=$E(IBVAL,1,2)_" "_$E(IBVAL,3,4)_" "_$E(IBVAL,7,8)
- .. Q
- . ;
- . I FLD="B" S IBVAL=$P(IBDAT,U,3),IBS=19,IBE=21   ; place of service
- . I FLD="C" S IBVAL=$S($P(IBDAT,U,13)=1:"Y",1:""),IBS=22,IBE=24   ; emergency indicator
- . I FLD="D" S IBVAL=$P(IBDAT,U,5),IBS=25,IBE=44 D   ; procedures and modifiers
- .. N M S M=$$MODLST^IBEFUNC($P(IBDAT,U,10))       ; modifier list
- .. S IBVAL=$$FO^IBCNEUT1(IBVAL,6)_"  "            ; procedure code
- .. S IBVAL=IBVAL_$$FO^IBCNEUT1($P(M,",",1),3)     ; mod#1
- .. S IBVAL=IBVAL_$$FO^IBCNEUT1($P(M,",",2),3)     ; mod#2
- .. S IBVAL=IBVAL_$$FO^IBCNEUT1($P(M,",",3),3)     ; mod#3
- .. S IBVAL=IBVAL_$$FO^IBCNEUT1($P(M,",",4),3)     ; mod#4
- .. Q
- . ;
- . I FLD="E" S IBVAL=$TR($P(IBDAT,U,7),","),IBS=45,IBE=48  ; diagnosis pointer
- . I FLD="F" S IBVAL=$P(IBDAT,U,8)*$P(IBDAT,U,9),IBS=49,IBE=57 D
- .. ; total charges
- .. S IBVAL=$$DOL^IBCEF77(IBVAL,8)
- .. I $L(IBVAL)>8 S IBVAL=$E(IBVAL,$L(IBVAL)-7,$L(IBVAL))
- .. Q
- . ;
- . I FLD="G" S IBVAL=$S($P(IBDAT,U,12):$P(IBDAT,U,12),1:$P(IBDAT,U,9)),IBS=58,IBE=61 D
- .. ; days or units or anesthesia minutes
- .. S IBVAL=$J(+IBVAL,4)
- .. Q
- . ;
- . ; columns H,I,J don't have any free text supplemental information
- . ;
- . I FLD="H" D     ; epsdt family plan
- .. S IBVAL=$P(IBAUX,U,7),IBS=0,IBE=0,IBTEXT=""   ; line 1 blank
- .. I IBVAL S IBVAL="Y"
- .. Q
- . I FLD="I" D     ; ID qualifier for rendering provider
- .. S IBVAL="",IBS=1,IBE=2   ; line 2 blank
- .. S IBTEXT=$G(IBRENQ)      ; qualifier on line 1
- .. Q
- . I FLD="J" D     ; rendering provider ID and NPI
- .. S IBTEXT=$G(IBRENSID),IBS=1,IBE=11   ; secondary ID line 1
- .. S IBVAL=$G(IBRENNPI)                 ; NPI# line 2
- .. Q
- . ;
- . S IBLINE=IBLINE+1                      ; top line
- . S IBXDATA(IBLINE)=$E(IBTEXT,IBS,IBE)   ; text in shaded area (top)
- . S IBLINE=IBLINE+1             ; bottom line
- . S IBXDATA(IBLINE)=IBVAL       ; field value in unshaded area (bottom)
- . Q
- ;
+ . I FLD="AF" S IBVAL=$P(IBDAT,U),IBS=1,IBE=9
+ . I FLD="AT" S IBVAL=$S($P(IBDAT,U,2):$P(IBDAT,U,2),1:$P(IBDAT,U)),IBS=10,IBE=18
+ . I FLD="B" S IBVAL=$P(IBDAT,U,3),IBS=19,IBE=21
+ . I FLD="C" S IBVAL=$P(IBDAT,U,4),IBS=22,IBE=24
+ . I FLD="D" S IBVAL=$P(IBDAT,U,5),IBS=25,IBE=41
+ . I FLD="D1" S IBVAL=$P($$MODLST^IBEFUNC($P(IBDAT,U,10)),",",1,4),IBS=0,IBE=0 ;Text for this area is handled by procedure field
+ . I FLD="E" S IBVAL=$P(IBDAT,U,7),IBS=42,IBE=48
+ . I FLD="F" S IBVAL=$P(IBDAT,U,8)*$P(IBDAT,U,9),IBS=49,IBE=58
+ . I FLD="G" S IBVAL=$S($P(IBDAT,U,4)'=7:$P(IBDAT,U,9),1:$P(IBDAT,U,12)),IBS=59,IBE=61
+ . I FLD="H" S IBVAL=$P(IBAUX,U,7),IBS=62,IBE=64
+ . I FLD="I" S IBVAL=$S($P(IBDAT,U,13)=1:"Y",1:""),IBS=65,IBE=67
+ . I FLD="J" S IBVAL="",IBS=68,IBE=70
+ . I FLD="K" S IBVAL=$S($G(IBXSAVE("Q"))'="":IBXSAVE("Q"),1:$P(IBAUX,U)),IBS=71,IBE=80
+ . I IBTEXT'="" D
+ .. S IBLINE=IBLINE+1,IBXDATA(IBLINE)=IBVAL
+ .. S IBLINE=IBLINE+1,IBXDATA(IBLINE)=$E(IBTEXT,IBS,IBE),IBXDATA(IBLINE,"T")=1
+ . E  D
+ .. S IBLINE=IBLINE+1,IBXDATA(IBLINE)=""
+ .. S IBLINE=IBLINE+1,IBXDATA(IBLINE)=IBVAL
  Q
- ;
-LINSPEC(IBIFN) ; Checks the specialities of line and claim level providers
- ; called from IBCBB2 to check for Chiro codes & IBCBB9 to check for 99's on Medicare
- ; Default = 99 if no valid SPEC code found for line and claim level provider
- ; Get rendering for professional, attending for institutional
- ; If multiple lines w/ rendering or attending, returns a string of spec codes
- N Z,IBSPEC,IBINS,IBDT,IBCP,IBSPC
- S IBSPC=""
- S IBDT=$P($G(^DGCR(399,+IBIFN,"U")),U,1)  ; use statement from date
- S IBINS=($$FT^IBCEF(IBIFN)=3)
- D GETPRV^IBCEU(IBIFN,"ALL",.IBPRV)
- S Z=$S('IBINS:3,1:4)
- ; check claim level
- I $G(IBPRV(Z,1))'="" D
- . I $P(IBPRV(Z,1),U,3) S IBSPEC=$$SPEC^IBCEU($P($G(IBPRV(Z,1)),U,3),IBDT) I IBSPEC'="" S IBSPC=IBSPC_U_IBSPEC Q
- . S Z0=+$O(^DGCR(399,IBIFN,"PRV","B",Z,0))
- . I Z0 S IBSPEC=$P($G(^DGCR(399,IBIFN,"PRV",Z0,0)),U,8) S:IBSPEC="" IBSPEC=99 S IBSPC=IBSPC_U_IBSPEC
- ; Check line level
- S IBCP=0 F  S IBCP=$O(^DGCR(399,IBIFN,"CP",IBCP)) Q:'IBCP  D
- .S Z0=+$O(^DGCR(399,IBIFN,"CP",IBCP,"LNPRV","B",Z,0))
- .I Z0 S IBSPEC=$P($G(^DGCR(399,IBIFN,"CP",IBCP,"LNPRV",Z0,0)),U,8) S:IBSPEC="" IBSPEC="99" S IBSPC=IBSPC_U_IBSPEC
- S:IBSPC="" IBSPC=99
- Q IBSPC
  ;
 BILLSPEC(IBIFN,IBPRV) ;  Returns the specialty of the provider on bill IBIFN
  ; If IBPRV is supplied, returns the data for that provider, otherwise,
@@ -237,9 +165,9 @@ SPECQ I IBSPEC="" S IBSPEC="99"
 CHAMPVA(IBIFN) ; Returns 1 if the bill IBIFN has a CHAMPVA rate type
  Q $E($P($G(^DGCR(399.3,+$P($G(^DGCR(399,IBIFN,0)),U,7),0)),U),1,7)="CHAMPVA"
  ;
-FAC(IBIFN) ; Obsolete function.  Used by old output formatter field and data element N-RENDERING INSTITUTION
- Q ""
+FAC(IBIFN) ; Is facility always to print in box 32 for bill ien IBIFN?
+ ;  Returns 1 if yes, 0 if no
+ Q $S($P($G(^DGCR(399,IBIFN,"UF2")),U,2):1,1:$P($G(^IBE(350.9,1,2)),U,12))
  ;
-MCR24K(IBIFN,IBPRV) ;Function returns MEDICARE id# for professional (CMS-1500) box 24k for bill IBIFN if appropriate
- ;*432/TAZ - Added IBPRV to allow circumvent the call to F^IBCEF("N-SPECIALTY CODE","IBZ",,IBIFN) in MCRSPEC^IBCEU4
- Q $S($$FT^IBCEF(IBIFN)=2&$$MCRONBIL^IBEFUNC(IBIFN):"V"_$$MCRSPEC^IBCEU4(IBIFN,1,$G(IBPRV))_$P($$SITE^VASITE,U,3),1:"")
+MCR24K(IBIFN) ;Function returns MEDICARE id# for professional (HCFA 1500) box 24k for bill IBIFN if appropriate
+ Q $S($$FT^IBCEF(IBIFN)=2&$$MCRONBIL^IBEFUNC(IBIFN):"V"_$$MCRSPEC^IBCEU4(IBIFN,1)_$P($$SITE^VASITE,U,3),1:"")

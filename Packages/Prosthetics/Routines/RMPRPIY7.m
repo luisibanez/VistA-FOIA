@@ -1,5 +1,5 @@
 RMPRPIY7 ;HINCIO/ODJ - PIP EDIT - PROMPTS ;9/18/02  15:17
- ;;3.0;PROSTHETICS;**61,118,139**;Feb 09, 1996;Build 4
+ ;;3.0;PROSTHETICS;**61,118**;Feb 09, 1996
  ;
  ;DBIA # 800 - FILEMAN read of file #440.
  Q
@@ -20,9 +20,7 @@ LOCNM(RMPRSTN,RMPR5,RMPREXC) ;
  S DIR("??")="^D QM2^RMPRPIYB"
  S RMPR5("IEN")=""
 LOCNM1 D ^DIR
- ;Patch *139 removes upper case translation to allow access to lower
- ;case entries used in location creation option
- ;S X=$TR(X,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+ S X=$TR(X,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
  I $G(RMPR5("IEN"))'="" S RMPREXC="" G LOCNMX
  I $D(DTOUT) S RMPREXC="T" G LOCNMX
  I $D(DIROUT) S RMPREXC="P" G LOCNMX

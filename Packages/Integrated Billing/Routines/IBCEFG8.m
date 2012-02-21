@@ -1,5 +1,5 @@
 IBCEFG8 ;ALB/TMP - OUTPUT FORMATTER GENERIC FORM TEST PROCESSING ;21-MAR-96
- ;;2.0;INTEGRATED BILLING;**52,88,51,348**; 21-MAR-94;Build 5
+ ;;2.0;INTEGRATED BILLING;**52,88,51**; 21-MAR-94
  ;
  Q
  ;
@@ -10,13 +10,6 @@ TEST ;Select form from screen and entry from file to test
  D SELX^IBCEFG3 S IBFORM=$G(IBCEXDA)
  G:IBFORM="" TESTQ
  S IB2=$G(^IBE(353,IBFORM,2)),IBPAR=+$P(IB2,U,5)
- ;
- ; IB*2*348 - esg - no testing with old claim forms
- I IBPAR=12!(IBPAR=13) D  G TESTQ
- . W !!?3,"This local form is associated with an obsolete printed claim form."
- . W !?3,"Testing is not available for this form."
- . Q
- ;
  S IBTYP=$P(IB2,U,2),IBFILE=+IB2
  ;Select Entry #
  S DIC=IBFILE,DIC(0)="AEMQ" D ^DIC

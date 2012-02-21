@@ -1,5 +1,5 @@
-GMRAPEM3 ;HIRMFO/WAA-ALLERGY/ADVERSE REACTION PATIENT EDIT DRIVER ;3/20/06  14:55
- ;;4.0;Adverse Reaction Tracking;**36**;Mar 29, 1996;Build 9
+GMRAPEM3 ;HIRMFO/WAA-ALLERGY/ADVERSE REACTION PATIENT EDIT DRIVER ; 8/27/93
+ ;;4.0;Adverse Reaction Tracking;;Mar 29, 1996
 UPOUT ; If the user uparrows out of the process
  I GMRAOUT S GMRAOUT=2-GMRAOUT D:GMRAOUT&($D(^TMP($J,"GMRASF"))) ALERT^GMRASIGN K ^TMP($J,"GMRASF"),GMRACNT,GMRANAM,GMRAPA
  K GMRANAM,GMRAPA
@@ -16,7 +16,7 @@ SIGNED ; If the reaction is already signed
  D CLEAN
  Q
 UPDATE ; Unlock global and prep for next allergy
- I '$G(GMRAVER,0),'$D(^TMP($J,"GMRASF","B",GMRAPA)) S ^TMP($J,"GMRASF","B",GMRAPA,GMRACNT)=$G(GMRANEW),^TMP($J,"GMRASF",GMRACNT,GMRAPA)=$G(GMRANEW) ;36
+ I '$G(GMRAVER,0),'$D(^TMP($J,"GMRASF","B",GMRAPA)) S ^TMP($J,"GMRASF","B",GMRAPA,GMRACNT)="",^TMP($J,"GMRASF",GMRACNT,GMRAPA)=""
  D CLEAN
  Q
 CLEAN ; Clean the account for the next reaction.

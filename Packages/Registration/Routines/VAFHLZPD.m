@@ -1,5 +1,5 @@
-VAFHLZPD ;ALB/KCL/PHH,TDM - Create generic HL7 ZPD segment ; 8/15/08 11:42am
- ;;5.3;Registration;**94,122,160,220,247,545,564,568,677,653,688**;Aug 13, 1993;Build 29
+VAFHLZPD ;ALB/KCL/PHH - Create generic HL7 ZPD segment ; 11/4/04 7:56am
+ ;;5.3;Registration;**94,122,160,220,247,545,564,568,677**;Aug 13, 1993
  ;
  ;
 EN(DFN,VAFSTR) ; This generic extrinsic function was designed to return
@@ -106,7 +106,7 @@ GETDATA(DFN,VAFSTR,ARRAY) ;Get info needed to build segment
  S @ARRAY@(1)=1
  S DFN=+$G(DFN)
  S VAFSTR=$G(VAFSTR)
- S:(VAFSTR="") VAFSTR=$$COMMANUM(1,40)
+ S:(VAFSTR="") VAFSTR=$$COMMANUM(1,33)
  S VAFSTR=","_VAFSTR_","
  ;Declare variables
  N VAFNODE,VAPD,X1,X
@@ -210,10 +210,6 @@ GETDATA(DFN,VAFSTR,ARRAY) ;Get info needed to build segment
  I VAFSTR[9&(VAFSTR[32) S X=$P($G(^DPT(DFN,.35)),U,4),X1=$$HLDATE^HLFNC(X),@ARRAY@(32)=$S(X1]"":X1,1:HLQ)
  ; Sequence 33 - Filipino Veteran Proof
  I VAFSTR[33 S X=$P($G(^DPT(DFN,.321)),U,14),@ARRAY@(33)=$S(X]"":X,1:HLQ)
- ; Sequence 34 - Pseudo SSN Reason - Veteran
- I VAFSTR[34 S X=$P($G(^DPT(DFN,"SSN")),U),@ARRAY@(34)=$S(X]"":X,1:HLQ)
- ; Sequence 35 - Agency/Allied Country
- I VAFSTR[35 S X=$P($G(^DPT(DFN,.3)),U,9),X1=$P($G(^DIC(35,+X,0)),U,2),@ARRAY@(35)=$S(X1]"":X1,1:HLQ)
  ; Sequence 40 - Emergency Response Indicator
  I VAFSTR[40 S X=$P($G(^DPT(DFN,.18)),U),@ARRAY@(40)=$S(X]"":X,1:HLQ)
  ;Done - cleanup & quit

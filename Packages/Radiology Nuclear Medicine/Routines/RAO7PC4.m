@@ -1,6 +1,5 @@
 RAO7PC4 ;HISC/SWM-utilities ;11/19/01  10:23
- ;;5.0;Radiology/Nuclear Medicine;**28,32,31,45,77**;Mar 16, 1998;Build 7
- ;08/10/2006 BAY/KAM Remedy Call 134839 Subscript Error
+ ;;5.0;Radiology/Nuclear Medicine;**28,32,31,45**;Mar 16, 1998
  Q
 EN1 ; api for CPRS notification alert #67
  Q:'$D(XQADATA)
@@ -10,8 +9,6 @@ EN1 ; api for CPRS notification alert #67
  Q
 SET1 N RADFN,RADTI,RACNI,RAPROC1,RAPROC2,RAPHY1,RAPHY2,RAPMOD1,RAPMOD2,RAACNT
  N RAPATNAM,RASSN,RASTR,I,J,RACMU
- ; 08/10/2006 BAY/KAM Remedy Call 134839/RA*5*77 - Added next line
- Q:$G(XQADATA)=""
  S RADFN=$P(XQADATA,"/") ; ien patient
  S RAACNT=0 ; counter
  S RADTI=$P(XQADATA,"/",2) ; inverse date of exam

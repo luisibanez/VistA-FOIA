@@ -1,5 +1,5 @@
 LRBEBAO ;DALOI/JAH/FHS - ORDERING AND RESULTING FOR OUTPATIENTS ;8/10/04
- ;;5.2;LAB SERVICE;**291,359,352**;Sep 27, 1994;Build 1
+ ;;5.2;LAB SERVICE;**291**;Sep 27, 1994
  ;
  ; This routine contains the subroutines that get the diagnosis pointers
  ; and indicators at order entry and result verification for outpatient.
@@ -77,10 +77,10 @@ OPWRK ; More Outpatient Work
  . . S LRBEDGX=""
  . . F  S LRBEDGX=$O(LRBEAR(LRBEDFN,"LRBEDGX",LRBESMP,LRBESPC,LRBETST,LRBEDGX)) Q:LRBEDGX=""  D
  . . . S LRBEPTDT=$G(LRBEAR(LRBEDFN,"LRBEDGX",LRBESMP,LRBESPC,LRBETST,LRBEDGX))
- . . . S N=$S($P(LRBEPTDT,U,12):1,1:2),X=$P(LRBEPTDT,U,4,11)
+ . . . S N=$S($P(LRBEPTDT,U,11):1,1:2),X=$P(LRBEPTDT,U,4,10)
  . . . ;collapse indicators for same dx
  . . . S XX=$G(DX(N,LRBEDGX))
- . . . F B=1:1:8 I $P(XX,U,B)'=1,$P(X,U,B)'="" S $P(XX,U,B)=$P(X,U,B)
+ . . . F B=1:1:7 I $P(XX,U,B)'=1,$P(X,U,B)'="" S $P(XX,U,B)=$P(X,U,B)
  . . . S DX(N,LRBEDGX)=XX
  ;set primary dx in PCE array
  S LRBEDGX=""
@@ -88,7 +88,7 @@ OPWRK ; More Outpatient Work
  . S LRBEDIA=$G(LRBEDIA)+1,XX=DX(1,LRBEDGX)
  . S ^TMP("LRPXAPI",$J,SUB2,LRBEDIA,"DIAGNOSIS")=LRBEDGX
  . S ^TMP("LRPXAPI",$J,SUB2,LRBEDIA,"PRIMARY")=1
- . F B=1:1:8 I $P(XX,U,B)'="" D
+ . F B=1:1:7 I $P(XX,U,B)'="" D
  . . S BG=$$GETT(B)
  . . I '$G(^TMP("LRPXAPI",$J,SUB2,LRBEDIA,BG)) S ^TMP("LRPXAPI",$J,SUB2,LRBEDIA,BG)=$P(XX,U,B)
  . . ;collapse dx indicators into encounter node
@@ -98,7 +98,7 @@ OPWRK ; More Outpatient Work
  F  S LRBEDGX=$O(DX(2,LRBEDGX)) Q:LRBEDGX=""  D
  . S LRBEDIA=$G(LRBEDIA)+1,XX=DX(2,LRBEDGX)
  . S ^TMP("LRPXAPI",$J,SUB2,LRBEDIA,"DIAGNOSIS")=LRBEDGX
- . F B=1:1:8 I $P(XX,U,B)'="" D
+ . F B=1:1:7 I $P(XX,U,B)'="" D
  . . S BG=$$GETT(B)
  . . I '$G(^TMP("LRPXAPI",$J,SUB2,LRBEDIA,BG)) S ^TMP("LRPXAPI",$J,SUB2,LRBEDIA,BG)=$P(XX,U,B)
  . . ;collapse dx indicators into encounter node
@@ -107,14 +107,18 @@ OPWRK ; More Outpatient Work
  ;
 GETT(X) ; Indicators for ^TMP
  I '+X Q ""
- Q "PL "_$S(X=1:"AO",X=2:"IR",X=3:"SC",X=4:"EC",X=5:"MST",X=6:"HNC",X=7:"CV",X=8:"SHAD",1:"")
+ Q "PL "_$S(X=1:"AO",X=2:"IR",X=3:"SC",X=4:"EC",X=5:"MST",X=6:"HNC",1:"CV")
  ;
 OPRES(LRBEAR,LRBEAR1,LRODT,LRSN,LRBEVST) ; Outpatient Final Resulting
+ ;
  ; Inputs:
+ ;  LRBEDFN   -  Patient's DFN
  ;  LRBEDN    -  Data Number of Test in #63 field 400
+ ;  VISIT     -  Patient's Encounter Number #9000010
  ;  LRBEAR(LRBEDFN,"VST")     -  Patient's Encounter Number #9000010
  ;  LRBEAR(LRBEDFN,"LRBEDGX",LRBEDN)
  ;   Piece     Desc
+ ;   -----     ---------------------------------
  ;   1     -   Procedure (CPT)
  ;   2     -   Modifiers (Sub-delimited by "~")
  ;   3     -   Diagnosis
@@ -125,7 +129,8 @@ OPRES(LRBEAR,LRBEAR1,LRODT,LRSN,LRBEVST) ; Outpatient Final Resulting
  ;   8     -   Encounter Provider
  ;   9     -   Ordering Provider
  ;   10    -   Quantity (Number of times procedure was performed)
- ;   11    -   Place of Service 
+ ;   11    -   Place of Service
+ ; 
  ; Output:
  ;  LRBEAR1(VISIT,TST,LRBEPOV)=LRBEDGX
  ;   VISIT      -  Pointer to VISIT (9000010) file
@@ -148,8 +153,7 @@ OPRES(LRBEAR,LRBEAR1,LRODT,LRSN,LRBEVST) ; Outpatient Final Resulting
  S LRBEDFN="" F  S LRBEDFN=$O(LRBEAR(LRBEDFN)) Q:LRBEDFN=""  D
  . S LRI=0 F  S LRI=$O(LRBEAR(LRBEDFN,"LRBEDGX",LRI)) Q:LRI<1  D
  . . D OPWRK2
- ;microbiology results sent to PCE in LRCAPPH1
- I $P($G(^LRO(68,$G(LRAA),0)),U,2)'="MI" D SEND
+ D SEND
  Q
 SEND ; Send if procedure is defined
  N LRLNOW,LRVX,PXALOOK,PXUCV
@@ -187,7 +191,7 @@ OPWRK3 ;
  .S ^TMP("LRPXAPI",$J,SUB1,LRBETNUM,"PROCEDURE")=$P(LRBEPTDT,U,1)
  .S ^TMP("LRPXAPI",$J,SUB1,LRBETNUM,"QTY")=1
  I $P(LRBEPTDT,U,2)'="" D
- .S ^TMP("LRPXAPI",$J,SUB1,LRBETNUM,"MODIFIERS",$P(LRBEPTDT,U,2))=""
+ .S ^TMP("LRPXAPI",$J,SUB1,LRBETNUM,"MODIFIER")=$P(LRBEPTDT,U,2)
  I $P(LRBEPTDT,U,3)'="" D
  .S ^TMP("LRPXAPI",$J,SUB1,LRBETNUM,"DIAGNOSIS")=$P(LRBEPTDT,U,3)
  I $P(LRBEPTDT,U,4)'="" D
@@ -218,9 +222,6 @@ OPWRK3 ;
  .S ^TMP("LRPXAPI",$J,SUB1,LRBETNUM,"ORD REFERENCE")=$P(LRBEPTDT,U,16)
  I LRSWSTAT,($P(LRBETM,".")'<LRSWDATE) D
  .S ^TMP("LRPXAPI",$J,"PROCEDURE",LRBETNUM,"DEPARTMENT")=108
- I $P(LRBEPTDT,U,20)'="" D
- .S ^TMP("LRPXAPI",$J,SUB1,LRBETNUM,"QTY")=$P(LRBEPTDT,U,20)
- I $G(^TMP("LRPXAPI",$J,SUB1,LRBETNUM,"DIAGNOSIS"))=0 K ^TMP("LRPXAPI",$J,SUB1,LRBETNUM,"DIAGNOSIS")
  Q
  ;
 INIT ;Setup PCE variables

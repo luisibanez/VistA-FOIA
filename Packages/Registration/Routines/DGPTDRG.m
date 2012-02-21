@@ -1,5 +1,5 @@
-DGPTDRG ;ALB/ABS - DRG Information Report User Prompts ; 11/15/06 8:31am
- ;;5.3;Registration;**60,441,510,559,599,606,669,729**;Aug 13, 1993;Build 59
+DGPTDRG ;ALB/ABS - DRG Information Report User Prompts ; 4/4/05 11:29am
+ ;;5.3;Registration;**60,441,510,559,599,606,669**;Aug 13, 1993
  ;;ADL;Update for CSV Project;;Mar 28, 2003
  S U="^" D Q,DT^DICRW
 PAT D EFFDATE G Q:$D(DUOUT),Q:$D(DTOUT)
@@ -21,7 +21,7 @@ TRS W !!,"Transfer to an acute care facility" S %=2 D YN^DICN G Q:%=-1 I %Y["?"!
 DMS W !!,"Discharged against medical advice" S %=2 D YN^DICN G Q:%=-1 I %Y["?"!('%) W !?3,"Enter <RET> for NO if patient did not leave against medical advice",!?3,"Enter 'Y' for YES if patient did leave against medical advice",!,*7 G DMS
  S DGDMS=$S(%=1:1,1:0)
 DX N DXINF,ICDVDT S ICDVDT=DGDAT
- S (DGDX,DGSURG)="" S PROMPT="Enter PRINCIPAL diagnosis: "
+ S (DGDX,DGSURG)="" S PROMPT="Enter DXLS: "
  D ICDEN1^DGPTF5
  Q:X["^"!(X="")
  S Y=+$$CODEN^ICDCODE(X,80)

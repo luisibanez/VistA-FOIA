@@ -1,5 +1,5 @@
 SDCWL2 ;ALB/MLI - CONTINUATION OF CLINIC WORKLOAD REPORTS ; 07 Mar 99  6:41 PM
- ;;5.3;Scheduling;**140,132,171,184,529**;Aug 13, 1993;Build 3
+ ;;5.3;Scheduling;**140,132,171,184**;Aug 13, 1993
 PRO S SDAS=$S($P(^SC(I,"S",J,1,K,0),U,9)="C":"C",1:$P(^DPT(DFN,"S",J,0),U,2)) S SDP=$P(^DPT(DFN,"S",J,0),U,7)
 PRO1 S SDP=$P(^DPT(DFN,"S",J,0),U,7) S:SDS="C" ^(SDN)=$S($D(^TMP($J,"CL",'$D(SDFL),SDN)):^(SDN),1:0)
  I SDS="S" S:SDF1 ^(SDSC)=$S($D(^TMP($J,"SC",'$D(SDFL),SDSC)):^(SDSC),1:0) I SDF2 S ^(SDCR)=$S($D(^TMP($J,"SC",'$D(SDFL),SDCR)):^(SDCR),1:0)
@@ -8,7 +8,7 @@ PRO1 S SDP=$P(^DPT(DFN,"S",J,0),U,7) S:SDS="C" ^(SDN)=$S($D(^TMP($J,"CL",'$D(SDF
  I $D(SDFL) S:SDS="C" ^(SDN)=$S($D(^TMP($J,"CL",1,SDN)):^(SDN),1:0) I SDS="S" S:SDF1 ^(SDSC)=$S($D(^TMP($J,"SC",1,SDSC)):^(SDSC),1:0) S:SDF2 ^(SDCR)=$S($D(^TMP($J,"SC",1,SDCR)):^(SDCR),1:0)
  Q:$D(SDFL)!(SDRT="B")  S SDAPT=$S(SDF="D":J\1,1:J\100) S:'$D(^TMP($J,1,SDN,SDAPT)) (^(SDAPT,"CA"),^("NS"),^("IN"),^("OB"),^("UN"),^("SD"))=0
  S TIME=$E($P(J,".",2)_"0000",1,4),TIME=$E(TIME,1,2)_":"_$E(TIME,3,4)
- S:SDNAM SDPN=$E($P(^DPT(DFN,0),U),1,20),SDSSN=$S($P(^(0),U,9)]"":$P(^(0),U,9),1:0),^TMP($J,1,SDN,SDAPT,"NM",SDPN,SDSSN,TIME,$S(SDAS]"":SDAS,SDOB:"OB",SDP=1:"S",SDP=3:"S",SDP=4:"U",1:" "))=""  ;added SDP=1 SD*529
+ S:SDNAM SDPN=$E($P(^DPT(DFN,0),U),1,20),SDSSN=$S($P(^(0),U,9)]"":$P(^(0),U,9),1:0),^TMP($J,1,SDN,SDAPT,"NM",SDPN,SDSSN,TIME,$S(SDAS]"":SDAS,SDOB:"OB",SDP=3:"S",SDP=4:"U",1:" "))=""
  K TIME I SDAS["C" S ^("CA")=^TMP($J,1,SDN,SDAPT,"CA")+1 Q
  I SDAS="N"!(SDAS="NA") S ^("NS")=^TMP($J,1,SDN,SDAPT,"NS")+1 Q
  I SDAS["I" S ^("IN")=^TMP($J,1,SDN,SDAPT,"IN")+1 Q

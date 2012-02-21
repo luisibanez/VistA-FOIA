@@ -1,5 +1,5 @@
 ORWDBA4 ; SLC/GU Billing Awareness - Phase II [11/26/04 15:44]
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**195,243**;Dec 17, 1997;Build 242
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**195**;Dec 17, 1997
  ;
  ;Miscellaneous CIDC functions utility.
  ;
@@ -29,7 +29,7 @@ GETTFCI(Y,ORIEN) ;Get Treatment Factors Clinical Indicators
  F  S CNT=$O(ORIEN(CNT)) Q:CNT=""  D
  . S TF=$$GTF(ORIEN(CNT))
  . S DXS=$$GDCD(ORIEN(CNT))
- . I TF="NNNNNNNN"&(DXS="") Q
+ . I TF="NNNNNNN"&(DXS="") Q
  . S TFCI(CNT)=ORIEN(CNT)_U_TF_$S(DXS="":"",1:U_DXS)
  M Y=TFCI
  Q
@@ -47,7 +47,7 @@ GTF(IEN) ;Get Treatment Factors
  ;          (Converted to GUI values and returned)
  N ORTF,OREM,OTF
  S OTF=""
- D GETS^DIQ(100,IEN,"90;91;92;93;94;95;96;98","I","ORTF","OREM")
+ D GETS^DIQ(100,IEN,"90;91;92;93;94;95;96","I","ORTF","OREM")
  S OTF=$G(ORTF(100,IEN_",",90,"I"))
  S OTF=OTF_U_$G(ORTF(100,IEN_",",91,"I"))
  S OTF=OTF_U_$G(ORTF(100,IEN_",",92,"I"))
@@ -55,12 +55,11 @@ GTF(IEN) ;Get Treatment Factors
  S OTF=OTF_U_$G(ORTF(100,IEN_",",94,"I"))
  S OTF=OTF_U_$G(ORTF(100,IEN_",",95,"I"))
  S OTF=OTF_U_$G(ORTF(100,IEN_",",96,"I"))
- S OTF=OTF_U_$G(ORTF(100,IEN_",",98,"I"))
  S OTF=$$TFGBLGUI^ORWDBA1(OTF)
- I OTF'="NNNNNNNN" Q OTF
+ I OTF'="NNNNNNN" Q OTF
  S OTF=""
  K ORTF,OREM
- D GETS^DIQ(100,IEN,"51;52;53;54;55;56;57;58","I","ORTF","OREM")
+ D GETS^DIQ(100,IEN,"51;52;53;54;55;56;57","I","ORTF","OREM")
  S OTF=$G(ORTF(100,IEN_",",51,"I"))
  S OTF=OTF_U_$G(ORTF(100,IEN_",",52,"I"))
  S OTF=OTF_U_$G(ORTF(100,IEN_",",53,"I"))
@@ -68,7 +67,6 @@ GTF(IEN) ;Get Treatment Factors
  S OTF=OTF_U_$G(ORTF(100,IEN_",",55,"I"))
  S OTF=OTF_U_$G(ORTF(100,IEN_",",56,"I"))
  S OTF=OTF_U_$G(ORTF(100,IEN_",",57,"I"))
- S OTF=OTF_U_$G(ORTF(100,IEN_",",58,"I"))
  S OTF=$$TFGBLGUI^ORWDBA1(OTF)
  Q OTF
  ;

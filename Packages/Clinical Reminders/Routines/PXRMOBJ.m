@@ -1,5 +1,5 @@
-PXRMOBJ ;SLC/JVS - PXRM OBJECT AND GUI EVAL FOR GEC ;7/14/05  07:34
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMOBJ ;SLC/JVS - PXRM OBJECT AND GUI EVAL FOR GEC ;09/24/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  Q
  ;
@@ -42,7 +42,7 @@ DEM(DFN) ;
  .S ^TMP("PXRMOBJ",$J,13,0)="      LTC Date Tested: "_DATA("STATUS DATE")
  I $D(DATA("WHY")) D
  .S ^TMP("PXRMOBJ",$J,13,0)="               Reason: "_DATA("WHY")
- S ^TMP("PXRMOBJ",$J,14,0)=""
+ S ^TMP("PXRMOBJ",$J,14,0)="----------------------------------------"
  ; NODE MUST END WITH ZERO SUBSCRIPT
  ; @CMARRAY@(CNT,0)=TEXT
  D EXIT

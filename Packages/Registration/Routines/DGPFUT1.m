@@ -1,5 +1,5 @@
-DGPFUT1 ;ALB/RBS - PRF UTILITIES CONTINUED ; 6/9/06 10:56am
- ;;5.3;Registration;**425,607,650**;Aug 13, 1993;Build 3
+DGPFUT1 ;ALB/RBS - PRF UTILITIES CONTINUED ; 6/10/04 12:29pm
+ ;;5.3;Registration;**425,607**;Aug 13, 1993
  ;
  Q  ;no direct entry
  ;
@@ -56,7 +56,54 @@ ASKDET() ;does user want to display flag details?
  . D YN^DICN
  . S YN=$S(%=-1:"^",%=1:"Y",%=2:"N",1:"?")
  . I YN="?" D:$D(DDS) CLRMSG^DDS W !,"Enter either 'Y' or 'N'."
+ ;I $D(DDS) D REFRESH^DDSUTL
  Q (YN="Y")
+ ;
+DISPDET(DGPFAPI) ; Display the details of patients Active record flags
+ ;
+ ; Input:   DGPFAPI() = Array of patients active flags
+ ;                      (passed by reference)
+ ;                      See $$GETACT^DGPFAPI for array format.
+ ; Output:  None
+ ;
+ I '$G(DGPFAPI) Q  ;no flags
+ ;
+ N DGPFI,DGPFQ,DGPFIEN,DGPFFLAG,IORVON,IORVOFF,DIRUT,DUOUT,DTOUT,X
+ ;
+ S (IORVON,IORVOFF)=""
+ D:$D(IOST(0))
+ . N X S X="IORVON;IORVOFF" D ENDR^%ZISS
+ ;
+ ; loop all returned Active Record Flag Assignment ien's
+ S (DGPFIEN,DGPFQ)=""
+ F  S DGPFIEN=$O(DGPFAPI(DGPFIEN)) Q:DGPFIEN=""  D  Q:DGPFQ
+ . S DGPFFLAG=$P($G(DGPFAPI(DGPFIEN,"FLAG")),U,2)
+ . Q:(DGPFFLAG'["")
+ . I $G(DGPFQ)=0 W ! S DGPFQ='$$CONTINUE^DGPFUT() Q:DGPFQ
+ . S DGPFQ=0
+ . W:$E(IOST,1,2)="C-" @IOF
+ . W !?11,"Flag Name: ",IORVON,"<"_DGPFFLAG_">",IORVOFF
+ . W !?11,"Flag Type: ",$P($G(DGPFAPI(DGPFIEN,"FLAGTYPE")),U,2)
+ . W !?7,"Flag Category: ",$P($G(DGPFAPI(DGPFIEN,"CATEGORY")),U,2)
+ . W !?3,"Assignment Status: ACTIVE"
+ . W !?2,"Initial Assignment: ",$P($G(DGPFAPI(DGPFIEN,"ASSIGNDT")),U,2)
+ . W !?9,"Approved By: ",$P($G(DGPFAPI(DGPFIEN,"APPRVBY")),U,2)
+ . W !?4,"Next Review Date: ",$P($G(DGPFAPI(DGPFIEN,"REVIEWDT")),U,2)
+ . W !?10,"Owner Site: ",$P($G(DGPFAPI(DGPFIEN,"OWNER")),U,2)
+ . W !?4,"Originating Site: ",$P($G(DGPFAPI(DGPFIEN,"ORIGSITE")),U,2)
+ . W !,"Assignment Narrative:",!,"---------------------"
+ . I $D(DGPFAPI(DGPFIEN,"NARR",1,0)) D
+ . . S DGPFI=""
+ . . F  S DGPFI=$O(DGPFAPI(DGPFIEN,"NARR",DGPFI)) Q:DGPFI=""  D  Q:DGPFQ
+ . . . I $Y>(IOSL-3) S DGPFQ='$$CONTINUE^DGPFUT() Q:DGPFQ  S $Y=2
+ . . . W !,$G(DGPFAPI(DGPFIEN,"NARR",DGPFI,0))
+ ;
+ W !!,IORVON,"<END OF RECORD FLAG DISPLAY>",IORVOFF,!
+ N DIR,X,Y,DIRUT,DTOUT,DUOUT,DIROUT
+ S DIR("A")="Enter RETURN to continue",DIR(0)="E"
+ D ^DIR K DIR
+ W !
+ Q
  ;
 DISPPRF(DGDFN) ; Patient Record Flags screen Display
  ;
@@ -84,6 +131,9 @@ DISPPRF(DGDFN) ; Patient Record Flags screen Display
  ;
  ; call api to display Active Record Flags
  D DISPACT(.DGPFAPI)
+ ;
+ ; display the details of patients Active record flags
+ ;D DISPDET(.DGPFAPI)  ;roll-and-scroll
  ;
  ; prompt and display assignment details
  I $$ASKDET() D EN^DGPFLMD(DGDFN,.DGPFAPI)  ;ListMan
@@ -128,6 +178,7 @@ SELPAT(DGPAT) ;This procedure is used to perform a patient lookup for an existin
  ;
  Q
  ;
+ ;
 GETFLAG(DGPFPTR,DGPFLAG) ;retrieve a single FLAG record
  ;  This function acts as a wrapper around the $$GETLF and $$GETNF
  ;  API's. Function will be used to obtain a single flag record from
@@ -170,54 +221,3 @@ GETFLAG(DGPFPTR,DGPFLAG) ;retrieve a single FLAG record
  . . S RESULT=1  ;success
  ;
  Q RESULT
- ;
-PARENT(DGCHILD) ;lookup and return the parent of a child
- ;
- ;  Input:
- ;    DGCHILD - pointer to INSTITUTION (#4) file
- ;
- ;  Output:
- ;   Function value - INSTITUTION file pointer^institution name^station# 
- ;                    of parent facility on success; 0 on failure
- ;
- N DGPARENT  ;function value
- N DGPARR    ;return array from XUAF4
- ;
- S DGCHILD=+$G(DGCHILD)
- D PARENT^XUAF4("DGPARR","`"_DGCHILD,"PARENT FACILITY")
- S DGPARENT=+$O(DGPARR("P",0))
- I DGPARENT S DGPARENT=DGPARENT_U_$P(DGPARR("P",DGPARENT),U)_U_$P(DGPARR("P",DGPARENT),U,2)
- Q DGPARENT
- ;
-FMTPRNT(DGCHILD) ;lookup and return parent of a child in display format
- ;
- ;  Input:
- ;    DGCHILD - pointer to INSTITUTION (#4) file
- ;
- ;  Output:
- ;   Function value - formatted name of parent institution on success;
- ;                    null on failure
- ;
- N DGPARENT  ;parent facility name
- S DGCHILD=+$G(DGCHILD)
- S DGPARENT=$P($$PARENT(DGCHILD),U,2)
- Q $S(DGPARENT]"":"("_DGPARENT_")",1:"")
- ;
-CNTRECS(DGFILE) ;return number of records of a file
- ;
- ;  Input:
- ;    DGFILE - (Required) file number to search
- ;
- ;  Output:
- ;    Function Value - number of records found
- ;
- N DGCNT    ;returned function value
- N DGERR    ;FM error message array
- N DGLIST   ;FM array of record ien's
- ;
- S DGCNT=0
- I $G(DGFILE)]"" D
- . D LIST^DIC(DGFILE,"","@","Q","*","","","","","","DGLIST","DGERR")
- . Q:$D(DGERR)
- . S DGCNT=+$G(DGLIST("DILIST",0))
- Q DGCNT

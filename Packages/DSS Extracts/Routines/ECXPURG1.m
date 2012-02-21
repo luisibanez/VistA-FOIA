@@ -1,5 +1,5 @@
-ECXPURG1 ;BIR/CML-Purge of DSS Extract Files (CONTINUED) ; 10/2/08 10:48am
- ;;3.0;DSS EXTRACTS;**2,9,8,24,49,102,112**;Dec 22, 1997;Build 26
+ECXPURG1 ;BIR/CML-Purge of DSS Extract Files (CONTINUED) ; [ 12/05/96  11:58 AM ]
+ ;;3.0;DSS EXTRACTS;**2,9,8,24,49**;Dec 22, 1997
 GET ;compile list of purgable extracts
  K HI,LO,ECBDT,ECEDT,ECLOC,^TMP("ECXPURG",$J)
  S QFLG=1 W !!,"...one moment please"
@@ -83,17 +83,15 @@ DATES ;ask for date range for purge of holding files
  I ECY="U" D
  .I '$O(^ECX(728.904,0)) W !!,"You have no data in the UDP holding file (file #728.904) to purge." Q
  .S LO=$O(^ECX(728.904,"A",0)),HI=$O(^ECX(728.904,"A"," "),-1)
- I ECY="V" D
- .I '$O(^VBEC(6002.03,0)) W !!,"You have no data in the VBECS holding file (file #6002.03) to purge." Q
- .S LO=$O(^VBEC(6002.03,"C",0)),HI=$O(^VBEC(6002.03,"C"," "),-1)
  Q:$G(LO)=""
- W @IOF,!!,"This file currently holds ",$S(ECY="I":"IVP",ECY="U":"UDP",1:"VBECS")," data from <",$$FMTE^XLFDT(LO,"D"),"> to <",$$FMTE^XLFDT(HI,"D"),">."
+ W @IOF,!!,"This file currently holds ",$S(ECY="I":"IVP",1:"UDP")," data from <",$$FMTE^XLFDT(LO,"D"),"> to <",$$FMTE^XLFDT(HI,"D"),">."
  W ! K DIR S DIR(0)="DA^"_LO_":"_HI_":EPX",DIR("A")="Beginning date for purge: " D ^DIR K DIR I $D(DIRUT) K HI,LO Q
  S ECBDT=+Y
  K DIR S DIR(0)="DA^"_ECBDT_":"_HI_":EPX",DIR("A")="Ending date for purge: " D ^DIR K DIR I $D(DIRUT) K HI,LO,ECBDT Q
  S ECEDT=+Y
 ASK4 ; ask to confirm date range
- W !!,"I will purge the ",$S(ECY="I":"IVP",ECY="U":"UDP",1:"VBECS")," holding file from <",$$FMTE^XLFDT(ECBDT,"D"),"> to <",$$FMTE^XLFDT(ECEDT,"D"),">."
+ W !!,"I will purge the ",$S(ECY="I":"IVP",1:"UDP")," holding file from <",$$FMTE^XLFDT(ECBDT,"D"),"> to <",$$FMTE^XLFDT(ECEDT,"D"),">."
+ W $C(7),$C(7),!!?3,"** REMEMBER - Once this data is purged it CANNOT be recreated. **"
  W !! K DIR S DIR(0)="Y",DIR("A")="Is this OK",DIR("B")="NO"
  S DIR("?",1)="    Enter:"
  S DIR("?",2)="      ""YES"" if you agree with this date range and wish to proceed,"

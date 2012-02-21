@@ -1,5 +1,5 @@
-PXRMCOPY ; SLC/PKR,PJH - Copy various reminder files. ;06/12/2009
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
+PXRMCOPY ; SLC/PKR,PJH - Copy various reminder files. ;05/11/2001
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;=====================================================
 COPY(PROMPT,ROOT,WHAT) ;Copy an entry of ROOT into a new entry.
@@ -11,7 +11,7 @@ COPY(PROMPT,ROOT,WHAT) ;Copy an entry of ROOT into a new entry.
 GETORGR ;Look-up logic to get and copy source entry to destination.
  N DA,DIE,DIC,DIK,DIR,DIRUT,FDA,FIELDLEN,FILE
  N IENN,IENO,IENS,MSG,NAME,ORGNAME,X,Y
- S DIC=ROOT,DIC(0)="AEMQ",DIC("A")=PROMPT
+ S DIC=ROOT,DIC(0)="AEQ",DIC("A")=PROMPT
  W !
  D ^DIC
  I $D(DUOUT)!$D(DTOUT) S DIROUT="" Q
@@ -34,7 +34,7 @@ GETNAM D ^DIR
  S NAME=Y
  ;
  ;Make sure the new name is valid.
- I '$$VNAME^PXRMINTR(NAME) G GETNAM
+ I '$$VNAME^PXRMINTR(NAME,FILE) G GETNAM
  ;
  ;Change to the new name.
  S IENS=IENN_","
@@ -63,20 +63,11 @@ GETNAM D ^DIR
  Q
  ;
  ;=====================================================
-COPYLL ;Copy a location list.
- N PROMPT,ROOT,WHAT
- S WHAT="location list"
- S ROOT="^PXRMD(810.9,"
- S PROMPT="Select the reminder location list to copy: "
- D COPY(PROMPT,ROOT,WHAT)
- Q
- ;
- ;=====================================================
 COPYREM ;Copy a reminder definition.
  N PROMPT,ROOT,WHAT
  S WHAT="reminder"
  S ROOT="^PXD(811.9,"
- S PROMPT="Select the reminder definition to copy: "
+ S PROMPT="Select the reminder item to copy: "
  D COPY(PROMPT,ROOT,WHAT)
  Q
  ;
@@ -85,7 +76,7 @@ COPYTAX ;Copy a taxonomy.
  N PROMPT,ROOT,WHAT
  S WHAT="taxonomy"
  S ROOT="^PXD(811.2,"
- S PROMPT="Select the reminder taxonomy to copy: "
+ S PROMPT="Select the taxonomy item to copy: "
  D COPY(PROMPT,ROOT,WHAT)
  Q
  ;
@@ -109,7 +100,7 @@ GETFOIEN(ROOT) ;Return the first open IEN in ROOT. This should be called
  ;after a call to SETSTART.
  N ENTRY,NIEN,OIEN
  S ENTRY=ROOT_0_")"
- S OIEN=+$P(@ENTRY,U,3)
+ S OIEN=$P(@ENTRY,U,3)
  S ENTRY=ROOT_OIEN_")"
  F  S NIEN=$O(@ENTRY) Q:+(NIEN-OIEN)>1  Q:+NIEN'>0  S OIEN=NIEN,ENTRY=ROOT_NIEN_")"
  Q OIEN+1

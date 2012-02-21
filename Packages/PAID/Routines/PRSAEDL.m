@@ -1,6 +1,5 @@
 PRSAEDL ; HISC/REL-Display Envir. Diff. Requests ;8/23/94  08:48
- ;;4.0;PAID;**114**;Sep 21, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;;Sep 21, 1995
 TK ; Timekeeper Entry
  S PRSTLV=2 G L0
 SUP ; Supervisor Entry
@@ -30,7 +29,7 @@ P2 Q
 CK W:'CNT !!,"No Environmental Differential Requests found for this period." Q
 LST ; Display Request
  S DFN=$S(SRT="E":N1,1:N2),Y0=$G(^PRSPC(DFN,0)) I HDR D:$Y>(IOSL-3) HDR Q:QT  G L1
- D:$Y>(IOSL-6) HDR Q:QT  I SRT="E" W !!,$P(Y0,"^",1) S X=$P(Y0,"^",9) I X W ?50,$E(X),"XX-XX-",$E(X,6,9) S HDR=1 G L1
+ D:$Y>(IOSL-6) HDR Q:QT  I SRT="E" W !!,$P(Y0,"^",1) S X=$P(Y0,"^",9) I X W ?50,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9) S HDR=1 G L1
  S X=N1 D DTP W !!,Y
 L1 ; List item
  S Z=$G(^PRST(458.3,DA,0)) Q:Z=""  S SCOM=$P($G(^(1)),"^",1),CNT=CNT+1

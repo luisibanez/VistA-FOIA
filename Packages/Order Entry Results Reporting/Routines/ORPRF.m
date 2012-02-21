@@ -1,5 +1,5 @@
-ORPRF ;SLC/JLI-Patient record flag ;6/14/06
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**173,187,190,215,243**;Dec 17, 1997;Build 242
+ORPRF ;SLC/JLI-Patient record flag ;1/10/06
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**173,187,190,215**;Dec 17, 1997
  ;
 FMT(ROOT) ; Format - Convert record flag data to displayable data
  ; Sets ^TMP("ORPRF",$J,NN) with flag data for multiple flags
@@ -31,20 +31,16 @@ HASFLG(ORY,PTDFN) ;Does patient PTDFN has flags
  ;     DBIA 3860: $$GETACT^DGPFAPI(PTDFN,.FLGDATA)
  ; Returns array ORY listing active assigned flags
  ; Array ORY has form:
- ;   ORY(flagID) = flagID^flagname,CAT1
- ;      where CAT1 is 1 if flag is cat 1, 0 if cat 2
+ ;   ORY(flagID) = flagID^flagname
  ; ORY = Num of items returned in array ORY = num of flags
  I '$L($TEXT(GETACT^DGPFAPI)) S ORY=0 Q
- N IDY,PRFARR,CAT1
+ N IDY,PRFARR
  K ^TMP("ORPRF",$J)
  S ORY=$$GETACT^DGPFAPI(PTDFN,"PRFARR")
  Q:'ORY
  D FMT(.@("PRFARR")) ; Sets ^TMP("ORPRF"
  S IDY=0 F  S IDY=$O(^TMP("ORPRF",$J,IDY)) Q:'IDY  D
  . S ORY(IDY)=IDY_U_$G(^TMP("ORPRF",$J,IDY,"FLAG"))
- . S CAT1=0
- . I $G(^TMP("ORPRF",$J,IDY,"CATEGORY"))="I (NATIONAL)" S CAT1=1
- . S ORY(IDY)=ORY(IDY)_U_CAT1
  Q
  ;
 HASFLG1(ORY,PTDFN) ; Does patient PTDFN have **Cat I** flags

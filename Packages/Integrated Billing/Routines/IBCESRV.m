@@ -1,6 +1,6 @@
 IBCESRV ;ALB/TMP - Server interface to IB from Austin ;8/6/03 10:04am
- ;;2.0;INTEGRATED BILLING;**137,181,196,232,296,320,407**;21-MAR-94;Build 29
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,181,196,232,296**;21-MAR-94
+ ;
 SERVER ; Entry point for server option to process EDI msgs received from Austin
  ;
  N IBEFLG,IBERR,IBTDA,XMER,IBXMZ,IBHOLDCT
@@ -55,8 +55,7 @@ MSG(XMER,IBTDA,IBXMZ) ; Read/Store message lines
  .. S ^TMP("IBERR",$J,"MSG",1)=IBHD
  .. S ^TMP("IBERR",$J,"MSG",2)=$G(XMRG)
  . S IBTXN=XMRG
- . ;
- . S IBBTCH=+$O(^IBA(364.1,"MSG",+$P(IBTXN,"#",2)\1,""),-1)
+ . S IBBTCH=+$O(^IBA(364.1,"MSG",+$P(IBTXN,"#",2)\1,""))
  . I 'IBBTCH S IBERR=6 D REST(.IBTXN,IBGBL) Q  ;No msgs match conf recpt
  . S IBTXN("BATCH",IBBTCH,0)="837REC0^"_IBD("MSG#")_U_+$E($P(IBD("SUBJ")," "),4,14)_"^^"_IBBTCH_U_IBDATE
  . ;
@@ -147,14 +146,13 @@ ADDTXN(IBDATA,REPORT) ; Add a trxn for msg in IBDATA to file 364.2
  ; REPORT = 1 if storing a report format message
  ;Function returns ien of the new entry in file 364.2 or "" if an error
  ;
- N A,IBDA,IBBTCH,IBBILL,IBDT,IBTEST,DLAYGO,DIC,DD,DO,X,Y,Z,IBIFN
+ N A,IBDA,IBBTCH,IBBILL,IBDT,IBTEST,DLAYGO,DIC,DD,DO,X,Y,Z
  ;
- S IBDA="",IBBTCH=$P(IBDATA,U,5),IBBILL=$P(IBDATA,U,4),IBIFN=0
- I IBBILL S IBIFN=+$G(^IBA(364,IBBILL,0))
+ S IBDA="",IBBTCH=$P(IBDATA,U,5),IBBILL=$P(IBDATA,U,4)
  S IBDT=$P(IBDATA,U,6)
  S IBTEST=0
  I $E($G(IBD("Q")),1,3)="MCT" D
- . I IBBILL,'$P($G(^IBA(364,IBBILL,0)),U,7),$D(^IBM(361.4,IBIFN,0)) S IBTEST=1 Q  ; Resubmit live claim for test (make sure 361.4 exists)
+ . I IBBILL,'$P($G(^IBA(364,IBBILL,0)),U,7) S IBTEST=1 Q  ; Resubmit live claim for test
  . I IBBTCH,$O(^IBM(361.4,"C",IBBTCH,0)) S IBTEST=1 Q  ; Resubmit live claim as test batch
  ;
  S (X,A)=$G(IBD("MSG#")) ; Use msg ID for .01 field

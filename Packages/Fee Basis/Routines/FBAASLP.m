@@ -1,6 +1,6 @@
-FBAASLP ;AISC/GRR-PRINT SUSPENSION LETTERS ;7/NOV/2006
- ;;3.5;FEE BASIS;**12,4,23,69,101**;JAN 30, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+FBAASLP ;AISC/GRR-PRINT SUSPENSION LETTERS ;09/25/00
+ ;;3.5;FEE BASIS;**12,4,23,69**;JAN 30, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  D DATE^FBAAUTL G END:FBPOP  K FBAAS S (FBAAOUT,FBSLW,FBPRG,FBCTR,FBY)=0,UL="",$P(UL,"=",80)="="
  D ^FBAASL G END:FBAAOUT
 RDCODE S DIR(0)="Y",DIR("A")="For All Suspension codes",DIR("B")="YES",DIR("?")="'Yes' to print suspension letters for all suspension codes, 'No' to select specific codes." D ^DIR K DIR W ! G END:$D(DUOUT),END:$D(DTOUT),SEL:'Y
@@ -122,7 +122,7 @@ HED W !,"PATIENT NAME",?33,"SSN",?49,"PATIENT ACCOUNT NUMBER"
  ;
 GOTP ; Utilize new API for Name Standardization
  ;
- S Y(0)=^DPT(J,0),PNAME=$P(Y(0),"^",1),PSSN=$TR($$SSNL4^FBAAUTL($$SSN^FBAAUTL(J)),"-","")
+ S Y(0)=^DPT(J,0),PNAME=$P(Y(0),"^",1),PSSN=$TR($$SSN^FBAAUTL(J),"-","")
  I PNAME["," D
  .N FBNAMES
  .S FBNAMES("FILE")=2,FBNAMES("IENS")=J_",",FBNAMES("FIELD")=.01

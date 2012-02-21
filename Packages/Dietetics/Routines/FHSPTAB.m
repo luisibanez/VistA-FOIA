@@ -1,14 +1,12 @@
 FHSPTAB ; HISC/REL/NCA - Tabulate Standing Orders ;4/27/93  13:07 
- ;;5.5;DIETETICS;**5**;Jan 28, 2005;Build 53
- ;11/10/05 modified to add outpatient standing order.
- S FHOPT=3   ;tabulate standing order flag.
+ ;;5.5;DIETETICS;;Jan 28, 2005
  S FHP=$O(^FH(119.72,0)) I FHP'<1,$O(^FH(119.72,FHP))<1 S FHP=0 G R1
 R0 R !!,"Select SERVICE POINT (or ALL): ",X:DTIME G:'$T!("^"[X) KIL D:X="all" TR^FH I X="ALL" S FHP=0
  E  K DIC S DIC="^FH(119.72,",DIC(0)="EMQ" D ^DIC G:Y<1 R0 S FHP=+Y
 R1 R !!,"Select Meal (B,N,E or ALL): ",MEAL:DTIME G:'$T!("^"[MEAL) KIL S X=MEAL D TR^FH S MEAL=X S:$P("ALL",MEAL,1)="" MEAL="A"
  I "BNEA"'[MEAL!(MEAL'?1U) W *7,!,"Enter B for Breakfast, N for Noon , E for Evening or ALL for all meals" G R1
 R3 W ! K IOP,%ZIS S %ZIS("A")="Select LIST Printer: ",%ZIS="MQ" D ^%ZIS K %ZIS,IOP G:POP KIL
- I $D(IO("Q")) S FHPGM="Q1^FHSPTAB",FHLST="FHP^MEAL^FHOPT" D EN2^FH G KIL
+ I $D(IO("Q")) S FHPGM="Q1^FHSPTAB",FHLST="FHP^MEAL" D EN2^FH G KIL
  U IO D Q1 D ^%ZISC K %ZIS,IOP G KIL
 Q1 ; Print the Tabulated List of Standing Orders
  D NOW^%DTC S NOW=%,PG=0 I MEAL'="A" G Q2
@@ -16,8 +14,6 @@ Q1 ; Print the Tabulated List of Standing Orders
  Q
 Q2 S T0=(NOW\1)_$S(MEAL="B":".07",MEAL="N":".11",1:".17")
  K N F W1=0:0 S W1=$O(^FH(119.6,W1)) Q:W1<1  D DP I DP'="" F FHDFN=0:0 S FHDFN=$O(^FHPT("AW",W1,FHDFN)) Q:FHDFN<1  S ADM=^FHPT("AW",W1,FHDFN) D ADD
- ;get outpatient so.
- D ADDO^FHSP1
  D HDR S NX="" F K1=0:0 S NX=$O(^FH(118.3,"B",NX)) Q:NX=""  F K=0:0 S K=$O(^FH(118.3,"B",NX,K)) Q:K<1  I $D(N(K)) D:$Y>56 HDR W !,$J(N(K),6),"       ",$P(^FH(118.3,K,0),"^",1)
  W ! Q
 ADD Q:ADM<1  D CHK I K2 F K2=0:0 S K2=$O(^FHPT("ASP",FHDFN,ADM,K2)) Q:K2<1  S X=^FHPT(FHDFN,"A",ADM,"SP",K2,0) D A1

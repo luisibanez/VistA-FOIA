@@ -1,5 +1,5 @@
 ORMFH ;SLC/MKB - Process Dietetics ORM msgs ;5/5/05  13:18
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**3,73,92,215,243**;Dec 17, 1997;Build 242
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**3,73,92,215**;Dec 17, 1997
  ;
 EN ; -- entry point for FH messages
  I '$L($T(@ORDCNTRL)) Q  ;S ORERR="Invalid order control code" Q
@@ -196,7 +196,7 @@ UPDATE(ORSTS,ORACT) ; -- continue processing
  . D SIGSTS^ORCSAVE2(+ORIFN,DA)
  . I $G(ORL) S ORP(1)=+ORIFN_";"_DA_"^1" D PRINTS^ORWD1(.ORP,+ORL)
  . S $P(^OR(100,+ORIFN,3),U,7)=DA
- I ORACT="DC",'$$ACTV^ORX1(ORNATR) S $P(^OR(100,+ORIFN,3),U,7)=0
+ I 'ORX,ORACT="DC",'$$ACTV^ORX1(ORNATR) S $P(^OR(100,+ORIFN,3),U,7)=0
  D:ORACT="DC" CANCEL^ORCSEND(+ORIFN)
  Q
  ;

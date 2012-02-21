@@ -1,5 +1,5 @@
 SDN1 ;BSN/GRR - NO-SHOW LETTERS ; 17 AUG 84  4:34 pm
- ;;5.3;Scheduling;**330,340,398,455,523**;Aug 13, 1993;Build 6
+ ;;5.3;Scheduling;**330,340,398,455**;Aug 13, 1993
  N SDBAD
  I ANS["Y"&($D(C)) F A=0:0 S A=$O(^UTILITY($J,A)) Q:A'>0  F C=0:0 S C=$O(^(A,C)) Q:C'>0  S SC=+^(C),SDLET="" S:$D(^SC(SC,"LTR")) SDLET=+^("LTR") S:SDLET ^UTILITY($J,"SDLT",SDLET,A,C)=^UTILITY($J,A,C) S:'SDLET ^UTILITY($J,"NO",A,C)=SC D KLL
  S SDFORM=$S($D(^DG(40.8,SDV1,"LTR")):^("LTR"),1:"") G:ANS["Y"&($D(C)) LST
@@ -8,7 +8,7 @@ BC K:$D(SDLT) C S:$D(SDLT) SDT=SDBD,DATEND=SDED K ^UTILITY($J) I $D(C) K VAUTC S
  I $D(VAUTC),'VAUTC G LST
 LST1 F C=0:0 S C=$O(^SC(C)) Q:C'>0  D LT,CHECK1 I $T,$S(SDV1="":1,SDV=SDV1:1,SDV="":1,1:0),'$D(SDVAUTC(+C)),$D(^SC(C,"S")) D OVER
 LST N SDFIRST S SDFIRST=1
- F SDLET=0:0 S SDLET=$O(^UTILITY($J,"SDLT",SDLET)) Q:SDLET'>0  F A=0:0 S A=$O(^UTILITY($J,"SDLT",SDLET,A)) Q:A'>0  I $S('$D(^DPT(A,.35)):1,$P(^(.35),"^",1)']"":1,1:0) N POP S POP=0 D ^SDLT Q:POP  D WR  ;SD*523 added quit
+ F SDLET=0:0 S SDLET=$O(^UTILITY($J,"SDLT",SDLET)) Q:SDLET'>0  F A=0:0 S A=$O(^UTILITY($J,"SDLT",SDLET,A)) Q:A'>0  I $S('$D(^DPT(A,.35)):1,$P(^(.35),"^",1)']"":1,1:0) D ^SDLT,WR
  I $D(^UTILITY($J,"NO")) W @IOF F A=0:0 S A=$O(^UTILITY($J,"NO",A)) Q:A'>0  F A1=0:0 S A1=$O(^(A,A1)) Q:A1'>0  Q:$$BADADR^DGUTL3(A)  W !,$P(^DPT(A,0),"^")," ",$P(^(0),"^",9)," has failed to keep the following appointment(s):" D NDT
  W:$D(^UTILITY($J,"NO")) !,"However, there are no letters assigned to the clinic(s).",!!
  I $D(^TMP($J,"BADADD")) D BADADD^SDLT K ^TMP($J,"BADADD")

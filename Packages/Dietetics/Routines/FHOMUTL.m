@@ -1,5 +1,5 @@
 FHOMUTL ;Hines OIFO/RTK OUTPATIENT MEALS UTILITIES  ;2/04/03  15:15
- ;;5.5;DIETETICS;**1,2,5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;**1,2**;Jan 28, 2005
  ;
 DIV ;ask for Communication office if Multi-division.
  N FHSCNT,FH
@@ -28,21 +28,8 @@ OUTLOC ;Prompt for outpatient location - screen for ONLY Outpatient Locations
  S DIC("S")="I $P(^(0),U,3)=FHOUT" D ^DIC
  Q:$D(DUOUT)  I Y=-1 Q
  S FHLOC=+Y,FHCOMM=$P($G(^FH(119.6,FHLOC,0)),U,8)
- I '$O(^FH(119.6,FHLOC,"L",0)) S FHLOC="",FHCOMM="" W !!,"The selected location does not have an Associated Hospital Location.  To set",!,"the Associated Hospital Location use option ENTER/EDIT NUTRITION LOCATIONS."
  Q
  ;
-RMBED ;Prompt for outpatient room-bed - must be set up for Outpatient Location
- S (FHRMBD,FHRMBSL)=""
- I $G(FHLOC)="" W !!,"No OUTPATIENT LOCATION selected" Q
- I '$D(^FH(119.6,FHLOC,"R")) Q
- F FHRMBI=0:0 S FHRMBI=$O(^FH(119.6,FHLOC,"R",FHRMBI)) Q:FHRMBI'>0  D
- .S FHRMBPT=$P($G(^FH(119.6,FHLOC,"R",FHRMBI,0)),U),FHRMBSL(FHRMBPT)=1
- K DIC S DIC="^DG(405.4,",DIC(0)="AEQZ"
- S DIC("A")="Select Outpatient Room-Bed: "
- S DIC("S")="I $D(FHRMBSL(+Y))" D ^DIC
- Q:$D(DUOUT)  I Y=-1 Q
- S FHRMBD=+Y
- Q
 GTFHDFN ;Get FHDFN, given DFN
  K DIR S DIR(0)="NAO",DIR("B")="ENTER DFN" D ^DIR Q:$D(DIRUT)  S ZZDFN=Y
  S FHZ115="P"_ZZDFN,FHDFN=$O(^FHPT("B",FHZ115,""))
@@ -154,17 +141,9 @@ MSHSS ;Code MSG for outpatient send status messages
  S MSG(2)="PID|||"_DFN_"||"_$P($G(^DPT(DFN,0)),"^",1)
  S MSG(3)="ORC|SR|"_FHORN_"^OR|"_FILL_"||"_FHSTTS
  Q
-CONVC ;Convert Amount/Unit in file 118.2, from "C" to "ML".
+CONVC ;convert Amount/Unit in file 118.2, from "C" to "ML".
  F FHII=0:0 S FHII=$O(^FH(118.2,FHII)) Q:FHII'>0  D
  .S FHAU=$P(^FH(118.2,FHII,0),U,3)
  .I FHAU["C" S FHAF=$P(FHAU,"C",1),FHAS=$P(FHAU,"C",2) D
  ..S $P(^FH(118.2,FHII,0),U,3)=FHAF_"ML"_FHAS
- Q
-MONUM ;Prompt for number of monitors to display
- W ! K DIR S FHNUM="",DIR("?")="Select ALL to view all monitors, or select a specific number.  For example, enter 20 to display the 20 most recent monitors."
- S DIR(0)="F",DIR("A")="How many monitors would you like to display?"
- S DIR("B")="ALL" D ^DIR
- I $D(DIRUT) S FHNUM="" Q
- S FHNUM=Y I FHNUM'="A",FHNUM'="ALL",FHNUM'?1.5N D MONUM Q
- I FHNUM="A"!(FHNUM="ALL") S FHNUM=99999
  Q

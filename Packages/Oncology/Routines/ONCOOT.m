@@ -1,5 +1,5 @@
 ONCOOT ;HIRMFO/GWB - Miscellaneous Output Transforms ;7/10/96
- ;;2.11;ONCOLOGY;**6,11,15,18,22,24,25,27,29,34,35,36,37,39,40,42,46**;Mar 07, 1995;Build 39
+ ;;2.11;ONCOLOGY;**6,11,15,18,22,24,25,27,29,34,35,36,37,39,40,42**;Mar 07, 1995
  ;
 RNE ;REGIONAL LYMPH NODES EXAMINED (165.5,33)
  S DXDT=$P($G(^ONCO(165.5,D0,0)),U,16)
@@ -39,11 +39,13 @@ BP ;BIOPSY PROCEDURE (165.5,141)
  ;
  ;1998 Prostate Cancer Study 
  ;
-PSA ;PSA (165.5,684)
+PSA ;Item 14. Results of Most Recent Pre-Treatment Prostate Specific
+ ;         Antigen (PSA) Test
+ ;RESULTS OF PSA TEST (PR98) (165.5,684)
  I Y=999.6 S Y=Y_" or higher"
- I Y=999.7 S Y="No PSA test performed"
- I Y=999.8 S Y="Done, results unknown or not reported"
- I Y=999.9 S Y="Unknown if test performed"
+ I Y=999.7 S Y="  No PSA test performed"
+ I Y=999.8 S Y="  Test done, results unknown or not reported"
+ I Y=999.9 S Y="  Unknown if test performed"
  Q
  ;
 DCISIT ;DCIS PRESENT (165.5,930) INPUT TRANSFORM

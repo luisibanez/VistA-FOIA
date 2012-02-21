@@ -1,8 +1,8 @@
 QANUTL ;;HISC/GJC-Utilities for Incident Reporting ;10/6/92
- ;;2.0;Incident Reporting;**1,3,32**;08/07/1992;Build 3
+ ;;2.0;Incident Reporting;**1,3**;08/07/1992
 EN0 ;Sets up and builds the patients ID.
  S QANDFN(0)=X,QANZERO(3)=^DPT(QANDFN(0),0),QANAME=$P(QANZERO(3),U),QANSSN=$P(QANZERO(3),U,9)
- S QANPID=$$QANPID^QANCDNT(QANAME)
+ S QANPID=$E($P(QANAME,",",2))_$E($P(QANAME," ",2))_$E($P(QANAME,","))_$E(QANSSN,6,9)
  K QANDFN(0),QANZERO(3),QANAME,QANSSN
  Q
 EN1 ;Used for DIC("W") used in QANMAIL and QANVAL.

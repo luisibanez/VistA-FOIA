@@ -1,12 +1,10 @@
 DGBTEF1 ;ALB/SCK - BENEFICIARY TRAVEL UPDATE PARAMETERS INTO FILES ;12/14/92 3/12/93
- ;;1.0;Beneficiary Travel;**2,14**;September 25, 2001;Build 7
+ ;;1.0;Beneficiary Travel;**2**;September 25, 2001
 RATES ;enter/edit bene travel parameters;option DGBT BENE TRAVEL RATES
  S DA=1,DR="720;723;721",DIE="^DG(43," D ^DIE G QUIT:X="^"!($D(DTOUT))!($D(Y)) K DA,DE,DQ,DR,DIE
- Q  ;This Q was added under direction of CBO to remove site's ability to edit rates
  W !!,"New travel rates are determined each fiscal year.  The rates should be",!,"entered each year with the effective date of Oct 1.",!
  W !,"Changing values for the current or past fiscal years could result in changes",!,"to the claims already entered.",!
 DATE ;  change deductible rates for FY
- Q  ;This Q was added under direction of CBO to remove site's ability to edit rates
  S DIR("A")="Select EFFECTIVE DATE",DIR(0)="DO^^E",DIR("?")="^D HELP1^DGBTEF1"
  D ^DIR K DIR G QUIT:$D(DIRUT) G HELP:$E(Y,4,7)'="1001" S X=+Y
  S DIC="^DG(43.1,",DIC(0)="ELQMZ"

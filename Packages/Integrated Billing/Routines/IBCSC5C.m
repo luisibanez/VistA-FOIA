@@ -1,26 +1,17 @@
 IBCSC5C ;ALB/ARH - ADD/EDIT PRESCRIPTION FILLS (CONTINUED) ;3/4/94
- ;;2.0;INTEGRATED BILLING;**27,52,130,51,160,260,309,315,339,347,363,381,405,432**;21-MAR-94;Build 192
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**27,52,130,51,160,260,309,315**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
 DEFAULT(IFN,IBRX) ; add default DX and CPT to a prescription bill
  ; if one is not in PSO.  If there is, use it instead.
  ; IFN = ien of bill entry
- N IBX,IBPAR1,IBDX,IBCPT,IBDT,IBBIL,IBDXIFN,IBCPTIFN,IBY,IB52,IBC,PDFN,LIST,NODE
+ N IBX,IBPAR1,IBDX,IBCPT,IBDT,IBBIL,IBDXIFN,IBCPTIFN,IBY,IB52,IBC
  S IBDXIFN=0
  S IBPAR1=$G(^IBE(350.9,1,1)),IBDX=$P(IBPAR1,U,29),IBCPT=$P(IBPAR1,U,30)
  S IBBIL=$G(^DGCR(399,+$G(IFN),0)) Q:IBBIL=""
  S IBX=$S($G(IBRX):$P($G(^DGCR(399,IFN,"RC",+IBRX,0)),U,11),1:$O(^IBA(362.4,"C",IFN,0))) Q:'IBX
- S IB52=+$P($G(^IBA(362.4,IBX,0)),"^",5),IBY=0 Q:IB52=0
- S PDFN=$$FILE^IBRXUTL(IB52,2)
- S LIST="IBCSC5CARR"
- S NODE="ICD"
- D RX^PSO52API(PDFN,LIST,IB52,,NODE,,)
- I ^TMP($J,LIST,PDFN,IB52,"ICD",0)>0 D
- .S IBY=0 F  S IBY=$O(^TMP($J,LIST,PDFN,IB52,"ICD",IBY)) Q:IBY'>0  D
- ..S IBDX(IBY)=$$ICD^IBRXUTL1(PDFN,IB52,IBY,LIST)
- ..I 'IBDX(IBY) K IBDX(IBY)
- K ^TMP($J,LIST)
+ S IB52=+$P($G(^IBA(362.4,IBX,0)),"^",5),IBY=0 F  S IBY=$O(^PSRX(IB52,"ICD",IBY)) Q:'IBY  S IBDX(IBY)=$G(^PSRX(IB52,"ICD",IBY,0)) I 'IBDX(IBY) K IBDX(IBY)
  I 'IBDX,'IBCPT,$D(IBDX)<10 Q
  S IBDT=$P($G(^IBA(362.4,+IBX,0)),U,3) Q:'IBDT
  ; add dx associated with rx if they are there.
@@ -51,40 +42,29 @@ DEFAULT(IFN,IBRX) ; add default DX and CPT to a prescription bill
  ;
 RXDISP(DFN,DT1,DT2,ARRAY,POARR,RXARR,IBRXALL,NODISP) ; display all rx fills for a patient and date range
  ;RXARR (as defined by SET^IBCSC5A) passed by ref. only to check if rx-fill is on the bill, not necessary not changed
- ;returns: ARRAY(RX #, FILL DT) = RX IFN (52) ^ FILL IFN ^ DRUG ^ DAYS SUPPLY ^ QTY ^ NDC ^ ORDER DATE, pass by reference if desired
+ ;returns: ARRAY(RX #, FILL DT) = RX IFN (52) ^ FILL IFN ^ DRUG ^ DAYS SUPPLY ^ QTY ^ NDC, pass by reference if desired
  ;         POARR(CNT)=RX # ^ FILL DT
- N PIFN,RIFN,IBX,IBY,DTE,DTR,RX,IBCNT,IBRX0,IBRX2,IBS,LIST,LIST2 K ARRAY,POARR S POARR=0,NODISP=+$G(NODISP)
+ N PIFN,RIFN,IBX,IBY,DTE,DTR,RX,IBCNT,IBRX0,IBRX2,IBS K ARRAY,POARR S POARR=0,NODISP=+$G(NODISP)
  S IBCNT=0,DT1=$G(DT1)-.0001,DT2=$G(DT2) S:'DT2 DT2=9999999 Q:'$G(DFN)
  ;^PS(55,DFN,"P","A",EXPIRATION DATE, RX) is the best xref available for finding patient fills in a date range
  ;if RX expires/cancelled before start of bill then should not be applicable to bill
- S LIST="IBRXDISPARR"
- D PROF^PSO52API(DFN,LIST,DT1)
- S DTE=0 F  S DTE=$O(^TMP($J,LIST,"B",DTE)) Q:'DTE  D
- . S PIFN=0 F  S PIFN=$O(^TMP($J,LIST,"B",DTE,PIFN)) Q:'PIFN  D
- .. S IBRX0=$$RXZERO^IBRXUTL(DFN,PIFN),IBRX2=$$RXSEC^IBRXUTL(DFN,PIFN)
+ S DTE=DT1 F  S DTE=$O(^PS(55,DFN,"P","A",DTE)) Q:'DTE  D
+ . S PIFN=0 F  S PIFN=$O(^PS(55,DFN,"P","A",DTE,PIFN)) Q:'PIFN  D
+ .. S IBRX0=$G(^PSRX(PIFN,0)),IBRX2=$G(^PSRX(PIFN,2))
  .. ; original fill
  .. I +$G(IBRXALL) S DTR=$P(IBRX2,U,2) I DTR'<DT1,DTR'>DT2 D
  ... D DATA^IBRXUTL(+$P(IBRX0,U,6))
- ... ; add issue date to array so order date can be displayed
- ... ;S ARRAY($P(IBRX0,U,1),+DTR)=PIFN_U_0_U_$P(IBRX0,U,6)_U_$P(IBRX0,U,8)_U_$P(IBRX0,U,7)_U_$$GETNDC^PSONDCUT(PIFN,0)
- ... S ARRAY($P(IBRX0,U,1),+DTR)=PIFN_U_0_U_$P(IBRX0,U,6)_U_$P(IBRX0,U,8)_U_$P(IBRX0,U,7)_U_$$GETNDC^PSONDCUT(PIFN,0)_U_$P(IBRX0,U,13)
+ ... S ARRAY($P(IBRX0,U,1),+DTR)=PIFN_U_0_U_$P(IBRX0,U,6)_U_$P(IBRX0,U,8)_U_$P(IBRX0,U,7)_U_$G(^TMP($J,"IBDRUG",+$P(IBRX0,U,6),31))
  ... K ^TMP($J,"IBDRUG")
  ... Q
  .. ; refills
- .. S LIST2="IBDISPSUB"
- .. S NODE="R"
- .. D RX^PSO52API(DFN,LIST2,PIFN,,NODE,,)
- .. S RIFN=0 F  S RIFN=$O(^TMP($J,LIST2,DFN,PIFN,"RF",RIFN)) Q:RIFN'>0  D
- ... S IBY=$$ZEROSUB^IBRXUTL(DFN,PIFN,RIFN) Q:IBY=""
- ... Q:+IBY<DT1!(+IBY>DT2)
- ... D DATA^IBRXUTL(+$P(IBRX0,U,6))
- ... ; add issue date to array so order date can be displayed
- ... ;S ARRAY($P(IBRX0,U,1),+IBY)=PIFN_U_RIFN_U_$P(IBRX0,U,6)_U_$P(IBRX0,U,8)_U_$P(IBY,U,4)_U_$$GETNDC^PSONDCUT(PIFN,RIFN)
- ... S ARRAY($P(IBRX0,U,1),+IBY)=PIFN_U_RIFN_U_$P(IBRX0,U,6)_U_$P(IBRX0,U,8)_U_$P(IBY,U,4)_U_$$GETNDC^PSONDCUT(PIFN,RIFN)_U_$P(IBRX0,U,13)
- ... K ^TMP($J,"IBDRUG")
- ... Q
- .. K ^TMP($J,LIST2)
- K ^TMP($J,LIST)
+ .. S DTR=DT1 F  S DTR=$O(^PSRX(PIFN,1,"B",DTR)) Q:'DTR!(DTR>DT2)  D
+ ... S RIFN=0 F  S RIFN=$O(^PSRX(PIFN,1,"B",DTR,RIFN)) Q:'RIFN  D
+ .... S IBY=$G(^PSRX(PIFN,1,RIFN,0)) Q:IBY=""
+ .... D DATA^IBRXUTL(+$P(IBRX0,U,6))
+ .... S ARRAY($P(IBRX0,U,1),+IBY)=PIFN_U_RIFN_U_$P(IBRX0,U,6)_U_$P(IBRX0,U,8)_U_$P(IBY,U,4)_U_$G(^TMP($J,"IBDRUG",+$P(IBRX0,U,6),31))
+ .... K ^TMP($J,"IBDRUG")
+ .... Q
  ;
  S IBX="",IBS=0 F  S IBX=$O(ARRAY(IBX)) Q:IBX=""  S IBY=0 F  S IBY=$O(ARRAY(IBX,IBY)) Q:'IBY  D
  . S IBCNT=IBCNT+1,POARR(IBCNT)=$P(IBX,U,1)_"^"_+IBY,POARR=IBCNT I $D(RXARR(IBX,IBY)) S IBS=IBS+1
@@ -104,7 +84,7 @@ DATE(X) Q $E(X,4,5)_"/"_$E(X,6,7)_"/"_$E(X,2,3)
  ;
 NEWRX(IBX) ;
  Q:'$G(IBX)  N X,Y K IBLIST W !
-NEWRX1 S DIR("?")="Enter the number preceding the RX Fills you want added to the bill. "_$$HTEXT
+NEWRX1 S DIR("?")="Enter the number preceding the RX Fills you want added to the bill.     "_$$HTEXT
  S DIR("A")="SELECT NEW RX FILLS TO ADD THE BILL"
  S DIR(0)="LO^1:"_+IBX D ^DIR K DIR G:'Y!$D(DIRUT) NEWRXE
  S IBLIST=Y
@@ -120,13 +100,11 @@ ADDNEW(IBIFN,LIST,IBPR,IBPRO) ;
  . S IBRX=$P(IBPRO(IBX),U,1),IBDT=$P(IBPRO(IBX),U,2) Q:IBRX=""
  . S IBQ=0,IBY=$G(IBPR(IBRX,+IBDT)) Q:'IBY
  . S IBPIFN=0 F  S IBPIFN=$O(^IBA(362.4,"AIFN"_IBIFN,IBRX,IBPIFN)) Q:'IBPIFN  I $P($G(^IBA(362.4,IBPIFN,0)),U,3)=IBDT S IBQ=1 Q
- . ;I 'IBQ S IBZ=$G(IBPR(IBRX,IBDT)) I $$ADD^IBCSC5A(IBRX,IBIFN,IBDT,$P(IBZ,U,3),$P(IBZ,U,1),$P(IBZ,U,4,6),$P(IBZ,U,2)) W "."
- . ; IB*2.0*432 - include issue date from file 52 to display to user when adding 
- . I 'IBQ S IBZ=$G(IBPR(IBRX,IBDT)) I $$ADD^IBCSC5A(IBRX,IBIFN,IBDT,$P(IBZ,U,3),$P(IBZ,U,1),$P(IBZ,U,4,7),$P(IBZ,U,2)) W "."
+ . I 'IBQ S IBZ=$G(IBPR(IBRX,IBDT)) I $$ADD^IBCSC5A(IBRX,IBIFN,IBDT,$P(IBZ,U,3),$P(IBZ,U,1),$P(IBZ,U,4,6)) W "."
  Q
  ;
 HTEXT() ;
- N X S X="If an Rx fill has been assigned to another bill it will be displayed in the last column. [ORG=Original Fill, NR=Not Released, RTS=Returned to Stock, OTC=Over-the-Counter, INV=Investigational, SUP=Supply Item]"
+ N X S X="If an Rx fill has been assigned to another bill it will be displayed in the last column.  [ORG=Original Fill, NR=Not Released, RTS=Returned to Stock, OTC=Over-the-Counter, INV=Investigational, SUP=Supply Item]"
  Q X
  ;
 RXLINK(IBIFN,CPIEN) ; Function returns the ien of the Rx rev code the proc
@@ -135,25 +113,15 @@ RXLINK(IBIFN,CPIEN) ; Function returns the ien of the Rx rev code the proc
  ;
 EXEMPT(RX) ; Used to look up exemption if any on rx, the return value
  ; will be only the first exemption reason found.
- N IBX,IBZ,IBS,IBR,PDFN,LIST,NODE,ICDCT
- S PDFN=$$FILE^IBRXUTL(RX,2)
- S LIST="IBRXARREX"
- S NODE="ICD"
- D RX^PSO52API(PDFN,LIST,RX,,NODE,,)
- S ICDCT=$G(^TMP($J,LIST,PDFN,RX,"ICD",0))
- S IBR="",(IBS,IBX)=0
- I ICDCT>0 D
- .S IBX=0 F  S IBX=$O(^TMP($J,LIST,PDFN,RX,"ICD",IBX)) Q:IBX'>0!(IBS)  D
- ..S IBZ=$$ICD^IBRXUTL1(PDFN,RX,IBX,LIST) F IBP=2:1:8 Q:IBS  I $P(IBZ,"^",IBP) S IBR=$P($T(EREASON+(IBP-1)),";",3),IBS=1
- K ^TMP($J,LIST)
+ N IBX,IBZ,IBS,IBR
+ S IBR="",(IBS,IBX)=0 F  S IBX=$O(^PSRX(RX,"ICD",IBX)) Q:'IBX!(IBS)  S IBZ=$G(^PSRX(RX,"ICD",IBX,0)) F IBP=2:1:8 Q:IBS  I $P(IBZ,"^",IBP) S IBR=$P($T(EREASON+(IBP-1)),";",3),IBS=1
  Q IBR
 EREASON ;
  ;;AO
  ;;IR
  ;;SC
- ;;SWA
+ ;;EC
  ;;MST
  ;;HNC
  ;;CV
- ;;SHAD
  ;

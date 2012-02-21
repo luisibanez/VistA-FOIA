@@ -1,5 +1,5 @@
-PXRMEHLP ; SLC/PJH - Reminder Extract help. ;05/31/2006
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMEHLP ; SLC/PJH - Reminder Extract help. ;03/30/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;====================================================
 LOAD(SUB) ;
  ;If necessary load the help text into the ^TMP array.
@@ -14,15 +14,16 @@ LOAD(SUB) ;
  I SUB["ETT" S LABEL="TX3"
  I SUB["EPM" S LABEL="TX4"
  I SUB["EPED" S LABEL="TX5"
- I SUB["EFM" S LABEL="TX6"
+ I SUB["EPM" S LABEL="TX6"
  I SUB["EFED" S LABEL="TX7"
  I SUB["EGM" S LABEL="TX8"
  I SUB["EGED" S LABEL="TX9"
  S DONE=0,VALMCNT=0
  F IND=1:1 Q:DONE  D
- . S TEXT=$P($T(@(LABEL_"+"_IND)),";;",2)
+ . S TEXT=$P($T(@(LABEL_"+"_IND)),";",3)
  . I TEXT="**End Text**" S DONE=1 Q
- . S VALMCNT=VALMCNT+1,^TMP(SUB,$J,VALMCNT,0)=TEXT
+ . S VALMCNT=VALMCNT+1
+ . S ^TMP(SUB,$J,VALMCNT,0)=TEXT
  S ^TMP(SUB,$J,"VALMCNT")=VALMCNT
  Q
  ;
@@ -30,12 +31,15 @@ LOAD(SUB) ;
 TX1 ;Help text
  ;;The following actions are available:
  ;;
- ;;EDM Extract Definition Management
- ;;    Display/edit extract definitions.
+ ;;EPM Extract Parameter Management
+ ;;
+ ;;    Display/edit extract parameters for a reminder extract.
  ;;
  ;;VSE View/Schedule Extract
+ ;;
  ;;    Display list of prior extract summaries or schedule manual
- ;;    extracts and transmission runs.
+ ;;    extracts and transmissions.
+ ;;    
  ;;
  ;;QU  Quit
  ;;**End Text**
@@ -46,22 +50,27 @@ TX2 ;Help text
  ;;The following actions are available:
  ;;
  ;;CV  Change View
+ ;;
  ;;    Toggle view of extract summaries between creation date order and
  ;;    extract period order.
  ;;
  ;;ES  Extract Summary
- ;;    Display reminder compliance and finding totals for extract summary.
- ;;    Also displays patient list with option to print Health Summary.
+ ;;
+ ;;    Display reminder and finding totals for extract summary. Also 
+ ;;    displays patient list with option to print Health Summary.
  ;;
  ;;ME  Manual Extract
+ ;;
  ;;    Initiate a new extract for a selected period with option to 
  ;;    transmit. 
  ;;
  ;;MT  Manual Transmission
+ ;;
  ;;    Initiate a transmission or retransmission of an existing extract
  ;;    summary. 
  ;;
  ;;TH  Transmission History
+ ;;
  ;;    Display transmission history and HL7 message ID's for an
  ;;    existing extract.
  ;;
@@ -74,15 +83,18 @@ TX3 ;Help text
  ;;The following actions are available:
  ;;
  ;;DPL Display Patient List
+ ;;
  ;;    Display a patient list used to create extract summary with
  ;;    option to print Health Summary.
  ;;
  ;;DSF Display/Suppress Finding Totals
- ;;    Toggle between display with reminder compliance totals only and
- ;;    display with both reminder compliance and finding totals.
+ ;;
+ ;;    Toggle between display with reminder totals only and display with 
+ ;;    both reminder and finding totals.
  ;;
  ;;PL  Print List
- ;;    Print extract totals currently displayed.
+ ;;
+ ;;    Print extract reminder totals with or without finding totals.
  ;;
  ;;QU  Quit
  ;;**End Text**
@@ -92,9 +104,11 @@ TX3 ;Help text
 TX4 ;Help text
  ;;The following actions are available:
  ;;
- ;;CR  Create Extract Definition
+ ;;CR  Create Extract Parameter
  ;;
- ;;DE  Display/Edit Extract Definition
+ ;;
+ ;;DP  Display/Edit Extract Parameter
+ ;;
  ;;
  ;;QU  Quit
  ;;**End Text**
@@ -104,7 +118,8 @@ TX4 ;Help text
 TX5 ;Help text
  ;;The following actions are available:
  ;;
- ;;ED  Edit Extract Definition
+ ;;ED  Edit Extract Parameter
+ ;;
  ;;
  ;;QU  Quit
  ;;**End Text**
@@ -114,9 +129,11 @@ TX5 ;Help text
 TX6 ;Help text
  ;;The following actions are available:
  ;;
- ;;CR  Create Extract Counting Rule
+ ;;CR  Create Extract Finding
  ;;
- ;;DE  Display/Edit Extract Counting Rule
+ ;;
+ ;;DF  Display/Edit Extract Finding
+ ;;
  ;;
  ;;QU  Quit
  ;;**End Text**
@@ -126,21 +143,25 @@ TX6 ;Help text
 TX7 ;Help text
  ;;The following actions are available:
  ;;
- ;;ED  Edit Extract Counting Rule
+ ;;ED  Edit Extract Finding
  ;;
- ;;CG  Counting Groups
+ ;;FG  Finding Groups
+ ;;
  ;;
  ;;QU  Quit
  ;;**End Text**
  Q
  ;
+ ;
  ;====================================================
 TX8 ;Help text
  ;;The following actions are available:
  ;;
- ;;CR  Create Extract Counting Group
+ ;;CR  Create Extract Finding Group
  ;;
- ;;DE  Display/Edit Extract Counting Group
+ ;;
+ ;;DG  Display/Edit Extract Finding Group
+ ;;
  ;;
  ;;QU  Quit
  ;;**End Text**
@@ -150,7 +171,8 @@ TX8 ;Help text
 TX9 ;Help text
  ;;The following actions are available:
  ;;
- ;;ED  Edit Extract Counting Group
+ ;;ED  Edit Extract Finding Group
+ ;;
  ;;
  ;;QU  Quit
  ;;**End Text**
@@ -163,4 +185,3 @@ NOHLP ;Help text
  ;;
  ;;**End Text**
  Q
- ;

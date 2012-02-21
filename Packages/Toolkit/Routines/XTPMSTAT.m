@@ -1,5 +1,5 @@
-XTPMSTAT ;OAK/BP - PRINT PATCH STATISTICS BY REPORT GROUP; 2/7/06
- ;;7.3;TOOLKIT;**98,100**; Apr 25, 1995;Build 4
+XTPMSTAT ;OAK/BP - PRINT PATCH STATISTICS BY REPORT GROUP; [8/2/05 7:35am]
+ ;;7.3;TOOLKIT;**98**; Apr 25, 1995
  ;
  S IOP="HOME" D ^%ZIS K IOP
 EN W @IOF,"Patch Monitor Statistics",!!!
@@ -20,8 +20,8 @@ DATE W ! S %DT="AEP"
  I XTBEDT<XTBBDT W !!,$C(7),"Starting date is later than ending date.",!! H 2 G DATE
  ;
 DEV W !! S %ZIS="AEQ" D ^%ZIS G:POP EXIT
- I $D(IO("Q")) S ZTIO=ION,ZTRTN="SORT^XTPMSTAT",ZTSAVE("XTB*")="",ZTSAVE("TMP*")="",ZTDESC="Patch Monitor Statistics" D ^%ZTLOAD D HOME^%ZIS
- I $D(ZTSK) W !,"Queued as task #",ZTSK H 2 G EXIT
+ I $D(IO("Q")) S ZTIO=ION,ZTRTN="SORT^XTPMSTAT",ZTSAVE("XTB*")="",ZTSAVE("TMP*")="",ZTDESC="Patch Monitor Statistics" D ^%ZTLOAD
+ I  W:$D(ZTSK) !,"Queued as task #",ZTSK H 2 G EXIT
  ;
  ; sort patches by compliance date
 SORT U IO F XTBCPLDT=(XTBBDT-.0001):0 S XTBCPLDT=$O(^XPD(9.9,"D",XTBCPLDT)) Q:XTBCPLDT=""!(XTBCPLDT>XTBEDT)  DO

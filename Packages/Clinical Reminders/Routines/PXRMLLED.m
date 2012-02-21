@@ -1,14 +1,14 @@
-PXRMLLED ; SLC/PJH - Edit a location list. ;06/09/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,11,12**;Feb 04, 2005;Build 73
+PXRMLLED ; SLC/PJH - Edit a location list. ;11/01/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;================================================================
- N CS1,CS2,DA,DIC,DLAYGO,DTOUT,DUOUT,FILEA,IENA,NUM,Y
+ N DA,DIC,DLAYGO,DTOUT,DUOUT,FILEA,IENA,NUM,Y
 GETNAME ;Get the name of the location list to edit.
- K DA,DIC,DLAYGO,DTOUT,DUOUT,Y
+ K CLASS,DA,DIC,DLAYGO,DTOUT,DUOUT,INUSE,PXRMEDOK,Y
+ S PXRMEDOK=1
  S DIC="^PXRMD(810.9,"
  S DIC(0)="AEMQL"
  S DIC("A")="Select Location List: "
- S DIC("S")="I $$VEDIT^PXRMUTIL(DIC,Y)"
  S DLAYGO=810.9
  ;Set the starting place for additions.
  D SETSTART^PXRMCOPY(DIC)
@@ -17,81 +17,84 @@ GETNAME ;Get the name of the location list to edit.
  I ($D(DTOUT))!($D(DUOUT)) Q
  I Y=-1 G END
  S DA=$P(Y,U,1)
- S CS1=$$FILE^PXRMEXCS(810.9,DA)
+ S CLASS=$P($G(^PXRMD(810.9,DA,0)),U,2)
+ I (CLASS="N")&('$G(PXRMINST)) D  G GETNAME
+ . W !,"You cannot edit National Location Lists!"
  D EDIT(DIC,DA)
- ;See if any changes have been made, if so do the edit history.
- S CS2=$$FILE^PXRMEXCS(810.9,DA)
- I CS2'=0,CS2'=CS1 D SEHIST^PXRMUTIL(810.9,DIC,DA)
  G GETNAME
 END ;
  Q
  ;
  ;================================================================
 EDIT(ROOT,DA) ;
- N DIE,DR,DIDEL,RESULT,X,Y
+ N DIE,DR,DIDEL
  S DIE=ROOT,DIDEL=810.9
-NAME S DR=".01"
+ S DR=".01;.02"
  D ^DIE
  I '$D(DA) Q
- I $D(Y) Q
-CLASS ;
- ;Class
-RETRY W !!
- S DR="100"
- D ^DIE
- I $D(Y) G NAME
- ;Sponsor
- S DR="101"
- D ^DIE
- I $D(Y) G RETRY
- ;Make sure Class and Sponsor Class are in synch.
- S RESULT=$$VSPONSOR^PXRMINTR(X)
- I RESULT=0 S DIE("NO^")="Other value" G RETRY
- I RESULT=1 K DIE("NO^")
- ;Review date
-RD W !!
- S DR="102"
- D ^DIE
- I $D(Y) G RETRY
  ;
  ;Description
-DES S DR="1"
+ S DR="1"
  D ^DIE
- I $D(Y) G RD
  ;
  ;Clinic Stops
-CS S DR="40.7"
- S DR(2,810.9001)=".01;1;2;3"
- S DR(3,810.90011)=".01"
+ S DR="40.7"
+ S DR(2,810.9001)=".01;1"
  D ^DIE
- I $D(Y) G RD
  ;
  ;Hospital Locations
-HL S DR="44"
+ S DR="44"
  D ^DIE
- I $D(Y) G CS
  Q
  ;
  ;================================================================
-KAMIS(X,DA,WHICH) ;Kill the AMIS Reporting Stop Code.
+INUSE(SIEN) ;This is used by ^DD(810.9,.01,"DEL",1,0) to determine if it
+ ;is ok to delete a sponsor.
+ N FILE,FILEA,IEN,IENA,IENT,IND,LIST,NUM,SP,TEXT
+ D EN^DDIOL("Checking usage ...")
+ S NUM=0
+ F FILE=811.9 D
+ . K LIST
+ . D LIST^DIC(FILE,"","@","","","","","","","","LIST")
+ . S IENT=$P(LIST("DILIST",0),U,1)
+ . F IND=1:1:IENT D
+ .. S IEN=LIST("DILIST",2,IND)
+ .. S SP=+$$GET1^DIQ(FILE,IEN,101,"I")
+ .. I SP=SIEN D
+ ... S NUM=NUM+1
+ ... S FILEA(NUM)=FILE
+ ... S IENA(NUM)=IEN
+ I NUM>0 D
+ . D EN^DDIOL("This Sponsor cannot be deleted, it is in use by the following:")
+ . D EN^DDIOL("FILE","","!!")
+ . D EN^DDIOL("ENTRY","","?35")
+ . D EN^DDIOL("----")
+ . D EN^DDIOL("-----","","?35")
+ . F IND=1:1:NUM D
+ .. S IENA(IND)=$$GET1^DIQ(FILEA(IND),IENA(IND),.01)
+ .. S FILEA(IND)=$$GET1^DID(FILEA(IND),"","","NAME")
+ .. D EN^DDIOL(FILEA(IND))
+ .. D EN^DDIOL(IENA(IND),"","?35")
+ . D EN^DDIOL("","","!!")
+ Q NUM
+ ;
+ ;================================================================
+KAMIS(X,DA) ;Kill the AMIS Reporting Stop Code.
  ;Do not execute as part of a verify fields.
  I $G(DIUTIL)="VERIFY FIELDS" Q
  ;Do not execute as part of exchange.
  I $G(PXRMEXCH) Q
- I WHICH="CREDIT STOP TO EXCLUDE" S $P(^PXRMD(810.9,DA(2),40.7,DA(1),1,DA,0),U,2)=""
- E  S $P(^PXRMD(810.9,DA(1),40.7,DA,0),U,2)=""
+ S $P(^PXRMD(810.9,DA(1),40.7,DA,0),U,2)=""
  Q
  ;
  ;================================================================
-SAMIS(X,DA,WHICH) ;Set the AMIS Reporting Stop Code.
+SAMIS(X,DA) ;Set the AMIS Reporting Stop Code.
  ;Do not execute as part of a verify fields.
  I $G(DIUTIL)="VERIFY FIELDS" Q
  ;Do not execute as part of exchange.
  I $G(PXRMEXCH) Q
  N AMIS
- ;DBIA #557
  S AMIS=$P(^DIC(40.7,X,0),U,2)
- I WHICH="CREDIT STOP TO EXCLUDE" S $P(^PXRMD(810.9,DA(2),40.7,DA(1),1,DA,0),U,2)=AMIS
- E  S $P(^PXRMD(810.9,DA(1),40.7,DA,0),U,2)=AMIS
+ S $P(^PXRMD(810.9,DA(1),40.7,DA,0),U,2)=AMIS
  Q
  ;

@@ -1,5 +1,5 @@
 FHREP1 ; HISC/NCA - Inventory Worksheet and Report ;3/9/95  08:28
- ;;5.5;DIETETICS;**13**;Jan 28, 2005;Build 1
+ ;;5.5;DIETETICS;;Jan 28, 2005
 EN2 ; Print the Inventory Worksheet & Report
  S FHXX="F"
  R !!,"Select W=Worksheet or R=Report: ",FHR:DTIME G:'$T!("^"[FHR) KIL^FHREP
@@ -9,7 +9,7 @@ E0 ; Read in Month and Year
  D NOW^%DTC S NOW=%\1
  K %DT W !!,"Enter Mth/Yr: "_+$E(NOW,4,5)_"/"_$E(NOW,2,3)_"// " R X:DTIME G:'$T!(X["^") KIL^FHREP
  I X="" S X=$E(NOW,1,5)_"00"
- S %DT="M" D ^%DT K %DT I Y<1!($E(Y,1,5)>$E(NOW,1,5)) W *7,"  Answer Month and Yr as Mth/Yr or Mth Yr.",!?25,"   CANNOT be greater than now." G E0
+ D ^%DT I Y<1!($E(Y,1,5)>$E(NOW,1,5)) W *7,"  Answer Month and Yr as Mth/Yr or Mth Yr.",!?25,"   CANNOT be greater than now." G E0
  S MTH=+$E(Y,4,5),MTH=$P("January February March April May June July August September October November December"," ",MTH),YR=$E(Y,2,3),MTH=MTH_" "_YR
  I FHR="W" D F1^FHREP G:FHXX["^"!("^"[X) KIL^FHREP
  I FHR="R" D D1^FHREP G:"^"[X KIL^FHREP

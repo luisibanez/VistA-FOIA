@@ -1,5 +1,5 @@
-OCXOZ12 ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
+OCXOZ12 ;SLC/RJS,CLA - Order Check Scan ;OCT 20,2005 at 22:40
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221**;Dec 17,1997
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
  ; ***************************************************************
@@ -11,7 +11,7 @@ OCXOZ12 ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
  Q
  ;
 R71R1A ; Verify all Event/Elements of  Rule #71 'OPIOID MEDICATIONS'  Relation #1 'OPIOID MED ORDER AND DUP OPIOID MEDS'
- ;  Called from EL138+5^OCXOZ0H, and EL139+5^OCXOZ0H.
+ ;  Called from EL138+5^OCXOZ0I, and EL139+5^OCXOZ0I.
  ;
  Q:$G(OCXOERR)
  ;
@@ -70,8 +70,7 @@ OPIOID(ORPT) ;determine if pat is receiving opioid med
  ...S DUPI=DUPI+1,DUP(DUPI)=" ["_DUPI_"] "_ORTEXT
  ...S ORTN=1
  I DUPI>0 D
- .;S DUPLEN=$P(215/DUPI,".")
- .S DUPLEN=500
+ .S DUPLEN=$P(215/DUPI,".")
  .F DUPJ=1:1:DUPI D
  ..I DUPJ=1 S ORDERS=$E(DUP(DUPJ),1,DUPLEN)
  ..E  S ORDERS=ORDERS_", "_$E(DUP(DUPJ),1,DUPLEN)

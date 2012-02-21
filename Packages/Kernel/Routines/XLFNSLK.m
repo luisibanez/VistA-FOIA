@@ -1,19 +1,17 @@
-XLFNSLK ;ISF/RWF - Calling a DNS server for name lookup ;5/21/07  14:47
- ;;8.0;KERNEL;**142,151,425**;Jul 10, 1995;Build 18
+XLFNSLK ;ISF/RWF - Calling a DNS server for name lookup ;06/13/2000  14:57
+ ;;8.0;KERNEL;**142,151**;June 25, 1999
  ;
 TEST ;Test entry
  N XLF,XL1,XL3,Y,I S (XLF,XL3)=""
- R !,"Enter a IP address to lookup: www.va.gov//",XL1:DTIME S:XL1="" XL1="www.va.gov" Q:XL1["^"
+ R !,"Enter a IP address to lookup: www.va.gov//",XL1 S:XL1="" XL1="www.va.gov" Q:XL1["^"
  W !,"Looking up ",XL1 D NS(.XLF,XL1,"A",.XL3)
  S XL1="XL3" F  S XL1=$Q(@XL1) Q:XL1=""  W !,XL1," = ",@XL1
  S Y="" F  S Y=$O(XLF("B",Y)) Q:Y=""  W !,?5,Y," > ",XLF("B",Y)
  Q
  ;
 ADDRESS(N,T) ;Get a IP address from a name
- N XLF,Y,I S XLF="",T=$G(T,"A")
- I ^%ZOSF("OS")["OpenM",T="A" D  Q $P(Y,",")
- . X "S Y=$ZU(54,13,N)"
- D NS(.XLF,N,T)
+ N XLF,Y,I S XLF=""
+ D NS(.XLF,N,$G(T,"A"))
  S Y="" F I=1:1:XLF("ANCOUNT") S:$D(XLF("AN"_I_"DATA")) Y=Y_XLF("AN"_I_"DATA")_","
  Q $E(Y,1,$L(Y)-1)
  ;
@@ -28,23 +26,21 @@ MAIL(RET,N) ;Get the MX address for a domain
 NS(XL,NAME,QTYPE,XLFLOG) ;NAME LOOKUP
  ;XL is the return array, NAME is the name to lookup,
  ;QTYPE is type of lookup, XLFLOG is a debug array returned.
- N RI,DNS,CNT,POP N:'$D(XLFLOG) XLFLOG S XL("ANCOUNT")=0,CNT=1
+ N RI,DNS,CNT N:'$D(XLFLOG) XLFLOG S XL("ANCOUNT")=0,CNT=1
  D SAVEDEV
 NS2 S DNS=$$GETDNS(CNT) I DNS="" G EXIT
  D LOG("Call server: "_DNS)
  D CALL^%ZISTCP(DNS,53) I POP S CNT=CNT+1 G NS2
  D LOG("Got connection, Send message")
  D BUILD(NAME,$G(QTYPE,"A")),LOG("Wait for reply")
- ;Close part of READ
- D READ,DECODE
- D RESDEV,LOG("Returned question: "_$G(XL("QD1NAME")))
+ D READ,DECODE,RESDEV,LOG("Returned question: "_$G(XL("QD1NAME")))
  Q
 EXIT D RESDEV
  Q
  ;
 BUILD(Y,T) ;BUILD A QUEARY
  ; ID,PARAM,#of?, #ofA, #of Auth, #of add,
- N X,%,MSG,I
+ N X,%,MSG
  S X=" M"_$C(1,0)_$C(0,1)_$C(0,0)_$C(0,0)_$C(0,0) ;Header
  I $E(Y,$L(Y))'="." S:$E(Y,$L(Y))'="." Y=Y_"."
  F I=1:1:$L(Y,".") S %=$P(Y,".",I) S:$L(%) X=X_$C($L(%))_% ;Address
@@ -62,8 +58,7 @@ READ ;
  I '$T D LOG("Time-out") G RDERR
  D LOG("Return msg length: "_RI)
  F I=13:1:RI U IO R *X:20 Q:'$T  S RI(I)=X ;or use X#1 and $A(X)
-RDERR ;End of read
- D CLOSE^%ZISTCP
+RDERR D CLOSE^%ZISTCP
  Q
 DECODE ;
  N I,IX,X,Y,Z,NN,NN2 Q:RI'>7
@@ -152,8 +147,7 @@ SAVEDEV ;Save calling device
  D:'$D(IO(0)) HOME^%ZIS D SAVDEV^%ZISUTL("XLFNSLK")
  Q
 RESDEV ;Restore calling device
- D USE^%ZISUTL("XLFNSLK"),RMDEV^%ZISUTL("XLFNSLK")
- K IO("CLOSE")
+ D GETDEV^%ZISUTL("XLFNSLK"),RMDEV^%ZISUTL("XLFNSLK")
  Q
 LOG(M) ;Log Debug messages
  S XLFLOG=$G(XLFLOG)+1,XLFLOG(XLFLOG)=M
@@ -164,6 +158,6 @@ POST ;Stuff a DNS address during install POST init.
  S XLF=$P($$PARAM^HLCS2,U,3)
  I XLF="T" D BMES^XPDUTL("Test Account DNS address not installed.") Q
  S DIC=8989.3,DR=51,DA=1,DIQ="XLF(" D EN^DIQ1 I $L(XLF(8989.3,1,51)) Q
- S DR="51///10.3.21.192",DIE="^XTV(8989.3,",DA=1 D ^DIE
+ S DR="51///152.129.1.12",DIE="^XTV(8989.3,",DA=1 D ^DIE
  D BMES^XPDUTL("DNS address installed.")
  Q

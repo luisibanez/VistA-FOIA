@@ -1,5 +1,5 @@
 RMPRN7 ;Hines OIFO/HNC-PRINT NPPD LOCAL DATA ;9/16/02  11:35
- ;;3.0;PROSTHETICS;**57,70,90,144**;Feb 09, 1996;Build 17
+ ;;3.0;PROSTHETICS;**57,70,90**;Feb 09, 1996
  D DIV4^RMPRSIT G:$D(X) EXIT
 DATE S %DT="XEA",%DT("A")="Enter Date to Start NPPD Calculations From: " D ^%DT G:X[U!(X="")!($D(DTOUT)) EXIT
  S DATE(1)=+Y
@@ -48,7 +48,7 @@ GNP ;gather nppd data
  ..S TYPE=$P(REC,U,4)
  ..S TY=$S(TYPE="X":2,TYPE=5:2,TYPE="I":1,1:3)
  ..S MR=$P($G(^RMPR(660,RMPRB,1)),U,4)
- ..I $P(^RMPR(660,RMPRB,0),U,17)'=""&($P(^(0),U,26)="") S TY=2,LINE="R99 A",MR=2676
+ ..I $P(^RMPR(660,RMPRB,0),U,17)'=""&($P(^(0),U,26)="") S TY=2,LINE="R90 A",MR=2676
  ..;PICKUP AND DELIVERY
  ..I $P(^RMPR(660,RMPRB,0),U,26)'="" S TY=2,LINE="R80 D",MR=2951
  ..Q:MR=""
@@ -58,7 +58,7 @@ GNP ;gather nppd data
  ..I TY'=2&($G(LINE)="") D
  ...I TYPE=5 Q
  ...S ERR=""
- ...S LINE=$P(^RMPR(661.1,MR,0),U,6) S:MR=2676 LINE="R99 A"
+ ...S LINE=$P(^RMPR(661.1,MR,0),U,6)
  ...S TYPE="X"
  ...S DIE="^RMPR(660,",DA=RMPRB,DR="2///^S X=TYPE"
  ...L +^RMPR(660,RMPRB):1 I '$T S ERR=1
@@ -67,7 +67,7 @@ GNP ;gather nppd data
  ...I ERR=1 S ^TMP($J,RMPRB)="NO UPDATE!"
  ...S ^TMP($J,RMPRB)="NEW TO REPAIR"
  ...S B=RMPRB D DATA^RMPRN6XM
- ..I TY=2 S LINE=$P(^RMPR(661.1,MR,0),U,6) S:MR=2676 LINE="R99 A"
+ ..I TY=2 S LINE=$P(^RMPR(661.1,MR,0),U,6)
  ..I TY=2&($G(LINE)="") D
  ...I TYPE=5 Q
  ...S ERR=""
@@ -208,7 +208,7 @@ REP ;calculate repair cost
  ;.I SSN'="" S ^TMP($J,"A",SSN)=""
  ;.K SSN
  S LINE=CODE
- I LINE="R99 A" S SOURCE="C",QTY=1
+ I LINE="R90 A" S SOURCE="C",QTY=1
  I $G(^TMP($J,"R",STN,LINE))="" S ^TMP($J,"R",STN,LINE)=""
  I SOURCE["V" S $P(^TMP($J,"R",STN,LINE),U,1)=$P(^TMP($J,"R",STN,LINE),U,1)+QTY
  I SOURCE["C" S $P(^TMP($J,"R",STN,LINE),U,2)=$P(^TMP($J,"R",STN,LINE),U,2)+QTY

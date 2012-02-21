@@ -1,5 +1,5 @@
-XUS3 ;SF-ISC/STAFF - SIGNON ;5/31/2006
- ;;8.0;KERNEL;**32,149,265,419**;Jul 10, 1995;Build 5
+XUS3 ;SF-ISC/STAFF - SIGNON ;10/5/05  15:25
+ ;;8.0;KERNEL;**32,149,265**;Jul 10, 1995
 TT ;Terminal Type select
  Q:$D(XUIOP(1))
  S DIC("B")=$S($P(XUIOP,";",2)]"":$P(XUIOP,";",2),$D(^%ZIS(1,XUDEV,"SUBTYPE")):+^("SUBTYPE"),1:"C-VT100")
@@ -101,7 +101,7 @@ NO() ;Fail, R/S entry. Reference to XGWIN has been removed.
 TXT(%) ;Call by R/S and Broker
  N XU1
  ;This string tells if a error code should HALT process.
- S:'$D(XUEXIT) XUEXIT=$E("111000010100100000000",%)
+ S:'$D(XUEXIT) XUEXIT=$E("1110000101001000000",%)
  S XU1=30810+(%/100)
  S %=$$EZBLD^DIALOG(XU1) I %["|" S %=$P(%,"|",1)_$G(XUM(0))_$P(%,"|",2)
  K XUM(0)
@@ -129,4 +129,3 @@ ZZ ;;Halt;Error Messages
 18 ;;0;User lockout
 19 ;;0;Signon not allowed as you have required forms to sign in terminal mode.
 20 ;;0;Client IP address not setup.
-21 ;;0;Null Verify code

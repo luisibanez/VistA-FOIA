@@ -1,5 +1,5 @@
 FHOMSP1 ;Hines OIFO/RTK SPECIAL MEALS PRINT MEAL  ;4/11/03  8:05
- ;;5.5;DIETETICS;**2,5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;**2**;Jan 28, 2005
  ;
  S STDT=DT,FHS="AP" D LIST^FHOMSS1 W !
  I NUM=0 W !,"NO AUTHORIZED OR PENDING SPECIAL MEALS TO PRINT" Q
@@ -22,9 +22,8 @@ PRINT ;
  F A=1:1:NUM S FHC=$P(FHCLST,",",A) Q:FHC=""  S FHCDT=FHLIST(FHC) D PR2
  Q
 PR2 ;
- S FHDFN=$P(FHCDT,U,1) D PATNAME^FHOMUTL
- S FHD=$P(FHCDT,U,2),FHNODE=$G(^FHPT(FHDFN,"SM",FHD,0))
- D ALG^FHCLN S ALG="Allergies :  "_$S(ALG="":"NONE ON FILE",1:ALG)
+ S FHDFN=$P(FHCDT,U,1) D PATNAME^FHOMUTL S FHD=$P(FHCDT,U,2)
+ S FHNODE=$G(^FHPT(FHDFN,"SM",FHD,0))
  S (LNS,UNLNS)="" F FHA=1:1:80 S LNS=LNS_"-",UNLNS=UNLNS_"_"
  S FHD=$E($$FMTE^XLFDT($P(FHCDT,U,2),"P"),1,12) S X=FHD D TR^FH S FHD=X
  S FHM=$P(FHNODE,U,9),FHSTAT=$P(FHNODE,U,2)
@@ -33,21 +32,18 @@ PR2 ;
  S FHTTL=$P(FHNODE,U,6) S:FHTTL'="" FHTTL=$P($G(^VA(200,FHTTL,0)),U,9) I FHTTL'="" S FHTTL=$E($P($G(^DIC(3.1,FHTTL,0)),U,1),1,24)
  S FHMEAL=$S(FHM="B":"BREAKFAST",FHM="N":"NOON",1:"EVENING")
  S FHLPT=$P(FHNODE,U,3),FHLOC=$P($G(^FH(119.6,FHLPT,0)),U,1)
- S FHRMBD=$P(FHNODE,U,13),FHRMBNM=""
- I FHRMBD'="" S FHRMBNM=$E($P($G(^DG(405.4,FHRMBD,0)),U,1),1,24)
  S FHDPT=$P(FHNODE,U,4),FHDIET=$P($G(^FH(111,FHDPT,0)),U,1)
  W:$Y @IOF
  W !!!!,LNS,!?4," A U T H O R I Z E D   O U T P A T I E N T   M E A L   V O U C H E R",!,LNS
- W !!!,"Name of Pt:  ",$E(FHPTNM,1,20)," (",$E(FHPTNM,1,1),FHBID,")"
- W ?44,"Req Loc  :  ",$E(FHLOC,1,24)
- W !,"Start Date:  ",FHD,?44,"Room-Bed :  ",FHRMBNM
- W !,"Stop Date :  ",FHD,?44,"Requestor:  ",$E(FHRQR,1,24),!,ALG
+ W !!!,"Name of Pt:  ",$E(FHPTNM,1,20)," (",$E(FHPTNM,1,1),FHBID,")",?44,"Req Loc  :  ",$E(FHLOC,1,24)
+ W !,"Start Date:  ",FHD,?44,"Requestor:  ",$E(FHRQR,1,24)
+ W !,"Stop Date :  ",FHD
  W !!?44,"Signature:  ",$S(FHSTAT="A":"/es/"_FHAZR,1:$E(UNLNS,1,23))
  W !!?44,"    Title:  ",$S(FHSTAT="A":FHTTL,1:$E(UNLNS,1,23))
  W !!?44,"     Date:  ",$S(FHSTAT="A":FHD,1:$E(UNLNS,1,23))
  W !!!!,"Pt Authorized a:  ",FHDIET," Meal for ",FHMEAL," meal time"
  W !!!!!!!!!!!!,"ALTERING OR COPYING THIS MEAL VOUCHER IS PROHIBITED."
- W !!!!!!!!!!!!!!!!!!,LNS,!,"In lieu of VA FORM 10-2817",!
+ W !!!!!!!!!!!!!!!!!!!,LNS,!,"In lieu of VA FORM 10-2817",!
  W !,"Facility:  " D SITE^FH W SITE D NOW^%DTC W ?45,$$FMTE^XLFDT(%,"P")
  W !,LNS
  Q

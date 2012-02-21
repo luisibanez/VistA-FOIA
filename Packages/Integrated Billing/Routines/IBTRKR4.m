@@ -1,5 +1,5 @@
 IBTRKR4 ;ALB/AAS - CLAIMS TRACKING - ADD/TRACK OUTPATIENT ENCOUNTERS ; 13-AUG-93
- ;;2.0;INTEGRATED BILLING;**91,142,292,312**;21-MAR-94
+ ;;2.0;INTEGRATED BILLING;**91,142,292**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 % ; -- entry point for nightly background job
@@ -10,7 +10,6 @@ IBTRKR4 ;ALB/AAS - CLAIMS TRACKING - ADD/TRACK OUTPATIENT ENCOUNTERS ; 13-AUG-93
  Q
  ;
 EN ; -- entry point to ask date range
- N IBSWINFO S IBSWINFO=$$SWSTAT^IBBAPI()                     ;IB*2.0*312
  N IBBDT,IBEDT,IBTSBDT,IBTSEDT,IBTALK
  S IBTALK=1
  I '$P($G(^IBE(350.9,1,6)),"^",3) W !!,"I'm sorry, Tracking of Outpatient Encounters is currrently turned off." G ENQ
@@ -18,12 +17,7 @@ EN ; -- entry point to ask date range
  D DATE^IBOUTL
  I IBBDT<1!(IBEDT<1) G ENQ
  S IBTSBDT=IBBDT,IBTSEDT=IBEDT
- ; Do NOT PROCESS on VistA if Start or End>=Switch Eff Dt    ;CCR-930
- ; -- check selected dates                                   ;IB*2.0*312
- I +IBSWINFO,((IBTSBDT+1)>$P(IBSWINFO,"^",2))!((IBTSEDT+1)>$P(IBSWINFO,"^",2)) D  G EN
-   .W !!,"The Begin OR End Date CANNOT be on or after"
-   .W !,"the PFSS Effective Date: ",$$FMTE^XLFDT($P(IBSWINFO,"^",2))
- ;
+ ; -- check selected dates
  S IBTRKR=$G(^IBE(350.9,1,6))
  ; start date can't be before parameters
  I +IBTRKR,IBTSBDT<+IBTRKR S IBTSBDT=IBTRKR W !!,"Begin date is before Claims Tracking Start Date, changed to ",$$DAT1^IBOUTL(IBTSBDT)

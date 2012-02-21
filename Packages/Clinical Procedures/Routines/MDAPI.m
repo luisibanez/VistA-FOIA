@@ -1,10 +1,10 @@
 MDAPI ; HOIFO/DP/NCA - CP API Calls ; [05-05-2003 10:28]
- ;;1.0;CLINICAL PROCEDURES;**6**;Apr 01, 2004;Build 102
+ ;;1.0;CLINICAL PROCEDURES;;Apr 01, 2004
  ; Description:
  ; These API's are for use by external packages communicating with CP.
  ;
  ; Integration Agreements:
- ; IA# 3378 [Subscription] Documents the APIs that external packages use to communicate with CP.
+ ; IA# 3378 [Restricted] Documents the APIs that external packages use to communicate with CP.
  ; IA# 3468 [Subscription] Use GMRCCP APIs.
  ;
 EXTDATA(MDPROC) ; [Procedure] 
@@ -137,17 +137,15 @@ TIUDEL(MDNOTE) ; [Procedure] TIU Note deletion Update
  ; Input parameters
  ;  1. MDNOTE [Literal/Required] TIU IEN
  ;
- N MDGBL,MDRES,MDFDA,MDTRAN,RESULTS
+ N MDRES,MDFDA,RESULTS
  S MDRES="" F  S MDRES=$O(^MDD(702,"ATIU",MDNOTE,MDRES)) Q:'MDRES  D
  .Q:$G(^MDD(702,+MDRES,0))=""
- .;S MDFDA(702,MDRES_",",.05)=""
+ .S MDFDA(702,MDRES_",",.05)=""
  .S MDFDA(702,MDRES_",",.06)=""
  .D FILE^DIE("","MDFDA")
- .S MDTRAN=$O(^MDD(702.001,"ASTUDY",MDRES,MDNOTE,0)) I +MDTRAN N DA,DIK S DA=+MDTRAN,DIK="^MDD(702.001," D ^DIK
  .D STATUS^MDRPCOT(MDRES_",",2,"TIU note deleted.")
  .S DATA("TRANSACTION")=MDRES,DATA("PKG")="TIU"
  .S DATA("MESSAGE")="TIU note deleted." D RPC^MDRPCOT(.RESULTS,"ADDMSG",.DATA)
- S MDGBL=$NA(^MDD(702.001,"PK",MDNOTE)) F  S MDGBL=$Q(@MDGBL) Q:MDGBL=""  Q:$QS(MDGBL,2)'="PK"!($QS(MDGBL,3)'=MDNOTE)  S MDTRAN=$QS(MDGBL,6) N DA,DIK S DA=+MDTRAN,DIK="^MDD(702.001," D ^DIK
  Q 1
  ;
 TIUREAS(MDFN,MDOLDC,MDANOTE,MDNDFN,MDNEWC,MDNEWV,MDNTIU) ; [Function] This is an API to clean up and update TIU note re-assignment.
@@ -160,7 +158,7 @@ TIUREAS(MDFN,MDOLDC,MDANOTE,MDNDFN,MDNEWC,MDNEWV,MDNTIU) ; [Function] This is an
  ;  6. MDNEWV [Literal/Required] The new visit for the TIU document assignment.
  ;  7. MDNTIU [Literal/Required] The new reassigned TIU document IEN.
  ;
- N MDD,MDGBL,MDTRAN,MDCHK,MDLP,MDMULN,MDN,MDPPR,MDREAS,MDTRANI,MDX
+ N MDD,MDTRAN,MDCHK,MDLP,MDPPR,MDREAS,MDTRANI,MDX
  I '$G(MDFN) Q "0^No DFN for the TIU note re-assignment."
  I '$G(MDOLDC) Q "0^No Old Consult # for the note re-assignment."
  I '$G(MDANOTE) Q "0^No TIU Note IEN."
@@ -168,28 +166,19 @@ TIUREAS(MDFN,MDOLDC,MDANOTE,MDNDFN,MDNEWC,MDNEWV,MDNTIU) ; [Function] This is an
  I '$G(MDNEWC) Q "0^No New Consult # for the note assignment."
  I '$G(MDNTIU) Q "0^No New Reassigned TIU IEN."
  S (MDD,MDCHK,MDREAS,MDTRAN)="",MDPPR=0 K ^TMP("MDTMP",$J)
- S MDTRAN=$O(^MDD(702,"ATIU",MDANOTE,0)) I +MDTRAN S MDCHK=$G(^MDD(702,MDTRAN,0)),MDTRANI=MDTRAN_"," D
+ F  S MDTRAN=$O(^MDD(702,"ACON",MDOLDC,MDTRAN)) Q:'MDTRAN  D
+ .S MDCHK=$G(^MDD(702,MDTRAN,0)),MDTRANI=MDTRAN_","
  .I $P(MDCHK,U,5)=MDOLDC&($P(MDCHK,U,6)=MDANOTE) D
- ..S MDFDA(702,+MDTRAN_",",.06)=""
- ..D FILE^DIE("","MDFDA") K MDFDA
- S MDGBL=$NA(^MDD(702.001,"PK",MDANOTE))
- F  S MDGBL=$Q(@MDGBL) Q:MDGBL=""  Q:$QS(MDGBL,2)'="PK"!($QS(MDGBL,3)'=MDANOTE)  S MDN=$QS(MDGBL,6) N DA,DIK S DA=+MDN,DIK="^MDD(702.001," D ^DIK
- S MDMULN=+$O(^MDD(702.001,"ASTUDY",+MDTRAN,0))
- I '+MDMULN I +MDTRAN N DA,DIK S DA=+MDTRAN,DIK="^MDD(702," D ^DIK
- D NOW^%DTC S MDD=% S MDTRANI=$O(^MDD(702,"ACON",MDNEWC,0))
- S MDREAS=$P(MDNEWV,";",3)_";"_$P(MDNEWV,";",2)_";"_$P(MDNEWV,";")
- I +MDTRANI&(MDNDFN=+$G(^MDD(702,+MDTRANI,0))) D
- .S MDPPR=$P($G(^MDD(702,+MDTRANI,0)),"^",4) Q:'MDPPR
- .S MDNEWV=$$GETVSTR^MDRPCOT1(MDNDFN,MDREAS,MDPPR,MDD)
- .S MDFDA(702,+MDTRANI_",",.06)=MDNTIU
- .S MDFDA(702,"+1,",.07)=$P(MDNEWV,";",3)_";"_$P(MDNEWV,";",2)_";"_$P(MDNEWV,";")
- .D FILE^DIE("","MDFDA") K MDFDA
+ ..S:'MDPPR MDPPR=$P(MDCHK,U,4)
+ ..N DA,DIK S DA=+MDTRAN,DIK="^MDD(702," D ^DIK
  I 'MDPPR D
  .D CPLIST^GMRCCP(MDNDFN,,$NA(^TMP("MDTMP",$J)))
  .S MDX=""
  .F  S MDX=$O(^TMP("MDTMP",$J,MDX)) Q:'MDX  S:$P(^(MDX),U,5)=MDNEWC MDPPR=$P(^(MDX),U,6)
  K ^TMP("MDTMP",$J)
- I +MDPPR Q 1
+ I 'MDPPR Q 1
+ D NOW^%DTC S MDD=%
+ S MDREAS=$P(MDNEWV,";",3)_";"_$P(MDNEWV,";",2)_";"_$P(MDNEWV,";")
  S MDNEWV=$$GETVSTR^MDRPCOT1(MDNDFN,MDREAS,MDPPR,MDD)
  S MDFDA(702,"+1,",.01)=MDNDFN
  S MDFDA(702,"+1,",.02)=MDD
@@ -199,7 +188,7 @@ TIUREAS(MDFN,MDOLDC,MDANOTE,MDNDFN,MDNEWC,MDNEWV,MDNTIU) ; [Function] This is an
  S MDFDA(702,"+1,",.06)=MDNTIU
  S MDFDA(702,"+1,",.07)=$P(MDNEWV,";",3)_";"_$P(MDNEWV,";",2)_";"_$P(MDNEWV,";")
  S MDFDA(702,"+1,",.09)=0
- D UPDATE^DIE("","MDFDA")
+ D UPDATE^DIE("","MDFDA","MDTRANI") Q:'$G(MDTRANI(1)) 1
  Q 1
  ;
 TRANS(STR) ; [Function] Translate the upper arrows to blanks
@@ -209,31 +198,3 @@ TRANS(STR) ; [Function] Translate the upper arrows to blanks
  I STR["^" Q $TR(STR,"^"," ")
  Q STR
  ;
-GETCP(RESULTS,MDCSLT) ; API to return CP Study data
- ; Input Parameters:
- ;   1. RESULTS [Literal/Required] Return Array
- ;   2. MDCSLT [Literal/Required] Consult number
- ;
- ; Output:
- ;   RESULTS(0)=-1^Error Message or 1 for success
- ;          (N,1)=CP Study Number
- ;          (N,2)=Patient DFN
- ;          (N,3)=Created Date/Time
- ;          (N,4)=Created By
- ;          (N,5)=CP Definition (External Name)
- ;          (N,6)=Consult Number
- ;          (N,7)=TIU Note IEN
- ;          (N,8)=VSTR
- ;          (N,9)=Transaction Status
- ;
- ; Where N = 1..n entries
- ;
- N MDCT,MDX,MDY
- I '$G(MDCSLT) S @RESULTS@(0)="-1^No Consult Number passed" Q
- S MDX=$O(^MDD(702,"ACON",MDCSLT,0)) I 'MDX S @RESULTS@(0)="-1^No CP Study Entry." Q
- S @RESULTS@(0)=1
- S MDCT=0,MDX="" F  S MDX=$O(^MDD(702,"ACON",MDCSLT,MDX)) Q:MDX<1  D
- .S MDCT=MDCT+1,@RESULTS@(MDCT,1)=MDX
- .S MDY=$G(^MDD(702,+MDX,0)),@RESULTS@(MDCT,2)=$P(MDY,U),@RESULTS@(MDCT,3)=$P(MDY,U,2),@RESULTS@(MDCT,4)=$P(MDY,U,3),@RESULTS@(MDCT,5)=$$GET1^DIQ(702,+MDX,.04,"E")
- .S @RESULTS@(MDCT,6)=$P(MDY,U,5),@RESULTS@(MDCT,7)=$P(MDY,U,6),@RESULTS@(MDCT,8)=$P(MDY,U,7),@RESULTS@(MDCT,9)=$$GET1^DIQ(702,+MDX,.09,"E")
- Q

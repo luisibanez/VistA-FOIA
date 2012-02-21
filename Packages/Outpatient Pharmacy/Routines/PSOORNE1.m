@@ -1,7 +1,6 @@
 PSOORNE1 ;BIR/SAB - Display new orders from backdoor ;03/06/95
- ;;7.0;OUTPATIENT PHARMACY;**11,21,27,32,37,46,71,94,104,117,133,148,279,251**;DEC 1997;Build 202
+ ;;7.0;OUTPATIENT PHARMACY;**11,21,27,32,37,46,71,94,104,117,133,148**;DEC 1997
  ;External reference to ^PS(55 is supported by DBIA 2228
- ;External reference to $$DS^PSSDSAPI supported by DBIA 5424
 EN(PSONEW) D DSPL^PSOORNE3,^PSOLMPO2
  Q
 EDT N FLD,LST K DIR,DUOUT,DIRUT S DIR("A")="Select Field to Edit by number",DIR(0)="LO^1:14" D ^DIR I $D(DTOUT)!($D(DUOUT)) K DIR,DIRUT,DTOUT,DTOUT S VALMBCK="" Q
@@ -45,10 +44,7 @@ VER I $G(PSOAC),$G(PSODRUG("NAME"))']"" D FULL^VALM1,2^PSOORNW1
  .W ! D 5 K PSOORRNW I PSONEW("DFLG")=1 D M3 Q
  .D 6 D:PSONEW("DFLG")=1 M3
  D:$G(COPY) PROV^PSOUTIL(.PSORENW) I PSONEW("DFLG")=1 S PSONEW2("QFLG")=1 Q
- N PSODOSD D FULL^VALM1,POST^PSODRG:'$G(PSOSIGFL)
- I $G(POERR("DFLG"))=1 S (PSONEW("DFLG"),PSONEW2("QFLG"))=1 Q
- I $G(PSODOSD) S (PSONEW("DFLG"),PSONEW2("QFLG"))=1 Q
- D:$$DS^PSSDSAPI&('$G(PSORX("DFLG"))) DOSCK^PSODOSUT("N") K PSONOOR I $G(PSORX("DFLG")) S VALMBCK="Q" Q
+ D FULL^VALM1,POST^PSODRG:'$G(PSOSIGFL) K PSONOOR I $G(PSORX("DFLG")) S VALMBCK="Q" Q
  I +$G(PSEXDT) D
  .D FULL^VALM1 S:$G(PSONEW("MAIL/WINDOW"))["W" BINGCRT="Y",BINGRTE="W"
  .D:+$G(PSEXDT)
@@ -101,18 +97,16 @@ SUMM ;print break down of orders to be finished
  .I ($Y+6)>IOSL K DIR S DIR(0)="E" D ^DIR K DIR D:$G(Y)  I '$G(Y) S PSZLQUIT=1 W ! Q
  ..W @IOF W !?20,"Pending Outpatient Medication Orders",! I $G(PSZCNT)>1 W ?20,"(signed in under "_$G(PSOINPRT)_")",!
  .K ^UTILITY("DIQ1",$J),DIQ,PSOINPRX S DA=$G(PSOINL),DIC=4,DIQ(0)="E",DR=".01" D EN^DIQ1 S PSOINPRX=$G(^UTILITY("DIQ1",$J,4,DA,.01,"E")) K ^UTILITY("DIQ1",$J),DA,DR,DIC,DIQ
- .;PSO*7*279 Change division to Institution
- .W !,"Institution: ",$G(PSOINPRX)
+ .W !,"Division: ",$G(PSOINPRX)
  .W !,"Patients: "_$G(^TMP($J,"PSOCZT",PSOINL,"PAT"))_"  Window: "_$G(^("WIN"))_"  Mail: "_$G(^("MAIL"))_"  Clinic: "_$G(^("CLIN")),!
- K DIR S DIR(0)="E",DIR("?")="Press Return to continue",DIR("A")="Press Return to Continue" D ^DIR K DIR
+ K DIR S DIR(0)="E",DIR("A")="Press Return to Continue" D ^DIR K DIR
  K ^TMP($J,"PSOCZT"),^TMP($J,"PSODPAT"),RT,PSOINPRT,PSOINPRX,PSI,PSID,PIN,PZA,PZROUT,PSOINL,PSZLQUIT
  Q
 SUMMCL ;
- ;PSO*7*279 Change Division to Institution
- W ! K DIR S DIR(0)="SMB^I:INSTITUTION;C:CLINIC",DIR("A")="Do you want the summary by Institution or Clinic",DIR("B")="Institution",DIR("?")=" "
- S DIR("?",1)="Enter 'I' to see the summary by Institution, and within Institution the orders",DIR("?",2)="shown by Mail, Window, or Administered in Clinic.",DIR("?",3)="Enter 'C' to see the summary by Clinic, along with Clinic Sort Groups."
+ W ! K DIR S DIR(0)="SMB^D:DIVISION;C:CLINIC",DIR("A")="Do you want the summary by Division or Clinic",DIR("B")="Division",DIR("?")=" "
+ S DIR("?",1)="Enter 'D' to see the summary by Division, and within Division the orders",DIR("?",2)="shown by Mail, Window, or Administered in Clinic.",DIR("?",3)="Enter 'C' to see the summary by Clinic, along with Clinic Sort Groups."
  D ^DIR K DIR I $D(DTOUT)!($D(DUOUT)) S PSOCLSUM=1 Q
- Q:$G(Y)="I"
+ Q:$G(Y)="D"
  S PSOCLSUM=1
  K ^TMP($J,"PSOLOC"),^TMP($J,"PSOLOCP") N PSCX,PSCXL,PSLX,PSCIN,PSCPT,PSCNDE,PSNCL,PSNPAT,PSCLOUT,PSCSFLAG,PCCNT,PSOCAG
  F PSCX=0:0 S PSCX=$O(^PS(52.41,"ACL",PSCX)) Q:'PSCX  F PSLX=0:0 S PSLX=$O(^PS(52.41,"ACL",PSCX,PSLX)) Q:'PSLX  F PSCIN=0:0 S PSCIN=$O(^PS(52.41,"ACL",PSCX,PSLX,PSCIN)) Q:'PSCIN  S PSCPT=+$P($G(^PS(52.41,PSCIN,0)),"^",2) D:PSCPT
@@ -134,10 +128,10 @@ SUMMCL ;
  .S (PCCNT,PSCSFLAG)=0 F PSCSORT=0:0 S PSCSORT=$O(^PS(59.8,PSCSORT)) Q:'PSCSORT!($G(PSCLOUT))  I $D(^PS(59.8,PSCSORT,1,"B",PSCXL)) S PSOCAG=0 D
  ..S PSCSFLAG=1 S:($Y+5)>IOSL&(PCCNT) PSOCAG=1 D:($Y+5)>IOSL&(PCCNT) CLDIR Q:$G(PSCLOUT)  W:$G(PSOCAG) !,"Clinic: "_$P($G(^SC(PSCXL,0)),"^")_"   cont." W:$G(PCCNT)>0 ! W ?16,$P($G(^PS(59.8,PSCSORT,0)),"^") S PCCNT=1
  .I '$G(PSCSFLAG) W ?16,"*** NO CLINIC SORT GROUPS ***"
- I '$G(PSCLOUT) K DIR S DIR(0)="E",DIR("?")="Press Return to continue",DIR("A")="Press <RET> to continue"  D ^DIR K DIR
+ I '$G(PSCLOUT) K DIR S DIR(0)="E",DIR("A")="Press <RET> to continue"  D ^DIR K DIR
 SUMMQ K ^TMP($J,"PSOLOC"),^TMP($J,"PSOLOCP")
  Q
-CLDIR K DIR S DIR(0)="E",DIR("?")="Press Return to continue",DIR("A")="Press <RET> to continue, '^' to exit" D ^DIR K DIR I Y'=1 S PSCLOUT=1 Q
+CLDIR K DIR S DIR(0)="E",DIR("A")="Press <RET> to continue, '^' to exit" D ^DIR K DIR I Y'=1 S PSCLOUT=1 Q
  W @IOF
  Q
 RXNCHK I $G(PSONEW("RX #"))']"" D RXNCHK^PSOORNE5
@@ -146,4 +140,3 @@ RDSPL D RDSPL^PSOORNE5
  Q
 M3 D M3^PSOOREDX
  Q
- ;

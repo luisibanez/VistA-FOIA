@@ -1,6 +1,6 @@
 IBCRHBS8 ;ALB/ARH - RATES: UPLOAD (RC 2+) CALCULATIONS CHARGE ; 10-OCT-03
- ;;2.0;INTEGRATED BILLING;**245,382**;21-MAR-94;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**245**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
 ISA(SITE,ITLINE) ; Return Inpatient DRG Standard Ancillary Charge
@@ -48,9 +48,8 @@ IIR(SITE,ITLINE) ; Return Inpatient DRG ICU Room & Board Charge
 IIRQ Q IBCHG
  ;
 ISNF(SITE,ITLINE) ; Return Inpatient Skilled Nursing Facility Per Diem
- N IBCHG,IBZIP,IBAA S IBCHG=0,ITLINE=$G(ITLINE),IBZIP=$P($G(SITE),U,4)
- I $P(ITLINE,U,2)'="SNF" G ISNFQ
- I $P(ITLINE,U,1)'="999",$P(ITLINE,U,1)'="000" G ISNFQ
+ N IBCHG,IBZIP,IBAA S IBCHG=0,ITLINE=$G(ITLINE),IBZIP=$P($G(SITE),U,4) I $P(ITLINE,U,2)'="SNF" G ISNFQ
+ I $P(ITLINE,U,1)'="999" G ISNFQ
  ;
  S IBAA=$$GETAA(IBZIP) I $P(IBAA,U,1)'=IBZIP G ISNFQ
  ;

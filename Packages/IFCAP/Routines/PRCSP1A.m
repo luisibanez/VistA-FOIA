@@ -1,5 +1,5 @@
 PRCSP1A ;WISC/SAW/BGJ-CONTROL POINT ACTIVITY PRINT OPTIONS CON'T ;5/1/92  9:20 AM [2/18/99 9:02am]
-V ;;5.1;IFCAP;**90,145**;Oct 20, 2000;Build 3
+V ;;5.1;IFCAP;;Oct 20, 2000
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 CPB ;CP BAL
  N PRCSST
@@ -14,12 +14,9 @@ QUE ;
  U IO S Z1="",P=0 D NOW^%DTC S Y=% D DD^%DT S TDATE=Y,PRCS("A")=1 I $D(^PRC(420,PRC("SITE"),1,+PRC("CP"),0)),$P(^(0),"^",11)="Y" S PRCS("A")=1
  S PRCC=$P($$QTRDATE^PRC0D(PRC("FY"),PRC("QTR")),"^",7)
  S PRCC=PRCC_"-"_PRC("SITE")_"-"_$P(PRC("CP")," ")_"-",PRCD=PRCC_"~"
- S (N,Z,Z(0))=PRCSZ,Z(0)=Z(0)_"-",(PRCS("O"),PRCS("C"))=0,N(1)="" D:'$D(C1) HDR D:$D(C1) HDR2
+ S (N,Z,Z(0))=PRCSZ,Z(0)=Z(0)_"-",(PRCS("O"),PRCS("C"))=0,N(1)="" D:'$D(C1) HDR
  I $G(C1)=1 W !,"STATION: ",PRC("SITE"),"   FUND CONTROL POINT: ",PRC("CP"),!,?5,"FISCAL YEAR: ",PRC("FY"),"   QTR: ",PRC("QTR")
- F  S PRCC=$O(^PRCS(410,"RB",PRCC)),N(1)=0 QUIT:PRCC]PRCD!'PRCC  D
- . F  S N(1)=$O(^PRCS(410,"RB",PRCC,N(1))),J=" " QUIT:'N(1)  D
- .. S:'PRCS("A") J=$S($D(^PRCS(410,N(1),7)):$P(^PRCS(410,N(1),7),"^",6),1:"")
- .. I J'=""!($P(^PRCS(410,N(1),0),"^",2)'="O"),$P(^(0),"^",2)]"" D TOT
+ F  S PRCC=$O(^PRCS(410,"RB",PRCC)) QUIT:PRCC]PRCD!'PRCC  S N(1)=$O(^(PRCC,"")),J=" " QUIT:'N(1)  S:'PRCS("A") J=$S($D(^PRCS(410,N(1),7)):$P(^(7),"^",6),1:"") I J'=""!($P(^PRCS(410,N(1),0),"^",2)'="O"),$P(^(0),"^",2)]"" D TOT
  Q:Z1=U  D CRT:$E(IOST,1,2)="C-" QUIT:Z1=U  D ^PRCSFMS Q:Z1=U
  D:IOSL-$Y<8 HOLD Q:Z1=U
  W !!!,"Balance Summary",?20,$J("1st Quarter",15),$J("2nd Quarter",15),$J("3rd Quarter",15),$J("4th Quarter",15)
@@ -56,14 +53,12 @@ WRT Q:Z1=U  D:IOSL-$Y<8 HOLD Q:Z1=U  S X1=$S(Z="O":"OBLIGATION",Z="A":"ADJUSTMEN
  W ?36,$J(T(1),10,2),$P(PRCH,"^")
  W ?47,$J(PRCS("C"),10,2) I T'="",T(3)'="Y" W ?58,$J(T,10,2),$P(PRCH,"^",2)
  W ?69,$J(PRCS("O"),10,2) Q
-HDR S P=P+1 W @IOF,"CONTROL POINT BALANCE - ",Z(0)_" "_$P(PRC("CP")," ",2),?50,TDATE,?73,"PAGE ",P
+HDR S P=P+1 W @IOF,"CONTROL POINT BALANCE - ",Z(0)_" "_$P(PRC("CP")," ",2),?53,TDATE,?75,"PAGE ",P
  W !!,?69,"FISCAL"
  W !,"FYQSeq# TXN OBL #",?26,"AP/OB DT",?37,"COMM $AMT",?50,"CP $BAL",?60,"OBL $AMT",?69,"UNOBL $BAL"
  S L="",$P(L,"-",IOM)="-" W !,L S L="" Q
-HDR2 S P=P+1 W @IOF,"CONTROL POINT BALANCE - ",Z(0)_" "_$P(PRC("CP")," ",2),?50,TDATE,?73,"PAGE ",P,! Q
 HOLD G HDR:$E(IOST,1,2)'="C-"
-CRT W !,"Press return to continue, uparrow (^) to exit: " R Z1:DTIME S:'$T Z1=U I ((Z1'=U)&('$D(C1)))  D HDR
- Q
+CRT W !,"Press return to continue, uparrow (^) to exit: " R Z1:DTIME S:'$T Z1=U D:Z1'=U HDR Q
 CTR ;CEILING TRANS
  D EN^PRCSUT G W2:'$D(PRC("SITE")),EXIT:Y<0 S PRCSAZ=PRC("SITE")_"-"_PRC("FY")_"-"_PRC("QTR")_"-"_$P(PRC("CP")," ")
  S FLDS="[PRCSCTR]",DHD="CEILING REPORT -  CP: "_PRC("CP"),BY="@.01,@1",FR=PRCSAZ_"-0001,C",TO=PRCSAZ_"-9999,C" D S

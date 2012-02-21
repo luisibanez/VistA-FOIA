@@ -1,5 +1,5 @@
-DIR1 ;SFISC/XAK-READER-MAID (PROCESS DATATYPE) ;11:41 AM  8 Jun 2007
- ;;22.0;VA FileMan;**1,5,73,156**;Mar 30, 1999;Build 1
+DIR1 ;SFISC/XAK-READER-MAID (PROCESS DATATYPE) ;1:47 PM  7 Feb 2001
+ ;;22.0;VA FileMan;**1,5,73**;Mar 30, 1999
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S %E=0 D @%T S:X?.E1C.E %E=1 Q:'%E!(X'?.E1L.E)!(%A["S")!(%A["Y")!((%T=1)&(%B["P"))!(%A["P")
  F %Y=1:1:$L(X) I $E(X,%Y)?1L S X=$E(X,1,%Y-1)_$C($A(X,%Y)-32)_$E(X,%Y+1,999)
@@ -7,7 +7,7 @@ DIR1 ;SFISC/XAK-READER-MAID (PROCESS DATATYPE) ;11:41 AM  8 Jun 2007
 Y ; YES/NO
 S ; SET
  N %BU,%K,%M,%J,DDH
- I $L(X)>245 S %E=1,Y="" Q  ;DI*156
+ I $L(X)>245 S %E=1 Q
  I %T="S",$D(DIR("S"))#2 S DIC("S")=DIR("S")
  S %BA=$S($D(DIC("S")):DIC("S"),1:"I 1")
  S (%J,%K,DDH)=0

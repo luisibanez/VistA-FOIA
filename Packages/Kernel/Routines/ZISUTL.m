@@ -1,5 +1,5 @@
-%ZISUTL ;Device Handler Utility routine ;01/08/2007
- ;;8.0;KERNEL;**18,24,34,69,118,127,199,275,425**;JUL 10, 1995;Build 18
+%ZISUTL ;Device Handler Utility routine ;3 Apr 2003 3:32 pm
+ ;;8.0;KERNEL;**18,24,34,69,118,127,199,275**;JUL 10, 1995
  Q  ;No entry from top
 GETDEV(X) ;Return IO variables
  I '$D(^TMP("XUDEVICE",$J,X)) S POP=1 Q
@@ -7,6 +7,7 @@ GETDEV(X) ;Return IO variables
  N % K IO("S")
  D SYMBOL("K") ;Kill first
  D SYMBOL(1,$NA(^TMP("XUDEVICE",$J,X)))
+ ;F %="IO","IO(""S"")","IOS","IOT","IOBS","IOF","IOM","ION","IOSL","IOST","IOST(0)","IOXY" I $D(^TMP("XUDEVICE",$J,X,%))#2 S @%=^(%)
  Q
  ;
 SAVDEV(NM) ;Save IO variables
@@ -17,6 +18,7 @@ SAVDEV(NM) ;Save IO variables
  S R=$NA(^TMP("XUDEVICE",$J,Y)) K @R ;Clear
  S @R@(0)=NM
  D SYMBOL(0,R)
+ ;F %="IO","IO(""S"")","IOS","IOT","IOBS","IOF","IOM","ION","IOSL","IOST","IOST(0)","IOXY" I $D(@%)#2 S ^TMP("XUDEVICE",$J,Y,%)=@%
  Q
  ;
 SYMBOL(MODE,ROOT) ;0=Save, 1=Restore, K=Kill IO variables
@@ -75,9 +77,7 @@ USE(X1) ;Restore IO* variables pertaining to the device.
  N %,Y
  S Y=$$FINDEV^%ZISUTL(X1)
  Q:'Y
- D GETDEV^%ZISUTL(Y)
- I $G(IOT)'="RES" U $S($D(IO(1,IO)):IO,1:IO(0))
- K IO("CLOSE")
+ D GETDEV^%ZISUTL(Y) U $S($D(IO(1,IO)):IO,1:IO(0))
  Q
  ;
 LINEPORT() ;Return device name for line port.

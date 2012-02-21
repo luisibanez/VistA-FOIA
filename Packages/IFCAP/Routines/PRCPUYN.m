@@ -1,6 +1,6 @@
 PRCPUYN ;WISC/RFJ-yes,no reader                                    ;29 Dec 93
- ;;5.1;IFCAP;**108**;Oct 20, 2000;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
@@ -22,6 +22,6 @@ YN(%) ;  yes, no reader
  Q X
  ;
 HELP I '$D(XH) W !,"You must enter a 'Yes' or a 'No', or you may enter an '^' to Quit",!! Q
- W:$L($G(XH)) !,XH F I=1:1 Q:'$D(XH(I))  W !,XH(I)
+ W !,XH F I=1:1 Q:'$D(XH(I))  W !,XH(I)
  W !
  Q

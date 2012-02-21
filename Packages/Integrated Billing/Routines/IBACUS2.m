@@ -1,6 +1,6 @@
 IBACUS2 ;ALB/CPM - TRICARE FISCAL INTERMEDIARY RX CLAIMS ;02-AUG-96
- ;;2.0;INTEGRATED BILLING;**52,91,51,240,341,347**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,91,51,240**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 BILL(IBKEY,IBCHTRN) ; Create the TRICARE claim for the Fiscal Intermediary.
  ;  Input:    IBKEY  --  1 ; 2, where
@@ -12,7 +12,7 @@ BILL(IBKEY,IBCHTRN) ; Create the TRICARE claim for the Fiscal Intermediary.
  N IBQUERY
  S IBY=1 K IBDRX
  I '$G(IBKEY) G BILLQ
- I $$FILE^IBRXUTL(+IBKEY,.01)="" G BILLQ
+ I $G(^PSRX(+IBKEY,0))="" G BILLQ
  S IBAMT=$P($G(^IBA(351.5,+IBCHTRN,2)),"^",5) ;  FI portion of charge
  I 'IBAMT G BILLQ
  ;
@@ -38,7 +38,7 @@ BILL(IBKEY,IBCHTRN) ; Create the TRICARE claim for the Fiscal Intermediary.
  ;      151  BILL FROM
  ;      152  BILL TO
  K IB
- S (IB(.02),DFN,IBDFN)=$$FILE^IBRXUTL(+IBKEY,2)
+ S (IB(.02),DFN,IBDFN)=+$P($G(^PSRX(+IBKEY,0)),"^",2)
  I 'DFN S IBY="-1^IB002" G BILLQ
  S IB(.07)=$O(^DGCR(399.3,"B","TRICARE",0))
  I 'IB(.07) S IBY="-1^IB059" G BILLQ
@@ -55,7 +55,7 @@ BILL(IBKEY,IBCHTRN) ; Create the TRICARE claim for the Fiscal Intermediary.
  S (IB(.03),IB(151),IB(152))=IBDRX("FDT")
  ;
  ; - set 362.4 node to rx#^p50^days sup^fill date^qty^ndc
- S IB(362.4,+IBKEY,1)=IBDRX("RX#")_"^"_$$FILE^IBRXUTL(+IBKEY,6)_"^"_IBDRX("SUP")_"^"_IBDRX("FDT")_"^"_IBDRX("QTY")_"^"_IBDRX("NDC")
+ S IB(362.4,+IBKEY,1)=IBDRX("RX#")_"^"_+$P($G(^PSRX(+IBKEY,0)),"^",6)_"^"_IBDRX("SUP")_"^"_IBDRX("FDT")_"^"_IBDRX("QTY")_"^"_IBDRX("NDC")
  ;
  ; - call the autobiller module to create the claim with a default
  ;   diagnosis and procedure for prescriptions
@@ -127,7 +127,7 @@ CANC(IBCHTRN) ; Cancel the claim to the Fiscal Intermediary.
  S IBCHG=$S(IB("U1")']"":0,$P(IB("U1"),"^",1)]"":$P(IB("U1"),"^",1),1:0)
  S IBCRES="TRICARE PRESCRIPTION REVERSED"
  ;
- S X="21^"_IBCHG_"^"_IBIL_"^"_$S('DUZ:.5,1:DUZ)_"^"_DT_"^"_IBCRES ; *341
+ S X="21^"_IBCHG_"^"_IBIL_"^"_DUZ_"^"_DT_"^"_IBCRES
  D ^PRCASER1
  I Y<0 S IBY=Y D BULL
  ;

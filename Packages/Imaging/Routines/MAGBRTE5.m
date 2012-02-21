@@ -1,6 +1,5 @@
-MAGBRTE5 ;WOIFO/PMK - Background Routing - Load Balance ; 06/08/2007 10:28
- ;;3.0;IMAGING;**11,30,51,85,54**;03-July-2009;;Build 1424
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGBRTE5 ;WOIFO/PMK - Background Routing - Load Balance ; 05/06/2004  06:32
+ ;;3.0;IMAGING;**11,30**;16-September-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGBRTE5 ;WOIFO/PMK - Background Routing - Load Balance ; 06/08/2007 10:28
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -112,9 +112,74 @@ BALANCE(IMAGE,RULE) N %,D,DEST,PARENT,PRI,X
  ;
  ; Current version assumes that BALANCE means DOS-Copy, not DICOM...
  D VALDEST^MAGDRPC1(.DEST,X)
- D LOG("Load-Balance Destination is "_X)
+ D LOG^MAGBRTE4("Load-Balance Destination is "_X)
  S PRI=$$PRI^MAGBRTE4($G(RULE(RULE,"PRIORITY")),IMAGE)
- S VRS=$$VRS(VRS,$$SEND(IMAGE,DEST,PRI,1,LOCATION))
+ S VRS=VRS_$$SEND^MAGBRTUT(IMAGE,DEST,PRI,1,LOCATION)
+ Q
+ ;
+KEYWORD ; build the KEYWORD array
+ N C,CD,D,D0,KW,M,V,X
+ S CD="CONDITION" K KEYWORD
+ ; Actions
+ F X="SEND","BALANCE","DICOM" S KEYWORD("ACTION",X)="-"
+ F X="DESTINATION","HOLIDAY" S KEYWORD("ACTION",X)="I"
+ ;
+ F X="HIGH","NORMAL","LOW" S KEYWORD("PRIORITY",X)="-"
+ ;
+ ; Fields in ^MAG(2005,
+ S M="LO^MAG^MAGBRTE3(IMAGE,"
+ S KEYWORD(CD,"OBJECT NAME")=M_"0,0,1,.VAL)"
+ S KEYWORD(CD,"FILE_REF")=M_"0,0,2,.VAL)"
+ S KEYWORD(CD,"MAGNETIC_REF")=M_"0,0,3,.VAL)"
+ S KEYWORD(CD,"ABSTRACT_REF")=M_"0,0,4,.VAL)"
+ S KEYWORD(CD,"WORM_REF")=M_"0,0,5,.VAL)"
+ S KEYWORD(CD,"OBJECT_TYPE")=M_"2005.02,0,6,.VAL)"
+ S KEYWORD(CD,"PATIENT")=M_"2,0,7,.VAL)"
+ S KEYWORD(CD,"PROCEDURE")=M_"0,0,8,.VAL)"
+ S KEYWORD(CD,"MODALITY")=M_"0,0,8,.VAL)"
+ S KEYWORD(CD,"SAVED_BY")=M_"200,2,2,.VAL)"
+ S KEYWORD(CD,"SUMMARY_OBJECT")=M_"0,2,3,.VAL)"
+ S KEYWORD(CD,"SHORT_DESCRIPTION")=M_"0,2,4,.VAL)"
+ S KEYWORD(CD,"PARENT_DATA")=M_"2005.03,2,6,.VAL)"
+ S KEYWORD(CD,"PARENT_GLOBAL_ROOT_D0")=M_"0,2,7,.VAL)"
+ S KEYWORD(CD,"PARENT_DATA_FILE_IMAGE_POINTER")=M_"0,2,8,.VAL)"
+ S KEYWORD(CD,"EXPORT_REQUEST_STATUS")=M_"0,2,9,.VAL)"
+ S KEYWORD(CD,"PATH_ACCESSION_NUMBER")=M_"0,""PATH"",1,.VAL)"
+ S KEYWORD(CD,"SPECIMEN_DESCRIPTION")=M_"0,""PATH"",2,.VAL)"
+ S KEYWORD(CD,"SPECIMEN")=M_"0,""PATH"",3,.VAL)"
+ S KEYWORD(CD,"STAIN")=M_"0,""PATH"",4,.VAL)"
+ S KEYWORD(CD,"MICROSCOPIC_OBJECTIVE")=M_"0,""PATH"",5,.VAL)"
+ S KEYWORD(CD,"PACS_UID")=M_"0,""PACS"",1,.VAL)"
+ S KEYWORD(CD,"RADIOLOGY_REPORT")=M_"74,""PACS"",2,.VAL)"
+ S KEYWORD(CD,"PACS_PROCEDURE")=M_"71,""PACS"",3,.VAL)"
+ S KEYWORD(CD,"PARENT_GLOBAL_ROOT_D1")=M_"0,2,10,.VAL)"
+ S KEYWORD(CD,"DESCRIPTIVE_CATEGORY")=M_"2005.81,100,1,.VAL)"
+ S KEYWORD(CD,"CLINIC")=M_"44,100,2,.VAL)"
+ S KEYWORD(CD,"BIG_MAGNETIC_PATH")=M_"2005.2,""FBIG"",1,.VAL)"
+ S KEYWORD(CD,"BIG_JUKEBOX_PATH")=M_"2005.2,""FBIG"",2,.VAL)"
+ ; Date and time fields
+ S M="DT^MAG^MAGBRTE3(IMAGE,"
+ S KEYWORD(CD,"IMAGE_SAVED")=M_"0,2,1,.VAL)"
+ S KEYWORD(CD,"LAST_ACCESS")=M_"0,0,9,.VAL)"
+ S KEYWORD(CD,"PROCEDURE_TIME")=M_"0,2,5,.VAL)"
+ S KEYWORD(CD,"EXAM_TIME")=M_"0,2,5,.VAL)"
+ ;
+ S M="DT^DATE^MAGBRTE3(IMAGE,"
+ S KEYWORD(CD,"IMAGE_SAVED_FIRST")=M_"0,2,1,1,.VAL)"
+ S KEYWORD(CD,"LAST_ACCESS_FIRST")=M_"0,0,9,1,.VAL)"
+ S KEYWORD(CD,"PROCEDURE_TIME_FIRST")=M_"0,2,5,1,.VAL)"
+ S KEYWORD(CD,"EXAM_TIME_FIRST")=M_"0,2,5,1,.VAL)"
+ S KEYWORD(CD,"STUDY_TIME")=M_"0,2,5,1,.VAL)"
+ ;
+ S KEYWORD(CD,"IMAGE_SAVED_LAST")=M_"0,2,1,2,.VAL)"
+ S KEYWORD(CD,"LAST_ACCESS_LAST")=M_"0,0,9,2,.VAL)"
+ S KEYWORD(CD,"PROCEDURE_TIME_LAST")=M_"0,2,5,2,.VAL)"
+ S KEYWORD(CD,"EXAM_TIME_LAST")=M_"0,2,5,2,.VAL)"
+ ;
+ ; Built-in Fields
+ S KEYWORD(CD,"SOURCE")="SH^SOURCE^MAGBRTE3(IMAGE,.VAL)"
+ S KEYWORD(CD,"URGENCY")="SH^URGENCY^MAGBRTE3(IMAGE,.VAL)"
+ S KEYWORD(CD,"NOW")="DT^NOW^MAGBRTE3(.VAL)"
  Q
  ;
 VARNAME(F) ;
@@ -124,68 +189,3 @@ VARNAME(F) ;
  F  Q:$E(F,$L(F))'="_"  S F=$E(F,1,$L(F)-1)
  S F=$TR(F,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
  Q F
- ;
-SEND(IMAGE,DEST,PRI,MECH,LOCATION) N D1,D2,IM,IMG,O,OUT,PRE,RADFN,RADTI,RACNI,RARPT,VRS,X
- S VRS=$$VRS("",$$SEND^MAGBRTUT(IMAGE,DEST,PRI,MECH,LOCATION))
- Q:$G(RULE(RULE,"PRIORSTUDY"))'="YES" VRS
- Q:'$G(IMAGE) VRS
- S X=$G(^MAG(2005,IMAGE,2))
- I $P(X,"^",6)'=74 Q VRS
- S RARPT=$P(X,"^",7) I 'RARPT Q VRS
- S X=$G(^RARPT(RARPT,0)) ; IA # 1171
- S RADFN=$P(X,"^",2),RADTI=9999999.9999-$P(X,"^",3),RACNI=$P(X,"^",4)
- S:RACNI RACNI=$O(^RADPT(+RADFN,"DT",+RADTI,"P","B",RACNI,"")) ; IA # 1172
- S PRE="A^"_RADFN_"^"_RADTI_"^"_RACNI_"^"_RARPT
- D PRIOR1^MAGJEX2(.OUT,PRE)
- S O=0 F  S O=$O(OUT(O))  Q:O=""  D
- . S X=$G(OUT(O)) Q:'$P(X,"^",2)
- . S X=$P(X,"|",2) Q:'X
- . S RARPT=$P(X,"^",4) Q:'RARPT
- . S D1=0 F  S D1=$O(^RARPT(RARPT,2005,D1)) Q:'D1  D  ; IA # 1171
- . . S IM=+$G(^RARPT(RARPT,2005,D1,0)) Q:'IM  ; IA # 1171
- . . S D2=0 F  S D2=$O(^MAG(2005,IM,1,D2)) Q:'D2  D
- . . . S IMG=+$G(^MAG(2005,IM,1,D2,0)) Q:'IMG
- . . . S VRS=$$VRS(VRS,$$SEND^MAGBRTUT(IMG,DEST,PRI,MECH,LOCATION))
- . . . S METMSG(1,"SEND also image #"_IMG_" from prior study")=""
- . . . Q
- . . Q
- . Q
- Q VRS
- ;
-VRS(OLD,NEW) N OUT
- S OUT=""
- S:OLD OUT=OLD_"^"
- S:NEW OUT=OUT_NEW
- F  Q:OUT'["^^"  S OUT=$P(OUT,"^^",1)_"^"_$P(OUT,"^^",2,$L(OUT)+2)
- Q:$L(OUT)<100 OUT
- Q $P(OUT,"^",1)_"^...^"_$P(OUT,"^",$L(OUT,"^"))
- ;
-LOG(X) N D,H,I,M,T
- S I=$O(^XTMP("MAGEVAL",ZTSK," "),-1)+1
- S XMSG=$G(XMSG)+1 S:I>XMSG XMSG=I
- S D=$P("Thu Fri Sat Sun Mon Tue Wed"," ",$H#7+1)
- S T=$P($H,",",2),H=T\3600,M=T\60#60 S:H<10 H=0_H S:M<10 M=0_M
- S ^XTMP("MAGEVAL",ZTSK,XMSG)=D_" "_H_":"_M_" "_X
- Q
- ;
-WLDMATCH(VAL,WILD) ;
- ;
- ; Returns true if VAL=WILD (Val=Actual value, Wild=Wildcard)
- ;
- ; Wild characters are:
- ;   ?   matches any single character
- ;   *   matches any string of characters
- ;
- N I,M
- F  Q:VAL=""  Q:WILD=""  D
- . I $E(VAL,1)=$E(WILD,1) S VAL=$E(VAL,2,$L(VAL)),WILD=$E(WILD,2,$L(WILD)) Q
- . I $E(WILD,1)="?" S VAL=$E(VAL,2,$L(VAL)),WILD=$E(WILD,2,$L(WILD)) Q
- . I $E(WILD,1)="*" D  Q:M
- . . I WILD="*" S (VAL,WILD)="",M=1 Q
- . . S WILD=$E(WILD,2,$L(WILD)),M=0
- . . F I=1:1:$L(VAL) I $$WLDMATCH($E(VAL,I,$L(VAL)),WILD) S M=1,VAL=$E(VAL,I,$L(VAL)) Q
- . . Q
- . S VAL="!",WILD=""
- . Q
- Q:VAL'="" 0 Q:WILD'="" 0 Q 1
- ;

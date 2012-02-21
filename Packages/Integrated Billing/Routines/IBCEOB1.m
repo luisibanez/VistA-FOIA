@@ -1,6 +1,5 @@
-IBCEOB1 ;ALB/TMP/PJH - 835 EDI EOB MSG PROCESSING ; 7/13/10 5:32pm
- ;;2.0;INTEGRATED BILLING;**137,135,155,296,356,349,431**;21-MAR-94;Build 106
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCEOB1 ;ALB/TMP - 835 EDI EOB MSG PROCESSING ;18-FEB-99
+ ;;2.0;INTEGRATED BILLING;**137,135,155,296**;21-MAR-94
  Q
  ;
 STORE(A,IB0,IBEOB,LEVEL) ;
@@ -43,14 +42,13 @@ STORE(A,IB0,IBEOB,LEVEL) ;
  I DR'="" D ^DIE
  Q ($D(Y)=0) ;Successfully stored all the data it was sent if $D(Y)=0
  ;
-HDR(IB0,IBEGBL,IBEOB,HIPAA) ; Store header data for EOB
+HDR(IB0,IBEGBL,IBEOB) ; Store header data for EOB
  ; IB0 = the record being processed from the msg
  ; IBEOB = the ien of the EOB entry in file 361.1
  ;
  N IBDT,IBDTP,DA,DR,DIE,X,Y
  K IBXSAVE("XTRA"),IBZSAVE
  ;
- S HIPAA=+$P(IB0,U,16) ;HIPAA Version code
  S IBDT=$P(IB0,U,3),IBDT=$E(IBDT,1,4)-1700_$E(IBDT,5,8)_"."_$P(IB0,U,4)
  S IBDTP=$P(IB0,U,9)
  I IBDTP S IBDTP=$E(IBDTP,1,4)-1700_$E(IBDTP,5,8)
@@ -61,7 +59,7 @@ HDR(IB0,IBEGBL,IBEOB,HIPAA) ; Store header data for EOB
  . S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Bad header data"
  Q ($D(Y)=0)
  ;
-FINDLN(IB0,IBEOB,IBZDATA,PLREF) ; Find corresponding billed line for the adj
+FINDLN(IB0,IBEOB,IBZDATA) ; Find the corresponding billed line for the adj
  ; IB0 = the record being processed
  ;       NOTE: pieces 3,4,16 are already reformatted
  ; IBEOB = the ien of the EOB entry in file 361.1
@@ -69,13 +67,11 @@ FINDLN(IB0,IBEOB,IBZDATA,PLREF) ; Find corresponding billed line for the adj
  ;           items for the bill.  This is passed in so this data only has
  ;           to be extracted once for each bill (the first time in, it
  ;           will be undefined)
- ; PLREF = Provider Line Reference
  ; OUTPUT = Line # in the original bill that this adjustment relates to
  ;          ^ paid procedure code if different from original procedure OR
  ;            paid rev code if different from original and no proc code
  ;
- N IBLN,IBLN1,IBBNDL,OCHG,OCHG2,OPROC,OREVCD,IBIFN,IBXARRAY,IBXARRY
- N IBXERR,UNITS,UNITS2,UNITS3,IBMOD,Z,Z0,CPT,EOBCHG,IBZVLA,IBAMIN
+ N IBLN,IBLN1,IBBNDL,OCHG,OCHG2,OPROC,OREVCD,IBIFN,IBXARRAY,IBXARRY,IBXERR,UNITS,UNITS2,UNITS3,IBMOD,Z,Z0,CPT,EOBCHG,IBZVLA
  ;
  S (IBLN,IBLN1)="",IBIFN=+$G(^IBM(361.1,IBEOB,0))
  S EOBCHG=+$$DOLLAR^IBCEOB($P(IB0,U,15))   ; charges on EOB 40 record
@@ -95,9 +91,9 @@ FINDLN(IB0,IBEOB,IBZDATA,PLREF) ; Find corresponding billed line for the adj
  .. Q
  . Q
  ;
- I $P($G(^DGCR(399,IBIFN,0)),U,19)=3 D  G FINDLNX     ; UB-04 format
- . I '$D(IBZDATA) D F^IBCEF("N-UB-04 SERVICE LINE (EDI)","IBZDATA",,IBIFN)
- . I +PLREF,$D(IBZDATA(+PLREF)) S IBLN=+PLREF_U_$P(IB0,U,10) Q
+ I $P($G(^DGCR(399,IBIFN,0)),U,19)=3 D  G FINDLNX     ; UB92 format
+ . I '$D(IBZDATA) D F^IBCEF("N-UB92 SERVICE LINE (EDI)","IBZDATA",,IBIFN)
+ . I $P(IB0,U,22),$D(IBZDATA(+$P(IB0,U,22))) S IBLN=+$P(IB0,U,22)_U_$P(IB0,U,10) Q
  . ;
  . S Z=0 F  S Z=$O(IBZDATA(Z)) Q:'Z  D  Q:IBLN
  .. ; Quit if processing an MRA and this VistA line# has already been filed
@@ -134,31 +130,28 @@ FINDLN(IB0,IBEOB,IBZDATA,PLREF) ; Find corresponding billed line for the adj
  ... S IBLN=Z_U_$S(OPROC'="":OPROC,1:OREVCD)
  ... Q
  .. Q
- . ; When dealing with Inpatient UB-04's, check for revenue code roll-ups
+ . ; When dealing with Inpatient UB92's, check for revenue code roll-ups
  . I 'IBLN,$$INPAT^IBCEF(IBIFN,1) D RCRU^IBCEOB00(.IBZDATA,IB0,.IBLN)
  . ; If only 1 rev code and charges are the same, assume a match
  . I 'IBLN,'$P($G(^IBM(361.1,IBEOB,0)),U,4),$O(IBZDATA(""),-1)=$O(IBZDATA("")),+OCHG=EOBCHG S IBLN=+$O(IBZDATA(""))_U_OREVCD
  ;
- ; At this point, we can assume the claim is CMS-1500 format
+ ; At this point, we can assume the claim is HCFA 1500 format
  I '$D(IBZDATA) D F^IBCEF("N-HCFA 1500 SERVICE LINE (EDI)","IBZDATA",,IBIFN)
- I PLREF,$D(IBZDATA(PLREF)) S IBLN=PLREF_U_$P(IB0,U,10) G FINDLNX
+ I $P(IB0,U,22),$D(IBZDATA(+$P(IB0,U,22))) S IBLN=+$P(IB0,U,22)_U_$P(IB0,U,10) G FINDLNX
  S Z=0 F  S Z=$O(IBZDATA(Z)) Q:'Z  D  Q:IBLN
  . ; Quit if processing an MRA and this VistA line# has already been filed
  . I $P($G(^IBM(361.1,IBEOB,0)),U,4)=1,$D(^IBM(361.1,IBEOB,15,"AC",Z)) Q
  . ; Quit if split MRA and this VistA line# has already been filed
  . I $D(IBZVLA(Z)) Q
  . S OCHG=$P(IBZDATA(Z),U,8)*$P(IBZDATA(Z),U,9) ; charge from bill
- . S IBAMIN=""
- . I $P(IBZDATA(Z),U,12)'="" S IBAMIN=$P(IBZDATA(Z),U,12)  ;anesthesia minutes
- . S UNITS=$S('IBAMIN:$P(IBZDATA(Z),U,9),1:IBAMIN/15)
- . ; original units from bill or anesthesia minutes calculation
+ . S UNITS=$S('$P(IBZDATA(Z),U,12):$P(IBZDATA(Z),U,9),1:$P(IBZDATA(Z),U,12)/15) ; original units from bill or anethesia minutes calculation
  . I $P(UNITS,".",2) S UNITS=$FN(UNITS,"",1)    ; round to a single decimal place for fractional units
  . I $P($P(IB0,U,16),".",2) S $P(IB0,U,16)=$FN($P(IB0,U,16),"",1)
  . S UNITS2=$P(IBZDATA(Z),U,9)     ; just the units
  . ; UNITS3 is the number of anesthesia minutes divided by 10, or nil.
  . ; Solution to get around the Trailblazers bug for MRAs
  . S UNITS3=""
- . I IBAMIN'=0 S UNITS3=IBAMIN/10
+ . I $P(IBZDATA(Z),U,12) S UNITS3=$P(IBZDATA(Z),U,12)/10
  . ;
  . S CPT=$P(IBZDATA(Z),U,5)        ; proc from bill
  . I CPT'?.N,CPT'="" S CPT=$O(^ICPT("B",CPT,""))   ; non-numeric proc
@@ -166,7 +159,7 @@ FINDLN(IB0,IBEOB,IBZDATA,PLREF) ; Find corresponding billed line for the adj
  . Q:OPROC'=$S('IBBNDL:$P(IB0,U,3),1:$P(IB0,U,10))
  . ;
  . S MODOK=0
- . I $$DOLLAR^IBCEFG1(OCHG)=+$P(IB0,U,15),UNITS=$P(IB0,U,16)!(UNITS2=$P(IB0,U,16))!(UNITS3=$P(IB0,U,16))!(IBAMIN=$P(IB0,U,16)),$S($P(IB0,U,19):$P(IB0,U,19)=$P(IBZDATA(Z),U),1:1) D
+ . I $$DOLLAR^IBCEFG1(OCHG)=+$P(IB0,U,15),UNITS=$P(IB0,U,16)!(UNITS2=$P(IB0,U,16))!(UNITS3=$P(IB0,U,16)),$S($P(IB0,U,19):$P(IB0,U,19)=$P(IBZDATA(Z),U),1:1) D
  .. ;Original procedure/chg/units/date match to get here
  .. ;Check matching original modifiers
  .. S MODOK=$$MODMATCH($$MODLST^IBEFUNC2($P(IBZDATA(Z),U,10)),$S('IBBNDL:$P(IB0,U,5,8),1:$P(IB0,U,11,14)))

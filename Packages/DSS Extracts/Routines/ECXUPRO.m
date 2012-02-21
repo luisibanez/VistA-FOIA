@@ -1,5 +1,5 @@
-ECXUPRO ;ALB/TJL-Prosthetic Extract Unusual Cost Report ; 1/08/08 1:00pm
- ;;3.0;DSS EXTRACTS;**49,111**;July 1, 2003;Build 4
+ECXUPRO ;ALB/TJL-Prosthetic Extract Unusual Cost Report ; 7/1/03 1:00pm
+ ;;3.0;DSS EXTRACTS;**49**;July 1, 2003
  ;
 EN ; entry point
  N X,Y,DATE,ECRUN,ECXDESC,ECXSAVE,ECXTL,ECTHLD
@@ -76,7 +76,7 @@ PROCESS ; entry point for queued report
  Q
  ;
 PRINT ; process temp file and print report
- N PG,QFLG,GTOT,LN,COUNT,FKEY,COST,SSN,REC,SDAY
+ N PG,QFLG,GTOT,LN,COUNT,FKEY,COST,SSN,REC
  U IO
  I $D(ZTQUEUED),$$S^%ZTLOAD S ZTSTOP=1 K ZTREQ Q
  S (PG,QFLG,GTOT)=0,$P(LN,"-",132)=""
@@ -84,11 +84,10 @@ PRINT ; process temp file and print report
  S COUNT=0,FKEY=""
  F  S FKEY=$O(^TMP($J,FKEY)) Q:FKEY=""!QFLG  D
  .S COST="" F  S COST=$O(^TMP($J,FKEY,COST)) Q:COST=""!QFLG  D
- .. S SDAY="" F  S SDAY=$O(^TMP($J,FKEY,COST,SDAY)) Q:SDAY=""!QFLG  D
- ...S SSN="" F  S SSN=$O(^TMP($J,FKEY,COST,SDAY,SSN)) Q:SSN=""!QFLG  S REC=^(SSN)  D
- ....S COUNT=COUNT+1
- ....I $Y+3>IOSL D HEADER Q:QFLG
- ....W !,$P(REC,U),?8,$P(REC,U,2),?21,$P(REC,U,3),?39,$P(REC,U,4),?70,$P(REC,U,5),?93,$$RJ^XLFSTR($P(REC,U,6),8),?110,$$RJ^XLFSTR($P(REC,U,7),11)
+ ..S SSN="" F  S SSN=$O(^TMP($J,FKEY,COST,SSN)) Q:SSN=""!QFLG  S REC=^(SSN)  D
+ ...S COUNT=COUNT+1
+ ...I $Y+3>IOSL D HEADER Q:QFLG
+ ...W !,$P(REC,U),?8,$P(REC,U,2),?21,$P(REC,U,3),?39,$P(REC,U,4),?70,$P(REC,U,5),?93,$$RJ^XLFSTR($P(REC,U,6),8),?110,$$RJ^XLFSTR($P(REC,U,7),11)
  Q:QFLG
  I COUNT=0 W !!,?8,"No unusual costs to report for this extract"
 CLOSE ;

@@ -1,6 +1,6 @@
 IBCU63 ;ALB/AAS - BILLING UTILITY TO SET AMB SURG REV CODES ; 20-NOV-91
- ;;2.0;INTEGRATED BILLING;**21,133,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**21,133**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO DGCRU63
 % ; BASC
@@ -34,7 +34,7 @@ FILE ;
 STDATE() ;  -start date for basc billing
  Q $S($P($G(^IBE(350.9,1,1)),"^",24):$P(^(1),"^",24),1:9999999)
  ;
-RX ;add rx refill charges (adds default rx cpt for cms-1500)
+RX ;add rx refill charges (adds default rx cpt for hcfa 1500)
  ;tries to use ins rx rev code, then site rx rev code finally standard revcode all with $20
  I '$D(^DGCR(399,IBIFN,"RC",0)) S ^DGCR(399,IBIFN,"RC",0)="^399.042PA"
  S DGBSLOS=IBCNT

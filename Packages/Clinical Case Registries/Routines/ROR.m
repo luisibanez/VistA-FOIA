@@ -1,5 +1,5 @@
-ROR ;HCIOFO/SG - CLINICAL CASE REGISTRIES ; 1/26/07 4:54pm
- ;;1.5;CLINICAL CASE REGISTRIES;**1,3**;Feb 17, 2006;Build 7
+ROR ;HCIOFO/SG - CLINICAL CASE REGISTRIES ; 2/6/06 9:10am
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; LOCAL VARIABLE ------ DESCRIPTION
  ;
@@ -94,7 +94,7 @@ ROR ;HCIOFO/SG - CLINICAL CASE REGISTRIES ; 1/26/07 4:54pm
  ;
  ;***** RETURNS THE TEST BUILD NUMBER FOR THE DATA EXTRACTION
 BUILD() ;
- Q 1
+ Q 6
  ;
  ;***** REGISTRY UPDATE AND DATA EXTRACTION TASK
  ;
@@ -115,8 +115,6 @@ BUILD() ;
  ;                 D  Run the task(s) in Debug Mode #1
  ;
  ;                 E  Use the event references (file #798.3)
- ;
- ;                 M  Disable data extraction and HL7 messaging
  ;
  ;                 S  Run the data extraction in single-task mode
  ;
@@ -158,8 +156,7 @@ TASK ;
  ;--- Remove inactive registries from the list
  S RC=$$ARLST^RORUTL02(.REGLST)  G:RC<0 ABORT
  ;--- Check the status of last HL7 message(s)
- I FLAGS'["M"  D  G:RC<0 ABORT
- . S RC=$$CHECKMSG^ROR10(.REGLST)
+ S RC=$$CHECKMSG^ROR10(.REGLST)  G:RC<0 ABORT
  ;
  ;--- Update the registries
  S RC=$$UPDATE^RORUPD(.REGLST,RORMNTSK,RORSUSP,FLAGS)
@@ -179,7 +176,7 @@ TASK ;
  S RC=$$REMARK^RORUTL05(.REGLST,31)
  ;
  ;--- Perform the data extraction
- S RC=$S(FLAGS'["M":$$EXTRACT^ROREXT(.REGLST,,RORSUSP,FLAGS),1:0)
+ S RC=$$EXTRACT^ROREXT(.REGLST,,RORSUSP,FLAGS)
  ;--- Process the errors
  I RC<0  D  G:RC<0 ABORT
  . ;--- Quit if stop is requested (via the TaskMan User option)

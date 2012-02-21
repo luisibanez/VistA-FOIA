@@ -1,5 +1,5 @@
 ORWDBA6 ; SLC/GDU - Clinical Indicator Data Capture - Phase I [10/12/04 15:40]
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**195,261**;Dec 17,1997
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**195**;Dec 17,1997
 MAIN ;Main starting point for this program
  N DIR,DTOUT,DUOUT,OPT,Y
  D CHKINS
@@ -10,7 +10,9 @@ MAIN ;Main starting point for this program
  S DIR("?",1)=$P($T(BHA),";",3)
  S DIR("?",2)=$P($T(BHE),";",3)
  S DIR("?",3)=$P($T(BHD),";",3)
- S DIR("?")=$P($T(BHL),";",3)
+ S DIR("?",4)=$P($T(BHL),";",3)
+ S DIR("?",5)=$P($T(BH1),";",3)
+ S DIR("?")=$P($T(BH2),";",3)
  S DIR("A")=$P($T(BA),";",3)
  W:$D(IOF) @IOF
  W !,$P($T(SH),";",3),!,$P($T(SH0),";",3)
@@ -24,14 +26,16 @@ MAIN ;Main starting point for this program
 SH ;;Enable Clinical Indicator Data Capture By Provider Parameter Management
 SH0 ;;Select Parameter Management Option
 B0A ;;M:Manage parameter by provider
-B0E ;;E:Enable parameter for all providers
-B0D ;;D:Disable parameter for all providers
+B0E ;;E:Assign parameter and Enable for all providers
+B0D ;;D:Assign parameter and Disable for all providers
 B0L ;;L:List providers with the assigned parameter
 BA ;;Select Enable CIDC By Provider parameter option
 BHA ;;Enter M to manage the Enable CIDC By Provider parameter by provider.
-BHE ;;Enter E to enable the parameter for all providers
-BHD ;;Enter D to disable the parameter for all providers
+BHE ;;Enter E to assign the parameter and enable it for all providers
+BHD ;;Enter D to assign the parameter and disable it for all providers
 BHL ;;Enter L to get a list of providers with the parameter and its value.
+BH1 ;;  ** Options E and D will not impact providers with the parameter already
+BH2 ;;     assigned and the functionality enabled / disabled.
  ;
 CHKINS ;Check Install
  N DIR,DTOUT,DUOUT,ERR,MSG,RF,X,X1,Y

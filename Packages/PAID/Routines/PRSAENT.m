@@ -1,6 +1,5 @@
 PRSAENT ;HISC/MGD-Entitlement String ;10/21/04
- ;;4.0;PAID;**6,21,45,69,75,76,90,96,112**;Sep 21, 1995;Build 54
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;**6,21,45,69,75,76,90,96**;Sep 21, 1995
  ;
  ;VARS:
  ; C0=employees 0 node of master record in file 450
@@ -101,7 +100,6 @@ L I $E(AC,2)=2 S PB=$P(C0,"^",20) S:PB=0 AC=AC_"*" Q
  I $E(AC,2)=3 S OCC=$P(C0,"^",17),OCC=+$E(OCC,5,6) S:OCC>20&(OCC<38) AC=AC_"*" Q
  S LVG=$P(C0,"^",15) S:LVG=5 AC=AC_"*" Q
 M I $E(AC,2)=1,NH=48 S AC=AC_"B" Q
- I $E(AC,2)=2,NH=80 S AC=AC_"R" Q
  I $E(AC,2)=2 S PB=$P(C0,"^",20) I PB=0 S AC=AC_"0" Q
  I $E(AC,2)=3 S PB=$P(C0,"^",20) I PB=2 S AC=AC_"2" Q
  S OCC=$P(C0,"^",17) S:OCC="" OCC="*"

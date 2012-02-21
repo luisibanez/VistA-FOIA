@@ -1,5 +1,5 @@
 WVSNOMED ;HIOFO/FT-IS LAB TEST A PAP SMEAR? ;2/12/04  14:37
- ;;1.0;WOMEN'S HEALTH;**16,23**;Sep 30, 1998;Build 5
+ ;;1.0;WOMEN'S HEALTH;**16**;Sep 30, 1998
  ;
  ; This routine uses the following IAs:
  ;  #1362 - ^ORB3               (controlled)
@@ -81,7 +81,7 @@ ADD ; Add pap smear to FILE 790.1
  Q:'Y
  S WV7901=+Y
  I $$PATCH^XPDUTL("OR*3.0*210") D  Q
- .D CPRS^WVSNOMED(70,DFN,"",WVPROV,"Pap Smear results available.",LRSS_U_WVLABAN_U_LRI)
+ .D CPRS^WVSNOMED(70,DFN,"",WVPROV,"Pap Smear results available.","")
  .Q
  D MAIL(DFN,WVLABAN,WVPROV,LRSS,WV7901)
  Q

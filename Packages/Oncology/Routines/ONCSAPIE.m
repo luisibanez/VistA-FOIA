@@ -1,5 +1,5 @@
-ONCSAPIE ;Hines OIFO/SG - COLLABORATIVE STAGING (ERRORS)  ; 10/27/06 8:59am
- ;;2.11;ONCOLOGY;**40,47,51**;Mar 07, 1995;Build 65
+ONCSAPIE ;Hines OIFO/SG - COLLABORATIVE STAGING (ERRORS)  ; 5/14/04 11:03am
+ ;;2.11;ONCOLOGY;**40**;Mar 07, 1995
  ;;
  ;
  Q
@@ -16,13 +16,13 @@ CLEAR(ENABLE) ;
  ;
  ;***** CHECKS THE ERRORS AFTER A FILEMAN DBS CALL
  ;
- ; ONC8MSG       Closed reference of the error messages array
+ ; ROR8MSG       Closed reference of the error messages array
  ;               (from DBS calls)
  ; [ERRCODE]     Error code to assign
  ; [FILE]        File number used in the DBS call
  ; [IENS]        IENS used in the DBS call
  ;
- ; The $$DBS^ONCSAPIE function checks the DIERR and @ONC8MSG
+ ; The $$DBS^ONCSAPIE function checks the DIERR and @ROR8MSG
  ; variables for errors after a FileMan DBS call.
  ; 
  ; Return Values:
@@ -40,10 +40,10 @@ CLEAR(ENABLE) ;
  ; NOTE: This entry point can also be called as a procedure:
  ;       D DBS^ONCSAPIE(...) if you do not need its return value.
  ;
-DBS(ONC8MSG,ERRCODE,FILE,IENS) ;
+DBS(ROR8MSG,ERRCODE,FILE,IENS) ;
  I '$G(DIERR)  Q:$QUIT ""  Q
- N ERRLST,ERRNODE,I,ONCMSGTEXT
- S ERRNODE=$S($G(ONC8MSG)'="":$NA(@ONC8MSG@("DIERR")),1:$NA(^TMP("DIERR",$J)))
+ N ERRLST,ERRNODE,I,MSGTEXT
+ S ERRNODE=$S($G(ROR8MSG)'="":$NA(@ROR8MSG@("DIERR")),1:$NA(^TMP("DIERR",$J)))
  I $D(@ERRNODE)<10  Q:$QUIT ""  Q
  ;--- Return a list of errors
  I '$G(ERRCODE)  D  Q:$QUIT $P(ERRLST,",",2,99)  Q
@@ -51,10 +51,10 @@ DBS(ONC8MSG,ERRCODE,FILE,IENS) ;
  . F  S I=$O(@ERRNODE@("E",I))  Q:'I  S ERRLST=ERRLST_","_I
  . D CLEAN^DILF
  ;--- Record the error message
- D MSG^DIALOG("AE",.ONCMSGTEXT,,,$G(ONC8MSG)),CLEAN^DILF
+ D MSG^DIALOG("AE",.MSGTEXT,,,$G(ROR8MSG)),CLEAN^DILF
  S I=$S($G(FILE):"; File #"_FILE,1:"")
  S:$G(IENS)'="" I=I_"; IENS: """_IENS_""""
- S I=$$ERROR(ERRCODE,.ONCMSGTEXT,I)
+ S I=$$ERROR(ERRCODE,.MSGTEXT,I)
  Q:$QUIT I  Q
  ;
  ;***** GENERATES THE ERROR MESSAGE
@@ -153,17 +153,6 @@ PRT1ERR(ERR,ONC8INFO) ;
  . I $Y'<ONCMNL  S EXIT=$$PAGE^ONCSAPIU()  Q:EXIT
  . ;---
  . I $G(ONC8INFO)'="",$D(@ONC8INFO)>1  S I=""  D
- ..;Error text formatting
- ..I ONC8INFO="ONCSAPI(""MSG"",1,1)" D
- ...N LINECNT,LINE,LINE1,LINE2,SUB
- ...S LINECNT=0
- ...S SUB=0 F  S SUB=$O(ONCSAPI("MSG","1",1,SUB)) Q:SUB'>0  S LINE=ONCSAPI("MSG","1",1,SUB) D
- ....S LINECNT=LINECNT+1
- ....S LINE1=$P(LINE,".",1)
- ....S LINE2=$P(LINE,".",2)
- ....S ONCSAPI("NEWMSG","1",1,LINECNT)=LINE1_"."
- ....I LINE2'="" S LINECNT=LINECNT+1 S ONCSAPI("NEWMSG","1",1,LINECNT)=LINE2_"."
- ...M ONCSAPI("MSG")=ONCSAPI("NEWMSG")
  . . F  S I=$O(@ONC8INFO@(I))  Q:I=""  D  Q:EXIT
  . . . D EN^DDIOL($E(@ONC8INFO@(I),1,IOM-7),,"!?6")
  . . . S:$Y'<ONCMNL EXIT=$$PAGE^ONCSAPIU()
@@ -219,28 +208,24 @@ TYPE(ERRCODE,DESCR) ;
  ;
 MSGLIST ; Code Type  Message Text
  ;;  -1 ^ 6 ^ Missing input parameters
- ;;  -2 ^ 6 ^ Errors returned by the Oncology web-service
+ ;;  -2 ^ 6 ^ Errors returned by the CS web-service
  ;;  -3 ^ 4 ^ XML parsing warning
  ;;  -4 ^ 6 ^ XML parsing error
  ;;  -5 ^ 6 ^ Error(s) during parsing of the result XML
  ;;  -6 ^ 6 ^ Parameter '|1|' has an invalid value: '|2|'
- ;;  -7 ^ 2 ^ Oncology web-service temporary moved to '|1|'
- ;;  -8 ^ 2 ^ Oncology web-service permanently moved to '|1|'
+ ;;  -7 ^ 2 ^ CS web-service temporary moved to '|1|'
+ ;;  -8 ^ 2 ^ CS web-service permanently moved to '|1|'
  ;;  -9 ^ 6 ^ FileMan DBS call error(s)|2|
  ;; -10 ^ 6 ^ HTTP client error(s)
- ;; -11 ^ 6 ^ Invalid URL of the Oncology web-service
+ ;; -11 ^ 6 ^ Invalid URL of the CS web-service
  ;; -12 ^ 6 ^ Too many redirections (|1|)
  ;; -13 ^ 6 ^ Cannot get the CS version number
  ;; -14 ^ 6 ^ Cannot get the schema number and name
  ;; -15 ^ 6 ^ Cannot lock the |1|
  ;; -16 ^ 6 ^ Invalid combination of input parameters: |1|
- ;; -17 ^ 6 ^ Cannot update the Oncology web-service URL in file #160.1
+ ;; -17 ^ 6 ^ Cannot update the CS web-service URL in file #160.1
  ;; -18 ^ 6 ^ Missing redirection URL
  ;; -19 ^ 2 ^ Unfortunately, the extended help is unavailable now.
  ;; -20 ^ 2 ^ Unfortunately, input value cannot be validated.
  ;; -21 ^ 2 ^ Unfortunately, the code description is unavailable now.
- ;; -22 ^ 6 ^ Cannot get the URL of the Oncology web-service
- ;; -23 ^ 6 ^ Cannot get the EDITS metafile version number
- ;
-CLEANUP ;Cleanup
- K DIERR,ONCSAPI
+ ;; -22 ^ 6 ^ Cannot get the URL of the CS web-service

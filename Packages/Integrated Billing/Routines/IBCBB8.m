@@ -1,8 +1,8 @@
 IBCBB8 ;ALB/BGA - CON'T MEDICARE EDIT CHECKS ;08/12/98
- ;;2.0;INTEGRATED BILLING;**51,137,210,349,373**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**51,137,210**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
- ; UB-04 CLAIM CERTIFICATE ID NUMBER
+ ; UB92 CLAIM CERTIFICATE ID NUMBER
  I '$$VALID(IBIFN) S IBQUIT=$$IBER^IBCBB3(.IBER,215) Q:IBQUIT
  ;
  ; Req. on Primary Payor when Medicare is secondary and value 12-15,43
@@ -21,7 +21,7 @@ IBCBB8 ;ALB/BGA - CON'T MEDICARE EDIT CHECKS ;08/12/98
  . K IBXDATA D F^IBCEF("N-ALL INSURANCE GROUP NUMBER",,,IBIFN)
  . I $P($G(IBXDATA(1)),U)="" S IBQUIT=$$IBER^IBCBB3(.IBER,225)
  ;
- ; UB-04 Diagnosis Codes
+ ; UB92 Diagnosis Codes
  K IBXDATA D F^IBCEF("N-DIAGNOSES",,,IBIFN)
  ;
  S IBI=0
@@ -44,6 +44,7 @@ VALID(IBIFN) ; Verify HIC # is valid
  I $G(IBXDATA)="" S VAL=0 G VALQ
  ;
  S IBXDATA=$TR(IBXDATA,"-")
+ I $L(IBXDATA)<9 S VAL=0 G VALQ
  ; HIC # must pass standard MEDICARE edits
  I '$$VALHIC^IBCNSMM(IBXDATA) S VAL=0
  ;

@@ -1,5 +1,5 @@
 SDAM1 ;MJK/ALB - Appt Mgt (Patient);Apr 23 1999
- ;;5.3;Scheduling;**149,155,193,189,445,478,466**;Aug 13, 1993;Build 2
+ ;;5.3;Scheduling;**149,155,193,189,445**;Aug 13, 1993
  ;
 INIT ; -- get init pat appt data
  ;  input:          DFN := ifn of pat
@@ -12,11 +12,10 @@ INIT ; -- get init pat appt data
  Q
  ;
 BLD ; -- scan apts
- N SDAMDD,SDNAME,SDMAX,SDLARGE,DFN,SDCL,BL,XC,XW,AC,AW,TC,TW,NC,NW,SC,SW,SDT,CC,CW,CN,CNPAT,CNSTLNK,CSTAT ; done for speed see INIT
+ N SDAMDD,SDNAME,SDMAX,SDLARGE,DFN,SDCL,BL,XC,XW,AC,AW,TC,TW,NC,NW,SC,SW,SDT ; done for speed see INIT
  D INIT^SDAM10
  S DFN=SDFN
- F SDT=SDBEG:0 S SDT=$O(^DPT(DFN,"S",SDT)) Q:'SDT!($P(SDT,".",1)>SDEND)  I $D(^(SDT,0)) S SDATA=^(0),SDCL=+SDATA,SDNAME=$P($G(^SC(SDCL,0)),U) D  K:CNSTLNK="" CNSTLNK D BLD1  ;SD/478
- .S CNSTLNK="",CN=0 F  S CN=$O(^SC(SDCL,"S",SDT,1,CN)) Q:'+CN  S CNPAT=$P($G(^SC(SDCL,"S",SDT,1,CN,0)),U) I CNPAT=DFN S CNSTLNK=$P($G(^SC(SDCL,"S",SDT,1,CN,"CONS")),U),CSTAT="" S:CNSTLNK'="" CSTAT=$P($G(^GMR(123,CNSTLNK,0)),U,12) Q  ;SD/478
+ F SDT=SDBEG:0 S SDT=$O(^DPT(DFN,"S",SDT)) Q:'SDT!($P(SDT,".",1)>SDEND)  I $D(^(SDT,0)) S SDATA=^(0),SDCL=+SDATA,SDNAME=$P($G(^SC(SDCL,0)),U) D BLD1
  D NUL^SDAM10,LARGE^SDAM10:$D(SDLARGE)
  S $P(^TMP("SDAM",$J,0),U,4)=VALMCNT
  Q
@@ -37,8 +36,6 @@ BLD1 ; -- build array
  S X=SDGAFREQ_$E(X,2,AC-1)_$E(SDACNT_BL,1,AW)_$E(X,AC+AW+1,VALMWD)
  S X=$E(X,1,NC-1)_$E($$LOWER(SDNAME)_BL,1,NW)_$E(X,NC+NW+1,VALMWD)
  S X=$E(X,1,XC-1)_$E($$FMTE^XLFDT(SDT,"5Z")_BL,1,XW)_$E(X,XC+XW+1,VALMWD)  ;to make date field work for SD*5.3*189 - uses FM List Template
- S:'$D(CSTAT) CSTAT="" ;SD/478
- S X=$E(X,1,CC-1)_$E($S((CSTAT=1!(CSTAT=2)!(CSTAT=13)):" ",$G(CNSTLNK):"Consult",1:"        ")_BL,1,CW)_$E(X,CC+CW+1,VALMWD) K CNSTLNK,CSTAT ;SD/478
  S Y=$P(SDSTAT,";",3)
  I Y'["FUTURE" S X=$E(X,1,SC-1)_$E($$LOWER(Y)_BL,1,SW)_$E(X,SC+SW+1,VALMWD)
  I Y["FUTURE" S X=$E(X,1,SC-1)_$E($$LOWER(Y)_$$ANC_BL,1,SW+TW+1)
@@ -110,12 +107,8 @@ STATUS(DFN,SDT,SDCL,SDATA,SDDA) ; -- return appt status
  ; -- determine print status
  S P=$S(S=C!(C=""):S,1:"")
  I P="" D
- .I S["INPATIENT",$P($G(^SC(SDCL,0)),U,17)'="Y",$P($G(^SCE(+$P(SDATA,U,20),0)),U,7)="" S P=$P(S," ")_"/ACT REQ" Q
  .I S="NO ACTION TAKEN",C="CHECKED OUT"!(C="CHECKED IN") S P="ACT REQ/"_C Q
  .S P=$S(S="NO ACTION TAKEN":S,1:$P(S," "))_"/"_C
- I S["INPATIENT",C="" D
- .I SDT>(DT+.2359) S P=$P(S," ")_"/FUTURE" Q
- .S P=$P(S," ")_"/NO ACT TAKN"
  ;
 STATUSQ Q +$O(^SD(409.63,"AC",S,0))_";"_S_";"_P_";"_$P(Y,"^")_";"_$P(Y,"^",3)_";"_+VADMVT
  ;

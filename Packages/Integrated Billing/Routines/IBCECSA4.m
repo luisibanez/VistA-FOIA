@@ -1,19 +1,18 @@
 IBCECSA4 ;ALB/CXW - IB CLAIMS STATUS AWAITING RESOLUTION SCREEN ;5-AUG-1999
- ;;2.0;INTEGRATED BILLING;**137,155,320,371,433**;21-MAR-1994;Build 36
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,155**;21-MAR-1994
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 SMSG ;select message
  N IBCOM,IBX,IBDAX,IBA
  D SEL(.IBDAX,1)
  I $O(IBDAX(""))="" G SMSGQ
  S IBDAX=+$O(IBDAX(0)),IBA=$G(IBDAX(IBDAX))
- S IBX=$G(^TMP("IBCECSB",$J,$P(IBA,U,3),$P(IBA,U,4),$P(IBA,U,6),$P(IBA,U,2)))
+ S IBX=$G(^TMP("IBCECSB",$J,$P(IBA,U,3),$P(IBA,U,4),$P(IBA,U,2)))
  I IBX'="" D
  . Q:'$$LOCK^IBCEU0(361,$P(IBA,U,2))
  . D EN^VALM("IBCEM CSA MSG")
  . D UNLOCK^IBCEU0(361,$P(IBA,U,2))
 SMSGQ S VALMBCK="R"
- I $G(IBFASTXT) S VALMBCK="Q" K IBDAX
  D:$O(IBDAX(0)) BLD^IBCECSA1
  Q
  ;
@@ -49,15 +48,11 @@ TPJI ;Third Party joint Inquiry
  Q
  ;
 PBILL ;Print bill - not for resubmit
- ; IB*320 - allow action for MRA request claims
  N IBIFN,IBX,IBA,IBRESUB
  D FULL^VALM1
  S IBDAX=$O(IBDAX(0)),IBIFN=+$G(IBDAX(+IBDAX))
- I "234"'[$P($G(^DGCR(399,IBIFN,0)),U,13) W !!,"Bill status must be REQUEST MRA, AUTHORIZED or PRNT/TX to print the bill." D PAUSE^VALM1 G PB1
- ;
- ; don't update review status for MRA's
- I $P($G(^DGCR(399,IBIFN,0)),U,13)=2 S IBRESUB=1
- E  S IBRESUB=$$RESUB(IBIFN,1,"PX")
+ I "34"'[$P($G(^DGCR(399,IBIFN,0)),U,13) W !!,"Bill status must be AUTHORIZED or PRNT/TX to print the bill." D PAUSE^VALM1 G PB1
+ S IBRESUB=$$RESUB(IBIFN,1,"PX")
  I IBRESUB'>0 W !,*7,"This is not a transmittable bill or review not needed" D PAUSE^VALM1 G PB1
  I IBRESUB=2 D  G PB1
  . N IB364
@@ -85,23 +80,16 @@ CANCEL ;Cancel bill
 CANCELQ S VALMBCK="R"
  Q
  ;
-CRD ; enter here if correcting a bill
- N IBCNCRD
- S IBCNCRD=1
 CLONE ;'Copy/cancel bill' protocol action
- N IBX,IBA,IB364,MRACHK,IBIFN,IBKEY
+ N IBX,IBA,IB364,MRACHK,IBIFN
  ; IBX,IBA will be killed during execution - need to protect them
  D FULL^VALM1
  S IBDAX=$O(IBDAX("")),IBIFN=+$P($G(IBDAX(IBDAX)),U)
  I IBDAX="" G CLONEQ
  ; Check for security key
- S IBKEY=$S($G(IBCNCRD)=1:"IB AUTHORIZE",1:"IB CLON")
- ;I '$$KCHK^XUSRB("IB AUTHORIZE") D  G CLONEQ
- I '$$KCHK^XUSRB(IBKEY) D  G CLONEQ
- . ;W !!?5,"You don't hold the proper security key to access this function."
- . ;W !?5,"The necessary key is IB AUTHORIZE.  Please see your manager."
- . W !!?5,"You must hold the "_IBKEY_" security key to access this function."
- . W !?5,"Please see your manager."
+ I '$$KCHK^XUSRB("IB AUTHORIZE") D  G CLONEQ
+ . W !!?5,"You don't hold the proper security key to access this function."
+ . W !?5,"The necessary key is IB AUTHORIZE.  Please see your manager."
  . D PAUSE^VALM1
  . Q
  D MRACHK I MRACHK G CLONEQ
@@ -116,7 +104,7 @@ PRO ; Copy for secondary/tertiary bill
  ;IBDAX - array from selection of message
  S IBA=$G(IBDAX(+$G(IBDAX)))
  G:'IBA PROQ
- S IBX=$G(^TMP("IBCECSB",$J,$P(IBA,U,3),$P(IBA,U,4),$P(IBA,U,6),$P(IBA,U,2))),IBIFN=$P(IBA,U)
+ S IBX=$G(^TMP("IBCECSB",$J,$P(IBA,U,3),$P(IBA,U,4),$P(IBA,U,2))),IBIFN=$P(IBA,U)
  S IB364=+$P(IBA,U,5)
  G:'IBIFN PROQ
  ;
@@ -167,7 +155,7 @@ SEL(IBDA,ONE) ; Select entry(s) from list
  K IBDA
  D EN^VALM2($G(XQORNOD(0)),$S('$G(ONE):"",1:"S"))
  S IBDA=0 F  S IBDA=$O(VALMY(IBDA)) Q:'IBDA  D
- . S IBDA(IBDA)=$P($G(^TMP("IBCECSA",$J,IBDA)),U,2,7)
+ . S IBDA(IBDA)=$P($G(^TMP("IBCECSA",$J,IBDA)),U,2,6)
  Q
  ;
 RESUB(IBIFN,TXMT,IBFUNC,IBTBA) ; Function asks if resubmit as resolution to a

@@ -1,7 +1,6 @@
 FHDCR1D ; HISC/REL/NCA/RVD - Build Separate Meal Diet Card ;2/23/00  09:52
- ;;5.5;DIETETICS;**3,5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;**3**;Jan 28, 2005
  ;RVD 8/10/05 added logic on Food Preferences for Bread/Beverages default for outpatient.
- ;patch #5 - added outpatient SO and fix diet pattern for outpatient.
 BLD ; Build Diet Card list for a patient in three per page format
  S X1=$G(^FHPT(+FHDFN,"A",+ADM,0)),FHORD=$P(X1,"^",2),SVC=$P(X1,"^",5),SF=$P(X1,"^",7),IS=$P(X1,"^",10),FHD=$P(X1,"^",16),(FHOR,X)=""
  I FHPAR'="Y" Q:SVC="C"
@@ -61,25 +60,19 @@ BLD ; Build Diet Card list for a patient in three per page format
  ;
 OUT ;process outpatient data
  S (SVC,SF,IS)=""
- I '$D(FHKDAT)!'$G(FHADM) Q
+ Q:'$D(FHKDAT)
  S X1=FHKDAT
  S FHWARD=W1 D LOC^FHDCR11
- S (FHOR,FHORD)=$P(FHKDAT,U,2),FHD=$P(X1,"^",14)
+ S (FHOR,FHORD)=FHDIET,FHD=$P(X1,"^",14)
  I FHPAR'="Y" Q:SVC="C"
  I SVC="C" S:SP'=SP1 SP=SP1 Q:'SP
- S:$D(^FHPT(FHDFN,0)) IS=$P(^FHPT(FHDFN,0),U,5)
- I $D(^FHPT(FHDFN,"OP",FHADM,"SF",0)) S SF=$P(^(0),U,3)
- I IS S IS=$G(^FH(119.4,+IS,0)) S:IS'="" SVC=SVC_"-"_$P(IS,"^",2)_$P(IS,"^",3)
- I SF,$D(^FHPT(FHDFN,"OP",FHADM,"SF",SF,0)),'$P(^(0),U,32) S SVC=SVC_"  "_"SF"_"("_$S($P($G(^FHPT(FHDFN,"OP",FHADM,"SF",+SF,0)),"^",34)="Y":"M",1:"I")_")"
+ Q:'FHORD
  S MEAL=FHMEAL
  I UPD D OLD^FHMTK11 I OLD=FHOR S FLG2=0 D EVT^FHDCR2 Q:'FLG2
- S STR=""
- S:$G(FHOR) FHOR=FHOR_"^^^^"
- I FHOR="" S FHOR=$P(FHKDAT,U,7,11)
+ S STR="",FHOR=FHOR_"^^^^"
  S DPAT=$O(^FH(111.1,"AB",FHOR,0))
  K FP,MP,N2,NN
- S PD=""
- S:$G(MPD) PD=MPD
+ S PD=MPD
  I DPAT S PD=$P($G(^FH(111.1,DPAT,0)),"^",7) D
  .F X8=0:0 S X8=$O(^FH(111.1,DPAT,MEAL,X8)) Q:X8<1  S Z1=$G(^(X8,0)) D
  ..S ZZ=$G(^FH(114.1,+Z1,0)),NAM=$P(ZZ,"^",1)
@@ -107,7 +100,6 @@ OUT ;process outpatient data
  ..Q
  ;
  S Y0=FHPTNM_" ("_FHBID_")"_"  "_SVC,S(NBR)=0,N1=0,Y="***"
- I '$G(FHDIET) S FHRNUM=FHKD D DIETPAT^FHOMRR1 S Y=$E(FHDIETP,1,18)
  S:$G(FHDIET) Y=$P(^FH(111,FHDIET,0),U,7)
  S N1=N1+1 I $L(Y)<40 S PP(N1,NBR)=Y
  E  S L=$S($L($P(Y,",",1,3))<40:3,1:2) S PP(N1,NBR)=$P(Y,",",1,L),N1=N1+1,PP(N1,NBR)=$E($P(Y,",",L+1,5),2,99)
@@ -124,7 +116,6 @@ OUT ;process outpatient data
  .Q
  S X8="" F  S X8=$O(NN(X8)) Q:X8=""  D
  .S S(NBR)=S(NBR)+1,MM(S(NBR),NBR)=$G(NN(X8)) Q
- I $G(FHKD) S ADM=FHKD D SOUT^FHMTK1B   ;get outpatient standing orders.
  S S(NBR)=S(NBR)+1,MM(S(NBR),NBR)=""
  D DISL
  Q

@@ -1,12 +1,11 @@
-PRCPRAL1 ;WISC/RFJ/DST-automatic level setter (print report)            ;28 Dec 93
- ;;5.1;IFCAP;**98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPRAL1 ;WISC/RFJ-automatic level setter (print report)            ;28 Dec 93
+ ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
 PRINT ;  print report
  N %,AVERAGE,DATE,DESCR,GROUP,GROUPNM,ITEMDA,ITEMDATA,NOW,NSN,PAGE,PRCPFLAG,PRCPFNOT,PRCPNESL,PRCPNNSL,PRCPNORP,PRCPNSRP,PRCPSTDD,SCREEN,SORT,TOTAL,Y
- N ODI  ; On-Demand Item flag
  K ^TMP($J,"PRCPRALS")
  S ITEMDA=0 F  S ITEMDA=$O(^PRCP(445,PRCP("I"),1,ITEMDA)) Q:'ITEMDA  D
  .   I $G(PRCPFITM),'$D(^TMP($J,"PRCPURS4",ITEMDA)),'$G(PRCPALLI) Q
@@ -37,13 +36,9 @@ PRINT ;  print report
  .   .   I $Y>(IOSL-6) D:SCREEN P^PRCPUREP Q:$D(PRCPFLAG)  D H
  .   .   S ITEMDATA=$G(^PRCP(445,PRCP("I"),1,ITEMDA,0))
  .   .   S DESCR=$$DESCR^PRCPUX1(PRCP("I"),ITEMDA),NSN=$$NSN^PRCPUX1(ITEMDA)
- .   .   I PRCP("DPTYPE")="W" W !!,NSN,?18,$E(DESCR,1,18)
- .   .   ; On-Demand Item display
- .   .   S ODI=""
- .   .   I PRCP("DPTYPE")'="W" S ODI=$$ODITEM^PRCPUX2(PRCP("I"),ITEMDA)
- .   .   Q:PRCP("DPTYPE")'="W"&((($G(ODIS)=1)&(ODI="Y"))!(($G(ODIS)=2)&(ODI'="Y")))
- .   .   I PRCP("DPTYPE")'="W" W !!,$E(DESCR,1,18),?25,$S(ODI="Y":"D",1:"")
- .   .   ;
+ .   .   W !!
+ .   .   I PRCP("DPTYPE")="W" W NSN,?18,$E(DESCR,1,18)
+ .   .   E  W $E(DESCR,1,18),?20,NSN
  .   .   W ?38,ITEMDA,?45,"OLD",$J(+$P(ITEMDATA,"^",9),8),$J(+$P(ITEMDATA,"^",11),8),$J(+$P(ITEMDATA,"^",10),8),$J(+$P(ITEMDATA,"^",4),8)
  .   .   I AVERAGE>.06,$G(PRCPFSET) K PRCPFNOT L +^PRCP(445,PRCP("I"),1,ITEMDA,0):5 I '$T S PRCPFNOT=1
  .   .   W !?3,"AVG USAGE: ",$J(AVERAGE,0,4)
@@ -63,12 +58,11 @@ PRINT ;  print report
  ;
 H S %=NOW_"  PAGE "_PAGE,PAGE=PAGE+1 I PAGE'=2!(SCREEN) W @IOF
  W $C(13),"AUTOMATIC LEVEL SETTER FOR: ",$E(PRCP("IN"),1,20),?(80-$L(%)),%
- I PRCP("DPTYPE")'="W",('$D(^TMP($J,"PRCPURS4"))) W !?5,$S(ODIS=2:"ON-DEMAND ITEMS ONLY",ODIS=3:"ALL ITEMS (STANDARD AND ON-DEMAND)",1:"STANDARD ITEMS ONLY")
  W !?5,"AVG USAGE START DATE: ",PRCPSTDD," (",PRCPTDAY," TOTAL DAYS)"
  W !?5,"DAYS/PERCENTAGE USED FOR CALCULATION:",?48,$J(PRCPDNSL,8),$J(PRCPPESL_"%",8),$J(PRCPPSRP_"%",8),$J(PRCPPORP_"%",8)
  S %="",$P(%,"-",81)=""
  W !?48,$J("NORMAL",8),$J("EMERG",8),$J("STAND",8),$J("OPTION",8),!
  I PRCP("DPTYPE")="W" W "NSN",?18,"DESCRIPTION"
- E  W "DESCRIPTION",?25,"OD"
- W ?38,"IM#",?48,$J("STKLVL",8),$J("STKLVL",8),$J("REO PT",8),$J("REO PT",8),!,%
+ E  W "DESCRIPTION",?20,"NSN"
+ W ?38,"MI#",?48,$J("STKLVL",8),$J("STKLVL",8),$J("REO PT",8),$J("REO PT",8),!,%
  Q

@@ -1,7 +1,5 @@
-PRSASR ;HISC/MGD,WOIFO/JAH/PLT - Supervisor Certification ;02/05/2005
- ;;4.0;PAID;**2,7,8,22,37,43,82,93,112,117**;Sep 21, 1995;Build 32
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;
+PRSASR ; HISC/MGD,WIRMFO/JAH - Supervisor Certification ;09/03/2003
+ ;;4.0;PAID;**2,7,8,22,37,43,82**;Sep 21, 1995
  ;Called by Pay Per Cert Option on T&A Superv menu. Timecard 4 each 
  ;employee in this supervs T&L is displayed.  Superv prompted at each 
  ;display as to whether card is ready 4 certification. Cards that r
@@ -78,11 +76,10 @@ T1 ;if supervisor signs off then update all records in tmp
  ;
  ;     ---------------------------------------------------
 CHK ; Check for needed approvals
- N PRSENT,PRSWOC
  S STAT=$P($G(^PRST(458,PPI,"E",DFN,0)),"^",2) I "PX"[STAT Q
  I USR=DFN Q:'$D(^XUSEC("PRSA SIGN",DUZ))
  E  I CKS S SSN=$P($G(^PRSPC(DFN,0)),"^",9) I SSN S EDUZ=+$O(^VA(200,"SSN",SSN,0)) I $D(^PRST(455.5,"AS",EDUZ,TLI)) Q:$P($G(^PRST(455.5,TLI,"S",EDUZ,0)),"^",2)'=TLE
- S HDR=0 D HDR,^PRSAENT S PRSENT=ENT
+ S HDR=0 D HDR
  ;
  ;Loop to display tour, exceptions(leave, etc..) & errors.
  ;
@@ -110,12 +107,6 @@ CHK ; Check for needed approvals
  F WK=1:1:2 D
  .  D WARNSUP^PRSAOTT(PPE,DFN,VAL,WK,.OTERR,.O8,.OA)
  .  I OTERR S ^TMP($J,"OT",DFN,WK)=O8_"^"_OA
- ;
- ;warning message for rs/rn and on type of time
- I $E(PRSENT,5) D
- . I @($TR($$CD8B^PRSU1B2(VAL,"RS^3^RN^3",1),U,"+")_"-("_$TR($$RSHR^PRSU1B2(DFN,PPI),U,"+")_")") W !,?3,"WARNING: The total scheduled recess hours for this pay period does not match the total RS/RN posted."
- . I $G(PRSWOC)]"" W !,?3,"Warning: The entire tour for day# ",PRSWOC," is posted RECESS. The On-Call will be paid unless posted UNAVAILABLE."
- . QUIT
  ;
 LD ; Check for changes to the Labor Distribution Codes made during the pay
  ; period.
@@ -156,9 +147,6 @@ PROC ; Set Approval, file any exceptions & update 8B string
  ;set 8b string & change status of timecard to payroll
  S ^PRST(458,PPI,"E",DFN,5)=VAL S $P(^PRST(458,PPI,"E",DFN,0),"^",2)="P"
  ;
- ; If employee is a PT Phys w/ memo update hours credited
- D PTP^PRSASR1(DFN,PPI)
- ;
  ;unlock employees time card record
  S GLOB="^PRST(458,"_PPI_","_"""E"""_","_DFN_",0)"
  D UNLOCK^PRSLIB00(GLOB)
@@ -169,7 +157,7 @@ PROC ; Set Approval, file any exceptions & update 8B string
  ;
 HDR ; Display Header
  I HDR S QT=$$ASK^PRSLIB00() Q:QT
- S X=$G(^PRSPC(DFN,0)) W !,@IOF,?3,$P(X,"^",1) S X=$P(X,"^",9) I X W ?68,$E(X),"XX-XX-",$E(X,6,9) S HDR=1
+ S X=$G(^PRSPC(DFN,0)) W !,@IOF,?3,$P(X,"^",1) S X=$P(X,"^",9) I X W ?68,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9) S HDR=1
  W !,?6,"Date",?20,"Scheduled Tour",?40,"Tour Exceptions",?63,IORVON,"Tour Errors",IORVOFF
  W !?3 F I=1:1:72 W "-"
  Q
@@ -177,7 +165,7 @@ HDR ; Display Header
 HDR2 ; Display Header don't quit
  N HOLD
  S HOLD=$$ASK^PRSLIB00(1)
- S X=$G(^PRSPC(DFN,0)) W !,@IOF,?3,$P(X,"^",1) S X=$P(X,"^",9) I X W ?68,$E(X),"XX-XX-",$E(X,6,9)
+ S X=$G(^PRSPC(DFN,0)) W !,@IOF,?3,$P(X,"^",1) S X=$P(X,"^",9) I X W ?68,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9)
  W !,?6,"Date",?20,"Scheduled Tour",?40,"Tour Exceptions",?63,IORVON,"Tour Errors",IORVOFF
  W !?3 F I=1:1:72 W "-"
  Q
@@ -192,7 +180,7 @@ EX ; clean up variables & unlock any leftover time card nodes
  K ^TMP($J) G KILL^XUSCLEAN
  Q
  ;
- ;
+ ;====================================================================
  ;These extrinsic functions simply remove lengthy code from long, 
  ;single line, nested loop.
  ;     ---------------------------------------------------
@@ -219,12 +207,12 @@ TOURERR(DTE,X9,XF) ;DISPLAY TOUR & ERRORS
  . I $P($G(Y2(K)),"^",2)'="" W:$X>44 ! W ?45,$P(Y2(K),"^",2)
  W:Y3'="" !?10,Y3
  I $D(ER) S:FATAL XF=1 F K=0:0 S K=$O(ER(K)) Q:K<1  D
- .  I $Y>(IOSL-4) D HDR2
- .  S ERRLEN=$S($P(ER(K),U,2)'="":$L(ER(K)),1:$L($P($G(ER(K)),U))+1)
- .  W:X9!((ERRLEN+1)>(IOM-$X)) !
- .  W ?(IOM-(ERRLEN+1)),IORVON
- .  W:$P(ER(K),"^",2)'="" $P(ER(K),"^",2)
- .  W " ",$P(ER(K),"^",1),IORVOFF
- .  S X9=0 S:'XF ^TMP($J,"X",DFN,DAY_" "_K)=ER(K)
- .  Q
+ . I $Y>(IOSL-4) D HDR2
+ .W:X9!($X>55) ! S ERRLEN=23
+ .I $P(ER(K),"^",2)'="" S ERRLEN=$L(ER(K))
+ .W ?(IOM-(ERRLEN+1)),IORVON
+ .W:$P(ER(K),"^",2)'="" $P(ER(K),"^",2)
+ .W " ",$P(ER(K),"^",1),IORVOFF
+ .S X9=0 S:'XF ^TMP($J,"X",DFN,DAY_" "_K)=ER(K)
+ .Q
  Q

@@ -1,6 +1,5 @@
-MAGDRPC3 ;WOIFO/EdM - Imaging RPCs ; 04 Jan 2011 8:37 AM
- ;;3.0;IMAGING;**11,30,51,50,85,54,49**;Mar 19, 2002;Build 2033;Apr 07, 2011
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDRPC3 ;WOIFO/EdM - Imaging RPCs ; 06/18/2004  14:42
+ ;;3.0;IMAGING;**11,30**;16-September-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDRPC3 ;WOIFO/EdM - Imaging RPCs ; 04 Jan 2011 8:37 AM
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -19,16 +19,12 @@ MAGDRPC3 ;WOIFO/EdM - Imaging RPCs ; 04 Jan 2011 8:37 AM
  ;
 RADLKUP(OUT,CASENUMB,STUDYDAT) ; RPC = MAG DICOM LOOKUP RAD STUDY
  ; Radiology patient/study lookup
- ; STUDYDAT is a vestigial input parameter, it is not used
  N ACCNUM ;--- Accession Number
  N CPTCODE ;-- CPT code for the procedure
  N CPTNAME ;-- CPT name for the procedure
- N DATETIME ;- Timestamp
- N DIVISION ;- pointer to INSTITUTION file (#4)
  N EXAMSTS ;-- Exam status (don't post images to CANCELLED exams)
  N PROCDESC ;- Procedure description
  N PROCIEN ;-- radiology procedure ien in ^RAMIS(71)
- N RAA ;------ array for returned value
  N RAIX ;----- cross reference subscript for case number lookup
  N RADPT1 ;--- first level subscript in ^RADPT
  N RADPT2 ;--- second level subscript in ^RADPT (after "DT")
@@ -37,45 +33,60 @@ RADLKUP(OUT,CASENUMB,STUDYDAT) ; RPC = MAG DICOM LOOKUP RAD STUDY
  ;
  ; find the patient/study in ^RADPT using the Radiology Case Number
  K OUT
- ;
- I $G(CASENUMB)="" S OUT(1)="-1,No Case Number Specified" Q
- ;
- S X=$$ACCFIND^RAAPI(CASENUMB,.RAA) ; IA 5020
- ;
- I X<0 S OUT(1)="-2,Error in Accession Number Lookup: <<"_X_">>" Q
- ;
- S RADPT1=$P(RAA(1),"^",1),RADPT2=$P(RAA(1),"^",2),RADPT3=$P(RAA(1),"^",3)
- ;
- I RADPT1="" S OUT(1)="-3,Null RADPT1 entry returned by $$ACCFIND^RAAPI" Q
- I RADPT2="" S OUT(1)="-4,Null RADPT2 entry returned by $$ACCFIND^RAAPI" Q
- I RADPT3="" S OUT(1)="-5,Null RADPT3 entry returned by $$ACCFIND^RAAPI" Q
- ;
- I '$D(^RADPT(RADPT1,0)) S OUT(1)="-6,No patient demographics file pointer" Q
- ;
- ; get patient demographics file pointer
- S DFN=$P(^RADPT(RADPT1,0),"^",1)
- ;
- I '$D(^RADPT(RADPT1,"DT",RADPT2,0)) S OUT(1)="-7,No datetime level" Q
- ;
- ; get date and time of examination
- S DATETIME=$P($G(^RADPT(RADPT1,"DT",RADPT2,0)),"^",1)
- ; get case info
- ;
- I '$D(^RADPT(RADPT1,"DT",RADPT2,"P",RADPT3,0)) S OUT(1)="-8,No study level" Q
- ;
- S X=^RADPT(RADPT1,"DT",RADPT2,"P",RADPT3,0)
- S Z=$P(X,"^",17) I Z S Z=$$ACCRPT^RAAPI(Z,.RAA) S ACCNUM=RAA(1)
- S PROCIEN=$P(X,"^",2),EXAMSTS=$P(X,"^",3)
- S:EXAMSTS EXAMSTS=$$GET1^DIQ(72,EXAMSTS,.01)
- S (PROCDESC,CPTNAME,CPTCODE)=""
- ;
- ; need PROCIEN to do lookup in ^RAMIS
- I 'PROCIEN S OUT(1)="-9,No procedure identifier" Q
- ;
- S Z=$G(^RAMIS(71,PROCIEN,0))
- S PROCDESC=$P(Z,"^",1),CPTCODE=$P(Z,"^",9)
- S CPTNAME=$P($$CPT^ICPTCOD(+CPTCODE),"^",3) ; IA 1995
- S:CPTNAME="" CPTNAME=PROCDESC
+ D
+ . I $G(CASENUMB)="" S OUT(1)="-1,No Case Number Specified" Q
+ . S RAIX=$S($D(^RADPT("C")):"C",1:"AE") ; for Radiology Patch RA*5*7
+ . S RAIX=$S(CASENUMB["-":"ADC",1:RAIX) ; select the cross-reference
+ . S RADPT1=$O(^RADPT(RAIX,CASENUMB,"")) I 'RADPT1 D  Q:'RADPT1
+ . . I '$G(STUDYDAT) S OUT(1)="-2,No Study Date Specified",RADPT1=0 Q
+ . . ;
+ . . ; Search 1-3 days prior the study date OR a day in advance but only
+ . . ; if the study date is not equal to today or greater than today.
+ . . ; Has to be long case number or must have an image study date
+ . . ;
+ . . N II,RCASE,SDATE,TODAY,X,Y,%,%I
+ . . ;
+ . . S RCASE=$S(CASENUMB["-":$P(CASENUMB,"-",2),1:CASENUMB)
+ . . I 'RCASE S RADPT1=0 Q
+ . . ;
+ . . D NOW^%DTC S TODAY=X
+ . . S X=$P(STUDYDAT,"."),SDATE=$E(X,1,4)-1700_$E(X,5,8) ; FileMan date
+ . . ;
+ . . ; 1-3 days prior study date
+ . . F II=1:1:3 S RADPT1=$$FIND(SDATE,RCASE,-II) Q:RADPT1
+ . . Q:RADPT1
+ . . ;
+ . . ; Wild goose chase, but check for today's case
+ . . S RADPT1=$O(^RADPT("ADC",$$MMDDYY(TODAY)_"-"_RCASE,"")) Q:RADPT1
+ . . ;
+ . . I SDATE'<TODAY S RADPT1=0 Q
+ . . ;
+ . . ; One day in advance?
+ . . S RADPT1=$$FIND(SDATE,RCASE,1) Q:RADPT1
+ . . ;
+ . . ; Finally just check the "C" or "AE" x-reference for the case number
+ . . S X=$S($O(^RADPT("C","")):"C",1:"AE") ; RA*5*7 patch
+ . . S RADPT1=$O(^RADPT(X,RCASE,""))
+ . . Q
+ . S RADPT2=$O(^RADPT(RAIX,CASENUMB,RADPT1,"")) Q:'RADPT2
+ . S RADPT3=$O(^RADPT(RAIX,CASENUMB,RADPT1,RADPT2,"")) Q:'RADPT3
+ . Q:'$D(^RADPT(RADPT1,0))  ; no patient demographics file pointer
+ . ; get patient demographics file pointer
+ . S DFN=$P(^RADPT(RADPT1,0),"^",1)
+ . Q:'$D(^RADPT(RADPT1,"DT",RADPT2,0))  ; no datetime level
+ . ; get date and time of examination
+ . S DATETIME=$P($G(^RADPT(RADPT1,"DT",RADPT2,0)),"^",1)
+ . ; get case info
+ . S X=$G(^RADPT(RADPT1,"DT",RADPT2,"P",RADPT3,0))
+ . S Z=$P(X,"^",17) I Z S Z=$P($G(^RARPT(Z,0)),"^",1) S:Z'="" ACCNUM=Z
+ . S PROCIEN=$P(X,"^",2),EXAMSTS=$P(X,"^",3)
+ . S:EXAMSTS EXAMSTS=$$GET1^DIQ(72,EXAMSTS,.01)
+ . S (PROCDESC,CPTNAME,CPTCODE)=""
+ . Q:'PROCIEN  ; need PROCIEN to do lookup in ^RAMIS
+ . S Z=$G(^RAMIS(71,PROCIEN,0))
+ . S PROCDESC=$P(Z,"^",1),CPTCODE=$P(Z,"^",9)
+ . S CPTNAME=$P($G(^ICPT(+CPTCODE,0)),"^",2) S:CPTNAME="" CPTNAME=PROCDESC
+ . Q
  S OUT(2)=$G(RADPT1)
  S OUT(3)=$G(RADPT2)
  S OUT(4)=$G(RADPT3)
@@ -95,8 +106,7 @@ RADLKUP(OUT,CASENUMB,STUDYDAT) ; RPC = MAG DICOM LOOKUP RAD STUDY
  . Q
  S OUT(13)=X ; List of Modality-codes
  S X="" I $G(RADPT1),$G(RADPT2) S X=$G(^RADPT(RADPT1,"DT",RADPT2,0))
- S DIVISION=$P(X,"^",3) ; pointer to INSTITUION file (#4) for division
- S OUT(14)=$E($$GET1^DIQ(4,DIVISION,99),1,3) ; station number, exclusive of any modifiers
+ S OUT(14)=$P(X,"^",3) ; Site
  ; Patient's pregnancy status at the time of the exam
  S X="" I $G(DFN),$G(RADPT2),$G(RADPT3) S X=$G(^RADPT(DFN,"DT",RADPT2,"P",RADPT3,0))
  S OUT(15)=$P($G(^RAO(75.1,+$P(X,"^",11),0)),"^",13)
@@ -104,15 +114,13 @@ RADLKUP(OUT,CASENUMB,STUDYDAT) ; RPC = MAG DICOM LOOKUP RAD STUDY
  S OUT(1)=1 ; OK
  Q
  ;
-QUEUE(OUT,IMAGE,APPNAM,LOCATION,ACCNUM,REASON,EMAIL,PRIOR,JBTOHD) ; RPC = MAG DICOM QUEUE IMAGE
+QUEUE(OUT,IMAGE,APPNAM,LOCATION,ACCNUM,REASON) ; RPC = MAG DICOM QUEUE IMAGE
  ; Add the DICOM study send image request to the queue
- N COUNT,D0,D1,DFN,LOG,OK,PROBLEM,TYPE,X
+ N COUNT,D0,D1,DFN,TYPE,X
  ;
  I '$G(IMAGE) S OUT="-1,No Image specified" Q
  I $G(APPNAM)="" S OUT="-2,No Destination specified" Q
  I '$G(LOCATION) S OUT="-3,No Origin specified" Q
- S PRIOR=+$G(PRIOR) S:'PRIOR PRIOR=500
- S JBTOHD=$S($G(JBTOHD):1,1:0)
  ;
  S X=$G(^MAG(2005,IMAGE,0))
  S TYPE=+$P(X,"^",6),DFN=$P(X,"^",7)
@@ -121,86 +129,49 @@ QUEUE(OUT,IMAGE,APPNAM,LOCATION,ACCNUM,REASON,EMAIL,PRIOR,JBTOHD) ; RPC = MAG DI
  . Q
  ;
  L +^MAGDOUTP(2006.574,0):1E9 ; Background process MUST wait
- S P=$P($G(^MAG(2005,IMAGE,0)),"^",10),P=$S(P:P,1:IMAGE)
- S STUID=$P($G(^MAG(2005,P,"PACS")),"^",1) S:STUID="" STUID="?"
- S OK=0,D0="" F  S D0=$O(^MAGDOUTP(2006.574,"STUDY",STUID,D0)) Q:'D0  D  Q:OK
- . Q:'$D(^MAGDOUTP(2006.574,"STS",LOCATION,PRIOR,"WAITING",D0))
- . Q:$P($G(^MAGDOUTP(2006.574,D0,0)),"^",1)'=APPNAM
- . S OK=D0
- . Q
- S D0=OK D:'D0
- . S X=$G(^MAGDOUTP(2006.574,0))
- . S $P(X,"^",1,2)="DICOM IMAGE OUTPUT FILE^2006.574"
- . S D0=$O(^MAGDOUTP(2006.574," "),-1)+1 ; Next number
- . S $P(X,"^",3)=D0
- . S $P(X,"^",4)=$P(X,"^",4)+1 ; Total count
- . S ^MAGDOUTP(2006.574,0)=X
- . ;
- . S ^MAGDOUTP(2006.574,D0,0)=APPNAM_"^"_P_"^"_$G(ACCNUM)_"^"_LOCATION_"^"_PRIOR_"^"_JBTOHD
- . S ^MAGDOUTP(2006.574,D0,2)=STUID
- . S ^MAGDOUTP(2006.574,"STUDY",STUID,D0)=""
- . Q
+ S X=$G(^MAGDOUTP(2006.574,0))
+ S $P(X,"^",1,2)="DICOM IMAGE OUTPUT FILE^2006.574"
+ S D0=$P(X,"^",3)+1,$P(X,"^",3)=D0 ; Next number
+ S $P(X,"^",4)=$P(X,"^",4)+1 ; Total count
+ S ^MAGDOUTP(2006.574,0)=X
+ ;
+ S ^MAGDOUTP(2006.574,D0,0)=APPNAM_"^"_IMAGE_"^"_$G(ACCNUM)_"^"_LOCATION
+ S ^MAGDOUTP(2006.574,"C",LOCATION,D0)=""
  L -^MAGDOUTP(2006.574,0)
  ;
- S COUNT=0,PROBLEM=3
+ S COUNT=0
  I (TYPE=3)!(TYPE=100) D  ; Single XRAY or DICOM image
- . S COUNT=COUNT+$$ENQUEUE(IMAGE,D0,PRIOR)
+ . D ENQUEUE(IMAGE,D0,1)
+ . S COUNT=1
  . Q
  I TYPE=11 D  ; Process all the images in an XRAY group
  . S D1=0 F  S D1=$O(^MAG(2005,IMAGE,1,D1)) Q:'D1  D
- . . S COUNT=COUNT+$$ENQUEUE($P($G(^MAG(2005,IMAGE,1,D1,0)),"^",1),D0,PRIOR)
+ . . D ENQUEUE($P($G(^MAG(2005,IMAGE,1,D1,0)),"^",1),D0,D1)
+ . . S COUNT=COUNT+1
  . . Q
  . Q
  ;
- S LOG="DICOM transmit to "_APPNAM_" for reason "_REASON
- D:COUNT ENTRY^MAGLOG($C(REASON+64),DUZ,IMAGE,"DICOM Gateway",DFN,COUNT,LOG)
- D:PROBLEM>3
- . N XMERR,XMID,XMSUB,XMY,XMZ
- . S PROBLEM(1)="Error while queueing image for Transmission:"
- . S PROBLEM(2)=LOG
- . S PROBLEM(3)=" "
- . ; --- send MailMan message...
- . S XMID=$G(DUZ) S:'XMID XMID=.5
- . S XMY(XMID)=""
- . S:$G(EMAIL)'="" XMY(EMAIL)=""
- . S XMSUB=$E("Cannot transmit image(s) to "_APPNAM,1,63)
- . D SENDMSG^XMXAPI(XMID,XMSUB,"PROBLEM",.XMY,,.XMZ,)
- . Q:'$G(XMERR)
- . M XMERR=^TMP("XMERR",$J) S $EC=",U13-Cannot send MailMan message,"
- . Q
+ S X="DICOM transmit to "_APPNAM_" for reason "_REASON
+ D ENTRY^MAGLOG($C(REASON+64),DUZ,IMAGE,"DICOM Gateway",DFN,COUNT,X)
  S OUT=1
  Q
  ;
-ENQUEUE(IMAGE,D0,PRIOR) ; Add an image to the DICOM send image request queue sub-file
- Q:'IMAGE 0
- N D1,I,OLD,X
- D CHK^MAGGSQI(.X,IMAGE) I +$G(X(0))'=1 D  Q 0
- . S PROBLEM=PROBLEM+1,PROBLEM(PROBLEM)=" "
- . S PROBLEM=PROBLEM+1,PROBLEM(PROBLEM)="Image # "_IMAGE_":"
- . S I="" F  S I=$O(X(I)) Q:I=""  S PROBLEM=PROBLEM+1,PROBLEM(PROBLEM)=X(I)
- . Q
- ;
- ; Enter each image at most once in each transmission request
- S (D1,OLD)=0 F  S D1=$O(^MAGDOUTP(2006.574,D0,1,D1)) Q:'D1  D  Q:OLD
- . S:$P($G(^MAGDOUTP(2006.574,D0,1,D1,0)),"^",1)=IMAGE OLD=1
- . Q
- Q:OLD 1
- ;
+ENQUEUE(IMAGE,D0,D1) ; Add an image to the DICOM send image request queue sub-file
+ Q:'IMAGE
  L +^MAGDOUTP(2006.574,D0,1,0):1E9 ; Background Process MUST wait
  S X=$G(^MAGDOUTP(2006.574,D0,1,0))
- S $P(X,"^",1,2)="^2006.5744"
- S D1=$O(^MAGDOUTP(2006.574,D0,1," "),-1)+1,$P(X,"^",3)=D1
+ S $P(X,"^",1,2)="^2006.5741"
+ S $P(X,"^",3)=D1
  S $P(X,"^",4)=$P(X,"^",4)+1,OUT=$P(X,"^",4)
  S ^MAGDOUTP(2006.574,D0,1,0)=X
- S ^MAGDOUTP(2006.574,D0,1,D1,0)=IMAGE_"^WAITING^"_$H
- S ^MAGDOUTP(2006.574,"STS",LOCATION,PRIOR,"WAITING",D0,D1)=""
+ S ^MAGDOUTP(2006.574,D0,1,D1,0)=IMAGE
  L -^MAGDOUTP(2006.574,D0,1,0)
- Q 1
+ Q
  ;
 FIND(DATE,CASE,NUM) ; ADC x-reference (Radiology patient file)
- N X
+ N X,X1,X2,Y
  Q:'$G(DATE) 0
- S X=DATE S:$G(NUM) X=$$FMADD^XLFDT(DATE,NUM) Q:X<1 0
+ S (X,X1)=DATE,X2=NUM D:NUM C^%DTC Q:X<1 0
  Q $O(^RADPT("ADC",$$MMDDYY(X)_"-"_CASE,""))
  ;
 MMDDYY(DAY) ; YYYMMDD --> MMDDYY

@@ -1,5 +1,5 @@
 ORWDBA7 ;;SLC/GSS Billing Awareness (CIDC-Clinical Indicators Data Capture)
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**195,215,243**;Dec 17, 1997;Build 242
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**195,215**;Dec 17, 1997
  ;
 BDOEDIT ; Backdoor entered orders edit in CPRS - entry point
  ; Data Flow> Ancillary creates a back door order which is incomplete
@@ -35,7 +35,7 @@ BDOEDIT ; Backdoor entered orders edit in CPRS - entry point
  ; Treatment Factors - converted and reformatted
  S ORSCEI=$$TFGBLTBL($G(^OR(100,ORIFN,5.2)))
  ; Get the acronym of the package generating this order
- S ANCILARY=$P($G(^DIC(9.4,$P($G(^OR(100,ORIFN,0)),U,14),0)),U,2)
+ S ANCILARY=$P($G(^DIC(9.4,$P($G(^OR(100,ORIFN,0)),U,14),0)),U,2)  ;D???
  ; Send data to the appropriate ancillary API based on package
  D OUTPUT
  ; If ancillary routine or tag w/in the routine doesn't exist check
@@ -72,13 +72,13 @@ CKROUTAG(TAGROU) ;Check if valid tag and routine
  ;
 TFGBLTBL(GBL) ;Convert Tx Factors from Global to TBL (HL7) order & format
  ; Note: this does not set Tx Factors in ZCL segment format but rather
- ;       AO^IR^SC^EC^MST^HNC^CV^SHD ('^' delimited string) format
+ ;       AO^IR^SC^EC^MST^HNC^CV ('^' delimited string) format
  ;
- ; Input:  GBL in 1^1^0^0^^^0^ (global) format
- ; Output: TBL in 0^0^1^^1^^0^ (TBL) format (also reordered)
+ ; Input:  GBL in 1^1^0^0^^^0 (global) format
+ ; Output: TBL in 0^0^1^^1^^0 (TBL) format (also reordered)
  ;
  N J,NTF,TBL,TF,TFGBL,TFGUI,TFTBL
- S TBL="",NTF=8  ;NCI=# of TxF
+ S TBL="",NTF=7  ;NCI=# of TxF
  ; Get Treatment Factor sequence order strings
  D TFSTGS^ORWDBA1
  ; Convert from GBL to TBL format and sequence
@@ -129,7 +129,7 @@ CONDTLD ;Consult Detailed Display Compile for CIDC/BA (called by GMRCSLM2)
  . S CIDCARY(GMRCCT,0)=LINE,GMRCCT=GMRCCT+1
  I OCT'="" D  ;if there are diagnoses then show Treatment Factors
  . S LINE="For conditions related to:    "
- . F EYE=1:1:8 S TF=$P(^OR(100,ORIFN,5.2),U,EYE) I TF D
+ . F EYE=1:1:7 S TF=$P(^OR(100,ORIFN,5.2),U,EYE) I TF D
  .. S CIDCARY(GMRCCT,0)=LINE_$$SC^ORQ21(EYE)
  .. S X=$$REPEAT^XLFSTR(" ",30),GMRCCT=GMRCCT+1
  Q

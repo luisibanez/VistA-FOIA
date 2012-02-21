@@ -1,6 +1,6 @@
 IBAERR3 ;ALB/AAS - RX COPAY EXEMPTION ALERT PROCESSOR ; 15-JAN-93
- ;;2.0;INTEGRATED BILLING;**356**;21-MAR-94
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;Version 2.0 ; INTEGRATED BILLING ;; 21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 % ; -- medication copayment exemption errors
  ;
@@ -32,10 +32,7 @@ TOWHO ; -- set xqa array to deliver to
  N I,J
  S I="" F  S I=$O(^IBE(354.5,+IBALERT,200,I)) Q:'I  S J=+^(I,0),XQA(J)=""
  S I="" F  S I=$O(^IBE(354.5,+IBALERT,2,I)) Q:'I  S J=+^(I,0),XQA("G."_$P($G(^XMB(3.8,+J,0)),"^"))=""
- I '$D(XQA) D
- .S J=+$P($G(^IBE(350.9,1,0)),"^",$S($G(IBALERT)<10:13,1:9))
- .I +J'=0 S XQA("G."_$P($G(^XMB(3.8,+J,0)),"^"))=""
- .I +J=0 S XQA("G.IB EDI SUPERVISOR")=""
+ I '$D(XQA) S J=+$P($G(^IBE(350.9,1,0)),"^",$S($G(IBALERT)<10:13,1:9)),XQA("G."_$P($G(^XMB(3.8,+J,0)),"^"))=""
  ;S XQA(DUZ)=""
 TOWHOQ Q
  ;
@@ -54,7 +51,7 @@ TOWHOQ Q
 PROC ; -- process alert
  ; -- run ^ibarxex to see if okay
  N IBDFN,DIR,X,Y W !!
- S DIR("?")="Enter YES to run the Manual Update option for this patient or NO if everything appears in order or enter '^' to exit and save this alert for later processing."
+ S DIR("?")="Enter YES to run the Manual Update option for this patient or NO if everything appear in order or enter '^' to exit and save this alert for later processing."
  S DIR(0)="Y",DIR("A")="Run Manual Update Option",DIR("B")="YES" D ^DIR
  I $D(DIRUT)!(Y=0) S IBCLEAR="NO" G PROCQ
  S IBDFN=DFN D EN^IBARXEX S DFN=IBDFN
@@ -73,23 +70,16 @@ CLEARQ Q
  ;
 WRITE ; -- write out long message
  ;    xqadata = alert type;dfn;exemption;ibjob;ibwhere;duz;dt;alert entry
- N XQATMP,XQATMP1,XQATMP2
  S DFN=$P(XQADATA,";",2),IBP=$$PT^IBEFUNC(DFN)
  W !!,"Patient: ",$P(IBP,"^"),?40,$P(IBP,"^",2)
  D DISP^IBARXEU(DFN,DT,3,0)
  W:+XQADATA<11 !!,$P($T(MSG+(+XQADATA)),";;",2)
- I +XQADATA>10 D
- .S XQATMP=+XQADATA-10
- .W !!,"The error that occurred was: ",$P($T(ERR+XQATMP^IBAERR2),";;",2),!,"Processed"
+ W:+XQADATA>10 !!,"The error that occured was: ",$P($T(ERR+(+XQADATA-10)^IBAERR2),";;",2),!,"Processed"
  W " by ",$P($G(^VA(200,+$P(XQADATA,";",6),0)),"^")," on ",$$DAT1^IBOUTL($P(XQADATA,";",7)),"."
  ;
  ; -- this only handles ibjobs>10 (exemption)
- I $P(XQADATA,";",4)>10 D
- .S XQATMP1=$P(XQADATA,";",4)-10
- .W !,"This occurred during the ",$P($T(JOB+XQATMP1^IBAERR2),";;",2)
- I $P(XQADATA,";",5)>10 D
- .S XQATMP2=$P(XQADATA,";",5)-10
- .W !,$P($T(WHERE+XQATMP2^IBAERR2),";;",2)
+ I $P(XQADATA,";",4)>10 W !,"This occured during the ",$P($T(JOB+($P(XQADATA,";",4)-10)^IBAERR2),";;",2)
+ W:$P(XQADATA,";",5)>10 !,$P($T(WHERE+($P(XQADATA,";",5)-10)^IBAERR2),";;",2)
  ;
 WRITEQ Q
  ;

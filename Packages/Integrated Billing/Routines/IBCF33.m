@@ -1,37 +1,37 @@
-IBCF33 ;ALB/ARH - UB-04 CMS-1450 (GATHER CODES) ;25-AUG-1993
- ;;2.0;INTEGRATED BILLING;**52,80,109,51,230,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCF33 ;ALB/ARH - UB92 HCFA-1450 (GATHER CODES) ;25-AUG-1993
+ ;;2.0;INTEGRATED BILLING;**52,80,109,51,230**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;IBIFN required
  ;
  ; Not all free text prints in these blocks as of MRA/EDI - only print
  ;   REVENUE CODES and associated data, Rx's and prosthetics
  ;   and last line to indicate multiple pages
- N IBI,IBJ,IBCU2,IBCOL,IBSTATE,IBCBILL,IBINPAT,IBX,IBY,Z,IBZ,IBLPG
- S IBLINES=22,IBCU2=$G(^DGCR(399,IBIFN,"U2")),IBCOL=1,IBNOCOM=0
- K IBXSAVE("RX-UB-04"),IBXSAVE("PROS-UB-04")
+ N IBI,IBJ,IBCBCOMM,IBCU2,IBCOL,IBSTATE,IBCBILL,IBINPAT,IBX,IBY,Z,IBZ,IBLCT,IBLPG
+ S IBLINES=23,IBCBCOMM=$G(^DGCR(399,IBIFN,"U1")),IBCU2=$G(^DGCR(399,IBIFN,"U2")),IBCOL=1,IBNOCOM=0
+ K IBXSAVE("RX-UB92"),IBXSAVE("PROS-UB92")
  D HOS^IBCEF22(IBIFN)
  ;
  I $$TXMT^IBCEF4(IBIFN) S IBNOCOM=1
  S Z="",IBNOCHG=0
  ; Add total line as last entry, if not already there
- ;S IBLCT=$O(IBXDATA(""),-1)
- ;I IBLCT,$P(IBXDATA(IBLCT),U)'="001" S IBXDATA(IBLCT+1)="001"
- ;S IBLCT=0
- S IBLPG=($O(IBXDATA(""),-1)+$O(IBXSAVE("RX-UB-04",""),-1)+$O(IBXSAVE("PROS-UB-04",""),-1))/22,IBLPG=IBLPG\1+$S($P(IBLPG,".",2):1,1:0)
+ S IBLCT=$O(IBXDATA(""),-1)
+ I IBLCT,$P(IBXDATA(IBLCT),U)'="001" S IBXDATA(IBLCT+1)="001"
+ S IBLCT=0
+ S IBLPG=($O(IBXDATA(""),-1)+$O(IBXSAVE("RX-UB92",""),-1)+$O(IBXSAVE("PROS-UB92",""),-1))/23,IBLPG=IBLPG\1+$S($P(IBLPG,".",2):1,1:0)
  F  S Z=$O(IBXDATA(Z)) Q:'Z  D
  . N IBZ1
- . ;I $P(IBXDATA(Z),U)="001",'$O(IBXDATA(Z)) S IBZ="001",$P(IBZ,U,4)=$P(IBCBCOMM,U,1),IBDA=0 S:IBNOCHG $P(IBZ,U,9)=$G(IBNOCHG) S IBXDATA(Z)=IBZ D SET1 Q
+ . I $P(IBXDATA(Z),U)="001",'$O(IBXDATA(Z)) S IBZ="001",$P(IBZ,U,4)=$P(IBCBCOMM,U,1),IBDA=0 S:IBNOCHG $P(IBZ,U,9)=$G(IBNOCHG) S IBXDATA(Z)=IBZ D SET1 Q
  . ;Get modifiers
  . S IBZ1=$G(^DGCR(399,IBIFN,"RC",+$P(IBXDATA(Z),U,8),0)),IBMOD=""
  . I $P(IBZ1,U,6),$S($P(IBZ1,U,10)=4:$P(IBZ1,U,11),1:'$P(IBZ1,U,10)) S $P(IBXDATA(Z),U,9)=$$MOD(IBZ1,IBIFN)
  . S IBZ=$P(IBXDATA(Z),U)_U_$P(IBXDATA(Z),U,3,5)_"^^"_$P(IBXDATA(Z),U,2),$P(IBZ,U,9)=$P(IBXDATA(Z),U,6),$P(IBZ,U,13)=$P(IBXDATA(Z),U,7),$P(IBZ,U,10)=$P(IBXDATA(Z),U,9),$P(IBZ,U,14)=$P(IBXDATA(Z),U,10)
  . I IBZ S IBNOCHG=IBNOCHG+$P(IBXDATA(Z),U,6),IBDA=$P(IBXDATA(Z),U,8) D SET1
- . ;S IBLCT=IBLCT+1
- I $D(IBXSAVE("RX-UB-04"))!$D(IBXSAVE("PROS-UB-04")) D
+ . S IBLCT=IBLCT+1
+ I $D(IBXSAVE("RX-UB92"))!$D(IBXSAVE("PROS-UB92")) D
  . N Z
- . S Z=0 F  S Z=$O(IBXSAVE("RX-UB-04",Z)) Q:'Z  S IBZ=IBXSAVE("RX-UB-04",Z) D SET2
- . S Z=0 F  S Z=$O(IBXSAVE("PROS-UB-04",Z)) Q:'Z  S IBZ=IBXSAVE("PROS-UB-04",Z) D SET2
+ . S Z=0 F  S Z=$O(IBXSAVE("RX-UB92",Z)) Q:'Z  S IBZ=IBXSAVE("RX-UB92",Z) D SET2
+ . S Z=0 F  S Z=$O(IBXSAVE("PROS-UB92",Z)) Q:'Z  S IBZ=IBXSAVE("PROS-UB92",Z) D SET2
  D END
  Q
  ;
@@ -73,19 +73,19 @@ OPV ;add outpatient visit dates
  ;. S IBJ=IBJ+1 I IBJ>2 D SET2 S IBZ=$J(" ",34),IBJ=0
  ;I $L(IBZ)>34 D SET2
  ;
-CONT ;D ^IBCF331 ;More free text - can no longer print on UB-04
+CONT ;D ^IBCF331 ;More free text - can no longer print on UB-92
  ;
  ; fill in rest of page
-END D:'$G(IBNOCOM) FILLPG S $P(^TMP($J,"IBC-RC"),U,2)=0 S IBPG=+$G(^TMP($J,"IBC-RC")),IBX=IBPG/22,IBPG=IBX\1+$S(+$P(IBX,".",2):1,1:0)
- K IBZ,IBBSN,IBBS,IBRV,IBDA,IBLN,IBCOL,IBLINES,IBARRAY,IBNOCHG,IBNOCOM,IBXSAVE("RX-UB-04"),IBXSAVE("PROS-UB-04")
+END D:'$G(IBNOCOM) FILLPG S $P(^TMP($J,"IBC-RC"),U,2)=0 S IBPG=+$G(^TMP($J,"IBC-RC")),IBX=IBPG/23,IBPG=IBX\1+$S(+$P(IBX,".",2):1,1:0)
+ K IBZ,IBBSN,IBBS,IBRV,IBDA,IBLN,IBCOL,IBLINES,IBARRAY,IBNOCHG,IBNOCOM,IBXSAVE("RX-UB92"),IBXSAVE("PROS-UB92")
  Q
  ;
 SPACE ;checks to see if IBX can fit on page, if not starts new page
- Q:'IBX  N IBLN,IBY S IBLN=+$G(^TMP($J,"IBC-RC")),IBY=IBLN#22 S:IBY=0&(IBLN'=0) IBY=22 I IBX>(IBLINES-IBY) D FILLPG
+ Q:'IBX  N IBLN,IBY S IBLN=+$G(^TMP($J,"IBC-RC")),IBY=IBLN#23 S:IBY=0&(IBLN'=0) IBY=23 I IBX>(IBLINES-IBY) D FILLPG
  Q
  ;
 FILLPG ;fill rest of page with blank lines
- N IBI,IBLN,IBZ S IBFILL=1 F IBI=1:1:22 S IBLN=+$G(^TMP($J,"IBC-RC")) Q:'(IBLN#22)  S IBZ="" D FILLUP Q:IBFILL=2
+ N IBI,IBLN,IBZ S IBFILL=1 F IBI=1:1:23 S IBLN=+$G(^TMP($J,"IBC-RC")) Q:'(IBLN#23)  S IBZ="" D FILLUP Q:IBFILL=2
  K IBFILL Q
  ;
 SET1 ; add rev codes to array: rev cd ^ rev cd st abbrev. ^ CPT CODE ^ unit charge ^ units ^ total ^ non-cov charge ^ form locator 49 ^ rev code mult ien ^ cpt modifiers attached to revenue code/procedure (unlinked)^ outpt serv date
@@ -97,27 +97,27 @@ SET1 ; add rev codes to array: rev cd ^ rev cd st abbrev. ^ CPT CODE ^ unit char
  S IBMOD=$P(IBZ,U,10) I IBMOD'="" S IBMOD=$E($TR(IBMOD,",;"),1,4) ; cpt modifiers
  I +IBZ S IBX=$G(^DGCR(399.2,+IBZ,0)) Q:IBX=""  D
  . S IBY=$P(IBX,U,1)_U_$P(IBX,U,2)_U_$$PRCD^IBCEF1($P(IBZ,U,6)_";ICPT(")_IBMOD
- . S IBY=IBY_U_$P(IBZ,U,2)_U_$P(IBZ,U,3)_U_$P(IBZ,U,4)_U_IBN_U_$P(IBZ,U,13)_U_$G(IBDA)_U_U_$$DATE^IBCF2($P(IBZ,U,14),"",1)
- I IBY="" S IBY=$P(IBZ,U,1)_U_$P(IBZ,U,2)_U_U_U_$P(IBZ,U,3)_U_$P(IBZ,U,4)_U_IBN_U_$P(IBZ,U,13)_U_$G(IBDA)_U_U_$$DATE^IBCF2($P(IBZ,U,14),"",1)
- S IBLN=+$G(^TMP($J,"IBC-RC"))+1,^TMP($J,"IBC-RC",IBLN)=1_U_IBY,^TMP($J,"IBC-RC")=IBLN I '(IBLN#22) S IBLINES=22
+ . S IBY=IBY_U_$P(IBZ,U,2)_U_$P(IBZ,U,3)_U_$P(IBZ,U,4)_U_IBN_U_$P(IBZ,U,13)_U_$G(IBDA)_U_U_$$DATE^IBCF2($P(IBZ,U,14),,1)
+ I IBY="" S IBY=$P(IBZ,U,1)_U_$P(IBZ,U,2)_U_U_U_$P(IBZ,U,3)_U_$P(IBZ,U,4)_U_IBN_U_$P(IBZ,U,13)_U_$G(IBDA)_U_U_$$DATE^IBCF2($P(IBZ,U,14),,1)
+ S IBLN=+$G(^TMP($J,"IBC-RC"))+1,^TMP($J,"IBC-RC",IBLN)=1_U_IBY,^TMP($J,"IBC-RC")=IBLN I '(IBLN#23) S IBLINES=23
  Q
  ;
 SET2 ;set free text into block 42 array
  Q:$G(IBNOCOM)  ;No comments wanted
  N IBLN D NEXTLN S IBCOL=$S('IBCOL:2,1:3)
- S IBLN=+$G(^TMP($J,"IBC-RC"))+1 I IBLN#22=1,$G(IBFILL) S IBFILL=2 Q
- S ^TMP($J,"IBC-RC",IBLN)=IBCOL_U_IBZ,^TMP($J,"IBC-RC")=IBLN I '(IBLN#22) S IBLINES=22
+ S IBLN=+$G(^TMP($J,"IBC-RC"))+1 I IBLN#23=1,$G(IBFILL) S IBFILL=2 Q
+ S ^TMP($J,"IBC-RC",IBLN)=IBCOL_U_IBZ,^TMP($J,"IBC-RC")=IBLN I '(IBLN#23) S IBLINES=23
  Q
  ;
 FILLUP ; Fill block 42 with blank lines
  N IBLN D NEXTLN S IBCOL=$S('IBCOL:2,1:3)
- S IBLN=+$G(^TMP($J,"IBC-RC"))+1 I IBLN#22=1,$G(IBFILL) S IBFILL=2 Q
- S ^TMP($J,"IBC-RC",IBLN)=IBCOL_U_IBZ,^TMP($J,"IBC-RC")=IBLN I '(IBLN#22) S IBLINES=22
+ S IBLN=+$G(^TMP($J,"IBC-RC"))+1 I IBLN#23=1,$G(IBFILL) S IBFILL=2 Q
+ S ^TMP($J,"IBC-RC",IBLN)=IBCOL_U_IBZ,^TMP($J,"IBC-RC")=IBLN I '(IBLN#23) S IBLINES=23
  Q
  ;
 NEXTLN ;checks counter for next line, resets if necessary,
  ;ie. if the line # indicated by the next line # var. has already been used then this increments the next line # var.
- S IBLN=+$G(^TMP($J,"IBC-RC"))+1 I $D(^TMP($J,"IBC-RC",IBLN)) S ^TMP($J,"IBC-RC")=IBLN S:'(IBLN#22) IBLINES=22 G NEXTLN
+ S IBLN=+$G(^TMP($J,"IBC-RC"))+1 I $D(^TMP($J,"IBC-RC",IBLN)) S ^TMP($J,"IBC-RC")=IBLN S:'(IBLN#23) IBLINES=23 G NEXTLN
  Q
  ;
 MOD(RCLN,IBIFN) ; return modifier(s) for a directly linked CPT charge or for an indirectly linked one
@@ -127,7 +127,7 @@ MOD(RCLN,IBIFN) ; return modifier(s) for a directly linked CPT charge or for an 
  I IBMOD="",$P(RCLN,U,14)'="" S IBMOD=$TR($P(RCLN,U,14),";",",") ; Not linked or linked, but manually entered modifiers only
 MODQ Q IBMOD
  ;
-DATE45(IBIFN,IBXDATA,IBDATE) ; What prints in the service date box of UB-04
+DATE45(IBIFN,IBXDATA,IBDATE) ; What prints in the service date box of UB92
  ; INPUT:
  ;   IBIFN = ien of bill
  ;   IBDATE = the default outpt service date
@@ -137,7 +137,7 @@ DATE45(IBIFN,IBXDATA,IBDATE) ; What prints in the service date box of UB-04
  N Z,Z0,IBR,IBIN
  S IBIN=$$INPAT^IBCEF(IBXIEN,1)
  F Z=1:1 Q:'$D(^TMP($J,"IBC-RC",Z))  S IBR=^(Z) D
- . S Z0=$S(+IBR=1&'IBIN&(+$P(IBR,U,2)'=1):$S($P(IBR,U,12):$P(IBR,U,12),1:$G(IBDATE)),+IBR=2:$E($P(IBR,U,2),46,52),1:$E($P(IBR,U,2),41,47))
- . S:Z'>22 IBXDATA(Z)=Z0 D:Z>22 CKREV^IBCEF3(Z,Z0)
+ . S Z0=$S(+IBR=1&'IBIN&(+$P(IBR,U,2)'=1):$S($P(IBR,U,12):$P(IBR,U,12),1:$G(IBDATE)),+IBR=2:$E($P(IBR,U,2),41,47),1:$E($P(IBR,U,2),36,42))
+ . S:Z'>21 IBXDATA(Z)=Z0 D:Z'<21 CKREV^IBCEF3(Z,Z0)
  Q
  ;

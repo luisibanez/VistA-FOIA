@@ -1,6 +1,6 @@
 IBCEMSR ;WOIFO/AAT - MRA STATISTICS REPORT ;09/03/04
- ;;2.0;INTEGRATED BILLING;**155,288,294,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**155,288,294**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ;
  N IBQ,IBDIV,IBBDT,IBEDT,IBSUM,IBSCR
@@ -105,7 +105,7 @@ COLLECT ; Collect Information
  ... S IBBILZ=$G(^DGCR(399,IBIFN,0))
  ... S IBBILST=$P(IBBILZ,U,13)
  ... S IBFORM=+$P(IBBILZ,U,19)
- ... I IBFORM'=2,IBFORM'=3 Q  ; not 1500 or UB
+ ... I IBFORM'=2,IBFORM'=3 Q  ; not HCFA1500 or UB92
  ... S IBCLERK=+$P($G(^DGCR(399,IBIFN,"S")),U,8) ; Who requested MRA?
  ... S IBCLERK=$P($G(^VA(200,IBCLERK,0)),U)
  ... S:IBCLERK="" IBCLERK="UNKNOWN"

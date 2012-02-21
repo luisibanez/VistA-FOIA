@@ -1,5 +1,5 @@
-ENPLS2 ;WISC/SAB - Select Items from List ;12/4/07  13:24
- ;;7.0;ENGINEERING;**23,87**;Aug 17, 1993;Build 16
+ENPLS2 ;WISC/SAB - Select Items from List ;7/21/95
+ ;;7.0;ENGINEERING;**23**;Aug 17, 1993
 EN ; entry point
  ; input global
  ;   ^TMP($J,"SCR)=number of entries in list^screen title
@@ -43,11 +43,9 @@ ACT ; prompt for selection
  I X="",ENF("S")<ENF("SM") S ENF("S")=ENF("S")+1 G BLD
  K ENACL S ENI="" F  S ENI=$O(Y(ENI)) Q:ENI=""  S ENACL(ENI)=Y(ENI)
 EXIT ;
- W:'$G(ENGNOFF) @IOF
+ W @IOF
  K DX,DY
  Q
-EN2(ENGNOFF) ;Entry point to suppress Form Feed at end
- G EN
 SHD ; Screen Header
  W @IOF
  W ENF("HD"),?65,"Screen ",ENF("S")," of ",ENF("SM"),!!

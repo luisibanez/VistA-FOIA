@@ -1,12 +1,12 @@
-ORWDX ; SLC/KCM/REV/JLI - Order dialog utilities ;09/08/2008 [2/11/09 8:00am]
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,125,131,132,141,164,178,187,190,195,215,246,243,283,296,280**;Dec 17, 1997;Build 85
- ;Per VHA Directive 2004-038, this routine should not be modified.
- ;Reference to DIC(9.4 supported by IA #2058
+ORWDX ; SLC/KCM/REV/JLI - Order dailog utilities ;8/31/05  13:09
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,125,131,132,141,164,178,187,190,195,215**;Dec 17, 1997
+NXT() ; -- Gets index in array
+ S ILST=ILST+1
+ Q ILST
  ;
 ORDITM(Y,FROM,DIR,XREF) ; Subset of orderable items
  ; Y(n)=IEN^.01 Name^.01 Name  -or-  IEN^Synonym <.01 Name>^.01 Name
- N I,IEN,CNT,X,DTXT,CURTM,DEFROUTE
- S DEFROUTE=""
+ N I,IEN,CNT,X,DTXT,CURTM
  S I=0,CNT=44,CURTM=$$NOW^XLFDT
  F  Q:I'<CNT  S FROM=$O(^ORD(101.43,XREF,FROM),DIR) Q:FROM=""  D
  . S IEN="" F  S IEN=$O(^ORD(101.43,XREF,FROM,IEN),DIR) Q:'IEN  D
@@ -30,28 +30,39 @@ DLGDEF(LST,DLG) ; Format mapping for a dlg
 DLGQUIK(LST,QO) ;(NOT USED)
  D LOADRSP(.LST,QO)
  Q
-LOADRSP(LST,RSPID,TRANS)      ; Load responses from 101.41 or 100
+LOADRSP(LST,RSPID)      ; Load responses from 101.41 or 100
  ; RSPID:  C123456;1-3243 = cached copy,   134-3234 = cached quick
  ;         X123456;1      = change order,  134      = quick dialog
- N I,J,DLG,INST,ID,VAL,ILST,ROOT,ORLOC S ROOT=""
- I RSPID["-" S ROOT="^TMP(""ORWDXMQ"",$J,"""_RSPID_""")" G XROOT^ORWDX2
- I $E(RSPID)="X" S ROOT="^OR(100,"_+$P(RSPID,"X",2)_",4.5)"  G XROOT^ORWDX2
- I +RSPID=RSPID  S ROOT="^ORD(101.41,"_+RSPID_",6)" G XROOT^ORWDX2
+ N I,J,DLG,INST,ID,VAL,ILST,ROOT S ROOT=""
+ I RSPID["-" S ROOT="^TMP(""ORWDXMQ"",$J,"""_RSPID_""")" G XROOT
+ I $E(RSPID)="X" S ROOT="^OR(100,"_+$P(RSPID,"X",2)_",4.5)"  G XROOT
+ I +RSPID=RSPID  S ROOT="^ORD(101.41,"_+RSPID_",6)" G XROOT
  Q:ROOT=""
- G XROOT^ORWDX2
+XROOT S (ILST,I)=0 F  S I=$O(@ROOT@(I)) Q:I'>0  D
+ . S DLG=$P(@ROOT@(I,0),U,2),INST=$P(^(0),U,3)
+ . S ID=$P($G(^ORD(101.41,DLG,1)),U,3)
+ . I '$L(ID) S ID="ID"_DLG
+ . S VAL=$G(@ROOT@(I,1))
+ . I $P($G(^ORD(101.41,DLG,0)),U)="OR GTX ADDITIVE" S ID="ADDITIVE"
+ . I $E(RSPID)="C",(ID="START"),VAL Q  ; skip literal start time on copy
+ . S LST($$NXT)="~"_DLG_U_INST_U_ID
+ . I $L(VAL) D
+ .. S LST($$NXT)="i"_VAL,LST($$NXT)="e"_$$EXTVAL(VAL,DLG)
+ . I $D(@ROOT@(I,2))>1 D
+ .. S J=0 F  S J=$O(@ROOT@(I,2,J)) Q:J'>0  D
+ ... S LST($$NXT)="t"_$G(@ROOT@(I,2,J,0))
+ I $E(ROOT,1,4)="^TMP" K ^TMP("ORWDXMQ",$J)
+ Q
 SAVE(REC,ORVP,ORNP,ORL,DLG,ORDG,ORIT,ORIFN,ORDIALOG,ORDEA,ORAPPT,ORSRC,OREVTDF) ;
  ; ORVP=DFN, ORNP=Provider, ORL=Location, DLG=Order Dialog,
  ; ORDG=Display Group, ORIT=Quick Order Dialog, ORAPPT=Appointment
  N ORDUZ,ORSTS,OREVENT,ORCAT,ORDA,ORTS,ORNEW,ORCHECK,ORLOG,ORLEAD,ORTRAIL,ORPKG,ORWP94,ORCATFN,OREVTYPE,ONPASS
- N XCNT,XCOMM,XDONE,XX  ;SBR
- S (XCOMM,XCNT)=""  ;SBR
- I $G(ORIFN)'="" D  ;SBR problem only occurs on change or renew orders
- . S XCNT=$O(^OR(100,+ORIFN,4.5,"ID","COMMENT",XCNT))  ;SBR
- . I XCNT'="" S XCOMM=$P($G(^OR(100,+ORIFN,4.5,XCNT,0)),"^",2)  ;SBR
- . I XCOMM'="" S XDONE=0,XX="" F  S XX=$O(ORDIALOG("WP",XCOMM,1,XX)) Q:XX=""  D  ;SBR
- . . I ORDIALOG("WP",XCOMM,1,XX,0)'="" S XDONE=1 Q  ;SBR
- . I XCOMM'="",'$G(XDONE),$D(ORDIALOG("WP",XCOMM)) K ORDIALOG("WP",XCOMM)  ;SBR
- S ORCATFN="" I $L($P(DLG,U,2)) S ORCATFN=$P(DLG,U,2),DLG=$P(DLG,U,1)
+ ; JD FIX FOR WASHINGTON DC
+ ;I '$L(ORSRC)!($G(ORSRC)=" ")!($G(ORSRC)=0) S ORSRC=$P(ORVP,U,2)
+ ;S ORVP=$P(ORVP,U)
+ ; END FIX JD
+ S ORCATFN=""
+ I $L($P(DLG,U,2)) S ORCATFN=$P(DLG,U,2),DLG=$P(DLG,U,1)
  ;Remove treating facility if inpatient and IMO order 26.42
  I $G(^DPT(ORVP,.1))'="",$P($G(^ORD(100.98,ORDG,0)),U)="CLINIC ORDERS" K ORDIALOG("ORTS")
  I $G(ORDIALOG("ORTS")) S ORTS=ORDIALOG("ORTS") K ORDIALOG("ORTS")
@@ -76,9 +87,6 @@ SAVE(REC,ORVP,ORNP,ORL,DLG,ORDG,ORIT,ORIFN,ORDIALOG,ORDEA,ORAPPT,ORSRC,OREVTDF) 
  I DLG="PSJ OR PAT OE" S ORCAT="I"
  S:DLG="FHW1" ORCAT="I" S:DLG?1"FHW "2.7U1" MEAL" ORCAT="O"
  S ORVP=ORVP_";DPT(",ORL(2)=ORL_";SC(",ORL=ORL(2)
- I ORDG=$O(^ORD(100.98,"B","LAB",0)) D  ;use section
- . N OI,SUB S OI=+$G(ORDIALOG($$PTR^ORCD("OR GTX ORDERABLE ITEM"),1))
- . S SUB=$P($G(^ORD(101.43,OI,"LR")),U,6),ORDG=$$DGRP^ORMLR(SUB)
  K:'ORDG ORDG K:'ORIT ORIT ; Dgrp & Quick must be non-zero
  M ORCHECK=ORDIALOG("ORCHECK") K ORDIALOG("ORCHECK")
  S ORDIALOG=$O(^ORD(101.41,"AB",DLG,0))
@@ -107,25 +115,21 @@ SAVE(REC,ORVP,ORNP,ORL,DLG,ORDG,ORIT,ORIFN,ORDIALOG,ORDEA,ORAPPT,ORSRC,OREVTDF) 
  . S REC="" S ORIFN=+ORIFN_";"_ORDA D GETBYIFN^ORWORR(.REC,ORIFN)
  Q
 SENDED(ORWLST,ORIENS,TS,LOC) ; Release EDOs to svc
- N OK,ORVP,ORWERR,ORSIGST,ORDA,ORNATURE,ORIX,X,PTEVT,ORIFN,J,EVENT,LOCK,OR3
+ N OK,ORVP,ORWERR,ORSIGST,ORDA,ORNATURE,ORIX,X,PTEVT,ORIFN,J,EVENT,LOCK
  S ORWERR="",ORIX=0,LOC=LOC_";SC("
- F  S ORIX=$O(ORIENS(ORIX)) Q:'ORIX  D  Q:ORWERR]""
- . S (ORIFN,ORWLST(ORIX))=ORIENS(ORIX)
- . S PTEVT=$P(^OR(100,+ORIFN,0),U,17)
- . I PTEVT D
- .. I $D(EVENT(PTEVT)) S LOCK=1 Q
- .. S LOCK=$$LCKEVT^ORX2(PTEVT) S:LOCK EVENT(PTEVT)=""
- . I 'LOCK S ORWERR="1^delayed event is locked - another user is processing orders for this event" S ORWLST(ORIX)=ORWLST(ORIX)_"^E^"_ORWERR Q
+ F  S ORIX=$O(ORIENS(ORIX)) Q:'ORIX  D
+ . S ORIFN=ORIENS(ORIX)
+ . S PTEVT=$P(^OR(100,+ORIFN,0),U,17) I PTEVT S LOCK=$$LCKEVT^ORX2(PTEVT) S:LOCK EVENT(PTEVT)="" I 'LOCK S ORWERR="1^delayed event is locked - another user is processing orders for this event" ;195
  . S ORDA=$P(ORIFN,";",2) S:'ORDA ORDA=1
  . S ORVP=$P($G(^OR(100,+ORIFN,0)),U,2)
  . I $D(^OR(100,+ORIFN,8,ORDA,0)) D
- .. S ORSIGST=$P($G(^(0)),U,4),ORNATURE=$P($G(^(0)),U,12) ;naked references refer to OR(100,+ORIFN,8,ORDA on line above
+ .. S ORSIGST=$P($G(^(0)),U,4)
+ .. S ORNATURE=$P($G(^(0)),U,12)
+ . S:$G(LOC) $P(^OR(100,+ORIFN,0),U,10)=LOC ;set location
+ . S:$G(TS) $P(^OR(100,+ORIFN,0),U,13)=TS ;set specialty
  . S OK=$$LOCK1^ORX2(ORIFN) I 'OK S ORWERR="1^"_$P(OK,U,2)
- . I OK,$G(LOCK) D
- .. S OR3=$G(^OR(100,+ORIFN,3)) I $P(OR3,"^",3)'=10!($P(OR3,"^",9)]"") D UNLK1^ORX2(ORIENS(ORIX)) Q  ;order already released or has a parent
- .. S:$G(LOC) $P(^OR(100,+ORIFN,0),U,10)=LOC ;set location
- .. S:$G(TS) $P(^OR(100,+ORIFN,0),U,13)=TS ;set specialty 
- .. D EN2^ORCSEND(ORIENS(ORIX),ORSIGST,ORNATURE,.ORWERR),UNLK1^ORX2(ORIENS(ORIX)) ;add ,LOCK to if statement for 195
+ . I OK,$G(LOCK) D EN2^ORCSEND(ORIENS(ORIX),ORSIGST,ORNATURE,.ORWERR),UNLK1^ORX2(ORIENS(ORIX)) ;add ,LOCK to if statement for 195
+ . S ORWLST(ORIX)=ORIENS(ORIX)
  . I $L(ORWERR) S ORWLST(ORIX)=ORWLST(ORIX)_"^E^"_ORWERR Q
  . E  D
  .. S PTEVT=$P($G(^OR(100,+ORIENS(ORIX),0)),U,17)
@@ -160,24 +164,27 @@ SEND1 N ORVP,ORWI,ORWERR,ORWREL,ORWSIG,ORWNATR,ORDERID,ORBEF,ORLR,ORLAB,X,I
  . I ORWSIG'=2 S X=X_"S"
  . S $P(ORWLST(ORWI),U,2)=X
  I $G(ORLAB) D BTS^ORMBLD(ORVP)
- I $D(ORWLST)>9 D
- . N I,A
- . S I=0 F  S I=$O(ORWLST(I)) Q:I=""  S A=$G(ORWLST(I)) I A["Invalid Procedure, Inactive, no Imaging Type" D SM^ORWDX2(A)
-  Q
+ Q
+EXTVAL(IVAL,DLG) ; External value given a dlg ptr
+ N ORDIALOG
+ S ORDIALOG(DLG,0)=$P($G(^ORD(101.41,DLG,1)),U,1,2)
+ S ORDIALOG(DLG,1)=IVAL
+ I $E(ORDIALOG(DLG,0))="R",(+IVAL'=IVAL) Q IVAL  ; free text date/time
+ Q $$EXT^ORCD(DLG,1)  ; all others
 DLGID(VAL,ORIFN) ; return dlg IEN for order
  S VAL=$P(^OR(100,+ORIFN,0),U,5)
  S VAL=$S($P(VAL,";",2)="ORD(101.41,":+VAL,1:0)
  Q
-FORMID(VAL,ORIFN) ; Base dlg FormID for an order
+FORMID(VAL,ORIFN)  ; Base dlg FormID for an order
  N DLG
  S VAL=0,DLG=$P(^OR(100,+ORIFN,0),U,5)
  Q:$P(DLG,";",2)'="ORD(101.41,"
  D FORMID^ORWDXM(.VAL,+DLG)
  Q
-AGAIN(VAL,DLG) ; return true to keep dlg for another order
+AGAIN(VAL,DLG)  ; return true to keep dlg for another order
  S VAL=''$P($G(^ORD(101.41,DLG,0)),U,9)
  Q
-DGRP(VAL,DLG) ; Display grp pointer for a dlg
+DGRP(VAL,DLG)   ; Display grp pointer for a dlg
  S DLG=$S($E(DLG)="`":+$P(DLG,"`",2),1:$O(^ORD(101.41,"AB",DLG,0))) ;kcm
  S VAL=$P($G(^ORD(101.41,DLG,0)),U,5)
  Q
@@ -204,7 +211,4 @@ LOCKORD(OK,ORIFN) ; Attempt to lock order
  Q
 UNLKORD(OK,ORIFN) ; Unlock order
  D UNLK1^ORX2(ORIFN) S OK=1
- Q
-UNLKOTH(OK,ORIFN) ; Unlock pt not by this session
- K ^XTMP("ORPTLK-"_ORIFN) S OK=1
  Q

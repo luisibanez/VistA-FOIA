@@ -1,5 +1,5 @@
-IVMCMF2 ;ALB/SEK,CKN,TDM - CHECK INCOME DEPENDENT DATA ; 4/14/06 1:34pm
- ;;2.0;INCOME VERIFICATION MATCH;**71,107,105,115**;21-OCT-94;Build 28
+IVMCMF2 ;ALB/SEK - CHECK INCOME DEPENDENT DATA ; 01/02/03
+ ;;2.0;INCOME VERIFICATION MATCH;**71,107**;21-OCT-94
  ;
  ; This routine is a called from IVMCMF.
  ;
@@ -40,13 +40,11 @@ ZDP(STRING) ; Check validity of ZDP segment
  ;
  ; Input:  STRING as ZDP segment
  ;
- N RELAT,IVMZDP5,PSSNRSN,SSNVSTAT
+ N RELAT,IVMZDP5
  S IVMZDP5=$P(STRING,HLFS,5)
  I +IVMZDP5'>0 D  G ZDPQ
  .S RELAT=$P(STRING,HLFS,6),RELAT=$S($D(^DG(408.11,RELAT,0)):$P(^DG(408.11,RELAT,0),HLFS),1:"OTHER")
  .S CNT=CNT+1,IVMERR(CNT)="Dependent ("_RELAT_") transmitted without SSN"
  I $D(IVMAR2(IVMZDP5)) S CNT=CNT+1,IVMERR(CNT)="Two dependents transmitted with same SSN"
  S IVMAR2(IVMZDP5)=""
- S PSSNRSN=$P(STRING,HLFS,10) I PSSNRSN]"",(PSSNRSN'="R"),(PSSNRSN'="S"),(PSSNRSN'="N") S CNT=CNT+1,IVMERR(CNT)="Invalid Pseudo SSN Reason transmitted for Spouse/Dependent."
- S SSNVSTAT=$P(STRING,HLFS,12) I SSNVSTAT]"",(SSNVSTAT'=2),(SSNVSTAT'=4) S CNT=CNT+1,IVMERR(CNT)="Invalid SSN Verification Status transmitted for Spouse/Dependent."
 ZDPQ Q

@@ -1,5 +1,5 @@
 IBJTCA2 ;ALB/ARH - TPI CLAIMS INFO BUILD (CONT) ;16-FEB-1995
- ;;2.0;INTEGRATED BILLING;**39,80,155,320**;21-MAR-94
+ ;;2.0;INTEGRATED BILLING;**39,80,155**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 CONT ; Continuation of Claim Information Screen Build
@@ -21,42 +21,11 @@ CONT ; Continuation of Claim Information Screen Build
  ;
  I +$P(IBDS,U,1) S IBT="Entered: ",IBD=$$EXT(IBDS,1,2) S IBLN=$$SET(IBT,IBD,IBLN,IBLR)
  I +$P(IBDS,U,4) S IBT="Initial Review: ",IBD=$$EXT(IBDS,4,5) S IBLN=$$SET(IBT,IBD,IBLN,IBLR)
- I +$P(IBDS,U,7) S IBT="MRA Request: ",IBD=$$EXT(IBDS,7,8) S IBLN=$$SET(IBT,IBD,IBLN,IBLR)
+ I +$P(IBDS,U,7) S IBT="Second Review: ",IBD=$$EXT(IBDS,7,8) S IBLN=$$SET(IBT,IBD,IBLN,IBLR)
  I +$P(IBDS,U,10) S IBT="Authorized: ",IBD=$$EXT(IBDS,10,11) S IBLN=$$SET(IBT,IBD,IBLN,IBLR)
  I +$P(IBDS,U,12) S IBT="First Printed: ",IBD=$$EXT(IBDS,12,13) S IBLN=$$SET(IBT,IBD,IBLN,IBLR)
  I $P(IBDS,U,14)>$P(IBDS,U,12) S IBT="Last Printed: ",IBD=$$EXT(IBDS,14,15) S IBLN=$$SET(IBT,IBD,IBLN,IBLR)
  I +$P(IBDS,U,17) S IBT="Cancelled: ",IBD=$$EXT(IBDS,17,18) S IBLN=$$SET(IBT,IBD,IBLN,IBLR)
- ;
- ; Patch 320 - added bill cloning history to TPJI report. 
- N IBCCR,IBCURR,IBNEXT,IBBCH,IBINDENT
- S IBINDENT=0
- D EN^IBCCR(IBIFN,.IBCCR)   ; utility to pull cloning history
- ;
- ; attempt to go one claim forward from the current claim
- S IBCURR="IBCCR("_+$P(IBDS,U,1)_","_IBIFN_")"
- S IBNEXT=$Q(@IBCURR)
- I IBNEXT'="" D
- . N IBX S IBX=@IBNEXT
- . S IBT="Copied: "
- . S IBD=$$FMTE^XLFDT($P(IBX,U,1),"2Z")_"  by  "_$P(IBX,U,3)
- . S IBLN=$$SET(IBT,IBD,IBLN,IBLR)
- . S IBT="Copied To: ",IBD=$P(IBX,U,2),IBLN=$$SET(IBT,IBD,IBLN,IBLR)
- . S IBINDENT=1
- . Q
- ;
- ; now go backwards for claim cloning history all the way back
- S IBBCH=IBCURR
- F  S IBBCH=$Q(@IBBCH,-1) Q:IBBCH=""  D
- . N IBX S IBX=@IBBCH
- . S IBT="Copied: " I IBINDENT S IBT="                  "_IBT
- . S IBD=$$FMTE^XLFDT($P(IBX,U,1),"2Z")_"  by  "_$P(IBX,U,3)
- . S IBLN=$$SET(IBT,IBD,IBLN,IBLR)
- . S IBT="Copied From: " I IBINDENT S IBT="             "_IBT
- . S IBD=$P(IBX,U,2),IBLN=$$SET(IBT,IBD,IBLN,IBLR)
- . S IBT="Reason Copied: " I IBINDENT S IBT="           "_IBT
- . S IBD=$P(IBX,U,4),IBLN=$$SET(IBT,IBD,IBLN,IBLR)
- . S IBINDENT=1
- . Q
  ;
  I $D(^DGCR(399,IBIFN,"R","AC",1)) S IBT="Returned to AR: ",X=0 F  S X=$O(^DGCR(399,IBIFN,"R","AC",1,X)) Q:'X  D
  . S IBY=$G(^DGCR(399,IBIFN,"R",X,0)),IBD=$$EXT(IBY,1,2) S IBLN=$$SET(IBT,IBD,IBLN,IBLR)

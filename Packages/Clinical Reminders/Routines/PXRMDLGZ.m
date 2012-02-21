@@ -1,5 +1,5 @@
-PXRMDLGZ ; SLC/PJH - Link reminder to dialog. ;06/19/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMDLGZ ; SLC/PJH - Link reminder to dialog. ;07/29/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;Called by option PXRM DIALOG/COMPONENT EDIT
  ;
@@ -32,7 +32,7 @@ DLGR(PXRMITEM) ;
  .D START^PXRMDLGH(PXRMITEM,.PXRMDIEN,"PXRMDIEN") Q:'PXRMDIEN
  .N PXRMHD,VALMBCK,VALMBG,VALMSG,VIEW,X,XMZ
  .S DNAM=$P($G(^PXRMD(801.41,PXRMDIEN,0)),U)
- .I +$P($G(^PXRMD(801.41,PXRMDIEN,0)),U,3)>0 S DNAM=DNAM_" (DISABLED)"
+ .I $P($G(^PXRMD(801.41,PXRMDIEN,0)),U,3)]"" S DNAM=DNAM_" (DISABLED)"
  .S PXRMHD="REMINDER DIALOG NAME: "_DNAM
  .S PXRMCS1=$$FILE^PXRMEXCS(801.41,PXRMDIEN)
  .S X="IORESET"
@@ -63,7 +63,7 @@ DLGE(PXRMDIEN) ;
  ;
  S PXRMHD=PXRMHD_" "_DDES W PXRMHD,!
  ;Edit selected dialog
- D EDIT^PXRMDEDT(DTYP,PXRMDIEN,0)
+ D EDIT^PXRMDEDT(DTYP,PXRMDIEN)
  Q
  ;
  ;Reminder dialog view
@@ -75,7 +75,7 @@ DLG(PXRMDIEN) ;
  ;Format headings to include dialog name
  S PXRMHD=PXRMHD_PXRMNAME
  ;Check if the set is disable and add to header if disabled
- I +$P(^PXRMD(801.41,PXRMDIEN,0),U,3)>0 S PXRMHD=PXRMHD_" (DISABLED)"
+ I $P(^PXRMD(801.41,PXRMDIEN,0),U,3)]"" S PXRMHD=PXRMHD_" (DISABLED)"
  ;Listman option
  D EN^VALM("PXRM DIALOG LIST")
  W IORESET
@@ -228,7 +228,11 @@ XINP(X) ;Taxonomy findings are not allowed for dialog groups
  I $P(X,";",2)="PXD(811.2,",$P($G(^PXRMD(801.41,DA,0)),U,4)="G" D  Q 0
  .W $C(7),!,"A taxonomy cannot be entered as the finding item for a group"
  ;Only applies to MH
- I $P(X,";",2)'="^YTT(601.71," Q 1
- I $$OK^PXRMDLL($P(X,";")) Q 1
+ I $P(X,";",2)'="YTT(601," Q 1
+ ;GAF
+ I $P($G(^YTT(601,$P(X,";"),0)),U)="GAF" Q 1
+ ;Check if a VALID GUI test
+ I $P($G(^YTT(601.6,$P(X,";"),0)),U,4)="Y" Q 1
+ ;else
  W *7,!,"This test is not appropriate for the GUI",!
  Q 0

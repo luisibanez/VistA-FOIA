@@ -1,6 +1,6 @@
 ACKQASU ;HCIOFO/BH-New/Edit Visit Utilities  ;  04/01/99
- ;;3.0;QUASAR;**8,15,16**;Feb 11, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine SHOULD NOT be modified.
+ ;;3.0;QUASAR;**8**;Feb 11, 2000
+ ;Per VHA Directive 10-93-142, this routine SHOULD NOT be modified.
  ;
 ELIGCHK() ; Checks to see if there is a Primary Eligibility (which there
  ; always should be) if there's not (i.e. data error) pass back zero.
@@ -51,7 +51,7 @@ KILL ;  Kill off values at end of processing
  K CLINVAR,DIVARR,ACKRAD,ACKENV,ACKPROV,ACKDIAGD,ACKCPTDS,ACKDIRUT
  K ACKPCENO,VSAD,DIVARR,DIV,CLINVARR,ACKTME,ACKSCR,ACKELGCT,ACKELG1
  K ACKTRGT,ACKDVN,ACKACKBA,ACKAUDIO,ACKATS,ACKQUIT,ACKMSG,ACKQTST
- K ACKQSER,ACKQORG,ACKQIR,ACKQECON,ACKAPMNT,ICPTVDT,ICDVDT,ACKHNC,ACKCV
+ K ACKQSER,ACKQORG,ACKQIR,ACKQECON,ACKAPMNT,ICPTVDT,ICDVDT
  Q
  ;
  ;
@@ -60,7 +60,7 @@ DC ;  CHECK OUT DIAGNOSTIC CONDITION - ENTER IF NEEDED
  Q:$D(^ACK(509850.2,DFN,1,"B",ACKDC))
  S ACKY=Y D DEM^VADPT S Y=ACKY,X=$$GET1^DIQ(80,ACKDC,.01),ACKLN=$P(VADM(1),","),ACKSX=$P(VADM(5),U)
  I $G(ACKBGRD)'="1" D
- . W !!,X,"   ",$$DIAGTXT^ACKQUTL8(ACKDC,ACKVD)
+ . W !!,X,"   ",$$PROCTXT^ACKQUTL8(ACKDC,ACKVD)
  . W !,"We have no previous record of diagnostic condition ",X," for ",$S(ACKSX="F":"Ms.",1:"Mr.")," ",ACKLN,"." D ADCODE
  . W !,"Ok, I've added this code to ",$S(ACKSX="F":"her",1:"his")," permanent record !",!
  I $G(ACKBGRD)=1 D ADCODE
@@ -68,8 +68,7 @@ DC ;  CHECK OUT DIAGNOSTIC CONDITION - ENTER IF NEEDED
  ;
 ADCODE ;  Adds ICD to permanent record.
  N D,D0,D1,DA,DB,DC,DD,DDTM,DE,DF,DG,DH,DI,DIC,DIE,DIEL,DIFLD,DIOV,DIP,DJ,DK,DL,DM,DN,DO,DP,DQ,DR,DU,DV,DW,DXS,DZ,I,Y ;we're calling this from FM
- F  L +^ACK(509850.2,DFN,1,0):$G(DILOCKTM,3) Q:$T  W:$G(ACKBGRD)'="1" !,"Another user is editing this record."
- S (DIC,DIE)="^ACK(509850.2,"_DFN_",1,",DIC(0)="L",DLAYGO=509850.2,ACKLAYGO=""
+ L +^ACK(509850.2,DFN,1,0) S (DIC,DIE)="^ACK(509850.2,"_DFN_",1,",DIC(0)="L",DLAYGO=509850.2,ACKLAYGO=""
  S DIC("P")=$P(^DD(509850.2,2,0),"^",2),DA(1)=DFN,X=ACKDC D FILE^DICN Q:Y<0  S DA=+Y,DR="2;1///"_ACKVD D ^DIE
  L -^ACK(509850.2,DFN,1,0) Q
  ;

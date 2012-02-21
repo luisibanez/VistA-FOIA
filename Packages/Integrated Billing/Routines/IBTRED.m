@@ -1,6 +1,6 @@
 IBTRED ;ALB/AAS - EXPAND/EDIT CLAIMS TRACKING ENTRY ;01-JUL-1993
- ;;2.0;INTEGRATED BILLING;**71,91,160,247,309,276,339,363**;21-MAR-94;Build 35
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**71,91,160,247,309,276**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 % ;
 EN ; -- main entry point for IBT EXPAND/EDIT TRACKING
@@ -64,23 +64,21 @@ VISIT ; -- Visit info Region
  Q
  ;
 3 ; -- visit region for rx refill
- N PSONTALK,PSOTMP,PSOQTY
+ N PSONTALK,PSOTMP
  S PSONTALK=1 ;PSORXN=+$P(IBTRND,"^",8),PSOFILL=+$P(IBTRND,"^",10)
  S X=+$P(IBTRND,"^",8)_"^"_+$P(IBTRND,"^",10) D EN^PSOCPVW
  ;if refill was deleted and EN^PSOCPVW doesn't return any data use IB API
  I '$D(PSOTMP) D PSOCPVW^IBNCPDPC(+$P(IBTRND,"^",2),+$P(IBTRND,"^",8),.PSOTMP)
- S PSOQTY=$$NCPDPQTY^PSSBPSUT(+$$RXAPI1^IBNCPUT1(+$P(IBTRND,"^",8),6,"I"),PSOTMP(52,+$P(IBTRND,"^",8),7,"E"))
  D SET^IBCNSP(START+2,OFFSET,"Prescription #: "_$G(PSOTMP(52,+$P(IBTRND,"^",8),.01,"E")))
  ;I $P(IBTRND,"^",10)=0 D SET^IBCNSP(START+3,OFFSET,"     Fill Date: "_$G(PSOTMP(52,+$P(IBTRND,"^",8),22,"E")))
  ;I +$P(IBTRND,"^",10) D SET^IBCNSP(START+3,OFFSET,"   Refill Date: "_$G(PSOTMP(52.1,+$P(IBTRND,"^",10),.01,"E")))
  I $P(IBTRND,"^",10)=0 D SET^IBCNSP(START+3,OFFSET,"     Fill Date: "_$$FMTE^XLFDT(+$P(IBTRND,"^",6)))
  I +$P(IBTRND,"^",10) D SET^IBCNSP(START+3,OFFSET,"   Refill Date: "_$$FMTE^XLFDT(+$P(IBTRND,"^",6)))
  D SET^IBCNSP(START+4,OFFSET,"          Drug: "_$G(PSOTMP(52,+$P(IBTRND,"^",8),6,"E")))
- D SET^IBCNSP(START+5,OFFSET,"   Rx Quantity: "_$J($G(PSOTMP(52,+$P(IBTRND,"^",8),7,"E")),8))
- D SET^IBCNSP(START+6,OFFSET," Bill Quantity:  "_$J($P(PSOQTY,"^"),11)_" "_$P(PSOQTY,"^",2))
- D SET^IBCNSP(START+7,OFFSET,"   Days Supply: "_$J($G(PSOTMP(52,+$P(IBTRND,"^",8),8,"E")),8))
- D SET^IBCNSP(START+8,OFFSET,"          NDC#: "_$$GETNDC^PSONDCUT(+$P(IBTRND,"^",8),$P(IBTRND,"^",10)))
- D SET^IBCNSP(START+9,OFFSET,"     Physician: "_$G(PSOTMP(52,+$P(IBTRND,"^",8),4,"E")))
+ D SET^IBCNSP(START+5,OFFSET,"      Quantity: "_$J($G(PSOTMP(52,+$P(IBTRND,"^",8),7,"E")),8))
+ D SET^IBCNSP(START+6,OFFSET,"   Days Supply: "_$J($G(PSOTMP(52,+$P(IBTRND,"^",8),8,"E")),8))
+ D SET^IBCNSP(START+7,OFFSET,"          NDC#: "_$$GETNDC^PSONDCUT(+$P(IBTRND,"^",8),$P(IBTRND,"^",10)),2)
+ D SET^IBCNSP(START+8,OFFSET,"     Physician: "_$G(PSOTMP(52,+$P(IBTRND,"^",8),4,"E")))
  Q
  ;
 4 ; -- Visit region for prosthetics
@@ -112,6 +110,6 @@ ENCL(IBOE) ; -- output format of classifications
  N I,X,IBCL,IBCL1 S IBCL=""
  I '$G(IBOE) G ENCLQ
  S IBCL1=$$ENCL^IBAMTS2(+IBOE)
- F I=1:1:8 S X=$P(IBCL1,"^",I) S:X IBCL=IBCL_$S(I=1:"AO",I=2:"IR",I=3:"SC",I=4:"SWA",I=5:"MST",I=6:"HNC",I=7:"CV",I=8:"SHAD",1:"")_"  "
+ F I=1:1:7 S X=$P(IBCL1,"^",I) S:X IBCL=IBCL_$S(I=1:"AO",I=2:"IR",I=3:"SC",I=4:"EC",I=5:"MST",I=6:"HNC",I=7:"CV",1:"")_"  "
 ENCLQ Q IBCL
  ;

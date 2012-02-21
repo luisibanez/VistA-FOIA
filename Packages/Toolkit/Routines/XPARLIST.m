@@ -1,5 +1,5 @@
-XPARLIST ; SLC/KCM - List parameter values ;8/30/07  16:27
- ;;7.3;TOOLKIT;**26,72,109**;Apr 25, 1995;Build 5
+XPARLIST ; SLC/KCM - List parameter values ; 5/1/03 6:43am
+ ;;7.3;TOOLKIT;**26,72**;Apr 25, 1995
  ;
 ALLPARS ; Select parameter and list values
  N PAR
@@ -37,7 +37,7 @@ ALLENT(ENT) ; List values given entity
  W !!,"Values for "_$$ENTNAME(ENT),!! S LN=1
  D HEADER
  S IEN=0 F  S IEN=$O(^XTV(8989.5,"B",ENT,IEN)) Q:'IEN  D
- . S X=^XTV(8989.5,IEN,0),VAL=$G(^XTV(8989.5,IEN,1)) ;p109
+ . S X=^XTV(8989.5,IEN,0),VAL=^XTV(8989.5,IEN,1)
  . Q:($P(X,U,2)="")!($P(X,U,3)="")
  . S ^TMP($J,$P(X,U,2),$P(X,U,3))=VAL
  . S ^TMP($J,$P(X,U,2),$P(X,U,3),IEN)=""

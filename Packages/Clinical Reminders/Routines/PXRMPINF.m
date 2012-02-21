@@ -1,50 +1,30 @@
-PXRMPINF ; SLC/PKR - Routines relating to patient information. ;12/23/2009
- ;;2.0;CLINICAL REMINDERS;**12,17**;Feb 04, 2005;Build 102
+PXRMPINF ; SLC/PKR - Routines relating to patient information. ;10/07/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;======================================================
 DATACHG ;This entry point is called whenever patient data has changed.
  ;It is attached to the following event points:
- ;PXK VISIT DATA EVENT via PXRM PATIENT DATA CHANGE
+ ;PXK VISIT DATA EVENT
  ;
  I '$D(^TMP("PXKCO",$J)) Q
- N EVENT,ZTDESC,ZTDTH,ZTIO,ZTRTN,ZTSAVE,ZTSK
- S EVENT="PXRM PXK EVENT"_$J_" "_$$NOW^XLFDT
- ;Make sure EVENT is unique.
- I $D(^XTMP(EVENT)) H 1 S EVENT="PXRM PXK EVENT"_$J_" "_$$NOW^XLFDT
- K ^XTMP(EVENT)
- S ^XTMP(EVENT,0)=$$FMADD^XLFDT(DT,3)_U_DT
- M ^XTMP(EVENT)=^TMP("PXKCO",$J)
- L +^XTMP(EVENT):DILOCKTM
- S ZTSAVE("EVENT")=""
- S ZTSAVE("XTMP(")=""
- S ZTRTN="DATACHGR^PXRMPINF"
- S ZTDESC="Clinical Reminders PXK VISIT DATA EVENT handler"
- S ZTDTH=$H
- S ZTIO=""
- D ^%ZTLOAD
- Q
- ;
- ;======================================================
-DATACHGR ;Process data from PXK VISIT DATA EVENT
  N DATA,DFN,DGBL,NODE,PXRMDFN,VIEN,VISIT,VF,VFL,VGBL
- S ZTREQ="@"
+ S DFN=""
  ;Look for PXK VISIT DATA EVENT data.
- S VISIT=$O(^XTMP(EVENT,0))
- S VIEN=$O(^XTMP(EVENT,VISIT,"VST",""))
- S NODE=$O(^XTMP(EVENT,VISIT,"VST",VIEN,""))
- S DATA=$G(^XTMP(EVENT,VISIT,"VST",VIEN,NODE,"AFTER"))
- I DATA="" S DATA=$G(^XTMP(EVENT,VISIT,"VST",VIEN,NODE,"BEFORE"))
+ S VISIT=$O(^TMP("PXKCO",$J,""))
+ S VIEN=$O(^TMP("PXKCO",$J,VISIT,"VST",""))
+ S NODE=$O(^TMP("PXKCO",$J,VISIT,"VST",VIEN,""))
+ S DATA=$G(^TMP("PXKCO",$J,VISIT,"VST",VIEN,NODE,"AFTER"))
+ I DATA="" S DATA=$G(^TMP("PXKCO",$J,VISIT,"VST",VIEN,NODE,"BEFORE"))
  S DFN=$P(DATA,U,5)
+ S PXRMDFN="PXRMDFN"_DFN
  ;Build the list of V Files.
  S VF=""
- F  S VF=$O(^XTMP(EVENT,VISIT,VF)) Q:VF=""  D
+ F  S VF=$O(^TMP("PXKCO",$J,VISIT,VF)) Q:VF=""  D
  . S DGBL=$S(VF="CPT":"PXD(811.2,",VF="HF":"AUTTHF(",VF="IMM":"AUTTIMM(",VF="PED":"AUTTEDT(",VF="POV":"PXD(811.2,",VF="SK":"AUTTSK(",VF="XAM":"AUTTEXAM(",1:"")
  . S VGBL=$S(VF="CPT":"AUPNVCPT(",VF="HF":"AUPNVHF(",VF="IMM":"AUPNVIMM(",VF="PED":"AUPNVPED(",VF="POV":"AUPNVPOV(",VF="SK":"AUPNVSK(",VF="XAM":"AUPNVXAM(",1:"")
  . S VFL(VF)=DGBL_U_VGBL
  ;Call the routines that need to process the data.
- D UPDPAT^PXRMMST(EVENT,DFN,VISIT,.VFL)
- L -^XTMP(EVENT)
- K ^XTMP(EVENT)
+ D UPDPAT^PXRMMST(DFN,VISIT,.VFL)
  Q
  ;
  ;======================================================

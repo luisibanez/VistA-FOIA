@@ -1,5 +1,5 @@
-FBAAV01 ;AISC/GRR-ELECTRONICALLY TRANSMIT FEE DATA CONTINUED ;11 Apr 2006  2:52 PM
- ;;3.5;FEE BASIS;**89,98**,JAN 30, 1995;;Build 54
+FBAAV01 ;AISC/GRR-ELECTRONICALLY TRANSMIT FEE DATA CONTINUED ;1/31/2005
+ ;;3.5;FEE BASIS;**89**;JAN 30, 1995
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
 NEWMSG ;get new message number, reset line counter
  ;FBLN=line counter, FBFEE=FEE message counter, FBNVP=NVP message counter
@@ -64,7 +64,7 @@ STRING ;called from FBAAV0 to build 'B3' payment record
  D STORE
  ;
  ; build and store 2nd line in message
- S FBSTR=FBADJA1_FBADJA2_FBNPI_"~$"
+ S FBSTR=FBADJA1_FBADJA2_$E(PAD,1,10)_"~$"
  D STORE
  ;
  K FBPICN,FBY

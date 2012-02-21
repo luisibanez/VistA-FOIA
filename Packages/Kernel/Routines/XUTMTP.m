@@ -1,5 +1,5 @@
-XUTMTP ;SEA/RDS - TaskMan: ToolKit, Print, Part 1 ;04/18/2006  16:19
- ;;8.0;KERNEL;**20,86,169,242,381**;Jul 10, 1995;Build 2
+XUTMTP ;SEA/RDS - TaskMan: ToolKit, Print, Part 1 ;04/24/2003  11:06
+ ;;8.0;KERNEL;**20,86,169,242**;Jul 10, 1995
  ;
 EN(XUTSK,XUINX,FLAG) ;Print one task
  I $D(XUTMUCI)_$D(ZTNAME)_$D(ZTFLAG)'="111" D ENV^XUTMUTL
@@ -8,7 +8,7 @@ TASK ;Lookup Task File Data
  S FLAG=+$G(FLAG),ZTC=0
  L +^%ZTSK(XUTSK):2 I '$T W !,"Task: ",XUTSK," entry locked." Q
  ;Get current data
- S XUTSK(0)=$G(^%ZTSK(XUTSK,0)),XUTSK(.03)=$G(^(.03)),XUTSK(.1)=$G(^(.1)),XUTSK(.2)=$G(^(.2)),XUTSK(.11)=$G(^(.11)),XUTSK(.26)=$G(^(.26))
+ S XUTSK(0)=$G(^%ZTSK(XUTSK,0)),XUTSK(.03)=$G(^(.03)),XUTSK(.1)=$G(^(.1)),XUTSK(.2)=$G(^(.2)),XUTSK(.26)=$G(^(.26))
  I '$D(^%ZTSK(XUTSK)) D  I 'XUTSK L -^%ZTSK(XUTSK) K XUTMT Q
  . S X=$G(^%ZTSCH("TASK",XUTSK))
  . I X="" W !,XUTSK,":  No information available." S XUTSK=0 Q
@@ -21,7 +21,7 @@ SCHED ;Lookup Task In Schedule File
  I XUTSK(.26)="" S ZT1="" F  S ZT1=$O(^%ZTSCH("IO",ZT1)),ZT2="" Q:ZT1=""  F  S ZT2=$O(^%ZTSCH("IO",ZT1,ZT2)) Q:ZT2=""  S:$D(^(ZT2,XUTSK))#2 XUTSK("IO",ZT1,ZT2,XUTSK)=""
  S ZT1="" F  S ZT1=$O(^%ZTSCH("JOB",ZT1)) Q:ZT1=""  S:$D(^(ZT1,XUTSK))#2 XUTSK("JOB",ZT1,XUTSK)=""
  S ZT1="" F  S ZT1=$O(^%ZTSCH("LINK",ZT1)),ZT2="" Q:ZT1=""  F  S ZT2=$O(^%ZTSCH("LINK",ZT1,ZT2)) Q:ZT2=""  S:$D(^(ZT2,XUTSK))#2 XUTSK("LINK",ZT1,ZT2,XUTSK)=""
- S:$D(^%ZTSCH("TASK",XUTSK))#2 XUTSK("TASK")=^(XUTSK) S:$D(^%ZTSCH("TASK",XUTSK,1)) XUTSK("TASK1")=^(1)
+ S:$D(^%ZTSCH("TASK",XUTSK))#2 XUTSK("TASK")=^(XUTSK)
  L -^%ZTSK(XUTSK)
  ;
 SCREEN ;Apply Screen, If Supplied
@@ -50,7 +50,7 @@ TIME(%ZTT) ;Convert $H Time To A Readable Time
  E  S %XD=+%ZTT,%XT=$P(%ZTT,",",2)
  S %H=$H,%=%XD-%H I %*%<2 S Y=$S(%<0:"Yesterday",'%:"Today",%>0:"Tomorrow",1:"")
  I %*%>1 S Y=$$HTE^XLFDT(%XD_","_%XT,"5D") ;D 7^%DTC S Y=$E(X,4,5)_"/"_$E(X,6,7)_"/"_$E(X,2,3)
- S Y=Y_" at "_(%XT\3600)_":"_$E(%XT#3600\60+100,2,3)
+ S Y=Y_" at " S Y=Y_(%XT\3600)_":"_$E(%XT#3600\60+100,2,3)
  Q Y
  ;
 ADD(MSG,FLG) ;Add msg to list

@@ -1,6 +1,5 @@
 MAGGTMC1 ;WOIFO/GEK - RPC Calls for Imaging/Medicine procedures ; [ 06/20/2001 08:57 ]
- ;;3.0;IMAGING;**59**;Nov 27, 2007;Build 20
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.0;IMAGING;;Mar 01, 2002
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -27,7 +26,7 @@ FILE(MAGRY,DATA,MAGARR) ;RPC Call to File the Image pointer into
  ; as the success    i.e.  MAGRY="IEN^Procdure Stub created"    6/19/97
  IF $$NEWERR^%ZTER N $ETRAP,$ESTACK S $ETRAP="D ERR^MAGGTERR"
  E  S X="ERR^MAGGTERR",@^%ZOSF("TRAP")
- N I,J,K,X,Y,Z,TIME,PSIEN,DFN,MAGPTR,MAGMCIEN,MCFILE,MAGOK,MAGERR,PROCSTUB
+ N I,J,K,X,Y,Z,TIME,PSIEN,DFN,MAGPTR,MAGMCIEN,MCFILE,MAGOK,MAGERR
  ;
  S X=$P(DATA,U,1),%DT="TS" D ^%DT S TIME=Y
  S PSIEN=+$P(DATA,U,2)
@@ -54,7 +53,6 @@ FILE(MAGRY,DATA,MAGARR) ;RPC Call to File the Image pointer into
  ; we get back MAGPTR(I)= MCFILE^PSIEN^MULTIPLE ENTRY IEN
  S I="" F  S I=$O(MAGPTR(I)) Q:I=""  D
  . S $P(^MAG(2005,I,2),U,6,8)=MAGPTR(I)
- . D LINKDT^MAGGTU6(.X,I)
  S MAGRY=MAGOK
  Q
  ;/GEK/ 4/29/98 put in modification to return DICOM ID for MED proc.
@@ -63,7 +61,7 @@ DICOMID(MAGRY,DATA) ;RPC Call to return a Dicom ID for medicine procedure.
  ;  to a medicine procedure.
  ;  DATA is    null  ^ PSIEN ^ DFN ^ MCIEN ^ null
  ; 
- N TMCFILE,TPSIEN,TDFN,TMCIEN,RETX
+ N TMCFILE,TPSIEN,TDFN,TMCIEN
  S TPSIEN=+$P(DATA,U,2)
  S TDFN=+$P(DATA,U,3)
  S TMCIEN=+$P(DATA,U,4)

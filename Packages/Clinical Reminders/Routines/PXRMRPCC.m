@@ -1,5 +1,5 @@
-PXRMRPCC ;SLC/PJH - PXRM REMINDER DIALOG ;11/26/2007
- ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
+PXRMRPCC ;SLC/PJH - PXRM REMINDER DIALOG ;04/12/2002
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
 ACTIVE(ORY,ORREM) ;Check if active dialog exist for reminders
  ;
@@ -38,7 +38,6 @@ DIALOG(ORY,ORREM,DFN) ;Load reminder dialog associated with the reminder
  I $P(DATA,U,3) S ORY(1)="-1^reminder dialog disabled" Q
  ;
  ;Load dialog lines into local array
- S ORY(0)=0_U_+$P($G(^PXRMD(801.41,DIEN,0)),U,17)
  D LOAD^PXRMDLL(DIEN,$G(DFN))
  Q
  ;
@@ -76,11 +75,9 @@ MH(ORY,OTEST) ; Mental Health dialog
  ;
  ; Input mental health instrument NAME
  ;
- K ^TMP($J,"YSQU")
- N ARRAY,CNT,CNT1,FNODE,FSUB,IC,NODE,OCNT,SUB,YS
- ;DBIA #5056
- S YS("CODE")=OTEST D SHOWALL^YTQPXRM5(.ARRAY,.YS)
- S OCNT=0,CNT=0
+ N YS,ARRAY S YS("CODE")=OTEST D SHOWALL^YTAPI3(.ARRAY,.YS) ; DBIA #2895
+ ;
+ N FNODE,FSUB,IC,NODE,OCNT,SUB
  S SUB="ARRAY",OCNT=0
  F  S SUB=$Q(@SUB) Q:SUB=""  D
  .S FSUB=$P($P(SUB,"(",2),")"),FNODE=""
@@ -95,19 +92,17 @@ MHR(ORY,RESULT,ORES) ; Mental Health score and P/N text
  ;
  ; Input MH result IEN and mental health instrument response
  ;
- D START^PXRMDLR(.ORY,RESULT,.ORES)
+ D ^PXRMDLR
  ;
  Q
  ;
 MHS(ORY,YS) ; Mental Health save response
  ;
  ; Input mental health instrument response
- N ANS,ARRAY,X
- S ANS=$G(YS("R1")) K YS("R1")
- S YS("ADATE")=YS("ADATE")_"."_$P($$NOW^XLFDT,".",2)
- F X=1:1:$L(ANS) I $E(ANS,X)'="X" S YS(X)=X_U_$E(ANS,X)
- ;DBIA #4463
- D SAVECR^YTQPXRM4(.ARRAY,.YS)
+ N ARRAY
+ D SAVEIT^YTAPI1(.ARRAY,.YS) ; DBIA #2893
+ I ARRAY(1)'="[DATA]" S ORY(1)="-1^"_ARRAY(1)_ARRAY(2)
+ I ARRAY(1)="[DATA]" S ORY(1)=ARRAY(1)_ARRAY(2)
  Q
  ;
 MST(ORY,DFN,DGMSTDT,DGMSTSC,DGMSTPR,FTYP,FIEN,RESULT) ; File MST status

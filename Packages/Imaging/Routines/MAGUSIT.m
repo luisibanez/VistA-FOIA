@@ -1,5 +1,5 @@
 MAGUSIT ;WOIFO/SRR/RMP - IMAGE SITE PARAMETERS COMPANION [ 06/29/2001 18:28 ]
- ;;3.0;IMAGING;**3,8,20**;Apr 12, 2006
+ ;;3.0;IMAGING;**3,8**;Sep 15, 2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -49,7 +49,6 @@ UNDEF(NAME) ;The domain is undefined in the Image site file (2006.19)
  S DIR("?")="Enter either T for a test account or P for a production account",DIR("B")="T"
  S DIR(0)="S0^T:Test;P:PRODUCTION"
  D ^DIR S ASK=Y
- K DIR
  I ASK="T" S FN="ZZT"
  I ASK="P" D
  . S FN=$$ONE^MAGQAI(NAME)
@@ -69,7 +68,7 @@ UI(DOMAIN,INIT) ;UPDATE IMAGING DISTRIBUTION
  D MAILIT
  K ^TMP($J,"MAGQ")
  Q
-MAILIT ;Send the report to the Clinical Application Time
+MAILIT ;Send the report to the Clinicial Application Time
  N XMSUB
  S XMSUB="Update Site file from "_LOC
 MAILSHR ;Shared Mail server code
@@ -85,7 +84,6 @@ MAILSHR ;Shared Mail server code
  S INDX=""
  F  S INDX=$O(XMY(INDX)) Q:INDX=""  S XMTO(INDX)=""
  D SENDMSG^XMXAPI(XMDUZ,XMSUBJ,XMBODY,.XMTO,,.XMZ,)
- K XMBODY,XMSUBJ,XMTO,XMZ
  Q
 ISN(RESULT,FILENAME,NETSIZE,JBSIZE) ; Image File Size variance Notice
  N Y,LOC,XMSUB,DIS,CAP,CNT,I,VR,DM,INST

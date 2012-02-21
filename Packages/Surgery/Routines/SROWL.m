@@ -1,6 +1,5 @@
-SROWL ;B'HAM ISC/MAM - ENTER PATIENT ON WAITING LIST ; 4/18/07 11:55am
- ;;3.0;Surgery;**58,119,162**;24 Jun 93;Build 4
- ;
+SROWL ;B'HAM ISC/MAM - ENTER PATIENT ON WAITING LIST ;13 Feb 1989  11:32 AM
+ ;;3.0;Surgery;**58,119**;24 Jun 93
 ENTER ; enter a patient on the waiting list
  S SRSOUT=0 W @IOF K DIC S DIC(0)="QEAMZL",(DIC,DLAYGO)=133.8,DIC("A")="  Select Surgical Specialty: " D ^DIC K DIC,DLAYGO G:Y<0 END S SRSS=+Y,SRSS1=+Y(0)
  S SRSSNM=$P(^SRO(137.45,SRSS1,0),"^")
@@ -73,7 +72,6 @@ PRMPT R !,"Is this a VA Physician from this facility?  (Y/N): <Y> ",SRCONT:DTIME
  S SRDEMO(4)=SRDEMO(200,SRNPREC,".116")        ;Zip
  S SRDEMO(5)=SRDEMO(200,SRNPREC,".132")        ;Office Phone
  ; Set up DR array that FileMan will use, with a call to ^DIE, after this subroutine Quits to "stuff" the demographic data.
- ; all fields except STATE will ignore input transform (SR*3.0*162)
- S DIC("DR")="1////"_SRDEMO(1)_";2////"_SRDEMO(2)_";3///"_SRDEMO(3)_";4////"_SRDEMO(4)_";5////"_SRDEMO(5)_";6////"_$P(Y,U,1)
+ S DIC("DR")="1///"_SRDEMO(1)_";2///"_SRDEMO(2)_";3///"_SRDEMO(3)_";4///"_SRDEMO(4)_";5///"_SRDEMO(5)_";6///"_$P(Y,U,1)
  S DIC(0)="Z"    ;Tells FileMan to file the data without any more user input
  Q

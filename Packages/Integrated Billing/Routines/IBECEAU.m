@@ -1,5 +1,5 @@
 IBECEAU ;ALB/CPM - Cancel/Edit/Add... Utilities ;11-MAR-93
- ;;2.0;INTEGRATED BILLING;**91,249,402**;21-MAR-94;Build 17
+ ;;2.0;INTEGRATED BILLING;**91,249**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 CHECK(TALK) ; Retrieve the institution and MAS Service pointer.
@@ -36,7 +36,7 @@ BFO(DFN,DATE) ; Patient Billed For OPT Copay on a specified date?
  ;            >0  --  Pointer to charge in file #350 that was billed
  N IBATYP,IBATYPN,IBL,IBND,IBN,Y
  I '$G(DFN)!'$G(DATE) G BFOQ
- S IBN=0 F  S IBN=$O(^IB("AFDT",DFN,-DATE,IBN)) Q:'IBN  D  I ($P(IBATYPN,"^",11)=4)!($P(IBATYPN,"^",11)=8),"^1^3^"[("^"_$P(IBATYP,"^",5)_"^"),"^1^2^3^4^8^20^"[("^"_+$P(IBND,"^",5)_"^") S Y=IBL Q
+ S IBN=0 F  S IBN=$O(^IB("AFDT",DFN,-DATE,IBN)) Q:'IBN  D  I $P(IBATYPN,"^",11)=4,"^1^3^"[("^"_$P(IBATYP,"^",5)_"^"),"^1^2^3^4^8^20^"[("^"_+$P(IBND,"^",5)_"^") S Y=IBL Q
  .S IBL=$$LAST(+$P($G(^IB(IBN,0)),"^",9)),IBND=$G(^IB(IBL,0))
  .S IBATYP=$G(^IBE(350.1,+$P(IBND,"^",3),0))
  .S IBATYPN=$G(^IBE(350.1,+$P(IBATYP,"^",9),0))

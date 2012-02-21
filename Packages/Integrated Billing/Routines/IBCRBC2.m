@@ -1,6 +1,6 @@
 IBCRBC2 ;ALB/ARH - RATES: BILL CALCULATION OF ITEM CHARGE ; 22-MAY-1996
- ;;2.0;INTEGRATED BILLING;**52,106,138,148,245,370**;21-MAR-94;Build 5
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,106,138,148,245**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; Input:  RS     - rate schedule necessary to calculated modified charges
  ;         CS     - required, charge set which defines the charges to calculate
@@ -21,7 +21,6 @@ IBCRBC2 ;ALB/ARH - RATES: BILL CALCULATION OF ITEM CHARGE ; 22-MAY-1996
  ;                  PROV   - procedure provider
  ;                  CLINIC - procedures associated clinic
  ;                  IBOE   - Outpatient Encounter, pointer to #408.69
- ;                  MODS   - list of all modifiers define for the procedure, separated by ','
  ;
  ; Total charge is calculated:  X = UNITS * UNIT CHARGE of the item         (per unit charge (un-adjusted))
  ;                              Y = X modified by Rate Schedule Adjustment  (per unit charge (adjusted))
@@ -34,11 +33,11 @@ IBCRBC2 ;ALB/ARH - RATES: BILL CALCULATION OF ITEM CHARGE ; 22-MAY-1996
  ;         
 BITMCHG(RS,CS,ITEM,EVDT,UNITS,MOD,INSRC,IDFRC,SAVE) ; get bill charges for a specific item, rate schedule and charge set and date set into temp array
  ;
- N IBCS0,IBDRVCD,IBBS,IBCHGARR,IBI,IBCNT,IBLN,IBCI,IBRVCD,IBPPRV,IBCHRG,IBTCHRG,IBRCHRG,IBPCHRG,IBACHRG
- N IBMCHRG,IBMODS,IBBASE,IBCOM I '$G(ITEM)!'$G(CS)!'$G(UNITS) Q
+ N IBCS0,IBDRVCD,IBBS,IBCHGARR,IBI,IBCNT,IBLN,IBCI,IBRVCD,IBPPRV,IBCHRG,IBTCHRG,IBRCHRG,IBPCHRG,IBACHRG,IBBASE,IBCOM
+ I '$G(ITEM)!'$G(CS)!'$G(UNITS) Q
  ;
  S RS=$G(RS),EVDT=$S(+$G(EVDT):+EVDT\1,1:DT),MOD=$G(MOD),INSRC=$G(INSRC),IDFRC=$G(IDFRC),SAVE=$G(SAVE)
- S IBCS0=$G(^IBE(363.1,+CS,0)),IBDRVCD=$P(IBCS0,U,5),IBPPRV=$P(SAVE,U,8),IBMODS=$P(SAVE,U,11)
+ S IBCS0=$G(^IBE(363.1,+CS,0)),IBDRVCD=$P(IBCS0,U,5),IBPPRV=$P(SAVE,U,8)
  S IBBS=+ITEM I $P($G(^IBE(363.3,+$P(IBCS0,U,2),0)),U,4)'=1 S IBBS=$P(SAVE,U,7) I 'IBBS S IBBS=$P(IBCS0,U,6)
  I 'IBBS Q
  ;
@@ -54,8 +53,7 @@ BITMCHG(RS,CS,ITEM,EVDT,UNITS,MOD,INSRC,IDFRC,SAVE) ; get bill charges for a spe
  . S IBCHRG=IBCHRG*UNITS
  . S IBCHRG=IBCHRG+IBBASE
  . S IBPCHRG=IBCHRG I +IBPPRV S IBPCHRG=$$PRVCHG^IBCRCC(CS,IBCHRG,IBPPRV,EVDT,ITEM)
- . S IBMCHRG=+IBPCHRG I +IBMODS S IBMCHRG=$$MODCHG^IBCRCC(CS,IBPCHRG,IBMODS)
- . S (IBCHRG,IBTCHRG)=+IBMCHRG
+ . S (IBCHRG,IBTCHRG)=+IBPCHRG
  . S IBACHRG=IBTCHRG I +RS,+IBTCHRG S IBRCHRG=$$RATECHG^IBCRCC(RS,IBTCHRG,EVDT),IBACHRG=+IBRCHRG
  . ;
  . S IBCNT=IBCNT+1,^TMP($J,"IBCRCC")=IBCNT
@@ -63,7 +61,6 @@ BITMCHG(RS,CS,ITEM,EVDT,UNITS,MOD,INSRC,IDFRC,SAVE) ; get bill charges for a spe
  . ;
  . I (UNITS>1)!(+IBBASE) S IBCOM=$$COMMUB(CS,UNITS,IBBASE) I IBCOM'="" D COMMENT(IBCNT,IBCOM)
  . I $P(IBPCHRG,U,2)'="" S IBCOM=$P(IBPCHRG,U,2) I IBCOM'="" D COMMENT(IBCNT,IBCOM)
- . I $P(IBMCHRG,U,2)'="" S IBCOM=$P(IBMCHRG,U,2) I IBCOM'="" D COMMENT(IBCNT,IBCOM)
  . I $P(IBRCHRG,U,2)'="" S IBCOM=$P(IBRCHRG,U,2) I IBCOM'="" D COMMENT(IBCNT,IBCOM)
  Q
  ;

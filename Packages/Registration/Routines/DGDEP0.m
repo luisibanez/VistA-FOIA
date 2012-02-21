@@ -1,5 +1,5 @@
-DGDEP0 ;ALB/CAW,JAN,BAJ,ERC - Dependent Driver (con't) ; 8/1/08 1:08pm
- ;;5.3;Registration;**45,60,395,624,653,688**;Aug 13, 1993;Build 29
+DGDEP0 ;ALB/CAW,JAN Dependent Driver (con't) ;11/21/94;8/17/01
+ ;;5.3;Registration;**45,60,395,624**;Aug 13, 1993
  ;
 RETDEP ;Return printable data of dependents
  Q:'$D(DGDEP("DGDEP",$J))
@@ -17,16 +17,7 @@ RETDEP ;Return printable data of dependents
  ..S $P(DGDEP(CNT),U,3)=$S($P(DEP,U,2)="M":"Male",$P(DEP,U,2)="F":"Female",1:"Unknown"),$P(DGDEP(CNT),U,20)=$P(DEP,U,20)
  ..S $P(DGDEP(CNT),U,21)=$P(DEP,U,21),$P(DGDEP(CNT),U,22)=$P(DEP,U,22)
  ..N Y S Y=$P(DEP,U,3) D DD^%DT S $P(DGDEP(CNT),U,4)=Y
- ..;
- ..;SSN and SSN Verification status modifications DG*5.3*688 BAJ 11/22/2005
- ..;format SSN for display
- ..I $P(DEP,U,9) D
- ... N T S $P(DGDEP(CNT),U,5)=$E($P(DEP,U,9),1,3)_"-"_$E($P(DEP,U,9),4,5)_"-"_$E($P(DEP,U,9),6,10)
- ... S T=$P(DEP,U,11)
- ... S $P(DGDEP(CNT),U,9)=$S(T=4:"VERIFIED",T=2:"INVALID",1:"")
- ...;set 10th piece to value of Pseudo SSN Reason, if there is one
- ...;for DG*5.3*653 - ERC
- ...S $P(DGDEP(CNT),U,10)=$S($P(DEP,U,10)="R":"Refused to Provide",$P(DEP,U,10)="S":"SSN Unknown/Follow-up Required",$P(DEP,U,10)="N":"NO SSN ASSIGNED",1:"")
+ ..I $P(DEP,U,9) S $P(DGDEP(CNT),U,5)=$E($P(DEP,U,9),1,3)_"-"_$E($P(DEP,U,9),4,5)_"-"_$E($P(DEP,U,9),6,9)
  ..;
  ..S INCOME=$P(DGDEP("DGDEP",$J,RELATE,MORE),U,21)
  ..S INCPER=$P(DGDEP("DGDEP",$J,RELATE,MORE),U,22)

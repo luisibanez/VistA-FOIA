@@ -1,5 +1,5 @@
 IBCSC4B ;ALB/MJB - MCCR PTF SCREEN (CONT.) ;24 FEB 89  9:52
- ;;2.0;INTEGRATED BILLING;**210,228,304**;21-MAR-94
+ ;;2.0;INTEGRATED BILLING;**210,228**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;MAP TO DGCRSC4B
@@ -25,7 +25,7 @@ WR N IBDATE
  Q
 WE S IBAE=$P(IBWE(0),U)
  I IBAE="",'$D(IBDXX),IBWE(0)]"" W ?43,"* ",IBNC S (IBWE(1),IBWE(2),IBWE(3),IBWE(4),IBWE(5))="",IBDXX=1
- I IBAE]"",IBWE(K)]"" S X=$S($P(IBWE(0),"^",3)["+":$$CPT^IBACSV(+IBWE(K),$G(IBDATE)),1:$$ICD9^IBACSV(+IBWE(K),$G(IBDATE))) D
+ I IBAE]"",IBWE(K)]"" S X=$S($P(IBWE(0),"^",3)["+":$$CPT^IBACSV(+IBWE(K),$G(IBDATE)):1:$$ICD9^IBACSV(+IBWE(K),$G(IBDATE))) D
  . W ?43,IBAE,K," - ",$S(X]"":$J($P(X,U),6)_"  "_$E($S($P(IBWE(0),"^",3)["+":$P(X,U,2),1:$P(X,U,3)),1,24),1:IBUC)
  Q
 ASK W !!,"<RETURN> to see more ",$S($D(IBP):"procedure",1:"diagnosis")," codes or '^' to QUIT: " R A:DTIME I '$T!(A["^") S:$D(IBDIA) IBDIA="" S:$D(IBP) IBP="" Q

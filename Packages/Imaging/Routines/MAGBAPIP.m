@@ -1,6 +1,5 @@
 MAGBAPIP ;WOIFO/MLH - Background Processor API to build queues - Modules for place
- ;;3.0;IMAGING;**1,7,8,20,59**;Nov 27, 2007;Build 20
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.0;IMAGING;**1,7,8**;Sep 15, 2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -16,13 +15,13 @@ MAGBAPIP ;WOIFO/MLH - Background Processor API to build queues - Modules for pla
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
-DUZ2PLC(WARN) ;Convert DUZ to a PLACE. File 2006.1 entry (PLACE)
- ; Extrinsic : Always returns a PLACE
- ; WARN          : message about where the PLACE was derived from.
+DUZ2PLC(WARN) ; Moved from MAGGTU3 v2.5 - DBI - SEB Patch 4
+ ; Extrinsic : Always returns a PLACE /gek 8/2003
+ ; WARN          : message about where the PLACE was derived from.  /gek 8/2003
  ; Compute the Users Institution for older versions of Imaging Display workstation.
- ; This is called when DUZ(2) doesn't exist Or Can't resolve DUZ(2)
- ;  into site param entry.  This solved a GateWay Problem where DUZ(2) didn't
- ;  exist.  - Shouldn't get here anymore, that was fixed.
+ ; This is called when : 
+ ;               DUZ(2) doesn' exist, 
+ ;               Or Can't resolve DUZ(2) into site param entry
  N MAGINST,DIVDTA,PLACE
  S MAGINST=0
  D GETS^DIQ(200,DUZ,"16*","I","DIVDTA") ; look up Division field
@@ -37,20 +36,15 @@ DUZ2PLC(WARN) ;Convert DUZ to a PLACE. File 2006.1 entry (PLACE)
  I 'PLACE S PLACE=$O(^MAG(2006.1,0)),WARN="Using First Site Param entry."
  Q PLACE
  ;
-DA2PLC(MAGDA,TYPE) ; Get Place from Image File IEN
+DA2PLC(MAGDA,TYPE) ; Moved from MAGGTU7 v2.5 - DBI - SEB Patch 4
  ; TYPE :        Possible values "A" Abstract, "F" Full Res or "B" Big File
  ; (defaults to "F" if null)
- ; Resolve Place (PLC) using the Acquisition Site field (ACQS)
- ; IF ACQS is null or not doesn't exist in the site parameter file
- ; THEN Resolve PLC using NetWork Location pointer
+ ; Resolve current place of image using NetWork Location pointer.
  ; 
- N MAGREF,MAG0,FBIG,SITE,PLC,MAGJB
+ N MAGREF,MAG0,FBIG
  I '$G(MAGDA) Q 0
- S SITE=$P($G(^MAG(2005,MAGDA,100)),U,3)
- I SITE S PLC=$$PLACE^MAGBAPI(SITE) Q:PLC PLC
- ; p59  Stop the error when an Image is Deleted.
- S MAG0=$G(^MAG(2005,MAGDA,0)) Q:MAG0="" 0
- ;
+ S MAG0=^MAG(2005,MAGDA,0)
+ ;I '$D(TYPE) S TYPE="F" /gek 8/2003  mod for efficiency (from ed)
  S TYPE=$E($G(TYPE)_"F",1)
  I "AF"[TYPE D
  . S MAGREF=$S(TYPE="A":+$P(MAG0,"^",4),1:+$P(MAG0,"^",3))

@@ -1,5 +1,5 @@
 IBJDB11 ;ALB/CPM - BILLING LAG TIME REPORT (COMPILE) ; 27-DEC-96
- ;;2.0;INTEGRATED BILLING;**69,100,118,165**;21-MAR-94
+ ;;2.0;INTEGRATED BILLING;**69,100,118**;21-MAR-94
  ;
 EN ; - Entry point from IBJDB1.
  ;
@@ -27,8 +27,11 @@ REV ; - Review all claims in file #399.
  .;
  .S IBTY=$S($P(IBN0,U,5)<3:"IN",1:"OP") ; Inpatient or outpatient claim?
  .;
- .;- Get date PTF transmitted.
- .S IBPTF="" I IBTY="IN" S IBPTF=$$PTF($P(IBN0,U,8)) Q:'IBPTF
+ .; - Get most recent date PTF transmitted.
+ .I IBTY="IN" D  Q:'IBPTF!('IBPTF&($P(IBAUTH,U,2)))
+ ..S IBPTF=$P(IBN0,U,8) I 'IBPTF Q
+ ..S IBPTF=$O(^DGP(45.83,"C",IBPTF,9999999),-1)\1 I IBPTF Q
+ ..S IBPTF=$P($G(^DGP(45.83,IBPTF,0)),U,2)\1
  .;
  .; - Get other claim info and build date line.
  .S IBDAT=$P(IBAUTH,U,2,5),DFN=+$P(IBN0,U,2),IBDFN=$G(^DPT(DFN,0))
@@ -52,19 +55,14 @@ REV ; - Review all claims in file #399.
  ..;
  ..; - Get most recent check out date that has not been marked as non
  ..;   billable by Claims Tracking; quit if there isn't one.
- ..I IBTY="OP" D  K IBCL,IBCL1 Q:'IBCHK
- ...D CL(IBN) ;GET LIST OF CLINICS FOR THIS BILL
+ ..I IBTY="OP" D  Q:'IBCHK
  ...S IBCHK=0,IBX1=IBX-.0001
  ...F  S IBX1=$O(^SCE("ADFN",DFN,IBX1)) Q:'IBX1!((IBX1\1)>IBX)  D
  ....S IBX2=0 F  S IBX2=$O(^SCE("ADFN",DFN,IBX1,IBX2)) Q:'IBX2  D
- .....;
- .....;CHECK TO SEE IF CLINICS MATCH
- .....S IBCL1=+$P($G(^SCE(IBX2,0)),U,4) Q:'$D(IBCL(IBCL1))
  .....I $P($G(^IBT(356,+$O(^IBT(356,"ASCE",IBX2,0)),0)),U,19) Q
- .....S IBX3=$P($G(^SCE(IBX2,0)),U,7)\1 I IBX3,IBX3'>$P(IBAUTH,U,2)  D
- ...... S:IBX3>IBCHK IBCHK=IBX3 Q
+ .....S IBX3=$P($G(^SCE(IBX2,0)),U,7)\1 I IBX3 S IBCHK=IBX3
  ..;
- ..S X=$S(IBTY="IN":IBX1_U_+IBPTF,1:IBX_U_IBCHK)_U_IBDAT
+ ..S X=$S(IBTY="IN":IBX1_U_IBPTF,1:IBX_U_IBCHK)_U_IBDAT
  ..S IBPOL1=$S(IBPOL>+X:1,1:0) ; Policy found after treatment.
  ..;
  ..; - Check date line for at least one date within the user specified
@@ -111,8 +109,7 @@ REV ; - Review all claims in file #399.
  ..; - Save data for detail or summary report(s).
  ..F Y=1:1 S Z=$P(IBSEL1,",",Y) Q:'Z  D
  ...I IBRPT="D" D
- ....S IBBN=$P(IBN0,U) S:IBPOL1 IBBN=IBBN_"*"
- ....S Y(Z)=IBBN_U_Y(Z),Y1(Z)=$G(Y1(Z))+1
+ ....S Y(Z)=$P(IBN0,U)_U_Y(Z)_U_$S(IBPOL1:"*",1:""),Y1(Z)=$G(Y1(Z))+1
  ....S ^TMP("IBJDB1",$J,IBDIV,IBTY,Z,$P(IBDFN,U)_"@@"_$P(IBDFN,U,9),Y1(Z))=Y(Z)
  ...E  S IBCT(IBDIV,IBTY,Z)=IBCT(IBDIV,IBTY,Z)+1,IBTL(IBDIV,IBTY,Z)=IBTL(IBDIV,IBTY,Z)+Y(Z)
  ;
@@ -146,14 +143,14 @@ AUTH(IBN) ; - Is this an authorized claim?
  S X=$P($G(^PRCA(430,IBN,0)),U,10) I X S $P(VAL,U,3)=X\1
  ;
 FP ; - Get first payment date, if available.
- I '$P($G(^PRCA(430,IBN,7)),U,7) G DC ; No payments made.
+ I '$P($G(^PRCA(430,IBN,7)),U,7) G CL ; No payments made.
  S (IBPAY,IBT)=0 F  S IBT=$O(^PRCA(433,"C",IBN,IBT)) Q:'IBT  D  Q:IBPAY
  .S IBT0=$G(^PRCA(433,IBT,0)),IBT1=$G(^(1))
  .I $P(IBT0,U,4)'=2 Q  ;                  Not complete.
  .I $P(IBT1,U,2)'=2,$P(IBT1,U,2)'=34 Q  ; Not a payment.
  .S X=$S(+IBT1:+IBT1,1:$P(IBT1,U,9)\1),$P(VAL,U,4)=X,IBPAY=1
  ;
-DC ; - Get date AR closed.
+CL ; - Get date AR closed.
  S X=$$CLO^PRCAFN(IBN) I X>0 S $P(VAL,U,5)=X
  ;
  ; - Is there a payment date AND a closed date for this claim?
@@ -169,21 +166,3 @@ DL(X,X1) ; - Is line item date valid for report?
  I 'X S:X1'<IBBDT&(X1'>IBEDT) X2=1 G DLQ
  I IBSEL[(","_X_","),X1'<IBBDT,X1'>IBEDT S X2=1
 DLQ Q X2
- ;
- ;
-PTF(X) ; - Get most recent PTF transmission date.
- ;    Input: X=IEN of PTF file entry.
- ;   Output: Y=PTF date.
- N I,K,Y
- S Y=0 G:'$O(^DGP(45.83,"C",+X,0)) PTFQ
- S I=0 F  S I=$O(^DGP(45.83,"C",X,I)) Q:'I  D
- .S J=$P($G(^DGP(45.83,I,0)),U,2)\1  Q:J>$P(IBAUTH,U,2)  S:J K(J)=""
- S I=0 F  S I=$O(K(I)) Q:'I  S Y=I
- ;
-PTFQ Q Y
- ;
-CL(IBN) ; - Get the clinics for bill.
- N I,J K IBCL ; IBCL=Bill clinic array.
- S I=0 F  S I=$O(^DGCR(399,IBN,"CP",I)) Q:I=""  D
- .S J=$P($G(^DGCR(399,IBN,"CP",I,0)),U,7) S:J IBCL(J)=""
- Q

@@ -1,10 +1,8 @@
 SCRPO6 ;BP-CIOFO/KEITH - Historical Team Assignment Summary ; 9/14/99 10:07am
- ;;5.3;Scheduling;**177,297**;AUG 13, 1993
+ ;;5.3;Scheduling;**177**;AUG 13, 1993
  ;
 EN ;Queue report
  N LIST,RTN,DESC
- S SUMON=0
- W !,"Print Final Summary Only" S %=2 D YN^DICN I %=1 S SUMON=1
  S LIST="DIV,TEAM"
  S RTN="RUN^SCRPO6"
  S DESC="Historical Team Assignment Summary"
@@ -29,7 +27,7 @@ PROMPT(LIST,SCRTN,SCDESC) ;Prompt for report parameters, queue report
  S SCT(1)="**** Report Parameters Selected ****" D SUBT^SCRPW50(SCT(1))
  G:'$$PPAR^SCRPO(.SC,1,.SCT) END
  W !!,"This report requires 132 column output!"
- W ! N ZTSAVE S ZTSAVE("^TMP(""SC"",$J,")="",ZTSAVE("SC")="",ZTSAVE("SUMON")=""
+ W ! N ZTSAVE S ZTSAVE("^TMP(""SC"",$J,")="",ZTSAVE("SC")=""
  D EN^XUTMDEVQ(SCRTN,SCDESC,.ZTSAVE)
 END K ^TMP("SC",$J) D DISP0^SCRPW23,END^SCRPW50 Q
  ;
@@ -81,7 +79,6 @@ PRINT ;Print report
  Q:SCOUT
  S SCX=^TMP("SCRPT",$J,0,0) D SLINE("REPORT TOTAL:",SCX,12,.SCLF)
  Q:SCOUT  D FOOT^SCRPO7
- Q:$G(SUMON)
  I $D(^TMP("SCRPT",$J,0,0,"TLIST")) D
  .S SCTITL(2)=$$HDRX("T") D HDR^SCRPO(.SCTITL,132),SHDR("T") Q:SCOUT
  .S SCDIV=""

@@ -1,6 +1,6 @@
 IBRREL ;ALB/CPM - RELEASE MEANS TEST CHARGES 'ON HOLD' ; 03-MAR-92
- ;;2.0;INTEGRATED BILLING;**95,153,199,347**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**95,153,199**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; Entry point for stand-alone 'release' option
  I '$D(^IB("AH")) W !!,"There are no patients with charges 'on hold' at this time.",! Q
@@ -66,13 +66,8 @@ LST ; Display individual IB Action.
  N IBND,IBND1,IBRXN,IBRX,IBRF,IBRDT,IENS
  S IBND=$G(^IB(IBN,0)),IBND1=$G(^IB(IBN,1)),(IBRXN,IBRX,IBRF,IBRDT)=0
  I $P(IBND,"^",4)["52:" S IBRXN=$P($P(IBND,"^",4),":",2),IBRX=$P($P(IBND,"^",8),"-"),IBRF=$P($P(IBND,"^",4),":",3)
- I $P(IBND,"^",4)["52:"  D
- .I IBRF>0 D
- ..S IENS=+IBRF
- ..S IBRDT=$$SUBFILE^IBRXUTL(+IBRXN,+IENS,52,.01)
- .E  D
- ..S IENS=+IBRXN
- ..S IBRDT=$$FILE^IBRXUTL(+IENS,22)
+ I IBRF>0 S IENS=+IBRF_","_+IBRXN_",",IBRDT=$$GET1^DIQ(52.1,IENS,.01,"I")
+ E  S IENS=+IBRXN_",",IBRDT=$$GET1^DIQ(52,IENS,22,"I")
  W !?1,$J(IBNUM,2),?7,$J(+IBND,9)
  W ?18,$S(IBRXN>0:"Rx #: "_IBRX_$S(IBRF>0:"("_IBRF_")",1:""),1:$P($G(^IBE(350.1,+$P(IBND,"^",3),0)),"^",8))
  W ?42,$P($P(IBND,"^",11),"-",2)

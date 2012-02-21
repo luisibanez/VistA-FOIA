@@ -1,6 +1,6 @@
 IBRFN4 ;ALB/TMK - Supported functions for AR/IB DATA EXTRACT ;15-FEB-2005
- ;;2.0;INTEGRATED BILLING;**301,305,389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**301**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 IBAREXT(IBIFN,IBD) ; Returns data for claim IBIFN for IB/AR Extract
  ; Data returned (pieces):
@@ -17,10 +17,9 @@ IBAREXT(IBIFN,IBD) ; Returns data for claim IBIFN for IB/AR Extract
  ; 11-DRG 0;8==> file 45 (9 - EXTERNAL)
  ; 12-ECME #  "M1";8 (460 - EXTERNAL)
  ; 13-NON-VA Facility
- ; 14-#Days Site Not Responsible for MRA ($$DAYS(IBIFN))
+ ; 14-Rejections from MRA exist flag (1=YES,0=NO) $$REJ(IBIFN)
  ; 15-National VA id number for Ins Verification (365.12;.02 - INTERNAL)
  ; 16-Payer name (file 365.12;.01)
- ; 17-Offset Amount (202-INTERNAL)
  ;
  ; IBD("PRD",seq #)=prosthetic item name^date^bill ien
  ; IBD("IN")= TYPE OF PLAN NAME ^ GROUP NUMBER ^ RELATIONSHIP TO INSURED
@@ -30,7 +29,7 @@ IBAREXT(IBIFN,IBD) ; Returns data for claim IBIFN for IB/AR Extract
  ;   ^ MAILING STREET ADDRESS [LINE 2] ^ CITY ^ STATE NAME  ^  ZIP
  ;
  N IB,IBI,IBJ,IBK,IBX,IBNODE,IBTMP,IBIN,Z
- F IBNODE=0,"S","TX","M","U1" S IB(IBNODE)=$G(^DGCR(399,IBIFN,IBNODE))
+ F IBNODE=0,"S","TX","M" S IB(IBNODE)=$G(^DGCR(399,IBIFN,IBNODE))
  S IBD=$S($$MRASEC^IBCEF4(IBIFN):1,1:0)
  S $P(IBD,U,2)=$P(IB("S"),U,7),$P(IBD,U,3)=$P(IB("TX"),U,2)
  S $P(IBD,U,4)=$$GET1^DIQ(399,IBIFN_",",26,"E"),$P(IBD,U,5)=$$GET1^DIQ(399,IBIFN_",",27,"E")
@@ -42,15 +41,15 @@ IBAREXT(IBIFN,IBD) ; Returns data for claim IBIFN for IB/AR Extract
  S $P(IBD,U,12)=$$GET1^DIQ(399,IBIFN_",",460,"E")
  S Z=$P($G(^DGCR(399,IBIFN,"U2")),U,10),$P(IBD,U,13)=$S(Z:$P($G(^IBA(355.93,Z,0)),U,1),1:"")
  ;
- S $P(IBD,U,14)=$$DAYS(IBIFN)
- S $P(IBD,U,17)=$P(IB("U1"),U,2)
+ ;;;S $P(IBD,U,14)=$$REJ(IBIFN)
+ S $P(IBD,U,14)=0    ; esg 2/24/05 - until the MRA bug is fixed
  ;
  K IBTMP D SET^IBCSC5B(IBIFN,.IBTMP)
  S (IBI,IBJ)=0 F  S IBI=$O(IBTMP(IBI)) Q:'IBI  D
  . S IBK=0 F  S IBK=$O(IBTMP(IBI,IBK)) Q:'IBK  D
  .. S IBX=IBTMP(IBI,IBK)
  .. S IBJ=IBJ+1
- .. S IBD("PRD",IBJ)=$$PINB^IBCSC5B(+IBX)_U_IBI_U_+IBTMP
+ .. S IBD("PRD",IBJ)=$P($$PIN^IBCSC5B(IBK),U,2)_U_IBI_U_+IBTMP
  ;
  S Z=" ",IBD("IN")="",DFN=+$P(IB(0),U,2)
  F  S Z=$O(^DPT(DFN,.312,Z),-1) Q:Z=""  D  Q:Z=""
@@ -100,27 +99,6 @@ IBACT(IBIFN,IBARRY) ; Returns IB actions for bill ien IBIFN
  . S IBARRY(IBCT)=IBARRY,IBARRY=""
  Q
  ;
-PREREG(IBBDT,IBEDT) ;Returns Pre-registration data
- N IBDATA
- S IBDATA=$$IBAR^IBJDIPR(IBBDT,IBEDT)
- Q IBDATA
- ;
-BUFFER(IBBDT,IBEDT) ;Returns Buffer data
- N IBDATA
- S IBDATA=$$IBAR^IBCNBOA(IBBDT,IBEDT)
- Q IBDATA
- ;
-DAYS(IBIFN) ; Returns # days site not responsible for MRA
- N X,X1,X2,D0
- S X="" ;No. of days
- G:'$P(IBD,U,2) DAYSQ
- S X2=$P(IBD,U,2) ;MRA Request Date
- S X1=$P(IBD,U,7) ;MRA Recorded Date
- G:'$$MRASEC^IBCEF4(IBIFN) DAYSQ ; Not MEDICARE secondary
- I 'X1!(X1<X2) S X1=DT
- D ^%DTC
-DAYSQ Q X
- ;
 REJ(IBIFN) ; Returns 1 if any rejects found for MRA secondary claim or for
  ; any preceding claims it was cancelled/cloned from
  N X,Y,I,X1,X2,X3,D0,CURSEQ
@@ -140,3 +118,4 @@ REJ(IBIFN) ; Returns 1 if any rejects found for MRA secondary claim or for
  .. S Y=1
  . I 'Y S D0=X1,X1=+$P($G(^DGCR(399,X1,0)),U,15) S:X1=D0 D0="" Q
 REJQ Q Y
+ ;

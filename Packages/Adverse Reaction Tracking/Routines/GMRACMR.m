@@ -1,5 +1,5 @@
 GMRACMR ;HIRMFO/WAA,RM-LIST Chart/ID Band mark report ;9/29/97  08:11
- ;;4.0;Adverse Reaction Tracking;**8,35**;Mar 29, 1996
+ ;;4.0;Adverse Reaction Tracking;**8**;Mar 29, 1996
  ;;
 EN1 ;PRIMARY ENTRY POINT
  S GMRAOUT=0
@@ -25,11 +25,6 @@ DATE ;DATE SELECTION
  ;FROM DATE
  Q:'(GMRASEL["2"!(GMRASEL["3"))
  W !," Enter date/time range in which patients were",!,$S(GMRASEL["3":" admitted into the hospital"_$S(GMRASEL["2":" or",1:""),1:""),$S(GMRASEL["2":" seen at an outpatient clinic",1:""),"."
- W !!," Please note! This report will show patients as not having received an"
- W !,"assessment if the assessment was entered after the end date of"
- W !,"the range.  For this reason, it is recommended to end the range"
- W !,"with today. This can be done with an entry of 'T' (for Today) at"
- W !,"the 'Enter END Date (time optional): T//' prompt."
  W !!,"Enter START Date (time optional): " R X:DTIME S:'$T X="^^" I "^^"[X S GMRAOUT=1 Q
  I X?1"?".E D  G DATE
  .   S %DT="TEX" D HELP^%DTC

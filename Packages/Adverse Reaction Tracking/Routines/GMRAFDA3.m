@@ -1,5 +1,5 @@
 GMRAFDA3 ;HIRMFO/WAA-DISPLAY FDA REPORT OVER DT RANGE ;12/1/95  11:34
- ;;4.0;Adverse Reaction Tracking;**33**;Mar 29, 1996;Build 5
+ ;;4.0;Adverse Reaction Tracking;;Mar 29, 1996
 EN1 ; Entry for PRINT ALL FDA EVENTS WITHIN D/T RANGE option
  S GMRAOUT=0 K DIR
  S DIR(0)="DO^:NOW:EXT",DIR("A")="Select Start Date/Time"
@@ -40,7 +40,6 @@ PRINT ;Central Print
  .S GMRAPA1(0)=$G(^GMR(120.85,GMRAPA1,0)) Q:GMRAPA1(0)=""
  .S GMRAPA(0)=$G(^GMR(120.8,$P(GMRAPA1(0),U,15),0)) Q:GMRAPA(0)=""
  .S DFN=$P(GMRAPA(0),U) D PID^VADPT6
- .Q:'$$PRDTST^GMRAUTL1(DFN)  ;GMRA*4*33  Exclude test patient from report if production or legacy environment.
  .S GMRACNT=GMRACNT+1
  .W !,$E($P(^DPT(DFN,0),U),1,23)," (",VA("PID"),")" K VA,DFN
  .W ?32,$E($P(GMRAPA(0),U,2),1,28)

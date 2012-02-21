@@ -1,5 +1,5 @@
 DGPTC ;ALB/MJK - Census Main Options; 15 APR 90 ; 5/11/01 1:15pm
- ;;5.3;Registration;**383,643,702**;Aug 13, 1993
+ ;;5.3;Registration;**383,643**;Aug 13, 1993
  ;
  D DT^DICRW S X="DGPTC",DIK="^DOPT("""_X_""","
  G A:$D(^DOPT(X,10))
@@ -38,8 +38,8 @@ Q4 K DGCN,DGCN0 Q
  K DGDASH W ! D DATE^DGPTCO1 S:Y]"" DIC("B")=Y
  S DIC="^DG(45.86,",DIC(0)="AELMQ" D ^DIC K DIC G Q7:Y<0
  S (D0,DGCN)=+Y D PAR
- ;S DA=DGCN,DIE="^DG(45.86,",DR="[DGPT CENSUS DATE]" D ^DIE K DIE,DR,DQ,DE
- ;I '$D(Y) S D0=DGCN D PAR W !!
+ S DA=DGCN,DIE="^DG(45.86,",DR="[DGPT CENSUS DATE]" D ^DIE K DIE,DR,DQ,DE
+ I '$D(Y) S D0=DGCN D PAR W !!
 Q7 K DGCN,D0,DA Q
  ;
 8 ;;Regenerate Census WorkFile

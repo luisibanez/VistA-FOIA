@@ -1,5 +1,5 @@
 GMRAOR1 ;HIRMFO/RM,WAA-OERR UTILITIES ;8/2/04  15:13
- ;;4.0;Adverse Reaction Tracking;**21,41**;Mar 29, 1996;Build 8
+ ;;4.0;Adverse Reaction Tracking;**21**;Mar 29, 1996
 EN1(DFN,ARRAY) ; This entry returns a list of patient allergies/adverse
  ; reactions.
  ; Input variables:
@@ -29,15 +29,3 @@ EN1(DFN,ARRAY) ; This entry returns a list of patient allergies/adverse
  I ARRAY'="GMRARXN" M @ARRAY=GMRARXN K GMRARXN
  K GMRAL
  Q
-SETNODE(ITEM,DATA) ;
- N VALUE
- S VALUE=""
- I ITEM[DATA S VALUE=ITEM Q VALUE
- I DATA="LOCAL" D  Q VALUE
- .I ITEM="" S VALUE="LOCAL" Q
- .I ITEM["REMOTE SITE(S)" S VALUE="LOCAL AND REMOTE SITE(S)"
- I DATA="REMOTE SITE(S)" D  Q VALUE
- .I ITEM="" S VALUE="REMOTE SITE(S)" Q
- .I ITEM["LOCAL" S VALUE="LOCAL AND REMOTE SITE(S)"
- Q VALUE
- ;

@@ -1,5 +1,5 @@
-OCXOZ10 ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
+OCXOZ10 ;SLC/RJS,CLA - Order Check Scan ;OCT 20,2005 at 22:40
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221**;Dec 17,1997
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
  ; ***************************************************************
@@ -122,7 +122,7 @@ R68R3B ; Send Order Check, Notication messages and/or Execute code for  Rule #68
  Q
  ;
 R69R1A ; Verify all Event/Elements of  Rule #69 'LAB THRESHOLD'  Relation #1 'IF HL7 LAB RESULTS AND (GREATER THAN THRESHOLD VAL...'
- ;  Called from EL5+7^OCXOZ0G, and EL131+5^OCXOZ0H, and EL132+5^OCXOZ0H.
+ ;  Called from EL5+7^OCXOZ0G, and EL131+5^OCXOZ0H, and EL132+5^OCXOZ0I.
  ;
  Q:$G(OCXOERR)
  ;

@@ -1,5 +1,5 @@
-PSJLMUTL ;BIR/MLM-INPATIENT LISTMAN UTILITIES ; 9/12/07 10:28am
- ;;5.0; INPATIENT MEDICATIONS ;**7,67,58,85,111,160,198**;16 DEC 97;Build 7
+PSJLMUTL ;BIR/MLM-INPATIENT LISTMAN UTILITIES ;29 May 98 / 8:35 AM
+ ;;5.0; INPATIENT MEDICATIONS ;**7,67,58,85,111**;16 DEC 97
  ;
  ; Reference to ^ORD(101 is supported by DBIA #872.
  ; Reference to ^PS(50.606 is supported by DBIA #2174.
@@ -15,7 +15,7 @@ NEWALL(DFN) ; Enter Allergy info.
  D FULL^VALM1,EN2^GMRAPEM0
  Q
 DISALL(DFN) ; Display brief patient info list.
- K ^TMP("PSJALL",$J) N PSJLN,X,Y,PSGALG,PSGRALG,PSGLDR,PSJGMRAL,PSJWHERE S PSJWHERE="PSJLMUTL"
+ K ^TMP("PSJALL",$J) N PSJLN,X,Y,PSGALG,PSGLDR,PSJGMRAL,PSJWHERE S PSJWHERE="PSJLMUTL"
  D ATS^PSJMUTL(57,57,2)
  I (PSJGMRAL=0) S ^TMP("PSJALL",$J,1,0)=" Allergies/Reactions: "_"NKA",PSJLN=2 G NARRATIV
  I (PSJGMRAL="") S ^TMP("PSJALL",$J,1,0)=" Allergies/Reactions: No Allergy Assessment",PSJLN=2 G NARRATIV
@@ -26,7 +26,6 @@ DISALL(DFN) ; Display brief patient info list.
  .F  S X=$O(PSGVALG(X)) Q:'X  S ^TMP("PSJALL",$J,PSJLN,0)="                        "_PSGVALG(X),PSJLN=PSJLN+1
  .S ^TMP("PSJALL",$J,PSJLN,0)="        Non-Verified: "_$S($G(PSGALG(1))=0:"",1:$G(PSGALG(1))),PSJLN=PSJLN+1,X=1
  .F  S X=$O(PSGALG(X)) Q:'X  S ^TMP("PSJALL",$J,PSJLN,0)="                        "_PSGALG(X),PSJLN=PSJLN+1
- D RAD^PSJMUTL
  I ($G(PSGVADR(1))="NKA")!((PSGVADR=0)&(PSGADR=0)) D
  .S ^TMP("PSJALL",$J,PSJLN,0)="",^TMP("PSJALL",$J,PSJLN+1,0)="   Adverse Reactions: "_$G(PSGADR(1)),PSJLN=PSJLN+2,X=1
  I ($G(PSGVADR(1))'="NKA")&((PSGVADR>0)!(PSGADR>0)) D
@@ -39,6 +38,7 @@ NARRATIV ; print inpatient/outpatient narratives
  N PSJCLHD
  S ^TMP("PSJALL",$J,PSJLN,0)="" D SETNAR("PSJALL",$G(^PS(55,DFN,5.3)),"In")
  S ^TMP("PSJALL",$J,PSJLN+1,0)="" D SETNAR("PSJALL",$G(^PS(55,DFN,1)),"Out")
+ ;S PSJLN=PSJLN+4 D SETNAR("PSJALL",$G(^PS(55,DFN,1)),"Out")
  D SDA S PSJLN=0 F X=0:0 S X=$O(^TMP("PSJALL",$J,X)) Q:'X  S PSJLN=PSJLN+1
  I '$G(PSJCLHD)!'$G(VALMCNT) S VALMCNT=PSJLN
  Q
@@ -68,6 +68,7 @@ ENC(SDPATDFN,SDCLIEN) ;
  . S SUBVIS=0 F  S SUBVIS=$O(^TMP("VSIT",$J,VIS,SUBVIS)) Q:'SUBVIS  D
  .. S PSJSCI=$P(^TMP("VSIT",$J,VIS,SUBVIS),U),PSJAPD=$$FMTE^XLFDT(PSJSCI,1) Q:PSJSCI<1!(PSJAPD="")
  .. S ^TMP("PSJVSIT",$J,PSJSCI,PSJCLIN,"E")=$E(PSJCLINO_PSJPAD,1,25)_"  "_$TR(PSJAPD,"@","/")_" *Encounter",PSJCLHD=1
+ ;D SDVISIT^SDAMA203(SDPATDFN,SDCLIEN,$G(PSGDT),1,1,SDFROM)
  Q
  ;
 SETNAR(SUB,NARR,TYPE) ; Set up Narrative info.
@@ -125,13 +126,14 @@ TECHACT() ; Allowable actions for IV technician (PSJI PHARM TECH)
  Q 1
 PATINFO()         ; Determines if detailed allergy info can be displayed.
  S Y=$P($G(^ORD(101,+$G(^ORD(101,DA(1),10,DA,0)),0)),U) I Y="" Q 0
+ ;I Y="PSJ LM DETAILED ALLERGY",'$G(GMRAL) Q 0
  I Y="PSJ LM SHOW PROFILE",$D(PSJLMPRO) Q 0
  Q 1
 HIDDEN(CHK) ; Determines if certain Hidden actions are to be available.
+ ;N Y S Y=$P($G(^ORD(101,+$G(^ORD(101,DA(1),10,DA,0)),0)),U) I Y="" Q 0
+ ;I Y="PSJ LM PNV JUMP",'$D(PSJPNV) Q 0
  I CHK="JUMP",'$G(PSJPNV) D NA("Jump is only available through Non-Verified/Pending Orders option.") Q 0
  I CHK="SPEED",'$D(PSJUDPRF) D NA("Speed options are only available from the Unit Dose Order Entry Profile.") Q 0
- ;PSJ*5*198;GMZ;Remove copy function from this option
- I CHK="COPY",('$D(PSGACT)!($G(PSGACT)="")) D NA("Copy is not allowed from this option.") Q 0
  Q 1
  ;
 NA(TXT) ;
@@ -145,6 +147,7 @@ UPR(DFN)         ; UPDATE PATIENT SPECIFIC DATA IN 55
  Q
  ;
 DETALL(DFN)        ; Enter Detailed Allergy Display list.
+ ;D EN^VALM("PSJ LM ALLERGY DETAIL"),DISALL^PSJLMUTL(DFN)
  D EN^VALM("PSJ LM ALLERGY DISPLAY")
  Q
 BRFALL(DFN)        ;
@@ -170,7 +173,7 @@ DRUGNAME(DFN,ON) ; Find drug name to display
  S X=+$O(^PS(53.1,+ON,1,0)) I X,'$O(^PS(53.1,+ON,1,X)) S X=$G(^PS(53.1,+ON,1,X,0)) I $P(X,U)]"" Q $$DDNAME(+X)_U_.3_$P(X,"^",2)
  Q $$OINAME(OIND)_U_.3
  ;
-DDNAME(X) ; 
+DDNAME(X) ; Return Dispense Drug N$G(PS(53.1,+ON,.3))
  Q $$FOUND($P($G(^PSDRUG(+X,0)),U),X,"PSDRUG(,")
  ;
 OINAME(ND) ; Return Orderable Item Name_" "_Dose Form_U_Dosage Ordered
@@ -178,5 +181,5 @@ OINAME(ND) ; Return Orderable Item Name_" "_Dose Form_U_Dosage Ordered
  S X=$G(^PS(50.7,+ND,0)),DNME="" S:X]"" DF=$P($G(^PS(50.606,+$P(X,U,2),0)),U),DNME=$P(X,U)_" "_DF
  Q $$FOUND(DNME,+ND,"PS(50.7")
  ;
-FOUND(DNME,DN,FN) ;
+FOUND(DNME,DN,FN) ; Valid Drug Name?
  Q $S(DNME]"":DNME,1:"NOT FOUND "_DN_";"_FN)

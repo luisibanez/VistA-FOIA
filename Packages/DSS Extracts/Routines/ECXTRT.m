@@ -1,5 +1,5 @@
-ECXTRT ;ALB/JAP,BIR/DMA,CML,PTD-Treating Specialty Change Extract ;9/8/10  16:25
- ;;3.0;DSS EXTRACTS;**1,8,17,24,33,35,39,46,49,84,107,105,127**;Dec 22, 1997;Build 36
+ECXTRT ;ALB/JAP,BIR/DMA,CML,PTD-Treating Specialty Change Extract ; 8/19/05 9:28am
+ ;;3.0;DSS EXTRACTS;**1,8,17,24,33,35,39,46,49,84**;Dec 22, 1997
 BEG ;entry point from option
  D SETUP I ECFILE="" Q
  D ^ECXTRAC,^ECXKILL
@@ -36,45 +36,36 @@ START ; start package specific extract
  ..;if ts has changed, find los on losing ts
  ..D:ECXTRTL'=ECXTRTN PREVTRT^ECXTRT1(.LOC,ECD1,ECD2,ECXTRTL,.ECXLOS)
  ..;whether ts has changed or not, see if primary provider has changed
- ..;don't bother if there's no data on current primary provider or no change in provider
+ ..;dont bother if there's no data on current primary provider or no change in provider
  ..D:(ECXPRVN'="")&(ECXPRVN'=ECXPRVL) PREVPRV^ECXTRT1(.LOC,ECD1,ECXPRVN,ECD2,.ECXPRVL,.ECXLOSP)
  ..;whether ts has changed or not, see if attending physician has changed
- ..;don't bother if there's no data on current attending physician or no change in attending
+ ..;dont bother if theres no data on current attending physician or no change in attending
  ..D:(ECXATTN'="")&(ECXATTN'=ECXATTL) PREVATT^ECXTRT1(.LOC,ECD1,ECXATTN,ECD2,.ECXATTL,.ECXLOSA)
  ..S ECXDATE=$$ECXDATE^ECXUTL(ECXMVD1,ECXYM),ECXTIME=$$ECXTIME^ECXUTL(ECXMVD1)
  ..S ECXADMDT=$$ECXDATE^ECXUTL(ECXADT,ECXYM),ECXADMTM=$$ECXTIME^ECXUTL(ECXADT),ECXDCDT=""
  ..;- Production Division
  ..S ECXPDIV=""
  ..I ECXLOGIC>2003 S ECXPDIV=$S(WRD="":"",1:$$NPDIV(WRD))
+ ..S (ECXALNPI,ECXANNPI,ECXPLNPI,ECXPNNPI)=""
  ..;
  ..;- Observation patient indicator (YES/NO)
  ..S ECXOBS=$$OBSPAT^ECXUTL4(ECXA,ECXTS)
  ..;
  ..;- Chg outpat with movemnt/discharge to inpat (to comply w/existing business rule)
  ..I ECXA="O"&(ECXOBS="NO")&(ECXMVD1) S ECXA="I"
- ..; ******* - PATCH 127, ADD PATCAT CODE ********
- ..S ECXPATCAT=$$PATCAT^ECXUTL(ECXDFN)
  ..;
  ..;- Get providers person classes
  .. S ECXATLPC=$$PRVCLASS^ECXUTL($E(ECXATTL,2,999),ECXADT)
- .. S ECATLNPI=$$NPI^XUSNPI("Individual_ID",$E(ECXATTL,2,999),ECXADT)
- .. S:+ECATLNPI'>0 ECATLNPI="" S ECATLNPI=$P(ECATLNPI,U)
  .. S ECXPRNPC=$$PRVCLASS^ECXUTL($E(ECXPRVN,2,999),ECXADT)
- .. S ECPRVNPI=$$NPI^XUSNPI("Individual_ID",$E(ECXPRVN,2,999),ECXADT)
- .. S:+ECPRVNPI'>0 ECPRVNPI="" S ECPRVNPI=$P(ECPRVNPI,U)
  .. S ECXATNPC=$$PRVCLASS^ECXUTL($E(ECXATTN,2,999),ECXADT)
- .. S ECATTNPI=$$NPI^XUSNPI("Individual_ID",$E(ECXATTN,2,999),ECXADT)
- .. S:+ECATTNPI'>0 ECATTNPI="" S ECATTNPI=$P(ECATTNPI,U)
  .. S ECXPRLPC=$$PRVCLASS^ECXUTL($E(ECXPRVL,2,999),ECXADT)
- .. S ECPRLNPI=$$NPI^XUSNPI("Individual_ID",$E(ECXPRVL,2,999),ECXADT)
- .. S:+ECPRLNPI'>0 ECPRLNPI="" S ECPRLNPI=$P(ECPRLNPI,U)
  ..;
  ..;- If no encounter number, don't file record
  ..S ECXENC=$$ENCNUM^ECXUTL4(ECXA,ECXSSN,ECXADT,,ECXTS,ECXOBS,ECHEAD,,)
- ..D:ECXENC'="" FILE^ECXTRT2
+ ..D:ECXENC'="" FILE
  ;for nhcu episodes with intervening asih stays, the los calculated here is not accurate,
  ;but it never has been; this is best solution within current extract framework;
- ;at discharge the los calculated for nhcu episodes will be the los since admission w/o asih los subtracted;
+ ;at discharge the los calculated for nhcu apisodes will be the los since admission w/o asih los subtracted;
  ;
  ;loop through discharges to get last treating specialty
  S ECD=ECSD1
@@ -110,32 +101,23 @@ START ; start package specific extract
  ..;- Production Division
  ..S ECXPDIV=""
  ..I ECXLOGIC>2003 S ECXPDIV=$S(WRD="":"",1:$$NPDIV(WRD))
+ ..S (ECXALNPI,ECXANNPI,ECXPLNPI,ECXPNNPI)=""
  ..;
  ..;- Observation patient indicator (YES/NO)
  ..S ECXOBS=$$OBSPAT^ECXUTL4(ECXA,ECXTS)
  ..;
  ..;- Chg outpat with movemnt/discharge to inpat (to comply w/existing business rule)
  ..I ECXA="O"&(ECXOBS="NO")&(ECXMVD1) S ECXA="I"
- ..; ******* - PATCH 127, ADD PATCAT CODE ********
- ..S ECXPATCAT=$$PATCAT^ECXUTL(ECXDFN)
  ..;
  ..;- Get providers person classes
  .. S ECXATLPC=$$PRVCLASS^ECXUTL($E(ECXATTL,2,999),ECXADT)
- .. S ECATLNPI=$$NPI^XUSNPI("Individual_ID",$E(ECXATTL,2,999),ECXADT)
- .. S:+ECATLNPI'>0 ECATLNPI="" S ECATLNPI=$P(ECATLNPI,U)
  .. S ECXPRNPC=$$PRVCLASS^ECXUTL($E(ECXPRVN,2,999),ECXADT)
- .. S ECPRVNPI=$$NPI^XUSNPI("Individual_ID",$E(ECXPRVN,2,999),ECXADT)
- .. S:+ECPRVNPI'>0 ECPRVNPI="" S ECPRVNPI=$P(ECPRVNPI,U)
  .. S ECXATNPC=$$PRVCLASS^ECXUTL($E(ECXATTN,2,999),ECXADT)
- .. S ECATTNPI=$$NPI^XUSNPI("Individual_ID",$E(ECXATTN,2,999),ECXADT)
- .. S:+ECATTNPI'>0 ECATTNPI="" S ECATTNPI=$P(ECATTNPI,U)
  .. S ECXPRLPC=$$PRVCLASS^ECXUTL($E(ECXPRVL,2,999),ECXADT)
- .. S ECPRLNPI=$$NPI^XUSNPI("Individual_ID",$E(ECXPRVL,2,999),ECXADT)
- .. S:+ECPRLNPI'>0 ECPRLNPI="" S ECPRLNPI=$P(ECPRLNPI,U)
  ..;
  ..;- If no encounter number don't file record
  ..S ECXENC=$$ENCNUM^ECXUTL4(ECXA,ECXSSN,ECXADT,,ECXTS,ECXOBS,ECHEAD,,)
- ..D:ECXENC'="" FILE^ECXTRT2
+ ..D:ECXENC'="" FILE
  D KPATDEM^ECXUTL2
  Q
  ;
@@ -179,6 +161,30 @@ FINDLOC(ECXTSD,ECXLOC,ECXSPC,ECXPRV,ECXATT,ECXMOV,ECXTRT) ;find local array node
  .S SUB4=$O(ECXLOC(SUB3,0)),SUB5=$O(ECXLOC(SUB3,SUB4,0))
  .S LOC=ECXLOC(SUB3,SUB4,SUB5),ECXTRT=SUB4,ECXSPC=$P(LOC,U)
  .S ECXPRV=$P(LOC,U,2),ECXATT=$P(LOC,U,3),ECXMOV=$P(LOC,U,4)
+ Q
+ ;
+FILE ;file the extract record
+ ;node0
+ ;^dfn^ssn^name^i/o (ECXA)^date^product^adm date^d/c date^
+ ;mov#^type^new ts^losing ts^losing ts los^
+ ;losing attending^movement type^time^adm time^new provider^
+ ;new attending^losing provider
+ ;node1
+ ;mpi^dss dept^losing attending npi^new provider npi^new attending npi^
+ ;losing provider npi^losing attending los^losing provider los^dom^
+ ;observ pat ind^encounter num
+ ;
+ S EC7=$O(^ECX(ECFILE,999999999),-1),EC7=EC7+1
+ S ECODE=EC7_U_EC23_U_U_ECXDFN_U_ECXSSN_U_ECXPNM_U_ECXA_U_ECXDATE_U_U
+ S ECODE=ECODE_ECXADMDT_U_ECXDCDT_U_ECDA_U_6_U_ECXSPCN_U_ECXSPCL_U
+ S ECODE=ECODE_ECXLOS_U_ECXATTL_U_ECMT_U_ECXTIME_U_ECXADMTM_U_ECXPRVN_U
+ S ECODE=ECODE_ECXATTN_U_ECXPRVL_U
+ S ECODE1=ECXMPI_U_ECXDSSD_U_ECXALNPI_U_ECXPNNPI_U_ECXANNPI_U_ECXPLNPI_U
+ S ECODE1=ECODE1_ECXLOSA_U_ECXLOSP_U_ECXDOM_U_ECXOBS_U_ECXENC_U_ECXPDIV
+ I ECXLOGIC>2005 S ECODE1=ECODE1_U_ECXATLPC_U_ECXPRNPC_U_ECXATNPC_U_ECXPRLPC
+ S ^ECX(ECFILE,EC7,0)=ECODE,^ECX(ECFILE,EC7,1)=ECODE1,ECRN=ECRN+1
+ S DA=EC7,DIK="^ECX("_ECFILE_"," D IX1^DIK K DIK,DA
+ I $D(ZTQUEUED),$$S^%ZTLOAD S QFLG=1
  Q
  ;
 SETUP ;Set required input for ECXTRAC

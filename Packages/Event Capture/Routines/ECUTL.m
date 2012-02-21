@@ -1,17 +1,13 @@
-ECUTL ;ALB/GTS/JAM - Event Capture Utilities ;23 Jul 2008
- ;;2.0; EVENT CAPTURE ;**10,18,47,63,95**;8 May 96;Build 26
+ECUTL ;ALB/GTS/JAM - Event Capture Utilities ;18 May 98
+ ;;2.0; EVENT CAPTURE ;**10,18,47,63**;8 May 96
  ;
-FNDVST(ECVST,ECRECNUM,EC2PCE) ; Search EC Patient records for associated Visits
+FNDVST(ECVST,ECRECNUM) ; Search EC Patient records for associated Visits
  ;
  ;   Input: ECVST    - Visit file IEN to search for
  ;          ECRECNUM - Event Capture record number to skip processing
- ;          EC2PCE   - Array passed by reference to contain results
  ;
  ;  Output: ECERR  1 - One of the records to resend lacks a zero node
  ;                 0 - All of the records to resend have zero nodes
- ;          EC2PCE   - array subscripted by date and pointer
- ;                     to EVENT CAPTURE PATIENT (#721) file
- ;                     [Ex: ECPCE(3080101,611)]
  ;
  N ECIEN,ECERR,ECVAR
  I '$D(ECRECNUM) S ECRECNUM=0
@@ -20,31 +16,24 @@ FNDVST(ECVST,ECRECNUM,EC2PCE) ; Search EC Patient records for associated Visits
  I ECERR=0 DO
  .S ECIEN=""
  .F  S ECIEN=$O(^ECH("C",ECVST,ECIEN)) Q:+ECIEN=0  DO
- ..S:ECRECNUM'=ECIEN ECVAR=$$RSEND(ECIEN,.EC2PCE)
+ ..S:ECRECNUM'=ECIEN ECVAR=$$RSEND(ECIEN)
  ..S:ECVAR>0 ECERR=1
 FNDVSTQ Q ECERR
  ;
-RSEND(ECIEN,ECPCE) ; Prepare EC Patient record for resending to PCE
+RSEND(ECIEN) ; Prepare EC Patient record for resending to PCE
  ;
  ;   Input:  ECIEN - IEN for record to resend to PCE
- ;           ECPCE - array passed by reference to contain results
+ ;
  ;  Output:  0 if successful   - EC Patient record will be resent to PCE
  ;           1 if Unsuccessful - EC Patient record lacks zero node
- ;           ECPCE - array subscripted by date and pointer
- ;                  to EVENT CAPTURE PATIENT (#721) file
- ;                  [Ex: ECPCE(3080101,611)]
  ;
  N ECERR,DA,DIE,DR,ECPROCDT
  S ECERR=0
  I '$D(^ECH(ECIEN,0)) S ECERR=1
  I ECERR=0 DO
  .S ECPROCDT=$P(^ECH(ECIEN,0),"^",3)
- .;remove set of field #31 and create ECPCE array to pass to
- .;direct EC to PCE xfer task
- .;S DA=ECIEN,DIE=721,DR="25///@;28///@;31///^S X=ECPROCDT;32///@"
- .S DA=ECIEN,DIE=721,DR="25///@;28///@;32///@"
+ .S DA=ECIEN,DIE=721,DR="25///@;28///@;31///^S X=ECPROCDT;32///@"
  .D ^DIE
- .S ECPCE(ECPROCDT,ECIEN)=""
 RSENDQ Q ECERR
 MODSCN() ;Screen CPT Procedure Modifier
  N ECPT,ECCPT,ECPDT

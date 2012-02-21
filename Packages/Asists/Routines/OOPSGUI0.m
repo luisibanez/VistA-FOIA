@@ -1,5 +1,5 @@
 OOPSGUI0 ;WIOFO/LLH-RPC routines ;01/02/02
- ;;2.0;ASISTS;**2,4,7,15**;Jun 03, 2002;Build 9
+ ;;2.0;ASISTS;**2,4,7**;Jun 03, 2002
  ;
 GETCASE(RESULTS,PERSON,CSTAT,PSTAT,CALL,OPT) ; Subroutine for Case Selection
  ; Returns a list of cases that can be displayed for selection
@@ -136,9 +136,8 @@ CALLER() ; Check to make sure case should be included
  .. N CALLER,SVIEW
  .. S CALLER=CALL
  .. I $$GET1^DIQ(2260,OOPSDA,51,"I") S VIEWC=0 Q    ; claim must be open
- .. ;V2_P15 02/13/08 llh - remove requirement Safety or Occ Health must sign first
- .. ;I $$GET1^DIQ(2260,OOPSDA,77)="" S VIEWC=0 Q
- .. ;I $$GET1^DIQ(2260,OOPSDA,80)="" S VIEWC=0 Q
+ .. I $$GET1^DIQ(2260,OOPSDA,77)="" S VIEWC=0 Q
+ .. I $$GET1^DIQ(2260,OOPSDA,80)="" S VIEWC=0 Q
  .. S SVIEW=$$SCR^OOPSWCSE(OOPSDA) I 'SVIEW S VIEWC=0 Q
  I CALL="U" D  Q VIEWC
  . I '+$$EDSTA^OOPSUTL1(OOPSDA,"O") S VIEWC=0 Q

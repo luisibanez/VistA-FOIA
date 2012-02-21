@@ -1,6 +1,6 @@
-IBTRCD1 ;ALB/AAS/BGA - CLAIMS TRACKING INS ACTION EDIT ;11/8/06 9:34am
- ;;2.0;INTEGRATED BILLING;**10,359,413**;21-MAR-94;Build 9
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBTRCD1 ;ALB/AAS/BGA - CLAIMS TRACKING INS ACTION EDIT ; 06-JUL-93
+ ;;Version 2.0 ; INTEGRATED BILLING ;**10**; 21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 % G ^IBTRC
  ;
@@ -15,7 +15,6 @@ NX(IBTMPNM,BLD) ; -- edit next template
  N IBXX,VALMY
  D EN^VALM(IBTMPNM)
  I '$D(IBFASTXT) D:'$G(BLD) BLD^IBTRCD
- I IBTMPNM="IBCNS VIEW PAT INS" D:$G(BLD)=1 BLD^IBTRE ;REBUILD LIST
  S VALMBCK="R"
  Q
  ;
@@ -66,8 +65,6 @@ UPDATE ; -- enter date and user if editing has taken place
  ;
 LOCKED ; -- write locked message
  Q:$D(ZTQUEUED)
- ;Suppress Writes & PAUSE^VALM1 call when used via ICB interface
- Q:$G(IBSUPRES)>0
  W !!,"Sorry, another user currently editing this entry."
  W !,"Try again later."
  D PAUSE^VALM1

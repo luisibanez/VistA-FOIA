@@ -1,5 +1,5 @@
-ECUTL2 ;ALB/JAM - Event Capture Diagnosis Code Selection ;23 Aug 2007
- ;;2.0; EVENT CAPTURE ;**23,33,47,63,72,95**;8 May 96;Build 26
+ECUTL2 ;ALB/JAM - Event Capture Diagnosis Code Selection ;11 Jan 2000
+ ;;2.0; EVENT CAPTURE ;**23,33,47,63,72**;8 May 96
 DIAG ;ask dx question (primary and multiple secondary) 
  ;check for primary dx and display message
  D PDXMSG
@@ -145,11 +145,7 @@ PXUPD(ECDFN,ECDT,ECL,EC4,ECDXP,ECDXX,ECXIEN) ; Update all associated
  . ;delete visit and resend to PCE
  . S ECVST=+$P($G(^ECH(ECIEN,0)),"^",21) I 'ECVST Q
  . ;* Prepare all EC records with same Visit file entry to resend to PCE
- . K EC2PCE S ECVAR1=$$FNDVST^ECUTL(ECVST,,.EC2PCE)
+ . S ECVAR1=$$FNDVST^ECUTL(ECVST)
  . ;- Set VALQUIET to stop Amb Care validator from broadcasting to screen
- . N ECPKG,ECSOU
- . S ECPKG=$O(^DIC(9.4,"B","EVENT CAPTURE",0)),ECSOU="EVENT CAPTURE DATA"
- . S VALQUIET=1,ECVV=$$DELVFILE^PXAPI("ALL",ECVST,ECPKG,ECSOU)
- . ;- Send to PCE task
- . D PCETASK^ECPCEU(.EC2PCE) K EC2PCE
+ . S VALQUIET=1,ECVV=$$DELVFILE^PXAPI("ALL",ECVST)
  Q ECERR

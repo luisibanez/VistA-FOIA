@@ -1,5 +1,5 @@
-RORRP019 ;HCIOFO/SG - RPC: LIST OF PATIENTS ; 5/26/06 12:03pm
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORRP019 ;HCIOFO/SG - RPC: LIST OF PATIENTS ; 9/20/05 9:21am
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  Q
  ;
@@ -104,12 +104,6 @@ PTLIST(RESULTS,REGIEN,DATE,PART,FLAGS,NUMBER,FROM) ;
  ;
  ;=== Query the file
  S RC=0  D
- . ;--- Decode coded SSN of a registry patient
- . I PART?1"#"1.11N.1"P"  D
- . . S PART=$$XOR^RORUTL03($P(PART,"#",2))
- . . S TMP=$S(PART["P":10,1:9)
- . . S:$L(PART)<TMP PART=$TR($J(PART,TMP)," ","0")
- . . S FLAGS=$TR(FLAGS,"2CP")_"CP"
  . ;--- Load a single patient with the provided IEN
  . I PART?1"`"1.N  D  Q
  . . I FLAGS'["2"  Q:$$PRRIEN^RORUTL01($P(PART,"`",2),REGIEN)'>0

@@ -1,5 +1,5 @@
-PXRMFFH ; SLC/PKR - Routines for function finding help. ;01/13/2008
- ;;2.0;CLINICAL REMINDERS;**12**;Feb 04, 2005;Build 73
+PXRMFFH ; SLC/PKR - Routines for function finding help. ;12/23/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;======================================================
 FSXHELP ;Function finding function string executable help.
@@ -54,9 +54,9 @@ TEXT ;Function finding help text.
  ;; FUN1(arg1,arg2,...argN) oper1 FUN2(arg1,arg2,...,argN) ...
  ;; where FUN1 stands for function 1, FUN2 function 2, and so on.
  ;; arg1,arg2,...,argN are the regular findings whose data are arguments
- ;; to the function and oper1 stands for a MUMPS operator.
- ;; The operators can be any of the following MUMPS operators:
- ;; +,-,>,<,=,&,!,[, ] and '.
+ ;; to the function and oper1 stands for a Mumps operator.
+ ;; The operators can be any of the following Mumps operators:
+ ;; +,-,>,<,=,&,!, and '.
  ;; 
  ;;When a function finding is evaluated the result will be treated as a logical
  ;;true or false, where 0 is false and non-zero is true.

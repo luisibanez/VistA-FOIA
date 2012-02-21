@@ -1,7 +1,6 @@
 RAMAIN ;HISC/FPT,GJC,CAH AISC/MJK,RMO;VMP/PW-Utility File Maintenance ;7/24/02  14:45
- ;;5.0;Radiology/Nuclear Medicine;**31,43,50,54,87**;Mar 16, 1998;Build 2
+ ;;5.0;Radiology/Nuclear Medicine;**31,43,50,54**;Mar 16, 1998
  ;
- ; 11/15/07 BAY/KAM RA*5*87 Rem Call 205080 Option File Access
 3 ;;Major AMIS Code Enter/Edit
  N RAI F RAI=1:1:5 W !?9,$P($T(REMIND+RAI),";;",2)
  S DIR(0)="Y",DIR("B")="No"
@@ -75,9 +74,7 @@ Q9 K DDH,DI,DISYS,I,J,POP
  ;
 10 ;;Procedure Modifiers Entry
  K DD,DO,DLAYGO,DIC,DA,DINUM,X,Y
- ;S (DIC,DLAYGO)="^RAMIS(71.2,",DIC(0)="AEMQL"
- ; 11/15/07 BAY/KAM RA*5*87 Rem Call 205080 Changed next line to set DLAYGO equal to the file number instead of the file root
- S DIC="^RAMIS(71.2,",DLAYGO=71.2,DIC(0)="AEMQL"
+ S (DIC,DLAYGO)="^RAMIS(71.2,",DIC(0)="AEMQL"
  S DIC("A")="Select Procedure Modifier: ",DIC("W")="D PROHLP^RAMAIN"
  W ! D ^DIC K DIC,DLAYGO I +Y'>0 K D,X,Y,POP,I,DDH,DG,DISYS,DUOUT Q
  S DIE="^RAMIS(71.2,",DA=+Y,DR="3;4" D ^DIE

@@ -1,7 +1,5 @@
 RARTE4 ;HISC/GJC - Edit/Delete Reports (cont) ;11/4/97  08:02
- ;;5.0;Radiology/Nuclear Medicine;**15,27,41,82,56,47**;Mar 16, 1998;Build 21
- ;Supported IA #10060 ^VA(200
- ;Supported IA #10007 DO^DIC1
+ ;;5.0;Radiology/Nuclear Medicine;**15,27,41**;Mar 16, 1998
 LOCK ;Try to lock next avail IEN, if locked - fail, if used - increment again
  S I=I+1 S RAXIT=$$LOCK^RAUTL12("^RARPT(",I) I RAXIT D UNLOCK2 D INCRPT G START^RARTE
  I $D(^RARPT(I))!($D(^RARPT("B",I))) D UNLOCK^RAUTL12("^RARPT(",I) G LOCK
@@ -18,11 +16,7 @@ LOCK ;Try to lock next avail IEN, if locked - fail, if used - increment again
 IN ;lock rpt for the 1st time if editing existing rpt
  S RAXIT=$$LOCK^RAUTL12("^RARPT(",RARPT) I RAXIT D UNLOCK2,Q Q
 IN0 ;skip to here if rpt created in this session and already locked
- G IN1:'$P(RAMDV,"^",14) K RACOPY
- S DIC("S")="I RARPT'=+Y,$P(^(0),U,5)'=""X""" ;omit same & deleted rpt
- ; Remedy ticket #245679, remove multi-index lookup
- S DIC("A")="Select Report to Copy: ",DIC(0)="AEQ",DIC="^RARPT("
- D DICW,^DIC K DIC("S"),DIC("A") S RAY1=Y
+ G IN1:'$P(RAMDV,"^",14) K RACOPY S DIC("S")="I RARPT'=+Y",DIC("A")="Select Report to Copy: ",DIC(0)="AMEQ",DIC="^RARPT(" D DICW,^DIC K DIC("S"),DIC("A") S RAY1=Y
  I X="^" D UNLOCK^RAUTL12("^RARPT(",RARPT),UNLOCK2 S RAXIT=$$EN3^RAUTL15(RARPT) D INCRPT G START^RARTE
  G IN1:RAY1<0
  F J="H","R","I" K ^RARPT(RARPT,J)
@@ -48,21 +42,20 @@ IN1 ;skip to here if div param disallows rpt copying
  I '$D(RACOPY),$P(RAMDV,"^",12) D STD^RARTE1 I X="^" G PRT
  W !,RAI D EDTRPT^RARTE1
 PRT D UNLOCK^RAUTL12(RAPNODE,RACNI)
+ ; --- copy diags to other cases of print set
+ I RAPRTSET S RADRS=1,RAXIT=0 D COPY^RARTE2 L -^RADPT(RADFN,"DT",RADTI) ;unlock dt level only after copying is done
  ; wait til report has been checked for completeness before unlocking it
  S RAXIT=$$EN3^RAUTL15(RARPT) D UNLOCK^RAUTL12("^RARPT(",RARPT)
  I RAXIT S RAXIT=0 D UNLOCK2 D INCRPT G START^RARTE
  ; ---
- D  K RAAB G PRT1:'$D(RABTCH),PRT1:'$D(^RABTCH(74.2,+RABTCH,0))
- .; RAHLTCPB flag is inactive
- .N RAHLTCPB S RAHLTCPB=1 D:$S('$D(RACT):0,RACT="V":1,1:0) UPSTAT^RAUTL0
- .D:$S('$D(RACT):1,RACT'="V":1,1:0) UP1^RAUTL1
+ D:$S('$D(RACT):0,RACT="V":1,1:0) UPSTAT^RAUTL0 D:$S('$D(RACT):1,RACT'="V":1,1:0) UP1^RAUTL1 K RAAB G PRT1:'$D(RABTCH),PRT1:'$D(^RABTCH(74.2,+RABTCH,0))
 ASKREP W !!,"Do you want to place this report in the batch ",RABTCHN,"? Yes// " R X:DTIME S:'$T!(X["^") X="N" S:X="" X="Y" G PRT1:"Nn"[$E(X)
- I "Yy"'[$E(X) W:X'["?" $C(7) W !!?3,"Enter 'YES' to place this report in the batch, or 'NO' not to." G ASKREP
+ I "Yy"'[$E(X) W:X'["?" *7 W !!?3,"Enter 'YES' to place this report in the batch, or 'NO' not to." G ASKREP
  I $D(^RABTCH(74.2,"D",RARPT,RABTCH)) W !?5,"...report is already part of the '",RABTCHN,"' batch" D INCRPT G START^RARTE
  W !?5,"...will now place report in the '",RABTCHN,"' batch" S DIE="^RABTCH(74.2,",DA=RABTCH,DR="25///"_$E(RADTE,4,7)_$E(RADTE,2,3)_"-"_RACN,DR(2,74.21)="2////N" D ^DIE K DQ,DE D INCRPT G START^RARTE
 PRT1 R !!,"Do you wish to print this report? No// ",X:DTIME S:'$T!(X["^") X="N" S:X="" X="N" ;030497
  I "Nn"[$E(X) D INCRPT G START^RARTE
- I "Yy"'[$E(X) W:X'["?" $C(7) W !!?3,"Enter 'YES' to print this report, or 'NO' not to." G PRT1
+ I "Yy"'[$E(X) W:X'["?" *7 W !!?3,"Enter 'YES' to print this report, or 'NO' not to." G PRT1
  S ION=$P(RAMLC,"^",10),IOP=$S(ION]"":"Q;"_ION,1:"Q")
  S RAMES="W !!?3,""Report has been queued for printing on device "",ION,""."""
  D Q^RARTR D INCRPT G START^RARTE

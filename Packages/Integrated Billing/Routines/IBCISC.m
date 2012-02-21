@@ -1,5 +1,5 @@
 IBCISC ;DSI/ESG - IB EDIT SCREENS ?CLA FUNCTIONALITY ;23-FEB-2001
- ;;2.0;INTEGRATED BILLING;**161,348**;21-MAR-94;Build 5
+ ;;2.0;INTEGRATED BILLING;**161**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; Cannot be called from the top
@@ -13,9 +13,9 @@ CLA(IBIFN) ; Entry point for ?CLA processing
  W @IOF
  W !!?21,"VistA-ClaimsManager Interface Options"
  ;
- ; Check the bill form type to make sure it's a 1500.
+ ; Check the bill form type to make sure it's a HCFA 1500.
  I $$CK1^IBCIUT1(IBIFN) D  G CLAX
- . W !!?5,"ClaimsManager is only available for CMS-1500 claims."
+ . W !!?5,"ClaimsManager is only available for HCFA 1500 claims."
  . W !!?5,"The form type of the bill you're editing"
  . W " (",$G(IBBNO),") is "
  . W $$EXTERNAL^DILFD(399,.19,"",$P(^DGCR(399,IBIFN,0),U,19)),"."

@@ -1,5 +1,5 @@
 SCRPW63 ;BP-CIOFO/KEITH - SC veterans awaiting appointments (cont.) ; 23 August 2002@20:23
- ;;5.3;Scheduling;**267,269,357,491**;AUG 13, 1993;Build 53
+ ;;5.3;Scheduling;**267,269,357**;AUG 13, 1993
  ;
 E ;Gather data for patients entered report
  N DFN,SDX,SDATE,SD0,SDSCEL,SDEL,SDYR,SDREL,SDTOT,SDSDT,SDLVDT,SDEDT
@@ -206,7 +206,7 @@ PLINE(DFN,SD0,SDEL) ;Print patient detail line
  ..Q
  .Q
  I SDRPT="E" D  Q
- .I SDELIM S SDZ(1)=SDZ D DELIM^SCRPW62(.SDZ) Q  ;W !,SDZ Q
+ .I SDELIM W !,SDZ Q
  .W !
  .Q
  ;Print appointment details for future appointment report
@@ -231,8 +231,7 @@ PLINE(DFN,SD0,SDEL) ;Print patient detail line
  ...S SDZA=SDZA_U_$$FMTE^XLFDT(SDI)_U_$P(SDC0,U)_U_SDCZ
  ...S SDZA=SDZA_U_$$FMTE^XLFDT(+SDA0)_U_$$FMDIFF^XLFDT(SDI,+SDA0)
  ...S SDZA=SDZA_U_$S(SDADM:$$FMDIFF^XLFDT(+SDA0,SDADM),1:"")
- ...S SDZ(1)=SDZ_SDZA
- ...D DELIM^SCRPW62(.SDZ)  ;W !,SDZ,SDZA
+ ...W !,SDZ,SDZA
  ...Q
  ..Q
  .Q

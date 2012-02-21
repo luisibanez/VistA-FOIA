@@ -1,5 +1,5 @@
 SCMSVPID ;ALB/ESD HL7 PID Segment Validation ; 23 Oct 98  3:36 PM
- ;;5.3;Scheduling;**44,66,162,254,293,441**;Aug 13, 1993;Build 14
+ ;;5.3;Scheduling;**44,66,162,254,293**;Aug 13, 1993
  ;
  ;
 EN(PIDSEG,HLQ,HLFS,HLECH,VALERR,ENCDT,EVNTHL7) ;
@@ -20,7 +20,7 @@ EN(PIDSEG,HLQ,HLFS,HLECH,VALERR,ENCDT,EVNTHL7) ;
  ;          -1^"xxx failed validity check" (xxx=element in PID segment)
  ;
  ;Declare variables
- N MSG,SEQ,SD,PARSEG,SEG,I
+ N MSG,SEQ,SD,PARSEG,SEG
  S PARSEG=$NA(^TMP("SCMSVPID",$J,"PARSEG"))
  K @PARSEG
  S MSG="-1^Element in PID segment failed validity check"
@@ -47,20 +47,19 @@ EN(PIDSEG,HLQ,HLFS,HLECH,VALERR,ENCDT,EVNTHL7) ;
  S SEQ=0
  F  S SEQ=+$O(SD(SEQ)) Q:'SEQ  D
  .I SEQ=11 D ADDRCHK(SEG,VALERR,.CNT) Q
- .I (SEQ=10)!(SEQ=22)!(SEQ=3) D  Q
+ .I (SEQ=10)!(SEQ=22) D  Q
  ..N PARSEQ,REP,COMP
  ..S PARSEQ=$NA(^TMP("SCMSVPID",$J,"PARSEQ"))
  ..K @PARSEQ
  ..D SEQPRSE^SCMSVUT5($NA(@PARSEG@(SEQ)),PARSEQ,HLECH)
  ..S REP=0
  ..F  S REP=+$O(@PARSEQ@(REP)) Q:'REP  D
- ...I SEQ=3,$G(@PARSEQ@(REP,5))'="PI" Q
  ...S DATA=$$CONVERT^SCMSVUT0($G(@PARSEQ@(REP,1)),$E(HLECH,4),HLQ)
  ...D VALIDATE^SCMSVUT0(SEG,$P(DATA,$E(HLECH,1),1),$P($T(@(SEQ)),";",3),VALERR,.CNT)
  ..K @PARSEQ
  .S DATA=$G(@PARSEG@(SEQ))
  .S DATA=$$CONVERT^SCMSVUT0(DATA,$E(HLECH,1),HLQ)
- .;S:SEQ=3 DATA=$P(DATA,$E(HLECH,1),1)
+ .S:SEQ=3 DATA=$P(DATA,$E(HLECH,1),1)
  .S:SEQ=5 DATA=$$FMNAME^HLFNC(DATA)
  .S:SEQ=7 DATA=$$FMDATE^HLFNC(DATA)
  .D VALIDATE^SCMSVUT0(SEG,DATA,$P($T(@(SEQ)),";",3),VALERR,.CNT)
@@ -72,7 +71,7 @@ ENQ K @PARSEG
 ADDRCHK(SEG,VALERR,CNT) ;- Validity check for address (seq 11)
  ;
  ;Declare variables
- N PARSEQ,REP,COMP,DATA,TYPE,OFFSET,CODE,STATE,SKIP,FORIGN
+ N PARSEQ,REP,COMP,DATA,TYPE,OFFSET,CODE,STATE,SKIP
  ;Parse sequence into repeated components
  S PARSEQ=$NA(^TMP("SCMSVPID",$J,"PARSEQ"))
  K @PARSEQ
@@ -82,9 +81,6 @@ ADDRCHK(SEG,VALERR,CNT) ;- Validity check for address (seq 11)
  F  S REP=+$O(@PARSEQ@(REP)) Q:'REP  D
  .;Get address type
  .S TYPE=$$CONVERT^SCMSVUT0($G(@PARSEQ@(REP,7)),$E(HLECH,4),HLQ)
- .;Set foreign country flag
- .S FORIGN=$$FOR^DGADDUTL($$CONVERT^SCMSVUT0($G(@PARSEQ@(REP,6)),$E(HLECH,4),HLQ))
- .I (TYPE'["P")&(TYPE'["VAC") Q  ;validate permanent and confidential addresses
  .S:TYPE="" TYPE="P" S:TYPE'="P" TYPE="VACA"
  .;Calculate error code offset
  .S OFFSET=$S($E(TYPE,1,4)="VACA":200,TYPE="P":0,1:0)
@@ -97,10 +93,8 @@ ADDRCHK(SEG,VALERR,CNT) ;- Validity check for address (seq 11)
  .;Validate components
  .S STATE=0
  .F SEQ=1,2,3,4,5,7,9,12 D
- ..I FORIGN,((SEQ=4)!(SEQ=5)!(SEQ=9)) Q  ;foreign addresses have no state/zip/county
  ..I TYPE="P" Q:((SEQ=7)!(SEQ=12))
  ..S DATA=$$CONVERT^SCMSVUT0($G(@PARSEQ@(REP,SEQ)),$E(HLECH,4),HLQ)
- ..I SEQ=12 Q:DATA=$E(HLECH,4)
  ..I SEQ=9 S STATE=$G(@PARSEQ@(REP,4)) I STATE'="" S STATE=+$O(^DIC(5,"C",STATE,""))
  ..S CODE=$S(SEQ<10:"110",1:"11")_SEQ
  ..S CODE=OFFSET+$P($T(@(CODE)),";",3)

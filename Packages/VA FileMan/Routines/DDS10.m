@@ -1,6 +1,6 @@
-DDS10 ;SFISC/MKO-BLOCK SETUP ;21SEP2006
- ;;22.0;VA FileMan;**147,151**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DDS10 ;SFISC/MKO-BLOCK SETUP ;22MAR2006
+ ;;22.0;VA FileMan;**147**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 SET(DDS1B,DDS1E,DA,DDP,DIE,DL,DDSDA) ;Get values for pointed-to block
  ;In:
@@ -17,7 +17,7 @@ SET(DDS1B,DDS1E,DA,DDP,DIE,DL,DDSDA) ;Get values for pointed-to block
  ;
  D BK(.DDS1B,.DDP) Q:$G(DIERR)
  D GDA(DDS1B,DDS1E,.DA) Q:$G(DIERR)
- D GL(DDP,.DA,.DIE,.DL,.DDSDA,$P($G(^DIST(.403,+DDS,40,+$G(DDSPG),40,DDS1B,0)),U,4)'="d") Q:$G(DIERR)  ;Don't LOCK record if block is display-only
+ D GL(DDP,.DA,.DIE,.DL,.DDSDA,1) Q:$G(DIERR)
  Q
  ;
 BK(DDSBK,DDP) ;Lookup block, get file number

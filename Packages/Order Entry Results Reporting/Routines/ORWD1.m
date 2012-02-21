@@ -1,5 +1,5 @@
-ORWD1 ; SLC/KCM/REV - GUI Prints; 28-JAN-1999 12:51 ;7/31/06  11:34
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,140,215,260**;Dec 17, 1997;Build 26
+ORWD1 ; SLC/KCM/REV - GUI Prints; 28-JAN-1999 12:51 ;1/10/06  10:36
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,140,215**;Dec 17, 1997
 PRINTS(PRTLST,HLOC,ORWDEV) ; Do the auto-prints after signing orders
  ; PRTLST(n)=ORIFN;ACT^Chart^Label^Requisition^Service^Work
  Q:$G(A7RNDBI)  ; per NDBI, to suppress prints during integration
@@ -34,7 +34,8 @@ MKLST(APIECE) ; Make a list to pass to GUI^ORPR02, called only from PRINTS
  . I APIECE=2,'$P($G(^ORD(100.02,NOA,1)),U,2) Q  ; no chart copies
  . I APIECE=6,'$P($G(^ORD(100.02,NOA,1)),U,5) Q  ; no work copies
  . S PKG=+$P($G(^OR(100,+ORIFN,0)),U,14),DLG=+$P($G(^OR(100,+ORIFN,0)),U,5)
- . I APIECE=4,PKG=$O(^DIC(9.4,"B","DIETETICS",0)),DLG'=$O(^ORD(101.41,"B","FHW SPECIAL MEAL",0)) Q  ;no requisitions
+ . I APIECE=4,PKG=$O(^DIC(9.4,"B","DIETETICS",0)) D
+ . . I DLG'=$O(^ORD(101.41,"B","FHW SPECIAL MEAL",0)) Q  ;no requisitions
  . S J=J+1,TMPLST(J)=$P(PRTLST(I),U)
  Q
 PARAM(Y,LOC) ;Returns in 'Y' the print parameters

@@ -1,5 +1,5 @@
 GMRCSRVS ;SLC/DCM,JFR - Add/Edit services in File 123.5. ;6/14/00 12:00
- ;;3.0;CONSULT/REQUEST TRACKING;**1,16,40,53,63**;DEC 27, 1997;Build 10
+ ;;3.0;CONSULT/REQUEST TRACKING;**1,16,40**;DEC 27, 1997
  ;
 EN ;set up services entry point
  ;GMRCOLDU=Service Usage field. If changed, GMRCOLDU shows the change (See ^DD(123.5,2,0) for field description).
@@ -14,7 +14,7 @@ EN ;set up services entry point
  .S DIE=DIC,DR="[GMRC SETUP REQUEST SERVICE]",DIE("NO^")="OUTOK"
  .D ^DIE
  .Q
- I $D(DA) S GMRCACT=$S($P(^GMR(123.5,GMRCSRVC,0),"^",2)=9:"MDC",$P(^(0),"^",2)=1:"MDC",1:GMRCACT) D
+ S GMRCACT=$S($P(^GMR(123.5,GMRCSRVC,0),"^",2)=9:"MDC",$P(^(0),"^",2)=1:"MDC",1:GMRCACT) D
  .S GMRCSSNM=$P(^GMR(123.5,GMRCSRVC,0),"^",1)
  .I GMRCACT'="MAD",GMRCSSNM'=GMRCOSNM S GMRCACT="MUP"
  .I $S(GMRCACT'="MAD":1,GMRCACT'="MUP":1,1:0),$L(GMRCOLDU),GMRCOLDU=$P(^GMR(123.5,GMRCSRVC,0),"^",2) S GMRCACT="NOACT"
@@ -152,52 +152,5 @@ INPUT(X,GMRCDA) ; INPUT TRANSFORM FOR THE SUB-SERVICE/SPECIALTY (#.01) FIELD
  ... S ^TMP("GMRC INPUT",$J,0)=$G(^TMP("GMRC INPUT",$J,0))+1 ;INCREASE LAST NUMBER BY 1
  ... S ^TMP("GMRC INPUT",$J,$G(^TMP("GMRC INPUT",$J,0)))=GMRPARNT ;ADD NEW PARENT SERVICE TO GLOBAL SO IT CAN BE CHECKED AS A CHILD ENTRY TO FIND IT'S PARENTS
  K ^TMP("GMRC INPUT",$J)
-INPUTQ I GMRQ=1 D EN^DDIOL("A SERVICE CAN NOT BE A SUB-SERVICE OF ITSELF","","!!?12") K X Q
- ;
-DUPCHK ;CHECK FOR CONSULT SERVICES APPEARING AS PART OF THE CONSULT SERVICE
- ;HIERARCHY IN MORE THAN ONE PLACE
- N ARRAY,COUNT,GMRCON,PARENT
- S PARENT=0
- ;Check if they are a sub-service to more than one service.
- F COUNT=0:1 S PARENT=$O(^GMR(123.5,"APC",X,PARENT)) Q:'+PARENT
- ;Print message about which services this service is a sub-service of.
- I COUNT'>0 Q
- S COUNT=1
- S ARRAY(COUNT)=" ",COUNT=COUNT+1
- S ARRAY(COUNT)=" ",COUNT=COUNT+1
- S ARRAY="Service "_$P(^GMR(123.5,X,0),"^",1)_" is already a sub-service of:"
- D PARSE(.ARRAY)
- S PARENT=0
- F  S PARENT=$O(^GMR(123.5,"APC",X,PARENT)) Q:'+PARENT  S ARRAY="   "_$P(^GMR(123.5,PARENT,0),"^",1) D PARSE(.ARRAY)
- S ARRAY(COUNT)=" ",COUNT=COUNT+1
- S ARRAY(COUNT)="A consult service appearing as part of the Consult service",COUNT=COUNT+1
- S ARRAY(COUNT)="hierarchy in more than one place (i.e. a sub-service of more",COUNT=COUNT+1
- S ARRAY(COUNT)="than one parent) has the potential to skew the results of the",COUNT=COUNT+1
- S ARRAY(COUNT)="Consult Performance Monitor Report [GMRC RPT PERF MONITOR].",COUNT=COUNT+1
- S ARRAY(COUNT)=" ",COUNT=COUNT+1
- D EN^DDIOL(.ARRAY)
- I '$G(DIQUIET) D
- . S GMRCON=0
- . D YESNO(X,Y)
- . I 'GMRCON K X
- . D EN^DDIOL(" ")
- Q
-PARSE(ARRAY) ;TAKE ARRAY VALUE AND PARSE INTO PIECES SHORTER THAN 70 CHARACTERS
- N ARRAYSP,GMRCNT
-PARSE1 I $L(ARRAY)'>70 S ARRAY(COUNT)=ARRAY,COUNT=COUNT+1 Q
- F GMRCNT=70:-1 S ARRAYSP=$E(ARRAY,GMRCNT) I ARRAYSP=" " Q
- S ARRAY(COUNT)=$E(ARRAY,1,GMRCNT-1),COUNT=COUNT+1
- S ARRAY=$E(ARRAY,GMRCNT+1,9999)
- G:ARRAY'="" PARSE1
- Q
-YESNO(X,Y) ;YES/NO QUESTION/RESPONSE
- N DIR,DIROUT,DIRUT,DTOUT,DUOUT
- S DIR(0)="YA"
- S DIR("A")="Do you wish to continue adding "_$P(^GMR(123.5,X,0),"^",1)_" as a new sub-service? "
- S DIR("B")="NO"
- S DIR("T")=300
- S DIR("?",1)="Enter ""YES"" to add service as a sub-service."
- S DIR("?")="Enter ""NO"" to NOT add the service as a sub-service."
- D ^DIR Q:($G(DTOUT))!($G(DUOUT))!($G(DIROUT))
- I Y=1 S GMRCON=1
+INPUTQ I GMRQ=1 D EN^DDIOL("A SERVICE CAN NOT BE A SUBSERVICE OF ITSELF","","!!?12") K X Q
  Q

@@ -1,5 +1,5 @@
 DGOINPT1 ;ALB/REW - BUILDS,PRINTS INPATIENT ROSTER ; 8/8/03 11:45am
- ;;5.3;Registration;**162,498,544,732**;Aug 13, 1993;Build 2
+ ;;5.3;Registration;**162,498,544**;Aug 13, 1993
  ;
  ;
  ; DGS1 IS USED FOR SORTING PRINT
@@ -85,8 +85,6 @@ QKVADPT ;QUICK SUBSTITUTE FOR VADPT:REQUIRES DFN
  S VAIN(7)=+$G(^DGPM(+VAIN(1),0))
  F I=2,11 S:$D(^VA(200,+VAIN(I),0)) VAIN(I)=VAIN(I)_U_$P(^(0),U,1)
  S:$D(^DIC(45.7,+VAIN(3),0)) VAIN(3)=VAIN(3)_U_$P(^(0),U,1)
- ;code added to differentiate ambiguous treating speialty names.
- S:($E($P(VAIN(3),U,2),1,7)="NH LONG")!($E($P(VAIN(3),U,2),1,8)="NH SHORT") VAIN(3)=$P(^(0),U,2)_U_$P($G(^DIC(42.4,+$P(^(0),U,2),0)),U,2)
 DEM S VADM(1)=$P($G(^DPT(DFN,0)),U,1)
  S VAIP(19,1)=$P($G(^DGPM(+VAIN(1),"DIR")),"^",1)
  S:VAIP(19,1)="" VAIP(19,1)=1

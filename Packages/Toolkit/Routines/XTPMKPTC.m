@@ -1,6 +1,5 @@
-XTPMKPTC ;OAK/BP - PATCH MONITOR FUNCTIONS ;09/10/2008
- ;;7.3;TOOLKIT;**98,100,114**; Apr 25, 1995;Build 1
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+XTPMKPTC ;OAK/BP - PATCH MONITOR FUNCTIONS ; [8/3/05 11:48am]
+ ;;7.3;TOOLKIT;**98**; Apr 25, 1995
  ;
 SRVR N XMB X XMREC
  S XTBMLN1=$G(^XMB(3.9,XMZ,0))
@@ -24,7 +23,6 @@ EXTINFO S (XTBDESG,XTBPKG,XTBPRIO,XTBVER,XTBSEQ,XTBSUB)=""
  .K NOFILE
  .Q:XMRG["====="
  .I XMRG["Designation" S (XTBDESG,XTBINST)=$P(XMRG,"Designation: ",2) Q:$D(NOFILE)  DO
- ..Q:XTBINST'["*"  ;*p114*-REM
  ..S XTBY=$P(XTBDESG,"*",2) I XTBY'?1.2N1".".N S XTBY=XTBY_".0",$P(XTBINST,"*",2)=XTBY
  .I XTBDESG="" S NOFILE=1 Q
  .I $D(^XPD(9.9,"B",XTBDESG)) S NOFILE=1 Q  ; already done
@@ -126,8 +124,8 @@ REG ; regular notification
  ;
 RPT W @IOF,!,"Complete Uninstalled Patch Report for "_^DD("SITE"),!!!
  S %ZIS="AEQ" D ^%ZIS G:POP EXIT
- I $D(IO("Q")) S ZTIO=ION,ZTSAVE="",ZTRTN="RPT1^XTPMKPTC",ZTDESC="Uninstalled Patch Report" D ^%ZTLOAD D HOME^%ZIS
- I $D(ZTSK) W !,"Queued as task# ",ZTSK,!! H 2 G EXIT
+ I $D(IO("Q")) S ZTIO=ION,ZTSAVE="",ZTRTN="RPT1^XTPMKPTC",ZTDESC="Uninstalled Patch Report"
+ I  D ^%ZTLOAD W:$D(ZTSK) !,"Queued as task# ",ZTSK,!! H 2 G EXIT
  ;
 RPT1 U IO K ^TMP($J) S XTBX="",XTBLN=8,XTBCNT=0
  D TEXT S Y=DT X ^DD("DD") S XTBRUNDT=Y
@@ -149,8 +147,8 @@ RPT1 U IO K ^TMP($J) S XTBX="",XTBLN=8,XTBCNT=0
  ;
 PASTDUE W @IOF,!,"Past Due Patch Report for "_^DD("SITE"),!!!
  S %ZIS="AEQ" D ^%ZIS G:POP EXIT
- I $D(IO("Q")) S ZTIO=ION,ZTSAVE="",ZTRTN="PASTD1^XTPMKPTC",ZTDESC="Past Due Patch Report" D ^%ZTLOAD D HOME^%ZIS
- I $D(ZTSK) W !,"Queued as task# ",ZTSK,!! H 2 G EXIT
+ I $D(IO("Q")) S ZTIO=ION,ZTSAVE="",ZTRTN="PASTD1^XTPMKPTC",ZTDESC="Past Due Patch Report"
+ I  D ^%ZTLOAD W:$D(ZTSK) !,"Queued as task# ",ZTSK,!! H 2 G EXIT
  ;
 PASTD1 U IO K ^TMP($J) S XTBX="",XTBLN=8,XTBCNT=0
  S XTBPSTD=1

@@ -1,22 +1,16 @@
 IBCEPTC ;ALB/TMK - EDI PREVIOUSLY TRANSMITTED CLAIMS ; 4/12/05 11:15am
- ;;2.0;INTEGRATED BILLING;**296,320,348,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**296**;21-MAR-94
  ;
 EN ; Main entrypoint
  ; IBDT1,IBDT2 = last transmit date range to use
  ; IBSORT = primary sort criteria to use B=BATCH #,I=INS CO NAME
- ; IBFORM = form type to limit selection to U=UB-04,C=CMS-1500,B=BOTH
+ ; IBFORM = form type to limit selection to U=UB92,H=HCFA 1500,B=BOTH
  ; IBCRIT = the additional sort criteria needed
- ; IBPTCCAN = whether or not to include cancelled claims
- ; IBRCBFPC = whether or not to include force print @ clearinghouse
- ; ^TMP("IB_PREV_CLAIM_INS",$J) = 1 for specific ins co/null for all
- ;                        ^($J,1,ien)="" for ien of each ins co selected
- ;                        ^($J,2,payer ID,ien)="" if selected
+ ; ^TMP("IB_PREV_CLAIM_INS,$J) = 1 for specific ins co/null for all
+ ;                        ^($J,ien)="" for ien of each ins co selected
  ; IBREP = format output should be put in R=report,S=Listman
  ;
- N DIR,DIC,X,Y,Z,Z0,Z1,IBHOW,IBACT,IBCT,IBREP,IBCRIT,IBDT1,IBDT2
- N IBFORM,IBOK,IBQUIT,IBSORT,IBY,DTOUT,DUOUT,%ZIS,ZTSAVE,ZTRTN,ZTDESC
- N POP,IBPAYER,EDI,INST,PROF,IBPTCCAN,DIROUT,DIRUT,DTOUT,DUOUT,IBRCBFPC
+ N DIR,DIC,X,Y,Z,Z0,Z1,IBHOW,IBACT,IBCT,IBREP,IBCRIT,IBDT1,IBDT2,IBINS,IBFORM,IBOK,IBQUIT,IBSORT,IBY,DTOUT,DUOUT,%ZIS,ZTSAVE,ZTRTN,ZTDESC,POP
  ;
 Q1 ;
  W !!,"*** Please Note ***"
@@ -49,7 +43,7 @@ Q1 ;
  I IBHOW="B" S (Z,IBCT)=0 F  S Z=$O(^TMP($J,"B",Z)) Q:'Z  D
  . S Z0=0 F  S Z0=$O(^IBA(364,"C",Z,Z0)) Q:'Z0  S Z1=+$G(^IBA(364,Z0,0)) I Z1,'$D(^TMP("IB_PREV_CLAIM_SELECT",$J,Z1,0)) S ^(0)=Z0,IBCT=IBCT+1
  S ^TMP("IB_PREV_CLAIM_SELECT",$J)=IBCT
- D RESUB^IBCEPTC3
+ D RESUB^IBCEPTC2
  G ENQ
  ;
 Q1A K ^TMP("IB_PREV_CLAIM_INS",$J)
@@ -61,40 +55,21 @@ Q1A K ^TMP("IB_PREV_CLAIM_INS",$J)
  ;
  I Y="A" S ^TMP("IB_PREV_CLAIM_INS",$J)="" G Q2
  ;
- ; esg - 11/21/05 - patch 320 question
- W !
- S DIR(0)="Y",DIR("A")="   Include all payers with the same electronic Payer ID",DIR("B")="Yes" D ^DIR K DIR
- I $D(DIROUT) G ENQ
- I $D(DIRUT) G Q1A
- S IBPAYER=Y
- W !
- ;
  S ^TMP("IB_PREV_CLAIM_INS",$J)=1
  S IBQUIT=0
- F  D  Q:IBQUIT
- . S DIC(0)="AEMQ",DIC=36,DIC("A")="   Select Insurance Company: "
- . I $O(^TMP("IB_PREV_CLAIM_INS",$J,1,"")) S DIC("A")="   Select Another Insurance Company: "
- . S DIC("W")="D INSLIST^IBCEMCA(Y)"
- . D ^DIC K DIC                   ; lookup
- . I X="^^" S IBQUIT=2 Q          ; user entered "^^"
- . I +Y'>0 S IBQUIT=1 Q           ; user is done
- . W !
- . S ^TMP("IB_PREV_CLAIM_INS",$J,1,+Y)=""
- . I 'IBPAYER Q
- . S EDI=$$UP^XLFSTR($G(^DIC(36,+Y,3)))
- . S PROF=$P(EDI,U,2),INST=$P(EDI,U,4)
- . I PROF'="",PROF'["PRNT" S ^TMP("IB_PREV_CLAIM_INS",$J,2,PROF,+Y)=""
- . I INST'="",INST'["PRNT" S ^TMP("IB_PREV_CLAIM_INS",$J,2,INST,+Y)=""
- . Q
+ F  S DIC(0)="AEMQ",DIC="^DIC(36,",DIC("A")="Select Specific Payer: " D ^DIC K DIC D  Q:IBQUIT
+ . I Y>0 S ^TMP("IB_PREV_CLAIM_INS",$J,+Y)="" Q
+ . I X="",$O(^TMP("IB_PREV_CLAIM_INS",$J,0)) S IBQUIT=1 Q
+ . I X="" W !!,"No specific payers selected!!" S IBQUIT=2 Q
+ . I X=U S IBQUIT=2 Q
+ . I X="^^" S IBQUIT=3 Q
+ . I Y'>0 Q
  ;
- I IBQUIT=2 G ENQ
+ I IBQUIT=2 G Q1A
+ I IBQUIT=3 G ENQ
  ;
- I '$O(^TMP("IB_PREV_CLAIM_INS",$J,1,0)) D  G Q1A
- . W *7,!!?3,"No payers have been selected.  Please try again."
- . Q
- ;
-Q2 S DIR(0)="SA^C:CMS-1500;U:UB-04;B:Both",DIR("B")="Both"
- S DIR("A")="Run for (U)B-04, (C)MS-1500 or (B)oth: "
+Q2 S DIR(0)="SA^H:HCFA 1500;U:UB92;B:Both",DIR("B")="Both"
+ S DIR("A")="Run for (U)B92, (H)CFA 1500 or (B)oth: "
  W !!,"BILL FORM TYPE SELECTION:" D ^DIR K DIR
  I X="^^" G ENQ
  I $D(DTOUT)!$D(DUOUT) G Q1A
@@ -124,27 +99,13 @@ Q4 ; Additional selection criteria
  I $D(DTOUT)!$D(DUOUT) G Q3
  S IBCRIT=Y
  ;
-Q41 ; Ask user if they want to include cancelled claims
- S DIR(0)="Y",DIR("B")="No",DIR("A")="Would you like to include cancelled claims"
- W ! D ^DIR K DIR
- I X="^^" G ENQ
- I $D(DIRUT) G Q4
- S IBPTCCAN=Y
- ;
-Q42 ; Include claims that are forced to print at clearinghouse?
- S DIR(0)="Y",DIR("B")="No",DIR("A")="Would you like to include claims Forced to Print at the Clearinghouse"
- W ! D ^DIR K DIR
- I X="^^" G ENQ
- I $D(DIRUT) G Q41
- S IBRCBFPC=Y
- ;
 Q5 S DIR("L",1)="Select one of the following: ",DIR("L",2)=" ",DIR("L",3)=$J("",10)_"1         Batch By Last Transmitted Date (Claims within a Batch)",DIR("L",4)=$J("",10)_"2         Current Payer (Insurance Company)"
  S DIR("L",5)=" "
  S DIR(0)="SA^1:Batch By Last Transmitted Date (Claims within a Batch);2:Current Payer (Insurance Company)",DIR("B")="Current Payer"
  S DIR("A")="Sort By: "
  W ! D ^DIR K DIR
  I X="^^" G ENQ
- I $D(DTOUT)!$D(DUOUT) G Q42
+ I $D(DTOUT)!$D(DUOUT) G Q4
  S IBSORT=Y
  ;
 Q6 S DIR(0)="SA^R:Report;S:Screen List"
@@ -154,16 +115,48 @@ Q6 S DIR(0)="SA^R:Report;S:Screen List"
  I X="^^" G ENQ
  I $D(DTOUT)!$D(DUOUT) G Q5
  S IBREP=Y
- ;
- I IBREP="S" D LIST^IBCEPTC0 G ENQ
+ ; 
+ I IBREP="S" D LIST G ENQ
  ;
 Q7 ; Select device
  F  S IBACT=0 D DEVSEL(.IBACT) Q:IBACT
  I IBACT=99 G ENQ
  U IO
- D LIST^IBCEPTC0
+ D LIST
  ;
 ENQ K ^TMP("IB_PREV_CLAIM_INS",$J),^TMP("IB_PREV_CLAIM_SELECT",$J)
+ Q
+ ;
+LIST ; Queued report format entrypoint
+ ; variables pre-defined: IBREP,IBSORT,IBFORM,IBDT1,IBDT2,IBCRIT
+ ;  ^TMP("IB_PREV_CLAIM_INS,$J) global
+ K ^TMP("IB_PREV_CLAIM",$J)
+ N IBBDA,IBBDA0,IBCURI,IBDA,IBDT,IBFT,IBIFN,IBINS,IBS1,IBS2,IBDTX
+ I IBREP="R" N IBPAGE,IBSTOP,IBHDRDT S (IBPAGE,IBSTOP)=0
+ S IBDT=IBDT1-.1
+ S IBINS=+$G(^TMP("IB_PREV_CLAIM_INS",$J))
+ F  S IBDT=$O(^IBA(364.1,"ALT",IBDT)) Q:'IBDT!((IBDT\1)>IBDT2)  S IBBDA=0 F  S IBBDA=$O(^IBA(364.1,"ALT",IBDT,IBBDA)) Q:'IBBDA  D
+ . S IBDTX=IBDT\1
+ . S IBDA=0 F  S IBDA=$O(^IBA(364,"C",IBBDA,IBDA)) Q:'IBDA  S IBIFN=+$G(^IBA(364,IBDA,0)) D
+ .. I IBFORM'="B" S IBFT=$$FT^IBCEF(IBIFN) Q:$S(IBFT=3:IBFORM="H",IBFT=2:IBFORM="U",1:1)
+ .. S IBCURI=$$CURR^IBCEF2(IBIFN) Q:'IBCURI
+ .. I IBINS Q:'$D(^TMP("IB_PREV_CLAIM_INS",$J,IBCURI))
+ .. I IBCRIT=1 Q:'$$MRASEC^IBCEF4(IBIFN)
+ .. I IBCRIT=2 Q:$$COBN^IBCEF(IBIFN)>1
+ .. I IBCRIT=3 Q:$$COBN^IBCEF(IBIFN)=1
+ .. I IBCRIT=4 Q:'$P($G(^DGCR(399,IBIFN,"TX")),U,7)
+ .. S IBBDA0=$G(^IBA(364.1,+IBBDA,0))
+ .. S IBS1=$S(IBSORT=1:(99999999-IBDTX)_U_$P(IBBDA0,U)_U_$P(IBBDA0,U,14)_U_+$P(IBBDA0,U,5),1:$P($G(^DIC(36,+IBCURI,0)),U)_U_+IBCURI),IBS2=$S(IBSORT=1:$P($G(^DGCR(399,IBIFN,0)),U),1:99999999-IBDTX)
+ .. ; Meets all selection criteria - extract to sort global
+ .. S:IBS1="" IBS1=" " S:IBS2="" IBS2=" "
+ .. I '$D(^TMP("IB_PREV_CLAIM",$J,IBS1)) S ^TMP("IB_PREV_CLAIM",$J,IBS1)=$S(IBSORT=1:$$FMTE^XLFDT(IBDTX,"1"),1:IBIFN)
+ .. S ^TMP("IB_PREV_CLAIM",$J,IBS1,IBS2,IBDA)=""
+ ;
+ I IBREP="R" D RPT^IBCEPTC1(IBSORT,IBDT1,IBDT2) G END  ; Output report
+ ;
+ D EN^VALM("IBCE VIEW PREV TRANS"_IBSORT) ; List Manager
+ ;
+END K ^TMP("IB_PREV_CLAIM",$J),^TMP("IB_PREV_CLAIM_INS",$J)
  Q
  ;
 DEVSEL(IBACT) ;
@@ -176,7 +169,7 @@ DEVSEL(IBACT) ;
  . I Y'=1 S IBOK=0 W !
  I $D(IO("Q")) D  S IBACT=99 G DEVSELQ
  . K IO("Q")
- . S ZTRTN="LIST^IBCEPTC0",ZTSAVE("IBCRIT(")="",ZTSAVE("IB*")="",ZTSAVE("^TMP(""IB_PREV_CLAIM_INS"",$J)")="",ZTSAVE("^TMP(""IB_PREV_CLAIM_INS"",$J,")="",ZTDESC="IB - Previously Transmitted Claims Report"
+ . S ZTRTN="LIST^IBCEPTC",ZTSAVE("IBCRIT(")="",ZTSAVE("IB*")="",ZTSAVE("^TMP(""IB_PREV_CLAIM_INS"",$J)")="",ZTSAVE("^TMP(""IB_PREV_CLAIM_INS"",$J,")="",ZTDESC="IB - Previously Transmitted Claims Report"
  . D ^%ZTLOAD K ZTSK D HOME^%ZIS
  S IBACT=1
 DEVSELQ Q

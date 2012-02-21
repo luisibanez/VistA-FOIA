@@ -1,9 +1,9 @@
 PSOCSRL ;BIR/BHW-release interface for control substance pkg ;7/22/94
- ;;7.0;OUTPATIENT PHARMACY;**27,71,118,148,247**;DEC 1997;Build 18
+ ;;7.0;OUTPATIENT PHARMACY;**27,71,118,148**;DEC 1997
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^PS(59.7 supported by DBIA 694
- ;External reference to $$SERV^IBARX1 supported by DBIA 2245
+ ;External reference to SERV^IBARX1 supported by DBIA 2245
 EN(RXP,XTYPE,PSRH) ;
  N NCPDP
  I '$D(PSOPAR) D  G:'$D(PSOPAR) EX
@@ -25,12 +25,11 @@ ORI ;orig
  S PSOCPN=$P(^PSRX(RXP,0),"^",2),QTY=$P($G(^PSRX(RXP,0)),"^",7),QDRUG=$P(^PSRX(RXP,0),"^",6)
  I '$P($G(^PSRX(RXP,2)),"^",13),+$P($G(^(2)),"^",2)'<PSIN S RXFD=$P(^(2),"^",2) D  G:$G(PSOUT) EX D:$G(LBLP) UPDATE I $G(ISUF) D UPDATE
  .S SUPN=$O(^PS(52.5,"B",RXP,0)) I SUPN,$D(^PS(52.5,"C",RXFD,SUPN)),$G(^PS(52.5,SUPN,"P"))'=1 S ISUF=1 Q
- .;
  .F LBL=0:0 S LBL=$O(^PSRX(RXP,"L",LBL)) Q:'LBL  I '+$P(^PSRX(RXP,"L",LBL,0),"^",2),'$P(^(0),"^",5) S LBLP=1
  .Q:'$G(LBLP)  D ASK Q:$G(PSOUT)
  .;
  .; - Checking for OPEN/UNRESOLVED 3rd. Party Payer Rejects / NDC Editing
- .I $$MANREL^PSOBPSUT(RXP,0)="^" K LBLP Q
+ .I $$MANREL^PSOBPSUT(RXP,0)="^" Q
  .;
  .S:$D(^PSDRUG(QDRUG,660.1)) ^PSDRUG(QDRUG,660.1)=^PSDRUG(QDRUG,660.1)-QTY
  .Q:$P($G(^PSRX(RXP,2)),"^",13)
@@ -55,12 +54,11 @@ QTY S PSOCPN=$P(^PSRX(RXP,0),"^",2),QDRUG=$P(^PSRX(RXP,0),"^",6) K LBLP
  D:$P($G(^PSRX(RXP,$P(XTYPE,"^"),$P(XTYPE,"^",2),0)),"^")'<PSIN  K ISUF,LBLP G:$G(PSOUT) EX
  .S RXFD=$E($P(^PSRX(RXP,$P(XTYPE,"^"),$P(XTYPE,"^",2),0),"^"),1,7),SUPN=$O(^PS(52.5,"B",RXP,0)) I SUPN,$D(^PS(52.5,"C",RXFD,SUPN)),$G(^PS(52.5,SUPN,"P"))'=1 S ISUF=1 D UPDATE Q
  .I $P(^PSRX(RXP,$P(XTYPE,"^"),$P(XTYPE,"^",2),0),"^",$S($P($G(XTYPE),"^"):18,1:19))]""!($P(^(0),"^",16)) K IFN Q
- .;
  .F LBL=0:0 S LBL=$O(^PSRX(RXP,"L",LBL)) Q:'LBL  I $P(^PSRX(RXP,"L",LBL,0),"^",2)=$S('$P(XTYPE,"^"):(99-$P(XTYPE,"^",2)),1:$P(XTYPE,"^",2)) S LBLP=1
  .Q:'$G(LBLP)  D ASK Q:$G(PSOUT)
  .;
  .; - Checking for OPEN/UNRESOLVED 3rd. Party Payer Rejects / NDC Editing
- .I XTYPE,$$MANREL^PSOBPSUT(RXP,$P(XTYPE,"^",2))="^" K LBLP Q
+ .I XTYPE,$$MANREL^PSOBPSUT(RXP,$P(XTYPE,"^",2))="^" Q
  .;
  .S IFN=$P(XTYPE,"^",2) S:$G(^PSDRUG(QDRUG,660.1))]"" QTY=$P(^PSRX(RXP,$P(XTYPE,"^"),$P(XTYPE,"^",2),0),"^",4),^PSDRUG(QDRUG,660.1)=^PSDRUG(QDRUG,660.1)-QTY
  .D NOW^%DTC S DIE="^PSRX("_RXP_","""_$P(XTYPE,"^")_""","

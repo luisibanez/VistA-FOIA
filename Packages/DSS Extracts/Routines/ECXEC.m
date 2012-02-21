@@ -1,5 +1,5 @@
-ECXEC ;ALB/JAP,BIR/JLP,PTD-DSS Event Capture Extract  ; 10/2/07 2:33pm
- ;;3.0;DSS EXTRACTS;**11,8,13,24,27,33,39,46,49,71,89,92,105,120,127,132**;Dec 22, 1997;Build 18
+ECXEC ;ALB/JAP,BIR/JLP,PTD-DSS Event Capture Extract  [ 02/14/97   2:26 PM ] ; 12/2/04 12:35pm
+ ;;3.0;DSS EXTRACTS;**11,8,13,24,27,33,39,46,49,71,89**;Dec 22, 1997
 BEG ;entry point from option
  I '$D(^ECH) W !,"Event Capture is not initialized",!! Q
  D SETUP I ECFILE="" Q
@@ -55,38 +55,28 @@ UPDATE ;sets record and updates counters
  .I 'ECUSTOP D
  ..S (ECAC1S,ECAC2S)="000"
  S ECDSS=ECAC1S_ECAC2S
- I ECXLOGIC>2003 I "^18^23^24^41^65^94^108^"[("^"_ECXTS_"^") S ECDSS=$$TSMAP^ECXUTL4(ECXTS)
+ I ECXLOGIC>2003 I "^18^23^24^36^41^65^94^"[("^"_ECXTS_"^") S ECDSS=$$TSMAP^ECXUTL4(ECXTS)
  S ECXDIV=""
  ;
  ;- Ord Div, Contrct St/End Dates, Contrct Type placeholders for FY2002
  S (ECXODIV,ECXCSDT,ECXCEDT,ECXCTYP)=""
  ;setup provider(s) as'2'_ien
  S (ECU1A,ECU2A,ECU3A,ECU1NPI,ECU2NPI,ECU3NPI,ECXPPC1,ECXPPC2,ECXPPC3)=""
- S (ECU1,ECU2,ECU3,ECU4,ECU5,ECU4A,ECU5A,ECU4NPI,ECU5NPI,ECXPPC4,ECXPPC5)=""
+ S (ECU1,ECU2,ECU3)=""
  K ECXPRV S ECXPROV=$$GETPRV^ECPRVMUT(ECDA,.ECXPRV) I ECXPROV Q
- F I=1:1:5 S Y=$O(ECXPRV("")) I Y'="" S @("ECU"_I)=+ECXPRV(Y) K ECXPRV(Y)
+ F I=1:1:3 S Y=$O(ECXPRV("")) I Y'="" S @("ECU"_I)=+ECXPRV(Y) K ECXPRV(Y)
  S:$L(ECU1) ECXPPC1=$$PRVCLASS^ECXUTL(ECU1,ECDT),ECU1A="2"_$P(ECU1,";")
- S ECXUSRTN=$$NPI^XUSNPI("Individual_ID",ECU1,ECDT)
- S:+ECXUSRTN'>0 ECXUSRTN="" S ECU1NPI=$P(ECXUSRTN,U)
  S:$L(ECU2) ECXPPC2=$$PRVCLASS^ECXUTL(ECU2,ECDT),ECU2A="2"_$P(ECU2,";")
- S ECXUSRTN=$$NPI^XUSNPI("Individual_ID",ECU2,ECDT)
- S:+ECXUSRTN'>0 ECXUSRTN="" S ECU2NPI=$P(ECXUSRTN,U)
  S:$L(ECU3) ECXPPC3=$$PRVCLASS^ECXUTL(ECU3,ECDT),ECU3A="2"_$P(ECU3,";")
- S ECXUSRTN=$$NPI^XUSNPI("Individual_ID",ECU3,ECDT)
- S:+ECXUSRTN'>0 ECXUSRTN="" S ECU3NPI=$P(ECXUSRTN,U)
- S:$L(ECU4) ECXPPC4=$$PRVCLASS^ECXUTL(ECU4,ECDT),ECU4A="2"_$P(ECU4,";")
- S ECXUSRTN=$$NPI^XUSNPI("Individual_ID",ECU4,ECDT)
- S:+ECXUSRTN'>0 ECXUSRTN="" S ECU4NPI=$P(ECXUSRTN,U)
- S:$L(ECU5) ECXPPC5=$$PRVCLASS^ECXUTL(ECU5,ECDT),ECU5A="2"_$P(ECU5,";")
- S ECXUSRTN=$$NPI^XUSNPI("Individual_ID",ECU5,ECDT)
- S:+ECXUSRTN'>0 ECXUSRTN="" S ECU5NPI=$P(ECXUSRTN,U)
  ;change for version 2 where ECP is a variable pointer and we want to
  ;expand it category = category or null if stored as 0
  D:ECP[";"
  .S ECP=$S(ECP["ICPT":$P(^ICPT(+ECP,0),U)_"01",ECP<90000:$P(^EC(725,+ECP,0),U,2)_"N",1:$P(^EC(725,+ECP,0),U,2)_"L"),ECC=$S(ECC:ECC,1:"")
  ;pick up EC to PCE data from "P" in File 721
- S ECPCE=$G(^ECH(ECDA,"P")),ECPCE1=$P(ECPCE,U),ECPCE2=$P(ECPCE,U,2)
- S ECPCE7=$S($P(ECPCE,U,7)=1:"Y",1:"N")
+ S ECPCE=$G(^ECH(ECDA,"P"))
+ S ECPCE1=$P(ECPCE,U),ECPCE2=$P(ECPCE,U,2),ECPCE3=$P(ECPCE,U,3)
+ S ECPCE4=$P(ECPCE,U,4),ECPCE5=$P(ECPCE,U,5),ECPCE6=$P(ECPCE,U,6)
+ S ECPCE7=$S($P(ECPCE,U,7)=1:"Y",1:"N"),ECXMST=$P(ECPCE,U,9)
  S ECXCMOD=""
  I $D(^ECH(ECDA,"MOD")) D
  .S MOD=0,M=""
@@ -102,18 +92,8 @@ UPDATE ;sets record and updates counters
  ;- CNH status (YES/NO)
  S ECXCNH=$$CNHSTAT^ECXUTL4(ECXDFN)
  ;
- ;- encounter classification
- S (ECXAO,ECXECE,ECXHNC,ECXMIL,ECXIR,ECXSHAD)="",ECXVISIT=$P(ECCH,U,21)
- I ECXVISIT'="" D
- .D VISIT^ECXSCX1(ECXDFN,ECXVISIT,.ECXVIST,.ECXERR) I ECXERR K ECXERR Q
- .S ECXAO=$G(ECXVIST("AO")),ECXECE=$G(ECXVIST("PGE")),ECXSHAD=$G(ECXVIST("SHAD"))
- .S ECXHNC=$G(ECXVIST("HNC")),ECXMIL=$G(ECXVIST("MST")),ECXIR=$G(ECXVIST("IR"))
  ; - Head and Neck Cancer Indicator
  S ECXHNCI=$$HNCI^ECXUTL4(ECXDFN)
- ; - PROJ 112/SHAD Indicator
- S ECXSHADI=$$SHAD^ECXUTL4(ECXDFN)
- ; ******* - PATCH 127, ADD PATCAT CODE 
- S ECXPATCAT=$$PATCAT^ECXUTL(ECXDFN)
  ;
  ; - Get national patient record flag Indicator if exist
  D NPRF^ECXUTL5
@@ -125,23 +105,23 @@ UPDATE ;sets record and updates counters
  ;
 FILE ;file record in #727.815
  ;node0
- ;ecode=inst ECL^dfn ECXDFN^ssn ECXSSN^name ECXPNM^i/o status ECXA^day^
+ ;ecode=inst ECL^dfn ECXDFN^ssn ECXSSN^name^i/o status ECXA^day^
  ;DSS unit ECDU^category ECC^procedure ECP^volume ECV^
- ;cost center ECCS^ordering sec ECO^section ECM^
- ;provider ECU1A^prov per cls ECXPPC1^prov 2 ECU2A^prov#2 per cls ECXPPC2
- ;^prov 3 ECU3A^prov#3 per cls ECXPPC3^^mov # ECXMN^treat spec ECXTS
- ;^time ECTM^primary care team ECPTTM^primary care provider ECPTPR
- ;^pce cpt code (ECXCPT)^primary icd-9 code ECXICD9^secondary icd-9
- ;ECXICD91^secondary icd-9 ECXICD92^secondary icd-9 ECXICD93^secondary 
- ;icd-9 ECXICD94^agent orange ECXAST^radiation exposure ECXRST^
- ;environmental contaminants ECXEST^service connected ECPTPR^sent to pce
- ;ECPCE7^^dss identifier ECDSS^dss dept
+ ;cost center ECCS^ordering sec ECO^section ^
+ ;provider ECU1A^^prov 2 ECU2A^^prov 3 ECU3A^^^mov # ECXMN^
+ ;treat spec ECXTS^time ECTM^
+ ;primary care team^primary care provider^pce cpt code (ECXCPT)^
+ ;primary icd-9 code ICD9^secondary icd-9 ICD91^secondary icd-9 ICD92^
+ ;secondary icd-9 ICD93^secondary icd-9 ICD94^
+ ;agent orange^radiation exposure ECPCC3^
+ ;environmental contaminants ECPTTM^service connected ECPTPR^
+ ;sent to pce ECPCE^^dss identifier ECDSS^dss dept
  ;node1
- ;mpi ECXMPI^dss dept ECXDSSD^PLACEHOLDER
- ;placeholder^placeholder^placeholder^
- ;placeholder^pc prov person class ECCLAS^
+ ;mpi ECXMPI^dss dept ECXDSSD^provider npi ECXPRV2^
+ ;provider #2 npi ECU2NPI^provider #3 npi ECU3NPI^^
+ ;pc provider npi ECPTNPI^pc prov person class ECCLAS^
  ;assoc pc prov ECASPR^assoc pc prov person class ECCLAS2^
- ;placeholder^
+ ;assoc pc prov npi ECASNPI^
  ;divison ECXDIV^mst status ECXMST^dom ECXDOM^date of birth ECXDOB^
  ;enrollment category ECXCAT^ enrollment status ECXSTAT^enrollment
  ;priority ECXPRIOR^period of service ECXPOS^purple heart indicator
@@ -154,20 +134,7 @@ FILE ;file record in #727.815
  ;ECXPRIOR_enrollment subgroup ECXSBGRP^user enrollee ECXUESTA^patient
  ;type ECXPTYPE^combat vet elig ECXCVE^combat vet elig end date
  ;ECXCVEDT^enc cv eligible ECXCVENC^national patient record flag
- ;ECXNPRFI^emerg response indic(FEMA) ECXERI^agent orange indic ECXAO^
- ;environ contam ECXECE^head/neck cancer ECXHNC^encntr mst ECXMIL
- ;^radiation ECXIR^OEF/OIF ECXOEF^OEF/OIF return date ECXOEFDT
- ;^associate pc provider npi ECASNPI^primary care provider npi ECPTNPI^
- ;provider npi ECU1NPI^provider #2 ECU2NPI^provider #3 ECU3NPI^
- ;shad status ECXSHADI^shad encounter ECXSHAD^patcat ECXPATCAT^
- ;prov #4 ECU4A^prov #4 pc ECXPPC4^prov #4 ECXU4NPI^prov #5 ECU5A^
- ;prov #5 pc ECXPPC5^prov #5 ECXU5NPI 
- ;
- ;convert specialty to PTF Code for transmission
- N ECXDATA
- S ECXDATA=$$TSDATA^DGACT(42.4,+ECXTS,.ECXDATA)
- S ECXTS=$G(ECXDATA(7))
- ;done
+ ;ECXNPRFI
  N DA,DIK
  S EC7=$O(^ECX(ECFILE,999999999),-1),EC7=EC7+1
  S ECODE=EC7_U_EC23_U_ECL_U_ECXDFN_U_ECXSSN_U_ECXPNM_U_ECXA_U
@@ -177,10 +144,10 @@ FILE ;file record in #727.815
  S ECODE=ECODE_ECXTS_U_ECTM_U
  S ECODE=ECODE_ECPTTM_U_ECPTPR_U_ECXCPT_U_ECXICD9_U
  S ECODE=ECODE_ECXICD91_U_ECXICD92_U_ECXICD93_U
- S ECODE=ECODE_ECXICD94_U_ECXAST_U_ECXRST_U_ECXEST_U
- S ECODE=ECODE_ECSC_U_ECPCE7_U_U_ECDSS_U_U
- S ECODE1=ECXMPI_U_ECXDSSD_U_U_U_U_ECCLAS_U
- S ECODE1=ECODE1_U_ECASPR_U_ECCLAS2_U_U_ECXDIV_U
+ S ECODE=ECODE_ECXICD94_U_ECPCE3_U_ECPCE4_U_ECPCE5_U
+ S ECODE=ECODE_ECPCE6_U_ECPCE7_U_U_ECDSS_U_U
+ S ECODE1=ECXMPI_U_ECXDSSD_U_ECU1NPI_U_ECU2NPI_U_ECU3NPI_U_ECCLAS_U
+ S ECODE1=ECODE1_ECPTNPI_U_ECASPR_U_ECCLAS2_U_ECASNPI_U_ECXDIV_U
  S ECODE1=ECODE1_ECXMST_U_ECXDOM_U_ECXDOB_U_ECXCAT_U_ECXSTAT_U
  S ECODE1=ECODE1_$S(ECXLOGIC<2005:ECXPRIOR,1:"")_U_ECXPOS_U_ECXPHI_U_ECXOBS_U_ECXENC_U_ECXAOL_U
  S ECODE1=ECODE1_ECXODIV_U_ECXCSDT_U_ECXCEDT_U_ECXCTYP_U_ECXCNH_U_ECXPDIV_U
@@ -188,29 +155,15 @@ FILE ;file record in #727.815
  I ECXLOGIC>2003 S ECODE1=ECODE1_U_ECXENRL_U
  I ECXLOGIC>2004 S ECODE1=ECODE1_U_ECXPRIOR_ECXSBGRP_U_ECXUESTA_U_ECXPTYPE_U_ECXCVE_U
  I ECXLOGIC>2004 S ECODE2=ECXCVEDT_U_ECXCVENC_U_ECXNPRFI
- I ECXLOGIC>2006 S ECODE2=ECODE2_U_ECXERI_U_ECXAO_U_ECXECE_U_ECXHNC_U_ECXMIL_U_ECXIR_U
- I ECXLOGIC>2007 S ECODE2=ECODE2_U_ECXOEF_U_ECXOEFDT_U_ECASNPI_U_ECPTNPI_U_ECU1NPI_U_ECU2NPI_U_ECU3NPI
- ; PATCAT added
- I ECXLOGIC>2010 S ECODE2=ECODE2_U_ECXSHADI_U_ECXSHAD_U_ECXPATCAT
- I ECXLOGIC>2011 S ECODE2=ECODE2_U_ECU4A_U_ECXPPC4_U_ECU4NPI_U_ECU5A_U_ECXPPC5_U_ECU5NPI
  S ^ECX(ECFILE,EC7,0)=ECODE,^ECX(ECFILE,EC7,1)=ECODE1,^ECX(ECFILE,EC7,2)=$G(ECODE2),ECRN=ECRN+1
  S DA=EC7,DIK="^ECX("_ECFILE_"," D IX1^DIK K DIK,DA
  I $D(ZTQUEUED),$$S^%ZTLOAD
  Q
  ;
 SETUP ;Set required input for ECXTRAC
- N OUT
- S ECHEAD="ECS",OUT=0
+ S ECHEAD="ECS"
  D ECXDEF^ECXUTL2(ECHEAD,.ECPACK,.ECGRP,.ECFILE,.ECRTN,.ECPIECE,.ECVER)
- Q:($G(ECXQQ))
- W @IOF,!,"Setting up for ",ECPACK," DSS Extract -",!
- W !,"   Reminder: A maintenance option, ECS Extract Unusual Volume Report, may"
- W !,"   assist in identifying problematic data. It should be run before the"
- W !,"   Event Capture Extract is performed.",!
- D PAUSE^ECXTRAC
- I OUT S ECFILE=""
  Q
  ;
 QUE ; entry point for the background requeuing handled by ECXTAUTO
- N ECXQQ
- S ECXQQ=1 D SETUP,QUE^ECXTAUTO,^ECXKILL Q
+ D SETUP,QUE^ECXTAUTO,^ECXKILL Q

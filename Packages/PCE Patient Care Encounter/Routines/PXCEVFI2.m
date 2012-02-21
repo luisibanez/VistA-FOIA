@@ -1,5 +1,5 @@
-PXCEVFI2 ;ISL/dee,ESW - Supporting routines for editing a visit or v-file entry ; 4/24/07 4:27pm
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,73,95,96,124,158,184**;Aug 12, 1996;Build 30
+PXCEVFI2 ;ISL/dee,ESW - Supporting routines for editing a visit or v-file entry ;2/11/04 4:40pm
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,73,95,96,124,158**;Aug 12, 1996
  ;
  Q
 ASK(PXCVIEN,PXCFIEN,PXCEAUPN,PXCCATT,PXCCODE) ; -- Display a selection list from one V-File for this visit
@@ -41,7 +41,7 @@ SAVE ; -- Save this edited and quit editing.
  . I PXCECAT="SIT"!(PXCECAT="APPM")!(PXCECAT="HIST") S PXCEVIEN=^TMP("PXK",$J,"VST",1,"IEN")
  Q
  ;
-DEL(PXCECAT) ; -- Delete this V-File entry from the List if all the visit information.
+DEL(PXCECAT) ; -- Delete this V-File entry from the List if all the visit infomation.
  I PXCEFIEN'>0!(PXCEVIEN'>0) W !!,$C(7),"Error: Cannot delete this an unknown V-File entry." D PAUSE^PXCEHELP Q
  I PXCEKEYS'["D",PXCEKEYS'["d" W !!,$C(7),"Error: You do not have delete access." D PAUSE^PXCEHELP Q
  ;
@@ -126,6 +126,6 @@ SC(PXDFN) ;Service Connected Help
  .S SDCNT=SDCNT+1
  .S SDDC=$S('$D(^DIC(31,+SDRD0,0)):"",$P(^(0),"^",4)]"":$P(^(0),"^",4),1:$P(^(0),"^"))
  .W:SDCNT>1 !
- .W ?20,$P($G(^DIC(31,+SDRD0,0)),"^",3),?25,SDDC,"  (",$P(SDRD0,"^",2),"%-",$S($P(SDRD0,"^",3):"SC",1:""),")"
+ .W ?20,SDDC,"  (",$P(SDRD0,"^",2),"%-",$S($P(SDRD0,"^",3):"SC",1:""),")"
  I 'SDCNT W $S('$O(^DPT(PXDFN,.372,0)):"None Stated",1:"No Service Connected Disabilities Listed")
  ;

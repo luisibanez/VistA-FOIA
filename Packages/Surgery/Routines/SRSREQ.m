@@ -1,5 +1,5 @@
 SRSREQ ;BIR/MAM - MAKE REQUESTS ; [ 01/20/00  9:42 AM ]
- ;;3.0; Surgery ;**8,12,23,30,37,92,131,154**;24 Jun 93
+ ;;3.0; Surgery ;**8,12,23,30,37,92,131**;24 Jun 93
 LOOP ; break procedure if greater than 70 characters
  S SROPS(M)="" F LOOP=1:1 S MM=$P(SROPER," "),MMM=$P(SROPER," ",2,200) Q:MMM=""  Q:$L(SROPS(M))+$L(MM)'<70  S SROPS(M)=SROPS(M)_MM_" ",SROPER=MMM
  Q
@@ -10,8 +10,6 @@ CC K SROPS,MM,MMM S SRCTN=SRSCC,SROPER=$P(^SRF(SRCTN,"OP"),"^") S:$L(SROPER)<70 
  S DFN=SRSDPT D DEM^VADPT W !!,VADM(1)_" has the following procedure already entered for this",!,"date: ",!!,"CASE #"_SRCTN_"  "_SROPS(1) I $D(SROPS(2)) W !,?9,SROPS(2) I $D(SROPS(3)) W !,?9,SROPS(3)
 ASKCC K DIR W ! S DIR("A")="Will this be a concurrent procedure ",DIR("B")="NO",DIR(0)="Y",DIR("?",1)="If these procedures will be scheduled at the same time, in the same operating",DIR("?")="room, answer 'YES'."
  D ^DIR S SRSC=Y K DIR Q:$D(DUOUT)!$D(DTOUT)  I 'Y K SRCTN Q
- ;if concurrent and the case is locked
- I Y,$D(^XTMP("SRLOCK-"_SRCTN)) D MSG^SRSUPRQ S SRSC=0 K SRCTN Q
  S SRSCON(SRSCON,"OP")=$P(^SRF(SRCTN,"OP"),"^"),SRSCON(SRSCON,"DOC")=$P(^VA(200,$P(^SRF(SRCTN,.1),"^",4),0),"^"),SRSCON(SRSCON,"SS")=$P(^SRO(137.45,$P(^SRF(SRCTN,0),"^",4),0),"^"),SRSCON(SRSCON)=SRCTN
  Q
 AVG ; update estimated case length

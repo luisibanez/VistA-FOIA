@@ -1,5 +1,5 @@
-PXRMDLG4 ; SLC/PJH - Reminder Dialog Edit/Inquiry ;01/18/2010
- ;;2.0;CLINICAL REMINDERS;**4,6,12,16**;Feb 04, 2005;Build 119
+PXRMDLG4 ; SLC/PJH - Reminder Dialog Edit/Inquiry ;07/29/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
 WP(SUB,SUB1,WIDTH,SEQ,VALMCNT) ;Format WP text
  N DIWF,DIWL,DIWR,IC,TEXT,X,TXTCNT,DTXT,CNT,SUB2
@@ -21,8 +21,10 @@ ADD ;PXRM DIALOG ADD ELEMENT validation
  N ANS,DTOUT,DUOUT,LIT,LOCK,Y,PIEN,ERR,IEN,NATIONAL,SEQ
  W IORESET
  S VALMBCK="R",NATIONAL=0
+ ;Check if national reminder dialog
  I $P($G(^PXRMD(801.41,PXRMDIEN,100)),U)="N" S NATIONAL=1
  S LOCK=$P($G(^PXRMD(801.41,PXRMDIEN,100)),U,4)
+ ;Dissallow editing of national dialogs
  I NATIONAL,'($G(PXRMINST)=1)&(DUZ(0)="@"),$G(LOCK)'=1 D  Q
  .W !,"Elements may not be added to national reminder dialogs" H 2
  ;
@@ -30,14 +32,13 @@ ADD ;PXRM DIALOG ADD ELEMENT validation
  Q:$D(DUOUT)!$D(DTOUT)
  ;
  ;Check if sequence number is OK
- I $G(PIEN)="" Q
  S ANS="N" D ASK^PXRMDLG5(.ANS,PIEN) Q:$D(DUOUT)!$D(DTOUT)!($G(ANS)="N")
  ;
  ;Select a dialog element to add to parent dialog (PIEN)
  ;PIEN may be dialog or a group within the dialog
  D ESEL^PXRMDEDT(PIEN,SEQ)
  ;Rebuild workfile
- D BUILD^PXRMDLG(PXRMMODE)
+ D BUILD^PXRMDLG(VIEW)
  Q
  ;
 FADD(DIEN,FTAB) ;Additional Findings
@@ -60,9 +61,8 @@ DETAIL(DIEN,LEV,VIEW,NODE) ;;Build listman global for all components
  .S DSUB=$O(^PXRMD(801.41,DIEN,10,"B",DSEQ,"")) Q:'DSUB
  .;Get ien of prompt/component
  .S DCIEN=$P($G(^PXRMD(801.41,DIEN,10,DSUB,0)),U,2) Q:'DCIEN
- .I "PF"[$P($G(^PXRMD(801.41,DCIEN,0)),U,4) D  Q
- ..S ^TMP("PXRMDLG4",$J,"IEN",NSEL)=DIEN_U_DSEQ
- ..S ^TMP("PXRMDLG4",$J,"SEQ",LEV_DSEQ)=DCIEN
+ .;Ignore prompts and forced values
+ .I "PF"[$P($G(^PXRMD(801.41,DCIEN,0)),U,4) Q
  .;Save line in workfile
  .D DLINE(DCIEN,LEV,DSEQ,NODE)
  .;Build pointers back to parent
@@ -75,7 +75,7 @@ DETAIL(DIEN,LEV,VIEW,NODE) ;;Build listman global for all components
  ;
 DLINE(DIEN,LEV,DSEQ,NODE) ;Save individual component details
  N CNT,DBOX,DCAP,DDIS,DMULT,DSUPP,DSHOW,DTYP,DTXT
- N IC,RESNM,RESULT,RIEN,RNAME,RCNT
+ N IC,RESNM,RESULT,RIEN,RNAME
  ;Dialog name
  S DDATA=$G(^PXRMD(801.41,DIEN,0)),DNAM=$P(DDATA,U) Q:DNAM=""
  ;Check if standard PXRM prompt
@@ -87,6 +87,9 @@ DLINE(DIEN,LEV,DSEQ,NODE) ;Save individual component details
  ;Resolution type and name
  S RNAME="",RIEN=$P($G(^PXRMD(801.41,DIEN,1)),U,3)
  I RIEN S RNAME=$P($G(^PXRMD(801.9,RIEN,0)),U)
+ ;Result Group
+ S RESULT=$P(DDATA,U,15)
+ I RESULT S RESNM=$P($G(^PXRMD(801.41,RESULT,0)),U)
  ;
  ;Group fields
  I DTYP="Group" D
@@ -97,7 +100,7 @@ DLINE(DIEN,LEV,DSEQ,NODE) ;Save individual component details
  .S DSUPP=$S($P(DDATA,U,11):"SUPPRESS",1:"NO SUPPRESS")
  .S DSHOW=$S($P(DDATA,U,10):"HIDE",1:"SHOW")
  .S DMULT=$P(DDATA,U,9)
- .S DMULT=$S(DMULT=1:"ONE ONLY",DMULT=2:"ONE OR MORE",DMULT=3:"NONE OR ONE",DMULT=4:"ALL REQUIRED",1:"NO SELECTION")
+ .S DMULT=$S(DMULT=1:"ONE ONLY",DMULT=2:"ONE OR MORE",DMULT=3:"NONE OR ONE",1:"NO SELECTION")
  ;
  N DPTX,DTXT,EXIST,ITEM,TEMP,SEP,SEQ,TAB,ALTLEN
  S NSEL=NSEL+1,NLINE=NLINE+1,ITEM=NSEL,SEP=$E(LEV,$L(LEV)),SEQ=LEV_DSEQ
@@ -112,7 +115,7 @@ DLINE(DIEN,LEV,DSEQ,NODE) ;Save individual component details
  ;Display dialog name
  S TEMP=TEMP_$J("",2+CNT)_DNAM
  ;Add disabled if present
- I +DDIS>0 S TEMP=TEMP_" (Disabled)"
+ I DDIS]"" S TEMP=TEMP_" (Disabled)"
  ;
  S ^TMP(NODE,$J,NLINE,0)=TEMP
  ;check for alternate dialog element/group
@@ -143,13 +146,6 @@ DLINE(DIEN,LEV,DSEQ,NODE) ;Save individual component details
  .I RNAME]"" D
  ..S TEMP=$J("",TAB)_"Resolution: "_RNAME
  ..S NLINE=NLINE+1,^TMP(NODE,$J,NLINE,0)=TEMP
- .;Result Group
- .I VIEW=4 D
- ..S RCNT=0 F  S RCNT=$O(^PXRMD(801.41,DIEN,51,RCNT)) Q:RCNT'>0  D
- ...S RESULT=$P($G(^PXRMD(801.41,DIEN,51,RCNT,0)),U)
- ...S RESNM=$P($G(^PXRMD(801.41,RESULT,0)),U) Q:RESNM=""
- ...S TEMP=$J("",TAB)_"Result Group: "_RESNM
- ...S NLINE=NLINE+1,^TMP(NODE,$J,NLINE,0)=TEMP
  .;Additional findings
  .D FADD(DIEN,TAB)
  ;Get additional prompts
@@ -167,6 +163,7 @@ DLINE(DIEN,LEV,DSEQ,NODE) ;Save individual component details
  ;
 FDESC(FIEN) ;Finding description
  N FGLOB,FITEM,FNUM
+ ;Determine finding type
  S FGLOB=$P(FIEN,";",2) Q:FGLOB=""
  S FITEM=$P(FIEN,";") Q:FITEM=""
  S FNUM=" ["_FITEM_"]"
@@ -193,19 +190,20 @@ FDESC(FIEN) ;Finding description
  Q
  ;
 FSAVE(DSUB,FNAME,FTYP,FTAB,FIEN) ;Save finding details
- N IND,FMTSTR,NL,OUTPUT,TEMP,TEXT
- I DSUB>1 D
- . S FMTSTR=FTAB_"R^13L1^"_(65-FTAB)_"L"
- . S TEXT=U_"Add. Finding:"
- I DSUB=1 D
- . S FMTSTR=FTAB_"R^8L1^"_(70-FTAB)_"L"
- . S TEXT=U_"Finding:"
- S TEXT=TEXT_U_FNAME_" ("_FTYP_")"
- D COLFMT^PXRMTEXT(FMTSTR,TEXT," ",.NL,.OUTPUT)
- F IND=1:1:NL D
- . S NLINE=NLINE+1
- . S ^TMP(NODE,$J,NLINE,0)=OUTPUT(IND)
- I VIEW=2,($G(FIEN)["ICPT"!($G(FIEN)["ICD9")) D FIND^PXRMDLG1(FIEN,DSEQ,DIEN,.NLINE,NODE)
+ N TEMP
+ I DSUB=1 S FLIT="Finding: "
+ I DSUB>1 S FLIT="Add. Finding: "
+ S FLONG=0
+ ;change code to use IOM instead of default length of 60
+ I $L(FLIT_FNAME_" ("_FTYP_")")>(IOM-20) S FLONG=1
+ I 'FLONG S FNAME=FLIT_FNAME_" ("_FTYP_")"
+ I FLONG S FNAME=FLIT_FNAME
+ S TEMP=$J("",FTAB)_$E(FNAME,1,(IOM-20))_$J("",60-$L(FNAME))
+ S NLINE=NLINE+1
+ S ^TMP(NODE,$J,NLINE,0)=TEMP
+ I FLONG S NLINE=NLINE+1,^TMP(NODE,$J,NLINE,0)=$J("",FTAB)_"("_FTYP_")"
+ I VIEW=2 D
+ .I $G(FIEN)["ICPT"!($G(FIEN)["ICD9") D FIND^PXRMDLG1(FIEN,DSEQ,DIEN,.NLINE,NODE)
  Q
  ;
 PROMPT(IEN,TAB,TEXT,VIEW) ;additional prompts in the dialog file
@@ -224,7 +222,7 @@ PROMPT(IEN,TAB,TEXT,VIEW) ;additional prompts in the dialog file
  ..I DTITLE="" S DTITLE=$P($G(^PXRMD(801.41,DSUB,2)),U,4)
  ..S DNAME=DTITLE
  .S DNAME=$J("",TAB)_TEXT_DNAME
- .S:+DDIS>0 DNAME=DNAME_" (Disabled)"
+ .S:DDIS]"" DNAME=DNAME_" (Disabled)"
  .S NLINE=NLINE+1
  .S ^TMP(NODE,$J,NLINE,0)=DNAME
  .S TEXT=$J("",$L(TEXT))
@@ -251,7 +249,6 @@ SEQ(SEQ,PIEN) ;Select sequence number to add
  .N CLASS,SUB
  .;Sequence number of parent
  .S SUB=$P(X,".",1,$L(X,".")-1)
- .I $G(SUB)=""!($G(SUB)=0) W !,"Invalid sequence number. A sequence number cannot be less then 1" H 2 Q
  .;Get IEN of parent dialog or group
  .S PIEN=$G(^TMP("PXRMDLG4",$J,"SEQ",SUB))
  .;Validate sequence number

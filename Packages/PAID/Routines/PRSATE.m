@@ -1,18 +1,28 @@
-PRSATE ;WCIOFO/JAH/PLT - Enter/Edit Employee (emp) Tour of Duty (ToD) ;03/15/2005
- ;;4.0;PAID;**8,11,27,45,55,93,112,117,121**;Sep 21, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRSATE ; WCIOFO/JAH-Enter/Edit Employee (emp) Tour of Duty (ToD);1/10/2000
+ ;;4.0;PAID;**8,11,27,45,55**;Sep 21, 1995
  ;
- ;ppi=ien of 450, ppi=ien of 458, ppe=pp (yy-mm)
- ;tli = ien of t&l, tlu=t&l # (nnn), prstlv=2 for timekeeper user
  N PPI,PPE,PRSTLV,TLI,TLE,DFN
+ ;
+ ;    PPI =  pay period (pp) internal #.
+ ;    PPE = pp external form (99-06).
+ ;    PRSTLV = flag indicates timekeeper (TK) in T&L lookup ^PRSAUTL.
+ ;    TLI = T&L unit internal #.
+ ;    TLU = T&L unit # 3-digit
+ ;
+ ;  -Get current pp-internal & external.  -Ask user for T&L.
+ ;  -Loop to ask for emp until TK is done.
+ ;  --Emp lookup screens emps not in T&L returned by PRSAUTL call.
+ ;
  S PRSTLV=2 D ^PRSAUTL Q:TLI<1
  F  S DFN=$$GETEMP^PRSATE6(TLE) Q:DFN<1  D
- . S PPI=$P(^PRST(458,0),"^",3),PPE=$P($G(^PRST(458,PPI,0)),"^",1)
- . D TOUREDIT(DFN,PPI,PPE,TLI,TLE,PRSTLV)
+ .    S PPI=$P(^PRST(458,0),"^",3),PPE=$P($G(^PRST(458,PPI,0)),"^",1)
+ .    D TOUREDIT(DFN,PPI,PPE,TLI,TLE,PRSTLV)
  Q
+ ;=======================
  ;
 TOUREDIT(DFN,PPI,PPE,TLI,TLE,PRSTLV) ;
- N C0,NH,FLX,PMP,PP,PB,ENT,SRT,WTL,TYP,Z,TD,ERROR,NOERROR,PRSDAY,PRSETD
+ ;
+ N C0,NH,FLX,PMP,PP,PB,ENT,SRT,WTL,TYP,Z,TD,ERROR,NOERROR
  ;
  ;   Entitlement lookup leaks many variables.  Following R used in 
  ;   this routine but may be looked up again despite the fact they R 
@@ -28,11 +38,14 @@ TOUREDIT(DFN,PPI,PPE,TLI,TLE,PRSTLV) ;
  ;  * PP= emps pay plan
  ;    DB = pay basis-1:full,2:part,3:intermit
  ;    ENT= 39 char entitlement string
+ ;
  ;  Entitlement lookup.
+ ;
  D ^PRSAENT I ENT="" D ERROR(1) S OUT=1 Q
  ;
  ; Display header/Ask pp (NOL^PRSATE2 returns SRT = Current, Next, Last)
- D NOW^%DTC S NOW=% K %
+ ;
+ D NOW^%DTC S NOW=%
  W:$E(IOST,1,2)="C-" @IOF
  W !?26,"VA TIME & ATTENDANCE SYSTEM"
  W !?29,"EMPLOYEE TOUR OF DUTY"
@@ -41,8 +54,11 @@ TOUREDIT(DFN,PPI,PPE,TLI,TLE,PRSTLV) ;
  I SRT="L" S PPI=PPI-1,PPE=$P($G(^PRST(458,PPI,0)),"^",1)
  ;
  ;  Get emp's flexitime code
+ ;
  S FLX=$$FLEXIND^PRSATE6(PPI,DFN,SRT)
+ ;
  ;  Is emp entitled reg. shed. hrs.?
+ ;
  I $E(ENT,1)="0" D
  .  S Z=$E(ENT,2),TD=$S(Z="D":3,1:4) D NONE
  E  D
@@ -80,7 +96,8 @@ TOUREDIT(DFN,PPI,PPE,TLI,TLE,PRSTLV) ;
  .....        D RESTORE^PRSATE6(PPI,DFN) S NOERROR=1
  ...    E  D
  ....      S NOERROR=1
- K NOW Q
+ Q
+ ;=======================
  ;
 ISTEMPTR() ; IS TEMPORARY ToD ?
  ; Ask user if ToD is temp or perm & convert TYP to true false flag
@@ -88,6 +105,7 @@ ISTEMPTR() ; IS TEMPORARY ToD ?
  ; 
  S TYP=$$ASKTEMP^PRSATE6() I TYP'["^" S TYP=$E(TYP,1)="T",WTL=TLI
  Q TYP
+ ;=======================
  ;
 A1 ; Set up for emps ToD look up. Screen allows Daily ToDs & days off 
  ; for daily emps.  Everyone else gets days off & all other ToDs.
@@ -101,7 +119,7 @@ A1 ; Set up for emps ToD look up. Screen allows Daily ToDs & days off
  ; Setup a fixed or varying ToD.  Compressed ToDs must be varying;
  ; ask TK about all others.
  ;
- S DB=$P(C0,U,10) I FLX="C"!("KM"[PP&(DB=1)&(NH=72)) D
+ I FLX="C" D
  .   D VAR
  E  D
  .  S X=$$ASKFIXED()
@@ -109,22 +127,14 @@ A1 ; Set up for emps ToD look up. Screen allows Daily ToDs & days off
  .  I X="N" D
  ..    D VAR
  .  E  D FX
- K DB Q
+ Q
+ ;=======================
  ;
 FX ; Fixed ToD
-FX1 S DIC("A")="Select TOUR OF DUTY: "
+ S DIC("A")="Select TOUR OF DUTY: "
  W ! D ^DIC
  Q:Y'>0
- S TD=+Y
- ;check overlap
- K PRSDAY,PRSETD
- F DAY=1:1:14 S $P(PRSETD,U,DAY)=$S(DAY#7<2:1,1:TD) D
- . N TOLD
- . S PRSDAY(DAY)=$P($G(^PRST(458,PPI,"E",DFN,"D",DAY,0)),U,1,4),$P(TOLD,U,DAY)=$S(SRT="N"&($P($G(^(0)),U,3)):$P(^(0),U,4),1:$P($G(^(0)),U,2)) S:DAY#7>1 $P(PRSDAY(DAY),U,6)=$P($G(^(0)),U,13),$P(PRSDAY(DAY),U,7,999)=$G(^(4))
- . D PRSDAY^PRSATE0
- . QUIT
- D ENT^PRSATE5 I $G(PRSERR) K PRSERR G FX1
- S Y=$G(^PRST(457.1,TD,1)),TDH=$P(^(0),"^",6),HRS=TDH*10
+ S TD=+Y,Y=$G(^PRST(457.1,TD,1)),TDH=$P(^(0),"^",6),HRS=TDH*10
  S (ZENT,STR)=""
  D OT^PRSATP,VS^PRSATE0
  I STR'="" W *7,!!,STR G FX
@@ -135,27 +145,28 @@ FX1 S DIC("A")="Select TOUR OF DUTY: "
  .  F DAY=2:1:6,9:1:13 D SET
  .  S TD=1,(Y,TDH)="" F DAY=1,7,8,14 D SET
  .  W "  ... done" D:HRS'=NH ERROR(2,NH,HRS)
- .  D T2
- . QUIT
- D HOL,RS K HRS,STR
+ .  D T2,^PRSATE5
+ D HOL,RS
  Q
- ;
+ ;=======================
  ;
 F1 F DAY=2:1:6,9:1:13 D NX
  S TD=1 F DAY=1,7,8,14 D NX
  W "  ... done"
  D:HRS'=NH ERROR(2,NH,HRS)
  Q
+ ;=======================
  ;
 VAR ; Variable ToD
  D ^PRSATE0
- I SRT'="N" D T2
+ I SRT'="N" D T2,^PRSATE5
  D HOL,RS
  Q
+ ;=======================
  ;
 NONE ; No ToD
  N TYP2,UPDT,Y,TDH
- W !!,"This is an intermittent employee with no specified tour."
+ W !!,"This is an Intermittent emp with no specified tour."
  W !!,"Time records will now be updated to indicate this."
  I '$D(^PRST(458,PPI,"E",DFN,"D",0)) S ^(0)="^458.02^14^14"
  I '$$PERM^PRSALIB(PPI,DFN) D
@@ -169,7 +180,7 @@ NONE ; No ToD
  W "  ... done"
  D HOL,RS
  Q
- ;
+ ;=======================
  ;
 RS ; Get Comp Ind
  S Y=$G(^PRST(458,PPI,"E",DFN,0))
@@ -193,8 +204,8 @@ RS ; Get Comp Ind
  .Q
  S $P(^PRST(458,PPI,"E",DFN,0),U,$S(SRT="N":7,1:6))=Y
  I $D(^PRST(458,"ATC",DFN)) D UPD^PRSASAL
- K PAY,ZENT Q
- ;
+ Q
+ ;=======================
  ;
 NX ; Set Next ToD
  S Z=$G(^PRST(458,PPI,"E",DFN,"D",DAY,0))
@@ -203,7 +214,7 @@ NX ; Set Next ToD
  S $P(Z,"^",3,4)="2^"_TD,$P(Z,"^",10,11)=DUZ_"^"_NOW
  S ^PRST(458,PPI,"E",DFN,"D",DAY,0)=Z,^PRST(458,"ATC",DFN,PPI,DAY)=""
  Q
- ;
+ ;=======================
  ;
 SET ; Set ToD
  N ZLASTPP
@@ -256,19 +267,20 @@ SET ; Set ToD
  ...      D S0
  ;
  D S1
- K OLD,SCH Q
- ;
+ Q
+ ;=======================
  ;
  ; Set up x-ref for supervisor approval of ToD change
  ;
 S0 S ^PRST(458,"ATC",DFN,PPI,DAY)=""
  Q
- ;
+ ;=======================
  ;
 S1 ;
- S ^PRST(458,PPI,"E",DFN,"D",DAY,0)=Z S:Y'="" ^(1)=Y
+ S ^PRST(458,PPI,"E",DFN,"D",DAY,0)=Z
+ S:Y'="" ^(1)=Y
  Q
- ;
+ ;=======================
  ;
 T2 ; Ask if second ToD
  N X
@@ -279,30 +291,21 @@ T2 ; Ask if second ToD
  ;
  S X=$$ASK2NDTR()
  Q:X'="Y"  G ^PRSATE4
- ;
+ ;=======================
  ;
 HOL ; Determine if Holiday within ToD
  N DAY
  D ^PRSAPPH
  Q:'$D(HOL)
  S TT="HX",DUP=1
- D E^PRSAPPH K DUP,HOL,TT
+ D E^PRSAPPH
  Q
- ;
+ ;=======================
  ;
 CLEANTOD(PPI,DFN,DAY,TD) ; CLEAN OUT TOUR
- N PRSDT,MIEN
  K ^PRST(458,PPI,"E",DFN,"D",DAY,1),^(2),^(3),^(10) I TD<5 K ^(4) S $P(Z,U,13,15)="^^"
- ; if employee is PTP with active memo then reset the ESR day
- S PRSDT=$P($G(^PRST(458,PPI,1)),U,DAY)
- S MIEN=$$MIEN^PRSPUT1(DFN,PRSDT)
- I MIEN D
- . N PRSFDA
- . S PRSFDA(458.02,DAY_","_DFN_","_PPI_",",146)="3" ; status = resubmit
- . S PRSFDA(458.02,DAY_","_DFN_","_PPI_",",148)="Tour Changed" ; remarks
- . D FILE^DIE("","PRSFDA"),MSG^DIALOG()
  Q
- ;
+ ;=======================
  ;
 ERROR(NUM,VAR1,VAR2) ;
  W *7,!!
@@ -311,7 +314,7 @@ ERROR(NUM,VAR1,VAR2) ;
  .  Q:$G(NH)=112
  .  W "Warning: Normal Hours are ",$G(VAR1),"; Tour Hours are ",$G(VAR2)
  Q
- ;
+ ;=======================
  ;
 ASKFIXED() ;GET USER'S YES OR NO RESPONSE TO FIXED ToD QUESTION
  N DIR,DIRUT,Y
@@ -320,17 +323,19 @@ ASKFIXED() ;GET USER'S YES OR NO RESPONSE TO FIXED ToD QUESTION
  S DIR("?")="Answer NO to create any other type of tour."
  S DIR("?",1)="Fixed tours are Monday - Friday with the same hours."
  D ^DIR
- Q $S(Y=1:"Y",Y=0:"N",1:"^")
- ;
+ S RESP=$S(Y=1:"Y",Y=0:"N",1:"^")
+ Q RESP
+ ;=======================
  ;
 ASK2NDTR() ;GET USER'S YES OR NO RESPONSE TO 2nd ToD QUESTION
  N DIR,DIRUT,Y
- S DIR("A")="Do you wish to enter a Second Tour"_$S($G(SRT)="X":"",1:" for any Day")
+ S DIR("A")="Do you wish to enter a Second Tour for any Day"
  S DIR(0)="Y"
  S DIR("B")="N"
  S DIR("?",1)="Answer Yes to add a second tour.  No to continue."
  S DIR("?")="Enter ^ to escape and cancel this tour change."
  D ^DIR
- Q $S(Y=1:"Y",Y=0:"N",1:"^")
- ;
+ S RESP=$S(Y=1:"Y",Y=0:"N",1:"^")
+ Q RESP
+ ;=======================
  ;

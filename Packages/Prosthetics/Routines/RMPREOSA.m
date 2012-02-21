@@ -1,6 +1,6 @@
 RMPREOSA ;HINES-IOFO/HNC - Clone, Auto Adaptive, Clothing Allowance ;10/31/03  14:17
- ;;3.0;PROSTHETICS;**80,75**;Feb 09, 1996;Build 25
-EN ;Add Auto Adaptive Suspense
+ ;;3.0;PROSTHETICS;**80**;Feb 09, 1996
+EN      ;Add Auto Adaptive Suspense
  ;
  D NOW^%DTC S X=%
  S DIC="^RMPR(668,",DIC(0)="AEQLM",DLAYGO=668
@@ -27,10 +27,7 @@ EN1 ;Add Clothing Allowance Suspense
  Q
 EN2 ;Create Clone CPRS Suspense
  ;
- N RMPR9
- S RMPR9=$P(^RMPR(668,DA,0),U,8)
- I $P(^RMPR(668,DA,0),U,8)>4&(RMPR9'=9)&(RMPR9'=11) W !!!,"Only CPRS Suspense Can Be Cloned!",!! H 2 Q
- I $P(^RMPR(668,DA,0),U,8)=11&($P($G(^RMPR(668,DA,0)),U,15)'>0) W !!!,"This was a Manual Request, not a CPRS Suspense.  Please create another Manual.",!! H 2 Q
+ I $P(^RMPR(668,DA,0),U,8)>4 W !!!,"Only CPRS Suspense Can Be Cloned!",!! H 2 Q
 ST2 S RMPRH=DA
  S (RMPRFLD,RMPRFI,RMPRFW)=0
  D GETS^DIQ(668,RMPRH,"**","I","OUT")

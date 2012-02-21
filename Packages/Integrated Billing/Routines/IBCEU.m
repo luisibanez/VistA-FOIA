@@ -1,9 +1,7 @@
 IBCEU ;ALB/TMP - EDI UTILITIES ;02-OCT-96
- ;;2.0;INTEGRATED BILLING;**51,137,207,232,349,432**;21-MAR-94;Build 192
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**51,137,207,232**;21-MAR-94
  ; DBIA SUPPORTED REF: GET^XUA4A72 = 1625
  ; DBIA SUPPORTED REF: $$ESBLOCK^XUSESIG1 = 1557
- Q
  ;
 TESTPT(DFN) ; Determine if pt is test pt
  ; Returns 1 if a test pt, 0 if not
@@ -21,28 +19,33 @@ MAINPRV(IBIFN) ; Returns name^id^ien^type code of 'main' prov on bill IBIFN
 PRVOK(VAL,IBIFN) ; Check bill form & prov function agree
  ; VAL = internal value of prov function
  ;
- N OK,IBBT
- S OK=0
- Q:VAL="" OK
- Q:'IBIFN OK
- S IBBT=$$FT^IBCEF(IBIFN) ; 2 If CMS-1500, 3 If UB-04
- I IBBT=2 D
- . I VAL=1 S OK=1 Q   ; CMS-1500, REFERRING
- . I VAL=3 S OK=1 Q   ; CMS-1500, RENDERING
- . I VAL=5 S OK=1 Q   ; CMS-1500, SUPERVISING
- I 'OK,IBBT=3 D
- . I VAL=1 S OK=1 Q   ; UB-04, REFERRING
- . I VAL=2 S OK=1 Q   ; UB-04, OPERATING
- . I VAL=3 S OK=1 Q   ; UB-04, RENDERING
- . I VAL=4 S OK=1 Q   ; UB-04, ATTENDING
- . I VAL=9 S OK=1 Q   ; UB-04, OTHER
+ ; OTHER(9) valid on institutional(UB92) bills
+ ; REFERRING(1) valid only on professional (HCFA) claims
+ ; Valid functions by bill types
+ ;  OUTPATIENT/UB-92: ATTENDING(4), OPERATING(2)-BILL TYPE 83X
+ ;                     AND A PRIN. PROC EXISTS
+ ;  INPATIENT/UB-92 : ATTENDING(4), OPERATING(2)-BILL TYPE 11X
+ ;                     AND A PRIN. PROC EXISTS
+ ;  OUTPATIENT/HCFA 1500 : RENDERING(3), SUPERVISING(5)
+ ;  INPATIENT/HCFA 1500  : RENDERING(3), SUPERVISING(5)
  ;
- Q OK
+ N OK,IBUB92
+ S VAL=$$UP^XLFSTR(VAL)
+ S OK=$S(VAL'="":1,1:0)
+ G:'OK!'$G(IBIFN) PRVQ
+ ;
+ S IBUB92=($$FT^IBCEF(IBIFN)=3) ; 1 if UB-92 ; 0 if HCFA 1500
+ ;
+ I VAL=1 S:IBUB92 OK=0 G PRVQ
+ ;
+ I "249"[VAL,'IBUB92 S OK=0 G PRVQ
+ I $S(VAL=3:1,1:VAL=5),IBUB92 S OK=0 G PRVQ
+ ;
+PRVQ Q OK
  ;
 PRVOK1(VAL,IBIFN) ; Check for both attending and rendering on bill
  N OK
  S OK=1
- Q:$$FT^IBCEF(IBIFN)=3 1  ; both are allowed on UB
  I $S("34"'[VAL:0,1:$D(^DGCR(399,IBIFN,"PRV","B",$S(VAL=3:4,1:3)))) D EN^DDIOL($S(VAL=3:"ATTENDING",1:"RENDERING")_" ALREADY EXISTS - CAN'T HAVE BOTH ON ONE BILL") S OK=0
  Q OK
  ;
@@ -59,37 +62,18 @@ CRED(IBPRV,IBIFN,IBPIEN,IBTYP) ; Returns prov credentials
  ; IBPRV = vp of provider for file 200 or 355.93
  ; IBIFN = bill ien in file 399 (optional)
  ; IBPIEN = prov ien - file 399.0222 (optional)
- ;          DEM;432 - prov ien can be from file 399.0404
- ;          as well (optional).
  ; IBTYP = the prov type
  ;
  N IBCRED
  S IBCRED=""
- ;
- ; DEM;432 - Provider can come from either file 399.0222, or
- ;           file 399.0404. Variable IBLNPRV is the flag
- ;           that indicates we want prov ien from file 399.0404.
- ;
- I '$G(IBLNPRV),$G(IBIFN),'$D(^DGCR(399,IBIFN,"PRV",0)) G CREDQ
- ;
- ; DEM;432 - Next line if for line level provider. Variable IBPROCP,
- ;           if it exist, is the procedure ien. File 399.0404 is a
- ;           multiple of the Procedure File 399.0304.
- ;
- I $G(IBLNPRV),$G(IBIFN),$G(IBPROCP),'$D(^DGCR(399,IBIFN,"CP",IBPROCP,"LNPRV",0)) G CREDQ
- I '$G(IBLNPRV),$G(IBIFN),($G(IBPIEN)!$G(IBTYP)) D
+ I $G(IBIFN),'$D(^DGCR(399,IBIFN,"PRV",0)) G CREDQ
+ I $G(IBIFN),($G(IBPIEN)!$G(IBTYP)) D
  . I '$G(IBPIEN) S IBPIEN=+$O(^DGCR(399,IBIFN,"PRV","B",IBTYP,0))
  . S IBCRED=$P($G(^DGCR(399,IBIFN,"PRV",IBPIEN,0)),U,3)
- ;
- I $G(IBLNPRV),$G(IBIFN),$G(IBPROCP),($G(IBPIEN)!$G(IBTYP)) D  ; DEM;432 - Line Provider File 399.0404.
- . I '$G(IBPIEN) S IBPIEN=+$O(^DGCR(399,IBIFN,"CP",IBPROCP,"B",IBTYP,0))
- . S IBCRED=$P($G(^DGCR(399,IBIFN,"CP",IBPROCP,"LNPRV",IBPIEN,0)),U,3)
- ;
-CREDQ ;
  I $G(IBPRV),IBCRED="" D
  . I IBPRV'["IBA(355.93" S IBCRED=$P($$ESBLOCK^XUSESIG1(+IBPRV),U,2)
  . I IBPRV["IBA(355.93" S IBCRED=$P($G(^IBA(355.93,+IBPRV,0)),U,3)
- Q IBCRED
+CREDQ Q IBCRED
  ;
 GETPRV(IBIFN,IBTYP,IBPRV) ; Returns prov(s) of type(s) IBTYP for
  ;  bill ien IBIFN.
@@ -108,14 +92,10 @@ GETPRV(IBIFN,IBTYP,IBPRV) ; Returns prov(s) of type(s) IBTYP for
  ;I IBZ="CI" D F^IBCEF("N-FEDERAL TAX ID","IBZFID",,IBIFN) S IBZFID=$TR(IBZFID,"-")
  S IBPRV=U_$G(IBZ),IBY=0
  S IBMRAND=$$MCRONBIL^IBEFUNC(IBIFN)
- ;WCJ;IB*2.0*432;Remove Default
  I IBMRAND D
- .; F Z=1:1:3,5,6,7,8,9 S:Z=3&($$FT^IBCEF(IBIFN)=3) Z=4 S IBPRV(Z)=$S(Z=3!(Z=4):"DEPT VETERANS AFFAIRS",1:"")_"^VAD000"
- . F Z=1:1:9 S IBPRV(Z)="^VAD000"
+ . F Z=1:1:3,5,6,7,8,9 S:Z=3&($$FT^IBCEF(IBIFN)=3) Z=4 S IBPRV(Z)=$S(Z=3!(Z=4):"DEPT VETERANS AFFAIRS",1:"")_"^VAD000"
  . I '$$INPAT^IBCEF(IBIFN,1),$$FT^IBCEF(IBIFN)=3 S IBPRV(4,1)="^SLF000"
- ;WCJ;IB*2.0*432;End changes
  ;
- ; For backwards compatability (before the claim level provider mulitple)
  I '$D(^DGCR(399,+IBIFN,"PRV",0)) D  G GETQ
  . N IBALL
  . S IBALL=(IBTYP="ALL")
@@ -147,34 +127,24 @@ NEEDPRV(IBIFN,IBTYP,IBPRV) ; Check for needed prov
  ; Only allow defaults for MCR
  S IBMRAND=$$WNRBILL^IBEFUNC(IBIFN) ;$$MCRONBIL^IBEFUNC(IBIFN)
  ;
- I IBTYP="ALL"!((IBTYP_",")["1,") D
- . ; DEM;432 - UB-04 or CMS-1500 SITUATIONAL
- . S IBPRV(1,"SITUATIONAL")=1
- . Q
- ;
  I IBTYP="ALL"!((IBTYP_",")["2,") D:IBFT
  . ; only for bill type inpt - 11X, outpt - 83X
- . S IBPRV(2,"SITUATIONAL")=1  ; DEM;432 - Default to "SITUATIONAL". If conditions below are met, then IBPRV(2,"SITUATIONAL") is KILLED and IBRPV is SET according to conditions.
  . Q:$S(IBINP:$E(IBTOB,1,2)'="11",1:$E(IBTOB,1,2)'="83")
- . ; UB-04 bill includes HCPCS procs - operating phys situational
+ . ; UB-92 bill includes HCPCS procs - operating phys required
  . N Z
  . S Z=0 F  S Z=$O(^DGCR(399,IBIFN,"CP",Z)) Q:'Z  I $P($G(^(Z,0)),U)["ICP" D  Q
- .. K IBPRV(2,"SITUATIONAL")  ; DEM;432 - We have met one of the condtions, so KILL IBPRV(2,"SITUATIONAL"). 
- .. I IBINP S IBPRV(2,"SITUATIONAL")=1 Q  ; DEM;432 - If UB-04 (inpatient), then operating provider situational.
- .. I 'IBINP S IBPRV(2,"NOTOPT")=1  ; DEM;432 - If UB-04 (outpatient), then operating provider required.
+ .. S IBPRV(2,"NOTOPT")=1
  .. Q:'IBMRAND
  .. I '$O(IBPRV(2,0)) S IBPRV(2,"REQ")=1,IBPRV(2,1)=$G(IBPRV(2))
  ;
- I IBTYP="ALL"!((IBTYP_",")["3,") D
- . ; if a CMS-1500 bill, rendering is required
- . I 'IBFT S IBPRV(3,"NOTOPT")=1
- . ; DEM;432 - if UB-04, rendering is situational.
- . I IBFT S IBPRV(3,"SITUATIONAL")=1 Q
+ I IBTYP="ALL"!((IBTYP_",")["3,") D:'IBFT
+ . ; if a HCFA 1500 bill, rendering is required
+ . S IBPRV(3,"NOTOPT")=1
  . Q:'IBMRAND
  . I '$O(IBPRV(3,0)) S IBPRV(3,1)=$G(IBPRV(3)),IBPRV(3,"REQ")=1
  ;
  I IBTYP="ALL"!((IBTYP_",")["4,") D:IBFT
- . ; if a UB-04, attending required
+ . ; if a UB-92, attending required
  . S IBPRV(4,"NOTOPT")=1
  . Q:'IBMRAND
  . I '$O(IBPRV(4,0)) S IBPRV(4,1)=$G(IBPRV(4)),IBPRV(4,"REQ")=1
@@ -188,7 +158,7 @@ CKPROV(IBIFN,IBTYP,IBVAL) ; Checks if prov of type IBTYP in 'PRV' node
  S OK=0,IBFT=$$FT^IBCEF(IBIFN)
  S Z=+$O(^DGCR(399,IBIFN,"PRV","B",+IBTYP,0))
  I $G(^DGCR(399,IBIFN,"PRV",Z,0))'="" D
- . ; Only outpt UB-04 can have SLF000 as prov ID with no name
+ . ; Only outpt UB-92 can have SLF000 as prov ID with no name
  . I IBFT=3,'$$INPAT^IBCEF(IBIFN,1),$P(^DGCR(399,IBIFN,"PRV",Z,0),U,2)="",$P(^(0),U,5)="SLF000" S OK=1 Q
  . I '$G(IBVAL) Q:$P(^DGCR(399,IBIFN,"PRV",Z,0),U,2)=""
  . S OK=1
@@ -216,11 +186,11 @@ BCLASS(IBIFN) ; Returns actual bill classif. code from ptr fld
  Q $P($G(^DGCR(399.1,+$P($G(^DGCR(399,IBIFN,0)),U,25),0)),U,2)
  ;
 ADMHR(IBIFN,IBDTTM) ; Extract admit hr from admit dt/tm
- ;  Default 00 if no time and bill is 11X or 18X
+ ;  Default 99 if no time and bill is 11X or 18X
  N TM
  S TM=$P(IBDTTM,".",2)
- I TM="","18"[$$BCLASS(IBIFN),$P($G(^DGCR(399,IBIFN,0)),U,24)=1 S TM="00"
- I TM'="",TM'="00" S TM=$E(TM_"0000",1,4)
+ I TM="","18"[$$BCLASS(IBIFN),$P($G(^DGCR(399,IBIFN,0)),U,24)=1 S TM=99
+ I TM'="",TM'=99 S TM=$E(TM_"0000",1,4)
  Q TM
  ;
 OLAB(IBIFN) ; Returns 1 if bill IBIFN is outside lab
@@ -245,38 +215,3 @@ SEQBILL(IBIFN) ; Returns the ien's of all bills in COB sequence for bill IBIFN
  I $P(IBSEQ,U,Z)="" S $P(IBSEQ,U,Z)=IBIFN
  Q IBSEQ
  ;
- ;IB*2.0*432/TAZ Added to take into account the line level providers.
-GETPRV1(IBIFN,IBTYP,IBPRV) ; Returns prov(s) of type(s) IBTYP for
- ;  bill ien IBIFN for TPJI display
- ;  IBTYP = prov types needed, separated by ',' or ALL
- ; 
- ; OUTPUT:
- ;  IBPRV array: IBPRV(level,type,ct)=name^current COB id^vp provider ien^cred
- ;
- N IB,IBCT,IBD,IBY,IBZ,IBMRAND,IBID,IBWNR,IBPNM,Z,IBPRTYP
- D F^IBCEF("N-CURRENT INS POLICY TYPE","IBZ",,IBIFN)
- S IBPRV=U_$G(IBZ),IBY=0
- D ALLIDS^IBCEFP(IBIFN,.IBXSAVE)
- S IBCT=0
- F  S IBCT=$O(IBXSAVE("PROVINF",IBIFN,"C",IBCT)) Q:'IBCT  D
- . S IBPRTYP=""
- . F  S IBPRTYP=$O(IBXSAVE("PROVINF",IBIFN,"C",IBCT,IBPRTYP)) Q:'IBPRTYP  D
- .. I IBTYP'="ALL",IBTYP'[IBPRTYP Q  ;Screen out unwanted providers
- .. N IBPRIEN,OBPRNM,IBCOBID
- .. S IBPRIEN=$P(IBXSAVE("PROVINF",IBIFN,"C",IBCT,IBPRTYP),U)
- .. S $P(IBPRV(1,IBCT,IBPRTYP),U,1)=$$EXPAND^IBTRE(399.0222,.02,IBPRIEN)
- .. S $P(IBPRV(1,IBCT,IBPRTYP),U,2)=IBXSAVE("PROVINF",IBIFN,"C",IBCT,IBPRTYP,"COBID")
- .. S $P(IBPRV(1,IBCT,IBPRTYP),U,3)=IBPRIEN
- .. S $P(IBPRV(1,IBCT,IBPRTYP),U,4)=$P(IBXSAVE("PROVINF",IBIFN,"C",IBCT,IBPRTYP,"NAME"),U,4)
- S IBCT=0
- F  S IBCT=$O(IBXSAVE("L-PROV",IBIFN,IBCT)) Q:'IBCT  D
- . S IBPRTYP=""
- . F  S IBPRTYP=$O(IBXSAVE("L-PROV",IBIFN,IBCT,"C",1,IBPRTYP)) Q:'IBPRTYP  D
- .. I IBTYP'="ALL",IBTYP'[IBPRTYP Q  ;Screen out unwanted providers
- .. N IBPRIEN
- .. S IBPRIEN=$P(IBXSAVE("L-PROV",IBIFN,IBCT,"C",1,IBPRTYP),U)
- .. S IBPRV(2,IBCT,IBPRTYP)=$$EXPAND^IBTRE(399.0222,.02,IBPRIEN)
- .. S $P(IBPRV(2,IBCT,IBPRTYP),U,2)=IBXSAVE("L-PROV",IBIFN,IBCT,"C",1,IBPRTYP,"COBID")
- .. S $P(IBPRV(2,IBCT,IBPRTYP),U,3)=IBPRIEN
- .. S $P(IBPRV(2,IBCT,IBPRTYP),U,4)=$P(IBXSAVE("L-PROV",IBIFN,IBCT,"C",1,IBPRTYP,"NAME"),U,4)
- Q 

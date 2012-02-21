@@ -1,6 +1,5 @@
 FHSEL2 ; HISC/REL/NCA/FAI - Tabulate Patient Preferences ;10/29/04  7:19
- ;;5.5;DIETETICS;**5**;Jan 28, 2005;Build 53
- ;patch #5 - screen for cancelled guest meals.
+ ;;5.5;DIETETICS;;Jan 28, 2005
  S X="T",%DT="X" D ^%DT S DT=+Y
  S FHP=$O(^FH(119.72,0)) I FHP'<1,$O(^FH(119.72,FHP))<1 S FHP=0 G D1
 D0 R !!,"Select SERVICE POINT (or ALL): ",X:DTIME G:'$T!("^"[X) KIL D:X="all" TR^FH I X="ALL" S FHP=0
@@ -54,7 +53,6 @@ Q3 S:D1="" D1=NOW\1
  ..S FHKDAT=^FHPT(FHDFN,"GM",FHKD,0)
  ..S (W1,FHW1)=$P(FHKDAT,U,5)
  ..S FHDIET=$P(FHKDAT,U,6),FHMEAL=$P(FHKDAT,U,3)
- ..I $P(FHKDAT,U,9)="C" Q
  ..I (FHMLSAV'="A"),(FHMEAL'=FHMLSAV) Q
  ..Q:'$D(^FH(119.6,FHW1,0))
  ..D W44

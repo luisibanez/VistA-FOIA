@@ -1,5 +1,5 @@
-PXRMREV ; SLC/PJH,PKR - Review Date routines. ;02/01/2010
- ;;2.0;CLINICAL REMINDERS;**4,16**;Feb 04, 2005;Build 119
+PXRMREV ; SLC/PJH,PKR - Review Date routines. ;01/03/2005
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;Select the review date
  ;----------------------
@@ -21,12 +21,8 @@ DATE() ;
 FILE() N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
  S DIR(0)="SO"_U_"C:Computed Finding;"
  S DIR(0)=DIR(0)_"D:Reminder Dialog;"
- S DIR(0)=DIR(0)_"L:Reminder Location List;"
- S DIR(0)=DIR(0)_"O:Reminder Orderable Item Groups;"
  S DIR(0)=DIR(0)_"R:Reminder Definition;"
- S DIR(0)=DIR(0)_"S:Reminder Sponsor;"
- S DIR(0)=DIR(0)_"T:Reminder Term;"
- S DIR(0)=DIR(0)_"X:Reminder Taxonomy;"
+ S DIR(0)=DIR(0)_"T:Reminder Taxonomy;"
  S DIR("A")="Select File to Review"
  S DIR("?")="Select from the codes displayed. For detailed help type ??"
  S DIR("??")=U_"D HELP^PXRMREV(1)"
@@ -78,14 +74,10 @@ START N DATE,DIROUT,DONE,DTOUT,DUOUT,FTYPE
  . S FLDS=".01,REVIEW DATE;C60"
  . S L=0
  .;
+ . I FTYPE="R" S DIC="^PXD(811.9,",DHD="REMINDERS TO REVIEW"
+ . I FTYPE="T" S DIC="^PXD(811.2,",DHD="TAXONOMIES TO REVIEW"
  . I FTYPE="C" S DIC="^PXRMD(811.4,",DHD="CF'S TO REVIEW"
  . I FTYPE="D" S DIC="^PXRMD(801.41,",DHD="DIALOGS TO REVIEW"
- . I FTYPE="L" S DIC="^PXRMD(810.9,",DHD="LOCATION LISTS TO REVIEW"
- . I FTYPE="R" S DIC="^PXD(811.9,",DHD="REMINDERS TO REVIEW"
- . I FTYPE="S" S DIC="^PXRMD(811.6,",DHD="SPONSORS TO REVIEW"
- . I FTYPE="X" S DIC="^PXD(811.2,",DHD="TAXONOMIES TO REVIEW"
- . I FTYPE="O" S DIC="^PXD(801,",DHD="ORDERABLE ITEM GROUPS TO REVIEW"
- . I FTYPE="T" S DIC="^PXRMD(811.5,",DHD="TERMS TO REVIEW"
  .;
  . S DHD=DHD_" (up to "_$$FMTE^XLFDT(DATE)_")"
  .;Print

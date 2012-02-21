@@ -1,6 +1,6 @@
 IBCNSP2 ;ALB/AAS - PATIENT INSURANCE INTERFACE FOR REGISTRATION ;21-JUNE-93
- ;;2.0;INTEGRATED BILLING;**6,28,75,82,155,371**;21-MAR-94;Build 57
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**6,28,75,82,155**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 % ;
 REG ; --Edit Patient insurance from registration, fee and mccr, allow new entries
@@ -21,6 +21,15 @@ REG ; --Edit Patient insurance from registration, fee and mccr, allow new entrie
  I $G(DFN)<1 S IBQUIT=1,VALMQUIT="" G REGQ
  ;
  I '$$ASKCOVD(DFN,.IBCOV,.IBCOVP) S IBQUIT=1 G REGQ
+ ; -- of covered by ins but none currently active so indicate
+ ;S IBCOV=$P($G(^DPT(DFN,.31)),"^",11)
+ ;I IBCOV="Y",'$$INSURED^IBCNS1(DFN) W !!,"Covered By Health Insurance indicates 'YES' but none currently Active.",!,"Please Review!",!!
+ ;
+ ;; -- ask if covered by insuracnce
+ ;S DIE="^DPT(",DR=".3192",DA=DFN D ^DIE K DIC,DIE,DA,DR
+ ;S IBCOVP=$P($G(^DPT(DFN,.31)),"^",11)
+ ;I $D(Y)!($D(DTOUT)) S IBQUIT=1 G REGQ
+ ;I $P($G(^DPT(DFN,.31)),"^",11)'="Y",'$$INSURED^IBCNS1(DFN) S IBQUIT=1 G REGQ
  ;
 R1 S (IBNEW,IBNEWP,IBQUIT)=0
  S DIC="^DPT("_DFN_",.312,",DIC(0)="AEQLM",DIC("A")="Select INSURANCE COMPANY: "
@@ -51,7 +60,7 @@ R1 S (IBNEW,IBNEWP,IBQUIT)=0
  ;
  ; -- edit patient ins. data
  S IBREG=1 G:$G(IBQUIT) REGQ
- D PAT^IBCNSEH,PATPOL^IBCNSM32(IBCDFN),UPDCLM(+$G(IBIFN),DFN,IBCDFN)
+ D PAT^IBCNSEH,PATPOL^IBCNSM32(IBCDFN)
  ;
  ; -- edit policy specific data if new or have key
  I $G(IBNEWP)!($D(^XUSEC("IB INSURANCE SUPERVISOR",DUZ))) D:'$G(IBQUIT) POL^IBCNSEH,EDPOL^IBCNSM3(IBCDFN)
@@ -74,6 +83,7 @@ REGQ ; -- exit logic and checks
  Q
  ;
 FEE ; -- fee entry point to add patient insurance.
+ ;N IBFEE S IBFEE=1 D REG
  D FEE^IBCNBME(DFN)
  Q
  ;
@@ -86,23 +96,6 @@ MCCR ; -- called from screen 3 of the edit bill option in mccr
  I $G(IBADI)=1 D R1 S IBCNRTN=1 K IBADI G MCCR
  I 'IBMCR,$$WNRBILL^IBEFUNC(IBIFN) S DGRVRCAL=1
  K IBCNRTN
- Q
- ;
-UPDCLM(IBIFN,DFN,IBCDFN) ; Update the claim's insurance nodes when edits are made
- ;   to the patient insurance file.
- ;  This procedure is called when a claim is being edited from IB billing
- ;  screen#3 and also when the patient insurance is being edited directly.
- ;
- I '$G(IBIFN)!'$G(DFN)!'$G(IBCDFN) Q         ; missing something
- I $P($G(^DGCR(399,IBIFN,0)),U,2)'=DFN Q     ; mismatch of claim and DFN
- I $P($G(^DGCR(399,IBIFN,0)),U,13)'=1 Q      ; claim not editable
- I '$D(^DPT(DFN,.312,IBCDFN,0)) Q            ; missing pat ins data
- NEW X,Z,NODE
- S X=IBCDFN
- F Z=1:1:3 I $P($G(^DGCR(399,IBIFN,"M")),U,11+Z)=IBCDFN D  Q
- . S NODE="I"_Z
- . D IX^IBCNS2(IBIFN,NODE)
- . Q
  Q
  ;
 DISP ; -- Display Patient insurance policy information for registrations

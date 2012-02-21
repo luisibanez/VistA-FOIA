@@ -1,5 +1,5 @@
 GMRAPST1 ;HIRMFO/WAA- PRINT LISTING OF FATAL REACTIONS ;3/5/97  14:45
- ;;4.0;Adverse Reaction Tracking;**7,33**;Mar 29, 1996;Build 5
+ ;;4.0;Adverse Reaction Tracking;**7**;Mar 29, 1996
 EN1 ; This routine will loop through the ADT entry point to get all
  ; the entries where the patient has died.
  S GMRAOUT=0
@@ -30,7 +30,6 @@ PRINT ;Queue point for report
  ..Q:+$G(^GMR(120.8,$P(GMRAPA1(0),U,15),"ER"))  ;data entered in error
  ..Q:$P(GMRAPA1(0),U,3)'="y"  ; If patient did not die of the reaction
  ..S GMRADFN=$P(GMRAPA1(0),U,2),GMRADDT=$P(GMRAPA1(0),U) ; reaction date
- ..Q:'$$PRDTST^GMRAUTL1(GMRADFN)  ;GMRA*4*33 Exclude test patient from report in production or legacy environments.
  ..S (GMRAPID,GMRANAME)=""
  ..D VAD^GMRAUTL1(GMRADFN,GMRADDT,"",.GMRANAME,"",.GMRAPID)
  ..S GMRADIED=$P($G(^DPT(GMRADFN,.35)),U) ; Date patient died
@@ -67,7 +66,7 @@ PRINT ;Queue point for report
  .Q
  D CLOSE^GMRAUTL
  Q
- ;has the patient died within the date
+ ;has the patient died with inthe dat
 HEAD ; Print header information
  I GMRAPG'=1  Q:$Y<(IOSL-4)
  I $E(IOST,1)="C" D  Q:GMRAOUT

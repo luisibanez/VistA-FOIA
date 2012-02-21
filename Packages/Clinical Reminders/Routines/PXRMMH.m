@@ -1,5 +1,5 @@
-PXRMMH ; SLC/PKR - Handle mental health findings. ;11/23/2007
- ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
+PXRMMH ; SLC/PKR - Handle mental health findings. ;05/14/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;=======================================================
 EVALFI(DFN,DEFARR,ENODE,FIEVAL) ;Evaluate mental health findings.
@@ -11,7 +11,6 @@ EVALPL(FINDPA,ENODE,TERMARR,PLIST) ;Evaluate mental health term findings
  ;for patient lists.
  D EVALPL^PXRMINDL(.FINDPA,ENODE,.TERMARR,PLIST)
  Q
- ;
  ;=======================================================
 EVALTERM(DFN,FINDPA,ENODE,TERMARR,TFIEVAL) ;Evaluate mental
  ;health instrument terms.
@@ -19,35 +18,39 @@ EVALTERM(DFN,FINDPA,ENODE,TERMARR,TFIEVAL) ;Evaluate mental
  Q
  ;
  ;=======================================================
-GETDATA(DASP,FIEVT) ;Return the data for a MH Administrations entry.
+GETDATA(DAS,FIEVT) ;Return the data for a Psych Instrument Patient entry.
  ;Some tests require the YSP key in order to get a score.
- N DAS,DATA,IND,SCALE
- S DAS=$P(DASP,"S",1)
- S SCALE=+$P(DASP,"S",2)
- ;DBIA #5043
- D ENDAS71^YTQPXRM6(.DATA,DAS)
- I $G(DATA(1))="[ERROR]" Q
- I SCALE=0 S SCALE=+$O(DATA("SI",""))
- S FIEVT("MH TEST")=$P(DATA(2),U,3)
- S IND=0
- F  S IND=$O(DATA("SI",IND)) Q:IND=""  S FIEVT("S",IND)=$P(DATA("SI",IND),U,3,4)
- S IND=0
- F  S IND=$O(DATA("R",IND)) Q:IND=""  S FIEVT("R",IND)=$P(DATA("R",IND),U,6)
- I $D(DATA("SI",SCALE)) S FIEVT("VALUE")=FIEVT("S",SCALE),FIEVT("SCALE NAME")=$P(DATA("SI",SCALE),U,2)
+ N DASP,IND,SCALE,YSDATA
+ ;DBIA #4442
+ S DASP=$P(DAS,"S",1)
+ S SCALE=$P(DAS,"S",2)
+ D ENDAS^YTAPI10(.YSDATA,DASP)
+ I $G(YSDATA(0))="[ERROR]" Q
+ S FIEVT("MH TEST")=$P(YSDATA(2),U,3)
+ I FIEVT("MH TEST")["GAF" S FIEVT("RATING")=$P(YSDATA(3),U,2) Q
+ ;If no scale is specified use the first set of results.
+ S IND=$S(SCALE="":6,1:SCALE+5)
+ S FIEVT("YSDATA")=$G(YSDATA(IND))
+ S FIEVT("SCALE NAME")=$P(FIEVT("YSDATA"),U,2)
+ S (FIEVT("RAW SCORE"),FIEVT("VALUE"))=$P(FIEVT("YSDATA"),U,3)
+ S FIEVT("TRANSFORMED SCORE")=$P(FIEVT("YSDATA"),U,4)
  Q
  ;
  ;=======================================================
 MHVOUT(INDENT,IFIEVAL,NLINES,TEXT) ;Produce the MHV output.
- N DATE,IND,JND,MHTEST,NOUT,SCALE,SNAME,SCORE,TEXTOUT
- S MHTEST="Mental Health Test: "_IFIEVAL("MH TEST")_" = "
+ N DATE,IND,JND,MHTEST,NAME,NOUT,RATING,RSCORE,SCORE,TEXTOUT,TSCORE
+ S MHTEST=IFIEVAL("MH TEST")
+ ;Remove the dashes surrounding the name.
+ S MHTEST=$TR(MHTEST,"-","")
+ S NAME="Mental Health Test: "_MHTEST_" = "
  S IND=0
  F  S IND=+$O(IFIEVAL(IND)) Q:IND=0  D
- . S DATE="("_$$EDATE^PXRMDATE(IFIEVAL(IND,"DATE"))_")"
- . S TEMP=MHTEST_DATE
- . S SNAME=$G(IFIEVAL(IND,"SCALE NAME"))
- . I SNAME'="" S TEMP=TEMP_" scale: "_SNAME_" -"
- . S SCORE=$G(IFIEVAL(IND,"VALUE"))
- . I SCORE'="" S TEMP=TEMP_"  raw score: "_$P(SCORE,U,1)_", transformed score: "_$P(SCORE,U,2)
+ . S DATE=IFIEVAL(IND,"DATE")
+ . S RSCORE=$G(IFIEVAL(IND,"RAW SCORE"))
+ . S TSCORE=$G(IFIEVAL(IND,"TRANSFORMED SCORE"))
+ . S RATING=$G(IFIEVAL(IND,"RATING"))
+ . S SCORE=$S(RATING'="":RATING,TSCORE'="":TSCORE,RSCORE'="":RSCORE,1:"")
+ . S TEMP=NAME_SCORE_" ("_$$EDATE^PXRMDATE(IFIEVAL(IND,"DATE"))_")"
  . D FORMATS^PXRMTEXT(INDENT+2,PXRMRM,TEMP,.NOUT,.TEXTOUT)
  . F JND=1:1:NOUT S NLINES=NLINES+1,TEXT(NLINES)=TEXTOUT(JND)
  S NLINES=NLINES+1,TEXT(NLINES)=""
@@ -56,17 +59,22 @@ MHVOUT(INDENT,IFIEVAL,NLINES,TEXT) ;Produce the MHV output.
  ;=======================================================
 OUTPUT(INDENT,IFIEVAL,NLINES,TEXT) ;Produce the clinical
  ;maintenance output.
- N IND,JND,MHTEST,NOUT,SCALE,SNAME,SCORE,TEXTOUT
+ N DATE,IND,JND,MHTEST,NOUT,RATING,RSCORE,TEXTOUT,TSCORE
  S MHTEST=IFIEVAL("MH TEST")
+ ;Remove the dashes surrounding the name.
+ S MHTEST=$TR(MHTEST,"-","")
  S NLINES=NLINES+1
  S TEXT(NLINES)=$$INSCHR^PXRMEXLC(INDENT," ")_"Mental Health Test: "_MHTEST
  S IND=0
  F  S IND=+$O(IFIEVAL(IND)) Q:IND=0  D
+ . S DATE=IFIEVAL(IND,"DATE")
  . S TEMP=$$EDATE^PXRMDATE(IFIEVAL(IND,"DATE"))
- . S SNAME=$G(IFIEVAL(IND,"SCALE NAME"))
- . I SNAME'="" S TEMP=TEMP_" scale: "_SNAME_" -"
- . S SCORE=$G(IFIEVAL(IND,"VALUE"))
- . I SCORE'="" S TEMP=TEMP_"  raw score: "_$P(SCORE,U,1)_", transformed score: "_$P(SCORE,U,2)
+ . S RSCORE=$G(IFIEVAL(IND,"RAW SCORE"))
+ . I RSCORE'="" S TEMP=TEMP_" raw score - "_RSCORE
+ . S TSCORE=$G(IFIEVAL(IND,"TRANSFORMED SCORE"))
+ . I TSCORE'="" S TEMP=TEMP_"; transformed score - "_TSCORE
+ . S RATING=$G(IFIEVAL(IND,"RATING"))
+ . I RATING'="" S TEMP=TEMP_" Rating: "_RATING
  . D FORMATS^PXRMTEXT(INDENT+2,PXRMRM,TEMP,.NOUT,.TEXTOUT)
  . F JND=1:1:NOUT S NLINES=NLINES+1,TEXT(NLINES)=TEXTOUT(JND)
  S NLINES=NLINES+1,TEXT(NLINES)=""
@@ -74,38 +82,29 @@ OUTPUT(INDENT,IFIEVAL,NLINES,TEXT) ;Produce the clinical
  ;
  ;=======================================================
 SCHELP(MHIEN) ;Xecutable help for MH SCALE
- N DATA,IND,JND,NUM,SCALE,SNUM
+ N IND,JND,NUM,SCALE,TEMP,TEMP1
  I MHIEN=0 D  Q
  . S SCALE(1)="This is not a valid Mental Health finding, selecting an MH scale does"
  . S SCALE(2)="not make sense"
  . D EN^DDIOL(.SCALE)
- ;DBIA #5053
- D SCALES^YTQPXRM5(.DATA,MHIEN)
- I DATA(1)="ERROR" D  Q
- . S SCALE(1)="There are no scales for this test."
- . D EN^DDIOL(.SCALE)
- S SCALE(1)="Valid scales are:"
- S SCALE(2)="SCALE NUMBER  SCALE NAME"
- S SCALE(3)="------------------------"
- S IND=0,JND=3
- F  S IND=$O(DATA("S",IND)) Q:IND=""  D
+ S SCALE(1)="SCALE NUMBER  SCALE NAME"
+ S SCALE(2)="------------------------"
+ S IND=0
+ S JND=2
+ F  S IND=$O(^YTT(601,MHIEN,"S",IND)) Q:+IND=0  D
+ . S TEMP=^YTT(601,MHIEN,"S",IND,0)
  . S JND=JND+1
- . S NUM=6-$L(IND)
- . S SCALE(JND)=$$INSCHR^PXRMEXLC(NUM," ")_(IND)_"        "_$P(DATA("S",IND),U,1)
+ . S TEMP1=$P(TEMP,U,1)
+ . S NUM=6-$L(TEMP1)
+ . S SCALE(JND)=$$INSCHR^PXRMEXLC(NUM," ")_TEMP1_"        "_$P(TEMP,U,2)
  D EN^DDIOL(.SCALE)
  Q
  ;
  ;=======================================================
-SCHELPD(DA) ;Xecutable help for MH SCALE in Result Group file 801.41
- N MHIEN
- S MHIEN=+$P($G(^PXRMD(801.41,DA,50)),U)
- D SCHELP^PXRMMH(MHIEN)
- Q
- ;=======================================================
 SCHELPF ;Xecutable help for MH SCALE in 811.9 findings.
  N FIND0,MHIEN
  S FIND0=^PXD(811.9,DA(1),20,DA,0)
- I FIND0["YTT(601.71" S MHIEN=$P(FIND0,";",1)
+ I FIND0["YTT(601" S MHIEN=$P(FIND0,";",1)
  E  S MHIEN=0
  D SCHELP(MHIEN)
  Q
@@ -114,72 +113,45 @@ SCHELPF ;Xecutable help for MH SCALE in 811.9 findings.
 SCHELPT ;Xecutable help for MH SCALE in 811.5 findings.
  N MHIEN,TFIND0
  S TFIND0=^PXRMD(811.5,DA(1),20,DA,0)
- I TFIND0["YTT(601.71" S MHIEN=$P(TFIND0,";",1)
+ I TFIND0["YTT(601" S MHIEN=$P(TFIND0,";",1)
  E  S MHIEN=0
  D SCHELP(MHIEN)
  Q
  ;
  ;=======================================================
-SCNAME(TEST,SCNUM) ;Given the test ien and scale number return the
- ;scale name.
- N DATA,SCNAME
- D SCALES^YTQPXRM5(.DATA,TEST)
- Q $G(DATA("S",SCNUM))
- ;
- ;=======================================================
 SEVALFI(DFN,ITEM,NGET,SDIR,BDT,EDT,NFOUND,FLIST) ;
- N FIEV,FINDING,IND,YS,DATA
+ N FIEV,FINDING,IND,YS,YSDATA
  S YS("CODE")=ITEM,YS("DFN")=DFN
  S YS("BEGIN")=BDT,YS("END")=EDT
- ;PTTEST^YTQPXRM2 does not understand "*" for a limit so use 99.
- I NGET="*" S NGET=99
  S YS("LIMIT")=$S(SDIR=-1:NGET,1:-NGET)
- ;DBIA #5035
- D PTTEST^YTQPXRM2(.DATA,.YS)
- S NFOUND=$P(DATA(1),U,2)
+ ;DBIA #4458
+ D PTTEST^YTAPI10A(.YSDATA,.YS)
+ S NFOUND=$P(YSDATA(1),U,2)
  I NFOUND=0 Q
- F IND=1:1:NFOUND S FLIST(IND)=DATA(IND+1)
+ F IND=1:1:NFOUND S FLIST(IND)=YSDATA(IND+1)
  Q
  ;
  ;=======================================================
 SEVALPL(ITEM,NOCC,BDT,EDT,PLIST) ;Use MH API to get patient list. Called
  ;from PXRMINDL.
  N YS
- ;YTAPI10A does not understand "*" for a limit so use 99.
- ;OCCUR^YTQPXRM1 does not understand "*" for a limit so use 99.
- I NOCC="*" S NOCC=99
  S YS("CODE")=ITEM,YS("BEGIN")=BDT,YS("END")=EDT,YS("LIMIT")=NOCC
- ;DBIA #5034
- D OCCUR^YTQPXRM1(PLIST,.YS)
+ ;DBIA #4458
+ D OCCUR^YTAPI10A(PLIST,.YS)
  Q
  ;
  ;=======================================================
 VSCALE(X,FIND0) ;Make sure that the mental health scale is valid.
  ;Either the scale number or the scale name can be used.
- N DATA,IND,MHIEN,MHTEST,SCALE,VALID
+ N MHIEN,MHTEST,SCALE,VALID
  S MHTEST=$P(FIND0,U,1)
  S MHIEN=$P(MHTEST,";",1)
- D SCALES^YTQPXRM5(.DATA,MHIEN)
- I +X>0 S VALID=$S($D(DATA("S",X)):1,1:0)
+ I +X>0 D  Q VALID
+ . S VALID=$S($D(^YTT(601,MHIEN,"S",X)):1,1:0)
  E  D
- . S IND=1,VALID=0
- . F  S IND=$O(DATA("S",IND)) Q:(VALID)!(IND="")  D
- .. I X=$P(DATA("S",IND),U,1) S VALID=1 Q
- I 'VALID D EN^DDIOL(X_" is not a valid scale for this test!")
- I $O(DATA(""),-1)>20 H 1
+ . S SCALE=$O(^YTT(601,MHIEN,"S","C",X,""))
+ . S VALID=$S(SCALE="":0,1:1)
  Q VALID
- ;
- ;=======================================================
-VSCALED(X,DA) ;Make sure that the mental health scale is valid for a result
- ;group.
- I X="" Q 1
- ;Do not execute as part of a verify fields.
- I $G(DIUTIL)="VERIFY FIELDS" Q 1
- ;Do not execute as part of exchange.
- I $G(PXRMEXCH) Q 1
- N MHTEST
- S MHTEST=$P($G(^PXRMD(801.41,DA,50)),U)
- Q $$VSCALE(X,MHTEST)
  ;
  ;=======================================================
 VSCALEF(X) ;Make sure that the mental health scale is valid for a finding.
@@ -203,12 +175,4 @@ VSCALET(X) ;Make sure that the mental health scale is valid for a
  N TFIND0
  S TFIND0=^PXRMD(811.5,DA(1),20,DA,0)
  Q $$VSCALE(X,TFIND0)
- ;
- ;=======================================================
-WARN ;Warn the user that they must select a scale if they intend to use
- ;a condition.
- W !,"Remember that the score is returned as raw score^transformed score,"
- W !,"so if your Condition uses the raw score use +V or $P(V,U,1) and if"
- W !,"it uses the transformed score use $P(V,U,2)."
- Q
  ;

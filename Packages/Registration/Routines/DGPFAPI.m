@@ -1,5 +1,5 @@
-DGPFAPI ;ALB/RBS - PRF EXTERNAL API'S ; 7/26/06 9:22am
- ;;5.3;Registration;**425,554,699,650**;Aug 13, 1993;Build 3
+DGPFAPI ;ALB/RBS - PRF EXTERNAL API'S ; 2/28/05 11:21am
+ ;;5.3;Registration;**425,554**;Aug 13, 1993
  ;
  Q  ;no direct entry
  ;
@@ -62,7 +62,6 @@ GETACT(DGDFN,DGPRF) ;Retrieve all ACTIVE Patient record flag assignments
  N DGPFA     ;flag assignment array
  N DGPFAH    ;flag assignment history array
  N DGPFLAG   ;flag record array
- N DGPFLAH   ;last flag assignment history array
  N DGCAT     ;flag category
  ;
  Q:'$G(DGDFN) 0                            ;Quit, null parameter
@@ -77,7 +76,7 @@ GETACT(DGDFN,DGPRF) ;Retrieve all ACTIVE Patient record flag assignments
  ;
  ; loop all returned Active Record Flag Assignment ien's
  F  S DGPFIEN=$O(DGPFIENS(DGPFIEN)) Q:DGPFIEN=""  D
- . K DGPFA,DGPFAH,DGPFLAG,DGPFLAH
+ . K DGPFA,DGPFAH,DGPFLAG
  . ;
  . ; retrieve single assignment record fields
  . Q:'$$GETASGN^DGPFAA(DGPFIEN,.DGPFA)
@@ -88,16 +87,13 @@ GETACT(DGDFN,DGPRF) ;Retrieve all ACTIVE Patient record flag assignments
  . ; get initial assignment history
  . Q:'$$GETHIST^DGPFAAH($$GETFIRST^DGPFAAH(DGPFIEN),.DGPFAH)
  . ;
- . ; get last assignment history
- . Q:'$$GETHIST^DGPFAAH($$GETLAST^DGPFAAH(DGPFIEN),.DGPFLAH)
- . ;
  . ; get record flag record
  . Q:'$$GETFLAG^DGPFUT1($P($G(DGPFA("FLAG")),U),.DGPFLAG)
  . ;
  . S DGPFTCNT=DGPFTCNT+1
  . ;
  . ; approved by user
- . S @DGPRF@(DGPFTCNT,"APPRVBY")=$G(DGPFLAH("APPRVBY"))
+ . S @DGPRF@(DGPFTCNT,"APPRVBY")=$G(DGPFAH("APPRVBY"))
  . ;
  . ; initial assignment date/time
  . S @DGPRF@(DGPFTCNT,"ASSIGNDT")=$G(DGPFAH("ASSIGNDT"))
@@ -116,19 +112,22 @@ GETACT(DGDFN,DGPRF) ;Retrieve all ACTIVE Patient record flag assignments
  . S @DGPRF@(DGPFTCNT,"CATEGORY")=DGCAT_U_DGCAT
  . ;
  . ; owner site
- . S @DGPRF@(DGPFTCNT,"OWNER")=$G(DGPFA("OWNER"))_"  "_$$FMTPRNT^DGPFUT1($P($G(DGPFA("OWNER")),U))
+ . S @DGPRF@(DGPFTCNT,"OWNER")=$G(DGPFA("OWNER"))
  . ;
  . ; originating site
- . S @DGPRF@(DGPFTCNT,"ORIGSITE")=$G(DGPFA("ORIGSITE"))_"  "_$$FMTPRNT^DGPFUT1($P($G(DGPFA("ORIGSITE")),U))
+ . S @DGPRF@(DGPFTCNT,"ORIGSITE")=$G(DGPFA("ORIGSITE"))
  . ;
- . ; add TIU info when Owner Site is a local division
- . I $$ISDIV^DGPFUT($P(DGPFA("OWNER"),U)) D
+ . ; only add TIU Progress Note subscripts if owner site of assignment
+ . I $P($$SITE^VASITE,U)=$P(DGPFA("OWNER"),U) D
+ . . ; get last history record (most current)
+ . . K DGPFAH
+ . . Q:'$$GETHIST^DGPFAAH($$GETLAST^DGPFAAH(DGPFIEN),.DGPFAH)
  . . ;
  . . ; flag associated TIU PN Title
  . . S @DGPRF@(DGPFTCNT,"TIUTITLE")=$G(DGPFLAG("TIUTITLE"))
  . . ;
  . . ; assignment history TIU PN Link
- . . S @DGPRF@(DGPFTCNT,"TIULINK")=$G(DGPFLAH("TIULINK"))
+ . . S @DGPRF@(DGPFTCNT,"TIULINK")=$G(DGPFAH("TIULINK"))
  . ;
  . ; narrative
  . I '$D(DGPFA("NARR",1,0)) D  Q  ;should never happen - but -
@@ -142,9 +141,13 @@ GETACT(DGDFN,DGPRF) ;Retrieve all ACTIVE Patient record flag assignments
  ;
  Q DGPFTCNT
  ;
-PRFQRY(DGDFN) ;query a treating facility for patient record flag assignments
- ;This function queries a given patient's treating facility to retrieve
- ;all patient record flag assignments for the patient.
+PRFQRY(DGDFN) ;query the CMOR for all patient record flag assignments
+ ;This function queries a given patient's Coordinated Master of Record
+ ;(CMOR) site to retrieve all patient record flag assignments for the
+ ;patient.  The function will only succeed when the QRY HL7 interface
+ ;is enabled, the patient has a national Integrated Control Number
+ ;(ICN), the patient's CMOR is not the local site and the HL7 query
+ ;receives an ACK from the CMOR site.
  ;
  ;  Input:
  ;    DGDFN - pointer to patient in PATIENT (#2) file
@@ -152,19 +155,14 @@ PRFQRY(DGDFN) ;query a treating facility for patient record flag assignments
  ;  Output:
  ;   Function value - 1 on success, 0 on failure
  ;
- N DGEVNT
  N DGRSLT
+ N DGQRY
  ;
  S DGRSLT=0
- S DGEVNT=$$FNDEVNT^DGPFHLL1(DGDFN)
- I DGEVNT D
- . ;
- . ;must have INCOMPLETE status
- . Q:'$$ISINCOMP^DGPFHLL1(DGEVNT)
- . ;
- . ;run query using mode defined in PRF HL7 QUERY STATUS (#3) field of
- . ;PRF PARAMETERS (#26.18) file.
- . S DGRSLT=$$SNDQRY^DGPFHLS(DGDFN,$$QRYON^DGPFPARM())
+ ;
+ S DGQRY=+$$QRYON^DGPFPARM()
+ I DGQRY D
+ . S DGRSLT=$$SNDQRY^DGPFHLS(DGDFN,DGQRY)
  ;
  Q DGRSLT
  ;
@@ -183,7 +181,7 @@ DISPPRF(DGDFN) ;display active patient record flag assignments
  Q:$P(XQY0,U)="DGPF RECORD FLAG ASSIGNMENT"
  ;
  ;protect Kernel IO variables
- N IOBM,IOBOFF,IOBON,IOEDEOP,IOINHI,IOINORM,IORC,IORVOFF,IORVON,IOIL
+ N IOBM,IOBOFF,IOBON,IOEDEOP,IOINHI,IOINORM,IORC,IORVOFF,IORVON
  N IOSC,IOSGRO,IOSTBM,IOTM,IOUOFF,IOUON
  ;
  ;protect ListMan variables
@@ -193,7 +191,7 @@ DISPPRF(DGDFN) ;display active patient record flag assignments
  ;
  ;protect Unwinder variables
  N ORU,ORUDA,ORUER,ORUFD,ORUFG,ORUSB,ORUSQ,ORUSV,ORUT,ORUW,ORUX
- N XQORM,DQ
+ N XQORM
  ;
  ; protect original Listman VALM DATA global
  K ^TMP($J,"DGPFVALM DATA")

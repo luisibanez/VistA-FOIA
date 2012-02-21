@@ -1,17 +1,12 @@
-ZOSFONT ;SFISC/AC - SETS UP ^%ZOSF for Cache for NT/VMS ;10/19/06  14:01
- ;;8.0;KERNEL;**34,104,365**;JUL 10, 1995;Build 5
- ;For Cache versions 3.2, 4 and 5
+ZOSFONT ;SFISC/AC - SETS UP ^%ZOSF FOR Open M for NT ;09/29/98  08:26
+ ;;8.0;KERNEL;**34,104**;JUL 03, 1995
  S %Y=1 K ^%ZOSF("MASTER"),^%ZOSF("SIGNOFF")
- N ZO F I="MGR","PROD","VOL" S:$D(^%ZOSF(I)) ZO(I)=^%ZOSF(I)
+ K ZO F I="MGR","PROD","VOL" S:$D(^%ZOSF(I)) ZO(I)=^%ZOSF(I)
  F I=1:2 S Z=$P($T(Z+I),";;",2) Q:Z=""  S X=$P($T(Z+1+I),";;",2,99) S ^%ZOSF(Z)=$S($D(ZO(Z)):ZO(Z),1:X)
- ;
-MGR W !,"NAME OF MANAGER'S NAMESPACE: "_^%ZOSF("MGR")_"// " R X:$S($G(DTIME):DTIME,1:9999) I X]"" X ^("UCICHECK") G MGR:0[Y S ^%ZOSF("MGR")=X
-PROD W !,"PRODUCTION (SIGN-ON) NAMESPACE: "_^%ZOSF("PROD")_"// " R X:$S($G(DTIME):DTIME,1:9999) I X]"" X ^("UCICHECK") G PROD:0[Y S ^%ZOSF("PROD")=Y
-VOL W !,"NAME OF THIS CONFIGURATION: "_^%ZOSF("VOL")_"//" R X:$S($G(DTIME):DTIME,1:9999) I X]"" S:X?1.22U ^%ZOSF("VOL")=X I X'?1.22U W "MUST BE 1-22 uppercase characters." G VOL
- ;
+MGR W !,"NAME OF MANAGER'S NAMESPACE: "_^%ZOSF("MGR")_"// " R X:$S($G(DTIME):DTIME,1:9999) I X]"" X ^("UCICHECK") G MGR:Y="" S ^%ZOSF("MGR")=X
+PROD W !,"PRODUCTION (SIGN-ON) NAMESPACE: "_^%ZOSF("PROD")_"// " R X:$S($G(DTIME):DTIME,1:9999) I X]"" X ^("UCICHECK") G PROD:Y="" S ^%ZOSF("PROD")=Y
+VOL W !,"NAME OF THIS CONFIGURATION: "_^%ZOSF("VOL")_"//" R X:$S($G(DTIME):DTIME,1:9999) I X]"" S:X?1.5U ^%ZOSF("VOL")=X I X'?1.5U W "MUST BE 1-5 uppercase characters." G VOL
 OS S $P(^%ZOSF("OS"),"^",1)="OpenM-NT" S:'$P(^%ZOSF("OS"),"^",2) $P(^%ZOSF("OS"),"^",2)=18
- ;For Cache 5.1 and above
- I $$VERSION^ZOSVONT>5 S ^%ZOSF("GSEL")="K ^CacheTempJ($J),^UTILITY($J) D ^%SYS.GSET M ^UTILITY($J)=CacheTempJ($J)"
  W !!,"ALL SET UP",!! Q
 Z ;;
  ;;ACTJ
@@ -21,7 +16,7 @@ Z ;;
  ;;BRK
  ;;U $I:("":"+B")
  ;;DEL
- ;;X "ZR  ZS @X"
+ ;;X "ZR  ZS @X" K ^UTILITY("ROU",X)
  ;;EOFF
  ;;U $I:("":"+S")
  ;;EON
@@ -34,14 +29,12 @@ Z ;;
  ;;Q
  ;;GD
  ;;D ^%GD
- ;;GSEL;Select Globals
- ;;K ^UTILITY($J) D ^%GSET
  ;;JOBPARAM
  ;;D JOBPAR^%ZOSV
  ;;LABOFF
  ;;U IO:("":"+S+I-T":$C(13,27))
  ;;LOAD
- ;;N %,%N S %N=0 X "ZL @X F XCNP=XCNP+1:1 S %N=%N+1,%=$T(+%N) Q:$L(%)=0  S @(DIF_XCNP_"",0)"")=%"
+ ;;S %N=0 X "ZL @X F XCNP=XCNP+1:1 S %N=%N+1,%=$T(+%N) Q:$L(%)=0  S @(DIF_XCNP_"",0)"")=%"
  ;;LPC
  ;;S Y=$ZC(X)
  ;;MAXSIZ
@@ -71,38 +64,36 @@ Z ;;
  ;;PRIORITY;;set priority to X (1=low, 10=high)
  ;;D @($S(X>7:"NORMAL",X>3:"NORMAL",1:"LOW")_"^%PRIO") ;Don't do HIGH
  ;;PROGMODE
- ;;S Y=$ZJOB#2
+ ;;S Y=$ZJ#2
  ;;PROD
  ;;VAH
  ;;RD
  ;;D ^%RD
  ;;RESJOB
- ;;N OLD S OLD=$ZNSPACE ZNSPACE "%SYS" D ^RESJOB ZNSPACE OLD Q
+ ;;Q:'$D(DUZ)  Q:'$D(^XUSEC("XUMGR",+DUZ))  N XQZ S XQZ="^RESJOB[MGR]" D DO^%XUCI
  ;;RM
- ;;I $G(IOT)["TRM" U $I:X
+ ;;U $I:X
  ;;RSEL;;ROUTINE SELECT
  ;;K ^UTILITY($J) D KERNEL^%RSET K %ST ;Special entry point for VA
  ;;RSUM
- ;;N %,%1,%3 ZL @X S Y=0 F %=1,3:1 S %1=$T(+%),%3=$F(%1," ") Q:'%3  S %3=$S($E(%1,%3)'=";":$L(%1),$E(%1,%3+1)=";":$L(%1),1:%3-2) F %2=1:1:%3 S Y=$A(%1,%2)*%2+Y
- ;;RSUM1
- ;;N %,%1,%3 ZL @X S Y=0 F %=1,3:1 S %1=$T(+%),%3=$F(%1," ") Q:'%3  S %3=$S($E(%1,%3)'=";":$L(%1),$E(%1,%3+1)=";":$L(%1),1:%3-2) F %2=1:1:%3 S Y=$A(%1,%2)*(%2+%)+Y
+ ;;ZL @X S Y=0 F %=1,3:1 S %1=$T(+%),%3=$F(%1," ") Q:'%3  S %3=$S($E(%1,%3)'=";":$L(%1),$E(%1,%3+1)=";":$L(%1),1:%3-2) F %2=1:1:%3 S Y=$A(%1,%2)*%2+Y
  ;;SS
  ;;D ^%SS
  ;;SAVE
- ;;N XCS S XCS="F XCM=1:1 S XCN=$O(@(DIE_XCN_"")"")) Q:+XCN'=XCN  S %=^(XCN,0) Q:$E(%,1)=""$""  I $E(%,1)'="";"" ZI %" X "ZR  X XCS ZS @X"
+ ;;S XCS="F XCM=1:1 S XCN=$O(@(DIE_XCN_"")"")) Q:+XCN'=XCN  S %=^(XCN,0) Q:$E(%,1)=""$""  I $E(%,1)'="";"" ZI %" X "ZR  X XCS ZS @X" S ^UTILITY("ROU",X)="" K XCS
  ;;SIZE
  ;;S Y=0 F I=1:1 S %=$T(+I) Q:%=""  S Y=Y+$L(%)+2
  ;;TEST
  ;;I X?1(1"%",1A).7AN,$D(^$ROUTINE(X))
  ;;TMK;;MAGTAPE MARK
  ;;S Y=$ZA\4#2
- ;;TRAP;;S X="^%ET",@^%ZOSF("TRAP"); User $ETRAP
+ ;;TRAP;;S X="^%ET",@^%ZOSF("TRAP") TO SET ERROR TRAP
  ;;$ZT=X
  ;;TRMOFF
  ;;U $I:("":"-I-T":$C(13,27))
  ;;TRMON
  ;;U $I:("":"+I+T")
- ;;TRMRD;;old Y=$A($ZB),Y=$S(Y<32:Y,Y=127:Y,1:0)
+ ;;TRMRD
  ;;S Y=$A($ZB),Y=$S(Y<32:Y,Y=127:Y,1:0)
  ;;TYPE-AHEAD
  ;;U $I:("":"-F":$C(13,27))
@@ -116,5 +107,5 @@ Z ;;
  ;;S $X=DX,$Y=DY
  ;;VOL;;VOLUME SET NAME
  ;;ROU
- ;;ZD;;$H to external
+ ;;ZD
  ;;S Y=$ZD(X)

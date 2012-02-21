@@ -1,16 +1,18 @@
-PXRMXSD ; SLC/PJH - Reminder Reports DIR Prompts; 06/05/2009
- ;;2.0;CLINICAL REMINDERS;**4,12**;Feb 04, 2005;Build 73
+PXRMXSD ; SLC/PJH - Reminder Reports DIR Prompts;12/30/2002
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
+ ;
+ ;Called by PXRMXD
  ;
 BED(YESNO) ;Option to sort by inpatient location and bed
- N DIR,X,Y
+ N X,Y,TEXT,DIR
  K DIROUT,DIRUT,DTOUT,DUOUT
- S DIR(0)="YA"
+ S DIR(0)="YA0"
  S DIR("A")="Sort by Inpatient Location/Bed: "
  S DIR("B")="N"
  S DIR("?")="Enter Y or N. For detailed help type ??"
  S DIR("??")=U_"D HELP^PXRMXHLP(11)"
  W !
- D ^DIR
+ D ^DIR K DIR
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!($D(DUOUT)) Q
  S YESNO=$E(Y(0))
@@ -18,49 +20,31 @@ BED(YESNO) ;Option to sort by inpatient location and bed
  Q
  ;
 COMB(YESNO,LIT,DEF) ;Option to combine report
- N DIR,X,Y
+ N X,Y,DIR,TEXT
  K DIROUT,DIRUT,DTOUT,DUOUT
- S DIR(0)="YA"
+ ;I $G(LIT)="" S DUOUT=1 Q
+ S DIR(0)="YA0"
  S DIR("A")="Combined report for all "_LIT_" : "
  S DIR("B")=DEF
  S DIR("?")="Enter Y or N. For detailed help type ??"
  S DIR("??")=U_"D HELP^PXRMXHLP(9)"
  W !
- D ^DIR
+ D ^DIR K DIR
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!($D(DUOUT)) Q
  S YESNO=$E(Y(0))
  Q
  ;
-DELIMSEL() ;Select DELIMITER CHARACTER
- N X,Y,DC,DIR
- K DIROUT,DIRUT,DTOUT,DUOUT
- S DIR(0)="S"_U_"C:Comma;"
- S DIR(0)=DIR(0)_"M:Semicolon;"
- S DIR(0)=DIR(0)_"L:Tilde;"
- S DIR(0)=DIR(0)_"S:Space;"
- S DIR(0)=DIR(0)_"T:Tab;"
- S DIR(0)=DIR(0)_"U:Up arrow;"
- S DIR("A")="Specify REPORT DELIMITER CHARACTER"
- S DIR("B")="U"
- S DIR("?")="Select from the codes displayed. For detailed help type ??"
- S DIR("??")=U_"D HELP^PXRMXHLP(14)"
- D ^DIR
- I $D(DIROUT) S DTOUT=1
- I $D(DTOUT)!($D(DUOUT)) Q ""
- S DC=$S(Y="C":",",Y="M":";",Y="L":"~",Y="S":" ",Y="T":$C(9),Y="U":"^",1:"^")
- Q DC
- ;
 FUTURE(YESNO,PROMPT,NUM) ;Option to display all future appointments on detail report
- N DIR,X,Y
+ N X,Y,DIR,TEXT
  K DIROUT,DIRUT,DTOUT,DUOUT
- S DIR(0)="YA"
+ S DIR(0)="YA0"
  S DIR("A")=PROMPT
  S DIR("B")="N"
  S DIR("?")="Enter Y or N. For detailed help type ??"
  S DIR("??")=U_"D HELP^PXRMXHLP("_NUM_")"
  W !
- D ^DIR
+ D ^DIR K DIR
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!($D(DUOUT)) Q
  S YESNO=$E(Y(0))
@@ -83,7 +67,7 @@ PREV(TYPE) ;Future Appts/Prior Encounters selection
  .S DIR("B")="C"
  .S DIR("??")=U_"D HELP^PXRMXHLP(7)"
  S DIR("?")="Select from the codes displayed. For detailed help type ??"
- D ^DIR
+ D ^DIR K DIR
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!($D(DUOUT)) Q
  S TYPE=Y
@@ -99,7 +83,7 @@ PRIME(TYPE) ;Primary Provider patients only or All
  S DIR("B")="P"
  S DIR("?")="Select from the codes displayed. For detailed help type ??"
  S DIR("??")=U_"D HELP^PXRMXHLP(4)"
- D ^DIR
+ D ^DIR K DIR
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!($D(DUOUT)) Q
  S TYPE=Y
@@ -116,7 +100,7 @@ REP(TYPE) ;Report type selection
  I PXRMSEL="I" S DIR("B")="D"
  S DIR("?")="Select from the codes displayed. For detailed help type ??"
  S DIR("??")=U_"D HELP^PXRMXHLP(2)"
- D ^DIR
+ D ^DIR K DIR
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!($D(DUOUT)) Q
  S TYPE=Y
@@ -135,75 +119,74 @@ SELECT(TYPE) ;Patient Sample Selection
  S DIR("B")="L"
  S DIR("?")="Select from the codes displayed. For detailed help type ??"
  S DIR("??")=U_"D HELP^PXRMXHLP(0)"
- D ^DIR
+ D ^DIR K DIR
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!($D(DUOUT)) Q
  S TYPE=Y
  Q
  ;
-SEPCS(PXRMCCS) ;Allow users to determine the output of the Clinic Stops report
- N DIR,TEXT,X,Y
- K DIROUT,DIRUT,DTOUT,DUOUT
- S PXRMCCS=""
- I PXRMREP="S",PXRMTOT="T" Q
- ;PXRMLCSC only defined if report is by Clinic Stops.
- I $P($G(PXRMLCSC),U)'="CS" Q
- S TEXT="C:Report by Clinic Stops Only;"
- I PXRMREP="S" S TEXT=TEXT_"B:Report by Clinic Stops and Individual Clinic(s);"
- S TEXT=TEXT_"I:Report by Individual Clinic(s)"
- S DIR(0)="S"_U_TEXT
- S DIR("A")="Clinic Stops output"
- S DIR("B")="C"
- D ^DIR
- I $D(DIROUT) S DTOUT=1
- I $D(DTOUT)!($D(DUOUT)) Q
- S PXRMCCS=Y
- Q
- ;
 SRT(YESNO) ;Option to sort by next appointment date on detail report
- N DIR,X,Y
+ N X,Y,TEXT,DIR
  K DIROUT,DIRUT,DTOUT,DUOUT
- S DIR(0)="YA"
+ S DIR(0)="YA0"
  S DIR("A")="Sort by Next Appointment date: "
  S DIR("B")="N"
  S DIR("?")="Enter Y or N. For detailed help type ??"
  S DIR("??")=U_"D HELP^PXRMXHLP(6)"
  W !
- D ^DIR
+ D ^DIR K DIR
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!($D(DUOUT)) Q
  S YESNO=$E(Y(0))
  Q
  ;
-SSN(YESNO) ;Option to print full SSN.
- N DIR,X,Y
+SSN(YESNO) ;Option to combine multifacility report
+ N X,Y,DIR,TEXT
  K DIROUT,DIRUT,DTOUT,DUOUT
- S DIR(0)="YA"
+ S DIR(0)="YA0"
  S DIR("A")="Print full SSN: "
  I $P($G(^PXRM(800,1,"FULL SSN")),U)="Y" S DIR("B")="Y"
  E  S DIR("B")="N"
  S DIR("?")="Enter Y or N. For detailed help type ??"
  S DIR("??")=U_"D HELP^PXRMXHLP(12)"
  W !
- D ^DIR
+ D ^DIR K DIR
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!($D(DUOUT)) Q
  S YESNO=$E(Y(0))
  Q
  ;
 TABS(YESNO) ;Option print compressed report
- N DIR,X,Y
+ N X,Y,DIR,TEXT
  K DIROUT,DIRUT,DTOUT,DUOUT
- S DIR(0)="YA"
- S DIR("A")="Print delimited output only: "
+ S DIR(0)="YA0"
+ S DIR("A")="Print Delimiter Separated output only: "
  S DIR("B")="N"
  S DIR("?")="Enter Y or N. For detailed help type ??"
  S DIR("??")=U_"D HELP^PXRMXHLP(13)"
  W !
- D ^DIR
+ D ^DIR K DIR
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!($D(DUOUT)) Q
  S YESNO=$E(Y(0))
+ Q
+ ;
+TABSEL(TYPE) ;Select DELIMITER CHARACTER
+ N X,Y,DIR
+ K DIROUT,DIRUT,DTOUT,DUOUT
+ S DIR(0)="S"_U_"C:Comma;"
+ S DIR(0)=DIR(0)_"M:Semicolon;"
+ S DIR(0)=DIR(0)_"S:Space;"
+ S DIR(0)=DIR(0)_"T:Tab;"
+ S DIR(0)=DIR(0)_"U:Up arrow;"
+ S DIR("A")="Specify REPORT DELIMITER CHARACTER"
+ S DIR("B")="U"
+ S DIR("?")="Select from the codes displayed. For detailed help type ??"
+ S DIR("??")=U_"D HELP^PXRMXHLP(14)"
+ D ^DIR K DIR
+ I $D(DIROUT) S DTOUT=1
+ I $D(DTOUT)!($D(DUOUT)) Q
+ S TYPE=Y
  Q
  ;
 TOTALS(TYPE,LIT1,LIT2,LIT3) ;Totals Selection
@@ -216,7 +199,7 @@ TOTALS(TYPE,LIT1,LIT2,LIT3) ;Totals Selection
  S DIR("B")="I"
  S DIR("?")="Select from the codes displayed. For detailed help type ??"
  S DIR("??")=U_"D HELP^PXRMXHLP(10)"
- D ^DIR
+ D ^DIR K DIR
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!($D(DUOUT)) Q
  S TYPE=Y

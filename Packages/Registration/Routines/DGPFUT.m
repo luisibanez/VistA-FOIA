@@ -1,5 +1,5 @@
-DGPFUT ;ALB/RPM - PRF UTILITIES ; 6/7/05 3:13pm
- ;;5.3;Registration;**425,554,650**;Aug 13, 1993;Build 3
+DGPFUT ;ALB/RPM - PRF UTILITIES ; 5/20/04 1:26pm
+ ;;5.3;Registration;**425,554**;Aug 13, 1993
  ;
  Q   ;no direct entry
  ;
@@ -171,26 +171,32 @@ STATUS(DGACT) ;calculate the assignment STATUS given an ACTION code
  . E  S DGSTAT=1
  Q DGSTAT
  ;
-MPIOK(DGDFN,DGICN) ;return national ICN
- ;This function verifies that a given patient has a valid national
- ;Integration Control Number.
+MPIOK(DGDFN,DGICN,DGCMOR) ;return non-local CMOR and ICN
+ ;This function retrieves an ICN given a pointer to the PATIENT (#2) file
+ ;for a patient.  When the ICN is not local and the local site is not the
+ ;Coordinating Master of Record (CMOR), the CMOR is retrieved as a
+ ;pointer to the INSTITUTION (#4) file.
  ; 
  ;  Supported DBIA #2701:  The supported DBIA is used to access MPI
- ;                         APIs to retrieve ICN and determine if ICN
- ;                         is local.
+ ;                         APIs to retrieve ICN, determine if ICN
+ ;                         is local and if site is CMOR.
+ ;  Supported DBIA #2702:  The supported DBIA is used to retrieve the
+ ;                         MPI node from the PATIENT (#2) file.
  ;
  ;  Input:
- ;    DGDFN - (required) IEN of patient in PATIENT (#2) file
- ;    DGICN - (optional) passed by reference to contain national ICN
+ ;    DGDFN - IEN of patient in PATIENT (#2) file
+ ;    DGICN - passed by reference to contain national ICN
+ ;   DGCMOR - passed by reference to contain CMOR
  ;
  ;  Output:
- ;   Function Value - 1 on valid national ICN;
- ;                    0 on failure
+ ;   Function Value - 1 on national ICN and non-local CMOR, 0 on failure
  ;            DGICN - Patient's Integrated Control Number
+ ;           DGCMOR - Pointer to INSTITUTION (#4) file for CMOR if CMOR
+ ;                    is not local, undefined otherwise.
  ;
  N DGRSLT
  S DGRSLT=0
- I $G(DGDFN)>0 D
+ I $G(DGDFN)>0,$D(^DPT(DGDFN,"MPI")) D
  . S DGICN=$$GETICN^MPIF001(DGDFN)
  . ;
  . ;ICN must be valid
@@ -199,58 +205,12 @@ MPIOK(DGDFN,DGICN) ;return national ICN
  . ;ICN must not be local
  . Q:$$IFLOCAL^MPIF001(DGDFN)
  . ;
+ . ;local site must not be CMOR site
+ . Q:($$IFVCCI^MPIF001(DGDFN)=1)
+ . ;
+ . ;get CMOR institution number
+ . S DGCMOR=$P($$MPINODE^MPIFAPI(DGDFN),U,3)
+ . Q:(DGCMOR'>0)
+ . ;
  . S DGRSLT=1
  Q DGRSLT
- ;
-GETNXTF(DGDFN,DGLTF) ;get previous treating facility
- ;This function will return the treating facility with a DATE LAST
- ;TREATED value immediately prior to the date for the treating facility
- ;passed as the second parameter.  The most recent treating facility
- ;will be returned when the second parameter is missing, null, or zero. 
- ;
- ;  Input:
- ;    DGDFN - pointer to patient in PATIENT (#2) file
- ;    DGLTF - (optional) last treating facility [default=0]
- ;
- ;  Output:
- ;    Function value - previous facility as a pointer to INSTITUTION (#4)
- ;                     file on success; 0 on failure
- ;
- N DGARR   ;fully subscripted array node
- N DGDARR  ;date sorted treating facilities
- N DGINST  ;institution pointer
- N DGNAM   ;name of sorted treating facilities array
- N DGTFARR  ;array of non-local treating facilities
- ;
- ;
- I $G(DGDFN)>0,$$BLDTFL^DGPFUT2(DGDFN,.DGTFARR) D
- . ;
- . ;validate last treating facility input parameter
- . S DGLTF=+$G(DGLTF)
- . S DGLTF=$S(DGLTF&($D(DGTFARR(DGLTF))):DGLTF,1:0)
- . ;
- . ;build date sorted list
- . S DGINST=0
- . F  S DGINST=$O(DGTFARR(DGINST)) Q:'DGINST  D
- . . S DGDARR(DGTFARR(DGINST),DGINST)=""
- . ;
- . ;find entry for previous treating facility
- . S DGNAM="DGDARR"
- . S DGARR=$QUERY(@DGNAM@(""),-1)
- . I DGLTF,DGARR]"" D
- . . I $QS(DGARR,2)'=DGLTF D
- . . . F  S DGARR=$QUERY(@DGARR,-1) Q:+$QS(DGARR,2)=DGLTF
- . . S DGARR=$QUERY(@DGARR,-1)
- ;
- Q $S($G(DGARR)]"":+$QS(DGARR,2),1:0)
- ;
-ISDIV(DGSITE) ;is site local division
- ;
- ;  Input:
- ;    DGSITE - pointer to INSTITUTION (#4) file
- ;
- ;  Output:
- ;    Function value - 1 on success; 0 on failure
- ;
- S DGSITE=+$G(DGSITE)
- Q $S($D(^DG(40.8,"AD",DGSITE)):1,1:0)

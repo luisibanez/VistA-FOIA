@@ -1,5 +1,5 @@
-ECXPRO1 ;ALB/GTS - Prosthetics Extract for DSS (Continued) ;9/20/11  11:49
- ;;3.0;DSS EXTRACTS;**9,11,13,15,21,24,33,37,39,100,105,112,132**;Dec 22, 1997;Build 18
+ECXPRO1 ;ALB/GTS - Prosthetics Extract for DSS (Continued) ; July 16, 1998
+ ;;3.0;DSS EXTRACTS;**9,11,13,15,21,24,33,37,39**;Dec 22, 1997
  ;
 NTEG(ECXDFN,ECXLNE,ECXPIEN,ECXN0,ECXNLB,ECINST,ECXFORM) ;** Check for required fields
  ;   Input
@@ -21,13 +21,12 @@ NTEG(ECXDFN,ECXLNE,ECXPIEN,ECXN0,ECXNLB,ECINST,ECXFORM) ;** Check for required f
  ;    ECXRQST                - Requesting Station
  ;    ECXRCST                - Receiving Station
  ;    ECXPHCPC               - PSAS HCPCS code; if 'unknown', then use CPT/HCPCS code 
- ;    ECXNPPDC               - NPPD code for repairs or new issues
  ;   Output (KILLed by NTEG)
  ;    ECXMISS                - 1 indicates missing information
  ;    ECXGOOD                - 0 indicates record should not be extracted
  ;
  N ECXGOOD,ECXMISS
- S (ECXRCST,ECXRQST,ECXNPPDC)="",ECXGOOD=1,ECXSTAT2=$P(ECXN0,U,10)
+ S (ECXRCST,ECXRQST)="",ECXGOOD=1,ECXSTAT2=$P(ECXN0,U,10)
  I ECXSTAT2]"" D
  .K ECXDIC
  .S DA=ECXSTAT2,DIC="^DIC(4,",DIQ(0)="I",DIQ="ECXDIC",DR=".01;99"
@@ -45,10 +44,7 @@ NTEG(ECXDFN,ECXLNE,ECXPIEN,ECXN0,ECXNLB,ECINST,ECXFORM) ;** Check for required f
  S ECXHCPCS=$$CPT^ECXUTL3(ECXHCPCS,ECXCMOD)
  ;get psas hcpcs code from file #661.1
  S ECXPHCPC=$P($G(^RMPR(660,ECXPIEN,1)),U,4) D
- .;get nppd code for repairs and new issues 10 characters in length.
- .I "X5"[ECXTYPE S ECXNPPDC=$TR($$GET1^DIQ(661.1,ECXPHCPC_",",5)," ","_")
- .I "ISR"[ECXTYPE S ECXNPPDC=$TR($$GET1^DIQ(661.1,ECXPHCPC_",",6)," ","_")
- .I +ECXPHCPC S ECXPHCPC=$E($P($G(^RMPR(661.1,ECXPHCPC,0)),U,1),1,5)
+ .I +ECXPHCPC S ECXPHCPC=$P($G(^RMPR(661.1,ECXPHCPC,0)),U,1)
  .I ECXPHCPC="UNKNOWN" S ECXPHCPC=$E(ECXHCPCS,1,5)
  ;
  ;* Get Requesting Station Number
@@ -95,7 +91,7 @@ CHK ;*Check variables
  S ECXMISS=ECXMISS_U
  I ECXSRCE']"" S ECXMISS=ECXMISS_"1"
  S ECXMISS=ECXMISS_U
- I ECXHCPCS']"" S ECXGOOD=0 ;S ECXMISS=ECXMISS_"1" ;*HCPCS code check disabled
+ I ECXHCPCS']"" S ECXMISS=ECXMISS_"1"
  S ECXMISS=ECXMISS_U
  I ECXFORM["-3" D
  .I ECXRQST']"" S ECXMISS=ECXMISS_"1"

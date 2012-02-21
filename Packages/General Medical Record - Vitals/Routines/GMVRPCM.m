@@ -1,5 +1,5 @@
 GMVRPCM ; HOIFO/DP - RPC for Vitals Manager ;07/25/05 9:10am
- ;;5.0;GEN. MED. REC. - VITALS;**1,8,13,3,22**;Oct 31, 2002;Build 22
+ ;;5.0;GEN. MED. REC. - VITALS;**1,8,13,3**;Oct 31, 2002
  ; Integration Agreements:
  ; #10040 [Supported] File 44 references
  ; #10076 [Supported] XUSEC Calls
@@ -66,7 +66,7 @@ GETHILO ; [P] Returns an abnormal value
  S @RESULTS@(0)=+$$GET1^DIQ(120.57,"1,",DATA)
  Q
 GETLIST ; [P] Return listing of file
- K GMVCNT,GMVLOOP,GMVRET,^TMP("DILIST",$J)
+ K GMVRET,^TMP("DILIST",$J)
  S GMVSCRN=""
  I +DATA=44 S DATA2=$P(DATA,U,2),DATA=+DATA
  I DATA=120.51 D  ; Set screen for vitals list
@@ -89,16 +89,7 @@ GETLIST ; [P] Return listing of file
  .D ACTLOCS^NURAPI(.GMVRET)
  .F X=0:0 S X=$O(GMVRET(X)) Q:'X  S @RESULTS@(X)=DATA_";"_GMVRET(X)
  .S @RESULTS@(0)=+$O(@RESULTS@(""),-1)
- I DATA=120.52 D  S @RESULTS@(0)=GMVCNT_U_$$GET1^DID(DATA,"","","NAME") Q  ;qualifiers
- .S GMVCNT=0,GMVLOOP=""
- .F  S GMVLOOP=$O(^GMRD(120.52,"B",GMVLOOP)) Q:GMVLOOP=""  D
- ..S GMVIEN=0
- ..F  S GMVIEN=$O(^GMRD(120.52,"B",GMVLOOP,GMVIEN)) Q:'GMVIEN  D
- ...S GMVNAME=$P($G(^GMRD(120.52,GMVIEN,0)),U,1)
- ...Q:GMVNAME=""
- ...Q:$$ACTIVE^GMVUID(120.52,.01,GMVIEN_",","")  ;inactive vuid
- ...S GMVCNT=GMVCNT+1
- ...S @RESULTS@(GMVCNT)="120.52;"_GMVIEN_U_GMVNAME
+ I DATA=120.52 S GMVSCRN="I '$$ACTIVE^GMVUID(120.52,.01,+Y_"","","""")"
  D LIST^DIC(DATA,"","@;.01","P","","","","",GMVSCRN)
  F X=0:0 S X=$O(^TMP("DILIST",$J,X)) Q:'X  D
  .S @RESULTS@(X)=DATA_";"_^TMP("DILIST",$J,X,0)

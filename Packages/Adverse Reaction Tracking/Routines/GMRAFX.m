@@ -1,5 +1,5 @@
-GMRAFX ;SLC/DAN Fix existing allergy entries ;3/2/06  13:46
- ;;4.0;Adverse Reaction Tracking;**17,19,23,20**;Mar 29, 1996;Build 1
+GMRAFX ;SLC/DAN Fix existing free text entries ;2/18/05  13:56
+ ;;4.0;Adverse Reaction Tracking;**17,19,23**;Mar 29, 1996
  ;DBIA SECTION
  ;10118 - VALM
  ;2056  - DIQ
@@ -17,25 +17,24 @@ GMRAFX ;SLC/DAN Fix existing allergy entries ;3/2/06  13:46
  ;10101 - XQOR
  ;
 EN ; -- main entry point for GMRA FIX
- N NMBR,REBLD,Y,DIR,I,LTYPE
- S LTYPE=$$GETTYPE^GMRAFX3(.LTYPE) Q:LTYPE=0
- I $D(^XTMP("GMRAFX",LTYPE,"B")) W !,"The list is currently being built by another user so this option is",!,"temporarily unavailable.  Please try again in a few minutes." Q
- I $D(^XTMP("GMRAFX",LTYPE,"INUSE")) D
+ N NMBR,REBLD,Y,DIR,I
+ I $D(^XTMP("GMRAFX","B")) W !,"The list is currently being built by another user so this option is",!,"temporarily unavailable.  Please try again in a few minutes." Q
+ I $D(^XTMP("GMRAFX","INUSE")) D
  .W !,"The utility is currently in use by the following people:",!
- .S I=0 F  S I=$O(^XTMP("GMRAFX",LTYPE,"INUSE",I)) Q:'+I  W !,$$GET1^DIQ(200,I,.01)
- .W !!,"As a result, the existing "_$S(LTYPE="FREE":"free text",LTYPE="ING":"ingredient",1:"drug class")_" list will be used." D WAIT^GMRAFX3
- I $D(^XTMP("GMRAFX",LTYPE)),'$D(^XTMP("GMRAFX",LTYPE,"INUSE")) D
- .W !,"The "_$S(LTYPE="FREE":"free text",LTYPE="ING":"ingredient",1:"drug class")_" list was last built on ",$$FMTE^XLFDT($P(^XTMP("GMRAFX",LTYPE,0),U,2)),!
- .S DIR(0)="Y",DIR("A")="Do you want to rebuild the list",DIR("B")="NO",DIR("?")="Enter yes to rebuild the list of entries.  Enter NO to use the currently existing list"
- .D ^DIR I Y=1 K ^XTMP("GMRAFX",LTYPE) S REBLD=1
- I $G(REBLD)!('$D(^XTMP("GMRAFX",LTYPE))) W !,"Building list of "_$S(LTYPE="FREE":"free text",LTYPE="ING":"ingredient",1:"drug class")_" allergies...this may take a few minutes",!
- S ^XTMP("GMRAFX",LTYPE,"INUSE",+$G(DUZ))=""
+ .S I=0 F  S I=$O(^XTMP("GMRAFX","INUSE",I)) Q:'+I  W !,$$GET1^DIQ(200,I,.01)
+ .W !!,"As a result, the existing free text list will be used." D WAIT^GMRAFX3
+ I $D(^XTMP("GMRAFX")),'$D(^XTMP("GMRAFX","INUSE")) D
+ .W !,"The free text list was last built on ",$$FMTE^XLFDT($P(^XTMP("GMRAFX",0),U,2)),!
+ .S DIR(0)="Y",DIR("A")="Do you want to rebuild the list",DIR("B")="NO",DIR("?")="Enter yes to rebuild the list of free text entries.  Enter NO to use the currently existing list"
+ .D ^DIR I Y=1 K ^XTMP("GMRAFX") S REBLD=1
+ I $G(REBLD)!('$D(^XTMP("GMRAFX"))) W !,"Building list of free text allergies...this may take a few minutes",!
+ S ^XTMP("GMRAFX","INUSE",+$G(DUZ))=""
  D EN^VALM("GMRA FIX")
- K ^XTMP("GMRAFX",LTYPE,"INUSE",+$G(DUZ))
+ K ^XTMP("GMRAFX","INUSE",+$G(DUZ))
  Q
  ;
 HDR ; -- header code
- S VALMHDR(1)="Allergy Tracking "_$S(LTYPE="FREE":"Free Text",LTYPE="ING":"Ingredient",1:"Drug CLass")_" Entries"
+ S VALMHDR(1)="Allergy Tracking Free Text Entries"
  Q
 PHDR ;
  S VALMSG="Select one or more entries"
@@ -44,33 +43,30 @@ PHDR ;
  Q
  ;
 INIT ;Initialize variables, etc
- S VALMBCK="",VALMBG=$S($G(VALMBG)'="":VALMBG,1:1),VALMCNT=$S($D(^XTMP("GMRAFX",LTYPE,0)):$P(^(0),U,3),1:0),VALMWD=80
+ S VALMBCK="",VALMBG=$S($G(VALMBG)'="":VALMBG,1:1),VALMCNT=$S($D(^XTMP("GMRAFX",0)):$P(^(0),U,3),1:0),VALMWD=80
  Q
 LIST ; -- obtain and display list of free text allergies
  N GMRAIEN,GMRAOTH,GMRATXT,GMRAUTXT,SP1,SP2,SP3,UP,TXT
  S VALMBCK="R",VALMCNT=0
- K ^XTMP("GMRAFX",LTYPE) S ^XTMP("GMRAFX",LTYPE,"B")="",^XTMP("GMRAFX",LTYPE,"INUSE",+$G(DUZ))=""
+ K ^XTMP("GMRAFX") S ^XTMP("GMRAFX","B")="",^XTMP("GMRAFX","INUSE",+$G(DUZ))=""
  S GMRAOTH=$O(^GMRD(120.82,"B","OTHER ALLERGY/ADVERSE REACTION",0))_";GMRD(120.82," ;Gets IEN;FILE ENTRY for free text entries
- S GMRAIEN=0 F  S GMRAIEN=$O(^GMR(120.8,GMRAIEN)) Q:'+GMRAIEN  D
- .I LTYPE="FREE" I $P($G(^GMR(120.8,GMRAIEN,0)),U,3)'=GMRAOTH Q
- .I LTYPE="ING" I $P($G(^GMR(120.8,GMRAIEN,0)),U,3)'["50.416" Q
- .I LTYPE="DRUG" I $P($G(^GMR(120.8,GMRAIEN,0)),U,3)'["50.605" Q
+ S GMRAIEN=0 F  S GMRAIEN=$O(^GMR(120.8,GMRAIEN)) Q:'+GMRAIEN  I $P($G(^(GMRAIEN,0)),U,3)=GMRAOTH D
  .Q:+$G(^GMR(120.8,GMRAIEN,"ER"))  ;Quit if reactant entered in error
  .Q:$$DECEASED(+$P($G(^GMR(120.8,GMRAIEN,0)),U))  ;Don't report expired patients
  .Q:$$TESTPAT^VADPT($P($G(^GMR(120.8,GMRAIEN,0)),U))  ;Don't report test patients
  .S GMRATXT=$E($P($G(^GMR(120.8,GMRAIEN,0)),U,2),1,75) ;Get "reactant" text entry, no more than 75 characters
  .S GMRATXT=$TR(GMRATXT,"""","") ;19 remove quote marks from text
  .S GMRAUTXT=$$UP^XLFSTR(GMRATXT) ;Convert to upper case
- .S ^XTMP("GMRAFX",LTYPE,"GMRAR",GMRAUTXT,GMRATXT)=$G(^XTMP("GMRAFX",LTYPE,"GMRAR",GMRAUTXT,GMRATXT))+1 ;# of active entries
- .S ^XTMP("GMRAFX",LTYPE,"GMRAR",GMRAUTXT,GMRATXT,GMRAIEN)="" ;Store entry number
+ .S ^XTMP("GMRAFX","GMRAR",GMRAUTXT,GMRATXT)=$G(^XTMP("GMRAFX","GMRAR",GMRAUTXT,GMRATXT))+1 ;Local array of free text entries = active
+ .S ^XTMP("GMRAFX","GMRAR",GMRAUTXT,GMRATXT,GMRAIEN)="" ;Store entry number
  .Q
- S UP="" F  S UP=$O(^XTMP("GMRAFX",LTYPE,"GMRAR",UP)) Q:UP=""  S TXT="" F  S TXT=$O(^XTMP("GMRAFX",LTYPE,"GMRAR",UP,TXT)) Q:TXT=""  D
+ S UP="" F  S UP=$O(^XTMP("GMRAFX","GMRAR",UP)) Q:UP=""  S TXT="" F  S TXT=$O(^XTMP("GMRAFX","GMRAR",UP,TXT)) Q:TXT=""  D
  .S VALMCNT=VALMCNT+1
- .S SP1=4-$L(VALMCNT),SP2=40-$L(TXT),SP3=16-$L(^XTMP("GMRAFX",LTYPE,"GMRAR",UP,TXT))\2 ;Set up spacing before storing
- .D SET^VALM10(VALMCNT,VALMCNT_$$REPEAT^XLFSTR(" ",SP1)_TXT_$$REPEAT^XLFSTR(" ",SP2)_$$REPEAT^XLFSTR(" ",SP3)_^XTMP("GMRAFX",LTYPE,"GMRAR",UP,TXT))
- .S ^XTMP("GMRAFX",LTYPE,"IDX",VALMCNT)=UP_"^"_TXT
- K ^XTMP("GMRAFX",LTYPE,"B") ;Done building
- S ^XTMP("GMRAFX",LTYPE,0)=$$FMADD^XLFDT(DT,30)_U_DT_U_$G(VALMCNT)
+ .S SP1=4-$L(VALMCNT),SP2=40-$L(TXT),SP3=16-$L(^XTMP("GMRAFX","GMRAR",UP,TXT))\2 ;Set up spacing before storing
+ .D SET^VALM10(VALMCNT,VALMCNT_$$REPEAT^XLFSTR(" ",SP1)_TXT_$$REPEAT^XLFSTR(" ",SP2)_$$REPEAT^XLFSTR(" ",SP3)_^XTMP("GMRAFX","GMRAR",UP,TXT))
+ .S ^XTMP("GMRAFX","IDX",VALMCNT)=UP_"^"_TXT
+ K ^XTMP("GMRAFX","B") ;Done building
+ S ^XTMP("GMRAFX",0)=$$FMADD^XLFDT(DT,30)_U_DT_U_$G(VALMCNT)
  Q
  ;
 HELP ; -- help code
@@ -130,7 +126,7 @@ AEA ; Entry for GMRA LOCAL ALLERGIES EDIT option
  Q
  ;
 PROCESS(TYPE) ;API to mark all entries as entered in error or update entries to new reactant
- N GMRAPA,GMRAI,GMRAJ,DIR,Y,ROOT,NUM,ENTRY,GMRADONE,STOP,J,TNMBR,GMRAAR,GMRASURE
+ N GMRAPA,GMRAI,GMRAJ,DIR,Y,ROOT,NUM,ENTRY,GMRADONE,STOP,J,TNMBR,GMRAAR
  S VALMBCK="R" D FULL^VALM1
  I '$G(NMBR) S NMBR=$$GETNUM^GMRAFX3("") Q:'+NMBR  D  Q:'+$G(NMBR)
  .S TNMBR=""
@@ -147,8 +143,8 @@ PROCESS(TYPE) ;API to mark all entries as entered in error or update entries to 
  S DIR("?",4)="Be SURE this is what you want to do."
  D ^DIR Q:Y'=1  ;Stop if user doesn't answer yes
  F GMRAI=1:1:($L(NMBR,",")-1) D
- .S NUM=$P(NMBR,",",GMRAI),ENTRY=^XTMP("GMRAFX",LTYPE,"IDX",NUM),STOP=0
- .S ROOT="^XTMP(""GMRAFX"",LTYPE,""GMRAR"","_""""_$P(ENTRY,"^")_""""_","_""""_$P(ENTRY,"^",2)_""""_")",GMRAJ=0 Q:'@ROOT
+ .S NUM=$P(NMBR,",",GMRAI),ENTRY=^XTMP("GMRAFX","IDX",NUM),STOP=0
+ .S ROOT="^XTMP(""GMRAFX"",""GMRAR"","_""""_$P(ENTRY,"^")_""""_","_""""_$P(ENTRY,"^",2)_""""_")",GMRAJ=0 Q:'@ROOT
  .I TYPE="U" W !!,"Updating ",$P(ENTRY,U)," reactions"
  .F  S GMRAJ=$O(@ROOT@(GMRAJ)) Q:GMRAJ=""!($G(STOP))  I GMRAJ D
  ..S GMRAPA=GMRAJ,GMRADONE=1 D @$S(TYPE="E":"EIE",1:"UIE^GMRAFX3")
@@ -156,7 +152,22 @@ PROCESS(TYPE) ;API to mark all entries as entered in error or update entries to 
  Q
  ;
 EIE ;Mark individual entry as entered in error
- D EIE^GMRAFX3 ;Moved due to size limits
+ N DIE,DA,DR,Y,DIK,DFN,OROLD,VAIN,X,GMRAOUT
+ S DIE="^GMR(120.8,",DA=GMRAPA,DR="22///1;23///NOW;24////"_$G(DUZ,.5)
+ D ^DIE ;Entered in error on date/time by user
+ D ADCOM(GMRAPA,"E","Marked Entered in Error during clean up process")
+ I $$NKASCR^GMRANKA($P(^GMR(120.8,GMRAPA,0),U)) D
+ .S DIK="^GMR(120.86,",DA=$P(^GMR(120.8,GMRAPA,0),U)
+ .D ^DIK ;If patient's last allergy marked as entered in error then delete assessment
+ .W !!,"**NOTE: By marking this reaction as entered in error, ",$$GET1^DIQ(2,DA,.01,"E"),!,"no longer has an assessment on file.  You may reassess this patient",!
+ .W "now by answering the following prompt or hit return to do it later.",!
+ .D NKAASK^GMRANKA(DA)
+ S GMRAPA(0)=$G(^GMR(120.8,GMRAPA,0)) Q:GMRAPA(0)=""
+ S GMRAOUT=0
+ D EN1^GMRAEAB ;Sends entered in error bulletin to appropriate mail groups
+ S DFN=$P(GMRAPA(0),U)
+ D INP^VADPT S X=$$FIND1^DIC(101,,"BX","GMRA ENTERED IN ERROR")_";ORD(101," ;19
+ D:X EN^XQOR ;Process protocols hanging off of "entered in error" protocol
  Q
  ;
 DECEASED(GMRAIFN) ;Function returns 1 if patient is deceased, 0 if living

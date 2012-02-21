@@ -1,5 +1,5 @@
-ECOSSUM ;BIR/DMA,RHK,JPW - Ordering Section Summary ;1 Jul 2008
- ;;2.0; EVENT CAPTURE ;**5,8,18,47,72,95**;8 May 96;Build 26
+ECOSSUM ;BIR/DMA,RHK,JPW-Ordering Section Summary ;27 Mar 96
+ ;;2.0; EVENT CAPTURE ;**5,8,18,47,72**;8 May 96
 EN ;entry point from menu option
  W !
  K DIC S DIC=723,DIC(0)="AQEMZ",DIC("A")="Select Ordering Section: " D ^DIC K DIC
@@ -131,7 +131,7 @@ PRINT ;output report
  .S UNIT="" F  S UNIT=$O(AUNIT(UNIT)) Q:UNIT=""  S ECUNIT=AUNIT(UNIT),ECV("U")=0 D  Q:QFLAG
  ..I '$D(^TMP("ECOS",$J,ECLOCA,ECUNIT)) Q
  ..S UNNAME=$E(UNIT,1,20)
- ..D:($Y+6>IOSL) HEAD Q:QFLAG  W !!,UNNAME
+ ..D:($Y+3>IOSL) HEAD Q:QFLAG  W !!,UNNAME
  ..S ECPATN="" F  S ECPATN=$O(^TMP("ECOS",$J,ECLOCA,ECUNIT,ECPATN)) Q:ECPATN=""  S ECV("P")=0 D  Q:QFLAG
  ...S PTNAME=$P(ECPATN,"^",1),PTNAME=$E(PTNAME,1,22),ECSSN=$P(ECPATN,"^",2)
  ...W ?24,PTNAME,?48,ECSSN
@@ -143,36 +143,34 @@ PRINT ;output report
  ....K PROV M PROV=^TMP("ECOS",$J,ECLOCA,ECUNIT,ECPATN,ECDA,"PRV")
  ....K ECMOD M ECMOD=^TMP("ECOS",$J,ECLOCA,ECUNIT,ECPATN,ECDA,"MOD")
  ....W ?54,ECPN,?96,ECV,?105,$E($P($G(PROV(1)),"^",2),1,24) K PROV(1)
- ....D:($Y+6>IOSL) HEAD Q:QFLAG
+ ....D:($Y+3>IOSL) HEAD Q:QFLAG
  ....;ALB/JAM - write cpt procedure modifiers on same line with providers
  ....S MOD=0,PROVN=1 F  S MOD=$O(ECMOD(MOD)),PROVN=$O(PROV(PROVN)) Q:(MOD="")&(PROVN="")  D  I QFLAG Q
- .....I ($Y+6>IOSL) D HEAD Q:QFLAG  W !?54,ECPN
+ .....I ($Y+3>IOSL) D HEAD Q:QFLAG  W !?54,ECPN
  .....W !
  .....I MOD'="" W ?58,"- ",MOD," ",$E($P(ECMOD(MOD),U,3),1,36) K ECMOD(MOD)
  .....I PROVN'="" W ?105,$E($P($G(PROV(PROVN)),"^",2),1,24) K PROV(PROVN)
  ....W ! ;start a new line
  ...;write subtotal for patient
- ...Q:QFLAG  D:($Y+6>IOSL) HEAD Q:QFLAG
+ ...Q:QFLAG  D:($Y+3>IOSL) HEAD Q:QFLAG
  ...W ?54,DASH2,!
  ...W ?24,"Subtotal for "_$P(ECPATN,"^",1)_":",?96,$$RJ^XLFSTR(ECV("P"),5," "),!!
  ..;write total for unit
- ..Q:QFLAG  D:($Y+6>IOSL) HEAD Q:QFLAG
+ ..Q:QFLAG  D:($Y+3>IOSL) HEAD Q:QFLAG
  ..W !,"Subtotal for DSS Unit "_UNIT_":",?95,$$RJ^XLFSTR(ECV("U"),6," "),!
  .;write the total for the location
- .Q:QFLAG  D:($Y+6>IOSL) HEAD Q:QFLAG
+ .Q:QFLAG  D:($Y+3>IOSL) HEAD Q:QFLAG
  .W !!,"Total for Location "_LOC_":",?95,$$RJ^XLFSTR(ECV("L"),6," "),!
  ;write the ordering section grandtotal
- Q:QFLAG  D:($Y+8>IOSL) HEAD Q:QFLAG
+ Q:QFLAG  D:($Y+5>IOSL) HEAD Q:QFLAG
  W !!!,"Grand Total for Ordering Section "_ECOSN_":",?95,$$RJ^XLFSTR(ECV("O"),6," "),!
  ;all done
- D FOOTER  ;print footer on last page
  I $E(IOST)="C"&('QFLAG) S DIR(0)="E" D  D ^DIR W @IOF
  .S SS=22-$Y F JJ=1:1:SS W !
  W:$E(IOST)'="C" @IOF
  Q
 HEAD ;header
  I $E(IOST)="C" S SS=22-$Y F JJ=1:1:SS W !
- I PAGE>0 D FOOTER
  I $E(IOST)="C",PAGE>0 S DIR(0)="E" W ! D ^DIR K DIR I 'Y S QFLAG=1 Q
  W:$Y!($E(IOST)="C") @IOF
  S PAGE=PAGE+1
@@ -181,11 +179,6 @@ HEAD ;header
  W !,?26,"Location: ",LOC,!
  W !,"DSS Unit",?24,"Patient",?48,"SSN",?54,"Procedure",?98,"Vol.",?105,"Provider(s)"
  W !,DASH,!
- Q
- ;
-FOOTER ;print page footer
- W !!?4,"Volume totals may represent days, minutes, numbers of procedures"
- W !?4,"and/or a combination of these."
  Q
  ;
 EXIT ;common exit point

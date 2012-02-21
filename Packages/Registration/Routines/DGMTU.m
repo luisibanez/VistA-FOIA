@@ -1,7 +1,7 @@
 DGMTU ;ALB/RMO,LBD,BRM,EG - Means Test Utilities ; 02/08/2005 07:10 AM
- ;;5.3;Registration;**4,33,182,277,290,374,358,420,426,411,332,433,456,476,519,451,630,783,799**;Aug 13, 1993;Build 1
- ;MT=Means Test
-LST(DFN,DGDT,DGMTYPT) ;Last MT for a patient
+ ;;5.3;Registration;**4,33,182,277,290,374,358,420,426,411,332,433,456,476,519,451,630**;Aug 13, 1993
+ ;
+LST(DFN,DGDT,DGMTYPT) ;Last means test for a patient
  ;         Input  -- DFN   Patient IEN
  ;                   DGDT  Date/Time  (Optional- default today@2359)
  ;                DGMTYPT  Type of Test (Optional - if not defined 
@@ -15,7 +15,7 @@ LST(DFN,DGDT,DGMTYPT) ;Last MT for a patient
  ..S DGNOD=$G(^DGMT(408.31,DGMTI,0)) I DGNOD,$G(^("PRIM"))!(DGMTYPT=4) S DGMTFL1=1,Y=DGMTI_"^"_$P(^(0),"^")_"^"_$$MTS(DFN,+$P(^(0),"^",3))_"^"_$P(DGNOD,"^",23) ; chk for primary MT
  Q $G(Y)
  ;
-LVMT(DFN,DGDT) ;Last valid MT (status other than required)
+LVMT(DFN,DGDT) ;Last valid means test (status other than required)
  ;          Input  -- DFN    Patient IEN
  ;                    DGDT   Date (Optional - default today)
  ;          Output -- Annual Means Test IEN^Date of Test^Status Name
@@ -25,7 +25,7 @@ LVMT(DFN,DGDT) ;Last valid MT (status other than required)
  I $P(DGMTL,"^",4)="R" F  S DGMT=$$LST^DGMTU(DFN,DGDT) Q:DGMT']""!($P(DGMT,U,4)'="R")  S DGDT=$P(DGMT,U,2)-1
  Q $S($G(DGMT)]"":DGMT,1:$G(DGMTL))
  ;
-NVMT(DFN,DGDT) ;Next valid MT (status other than required)
+NVMT(DFN,DGDT) ;Next valid means test (status other than required)
  ;          Input  -- DFN    Patient IEN
  ;                    DGDT   Date (Required)
  ;          Output -- Annual Means Test IEN^Date of Test^Status Name
@@ -36,7 +36,7 @@ NVMT(DFN,DGDT) ;Next valid MT (status other than required)
  .F DGMTI=0:0 S DGMTI=$O(^DGMT(408.31,"AD",1,DFN,DGDTE,DGMTI)) Q:'DGMTI  S DGMT0=$G(^DGMT(408.31,DGMTI,0)),DGMTS=+$P(DGMT0,"^",3),DGMTPR=$G(^("PRIM")) I +DGMT0,DGMTS'=1,DGMTPR S DGMT=DGMTI_"^"_+DGMT0_"^"_$$MTS^DGMTU(DFN,DGMTS) Q
  Q $G(DGMT)
  ;
-MTS(DFN,DGMTS) ;MT status -- default current
+MTS(DFN,DGMTS) ;Means test status -- default current
  ;         Input  -- DFN    Patient IEN
  ;                   DGMTS  Means Test Status IEN  (Optional)
  ;         Output -- Status Name^Status Code
@@ -45,7 +45,7 @@ MTS(DFN,DGMTS) ;MT status -- default current
  I DGMTS S Y=$P($G(^DG(408.32,DGMTS,0)),"^",1,2)
  Q $G(Y)
  ;
-DIS(DFN) ;Display patients current MT status,
+DIS(DFN) ;Display patients current means test status,
  ;        eligibility for care, deductible information,
  ;        date of test and date of completion
  ;         Input  -- DFN    Patient IEN
@@ -66,24 +66,21 @@ DIS(DFN) ;Display patients current MT status,
  I DGCS=3 S Y=$P(DGMT0,"^",17) X ^DD("DD") W " (NO LONGER REQUIRED: ",Y,")"
 DISQ Q
  ;
-EDT(DFN,DGDT) ;Display patients current MT information and provide
+EDT(DFN,DGDT) ;Display patients current means test information and provide
  ;        the user with the option of proceeding with a required
- ;        MT or editing an existing means test
+ ;        means test or editing an existing means test
  ;         Input  -- DFN    Patient IEN
  ;                   DGDT   Date/Time
  ;         Output -- None
  ;
  ; obtain lock used to synchronize local MT/CT options with income test upload
- N VSITE
  I $$LOCK^DGMTUTL(DFN)
  ;
  D DIS(DFN)
- S DGMTI=+$$LST(DFN,DGDT),VSITE=+$P($$SITE^VASITE(),U,3)
- G EDTQ:'DGMTI!(DGMTI'=+$$LST^DGMTU(DFN))
- I $P($G(^DGMT(408.31,DGMTI,2)),U,5)'=VSITE G EDTQ ; Test doesn't belong to site
+ S DGMTI=+$$LST(DFN,DGDT) G EDTQ:'DGMTI!(DGMTI'=+$$LST^DGMTU(DFN))
  S DGMT0=$G(^DGMT(408.31,DGMTI,0)),DGMTDT=+DGMT0,DGMTS=$P(DGMT0,"^",3)
  S DIR("A")="Do you wish to "_$S(DGMTS=1:"proceed with",1:"edit")_" the means test at this time"
- S DIR("B")=$S(DGMTS&($D(DGPRFLG)):"NO",DGMTS=1:"YES",1:"NO"),DIR(0)="Y"
+ S DIR("B")=$S(DGMTS=1:"YES",1:"NO"),DIR(0)="Y"
  W ! D ^DIR G EDTQ:$D(DTOUT)!($D(DUOUT))
  I Y S DGMTYPT=1,DGMTACT="EDT",DGMTROU="EDTQ^DGMTU" G EN^DGMTSC
 EDTQ K DGMT0,DGMTACT,DGMTDT,DGMTI,DGMTROU,DGMTS,DIR,DTOUT,DUOUT,Y
@@ -93,7 +90,7 @@ EDTQ K DGMT0,DGMTACT,DGMTDT,DGMTI,DGMTROU,DGMTS,DIR,DTOUT,DUOUT,Y
  ;
  Q
  ;
-CMTS(DFN) ;Get Current MT Status - query HEC if necessary
+CMTS(DFN) ;Get Current Means Test Status - query HEC if necessary
  ;
  ;        Input: DFN=patient ien
  ;       Output: MT IEN^Date of Test^Status Name
@@ -180,7 +177,7 @@ QFLG(DGMTDATA) ;
  D DOM^DGMTR I $G(DGDOM) S IVMQFLG=0
  Q IVMQFLG
  ;
-FUT(DFN,DGDT,DGMTYPT) ; Future MT for a patient
+FUT(DFN,DGDT,DGMTYPT) ; Future Means Tests for a patient
  ;DFN      Patient IEN
  ;DGDT     Date (Optional- default to today)
  ;DGMTYPT  Type of Test (Optional - default to MT)

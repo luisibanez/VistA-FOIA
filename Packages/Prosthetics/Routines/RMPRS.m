@@ -1,5 +1,5 @@
 RMPRS ;PHX/HNC/RFM,RVD-ADD SUSPENSE RECORD ;8/29/1994
- ;;3.0;PROSTHETICS;**26,28,30,45,52,62,120**;Feb 09, 1996
+ ;;3.0;PROSTHETICS;**26,28,30,45,52,62**;Feb 09, 1996
  ;
  ;  HNC - patch 52 - 9/22/00 Modify INQ - sub.
  ;                           Add KILL^XUSCLEAN on exit to kill
@@ -81,9 +81,9 @@ INQ ;Inquire to Suspense entry point
  D HOME^%ZIS
  S RMPRFLAG=1
  ;get patient dfn
- D DICDPT I Y'>0!($D(DTOUT))!(Y="^") K RMPRDFN G EXIT
+ D DICDPT G:Y'>0!($D(DTOUT))!(Y="^") EXIT
  S RMPRDFN=+Y
- D REV I 'IEN K RMPRDFN G EXIT
+ D REV G:'IEN EXIT
  ;call new suspense processing
  N RMPREOY,DA
  S (RMPREOY,DA)=IEN D VIEWCP^RMPREO23

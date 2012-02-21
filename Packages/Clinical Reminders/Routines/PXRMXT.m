@@ -1,5 +1,5 @@
-PXRMXT ; SLC/PJH - Reminder Reports Template Load ;11/21/2005
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMXT ; SLC/PJH - Reminder Reports Template Load ;07/16/2002
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ; 
  ; Called from PXRMYD,PXRMXD
  ;
@@ -15,7 +15,7 @@ START N X,Y,CNT,FOUND,PXRMFLD,DIC,MSG
  ;Select template required
  W !
  S CNT=0,DIC=810.1,DIC(0)="AEQMZ"
- S DIC("A")="Select an existing REPORT TEMPLATE or return to continue: "
+ S DIC("A")="Select an existing REPORT TEMPLATE or return to continue:"
  S DIC("S")="I $P(^PXRMPT(810.1,+Y,0),U,3)=PXRMTYP"
  D ^DIC
  I X=(U_U) S DTOUT=1
@@ -102,8 +102,8 @@ MULT ;Clear multiple field arrays
  ;Build PXRMFACN/PXRMLOCN array IEN's and counters NHL/NFAC
  D NUM
  ;
- ;Build Service Category array
- I $L(PXRMSCAT)>0 F IC=1:1:$L(PXRMSCAT,",") S PXRMSCAT($P(PXRMSCAT,",",IC))=""
+ ;Build Service Category string (held as array in PXRMPT to allow edit)
+ I $G(PXRMSEL)="L" S PXRMSCAT=$$STR(810.19,"SERVICE")
  ;
  ;Add Descriptions for Reminders
  D DES(.PXRMREM,"^PXD(811.9",4)
@@ -121,6 +121,7 @@ MULT ;Clear multiple field arrays
  ;
  ;Combine individual reminders and category reminders
  D MERGE^PXRMXS1
+ ;
  Q
  ;
  ;
@@ -147,6 +148,16 @@ SUB(OUTPUT,SUB,VAR,ORD) ;
  .I VAR="REMINDER" S ORDER(DISP,IC)=""
  .I VAR="REMINDER CATEGORY" S ORDERC(DISP,IC)=""
  Q
+ ;
+ ;Extract INTernal format from ARRAY and build string
+ ;---------------------------------------------------
+STR(SUB,VAR) ; 
+ N IC,INT,SUB1
+ S SUB1="",IC=0,@VAR=""
+ F  S SUB1=$O(ARRAY(SUB,SUB1)) Q:SUB1=""  D
+ .S INT=$P($G(ARRAY(SUB,SUB1,MREF(VAR),"I")),";")
+ .S @VAR=@VAR_INT
+ Q @VAR
  ;
  ;Build array PXRMFACN and NFAC
  ;-----------------------------

@@ -1,9 +1,11 @@
-ONCSAPIX ;Hines OIFO/SG - COLLABORATIVE STAGING (XML TOOLS)  ; 8/11/06 8:11am
- ;;2.11;ONCOLOGY;**40,47**;Mar 07, 1995;Build 19
+ONCSAPIX ;Hines OIFO/SG - COLLABORATIVE STAGING (XML TOOLS)  ; 3/17/04 4:33pm
+ ;;2.11;ONCOLOGY;**40**;Mar 07, 1995
  ;
  ; ONCXML -------------- DESCRIPTOR FOR THE XML PARSING
  ;
  ; ONCXML(               Closed root of the destination buffer
+ ;
+ ;   "DLLVER")           Version of the CS DLL
  ;
  ;   "ERR")              Number of parsing errors
  ;
@@ -12,12 +14,10 @@ ONCSAPIX ;Hines OIFO/SG - COLLABORATIVE STAGING (XML TOOLS)  ; 8/11/06 8:11am
  ;
  ;   "PATH")             Path to the current XML tag
  ;
- ;   "RC")               Error code returned by the web-service
+ ;   "RC")               Error code returned by the CS web-service
  ;
  ;   "TI")               Number of the current text line of
  ;                       the current tag value
- ;
- ;   "TEXT")             Buffer for the current tag text
  ;
  Q
  ;
@@ -92,7 +92,7 @@ STARTDOC ;
  ;
 STARTEL(ELMT,ATTR) ;
  S ONCXML("PATH")=ONCXML("PATH")_$S(ONCXML("PATH")'="":",",1:"")_ELMT
- S ONCXML("TI")=1  K ONCXML("TEXT")
+ S ONCXML("TI")=1
  Q
  ;
  ;***** TEXT CALLBACK FOR THE SAX PARSER

@@ -1,6 +1,5 @@
-PRS8WE ;WCIOFO/MGD-DECOMPOSITION, WEEKEND PREMIUM ;01/31/08
- ;;4.0;PAID;**42,65,74,75,90,92,96,117**;Sep 21, 1995;Build 32
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRS8WE ;HISC/MRL,WCIOFO/MGD-DECOMPOSITION, WEEKEND PREMIUM ;09/23/04
+ ;;4.0;PAID;**42,65,74,75,90,92,96**;Sep 21, 1995
  ;
  ;This routine is used to determine the payment of Saturday and
  ;Sunday Premium pays to entitled employees.
@@ -134,7 +133,7 @@ WPD ; Weekend Premium for Day
 TV() ; List types of time in a 'tour'
  N PRSX
  ; for regular time
- S PRSX="LRSFGDUAJMWNnVH1234XYmZq"
+ S PRSX="LRSFGDUAJMWNnVH1234XYm"
  ; for OT/CT
  S PRSX=PRSX_$S(TYP["B":"EeOs",TYP["N"!(TYP["H"):"EetOoscbT",1:"")
  I HYBRID S PRSX=PRSX_"EetOoscbT"
@@ -168,7 +167,7 @@ CTS(XW,XH) ; Return class of a time segment
  ;    "R"  regular scheduled
  ;    "X"  extra (ot/ct) or unscheduled reg.
  ;    "N"  not worked (includes on-call, standby when not called back)
- Q $S(("LRSFGDUAJMWNnVH123XYmZq"[XW)!((XW="O")&(XH=2)):"R",("EetscbT4"[XW)!((XW="O")&(XH'=2)):"X",1:"N")
+ Q $S(("LRSFGDUAJMWNnVH123XYm"[XW)!((XW="O")&(XH=2)):"R",("EetscbT4"[XW)!((XW="O")&(XH'=2)):"X",1:"N")
  ;
 TDT(DAYN) ; Two-Day Tour extrinsic variable
  ; input

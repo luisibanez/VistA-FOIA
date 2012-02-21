@@ -1,5 +1,5 @@
 PSOMLLDT ;BIR/RTR - Copay date routine ;08/24/01
- ;;7.0;OUTPATIENT PHARMACY;**71,157,143,219,278,225,303**;DEC 1997;Build 19
+ ;;7.0;OUTPATIENT PHARMACY;**71,157,143,219**;DEC 1997
  ;External reference SDC022 supported by DBIA 1579
  ;External reference DGMSTAPI supported by DBIA2716
  ;CIDC: Before doing EI question, check to see if should ask ei question 
@@ -82,10 +82,9 @@ PGW ;Persian Gulf War question
  . K PSOANSQ("PGW"),PSOANSQD("PGW") I $G(PSOX("IRXN")) K PSOANSQ(PSOX("IRXN"),"PGW")
  N PSOUFLAG S PSOUFLAG=0
  K DIR S DIR(0)="Y"
- S DIR("A")="Was treatment related to service in SW Asia"
- S DIR("?")=" ",DIR("?",1)="Enter 'Yes' if this prescription is being used to treat a condition related to"
- S DIR("?",2)="service in Southwest Asia. This response will be used to determine whether or"
- S DIR("?",3)="not a copay should be applied to the prescription."
+ S DIR("A")="Was treatment related to Environmental Contaminant exposure"
+ S DIR("?")=" ",DIR("?",1)="Enter 'Yes' if this prescription is being used to treat a condition due to",DIR("?",2)="environmental contaminant exposure during the Persian Gulf War. This response"
+ S DIR("?",3)="will be used to determine whether or not a copay should be applied to the",DIR("?",4)="prescription."
  I '$G(PSOFLAG) S (DIR("B"),PSOUFLAG)=$S($G(PSORX(+$G(PSORENW("OIRXN")),"PGW"))=0:"NO",$G(PSORX(+$G(PSORENW("OIRXN")),"PGW"))=1:"YES",1:"") I DIR("B")="" K DIR("B") S PSOUFLAG=0
  I $G(PSOFLAG),$G(PSONEWFF) I $G(PSOANSQD("PGW"))=0!($G(PSOANSQD("PGW"))=1) S DIR("B")=$S($G(PSOANSQD("PGW"))=1:"YES",1:"NO")
  W ! D ^DIR K DIR
@@ -93,7 +92,7 @@ PGW ;Persian Gulf War question
  .I Y["^"!($D(DUOUT))!($D(DTOUT)) S PSOCPZ("DFLG")=1 Q
  .S PSOANSQ("PGW")=Y
  .I $G(PSONEWFF) S PSOANSQD("PGW")=Y
- I Y["^"!($D(DUOUT))!($D(DTOUT)) D  W !!,"This Renewal has been designated as"_$S($G(PSOUFLAG)="YES":"",1:" NOT")_" being used for treatment of",!,"Southwest Asia Conditions exposure." D:$G(PSOSCP)<50 MESS D PAUSE Q
+ I Y["^"!($D(DUOUT))!($D(DTOUT)) D  W !!,"This Renewal has been designated as"_$S($G(PSOUFLAG)="YES":"",1:" NOT")_" being used for treatment of",!,"environmental contaminant exposure during the Persian Gulf War." D:$G(PSOSCP)<50 MESS D PAUSE Q
  .S PSOANSQ(PSOX("IRXN"),"PGW")=$S($G(PSOUFLAG)="YES":1,1:0)
  I $G(PSOX("IRXN")) S PSOANSQ(PSOX("IRXN"),"PGW")=Y
  E  S PSOANSQ("PGW")=Y
@@ -129,10 +128,9 @@ CV ; Combat Veteran Question
  S DIR("?",2)="active duty in a theater of combat operations during a period of war after the"
  S DIR("?",3)="Gulf War. This response will be used to determine whether or not a copay should"
  S DIR("?",4)="be applied to the prescription."
- S DIR("B")="YES"
  I '$G(PSOFLAG) D
  .  S (DIR("B"),PSOUFLAG)=$S($G(PSORX(+$G(PSORENW("OIRXN")),"CV"))=0:"NO",$G(PSORX(+$G(PSORENW("OIRXN")),"CV"))=1:"YES",1:"")
- .  I DIR("B")="" S (PSOUFLAG,DIR("B"))="YES"
+ .  I DIR("B")="" K DIR("B") S PSOUFLAG=0
  I $G(PSOFLAG),$G(PSONEWFF) D
  .  I $G(PSOANSQD("CV"))=0!($G(PSOANSQD("CV"))=1) D
  .  .  S DIR("B")=$S($G(PSOANSQD("CV"))=1:"YES",1:"NO")
@@ -152,13 +150,13 @@ PAUSE ;
  K DIR W ! S DIR(0)="E",DIR("A")="Press Return to continue" D ^DIR K DIR
  Q
 MESS ;
- Q:$G(PSODRUG("DEA"))["S"!($G(PSODRUG("DEA"))["I")!($G(PSODRUG("DEA"))["N")
+ Q:$G(PSODRUG("DEA"))["S"!($G(PSODRUG("DEA"))["I")
  W !,"Please use the 'Reset Copay Status/Cancel Charges' option to make corrections.",!
  Q
 MESSM ;
- Q:$G(PSODRUG("DEA"))["S"!($G(PSODRUG("DEA"))["I")!($G(PSODRUG("DEA"))["N")
+ Q:$G(PSODRUG("DEA"))["S"!($G(PSODRUG("DEA"))["I")
  W " Please use the 'Reset Copay Status/Cancel Charges' option",!,"to make corrections.",!
  Q
 MESSV ;
- Q:$G(PSODRUG("DEA"))["S"!($G(PSODRUG("DEA"))["I")!($G(PSODRUG("DEA"))["N")
+ Q:$G(PSODRUG("DEA"))["S"!($G(PSODRUG("DEA"))["I")
  W " Please use the 'Reset Copay Status/Cancel",!,"Charges' option to make corrections.",!

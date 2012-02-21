@@ -1,6 +1,5 @@
-SDAMA302 ;BPOIFO/ACS-Filter API By Clinic ; 9/14/05 12:45pm
- ;;5.3;Scheduling;**301,347,508**;13 Aug 1993
- ;PER VHA DIRECTIVE 2004-038, DO NOT MODIFY THIS ROUTINE
+SDAMA302 ;BPOIFO/ACS-Filter API By Clinic ;04 Dec 2003 [5/18/04 10:58am]
+ ;;5.3;Scheduling;**301,347**;13 Aug 1993
  ;
  ;*****************************************************************
  ;              CHANGE LOG
@@ -9,7 +8,7 @@ SDAMA302 ;BPOIFO/ACS-Filter API By Clinic ; 9/14/05 12:45pm
  ;--------  ----------    -----------------------------------------
  ;12/04/03  SD*5.3*301    ROUTINE COMPLETED
  ;08/06/04  SD*5.3*347    CHANGE CALL TO ^SDAMA305 TO SETARRAY
- ;02/22/07  SD*5.3*508    SEE SDAMA301 FOR CHANGE LIST
+ ;
  ;*****************************************************************
  ;
  ;*****************************************************************
@@ -21,9 +20,11 @@ SDAMA302 ;BPOIFO/ACS-Filter API By Clinic ; 9/14/05 12:45pm
  ;  SDDV      Appointment Data Values array
  ;  SDFLTR    Filter Flags array
  ;  
+ ;OUTPUT
+ ;  
  ;*****************************************************************
 CLIN(SDARRAY,SDDV,SDFLTR) ;
- N SDCOUNT,SDX,SDQUIT,SDCLIEN,SDSTART,SDEND,SDGBL
+ N SDCOUNT,SDX,SDQUIT,SDCLIEN,SDSTART,SDEND,SDCLMIG,SDGBL
  S (SDCOUNT,SDQUIT)=0
  ;Set up start and end date/times for search criteria
  I $G(SDARRAY("MAX"))'<0  D
@@ -41,33 +42,31 @@ CLIN(SDARRAY,SDDV,SDFLTR) ;
  .. ;For each clinic in the filter:
  .. F SDX=1:1:SDCOUNT D
  ... S SDCLIEN=$P(SDARRAY(2),";",SDX)
- ... ;call VistA for appointment information
- ... D CALLVSTA(SDCLIEN,SDSTART,SDEND,.SDARRAY)
+ ... D MIG(SDCLIEN,SDSTART,SDEND,.SDARRAY)
  . ;if clinic is in array, get IENs
  . I SDARRAY("CLNGBL")=1 D
  .. S SDGBL=SDARRAY(2),SDCLIEN=0
  .. ;for each clinic in the global:
  .. F  S SDCLIEN=$O(@(SDGBL_"SDCLIEN)")) Q:$G(SDCLIEN)=""  D
- ... ;call VistA for appointment information
- ... D CALLVSTA(SDCLIEN,SDSTART,SDEND,.SDARRAY)
+ ... D MIG(SDCLIEN,SDSTART,SDEND,.SDARRAY)
  ;
  ;If clinic filter is not populated
  I $L(SDARRAY(2))'>0 D
  . ;for each clinic on ^SC
  . S SDCLIEN=0 F  S SDCLIEN=$O(^SC(SDCLIEN)) Q:(+$G(SDCLIEN)=0)  D
- .. ;call VistA for appointment information
- .. D CALLVSTA(SDCLIEN,SDSTART,SDEND,.SDARRAY)
+ .. S SDARRAY("CLIN")=SDCLIEN
+ .. S SDCLMIG=$$CLMIG^SDAMA307(SDCLIEN)
+ .. ;if clinic has migrated, set flag else get appointment data
+ .. I SDCLMIG S SDARRAY("RSA")=1
+ .. E  D GETAPPT(SDCLIEN,SDSTART,SDEND,.SDARRAY)
  Q
  ;
-CALLVSTA(SDCLIEN,SDSTART,SDEND,SDARRAY) ;
- ;retrieve appointment information from VistA
- I $$CLMIG^SDAMA307(SDCLIEN,.SDARRAY) D
- . ;adjust end time if clinic has completed migration
- . ;(Only Non-migrated appointments returned from VistA)
- . I $G(SDARRAY("MIG"))]"" D
- .. S SDEND=+$G(SDARRAY("MIG"))
- .. ;increment SDEND to capture all appointments when ordering
- .. S:$G(SDARRAY("MAX"))<0 SDEND=(SDEND+.000001)
+MIG(SDCLIEN,SDSTART,SDEND,SDARRAY) ;
+ S SDCLMIG=$$CLMIG^SDAMA307(SDCLIEN)
+ ;if the clinic has migrated, add to list of migrated clinics else get appointment data
+ I SDCLMIG S SDARRAY("RSA")=1,SDARRAY("MIG")=$S($G(SDARRAY("MIG"))="":SDCLIEN,1:SDARRAY("MIG")_";"_SDCLIEN)
+ E  D
+ . S SDARRAY("CLIN")=SDCLIEN
  . D GETAPPT(SDCLIEN,SDSTART,SDEND,.SDARRAY)
  Q
  ;
@@ -77,6 +76,7 @@ GETAPPT(SDCLIEN,SDSTART,SDEND,SDARRAY) ;
  N SDAPPTDT,SDA
  ;if the current clinic has no appointments on ^SC, get next clinic
  Q:'$D(^SC(SDCLIEN,"S"))
+ ;
  ;
  ;get first "N" appointments
  I $G(SDARRAY("MAX"))'<0  D
@@ -104,7 +104,6 @@ GETINFO(SDCLIEN,SDAPPTDT,SDA,SDARRAY) ;
  S SDARRAY("SC0")=$G(^SC(SDCLIEN,"S",SDAPPTDT,1,SDA,0))
  S SDARRAY("SCC")=$G(^SC(SDCLIEN,"S",SDAPPTDT,1,SDA,"C"))
  S SDARRAY("SCOB")=$G(^SC(SDCLIEN,"S",SDAPPTDT,1,SDA,"OB"))
- S SDARRAY("SCONS")=$G(^SC(SDCLIEN,"S",SDAPPTDT,1,SDA,"CONS"))
  S SDARRAY("DATE")=SDAPPTDT
  ;exclude cancelled appts
  S SDCAN=$P($G(SDARRAY("SC0")),"^",9)
@@ -127,5 +126,5 @@ GETINFO(SDCLIEN,SDAPPTDT,SDA,SDARRAY) ;
  ;appointment must match the "clinic" filter values
  I $$MATCH^SDAMA304("C",.SDARRAY,.SDFLTR,.SDDV) D
  . ;if appointment matches the "patient" filter values, put appointment data into output array
- . I $$MATCH^SDAMA304("P",.SDARRAY,.SDFLTR,.SDDV) D SETARRAY^SDAMA305(.SDARRAY)
+ . I $$MATCH^SDAMA304("P",.SDARRAY,.SDFLTR,.SDDV) D SETARRAY^SDAMA305(.SDFLTR,.SDARRAY)
  Q

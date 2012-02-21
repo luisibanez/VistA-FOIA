@@ -1,5 +1,5 @@
-DGPTF ;ALB/JDS/AS - PTF LOAD/EDIT DRIVER ; 5/17/05 12:13pm
- ;;5.3;Registration;**26,58,164,195,397,565,664**;Aug 13, 1993;Build 15
+DGPTF ;ALB/JDS/AS - PTF LOAD/EDIT DRIVER ; 11/24/03 12:13pm
+ ;;5.3;Registration;**26,58,164,195,397,565**;Aug 13, 1993
  ;
  D LO^DGUTL
  I $D(^DISV(DUZ,"^DPT(")),$D(^("^DGPT(")) S A=+^("^DGPT("),B=+^("^DPT(") I $D(^DGPT(A,0)),$D(^DPT(B,0)) S:(+^DGPT(A,0)'=B&$D(^DGPT("B",B))) ^DISV(DUZ,"^DGPT(")=""
@@ -27,7 +27,6 @@ GETD ;
  K DGNTARR
  K B F I=0,101,70 S B(I)="" S:$D(^DGPT(PTF,I)) B(I)=^(I)
  S A("CV")=$$CVEDT^DGCV(DFN,$P($G(B(0)),U,2))
- S A("SHAD")=$$GETSHAD^DGUTL3(DFN)
  S DGDD=+B(70),DGFC=+$P(B(0),U,3)
  S Y=DGDD D FMT^DGPTUTL
  S Y=DGADM D D^DGPTUTL S DGAD=Y,HEAD="Name: "_$P(A(0),U,1)_"  SSN: "_$P(A(0),U,9)_" Dt of Adm: "_DGAD

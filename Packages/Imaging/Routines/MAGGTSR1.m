@@ -1,6 +1,5 @@
 MAGGTSR1 ;WOIFO/GEK - ADD IMAGES TO SURGERY FILE ; [ 06/20/2001 08:57 ]
- ;;3.0;IMAGING;**59**;Nov 27, 2007;Build 20
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.0;IMAGING;;Mar 01, 2002
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -47,7 +46,6 @@ FILE(MAGRY,MAGIEN,DATA) ;RPC Call to file Image pointers in Surgery package
  . I $D(DIERR) D RTRNERR(.MAGERR)
  S MAGRY="1^Image added to Surgery Package"
  S $P(^MAG(2005,MAGIEN,2),U,6,8)="130^"_MAGSIEN_U_MAGIENS(1)
- D LINKDT^MAGGTU6(.X,MAGIEN)
  Q
 RTRNERR(ETXT) ; There was error from UPDATE^DIE quit with error text
  S ETXT="0^ERROR  "_MAGERR("DIERR",1,"TEXT",1)

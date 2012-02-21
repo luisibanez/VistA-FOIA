@@ -1,6 +1,5 @@
-HLTPCK2A ;SF/RSD - Message Header Validation (Con't) ;09/24/2008 17:11
- ;;1.6;HEALTH LEVEL SEVEN;**19,57,59,66,108,120,133,142**;Oct 13, 1995;Build 17
- ;Per VHA Directive 2004-038, this routine should not be modified.
+HLTPCK2A ;SF/RSD - Message Header Validation (Con't) ;03/07/2006  13:15
+ ;;1.6;HEALTH LEVEL SEVEN;**19,57,59,66,108,120**;Oct 13, 1995;Build 12
  S ERR=""
  S HLPARAM=$$PARAM^HLCS2,HLDOM=$P(HLPARAM,U,2),HLINSTN=$P(HLPARAM,U,6)
 MT ;Validate message type
@@ -12,16 +11,12 @@ MT ;Validate message type
 AT ;Determine if message is an acknowledgement type
  I (("ACK,ADR,MCF,MFK,MFR,ORF,ORR,RRA,RRD,RRE,RRG,TBR"[ARY("MTN"))&($G(MSA)="")) S:(ERR="") ERR="MSA Segment Missing" Q
  ;commit ack, quit
- ; patch HL*1.6*142
- ; in order to get data for ien of sending application,
- ; receiving application, and subscriber protocol.
- ; I $E($G(MSA))="C" D  Q
- I $E($G(MSA))="C" D
+ I $E($G(MSA))="C" D  Q
  . ;find original msg.
  . S ARY("MSAID")=$P(MSA,FS,2),ARY("MTIENS")=0
- . I ARY("MSAID")="" S:(ERR="") ERR="Invalid Message Control ID in MSA Segment - No Message ID " Q
+ . I ARY("MSAID")="" S:(ERR="") ERR="Invalid Message Control ID in MSA Segment" Q
  . F  S ARY("MTIENS")=+$O(^HLMA("C",ARY("MSAID"),ARY("MTIENS"))) Q:'ARY("MTIENS")!($P($G(^HLMA(ARY("MTIENS"),0)),U,3)="O")
- . I 'ARY("MTIENS") S:(ERR="") ERR="Invalid Message Control ID in MSA Segment - No message IEN in ""C"" x-ref" Q
+ . I 'ARY("MTIENS") S:(ERR="") ERR="Invalid Message Control ID in MSA Segment" Q
  . Q
 AAT ;Validate accept ack type and application ack type
  I ($G(ARY("ACAT"))'="") I ("AL,NE,ER,SU"'[ARY("ACAT")) S:(ERR="") ERR="Invalid accept ack type" Q
@@ -43,15 +38,15 @@ RA ;Validate receiving application
  . S ARY("RAN-SUB3")=$P(ARY("RAN"),ECH(1),3)
  . I 'ARY("RAP"),ARY("RAN-SUB1")]"" D
  .. S ARY("RAP")=+$O(^HL(771,"B",$E(ARY("RAN-SUB1"),1,30),0))
- . I ARY("RAN-SUB1")[ECH(3) D
+ . I ARY("RAN-SUB1")["\" D
  .. S ARY("RAN-SUB1-DEESCAPE")=$$DEESCAPE(ARY("RAN-SUB1"))
- . I ARY("RAN-SUB2")[ECH(3) D
+ . I ARY("RAN-SUB2")["\" D
  .. S ARY("RAN-SUB2-DEESCAPE")=$$DEESCAPE(ARY("RAN-SUB2"))
- . I ARY("RAN-SUB3")[ECH(3) D
+ . I ARY("RAN-SUB3")["\" D
  .. S ARY("RAN-SUB3-DEESCAPE")=$$DEESCAPE(ARY("RAN-SUB3"))
  . I 'ARY("RAP"),$G(ARY("RAN-SUB1-DEESCAPE"))]"" D
  .. S ARY("RAP")=+$O(^HL(771,"B",$E(ARY("RAN-SUB1-DEESCAPE"),1,30),0))
- I ARY("RAN")[ECH(3) D
+ I ARY("RAN")["\" D
  . S ARY("RAN-DEESCAPE")=$$DEESCAPE(ARY("RAN"))
  I 'ARY("RAP"),$G(ARY("RAN-DEESCAPE"))]"" D
  . S ARY("RAP")=+$O(^HL(771,"B",$E(ARY("RAN-DEESCAPE"),1,30),0))
@@ -77,15 +72,15 @@ SA ;Validate sending application
  . S ARY("SAN-SUB3")=$P(ARY("SAN"),ECH(1),3)
  . I 'ARY("SAP"),ARY("SAN-SUB1")]"" D
  .. S ARY("SAP")=+$O(^HL(771,"B",$E(ARY("SAN-SUB1"),1,30),0))
- . I ARY("SAN-SUB1")[ECH(3) D
+ . I ARY("SAN-SUB1")["\" D
  .. S ARY("SAN-SUB1-DEESCAPE")=$$DEESCAPE(ARY("SAN-SUB1"))
- . I ARY("SAN-SUB2")[ECH(3) D
+ . I ARY("SAN-SUB2")["\" D
  .. S ARY("SAN-SUB2-DEESCAPE")=$$DEESCAPE(ARY("SAN-SUB2"))
- . I ARY("SAN-SUB3")[ECH(3) D
+ . I ARY("SAN-SUB3")["\" D
  .. S ARY("SAN-SUB3-DEESCAPE")=$$DEESCAPE(ARY("SAN-SUB3"))
  . I 'ARY("SAP"),$G(ARY("SAN-SUB1-DEESCAPE"))]"" D
  .. S ARY("SAP")=+$O(^HL(771,"B",$E(ARY("SAN-SUB1-DEESCAPE"),1,30),0))
- I ARY("SAN")[ECH(3) D
+ I ARY("SAN")["\" D
  . S ARY("SAN-DEESCAPE")=$$DEESCAPE(ARY("SAN"))
  I 'ARY("SAP"),$G(ARY("SAN-DEESCAPE"))]"" D
  . S ARY("SAP")=+$O(^HL(771,"B",$E(ARY("SAN-DEESCAPE"),1,30),0))
@@ -94,11 +89,6 @@ SA ;Validate sending application
  I ('ARY("SAP")) S:(ERR="") ERR="Invalid Sending Application" Q
  ;
 VN ;Validate version number
- ; patch HL*1.6*142
- ; do not check version number of commit ACK because the batch commit ACK
- ; does not have version number in it.
- I $E($G(MSA))="C" G ET
- ;
  I (ARY("VER")="") S:(ERR="") ERR="Missing HL7 Version" Q
  S X=0
  S:(ARY("VER")'="") X=+$O(^HL(771.5,"B",ARY("VER"),0))
@@ -125,53 +115,51 @@ ET ;Event Type Checks
  D ^HLTPCK2B
  Q
 DEESCAPE(INPUT) ;
- ; patch HL*1.6*120 - de-escape delimiters
- ; (assuming "\" is the escape character):
+ ; patch HL*1.6*120 - de-escape delimiters:
  ; - field separator (de-escape from \F\)
  ; - component separator (de-escape from \S\)
  ; - repetition separator (de-escape from \R\)
  ; - escape character (de-escape from \E\)
  ; - subcomponent separator (de-escape from \T\)
  ; \F\ will be de-escaped only if the length of FS is 1.
+ ; \S\,\R\,\E\,and \T\ will be de-escaped only if the length
+ ; of ECH is 4.
  ;
  ; input:
  ; INPUT - input string to be de-escaped
  ; FS - field separator
- ; ECH - encoding characters
+ ; ECH - encoding 4 characters
  ; 
  ; output: de-escaped string
  ;
  N HLDATA,HLESCAPE,HLI,HLCHAR,HLCHAR23,HLEN,HLOUT
  S HLDATA=$G(INPUT)
+ I $L($G(ECH))=4 D
+ . S ECH(1)=$E(ECH,1)
+ . S ECH(2)=$E(ECH,2)
+ . S ECH(3)=$E(ECH,3)
+ . S ECH(4)=$E(ECH,4)
  Q:HLDATA']"" HLDATA
- ;
- ; patch HL*1.6*133
- Q:$L($G(ECH))<3 HLDATA
- ;
- S ECH(1)=$E(ECH,1)
- S ECH(2)=$E(ECH,2)
- S ECH(3)=$E(ECH,3)
- S ECH(4)=$E(ECH,4)
  ;
  S HLEN=$L(HLDATA)
  S HLOUT=""
  F HLI=1:1:HLEN D
  . S HLCHAR=$E(HLDATA,HLI)
- . I HLCHAR=ECH(3) D
+ . I HLCHAR="\" D
  . S HLCHAR23=$E(HLDATA,HLI+1,HLI+2)
- . I $L($G(FS))=1,(HLCHAR23=("F"_ECH(3))) D  Q
+ . I $L($G(FS))=1,(HLCHAR23="F\") D  Q
  .. S HLOUT=HLOUT_FS
  .. S HLI=HLI+2
- . I HLCHAR23=("S"_ECH(3)) D  Q
+ . I $L($G(ECH))=4,(HLCHAR23="S\") D  Q
  .. S HLOUT=HLOUT_ECH(1)
  .. S HLI=HLI+2
- . I HLCHAR23=("R"_ECH(3)) D  Q
+ . I $L($G(ECH))=4,(HLCHAR23="R\") D  Q
  .. S HLOUT=HLOUT_ECH(2)
  .. S HLI=HLI+2
- . I HLCHAR23=("E"_ECH(3)) D  Q
+ . I $L($G(ECH))=4,(HLCHAR23="E\") D  Q
  .. S HLOUT=HLOUT_ECH(3)
  .. S HLI=HLI+2
- . I $L($G(ECH))>3,(HLCHAR23=("T"_ECH(3))) D  Q
+ . I $L($G(ECH))=4,(HLCHAR23="T\") D  Q
  .. S HLOUT=HLOUT_ECH(4)
  .. S HLI=HLI+2
  . S HLOUT=HLOUT_HLCHAR

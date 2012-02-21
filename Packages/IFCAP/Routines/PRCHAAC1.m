@@ -1,5 +1,5 @@
 PRCHAAC1 ;WIFO/CR-CONT. OF IFCAP HL7 MESSAGE TO AUSTIN ;3/4/05 11:43 AM
- ;;5.1;IFCAP;**79,105**;Oct 20, 2000;Build 4
+ ;;5.1;IFCAP;**79**;Oct 20, 2000
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; This routine is called from the routine PRCHAAC.
@@ -31,7 +31,7 @@ PRCHAAC1 ;WIFO/CR-CONT. OF IFCAP HL7 MESSAGE TO AUSTIN ;3/4/05 11:43 AM
  S PRCSEG="CDM"
  S $P(PRCSEG,HLFS,2)="V"_PRCROOT      ;primary key value
  S $P(PRCSEG,HLFS,4)="PROCUREMENT DETAIL FROM IFCAP"
- S $P(PRCSEG,HLFS,12)=PRCCN           ;contract number
+ S:$G(PRCAM)="" $P(PRCSEG,HLFS,12)=PRCCN           ;contract number
  S:$G(PRCAM)="" $P(PRCSEG,HLFS,13)=PRCVEN_HLCS_HLCS_PRCDB
  S HLA("HLS",3)=PRCSEG
  ;

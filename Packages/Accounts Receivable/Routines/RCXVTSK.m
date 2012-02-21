@@ -1,5 +1,5 @@
 RCXVTSK ;DAOU/ALA-AR Data Extract Nightly Task ;23-JUL-03
- ;;4.5;Accounts Receivable;**201,227,228,232**;Mar 20, 1995
+ ;;4.5;Accounts Receivable;**201,227,228**;Mar 20, 1995
  ;
  ;** Program Description **
  ;  This program is the nightly task program for the
@@ -42,8 +42,6 @@ EN ;  Entry point
  ;S X1=$$STD^RCCPCFN,X2=-3 D C^%DTC I X=DT L -^RCXVTSK K X Q
  ;K X1,X2
  ;
-MONTHLY ;Set up monthly transmission batches
- I $E(DT,6,7)="01" D EN^RCXVDC10
 NM ;  Find all new batches to be transmitted
  S RBSQ=0,RBTOT=0
  F  S RCXVBTN=$O(^RCXV("AC","P",RCXVBTN)) Q:RCXVBTN=""  D
@@ -106,15 +104,6 @@ STRT ;  Start the build and transmission of batches
  .. S RCXVEDT=$P($G(^RCY(344,RCXVD0,0)),U,12)\1
  .. D D344^RCXVDC8
  . ;
- . S RCXVD0=0
- . F  S RCXVD0=$O(^RCXV(RCXVBTN,3,RCXVD0)) Q:'RCXVD0  D
- .. S DFN=RCXVD0
- .. D D3547^RCXVDC10
- . ;
- . I $D(^RCXV(RCXVBTN,4)) S RCXVMO=$G(^(4)) D PREREG^RCXVDC10
- . ;
- . I $D(^RCXV(RCXVBTN,5)) S RCXVMO=$G(^(5)) D BUFFER^RCXVDC10
- . ;
  . D CLOSE^%ZISH("RCXVHNDL")
  . ;
  . S $P(^RC(342,1,20),U,9)=$$NOW^XLFDT()
@@ -131,7 +120,7 @@ EXIT D MSG^RCXVCHK
  K RCXVSITE,RCXVFILE,RCXVRN,RCXVRT,RCXVDIR,RCXVATP,RCXVU,DTACT,RBSQ,RBTOT
  K RCFDATE,RCXVCFLG,RCXVDBN,RCXVIDT,RCXVSEQ,RCXVSTOT,RCXVTRD,CCT,DTENT
  K RCBLN,RCDBTR,RCDEBT,RCTRAN,RCXVTR,RCBCN,RCXVPFDT,RCXVPTDT,RCXRMB
- K RCXVLDOM,RCXVARD,RCXVSUB,RCXVBTY,RCXVLEG,RCXVSCR,Y,X,RCXVMO
+ K RCXVLDOM,RCXVARD,RCXVSUB,RCXVBTY,RCXVLEG,RCXVSCR,Y,X
  K ^TMP("RCXVMSG",$J),^TMP("RCXVA",$J),^TMP("RCXVIN",$J)
  Q
  ;
@@ -173,8 +162,6 @@ CUR ;  Find all current fiscal year bills
  .. F  S IEN=$O(^PRCA(433,"AT",TTYP,RDATE,IEN)) Q:IEN=""  D
  ... S RCXVBLN=$P(^PRCA(433,IEN,0),U,2)
  ... I RCXVBLN="" Q
- ... S X=$P($G(^PRCA(430,RCXVBLN,0)),U,8)
- ... I X=16!(X=40) Q
  ... ; Line below changed for patch 228 to do FY05 extract
  ... D FIL^RCXVDEQ("E")
  ;

@@ -1,5 +1,5 @@
-PXRMXX1 ; SLC/PJH - Build list of reminder findings;08/03/2005
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMXX1 ; SLC/PJH - Build list of reminder findings;06/24/2003
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;Called at REM, REPORT and PSMERG from PXRMXX
  ;
@@ -91,8 +91,6 @@ REPORT(NODE) ;
  S $P(^PXRMXT(810.3,0),U,3)=CNT,$P(^PXRMXT(810.3,0),U,4)=COUNT
  ;Save Task and extract parameters
  S ^PXRMXT(810.3,CNT,0)=DESC_U_PXRMBDT_U_PXRMEDT_U_$G(ZTSK)_U_DUZ_U_$$NOW^XLFDT_U_PXRMCNT_U_PXRMFCNT
- S $P(^PXRMXT(810.3,CNT,50),U)=1
- S $P(^PXRMXT(810.3,CNT,100),U)="N"
  ;Transfer findings into report file
  N DATE,DFN,DRUG,DSUP,ENC,EREC,ETYP,IC,FINDING,RESULT
  N TERM,ALTTRM,TIEN,TNDBID,VALUE,VIEN
@@ -142,6 +140,16 @@ REPORT(NODE) ;
  S DIK="^PXRMXT(810.3,",DA=CNT
  D IX1^DIK
  ;
+ ;Purge entries
+ S OLD=0
+ F  S OLD=$O(^PXRMXT(810.3,OLD)) Q:'OLD  D
+ .;bookmark - count needs to be more accurate
+ .;Ignore if not EPI
+ .I $E($G(^PXRMXT(810.3,OLD,0)),1,5)'="LREPI" Q
+ .;Keep last 30 runs
+ .I (OLD+30)>CNT Q
+ .N DIK,DA
+ .S DIK="^PXRMXT(810.3,",DA=OLD D ^DIK
  Q
  ;
  ;Store finding for term

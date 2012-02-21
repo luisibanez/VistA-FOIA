@@ -1,6 +1,6 @@
-IBARXEU1 ;AAS/ALB - RX EXEMPTION UTILITY ROUTINE (CONT.) ; 3/27/07 3:10pm
- ;;2.0;INTEGRATED BILLING;**26,112,74,275,367,449**;21-MAR-94;Build 15
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBARXEU1 ;AAS/ALB - RX EXEMPTION UTILITY ROUTINE (CONT.) ;2-NOV-92
+ ;;2.0;INTEGRATED BILLING;**26,112,74,275**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 STATUS(DFN,IBDT) ; -- Determine medication copayment exemption status
  ; -- requests data from MAS
@@ -28,11 +28,11 @@ AUTOST(DFN,IBDT) ; -- Determine automatically exempt patients.
  ; -- ask mas if in receipt of pension/a&a/hb, etc.
  ;    the automatic determinations
  ;    returns:
- ; sc>50%^rec a&a^rec hb^rec pen^n/a^non-vet^^POW^Unempl.^cd
- ;   1       1      1       1           1      1    1     1
+ ; sc>50% ^ rec a&a ^ rec hb ^ rec pen ^ n/a ^ non-vet ^ ^ POW ^ Unempl. 
+ ;   1         1        1         1                1        1      1
  ;    pieces =1 if true
  S IBEXMT=$$AUTOINFO^DGMTCOU1(DFN) I IBEXMT="" G AUTOSTQ
- I IBEXMT[1 F I=1,2,3,4,6,8,9,10 I $P(IBEXMT,"^",I)=1 S IBEXREA=I*10 Q  ;lookup code is piece position time 10
+ I IBEXMT[1 F I=1,2,3,4,6,8,9 I $P(IBEXMT,"^",I)=1 S IBEXREA=I*10 Q  ;lookup code is piece position time 10
  ;
 AUTOSTQ I IBEXREA="" Q IBEXREA
  Q $O(^IBE(354.2,"ACODE",+IBEXREA,0))_"^"_IBDT
@@ -43,17 +43,9 @@ INCST(DFN,IBDT) ; -- return medication copayment exemption reason/date
  ;
  ;    returns :  = exemption reason (pointer to 354.2) ^ date
  ;
- N IBDATA,X,DGMT,CLN,CONV
+ N IBDATA,X
  S IBDATA=$G(^DGMT(408.31,+$$LST^DGMTCOU1(DFN,IBDT,3),0)) ;get any test
  I $$PLUS^IBARXEU0(+IBDATA)<IBDT S X=$O(^IBE(354.2,"ACODE",210,0))_"^"_IBDT G INCSTQ ; means test too old -no data
- I $P(IBDATA,U,23)=2 D  G:CONV INCSTQ ;skip Edb conv. tests
- .;Loop through the MT comments, Check for EDB converted test
- .;No comments to check
- .S (CLN,CONV)=0,DGMT=$$LST^DGMTCOU1(DFN,IBDT,3)
- .F  S CLN=$O(^DGMT(408.31,+DGMT,"C",CLN)) Q:'CLN!(CONV)  D
- ..;If most recent test is a converted test use current info from IBA(354
- ..I $G(^DGMT(408.31,+DGMT,"C",CLN,0))["Z06 MT via Edb" S CONV=1,X=$P($G(^IBA(354,DFN,0)),"^",5)_"^"_$P($G(^IBA(354,DFN,0)),"^",3)
- ;
  I $$NETW^IBARXEU1 S X=$$MTCOMP^IBARXEU5($$INCDT(IBDATA),IBDATA)
  I '$$NETW^IBARXEU1 S X=$$INCDT(IBDATA),X=$P(X,"^",3)_"^"_$P(X,"^",2)
 INCSTQ Q X

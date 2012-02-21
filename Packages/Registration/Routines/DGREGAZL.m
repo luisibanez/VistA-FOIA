@@ -1,5 +1,5 @@
-DGREGAZL ;ALB/DW - ZIP LINKING UTILITY ; 5/27/04 10:54am
- ;;5.3;Registration;**522,560,581,730,760**;Aug 13, 1993;Build 11
+DGREGAZL ;ALB/DW - ZIP LINKING UTILITY ; 3/3/04 1:43pm
+ ;;5.3;Registration;**522,560,581**;Aug 13, 1993
  ;
 EN(RESULT,DFN) ;Let user edit zip+4, city, state, county based on zip-linking
  ; Output: RESULT(field#) = User Input External ^ Internal
@@ -42,8 +42,6 @@ ZAGN N DIR,DTOUT,DUOUT,DIROUT,DGDATA
  I $D(^XUSEC("EAS GMT COUNTY EDIT",+DUZ)) Q DGZIP
  I DGZIP="" Q DGZIP
  D POSTALB^XIPUTIL(DGZIP,.DGDATA)
-  ;DG*730 - later commented out by DG*760
- ;I $G(DGDATA(1,"CITY ABBREVIATION"))'="",$G(DGDATA(1,"CITY ABBREVIATION"))=$G(DGDATA(2,"CITY")) S DGDATA=1 K DGDATA(2)
  I $D(DGDATA("ERROR")) D  G ZAGN
  . W $C(7)," ??"
  Q DGZIP
@@ -51,35 +49,27 @@ CITY(RESULT,ZIP,DFN) ;Base on zip, let user input city(#.114)
  ; Input:
  ;   ZIP - user input zip for the patient primary address
  ;   DFN - Interal entry number of Patient File (#2)
- ; Output:RESULT=-1 (input error or timed or ^ out) 
+ ; Output:RESULT=-1 (input error or times or ^ out) 
  ;        or    =user input city
  ;        Array index # of selected city.
  K RESULT
  N DGDATA,DIR,DA,Y,DTOUT,DUOUT,DIROUT,DGIND
  N DGCITY,DGST,DGCNTY,DGABRV,DGN,DGECH,DGSOC
  N DOLDCITY,DGSAME,DGELEVEN
- ; DG*760 brought in DGCITI
- N DGCITI
  S DGIND=""
  D POSTALB^XIPUTIL(ZIP,.DGDATA)
- ;DG*730 - later commented out by DG*760
- ;I $G(DGDATA(1,"CITY ABBREVIATION"))'="",$G(DGDATA(1,"CITY ABBREVIATION"))=$G(DGDATA(2,"CITY")) S DGDATA=1 K DGDATA(2)
  D FIELD^DID(2,.114,"N","LABEL","DGCITY")
  S DGN=""
  I '$D(DGDATA("ERROR")) D
  . S DOLDCITY=$$GET1^DIQ(2,DFN_",",.114)
  . S DGSAME=0
  . F  S DGN=$O(DGDATA(DGN)) Q:DGN=""  D
- .. S DGCITI=$P($G(DGDATA(DGN,"CITY")),"*",1)
  .. S DGABRV=$G(DGDATA(DGN,"CITY ABBREVIATION"))
- .. I DOLDCITY'="",DGCITI=DOLDCITY!(DGABRV=DOLDCITY) S DGSAME=1
- .. ; next 4 commented out lines done by DG*760
- .. ;I DGABRV="" S DGABRV=$P($G(DGDATA(DGN,"CITY")),"*",1)
- .. ;I DOLDCITY'="",DGABRV=DOLDCITY S DGSAME=1
- .. ;I $G(DGDATA(DGN,"CITY"))["*" S:DGABRV'="" DGABRV=DGABRV_"*"
- .. I $G(DGDATA(DGN,"CITY"))["*" S DGCITI=DGCITI_"*"
- .. ;S DGECH=DGN_":"_DGABRV
- .. S DGECH=DGN_":"_DGCITI
+ .. I DOLDCITY'="",DGABRV=DOLDCITY S DGSAME=1
+ .. I DGABRV="" S DGABRV=$P($G(DGDATA(DGN,"CITY")),"*",1)
+ .. I DOLDCITY'="",DGABRV=DOLDCITY S DGSAME=1
+ .. I $G(DGDATA(DGN,"CITY"))["*" S:DGABRV'="" DGABRV=DGABRV_"*"
+ .. S DGECH=DGN_":"_DGABRV
  .. S DGSOC=$S($G(DGSOC)="":DGECH,1:DGSOC_";"_DGECH)
  .. S DGTOT=DGN
  .I 'DGSAME S DGELEVEN=$G(^DPT(DFN,.11)) D
@@ -110,9 +100,7 @@ CAGN2 . I '$D(^XUSEC("EAS GMT COUNTY EDIT",+DUZ)) Q
  . I $D(DTOUT) S RESULT=-1 Q
  . I $D(DUOUT)!$D(DIROUT) D UPCT^DGREGAED G CAGN2
  . S RESULT=$G(Y)
- I $L($G(RESULT))>15 D
- . S DGN=Y
- . S RESULT=$G(DGDATA(DGN,"CITY ABBREVIATION"))
+ I $L($G(RESULT))>15 S RESULT=$E(RESULT,1,15)
  Q DGIND
  ;
 LINK(RESULT,ZIP,DGN) ;From zip, get the linked state,county

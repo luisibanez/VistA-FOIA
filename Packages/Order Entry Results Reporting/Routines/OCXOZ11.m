@@ -1,5 +1,5 @@
-OCXOZ11 ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
+OCXOZ11 ;SLC/RJS,CLA - Order Check Scan ;OCT 20,2005 at 22:40
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221**;Dec 17,1997
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
  ; ***************************************************************
@@ -48,7 +48,7 @@ R69R1B ; Send Order Check, Notication messages and/or Execute code for  Rule #69
  Q
  ;
 R70R1A ; Verify all Event/Elements of  Rule #70 'NO ALLERGY ASSESSMENT'  Relation #1 'NO ALLERGY ASSESSMENT AND (RADIOLOGY ORDER OR PHAR...'
- ;  Called from EL28+5^OCXOZ0H, and EL135+5^OCXOZ0H, and EL136+5^OCXOZ0H, and EL137+5^OCXOZ0H.
+ ;  Called from EL28+5^OCXOZ0I, and EL135+5^OCXOZ0I, and EL136+5^OCXOZ0I, and EL137+5^OCXOZ0I.
  ;
  Q:$G(OCXOERR)
  ;

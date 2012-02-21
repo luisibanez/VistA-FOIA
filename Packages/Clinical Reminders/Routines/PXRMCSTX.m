@@ -1,5 +1,5 @@
-PXRMCSTX ; SLC/PKR - Routines for taxonomy code set update. ;11/02/2009
- ;;2.0;CLINICAL REMINDERS;**9,12,17**;Feb 04, 2005;Build 102
+PXRMCSTX ; SLC/PKR - Routines for taxonomy code set update. ;03/02/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;=====================================================
 ADDTMSG(LC,MSG) ;Add a set of messages to the global message.
@@ -45,7 +45,7 @@ CSU(TYPE) ;Entry point for code set update.
  I TYPE'="CPT",TYPE'="ICD" Q
  N ADJMSG,ALOW,ALOWC,ALOWO,AHIGH,AHIGHC,AHIGHO,CODEIEN,CODEMSG
  N FI,FILELIST,FILENUM,IEN,IND,HIGH,LC,LOW,NFILES,NNEW,NEWCODES,SENDMSG
- N TAXHDRE,TAXHDRL,TAXHDRS,TAXMSG,TEMP,XMSUB
+ N TAXHDRE,TAXHDRL,TAXHDRS,TAXMSG,TEMP
  I TYPE="CPT" S NFILES=1,FILELIST(1)=81
  I TYPE="ICD" S NFILES=2,FILELIST(1)=80,FILELIST(2)=80.1
  K ^TMP("PXRMXMZ",$J)
@@ -67,11 +67,11 @@ CSU(TYPE) ;Entry point for code set update.
  ... E  S ALOWC=0
  ... I AHIGH'=AHIGHO S AHIGHC=1,$P(^PXD(811.2,IEN,FILENUM,IND,0),U,4)=AHIGH
  ... E  S AHIGHC=0
- ... I (ALOWC)!(AHIGHC) D
+ ... I ALOWC!AHIGHC D
  .... D ADJMSG(FILENUM,LOW,HIGH,ALOW,ALOWC,ALOWO,AHIGH,AHIGHC,AHIGHO,.ADJMSG)
  .... D ADDTMSG(.LC,.ADJMSG)
  .... S TAXMSG=1
- ..;Save the old expansion and compare with the new one.
+ ..;Save the old expansion and compare with the old one.
  .. K ^TMP($J,"OLDEXP")
  .. S IND=0
  .. F  S IND=+$O(^PXD(811.3,IEN,FILENUM,IND)) Q:IND=0  D
@@ -97,13 +97,10 @@ CSU(TYPE) ;Entry point for code set update.
  ... D TAXHDR(IEN,TAXHDRS)
  ... S TAXHDRS=LC+1,TAXHDRE=TAXHDRS+TAXHDRL,LC=TAXHDRE
  ... S SENDMSG=1
- S XMSUB="Clinical Reminder taxonomy updates, new "_TYPE_" global installation."
- I SENDMSG D CMSGHDR(TYPE)
- I 'SENDMSG D
- . S ^TMP("PXRMXMZ",$J,1,0)="No changes in adjacent high and low codes were found."
- . S ^TMP("PXRMXMZ",$J,2,0)="No inactive selectable codes were found."
- . S ^TMP("PXRMXMZ",$J,3,0)="No action is necessary."
- D SEND^PXRMMSG("PXRMXMZ",XMSUB)
+ I SENDMSG D
+ . N XMSUB
+ . S XMSUB="Clinical Reminder taxonomy updates, new "_TYPE_" global installation."
+ . D CMSGHDR(TYPE)
  K ^TMP("PXRMXMZ",$J),^TMP($J,"OLDEXP")
  Q
  ;
@@ -128,7 +125,7 @@ NEWCMSG(FILENUM,NNEW,NEWCODES,CODEMSG) ;Create the message for new codes
  N LC,IND,TYPE
  K CODEMSG
  S TYPE=$S(FILENUM=80:"ICD9",FILENUM=80.1:"ICD0",FILENUM=81:"CPT")
- S CODEMSG(1)="The following "_TYPE_" codes were not in the previous expansion for this taxonomy:"
+ S CODEMSG(1)="The following are new "_TYPE_" codes in the expansion for this taxonomy:"
  S LC=1
  F IND=1:1:NNEW D
  . S CODE=NEWCODES(IND)

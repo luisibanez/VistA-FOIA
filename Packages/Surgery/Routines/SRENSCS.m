@@ -1,5 +1,5 @@
-SRENSCS ;BIR/SJA - ENSURING CORRECT SURGERY ;04/26/04
- ;;3.0; Surgery ;**129,153**;24 Jun 93;Build 11
+SRENSCS ;BIR/SJA - ENSURING CORRECT SURGERY ; [04/26/04  12:28 pm ]
+ ;;3.0; Surgery ;**129**;24 Jun 93
  ;
  ; entry point called by 'AIN' x-ref of the correct surgery fields
 IN I X'="N"!(X'=Y) Q
@@ -17,18 +17,4 @@ ASK D EN^DDIOL("Correct Surgery Comments should be entered when a ""NO"" respons
  W ! S DIE=130,DA=SRTN1,DR=$P(SRJ,";",2)_"T" D ^DIE
  Q
 HELP D EN^DDIOL("Enter 'YES' to enter correct surgery comments.  Enter 'NO' to quit without entering correct surgery comments.",,"!!")
- Q
-HR ;entry point called by 'AN' x-ref of the Sur Site Hair Removal Method field
- I X'="S"&(X'="O") Q
- N SRTN1,SRYN,SRSEL S SRSEL=X,SRTN1=$S($D(SRTN):SRTN,1:DA) Q:'SRTN1
-HRASK I SRSEL="O" D  G HRC
- .D EN^DDIOL("Because OTHER has been selected, information must be entered into the comments",,"!!")
- .D EN^DDIOL("field explaining the other technique.",,"!")
-SH D EN^DDIOL("It has been determined that shaving the surgical site results in a greater",,"!!")
- D EN^DDIOL("likelihood of infection. Current best practices suggest that clippers should",,"!")
- D EN^DDIOL("be used instead of shaving. Whenever hair is removed by shaving, a comment must",,"!")
- D EN^DDIOL("be entered explaining why this process was used instead of safer techniques.",,"!")
-HRC ; edit the associated comments fields
- N DR,DIE,DA,DP,DC,DL,DE,DI,DIEL,DIETMP,DIFLD,DIP,DK,DM,DP,DQ,DU,DV,DW
- W ! S DIE=130,DA=SRTN1,DR=508_"T" D ^DIE
  Q

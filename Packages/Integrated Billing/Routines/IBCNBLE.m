@@ -1,6 +1,6 @@
-IBCNBLE ;ALB/ARH - Ins Buffer: LM buffer entry screen ;1-Jun-97
- ;;2.0;INTEGRATED BILLING;**82,231,184,251,371,416,435**;21-MAR-94;Build 27
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCNBLE ;ALB/ARH-Ins Buffer: LM buffer entry screen ;1 Jun 97
+ ;;2.0;INTEGRATED BILLING;**82,231,184,251**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; - main entry point for list manager display
  N DFN
@@ -40,26 +40,9 @@ EXIT ; - exit list manager screen
  Q
  ;
 BLD ; display buffer entry
- N DFN,CLIEN,CLDT,IB0,IB20,IB40,IB60,IB61,IB62,IBL,IBLINE,ADDR,IBI,IBY
+ N IB0,IB20,IB40,IB60,IB61,IBL,IBLINE,ADDR,IBI,IBY
  S VALMCNT=0
- S IB0=$G(^IBA(355.33,IBBUFDA,0)),IB20=$G(^IBA(355.33,IBBUFDA,20)),IB40=$G(^IBA(355.33,IBBUFDA,40))
- S IB60=$G(^IBA(355.33,IBBUFDA,60)),IB61=$G(^IBA(355.33,IBBUFDA,61)),IB62=$G(^IBA(355.33,IBBUFDA,62))
- ; check if we are coming from appointments view
- I $G(AVIEW) D
- .D SET(" ") S IBY=$J("",26)_"Appointment Information" D SET(IBY,"B") S IBLINE=""
- .S DFN=+IB60
- .S CLIEN="" F  S CLIEN=$O(^TMP($J,"IBCNAPPTS",DFN,CLIEN)) Q:CLIEN=""  D
- ..S CLDT="" F  S CLDT=$O(^TMP($J,"IBCNAPPTS",DFN,CLIEN,CLDT)) Q:CLDT=""  D
- ...S IBL="Clinic: ",IBY=$P($P(^TMP($J,"IBCNAPPTS",DFN,CLIEN,CLDT),U,2),";",2)
- ...S IBLINE=$$SETL(IBLINE,IBY,IBL,10,30)
- ...S IBL="Appt. D/T: ",IBY=$$FMTE^XLFDT(CLDT)
- ...S IBLINE=$$SETL(IBLINE,IBY,IBL,50,22)
- ...D SET(IBLINE) S IBLINE=""
- ...Q
- ..Q
- .Q
- ;
- I +$P(IB0,U,17) D EN^IBCNBLE2    ; IB*2*435 - Display e-Pharmacy ELIG response data
+ S IB0=$G(^IBA(355.33,IBBUFDA,0)),IB20=$G(^IBA(355.33,IBBUFDA,20)),IB40=$G(^IBA(355.33,IBBUFDA,40)),IB60=$G(^IBA(355.33,IBBUFDA,60)),IB61=$G(^IBA(355.33,IBBUFDA,61))
  ;
  D SET(" ") S IBY=$J("",26)_"Insurance Company Information" D SET(IBY,"B") S IBLINE=""
  S IBL="Name: ",IBY=$P(IB20,U,1) S IBLINE=$$SETL("",IBY,IBL,10,30)
@@ -113,7 +96,7 @@ BLD ; display buffer entry
  I $P(IB60,U,6)'="01"!($P(IB60,U,8)'="") S IBL="Insured's DOB: ",IBY=$$DATE($P(IB60,U,8)) S IBLINE=$$SETL("",IBY,IBL,18,8)
  S IBL="Coord of Benefits: ",IBY=$$EXPAND^IBTRE(355.33,60.12,$P(IB60,U,12)) S IBLINE=$$SETL(IBLINE,IBY,IBL,62,16)
  D SET(IBLINE) S IBLINE=""
- I $P(IB62,U)'="" S IBL="Patient Id: ",IBY=$P(IB62,U) S IBLINE=$$SETL(IBLINE,IBY,IBL,62,13)
+ I $P(IB60,U,6)'="01"!($P(IB60,U,9)'="") S IBL="Insured's SSN: ",IBY=$P(IB60,U,9) S IBLINE=$$SETL("",IBY,IBL,18,13)
  I IBLINE'="" D SET(IBLINE) S IBLINE=""
  ;
  I '$P(IB61,U,1) D SET(" ") S IBL="Employer Sponsored Group Health Plan?: ",IBY=$$YN($P(IB61,U,1)) S IBLINE=$$SETL("",IBY,IBL,40,3) D SET(IBLINE) S IBLINE="" G NXT
@@ -147,7 +130,7 @@ NXT ;
  ; eIIV processed date to the right column
  ;
  S IBLINE=$$TRACE(IBLINE,IBBUFDA)       ; eIIV trace #
- S IBL="eIV Processed Date: ",IBY=$S($P(IB0,U,15)="":"",1:$$FMTE^XLFDT($P(IB0,U,15),"2M"))
+ S IBL="eIIV Processed Date: ",IBY=$S($P(IB0,U,15)="":"",1:$$FMTE^XLFDT($P(IB0,U,15),"2M"))
  S IBLINE=$$SETL(IBLINE,IBY,IBL,62,17)
  D SET(IBLINE) S IBLINE=""
  S IBL="Source: ",IBY=$$EXPAND^IBTRE(355.33,.03,$P(IB0,U,3))
@@ -197,7 +180,7 @@ TRACE(IBLINE,IBBUFDA) ; Add the eIIV Trace Number to the display
  S RESP=$O(^IBCN(365,"AF",IBBUFDA,""),-1)          ; response ien
  S TRACENUM=""
  I RESP S TRACENUM=$P($G(^IBCN(365,RESP,0)),U,9)   ; trace# field
- S IBL="eIV Trace #: ",IBY=TRACENUM               ; field label/data
+ S IBL="eIIV Trace #: ",IBY=TRACENUM               ; field label/data
  S IBLINE=$$SETL("",IBY,IBL,18,17)             ; add it
 TRACEX ;
  Q IBLINE

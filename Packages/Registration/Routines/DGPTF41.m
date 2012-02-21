@@ -1,5 +1,5 @@
-DGPTF41 ;ALB/JDS - PTF ENTRY/EDIT-4 ; 11/15/06 8:37am
- ;;5.3;Registration;**64,635,729**;Aug 13, 1993;Build 59
+DGPTF41 ;ALB/JDS - PTF ENTRY/EDIT-4 ;4/26/05 1:22pm
+ ;;5.3;Registration;**64,635**;Aug 13, 1993
  ;
 ACT ; -- 701 actions
  G ACT1:DGST
@@ -29,7 +29,7 @@ READ ; -- read X
  Q
  ;
 HELP ;
- W !,"Enter  '1'  to edit Principal & Admit Diagnosis"
+ W !,"Enter  '1'  to edit DXLS & Admit Diagnosis"
  W !,"       'C'  to close out PTF record"
  I DGCFL W:DGCST=1 !,"       'P'  to re-open a Census record",!,"       'E'  to release a Census record" W:'DGCST !,"       'L'  to close for Census"
  W !,"       '^'  to stop the display"

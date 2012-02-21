@@ -1,5 +1,5 @@
 SDAMOC ;IOFIO - BAY PINES/TEH - Statistical Report for Cancelled Appointments;4/15/92
- ;;5.3;Scheduling;**487**;Aug 13, 1993
+ ;;5.3;Scheduling;**389**;Aug 13, 1993
  ;SCK - 5/18/93 MODS FOR APP CLININCS AND STOP CODES
 STATS ;
  K ^TMP("SDAMC"),^TMP("SDAMCD")

@@ -1,5 +1,5 @@
-HBHCRP12 ; LR VAMC(IRMS)/MJT-HBHC file 631 rpt, Episode of Care/Length of Stay, by date range, sorted by patient name, includes: pt name, Last Four, admission date, discharge date, & length of stay, plus pt & day totals; ; 12/21/05 3:40pm
- ;;1.0;HOSPITAL BASED HOME CARE;**6,21,22**;NOV 01, 1993;Build 2
+HBHCRP12 ; LR VAMC(IRMS)/MJT-HBHC report on file 631, Episode of Care/Length of Stay, by date range, sorted by patient name, includes: patient name, SSN, admission date, discharge date, & length of stay, plus pt & day totals ;9205
+ ;;1.0;HOSPITAL BASED HOME CARE;**6,21**;NOV 01, 1993
  ; Also includes pt & day totals, plus avg LOS for complete episodes only
  D START^HBHCUTL
  G:(HBHCBEG1=-1)!(HBHCEND1=-1) EXIT
@@ -8,7 +8,7 @@ HBHCRP12 ; LR VAMC(IRMS)/MJT-HBHC file 631 rpt, Episode of Care/Length of Stay, 
 DQ ; De-queue
  U IO
  K ^TMP("HBHC",$J)
- S $P(HBHCY,"-",81)="",HBHCHEAD="Episode of Care/Length of Stay",HBHCHDR="W !?63,""Discharge"",?74,""Length"",!,""Patient Name"",?34,""Last Four"",?50,""Date"",?63,""Date"",?74,""/Stay""",(HBHCCNT,HBHCCNT1,HBHCTOT,HBHCTOT1)=0
+ S $P(HBHCY,"-",81)="",HBHCHEAD="Episode of Care/Length of Stay",HBHCHDR="W !?63,""Discharge"",?74,""Length"",!,""Patient Name"",?34,""SSN"",?50,""Date"",?63,""Date"",?74,""/Stay""",(HBHCCNT,HBHCCNT1,HBHCTOT,HBHCTOT1)=0
  S HBHCCOLM=(80-(30+$L(HBHCHEAD))\2) S:HBHCCOLM'>0 HBHCCOLM=1
  D TODAY^HBHCUTL D:IO'=IO(0)!($D(IO("S"))) HDRRANGE^HBHCUTL
  I '$D(IO("S")),(IO=IO(0)) S HBHCCC=HBHCCC+1 D HDRRANGE^HBHCUTL
@@ -37,7 +37,7 @@ PROCESS ; Process record & build ^TMP("HBHC",$J) global
  ; Add 1 to HBHCLOS to be current/ending day inclusive
  I (HBHCDSDT="")!(HBHCDSDT=" Active") S X1=HBHCEND1,X2=HBHCADDT D ^%DTC S HBHCLOS=(X+1)
  S HBHCTOT=HBHCTOT+HBHCLOS
- S ^TMP("HBHC",$J,$P(HBHCDPT0,U),HBHCADDT)=$E($P(HBHCDPT0,U,9),6,9)_U_HBHCDSDT_U_HBHCLOS
+ S ^TMP("HBHC",$J,$P(HBHCDPT0,U),HBHCADDT)=$E($P(HBHCDPT0,U,9),1,3)_"-"_$E($P(HBHCDPT0,U,9),4,5)_"-"_$E($P(HBHCDPT0,U,9),6,9)_U_HBHCDSDT_U_HBHCLOS
  Q
 PRTLOOP ; Print loop
  S HBHCNAME="" F  S HBHCNAME=$O(^TMP("HBHC",$J,HBHCNAME)) Q:HBHCNAME=""  S HBHCADDT="" F  S HBHCADDT=$O(^TMP("HBHC",$J,HBHCNAME,HBHCADDT)) Q:HBHCADDT=""  D PRINT

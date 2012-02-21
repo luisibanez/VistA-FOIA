@@ -1,6 +1,6 @@
 IBECUS2 ;DVAMC/RLM - TRICARE PHARMACY BILL TRANSACTION ;14-AUG-96
- ;;2.0;INTEGRATED BILLING;**52,89,143,162,240,274,347**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,89,143,162,240,274**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; Attempt to bill a prescription directly to the FI.
  ;  Input:    IBKEY  --  1 ; 2, where
@@ -20,7 +20,6 @@ EN ; Attempt to bill a prescription directly to the FI.
  ;
  ; - get rx data; make sure there is an NDC
  K IBDRX,IBERR,IBAWPV,IBRESP
- N DFN,IBRX,IBITEM,IBAWP
  N DIQUIET S DIQUIET=1 D DT^DICRW
  S IBRX=+IBKEY,IBREF=+$P(IBKEY,";",2)
  I $$TRANS^PSOCPTRI(IBRX,IBREF,.IBDRX)<0 S IBERR=1 G ENQ
@@ -35,7 +34,7 @@ EN ; Attempt to bill a prescription directly to the FI.
  I 'IBAWP S IBERR=11 G ENQ ;                     NDC has a zero charge
  ;
  ; - is patient data intact?
- S DFN=+$$FILE^IBRXUTL(+IBRX,2)
+ S DFN=+$P($G(^PSRX(IBRX,0)),"^",2)
  S IBDPT(0)=$G(^DPT(DFN,0)),IBDPT(.11)=$G(^(.11)),IBDPT(.13)=$G(^(.13))
  I IBDPT(0)="" S IBERR=4 G ENQ
  ;

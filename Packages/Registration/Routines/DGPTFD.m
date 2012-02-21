@@ -1,5 +1,5 @@
 DGPTFD ;ALB/MTC/ADL - Sets Required Variables for DRG on 701 Screen ; 2/19/02 12:52pm
- ;;5.3;Registration;**60,441,510,785**;Aug 13, 1993;Build 7
+ ;;5.3;Registration;**60,441,510**;Aug 13, 1993
  ;;ADL;Update for CSV Project;;Mar 24, 2003
  ;
 EN1 ;-- entry point from 701
@@ -28,17 +28,13 @@ EN1 ;-- entry point from 701
  ;-- start with surgeries (401)
  F DGI=0:0 S DGI=$O(^DGPT(PTF,"S",DGI)) Q:DGI'>0  S X=$P(^(DGI,0),U,8,12) I X]"",X'="^^^^" S K=+^(0),K=$S('$D(DGSURG(K)):K,K[".":K_DGI_1,1:K_".0000"_DGI_1),DGSURG(K)="" S DGVAR=0 D TAG
  ;-- build DGSURG
- N I,X,Y,Z ; eliminate duplicates as we go
- N SUB S SUB=0
+ N I,X,Y,Z ; eliminate duplicates as we go 
  I $D(DGSURG) S DGSURG=U F DGI=0:0 S DGI=$O(DGSURG(DGI)) Q:DGI'>0  D
  .S X=DGSURG(DGI)
  .F I=1:1:5 S Y=$P(X,U,I) Q:Y=""  D
  ..Q:$L(DGSURG)>240
- ..S Z=U_Y_U
- ..S ICDSURG(I)=Y
- ..;Q:DGSURG[Z
+ ..S Z=U_Y_U Q:DGSURG[Z
  ..S DGSURG=DGSURG_Y_U
- ..I +DGPTTMP>0,($P(DGPTTMP,U,10)) S SUB=SUB+1,DGSURG(SUB)=$P(DGPTTMP,U,2)
  ;-- procedures next old records before 10/1/87
  I +DGPT(70),+DGPT(70)<2871000 G DRG:'$D(^DGPT(PTF,"401P")) S DGPROC="",X=^("401P") D:X]""&(X'="^^^^")  G DRG
  . F DGI=1:1:5 I $P(X,U,DGI)]"" S DGPTTMP=$$ICDOP^ICDCODE($P(X,U,DGI),$$GETDATE^ICDGTDRG(PTF)) I +DGPTTMP>0,$P(DGPTTMP,U,10) S DGPROC=DGPROC_$P(X,U,DGI)_U
@@ -49,14 +45,12 @@ EN1 ;-- entry point from 701
  .S X=DGPROC(DGI)
  .F I=1:1:5 S Y=$P(X,U,I) Q:Y=""  D
  ..Q:$L(DGPROC)>240
- ..S Z=U_Y_U
- ..S DGPROC(I)=Y
- ..;Q:DGPROC[Z
+ ..S Z=U_Y_U Q:DGPROC[Z
  ..S DGPROC=DGPROC_Y_U
 DRG ;
  S:'$D(DGCPT) DGDRGPRT=1 D ^DGPTICD  ;return DRG code even if inactive
  ;
-Q K AGE,SEX,DGEXP,DGDMS,DGPT,DGTRS,DGDX,DGNODE,DGPROC,DGSURG,DGDRGPRT,DGI,DGJ,K,DOB,ICDSURG Q
+Q K AGE,SEX,DGEXP,DGDMS,DGPT,DGTRS,DGDX,DGNODE,DGPROC,DGSURG,DGDRGPRT,DGI,DGJ,K,DOB Q
  ;
 OLD ;-- used to format diagnostic codes for old PTF records
  S X="" F DGJ=1:1:5 I $P(DGNODE,"^",DGJ)]"",$D(^ICD9($P(DGNODE,"^",DGJ),0)) S X=X_"^"_$P(DGNODE,"^",DGJ)

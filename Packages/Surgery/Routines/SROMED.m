@@ -1,5 +1,7 @@
-SROMED ;BIR/MAM - ENTER/EDIT MEDICATIONS ;01/30/08
- ;;3.0; Surgery ;**21,44,79,100,151,166**;24 Jun 93;Build 6
+SROMED ;B'HAM ISC/MAM - ENTER/EDIT MEDICATIONS ; [ 01/30/01  12:22 AM ]
+ ;;3.0; Surgery ;**21,44,79,100,151**;24 Jun 93
+ ;
+ ; Reference to ^PSDRUG supported by DBIA #221
  ;
  I '$D(^XUSEC("SROEDIT",DUZ))&'$D(^XUSEC("SROANES",DUZ)) W !!!,$C(7),"You must hold the SROEDIT key or the SROANES key to use this option !",! Q
  D ^SROLOCK G:SROLOCK END Q:'$D(SRTN)
@@ -9,7 +11,8 @@ START S SRQ=0,SRSMED=1 G:SRTN<1 END W @IOF S SRF=0 R !!,"ENTER MEDICATION/DOSE(M
  I M="?" W !!,"Enter '??' to get a list of available drugs.",! D RET G:SRQ END G START
  I M?.E1C.E W !!,"Your answer has a control character in it, please re-type it.",! D RET G:SRQ END G START
  S (X,SRMM)=SRM D
- .N SRDIC,SRD S SRDIC=50,SRDIC(0)="EMQSZ",SRD="B^C" D MIX^PSSDI(50,"SR",.SRDIC,SRD,X,,DT)
+ .I $L($T(SCREEN^PSSDI)) N SRTEST S SRTEST=50,SRTEST(0)="EQSZ" D DIC^PSSDI(50,"SR",.SRTEST,X,,DT) Q  ;call PSSDI if PSS*1*104 is released
+ .S DIC="^PSDRUG(",DIC(0)="QEZM",DIC("S")="I $S('$G(^PSDRUG(Y,""I"")):1,DT'>^(""I""):1,1:0)" D ^DIC K DIC
  S SRM=$S(Y<0:"",1:$P(Y,"^",2))
  I SRM="",SRMM'["?" W !!,"The Drug '",SRMM,"' does not exist in your Drug file.  Please re-enter. " D RET G:SRQ END G START
  I SRMM="??" D RET G:SRQ END G START
@@ -41,10 +44,3 @@ DOSE ; check dosage
  I SRD="?" W !!,"Dosage must be 1 to 15 characters in length, i.e. 15 mg." S SRF=1
 D1 I SRF=1 R !!,"ENTER DOSE: ",SRD1:DTIME S:'$T SRD1="^" K:SRD1["^" SRD Q:SRD1["^"  W:SRD1["?" !!,"Dosage must be 1 to 15 characters in length" G:SRD1["?" D1 S SRD=SRD1,SRF=0 G DOSE
  Q
-SCR(SRFL,SRPK) ; screening for fields point to the DRUG file (#50)
- N SRDT,SRN0,SRNODE,SROK,SRY S SROK=0,SRY=+Y K ^TMP($J,"SR")
- I $G(SRFL)=1 S SRTN=$S($G(SRTN):SRTN,1:DA),SRN0=$G(^SRF(SRTN,0)),SRDT=$S($P(SRN0,"^",9):$P($P(SRN0,"^",9),"."),1:DT)
- D DATA^PSS50(SRY,,$S($G(SRFL):SRDT,1:""),,,"SR")
- I SRPK="S" D  Q SROK
- .S SRNODE=$P($G(^TMP($J,"SR",SRY,63)),"^") K ^TMP($J,"SR") I SRNODE["S" S SROK=1
- S SROK=$S($P($G(^TMP($J,"SR",0)),"^")=-1:0,1:1) K ^TMP($J,"SR") Q SROK

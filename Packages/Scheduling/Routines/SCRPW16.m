@@ -1,5 +1,5 @@
 SCRPW16 ;RENO/KEITH - Encounter 'Action Required' Report ; 01 Jan 99  9:27 PM
- ;;5.3;Scheduling;**139,144,155,161,336,466**;AUG 13, 1993;Build 2
+ ;;5.3;Scheduling;**139,144,155,161,336**;AUG 13, 1993
  N SD,SDDIV,ZTSAVE,%DT,DIR,DTOUT,DUOUT,X,Y
  D TITL^SCRPW50("Encounter 'Action Required' Report")
  G:'$$DIVA^SCRPW17(.SDDIV) EXIT
@@ -56,7 +56,7 @@ STOP ;Check for stop task request
  S:$G(ZTQUEUED) (SDOUT,ZTSTOP)=$S($$S^%ZTLOAD:1,1:0) Q
  ;
 EVAL S SDSTOP=SDSTOP+1 I SDSTOP#3000=0 D STOP Q:SDOUT
- S SDOE0=$$GETOE^SDOE(SDOE),SDIV=$P(SDOE0,U,11) Q:$P(SDOE0,U,6)!'SDIV  Q:$$STCK(SDOE0)  Q:'$$DIV(SDIV)
+ S SDOE0=$$GETOE^SDOE(SDOE),SDIV=$P(SDOE0,U,11) Q:$P(SDOE0,U,6)!'SDIV  Q:$P(SDOE0,U,12)'=14  Q:'$$DIV(SDIV)
  S SDCL=+$P(SDOE0,U,4),SDCLN=$S('SDCL:"**NONE**",1:$P(^SC(SDCL,0),U)),SDCG=$P($G(^SC(SDCL,0)),U,31),SDCG=$S(SD("FORMAT")'["G":"**NONE**",SDCG:$P(^SD(409.67,SDCG,0),U),1:"**NONE**")
  I SD("FORMAT")="SC",'$D(SD("CLINIC",SDCLN)) Q
  I SD("FORMAT")="RC",(($O(SD("CLINIC",""))]SDCLN)!(SDCLN]$O(SD("CLINIC",""),-1))) Q
@@ -82,15 +82,6 @@ EVAL S SDSTOP=SDSTOP+1 I SDSTOP#3000=0 D STOP Q:SDOUT
  I 'SDFOUND S SDX="Unknown reason" D SET(SDX)
  D EV1(SDIV) D:SDMD EV1(0)
  Q
- ;
-STCK(SDOE0) ;Check Status for action required
- ;Returns 0 if status=action required (14) or
- ;             status=inpatients (8) and check out date=""
- ;        1 if non-count clinic, OOS and otherwise
- I $P(SDOE0,U,4),'$$CLINIC^SDAMU($P(SDOE0,U,4)) Q 1
- I $P(SDOE0,U,12)=8,$P(SDOE0,U,7)="" Q 0
- I $P(SDOE0,U,12)'=14 Q 1
- Q 0
  ;
 EV1(SDIV) S ^TMP("SCRPW",$J,SDIV,1,SDCG,SDCLN,SDORD,DFN,SDOE)=SDOE0,^TMP("SCRPW",$J,SDIV,3,DFN)=SDDPT(1)_U_SDDPT(2)
  Q

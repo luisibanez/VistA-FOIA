@@ -1,5 +1,5 @@
 FHMTK1 ; HISC/REL/NCA - Tray Tickets ;4/20/95  15:28
- ;;5.5;DIETETICS;**5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;;Jan 28, 2005
 F0 ;
  K FHOMF,DFN,IEN200 S FHBY="",FHTTDFN=0
  K DIR S DIR(0)="SBAO^P:Patient;C:Communication Office;L:Location;A:All"
@@ -42,7 +42,7 @@ R1 R !!,"Select MEAL (B,N,E,or ALL): ",MEAL:DTIME G:'$T!("^"[MEAL) KIL S X=MEAL 
  I MEAL="A" F LP="B","N","E" S FHX1=$P(FHDA,"^",$F("BNE",LP)) I 'FHX1 W *7,!!,"*** NO MENU DEFINED FOR ",$S(LP="B":"BREAKFAST",LP="N":"NOON",1:"EVENING")," ***" G KIL
  S (SUM,UPD)=0 G:MEAL="A" D5
  S FHX1=$P(FHDA,"^",$F("BNE",MEAL)) I 'FHX1 W *7,!!,"*** NO MENU DEFINED FOR THIS MEAL ***" G KIL
- ;I $G(IEN200)'="",$G(FHOMF)=1 Q
+ I $G(IEN200)'="",$G(FHOMF)=1 Q
  G L0:DFN,R2
 D5 G:DFN!($G(IEN200)'="") L0 R !!,"Consolidated List? Y// ",X:DTIME G:'$T!(X="^") KIL S:X="" X="Y" D TR^FH I $P("YES",X,1)'="",$P("NO",X,1)'="" W *7,"  Answer YES or NO" G D5
  S SUM=X?1"Y".E
@@ -66,3 +66,9 @@ P1 ; Tray tickets for single outpatient
  I MEAL="A" S MFLG=1
  D ^FHOMTK1 Q
  Q
+ ;
+OLDF0 ; Old F0 entry point, no longer used
+ ;K FHOMF S FHBY="" R !!,"Print by PATIENT or COMMUNICATION OFFICE or LOCATION or ALL? COMM// ",X:DTIME G:'$T!(X["^") KIL S:X="" X="C" D TR^FH
+ ;I $P("PATIENT",X,1)'="",$P("LOCATION",X,1)'="",$P("COMMUNICATION OFFICE",X,1)'="",$P("ALL",X,1)'="" W *7,!?7,"  Answer with P or C or L or A" G F0
+ ;S FHBY=X G P0:X?1"P".E,NL0:X?1"L".E I X?1"A".E S (DFN,FHP,W1)="" G S0
+ ;S FHP=$O(^FH(119.73,0)) I FHP'<1,$O(^FH(119.73,FHP))<1 S (DFN,W1)="" G S0

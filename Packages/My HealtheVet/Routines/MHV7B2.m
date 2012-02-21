@@ -1,10 +1,10 @@
-MHV7B2 ;WAS/GPM - HL7 message builder ORP^O10 ; [12/24/07 5:43pm]
- ;;1.0;My HealtheVet;**2**;Aug 23, 2005;Build 22
+MHV7B2 ;WAS/GPM - HL7 message builder ORP^O10 ; [8/22/05 11:47pm]
+ ;;1.0;My HealtheVet;;Aug 23, 2005
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  Q
  ;
-ORPO10(MSGROOT,REQ,ERR,DATAROOT,LEN,HL) ; Build refill request response
+ORPO10(MSGROOT,REQ,ERR,DATAROOT,HL) ; Build refill request response
  ;
  ;  Populates the array pointed to by MSGROOT with an ORP^O10 order
  ; response message by calling the appropriate segment builders based
@@ -27,25 +27,65 @@ ORPO10(MSGROOT,REQ,ERR,DATAROOT,LEN,HL) ; Build refill request response
  ;          HL - HL7 package array variable
  ;
  ;  Output: ORP^O10 message in MSGROOT
- ;         LEN - Length of formatted message
  ;
- N CNT,HIT,I
- D LOG^MHVUL2("ORP-O10 BUILDER","BEGIN","S","TRACE")
- ;
+ N CNT,RDT,HIT,I
  K @MSGROOT
- S CNT=1,@MSGROOT@(CNT)=$$MSA^MHV7BUS($G(REQ("MID")),ERR,.HL),LEN=$L(@MSGROOT@(CNT))
- I $P(ERR,"^",4) S CNT=CNT+1,@MSGROOT@(CNT)=$$ERR^MHV7BUS(ERR,.HL),LEN=LEN+$L(@MSGROOT@(CNT))
- S CNT=CNT+1,@MSGROOT@(CNT)=$$PID^MHV7BUS(.REQ,.HL),LEN=LEN+$L(@MSGROOT@(CNT))
+ S CNT=1,@MSGROOT@(CNT)=$$MSA^MHV7B1($G(REQ("MID")),ERR,.HL)
+ I $P(ERR,"^",4) S CNT=CNT+1,@MSGROOT@(CNT)=$$ERR^MHV7B1(ERR,.HL)
+ Q:$P(ERR,"^",4)
+ S CNT=CNT+1,@MSGROOT@(CNT)=$$PID(.REQ,.HL)
+ F I=1:1 Q:'$D(@DATAROOT@(I))  D
+ . S CNT=CNT+1,@MSGROOT@(CNT)=$$ORC(@DATAROOT@(I),.HL)
+ . S CNT=CNT+1,@MSGROOT@(CNT)=$$RXE(@DATAROOT@(I),.HL)
+ . Q
+ Q
  ;
- I '$P(ERR,"^",4),DATAROOT'="" D
- . F I=1:1 Q:'$D(@DATAROOT@(I))  D
- .. S CNT=CNT+1,@MSGROOT@(CNT)=$$ORC(@DATAROOT@(I),.HL),LEN=LEN+$L(@MSGROOT@(CNT))
- .. S CNT=CNT+1,@MSGROOT@(CNT)=$$RXE(@DATAROOT@(I),.HL),LEN=LEN+$L(@MSGROOT@(CNT))
- .. Q
+PID(REQ,HL) ;
+ N PID,NAME,STATION,IDCNT
+ S STATION=$P($$SITE^VASITE,"^",3)
+ S PID(0)="PID"
+ S IDCNT=0
+ I REQ("ICN")'="" D
+ . S IDCNT=IDCNT+1
+ . S PID(3,IDCNT,1)=REQ("ICN")          ;Patient ID - ICN
+ . S PID(3,IDCNT,4,1)="USVHA"           ;assigning authority ID
+ . S PID(3,IDCNT,4,3)="HL70363"         ;assigning authority type
+ . S PID(3,IDCNT,5)="NI"                ;Patient ID type
+ . S PID(3,IDCNT,6,1)="VA FACILITY ID"  ;assigning facility
+ . S PID(3,IDCNT,6,2)=STATION           ;Station number
+ . S PID(3,IDCNT,6,3)="L"               ;facility ID type
  . Q
  ;
- D LOG^MHVUL2("ORP-O10 BUILDER","END","S","TRACE")
- Q
+ I REQ("DFN")'="" D
+ . S IDCNT=IDCNT+1
+ . S PID(3,IDCNT,1)=REQ("DFN")          ;Patient ID - DFN
+ . S PID(3,IDCNT,4,1)="USVHA"           ;assigning authority ID
+ . S PID(3,IDCNT,4,3)="HL70363"         ;assigning authority type
+ . S PID(3,IDCNT,5)="PI"                ;Patient ID type
+ . S PID(3,IDCNT,6,1)="VA FACILITY ID"  ;assigning facility
+ . S PID(3,IDCNT,6,2)=STATION           ;Station number
+ . S PID(3,IDCNT,6,3)="L"               ;facility ID type
+ . Q
+ ;
+ I REQ("SSN")'="" D
+ . S IDCNT=IDCNT+1
+ . S PID(3,IDCNT,1)=REQ("SSN")          ;Patient ID - SSN
+ . S PID(3,IDCNT,4,1)="USSSA"           ;assigning authority ID
+ . S PID(3,IDCNT,4,3)="HL70363"         ;assigning authority type
+ . S PID(3,IDCNT,5)="SS"                ;Patient ID type
+ . S PID(3,IDCNT,6,1)="VA FACILITY ID"  ;assigning facility
+ . S PID(3,IDCNT,6,2)="200MH"           ;Station number
+ . S PID(3,IDCNT,6,3)="L"               ;facility ID type
+ . Q
+ ;
+ S NAME("FILE")=2,NAME("FIELD")=.01,NAME("IENS")=REQ("DFN")_","
+ S NAME=$$NAMEFMT^XLFNAME(.NAME)
+ S PID(5,1,1)=$$ESCAPE^MHV7U($P(NAME,"^"),.HL)    ;family
+ S PID(5,1,2)=$$ESCAPE^MHV7U($P(NAME,"^",2),.HL)  ;given
+ S PID(5,1,3)=$$ESCAPE^MHV7U($P(NAME,"^",3),.HL)  ;middle
+ S PID(5,1,4)=$$ESCAPE^MHV7U($P(NAME,"^",4),.HL)  ;suffix
+ ;
+ Q $$BLDSEG^MHV7U(.PID,.HL)
  ;
 ORC(DATA,HL) ;build ORC segment
  N ORC,STATUS,CONTROL

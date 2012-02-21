@@ -1,5 +1,5 @@
-GMRAPU ;HIRMFO/WAA- PRINT ALLERGY LIST BY LOCATION UNVERIFIED ;8/27/93
- ;;4.0;Adverse Reaction Tracking;**33**;Mar 29, 1996;Build 5
+GMRAPU ;HIRMFO/WAA- PRINT ALLERGY LIST BY LOCATION UNVERIFIED ; 8/27/93
+ ;;4.0;Adverse Reaction Tracking;;Mar 29, 1996
 EN1 ; This routine will loop through the GMRA patient allergy file (120.8)
  ; to find all patients with unverified reactions
  ;
@@ -66,7 +66,6 @@ FIND ; This subroutines will build the data for the report.
  F  S GMADFN=$O(^GMR(120.8,"AVER",GMADFN)) Q:GMADFN<1  D
  .N GMRALOC,GMRANAM,GMALOC,GMRAPA
  .S GMRANAM="",GMRALOC=""
- .Q:'$$PRDTST^GMRAUTL1(GMADFN)  ;GMRA*4*33 Exclude test patients if production or legacy environment.
  .D VAD^GMRAUTL1(GMADFN,"",.GMRALOC,.GMRANAM,"","","") I GMRALOC="" S GMALOC="OUTPATIENT"
  .E  S GMALOC=$P($G(^DIC(42,GMRALOC,0)),U)
  .Q:GMALOC=""

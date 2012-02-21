@@ -1,5 +1,5 @@
 DGRP2 ;ALB/MRL,BRM - REGISTRATION SCREEN 2/CONTACT INFORMATION ;06 JUN 88@2300
- ;;5.3;Registration;**415,545,638,677,760**;Aug 13, 1993;Build 11
+ ;;5.3;Registration;**415,545,638,677**;Aug 13, 1993
  S DGRPS=2 D H^DGRPU F I=0,.24,57,1010.15 S DGRP(I)=$S($D(^DPT(DFN,I)):^(I),1:"")
  S DGRPX=DGRP(0)
  S (Z,DGRPW)=1 D WW^DGRPV W "  Marital: " S Z=$S($D(^DIC(11,+$P(DGRPX,"^",5),0)):$E($P(^(0),"^",1),1,28),1:DGRPU),Z1=30 D WW1^DGRPV
@@ -8,7 +8,7 @@ DGRP2 ;ALB/MRL,BRM - REGISTRATION SCREEN 2/CONTACT INFORMATION ;06 JUN 88@2300
  W ?41,"POB: ",$E($S((DGNOCITY&DGUNK):"UNANSWERED",1:DGD_$S(($L(DGD)):", ",1:"")_DGD1),1,29)
  ;S DGRPX=DGRP(0)
  W !?4,"Religion: ",$S($D(^DIC(13,+$P(DGRPX,"^",8),0)):$P(^(0),"^",1),1:DGRPU),?41,"Father: ",$S($P(DGRP(.24),"^",1)]"":$E($P(DGRP(.24),"^",1),1,29),1:DGRPU)
- S X=$P(DGRP(57),"^",4),X=$S(X']"":DGRPU,X="X":"NOT APPLICABLE",X=1:"PARA,",X=2:"QUAD,",X=3:"PARA,NON",1:"QUAD,NON"),X=$S("QP"[$E(X):X_"TRAUMATIC",1:X) W !?9,"SCI: ",X
+ S X=$P(DGRP(57),"^",4),X=$S(X']"":DGRPU,X="X":"NOT APPLICABLE",X=1:"PARA,",X=2:"QUAD,",X=3:"PARA,NON",1:"QUAD,NON"),X=$S("QD"[$E(X):X_"TRAUMATIC",1:X) W !?9,"SCI: ",X
  W ?41,"Mother: ",$S($P(DGRP(.24),"^",2)]"":$E($P(DGRP(.24),"^",2),1,29),1:DGRPU)
  W !,?35,"Mom's Maiden: ",$S($P(DGRP(.24),"^",3)]"":$E($P(DGRP(.24),"^",3),1,29),1:DGRPU)
  W ! S Z=2 D WW^DGRPV W " Previous Care Date      Location of Previous Care",!?4,"------------------      -------------------------" S DGRPX=DGRP(1010.15) I $P(DGRPX,"^",5)'="Y" S X="NONE INDICATED" W !?4,X,?28,X

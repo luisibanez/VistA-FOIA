@@ -1,5 +1,5 @@
-MAGDGL ;WOIFO/EdM - Global Lister ; 05/27/2005  09:23
- ;;3.0;IMAGING;**11,51**;26-August-2005
+MAGDGL ;WOIFO/EdM - Global Lister ; 03/26/2004  08:38
+ ;;3.0;IMAGING;**11**;14-April-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -57,12 +57,9 @@ MAGDGL ;WOIFO/EdM - Global Lister ; 05/27/2005  09:23
  Q
  ;
 LIST(OUT,WILD,MAX,START) ; RPC = MAG DICOM LIST GLOBAL VARIABLE
- N %D,E,I,L,M,N,NODE,OK,Q,REF,X
- I $D(RPC0) D  Q:'OK
- . N KEY,LIST,RET
- . S KEY="MAG SYSTEM",LIST(1)=KEY D OWNSKEY^XUSRB(.RET,.LIST,DUZ)
- . S OK=$G(RET(1))
- . S:'OK OUT(1)="-13,Calling user does not have security key "_KEY
+ N %D,E,I,L,M,N,NODE,Q,REF,X
+ I $D(RPC0),'$$KCHK^XUSRB("MAG SYSTEM",DUZ) D  Q
+ . S OUT(1)="-13,Calling user does not have security key MAG SYSTEM"
  . Q
  I $E($G(WILD),1)'="^" S OUT(1)="-1,Invalid wild-card: "_WILD Q
  S NODE=0,START=$G(START)\1 S:START<1 START=0

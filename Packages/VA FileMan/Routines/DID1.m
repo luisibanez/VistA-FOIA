@@ -1,6 +1,6 @@
-DID1 ;SFISC/XAK,JLT-STD DD LIST ;9APR2007
- ;;22.0;VA FileMan;**7,76,105,152**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DID1 ;SFISC/XAK,JLT-STD DD LIST ;1:53 PM  6 Mar 2002
+ ;;22.0;VA FileMan;**7,76,105**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  S DJ(Z)=D0,DDL1=14,DDL2=32 G B
  ;
 L S DJ(Z)=0
@@ -8,10 +8,7 @@ A S DJ(Z)=$O(^DD(F(Z),DJ(Z))) I DJ(Z)'>0 S:DJ(Z)="" DJ(Z)=-1 W !! S Z=Z-1 Q
 B S N=^DD(F(Z),DJ(Z),0) K DDF I $D(DIGR),Z<2!(DJ(Z)-.01) X DIGR E  G ND
  D HD:$Y+6>IOSL Q:M=U  W !!,F(Z),",",DJ(Z)
  W ?(Z+Z+12),$P(N,U,1),?DDL2+4," "_$P(N,U,4)
- S X=$P(N,U,2)
-WP I X,$D(^DD(+X,.01,0)) S W=$P(^(0),U,2) I W["W" D
- .S X="WORD-PROCESSING #"_+X D  S X="(NOWRAP)" D:W["L"  S X="(IGNORE ""|"")" D:W["X"!(W["x")  S X="(UNEDITABLE)" D:W["I"  S X=""
- ..W:$L(X)+$X+5>IOM !?18 W "   ",X
+ S X=$P(N,U,2) I X,$D(^DD(+X,.01,0)) S W=$P(^(0),U,2) I W["W" W "   WORD-PROCESSING #",+X W:W["L" " (NOWRAP)" S X=""
  F W="BOOLEAN","COMPUTED","FREE TEXT","SET","DATE","NUMBER","POINTER","K","VARIABLE POINTER","p" I X[$E(W) D VP^DIDX:$E(W)="V" S:W="K" W="MUMPS" S:W="p" W="POINTER" W ?40," "_W G ND:M=U
  I +X S W=" Multiple" S W=W_" #"_+X D W G ND:M=U
  I X["V" S I=0 F  S I=$O(^DD(F(Z),D0,"V",I)) Q:I'>0  S %Y=$P(^(I,0),U) I $D(^DIC(%Y,0)),$D(@(^(0,"GL")_"0)")) S ^UTILITY($J,"P",$E($P(^(0),U),1,30),0)=%Y,^(F(Z),DJ(Z))=0

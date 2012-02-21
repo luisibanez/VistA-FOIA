@@ -1,5 +1,5 @@
 LRDRAW ;DALOI/CJS/RLM-WARD COLLECTION SUMMARY ;8/11/97
- ;;5.2;LAB SERVICE;**121,190,272,369**;Sep 27, 1994;Build 2
+ ;;5.2;LAB SERVICE;**121,190,272**;Sep 27, 1994
  ; Reference to ^%DT supported by DBIA #10003
  ; Reference to $$FMTE^XLFDT supported by IA #10103
  ; Reference to $$NOW^XLFDT supported by IA #10103
@@ -26,7 +26,6 @@ PRNT S LRDFN=+^LRO(69,LRODT,1,LRSN,0),LRLWC=$P(^(0),U,4),LRDC=1
 FNDLOC ;return a location from ^LRO(69,LRODT,1,"AC",LRLLOC,LRSN), from LRNODRQW, LRPHEXPT, LRPHITEM
 LOOP S LRLLOC="" W !,$S($D(DIC("A")):DIC("A"),1:"Select PATIENT LOCATION: ")
  R "ALL// ",X:DTIME G:'$T LEND S:X="" X="ALL" S:X="ALL"!(X="all") X="" S LRLLOC=X Q:X=""  I $L(X) G LEND:X["^",LALL:X["?"!(X'?.ANP)
- I $L(X)<2!($L(X)>30) W "  Enter 2 - 30 alpha-numeric name" G LOOP
  I $D(^LRO(69,LRODT,1,"AC",X)) S LRLLOC=X K %,X,Y Q
  S DIC=44,DIC(0)="EMOZ",DIC("S")="I $L($P(^(0),U,2)),$D(^LRO(69,LRODT,1,""AC"",$P(^(0),U,2)))" D ^DIC K DIC
  I $D(DTOUT)!$D(DUOUT) K DTOUT,DUOUT G LOOP

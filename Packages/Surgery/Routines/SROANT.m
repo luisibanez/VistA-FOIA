@@ -1,8 +1,8 @@
-SROANT ;BIR/MAM - INCOMPLETE ASSESSMENTS ;01/18/07
- ;;3.0; Surgery ;**38,50,100,142,153,160**;24 Jun 93;Build 7
+SROANT ;BIR/MAM - INCOMPLETE ASSESSMENTS ;03/08/06
+ ;;3.0; Surgery ;**38,50,100,142**;24 Jun 93
  I $E(IOST)="P" D ^SROANTP Q
  S SRSOUT=0 D HDR
- F  S SRSD=$O(^SRF("AC",SRSD)) Q:'SRSD!(SRSD>SRED)!SRSOUT  S SRTN=0 F  S SRTN=$O(^SRF("AC",SRSD,SRTN)) Q:'SRTN!SRSOUT  S SR("RA")=$G(^SRF(SRTN,"RA")) I $P(SR("RA"),"^")="I",$D(^SRF(SRTN,0)),$$MANDIV^SROUTL0(SRINSTP,SRTN) D SET
+ F  S SRSD=$O(^SRF("AC",SRSD)) Q:'SRSD!(SRSD>SRED)!SRSOUT  S SRTN=0 F  S SRTN=$O(^SRF("AC",SRSD,SRTN)) Q:'SRTN!SRSOUT  S SR("RA")=$G(^SRF(SRTN,"RA")) I $P(SR("RA"),"^")="I",$D(^SRF(SRTN,0)),$$DIV^SROUTL0(SRTN) D SET
  Q
 SET ; print assessments
  I $P(SR("RA"),"^",6)="N" Q
@@ -19,9 +19,9 @@ SET ; print assessments
  S Y=$P(SRA(0),"^",9) D D^DIQ S SRDT=$P(Y,"@")
  S (SRDOC,Y)=$P($G(^SRF(SRTN,.1)),"^",4),C=$P(^DD(130,.14,0),"^",2) D:Y'="" Y^DIQ I $L(Y)>18 S Z=$P(Y,",")_","_$E($P(Y,",",2))_".",Y=Z
  S SRDOC=Y
+ S X=$P($G(^SRO(136,SRTN,0)),"^",2) I X S Y=$S(X:$P($$CPT^ICPTCOD(X),"^",2),1:"") D SSPRIN^SROCPT0 I $L(Y) S SRCPTT=Y
  W !,SRTN,?20,SRANM_" "_VA("PID"),?55,$P(SRSS,"("),!,SRDT,?20,SROPS(1),?55,SRTECH,!,SRDOC I $D(SROPS(2)) W !,?20,SROPS(2) I $D(SROPS(3)) W !,?20,SROPS(3)
- N I,SRPROC,SRL S SRL=48 D CPTS^SROAUTL0 W !,?20,"CPT Codes: "
- F I=1:1 Q:'$D(SRPROC(I))  W:I=1 ?31,SRPROC(I) W:I'=1 !,?31,SRPROC(I)
+ W !,?20,"CPT Code: "_SRCPTT
  W ! F LINE=1:1:80 W "-"
  Q
 OTHER ; other operations
@@ -35,5 +35,5 @@ LOOP ; break procedures
 PAGE W !!,"Press <RET> to continue, or '^' to quit  " R X:DTIME I '$T!(X["^") S SRSOUT=1 Q
  I X["?" W !!,"If you want to continue listing incomplete assessments, enter <RET>.  Enter",!,"'^' to return to the menu." G PAGE
 HDR W @IOF,!,?26,"INCOMPLETE RISK ASSESSMENTS",!,?(80-$L(SRFRTO)\2),SRFRTO,!!,"ASSESSMENT #",?20,"PATIENT",?55,"SURGICAL SPECIALTY"
- W !,"OPERATION DATE",?20,"OPERATION(S)",?55,"ANESTHESIA TECHNIQUE",!,"SURGEON",! F LINE=1:1:80 W "="
+ W !,"OPERATION DATE",?20,"PRINCIPAL OPERATION",?55,"ANESTHESIA TECHNIQUE",!,"SURGEON",! F LINE=1:1:80 W "="
  Q

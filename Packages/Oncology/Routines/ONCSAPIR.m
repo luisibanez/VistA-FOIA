@@ -1,35 +1,13 @@
-ONCSAPIR ;Hines OIFO/SG - COLLABORATIVE STAGING (REQUEST)  ; 2/8/07 8:28am
- ;;2.11;ONCOLOGY;**40,41,44,47**;Mar 07, 1995;Build 19
+ONCSAPIR ;Hines OIFO/SG - COLLABORATIVE STAGING (REQUEST)  ; 10/31/05 10:13am
+ ;;2.11;ONCOLOGY;**40,41,44**;Mar 07, 1995
  ;
  ; ONC8DST ------------- DESCRIPTOR OF THE DESTINATION BUFFER
  ;                       (a parameter of HEADER, PUT, and TRAILER)
  ;
  ; ONC8DST(              Closed root of the destination buffer
  ;   "PTR")              Pointer in the destination buffer
- ;   "PTRC")             Continuation pointer (optional)
  ;   "REQ")              Name of the root tag of the request
  ;
- Q
- ;
- ;***** APPENDS THE STRING TO THE LAST LINE OF THE DESTINATION BUFFER
- ;
- ; .ONC8DST      Reference to a descriptor of the destination buffer.
- ;
- ; STR           String
- ;
- ; [NOENC]       Disable XML encoding (enabled by default)
- ;
- ; This procedure appends the string as the continuation node
- ; to the last line added by the PUT^ONCSAPIR.
- ;
-APPEND(ONC8DST,STR,NOENC) ;
- Q:$G(ONC8DST("PTR"))'>0
- N ENCSTR,I1,I2,S1
- S ENCSTR=$S('$G(NOENC):$$SYMENC^MXMLUTL(STR),1:STR)
- S I2=0
- F  S I1=I2+1,I2=I1+249,S1=$E(ENCSTR,I1,I2)  Q:S1=""  D
- . S ONC8DST("PTRC")=$G(ONC8DST("PTRC"))+1
- . S @ONC8DST@(ONC8DST("PTR"),ONC8DST("PTRC"))=S1
  Q
  ;
  ;***** CHECKS FOR PARSING AND WEB SERVICE ERRORS
@@ -47,13 +25,13 @@ APPEND(ONC8DST,STR,NOENC) ;
  ;
 CHKERR(ONCXML,ONC8INFO) ;
  N RC,TMP
- I $G(ONCXML("ERR"))>0  Q $$ERROR^ONCSAPIE(-5)
+ I ONCXML("ERR")>0  Q $$ERROR^ONCSAPIE(-5)
  I $G(ONCXML("FAULTCODE"))'=""  D  Q RC
  . S TMP=$TR($G(ONCXML("FAULTSTRING")),"^","~")
  . S:TMP="" TMP="Unknown error"
  . S RC="-2"_U_ONCXML("FAULTCODE")_": "_TMP
  . D STORE^ONCSAPIE(RC,$G(ONC8INFO))
- . ;--- Error code -11 is returned by the web-service if the
+ . ;--- Error code -11 is returned by the CS web-service if the
  . ;    CStage_calculate function calculated only some staging
  . ;--- values and returned warning(s).
  . S:+$G(ONCXML("RC"))=-11 RC=1
@@ -65,24 +43,18 @@ CHKERR(ONCXML,ONC8INFO) ;
  ;
  ; REQUEST       Name of the root tag of the request.
  ;
- ; [.ATTS]       Reference to a local variable that stores a list
- ;               of attribute values (ATTS(name)=value).
- ;
-HEADER(ONC8DST,REQUEST,ATTS) ;
+HEADER(ONC8DST,REQUEST) ;
  ;;<soap:Envelope xmlns:soap="http://www.w3.org/2001/12/soap-envelope"
  ;; soap:encodingStyle="http://www.w3.org/2001/12/soap-encoding">
  ;;<soap:Body>
  ;
- N I,TAG,TMP
+ N I,TMP
  S ONC8DST("PTR")=0  K @ONC8DST
  D PUT(.ONC8DST,,$$XMLHDR^MXMLUTL())
  F I=1:1  S TMP=$P($T(HEADER+I),";;",2)  Q:TMP=""  D
  . D PUT(.ONC8DST,,TMP)
- S TAG=REQUEST,I=""
- F  S I=$O(ATTS(I))  Q:I=""  D
- . S TAG=TAG_" "_I_"="""_$$SYMENC^MXMLUTL(ATTS(I))_""""
- S TAG=TAG_" ver=""2.0"" xmlns=""http://websrv.oncology.med.va.gov"""
- D PUT(.ONC8DST,TAG,,1)
+ S TMP=REQUEST_" ver=""1"" xmlns=""http://vista.med.va.gov/oncology"""
+ D PUT(.ONC8DST,TMP,,1)
  S ONC8DST("REQ")=REQUEST
  Q
  ;
@@ -125,7 +97,7 @@ PARAMS(ONC8DST,REQUEST,INPUT) ;
  ;               by the NAME parameter
  ;
 PUT(ONC8DST,NAME,VAL,TAGONLY) ;
- S (ONC8DST("PTR"),PTR)=ONC8DST("PTR")+1  K ONC8DST("PTRC")
+ S (ONC8DST("PTR"),PTR)=ONC8DST("PTR")+1
  I $G(NAME)=""  S @ONC8DST@(PTR)=$G(VAL)        Q
  I $G(TAGONLY)  S @ONC8DST@(PTR)="<"_NAME_">"   Q
  I $G(VAL)=""   S @ONC8DST@(PTR)="<"_NAME_"/>"  Q
@@ -141,6 +113,9 @@ PUT(ONC8DST,NAME,VAL,TAGONLY) ;
  ;
  ; [ONC8REQ]     Closed root of the variable containing
  ;               the text of the request.
+ ;
+ ; [.ONC8STAT]   Reference to a local variable where status
+ ;               values are returned.
  ;
  ; Return Values:
  ;        0  Ok
@@ -183,7 +158,6 @@ REQUEST(URL,ONC8RSP,ONC8REQ) ;
  ; .ONC8DST      Reference to a descriptor of the destination buffer.
  ;
 TRAILER(ONC8DST) ;
- S ONC8DST("PTR")=+$O(@ONC8DST@(""),-1)
  D PUT(.ONC8DST,"/"_ONC8DST("REQ"),,1)
  D PUT(.ONC8DST,"/soap:Body",,1)
  D PUT(.ONC8DST,"/soap:Envelope",,1)

@@ -1,9 +1,8 @@
 FHSEL1 ; HISC/REL/NCA/JH/RTK/FAI - Patient Preferences ;10/20/04  10:19
- ;;5.5;DIETETICS;**8**;Jan 28, 2005;Build 28
+ ;;5.5;DIETETICS;;Jan 28, 2005
 EN1 ; Enter/Edit Preference File entries
- I $G(FHALGMZ)=1 QUIT
  W ! S (DIC,DIE)="^FH(115.2,",DIC(0)="AEQLM",DIC("DR")=".01;1",DLAYGO=115.2 W ! D ^DIC K DIC,DLAYGO G KIL:U[X!$D(DTOUT),EN1:Y<1
- S (FHDA,DA)=+Y,DR=".01;26;1;S:X=""D"" Y=0;3;20;S:'X Y=99;21;27;99" D ^DIE K DA,DIE,DR
+ S (FHDA,DA)=+Y,DR=".01;1;S:X=""D"" Y=0;3;20;S:'X Y=99;21;99" D ^DIE K DA,DIE,DR
  I $P($G(^FH(115.2,FHDA,0)),"^",2)'="D"!($D(Y)) G EN1
 TRAN R !!,"Do you want to import Recipes from another Food Preference? N // ",X:DTIME
  G:'$T!(X["^") EN1
@@ -13,7 +12,7 @@ T1 W ! K DIC S DIC="^FH(115.2,",DIC(0)="AEMQ",DIC("S")="I $P(^(0),U,2)=""D""" D 
  G KIL:"^"[X!($D(DTOUT)),T1:Y<1 S FHD=+Y
  S:'$D(^FH(115.2,FHDA,"X",0)) ^(0)="^115.21P^^"
  F DIS=0:0 S DIS=$O(^FH(115.2,FHD,"X",DIS)) Q:DIS<1  S L1=$G(^(DIS,0)) D ADD
-DIS S DA=FHDA,DIE="^FH(115.2,",DR="10;27;99" D ^DIE K DA,DIE,DR G EN1
+DIS S DA=FHDA,DIE="^FH(115.2,",DR="10;99" D ^DIE K DA,DIE,DR G EN1
 ADD ; Add dislikes recipes from another food preference
  I $D(^FH(115.2,FHDA,"X","B",+L1)) Q
 A L +^FH(115.2,FHDA,"X",0)
@@ -25,16 +24,7 @@ A L +^FH(115.2,FHDA,"X",0)
  S ^FH(115.2,FHDA,"X","B",+L1,FHX2)=""
  Q
 EN2 ; List Preference File
- W ! K DIR S DIR("A")="Do you want to print recipes?: "
- S DIR(0)="YA",DIR("B")="Y" D ^DIR
- I $D(DIRUT) K %ZIS S IOP="" D ^%ZIS G KIL
- S FHALRC=Y I FHALRC=1 D EN2OLD Q
- I FHALRC=0 D EN2NEW Q
- Q
-EN2OLD W ! S L=0,DIC="^FH(115.2,",FLDS="[FHSELIST]",BY="LIKE OR DISLIKE,NAME"
- S FR="@",TO="",DHD="PATIENT PREFERENCES" D EN1^DIP
- K %ZIS S IOP="" D ^%ZIS G KIL
-EN2NEW W ! S L=0,DIC="^FH(115.2,",FLDS="[FHSELST2]",BY="LIKE OR DISLIKE,NAME"
+ W ! S L=0,DIC="^FH(115.2,",FLDS="[FHSELIST]",BY="LIKE OR DISLIKE,NAME"
  S FR="@",TO="",DHD="PATIENT PREFERENCES" D EN1^DIP
  K %ZIS S IOP="" D ^%ZIS G KIL
 EN3 ; Enter/Edit Patient Preferences

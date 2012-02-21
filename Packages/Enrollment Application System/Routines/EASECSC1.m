@@ -1,5 +1,5 @@
-EASECSC1 ;ALB/PHH,LBD,EG,ERC - LTC Co-Pay Test Screen Military Service ; 05/06/2006 4:17 PM
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**5,7,38,62,75,70**;Mar 15, 2001;Build 26
+EASECSC1 ;ALB/PHH,LBD - LTC Co-Pay Test Screen Military Service ; 9/19/05 3:05pm
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**5,7,38,62**;Mar 15, 2001
  ;
  ; Input  -- DFN      Patient IEN
  ;           DGMTACT  LTC Co-Pay Test Action
@@ -37,13 +37,11 @@ EASECRP6 ; Display the screen
  S Z=3 D WW W "        Combat: " S X=11,Z1=6 D YN W "From: " S X=13,Z1=13 D DAT W "To: " S X=14,Z1=12 D DAT W "Loc: ",$S($D(^DIC(22,+$P(DGRPX,"^",12),0)):$P(^(0),"^",2),1:"")
  S Z=4,DGRPX=DGRP(.321) D WW W "       Vietnam: " S X=1,Z1=6 D YN W "From: " S X=4,Z1=13 D DAT W "To: " S X=5,X1=13 D DAT
  S Z=5 D WW W "      A/O Exp.: " S X=2,Z1=7,DGLTC=1 D YN W "Reg: " S X=7,Z1=11 D DAT W "Exam: " S X=9,Z1=11 D DAT W "A/O#: " S Z=$P(DGRPX,"^",10),Z1=8 D WW1^DGRPV S Z=$P(DGRPX,"^",13) W $S(Z="K":" DMZ",Z="V":"VIET",1:"")
- S Z=6 D WW W "      ION Rad.: " S X=3,Z1=7,DGLTC=1 D YN W "Reg: " S X=11,Z1=9 D DAT W "Method: "
- S X=$P(DGRPX,"^",12) W $S(X=2:"HIROSHIMA/NAGASAKI",X=3:"ATMOSPHERIC NUCLEAR TESTING",X=4:"H/N AND ATMOSPHERIC TESTING",X=5:"UNDERGROUND NUCLEAR TESTING",X=6:"EXPOSURE AT NUCLEAR FACILITY",X=7:"OTHER",1:"")
+ S Z=6 D WW W "      ION Rad.: " S X=3,Z1=7,DGLTC=1 D YN W "Reg: " S X=11,Z1=9 D DAT W "Method: " S X=$P(DGRPX,"^",12) W $S(X="B":"BOTH",X="T":"NUCLEAR TESTING",X="N":"NAGASAKI/HIROSHIMA",1:"")
  S DGRPX=DGRP(.322)
  F DGX=1,4,7,10 S X=DGX,Z=DGX-1/3+7 D WW W:DGX<10 " " W $S(DGX=1:"      Lebanon",DGX=4:"      Grenada",DGX=7:"       Panama",1:"      Gulf War"),": " S Z1=6 D YN W "From: " S X=DGX+1,Z1=13 D DAT W "To: " S X=DGX+2,Z1=12 D DAT
  S Z=11 D WW W "       Somalia: " S (DGX,X)=16,Z1=6 D YN W "From: " S X=17,Z1=13 D DAT W "To: " S X=18,Z1=12 D DAT
- ; Contam name changed to SW Asia Conditions, DG*5.3*688
- S Z=12 D WW W "  SW Asia Cond: " S X=13,Z1=7,DGLTC=1 D YN W "Reg: " S X=14,Z1=11 D DAT W "Exam: " S X=15,Z1=10 D DAT
+ S Z=12 D WW W "    Env Contam: " S X=13,Z1=7,DGLTC=1 D YN W "Reg: " S X=14,Z1=11 D DAT W "Exam: " S X=15,Z1=10 D DAT
  S Z=13 D WW S X=$P(DGRP(.36),"^",12)
  W "      Mil Disab Retirement: ",$S(X=0:"NO",X=1:"YES",1:"")
  S Z=21 S X=$P(DGRP(.36),U,13)

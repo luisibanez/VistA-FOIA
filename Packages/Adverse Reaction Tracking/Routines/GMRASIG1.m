@@ -1,5 +1,5 @@
-GMRASIG1 ;HIRMFO/WAA-A/AR PATIENT SIGN OFF PART2 ;9/22/06  10:49
- ;;4.0;Adverse Reaction Tracking;**2,17,21,36**;Mar 29, 1996;Build 9
+GMRASIG1 ;HIRMFO/WAA-A/AR PATIENT SIGN OFF PART2 ;11/10/04  11:36
+ ;;4.0;Adverse Reaction Tracking;**2,17,21**;Mar 29, 1996
 PRINT ;Print out data to be signed off on
  N DIR,X,Y
  S GMRAPA=""
@@ -50,13 +50,11 @@ PNOTE ; Generate a Progress Note for a patient
  .Q
  Q
 ENCNT ; Count how many entries where selected and set up Sort order
- N SUB ;36
  S (GMRACNTT,X)=0 K ^TMP($J,"GMRARE") ; Resort the entries
  F  S X=$O(^TMP($J,"GMRASF","B",X)) Q:X<1  D
  .S GMRACNTT=GMRACNTT+1
- .S SUB=$O(^TMP($J,"GMRASF","B",X,0)) ;36
- .S ^TMP($J,"GMRARE",GMRACNTT,X)=+$G(^TMP($J,"GMRASF","B",X,SUB)) ;36
- .S ^TMP($J,"GMRARE","B",X,GMRACNTT)=+$G(^TMP($J,"GMRASF","B",X,SUB)) ;36
+ .S ^TMP($J,"GMRARE",GMRACNTT,X)=""
+ .S ^TMP($J,"GMRARE","B",X,GMRACNTT)=""
  .Q
  K ^TMP($J,"GMRASF")
  M ^TMP($J,"GMRASF")=^TMP($J,"GMRARE")

@@ -1,14 +1,13 @@
-PSO52AP1 ;BHM/SAB - Encapsulation II API to return Rx data ;04/07/05 10:30 am
- ;;7.0;OUTPATIENT PHARMACY;**213,245,276**;DEC 1997;Build 15
- ;
- ;Reference to ^PS(55 supported by DBIA 2228
- ;Reference to ^PSDRUG supported by DBIA 221
+PSO52AP1 ;BHAM ISC/SAB- encap II API to return Rx data ; 04/07/05 10:30 am
+ ;;7.0;OUTPATIENT PHARMACY;**213**;DEC 1997
+ ;^PS(55 supported by DBIA 2228
+ ;^PSDRUG supported by DBIA 221
  ;
  ;Rx profile called from PROF^PSO52API
  ;DFN: Patient's IEN 
  ;LIST: Subscript name used in ^TMP global [REQUIRED]
- ;SDATE: Starting Expiration Date [optional]
- ;EDATE: Ending Expiration Date [optional]
+ ;SDATE: Starting Suspense Date [optional]
+ ;EDATE: Ending Suspense Date [optional]
  ;
  Q:$G(LIST)=""
  N DA,DR,PST,DIC,DIQ,DATE,IEN K ^TMP($J,LIST)
@@ -28,14 +27,13 @@ ND ;returns data
  Q:$P($G(^PSRX(IEN,"STA")),"^")=13
  S ^TMP($J,LIST,DFN,0)=$G(^TMP($J,LIST,DFN,0))+1
  I DT>$P(^PSRX(IEN,2),"^",6),$P(^PSRX(IEN,"STA"),"^")<11 D
- .N PSOEXRX,PSOEXSTA,ORN,PIFN,PSUSD,PRFDT,PDA,PSDTEST,PSOVADM
- .S PSOEXRX=IEN M PSOVADM=VADM D EN2^PSOMAUEX M VADM=PSOVADM K PSOEXRX,PSONM,PSONMX
+ .N PSOEXRX,PSOEXSTA,ORN,PIFN,PSUSD,PRFDT,PDA,PSDTEST
+ .S PSOEXRX=IEN D EN2^PSOMAUEX K PSOEXRX,PSONM,PSONMX
  K PST S DIC=52,DA=IEN,DR=".01:9;10.3;10.6;11;16;17;100"
  S DIQ="PST",DIQ(0)="IE" D EN^DIQ1
  S ^TMP($J,LIST,"B",PST(52,DA,.01,"E"),IEN)=""
  F DR=.01,1,2,3,4,5,6,6.5,7,8,9,10.3,10.6,11,16,17,100 D
  .I PST(52,DA,DR,"E")'=PST(52,DA,DR,"I") S ^TMP($J,LIST,DFN,IEN,DR)=PST(52,DA,DR,"I")_"^"_PST(52,DA,DR,"E") Q
  .S ^TMP($J,LIST,DFN,IEN,DR)=PST(52,DA,DR,"I")
- S $P(^TMP($J,LIST,DFN,IEN,.01),U,2)=IEN
  K DA,DR,PST,DIC,DIQ
  Q

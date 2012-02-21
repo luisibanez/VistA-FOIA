@@ -1,17 +1,14 @@
 PSXRPPL1 ;BIR/WPB-Resets Suspense to Print/Transmit ;[ 10/02/97  3:13 PM ]
- ;;2.0;CMOP;**3,48,62,66,65,69**;11 Apr 97;Build 60
+ ;;2.0;CMOP;**3,48**;11 Apr 97
  ;Reference to ^PSRX( supported by DBIA #1977
- ;Reference to File #59  supported by DBIA #1976
- ;Reference to PSOSURST  supported by DBIA #1970
- ;Reference to ^PS(52.5, supported by DBIA #1978
- ;Reference to ^BPSUTIL  supported by DBIA #4410
- ;Reference to ^PSSLOCK  supported by DBIA #2789
+ ;Reference to File #59 supported by DBIA #1976
+ ;Reference to PSOSURST supported by DBIA #1970
+ ;Reference to ^PS(52.5,  supported by DBIA #1978
+ ;Reference to ^BPSUTIL supported by DBIA #4410
+ ;Reference to ^PSSLOCK   supported by DBIA #2789
  ;Reference to ^PSOBPSUT supported by DBIA #4701
  ;Reference to ^PSOBPSU1 supported by DBIA #4702
  ;Reference to ^PSOREJUT supported by DBIA #4706
- ;Reference to ^PSOREJU3 supported by DBIA #5186
- ;Reference to ^PSOBPSU2 supported by DBIA #4970
- ;Reference to ^PSOSULB1 supported by DBIA #2478
  ;
  ;This routine will reset the Queued flags and the printed flags in
  ;PS(52.5 to 'Queued' and 'Printed' respectively and either retransmits
@@ -108,6 +105,7 @@ PRTERR ; auto error trap for prt cmop local
  I $G(PSXBAT) D
  . N DA,DIE,DR S DIE="^PSX(550.2,",DA=PSXBAT,DR="1////4"
  . D ^DIE
+ ;I $E(IOST)="C" F XX=1:1:5 W !,TEXT(XX,0)
  G UNWIND^%ZTER
  ;
 SBTECME(PSXTP,PSXDV,THRDT,PULLDT) ; - Sumitting prescriptions to EMCE (3rd Party Billing)
@@ -128,34 +126,15 @@ SBTECME(PSXTP,PSXDV,THRDT,PULLDT) ; - Sumitting prescriptions to EMCE (3rd Party
  . . . . I SDT>THRDT,'$D(^TMP("PSXEPHDFN",$J,XDFN)) Q
  . . . . I $$PATCH^XPDUTL("PSO*7.0*148") D
  . . . . . I $$RETRX^PSOBPSUT(RX,RFL),SDT>DT Q
- . . . . . I $$DOUBLE(RX,RFL) Q
- . . . . . I $$FIND^PSOREJUT(RX,RFL,,"79,88") Q
- . . . . . I '$$RETRX^PSOBPSUT(RX,RFL),'$$ECMESTAT^PSXRPPL2(RX,RFL) Q
- . . . . . I $$PATCH^XPDUTL("PSO*7.0*289") Q:'$$DUR^PSXRPPL2(RX,RFL)  ;ePharm Host error hold
- . . . . . I $$PATCH^XPDUTL("PSO*7.0*289"),$$STATUS^PSOBPSUT(RX,RFL-1)'="" Q:'$$DSH^PSXRPPL2(REC)  ;ePharm 3/4 days supply
+ . . . . . I $$FIND^PSOREJUT(RX,RFL) Q
+ . . . . . I '$$RETRX^PSOBPSUT(RX,RFL),$$STATUS^PSOBPSUT(RX,RFL)'="" Q
  . . . . . S DOS=$$RXFLDT^PSOBPSUT(RX,RFL) I DOS>DT S DOS=DT
  . . . . . D ECMESND^PSOBPSU1(RX,RFL,DOS,"PC",,1,,,,.RESP)
- . . . . . I $$PATCH^XPDUTL("PSO*7.0*287"),$$TRISTA^PSOREJU3(RX,RFL,.RESP,"PC") S ^TMP("PSXEPHNB",$J,RX,RFL)=$G(RESP)
  . . . . . I $D(RESP),'RESP S SBTECME=SBTECME+1
  . . . . . S ^TMP("PSXEPHDFN",$J,XDFN)=""
  . . . D PSOUL^PSSLOCK(PSOLRX)
  K ^TMP("PSXEPHDFN",$J)
  Q SBTECME
- ;
-DOUBLE(RX,RFL) ; Checks if previous fill is still being worked on by CMOP
- ;Input: (r) RX  - Prescription IEN
- ;       (r) RFL - Fill number
- ;Output:    0 - Previous fill not with CMOP / 1 - CMOP working on previous fill
- N CMP,DOUBLE,STS
- ; 
- I 'RFL!'$D(^PSRX(RX,4)) Q 0
- I $$STATUS^PSOBPSUT(RX,RFL-1)="" Q 0
- S DOUBLE=0,CMP=999
- F  S CMP=$O(^PSRX(RX,4,CMP),-1) Q:'CMP  D  I DOUBLE Q
- . I $$GET1^DIQ(52.01,CMP_","_RX,2,"I")'=(RFL-1) Q
- . S STS=$$GET1^DIQ(52.01,CMP_","_RX,3,"I")
- . I STS=0!(STS=2) S DOUBLE=1
- Q DOUBLE
  ;
 EXIT ;
  K DFN,PSXDAYS,PSXDTRG,SWITCH,STAT,PRINT,PSXTRANS,REC,REPLY,SDT,X,X1,X2,Y,ANSWER,STATUS,PSXFLAG,PSXPTR,PSXSTAT

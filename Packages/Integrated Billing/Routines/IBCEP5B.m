@@ -1,16 +1,15 @@
 IBCEP5B ;ALB/TMP - EDI UTILITIES for prov ID ;29-SEP-00
- ;;2.0;INTEGRATED BILLING;**137,239,232,320,348,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,239,232**;21-MAR-94
  ;
 NEWID(IBFILE,IBINS,IBPRV,IBPTYP,IBIEN,IBF) ; Generic add prov id
  ; at both prov (file 355.9) and ins co levels (355.91)
  ; IBFILE = 355.9 or 355.91 - the file being edited
  ; IBINS = ien of ins co (36) or *ALL* for all ins co
  ; IBPRV = vp ien of billing prov
- ; IBPTYP = ien of prov type (file 355.97)
+ ; IBPTYP = ien of prov type (file 355.96)
  ; IBIEN = ien of entry being added (req'd)
  ; IBF = 1 if deleting from ins-related options, "" from prov-related
- N DIC,DIR,X,Y,Z,DA,DR,DIE,DO,DD,DLAYGO,DTOUT,DUOUT,IBQ,IBCUND,IB3559,IB35591,Q,IBDR,IBID,AFT
+ N DIC,DIR,X,Y,Z,DA,DR,DIE,DO,DD,DLAYGO,DTOUT,DUOUT,IBQ,IBCUND,IB3559,IB35591,Q,IBDR,IBID
  S IB35591(.03)="",IBPTYP=$G(IBPTYP)
  F Z=.04,.05,.03 D  G:Z="" NEWQ
  . I $S(Z'=.03:1,1:$S('$G(IBINS):0,1:$G(IBCUND))) D  Q:Z=""
@@ -21,16 +20,6 @@ NEWID(IBFILE,IBINS,IBPRV,IBPTYP,IBIEN,IBF) ; Generic add prov id
  ... S DIR("S")="I $O(^IBA(355.96,""AUNIQ"","_IBINS_",Y,"_$G(IB3559(.04))_","_$G(IB3559(.05))_","_IBPTYP_",0))!($O(^IBA(355.96,""AUNIQ"","_IBINS_",Y,"_$G(IB3559(.04))_",0,"_IBPTYP_",0)))"
  ... S DIR("S")=DIR("S")_"!($O(^IBA(355.96,""AUNIQ"","_IBINS_",Y,0,"_$G(IB3559(.05))_","_IBPTYP_",0)))!($O(^IBA(355.96,""AUNIQ"","_IBINS_",Y,0,0,"_IBPTYP_",0)))"
  ... S DIR("?",1)="Care unit describes areas of service and is assigned by the payer, if",DIR("?")="  applicable.  Use Care Unit Maintenance to add or modify care units."
- .. ;
- .. I Z=.04,IBPRV["355.93",$$GET1^DIQ(355.93,+IBPRV,.02,"I")=1 D
- ... I $$GET1^DIQ(355.97,IBPTYP,.03,"I")="EI" S $P(DIR(0),U,3)="K:Y'=1 X",DIR("?")="Provider ID Qualifier selected only allows institutional (UB type) forms" Q
- ... I $$GET1^DIQ(355.97,IBPTYP,.03,"I")="TJ" S $P(DIR(0),U,3)="K:Y'=2 X",DIR("?")="Provider ID Qualifier selected only allows professional (CMS-1500) forms" Q
- ... N AFT
- ... S AFT=$$GET1^DIQ(355.97,IBPTYP,.07,"I")  ; get allowable form type for this Provider ID Type
- ... I AFT="B" S $P(DIR(0),U,3)="K:"".0.1.2.""'[("".""_Y_""."") X",DIR("?")="Provider ID Qualifier selected allows institutional, professional or both" Q
- ... I AFT="P" S $P(DIR(0),U,3)="K:Y'=2 X",DIR("?")="Provider ID Qualifier selected only allows professional (CMS-1500) forms" Q
- ... I AFT="I" S $P(DIR(0),U,3)="K:Y'=1 X",DIR("?")="Provider ID Qualifier selected only allows institutional (UB type) forms" Q
- .. ;
  .. S DA=0
  .. I Z=.04,$P($G(^IBE(355.97,+IBPTYP,0)),U,3)="1A" D SETDIR(.DIR)
  .. D ^DIR K DIR
@@ -72,18 +61,10 @@ NEWID(IBFILE,IBINS,IBPRV,IBPTYP,IBIEN,IBF) ; Generic add prov id
  ... D ^DIE
  ... I $D(Y) K IB3559,IB35591 S IBOK=0
  ;
-NEWQ ;
- I '$D(IB3559),$G(IBIEN) D  Q
+NEWQ I '$D(IB3559),$G(IBIEN) D
  . N DIR,DIK,DA,X,Y
  . S DA=IBIEN,DIK="^IBA("_IBFILE_"," D ^DIK
  . S DIR(0)="EA",DIR("A",1)=$S('$G(IBOK):"",1:"PROBLEM ENCOUNTERED FILING THE RECORD - ")_"RECORD NOT ADDED",DIR("A")="PRESS ENTER to continue " W ! D ^DIR K DIR
- ;
- ; Save this for Copy ID actions
- I $G(IBIEN) D
- . I IBFILE=355.91!(IBFILE=355.9&($P($G(^IBA(IBFILE,IBIEN,0)),U)["VA(200,")) D
- .. N NEXTONE S NEXTONE=$$NEXTONE^IBCEP5A()
- .. S ^TMP("IB_EDITED_IDS",$J,NEXTONE)=IBIEN_U_"ADD"_U_IBFILE
- .. S ^TMP("IB_EDITED_IDS",$J,NEXTONE,0)=$G(^IBA(IBFILE,IBIEN,0))
  Q
  ;
 CHG(IBFILE,IBDA) ; Generic call - edit prov id
@@ -106,14 +87,7 @@ CHG(IBFILE,IBDA) ; Generic call - edit prov id
  S IBCUCHK=$$CUCHK^IBCEP5C(IBDA,IB0) G:IBCUCHK CHGQ
  S DR=""
  F Z=2,4:1:7,3 I $P(IB0,U,Z)'=$P(IBOLD,U,Z) S DR=DR_$S(DR'="":";",1:"")_(Z/100)_"///"_$S($P(IB0,U,Z)'="@":"/",1:"")_$P(IB0,U,Z)
- I DR'="" D
- . I IBFILE=355.91!(IBFILE=355.9&($P(IB0,U)["VA(200,")) D
- .. N NEXTONE
- .. S NEXTONE=$$NEXTONE^IBCEP5A()
- .. S ^TMP("IB_EDITED_IDS",$J,NEXTONE)=IBDA_U_"MOD"_U_IBFILE_U_IBDA
- .. S ^TMP("IB_EDITED_IDS",$J,NEXTONE,"OLD0")=IBOLD
- .. S ^TMP("IB_EDITED_IDS",$J,NEXTONE,0)=IB0
- . S DIE="^IBA("_IBFILE_",",DA=IBDA D ^DIE
+ I DR'="" S DIE="^IBA("_IBFILE_",",DA=IBDA D ^DIE
 CHGQ L -^IBA(IBFILE,IBDA)
  Q
  ;
@@ -126,12 +100,84 @@ DEL(IBFILE,IBDA,IBF) ; Delete prov specific ID's
  Q
  ;
 EDIT(IBFILE,IBFLD,IB0,IBOLD,IBIEN,IBCK1) ; Generic edit flds
- Q $$EDIT^IBCEP5D($G(IBFILE),$G(IBFLD),$G(IB0),$G(IBOLD),$G(IBIEN),$G(IBCK1))
+ N DIR,Y,X,IB,IB1,IBCUVAL,IBCUY,IBFLD0,IBNEW,IBPRV,IBVAL,IBIVAL,IBINS,IBCUCHK,IBOK,DUOUT,DTOUT
+ I IBFILE=355.91,IBFLD=.02 S IBNEW="" G EDITQ ; No .02 in file 355.91
+ S IBCUCHK=1,IBCUVAL=""
+ S IBFLD0=IBFLD*100,IBPRV=$S(IBFILE=355.9:$P(IB0,U),1:""),IBNEW=""
+ S IBINS=$P(IB0,U,$S(IBFILE=355.9:2,1:1))
+ I IBFLD'=.03 S IBVAL=$$EXPAND^IBTRE(IBFILE,IBFLD,$P(IB0,U,IBFLD0)),IBIVAL=$P(IB0,U,IBFLD0)
+ I IBFLD=.03,$S('IBINS:1,1:'$$CAREUN^IBCEP3(IBINS,$P(IB0,U,6),$P(IB0,U,4),$P(IB0,U,5),$P(IB0,U,5)=3)) S:$P(IB0,U,3) IBNEW="@" G EDITQ
+ I IBFLD=.03 S IBVAL=$P($G(^IBA(355.95,+$G(^IBA(355.96,+$P(IB0,U,3),0)),0)),U),IBIVAL=$P(IB0,U,3) D
+ . S IBCUCHK=0,IBCUVAL=$P($G(^IBA(355.96,+IBIVAL,0)),U,1) I IBCUVAL="" Q
+ . I $O(^IBA(355.96,"AUNIQ",IBINS,IBCUVAL,$P(IB0,U,4),$P(IB0,U,5),$P(IB0,U,6),"")) S IBCUCHK=1 Q
+ . I $O(^IBA(355.96,"AUNIQ",IBINS,IBCUVAL,$P(IB0,U,4),0,$P(IB0,U,6),""))  S IBCUCHK=1 Q
+ . I $O(^IBA(355.96,"AUNIQ",IBINS,IBCUVAL,0,$P(IB0,U,5),$P(IB0,U,6),"")) S IBCUCHK=1 Q
+ . I $O(^IBA(355.96,"AUNIQ",IBINS,IBCUVAL,0,0,$P(IB0,U,6),"")) S IBCUCHK=1 Q
+ . S IBIVAL="@"
+ I IBFLD'=.02 D
+ . N DA
+ . S DIR(0)=$S(IBFLD'=.03:IBFILE_","_IBFLD_"AO",1:"PAO^355.95:AEMQ")
+ . I IBFLD=.03 D  Q:$P(IB0,U,4)=""!($P(IB0,U,5)="")!($P(IB0,U,6)="")
+ .. S DIR("A")="CARE UNIT: "
+ .. S DIR("S")="I $D(^IBA(355.96,""AUNIQ"",IBINS,Y,$P(IB0,U,4),$P(IB0,U,5),$P(IB0,U,6)))!($D(^IBA(355.96,""AUNIQ"",IBINS,Y,$P(IB0,U,4),0,$P(IB0,U,6))))"
+ .. S DIR("S")=DIR("S")_"!($D(^IBA(355.96,""AUNIQ"",IBINS,Y,0,$P(IB0,U,5),$P(IB0,U,6))))!($D(^IBA(355.96,""AUNIQ"",IBINS,Y,0,0,$P(IB0,U,6))))"
+ . I IBFLD'=.03 S DIR("A")=$$GET1^DID(IBFILE,IBFLD,,"LABEL")_": "
+ . S:IBVAL'=""&(IBCUCHK) DIR("A")=DIR("A")_IBVAL_"// "
+ . S DA=0
+ . F  D ^DIR S IBOK=0 D  Q:IBOK
+ .. I $D(DUOUT)!$D(DTOUT) S IBOK=1 Q
+ .. I X="",$P(IB0,U,(IBFLD*100))'="" S (X,Y)=$P(IB0,U,(IBFLD*100))
+ .. I IBFLD=.06,$P(IB0,U,4)'=1,$P($G(^IBE(355.97,$S(+Y:+Y,1:+$P(IB0,U,6)),0)),U,3)="1A" W !,"BLUE CROSS IS ONLY ALLOWED FOR UB92 ONLY" Q
+ .. S IBOK=1
+ . K DIR
+ . I IBFLD=.03,'$D(DTOUT),'$D(DUOUT) D  S Y=IBCUY
+ .. S IBCUVAL=+$G(^IBA(355.96,+Y,0))
+ .. S IBCUY=+$O(^IBA(355.96,"AUNIQ",IBINS,IBCUVAL,$P(IB0,U,4),$P(IB0,U,5),$P(IB0,U,6),0))
+ .. I 'IBCUY S IBCUY=+$O(^IBA(355.96,"AUNIQ",IBINS,IBCUVAL,$P(IB0,U,4),0,$P(IB0,U,6),0))
+ .. I 'IBCUY S IBCUY=+$O(^IBA(355.96,"AUNIQ",IBINS,IBCUVAL,0,$P(IB0,U,5),$P(IB0,U,6),0))
+ .. I 'IBCUY S IBCUY=+$O(^IBA(355.96,"AUNIQ",IBINS,IBCUVAL,0,0,$P(IB0,U,6),0))
+ .. I 'IBCUY S IBCUY="@"
+ . I IBIVAL'="",IBCUCHK,($P(Y,U)=IBIVAL!(X="")) S IBNEW=IBIVAL Q
+ . I 'IBCUCHK,X="" S IBNEW=IBIVAL Q
+ . I X'="@",($S(X="":IBIVAL'="",1:0)!$D(DTOUT)!$D(DUOUT)) S IBNEW="^1" Q
+ . S IBNEW=$S(X'="@":$P(Y,U),1:X)
+ . I IBFLD=.03,X="" S IBNEW="" ; No care unit selected
+ I IBFLD=.02 D  ; Only file 355.9
+ . N DIR,X,Y,DIC,DA,IBIT
+ . S IBIT=$$GET1^DID(355.9,.02,,"INPUT TRANSFORM")
+ . S DIR(0)="FAO^1:30"
+ . S DIR("A")="INSURANCE CO: "_$S(IBVAL'="":IBVAL_"// ",1:" "),DIR("?")="^N IBHELP,Z D HELP^DIE(355.9,,.02,""A"",""IBHELP"") S Z=0 F  S Z=$O(IBHELP(""DIHELP"",Z)) Q:'Z  W !,IBHELP(""DIHELP"",Z)"
+ . F  W ! D ^DIR D  I IBNEW'="" K DIR Q
+ .. I $D(DTOUT)!$D(DUOUT) S IBNEW="^1" Q
+ .. I IBIVAL'="",($P(Y,U)=IBIVAL!(X="")) S IBNEW=IBIVAL Q
+ .. I X="@" S IBNEW="@" Q
+ .. I X="",IBIVAL="" S IBNEW="*ALL*" Q
+ .. S DIC="^DIC(36,",DIC(0)="EMQ",DIC("S")="X IBIT I $D(X)" D ^DIC
+ .. I Y>0 S IBNEW=$P(Y,U) Q
+ .. S Y="",IBNEW="^1"
+ G:IBNEW="^1"!(IBNEW=IBIVAL)!(IBFLD=.07) EDITQ
+ I $G(IBCK1) D
+ . N X1,X2,X3,X4,X5,X6
+ . S X1=$S(IBFILE=355.9:$S(IBFLD'=.01:IBPRV,1:IBNEW),1:"")
+ . S X2=$S(IBFILE=355.9:$S(IBFLD'=.02:$P(IB0,U,2),1:IBNEW),1:$S(IBFLD'=.01:$P(IB0,U),1:IBNEW))
+ . S X3=$S(IBFLD'=.03:$P(IB0,U,3),1:IBNEW),X4=$S(IBFLD'=.04:$P(IB0,U,4),1:IBNEW),X5=$S(IBFLD'=.05:$P(IB0,U,5),1:IBNEW),X6=$S(IBFLD'=.06:$P(IB0,U,6),1:IBNEW)
+ . I X2="" S X2="*ALL*"
+ . I X3="" S X3="*N/A*"
+ . I IBFILE=355.9,$S(X4=""!(X5="")!(X6=""):1,$O(^IBA(355.9,"AUNIQ",X1,X2,X3,X4,X5,X6,0)):$O(^(0))'=IBIEN,1:0) S IBNEW=IBNEW_"^2" Q
+ . I IBFILE=355.91,$S(X4=""!(X5="")!(X6=""):1,$O(^IBA(355.91,"AUNIQ",X2,X3,X4,X5,X6,0)):$O(^(0))'=IBIEN,1:0) S IBNEW=IBNEW_"^2" Q
+ . F IB=2,3 D  Q:$P(IBNEW,U,3)=3
+ .. S IB1=(X2="*ALL*"!(X3="*N/A*"))
+ .. I IBFILE=355.9,IB=2,$S($P(IBOLD,U,2)="":X2'="*ALL*",1:$P(IBOLD,U,2)'=X2) S X2=""
+ .. I IB=3,$S($P(IBOLD,U,3)="":X3'="*N/A*",1:$P(IBOLD,U,3)'=X3) S X3=""
+ .. I '$$COMBOK^IBCEP5C(IBFILE,IBPRV_U_(IBFLD*100)_U_X2_U_X3_U_X4_U_X5_U_X6,IB1) S IBNEW="^3"
  ;
-SETDIR(DIR) ; Sets dir for BLUE CROSS only UB-04 form type
- S DIR("B")="UB-04",$P(DIR(0),U,3)="K:Y'=1 X",DIR("?")="ONLY UB-04 FORM TYPE IS VALID FOR BLUE CROSS ID"
+EDITQ Q IBNEW
+ ;
+SETDIR(DIR) ; Sets dir for BLUE CROSS only UB92 form type
+ S DIR("B")="UB92",$P(DIR(0),U,3)="K:Y'=1 X",DIR("?")="ONLY UB92 FORM TYPE IS VALID FOR BLUE CROSS ID"
  Q
  ;
 ENTER(DIR) ;
  S DIR(0)="EA",DIR("A")="PRESS ENTER TO CONTINUE: "
  Q
+ ;

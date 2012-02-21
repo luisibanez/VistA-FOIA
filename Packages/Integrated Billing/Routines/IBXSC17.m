@@ -1,4 +1,4 @@
-IBXSC17 ; ;07/14/09
+IBXSC17 ; ;08/13/05
  D DE G BEGIN
 DE S DIE="^DPT(",DIC=DIE,DP=2,DL=2,DIEL=0,DU="" K DG,DE,DB Q:$O(^DPT(DA,""))=""
  I $D(^(.11)) S %Z=^(.11) S %=$P(%Z,U,1) S:%]"" DE(1)=% S %=$P(%Z,U,2) S:%]"" DE(3)=% S %=$P(%Z,U,3) S:%]"" DE(5)=% S %=$P(%Z,U,4) S:%]"" DE(6)=% S %=$P(%Z,U,5) S:%]"" DE(7)=%
@@ -199,7 +199,7 @@ X6 K:$L(X)>15!($L(X)<2) X
  I $D(X),X'?.ANP K X
  Q
  ;
-7 D:$D(DG)>9 F^DIE17,DE S DQ=7,DW=".11;5",DV="*P5'a",DU="",DLB="STATE",DIFLD=.115
+7 D:$D(DG)>9 F^DIE17,DE S DQ=7,DW=".11;5",DV="P5'a",DU="",DLB="STATE",DIFLD=.115
  S DE(DW)="C7^IBXSC17",DE(DW,"INDEX")=1
  S DU="DIC(5,"
  G RE
@@ -218,7 +218,5 @@ C7X1(DION) K X
  S X=$G(X(1))
  Q
 C7F2 Q
-X7 S DIC("S")="I $P(^DIC(5,Y,0),U,6)=1" D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X
- Q
- ;
+X7 Q
 8 D:$D(DG)>9 F^DIE17 G ^IBXSC114

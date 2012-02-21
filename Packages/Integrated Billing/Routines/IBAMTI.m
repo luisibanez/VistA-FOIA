@@ -1,11 +1,11 @@
 IBAMTI ;ALB/CPM - SPECIAL INPATIENT BILLING CASES ; 11-AUG-93
- ;;2.0;INTEGRATED BILLING;**52,132,153,156,234,247,339**;21-MAR-94;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,132,153,156,234,247**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 ADM(DFN,IBPM,IBCL) ; Create a new case record upon admission
  ;  Input:     DFN  --  Pointer to the patient in file #2
  ;            IBPM  --  Pointer to the adm movement in file #405
- ;            IBCL  --  Patient class [1-ao|2-ir|3-sc|4-swa|5-mst|6-hnc|7-cv|8-shad]
+ ;            IBCL  --  Patient class [1-ao|2-ir|3-sc|4-ec|5-mst|6-hnc|7-cv]
  I '$G(DFN)!'$G(IBPM)!'$G(IBCL) G ADMQ
  N DA,DIC,DIE,DR,IBC,X,Y
  ;
@@ -40,7 +40,7 @@ BGJ ; Perform nightly background monitoring of all case records.
  ;
 BULL(IBEV,IBCL) ; Send a bulletin at admission and discharge.
  ;  Input:    IBEV  --  Event [1:admission|2:discharge]
- ;            IBCL  --  Patient class [1-ao|2-ir|3-swa|4-sc|5-mst|6-hnc|7-cv|8-shad]
+ ;            IBCL  --  Patient class [1-ao|2-ir|3-ec|4-sc|5-mst|6-hnc|7-cv]
  K IBT S IBPT=$$PT^IBEFUNC(DFN)
  S XMSUB=$E($P(IBPT,"^"),1,14)_"  "_$P(IBPT,"^",3)_" - "_$$UCCL(IBCL)_$S($G(IBEV)=1:" ADM",1:" DISCH")
  S IBT(1)="The following Means Test copay "_$$LCCL(IBCL)_" patient was just "_$S($G(IBEV)=1:"admitted:",1:"discharged:")
@@ -81,7 +81,7 @@ NOTICE(IBNUM,DFN,IBPM,IBCL) ; Notice to disposition billing case
  ;  Input:   IBNUM  --  Number of days since discharge
  ;             DFN  --  Pointer to the patient in file #2
  ;            IBPM  --  Pointer to the admission in file #405
- ;            IBCL  --  Patient class [1-ao|2-ir|3-swa|4-sc|5-mst|6-hnc|7-cv|8-shad]
+ ;            IBCL  --  Patient class [1-ao|2-ir|3-ec|4-sc|5-mst|6-hnc|7-cv]
  ;
  Q:IBNUM#15  ; send notice every 15 days only
  N IBC K IBT S IBPT=$$PT^IBEFUNC(DFN)
@@ -103,10 +103,10 @@ NOTICE(IBNUM,DFN,IBPM,IBCL) ; Notice to disposition billing case
  Q
  ;
 UCCL(X) ; Return the upper case classification description.
- ;  Input:       X  --  Patient class [1-ao|2-ir|3-swa|4-sc|5-mst|6-hnc|7-cv|8-shad]
+ ;  Input:       X  --  Patient class [1-ao|2-ir|3-ec|4-sc|5-mst|6-hnc|7-cv]
  Q $S('$G(X):"SPECIAL",1:$$PATTYPE^IBACV(X))
  ;
 LCCL(X) ; Return the lower case classification description.
- ;  Input:       X  --  Patient class [1-ao|2-ir|3-swa|4-sc|5-mst|6-hnc|7-cv|8-shad]
+ ;  Input:       X  --  Patient class [1-ao|2-ir|3-ec|4-sc|5-mst|6-hnc|7-cv]
  Q $S('$G(X):"Special",1:$$PATTYPE^IBACV(X,"M"))
  ;

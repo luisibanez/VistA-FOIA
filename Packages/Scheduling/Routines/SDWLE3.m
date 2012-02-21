@@ -1,5 +1,5 @@
-SDWLE3 ;IOFO BAY PINES/TEH - WAITING LIST-ENTER/EDIT;06/12/2002 ; 12/14/05 1:28pm  ; Compiled April 25, 2006 10:42:02
- ;;5.3;scheduling;**263,417,446**;AUG 13 1993;Build 77
+SDWLE3 ;IOFO BAY PINES/TEH - WAITING LIST-ENTER/EDIT;06/12/2002 ; 12/14/05 1:28pm
+ ;;5.3;scheduling;**263,417**;AUG 13 1993
  ;
  ;
  ;******************************************************************
@@ -8,12 +8,12 @@ SDWLE3 ;IOFO BAY PINES/TEH - WAITING LIST-ENTER/EDIT;06/12/2002 ; 12/14/05 1:28p
  ;   DATE                        PATCH                   DESCRIPTION
  ;   ----                        -----                   -----------
  ;   08/01/2005                SD*5.3*417              Permit multiple teams
- ;   04/21/2006                SD*5.3*446              Inter-Facility Transfer
+ ;   
  ;   
  ;
 EN ;
  ;ASK FOR SPECIFIC TEAM (404.51)
- K DIR,DIC,DR,DIE,SDTMENT S (DA,SDTMENT)=SDWLDA K SDWLTH,SDWLMAX
+ K DIR,DIC,DR,DIE S DA=SDWLDA K SDWLTH,SDWLMAX
  S SDWLYN=5,SDWLTYE=1,SDWLVBR="SDWLST"
  I $D(SDWLST),'SDWLST K SDWLST
  I $G(SDWLCP3)'="" D
@@ -34,14 +34,7 @@ EN1 W ! S SDWLS=SDWLY,SDWLX=$S(SDWLTYE=1:"T",SDWLTYE=2:"P",1:""),SDWLSX="     "_
  N SDWLT S SDWLT=0 F  S SDWLT=$O(SDWLPLST(1,SDWLT)) Q:SDWLT<1  K SDWLMAX(SDWLT)
  S SDWLSCR="I $P(^(0),U,7)=SDWLIN,'$D(SDWLTH(+Y)),$D(SDWLMAX(+Y)),'$D(SDWLPLST(SDWLTYE,+Y,SDWLIN))"
  D EN2 G END:$D(DUOUT)
- ;DA=SDWLDA, see EN
- S DR="5////^S X=SDWLVAR",DIE=409.3 D ^DIE
- N FLG D FLAGS(.FLG,DFN,SDWLVAR)
- I 'FLG S DA=SDTMENT,DIE=409.3 D
- .S SDINTR=FLG(1),SDREJ=FLG(2),SDMTM=FLG(3)
- .S DR="32////^S X=SDREJ;34////^S X=SDINTR;38////^S X=SDMTM" D ^DIE
- ;
- S @SDWLVBR=SDWLVAR
+ S DR="5////^S X=SDWLVAR",DIE=409.3 D ^DIE S @SDWLVBR=SDWLVAR
  I $D(SDWLVARO),SDWLVARO,SDWLVAR'=SDWLVARO D DELPOS
  G END
 EN2 ;-DIR READ
@@ -59,38 +52,6 @@ EN2 ;-DIR READ
  I $D(DUOUT) Q
  I Y<0 W "??" G EN2
  S SDWLVAR=+Y
- Q
- ;identify flags
-FLAGS(FLG,DFN,TEAM) ;
- N SDTEAM S SDTEAM=$G(TEAM)
- ; check if transfer and if multiple teams in institution
- S SDCNT=0,SDINTR=0,SDREJ=0,SDMTM=0 D
- .S SDWLIN=$P($G(^SCTM(404.51,TEAM,0)),U,7)
- .I $P(^SCTM(404.51,TEAM,0),U,5)'=1 Q  ; cannot be primary care provider team   
- .;identify INTRA-transfer
- .;- is patient assigned to PC provider?
- .I $$GETALL^SCAPMCA(DFN) D
- ..I $G(^TMP("SC",$J,DFN,"PCPOS",0)) S SDTM=$P(^(1),U,3) I SDTM>0 D
- ...I $P($G(^SCTM(404.51,SDTM,0)),U,7)'=SDWLIN S SDINTR=1 D  ; inter transfer ; different institution
- ..I '$G(^TMP("SC",$J,DFN,"PCPOS",0)) D
- ...;check available PCMM teams in other institutions and if so set up rejection flag
- ...S SDINS=""
- ...F  S SDINS=$O(^SCTM(404.51,"AINST",SDINS)) Q:SDINS=""  I SDINS'=SDWLIN D  Q:SDREJ
- ....S SDCNT=0,SDT=""
- ....F  S SDT=$O(^SCTM(404.51,"AINST",SDINS,SDT)) Q:SDT=""  D  Q:SDREJ
- .....I $$ACTTM^SCMCTMU(SDT,DT)&($P($G(^SCTM(404.51,SDT,0)),U,5))&'$P($G(^SCTM(404.51,SDT,0)),U,10) D
- ......S SCTMCT=$$TEAMCNT^SCAPMCU1(SDT) ;currently assigned
- ......S SCTMMAX=$P($$GETEAM^SCAPMCU3(SDT),"^",8) ;maximum set
- ......I SCTMCT<SCTMMAX S SDREJ=1
- ..;find all teams from institution SDWLIN
- ..I SDINTR S SDCNT=0,SDT="" D
- ...F  S SDT=$O(^SCTM(404.51,"AINST",SDWLIN,SDT)) Q:SDT=""  I $P(^SCTM(404.51,SDT,0),U,5)=1 S TEAM(SDT)="",SDCNT=SDCNT+1
- S FLG(1)=SDINTR,FLG(2)=SDREJ,FLG(3)=SDMTM
- I SDCNT>1 S SDMTM=1,FLG(3)=SDMTM,FLG=1 S SDCC="" F  S SDCC=$O(TEAM(SDCC)) Q:SDCC=""  S TEAM=SDCC N DR,Y D WMT
- I SDCNT>1 S TEAM=$G(SDTEAM) Q
- I SDCNT'>1 N DR,Y S FLG=0 S TEAM=$G(SDTEAM) Q
-WMT D INPUT^SDWLRP1(.RES,DFN_U_1_U_TEAM_U_U_DUZ_"^^"_U_SDINTR_U_SDREJ_U_SDMTM)
- ;I $G(RES) S OK=0,DA=+$P(RES,U,2),DIE="^SDWL(409.3,",DR="25;S OK=1" D ^DIE  I '$G(OK) S DIK=DIE D ^DIK W !,"Wait list entry deleted"
  Q
 GETLIST ;GET LIST OF TEAM ASSIGNMENTS - SD*5.3*417
  N SDWLDAX,X,Z,SDWLIN K SDWLPLST S SDWLPLST=""

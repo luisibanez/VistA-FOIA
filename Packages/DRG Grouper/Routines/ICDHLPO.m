@@ -1,5 +1,5 @@
-ICDHLPO ;ALB/GRR/EG-HELP DISPLAY FOR OPERATION IDENTIFIERS ; 11/9/07 12:52pm
- ;;18.0;DRG Grouper;**10,14,31**;Oct 20, 2000;Build 7
+ICDHLPO ;ALB/GRR/EG-HELP DISPLAY FOR OPERATION IDENTIFIERS ; 9/22/04 9:38am
+ ;;18.0;DRG Grouper;**10,14**;Oct 20, 2000
 EN ;revised 12/94  abr
  N ICDID,I,J,ID
  F I=1:1 S ICDID=$T(PXCODE+I),ICDID=$P(ICDID,";;",2) Q:ICDID="EXIT"  D
@@ -56,7 +56,6 @@ PXCODE ; procedure id codes
  ;;C=Chemo inplant
  ;;Q=Craniotomy
  ;;I=injectable/infusion (injection or infusion of drugs)
- ;;J=Inguinal and femoral hernia procedures
  ;;EXIT
  Q
 PNCODE ;numeric ID's for procedures/ operations

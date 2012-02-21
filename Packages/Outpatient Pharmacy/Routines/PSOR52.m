@@ -1,9 +1,7 @@
 PSOR52 ;IHS/DSD/JCM - Files refill entries in prescription file ;03/10/93
- ;;7.0;OUTPATIENT PHARMACY;**10,22,27,181,148,201,260,281,358**;DEC 1997;Build 35
- ;Reference to ^PSDRUG supported by DBIA 221
- ;Reference to PSOUL^PSSLOCK supported by DBIA 2789
- ;Reference SWSTAT^IBBAPI supported by DBIA 4663
- ;Reference SAVNDC^PSSNDCUT supported by DBIA 4707
+ ;;7.0;OUTPATIENT PHARMACY;**10,22,27,181,148**;DEC 1997
+ ;External reference to ^PSDRUG supported by DBIA 221
+ ;External reference to PSOUL^PSSLOCK supported by DBIA 2789
  ; This routine is responsible for the actual
  ; filling of the refill prescription.
  ;---------------------------------------------------------   
@@ -36,7 +34,7 @@ INIT ;
  I $P(PSOX("RX2"),"^",12)]"" S PSOX("GENERIC PROVIDER")=$P(PSOX("RX2"),"^",12)
  S PSOX("PROVIDER")=$P(PSOX("RX0"),"^",4)
  S:'$D(PSOX("CLERK CODE")) PSOX("CLERK CODE")=DUZ
- S PSOX("DAW")=$$GETDAW^PSODAWUT(+PSOX("IRXN")),PSOX("NDC")=$$GETNDC^PSSNDCUT($P(PSOX("RX0"),"^",6))
+ S PSOX("DAW")=$$GETDAW^PSODAWUT(+PSOX("IRXN"))
 INITX Q
  ;
 FILE ;     
@@ -51,7 +49,6 @@ FILE ;
  S $P(^PSRX(PSOX("IRXN"),3),"^",1,2)=PSOX("LAST DISPENSED DATE")_"^"_PSOX("NEXT POSSIBLE REFILL")
  S $P(^PSRX(PSOX("IRXN"),3),"^",4)=PSOX("LAST REFILL DATE")
  I $D(PSOX("METHOD OF PICK-UP")),PSOX("FILL DATE")'>DT S $P(^PSRX(PSOX("IRXN"),"MP"),"^")=PSOX("METHOD OF PICK-UP")
- D:$$SWSTAT^IBBAPI() GACT^PSOPFSU0(PSOX("IRXN"),PSOX("NUMBER"))
  ;L -^PSRX(PSOX("IRXN"))
  Q
  ;
@@ -78,16 +75,11 @@ FINISH ;
  .I $G(PSOXRXFL)'="" S RXFL(PSOX("IRXN"))=$G(PSOXRXFL) K PSOXRXFL
  ;
  ; - Calling ECME for claims generation and transmission / REJECT handling
- N ACTION,PSOERX,PSOERF
- S PSOERX=PSOX("IRXN"),PSOERF=PSOX("NUMBER")
- I $$SUBMIT^PSOBPSUT(PSOERX,PSOERF) D  I ACTION="Q"!(ACTION="^") Q
- . S ACTION="" D ECMESND^PSOBPSU1(PSOERX,PSOERF,PSOX("FILL DATE"),"RF")
- . ; Quit if there is an unresolved Tricare non-billable reject code, PSO*7*358
- . I $$PSOET^PSOREJP3(PSOERX,PSOERF) S ACTION="Q" Q
- . I $$FIND^PSOREJUT(PSOERX,PSOERF) D
- . . S ACTION=$$HDLG^PSOREJU1(PSOERX,PSOERF,"79,88","OF","IOQ","Q")
- . I $$STATUS^PSOBPSUT(PSOERX,PSOERF)="E PAYABLE" D
- . . D SAVNDC^PSSNDCUT(+$$GET1^DIQ(52,PSOERX,6,"I"),$G(PSOSITE),$$GETNDC^PSONDCUT(PSOERX,PSOERF))
+ N ACTION
+ I $$SUBMIT^PSOBPSUT(PSOX("IRXN"),PSOX("NUMBER")) D  I ACTION="Q"!(ACTION="^") Q
+ . S ACTION="" D ECMESND^PSOBPSU1(PSOX("IRXN"),PSOX("NUMBER"),PSOX("FILL DATE"),"RF")
+ . I $$FIND^PSOREJUT(PSOX("IRXN"),PSOX("NUMBER")) D
+ . . S ACTION=$$HDLG^PSOREJU1(PSOX("IRXN"),PSOX("NUMBER"),"79,88","OF","IOQ","I")
  ;
  I $G(PSOX("QS"))="Q" D  G FINISHX
  . I $G(PPL),$L(PPL_PSOX("IRXN")_",")>240 D TRI^PSOBBC D Q^PSORXL K PPL,RXFL

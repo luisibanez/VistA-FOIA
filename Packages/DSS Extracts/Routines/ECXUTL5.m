@@ -1,5 +1,5 @@
-ECXUTL5 ;ALB/JRC - Utilities for DSS Extracts ; 10/17/07 3:49pm
- ;;3.0;DSS EXTRACTS;**71,84,92,103,105,120**;Dec 22, 1997;Build 43
+ECXUTL5 ;BPFO/JRC - Utilities for DSS Extracts ; 9/29/05 8:42am
+ ;;3.0;DSS EXTRACTS;**71,84**;Dec 22, 1997
  ;
 REPEAT(CHAR,TIMES) ;REPEAT A STRING
  ;INPUT  : CHAR - Character to repeat
@@ -112,7 +112,7 @@ DOIVPO(K,L) ;Add destination for outpatient ivp orders
  ;     Input     K - DFN
  ;               L - Order # from Pharmacy Patient File (#55)
  ;
- ;     Output     ordering stop code
+ ;     Ouput     ordering stop code
  ;
  N ECXDIC,ECXDICA,ECXDICB,DOIVPO,CLINIC,SCODE,DIC,DIQ,DR,DA
  S (ECXDIC,ECXDICA,ECXDICB,DOIVPO,CLINIC,SCODE)=""
@@ -137,7 +137,7 @@ DOUDO(K,L) ;Add destination for outpatient udp orders
  ;     Input     K - DFN
  ;               L - Order # from Pharmacy Patient File (#55)
  ;
- ;     Output     ordering stop code
+ ;     Ouput     ordering stop code
  ;
  N ECXDIC,ECXDICA,ECXDICB,DOIVPO,CLINIC,SCODE,DIC,DIQ,DR,DA
  S (ECXDIC,ECXDICA,ECXDICB,DOIVPO,CLINIC,SCODE)=""
@@ -177,48 +177,10 @@ PHAAPI(DRUG) ;Call Pharmacy drug file API dbia 4483
  Q NAME_U_CLASS_U_NDC_U_INV_U_P1_U_P3_U_PPDU_U_UNIT
  ;
 TSSC(X) ;Check treating specialty (ts) and if ts equals any of the following
- ;18,23,24,36,41,65,94,108(1J) then assign predefined code and return value
+ ;18,23,24,36,41,65,94 then assign predefined code and return value
  ;
  ;    Input: treating specialty
  ;    Output: Ordering stop code
  ;
- S CODE=$S(X=18:293,X=23:295,X=24:290,X=36:294,X=41:296,X=65:291,X=94:292,X=108:297,1:"")
+ S CODE=$S(X=18:293,X=23:295,X=24:290,X=36:294,X=41:296,X=65:291,X=94:292,1:"")
  Q CODE
- ;
-PSJ59P5(X) ;Get iv room division
- ;   Input  X - iv room ien
- ;
- ;   Output - field .02 division
- ;Init variables
- N DIV S DIV=""
- ;Check input
- I 'X  Q DIV
- D ALL^PSJ59P5(X,,"ECXDIV")
- S DIV=$P($G(^TMP($J,"ECXDIV",X,.02)),U)
- K ^TMP($J,"ECXDIV")
- Q DIV
- ;
-SCRX(IEN) ;Service connected prescription
- ;Init variables
- N DIC,DR,DA,ECXDIQ
- ;Check input
- I '$G(IEN) Q ""
- S DIC=52,DR="116",DA=IEN,DIQ="ECXDIQ"
- D DIQ^PSODI(DIC,DIC,DR,DA,DIQ)
- Q $S($G(ECXDIQ(52,DA,116))="YES":"Y",$G(ECXDIQ(52,DA,116))="NO":"N",1:"")
- ;
-SSN(SSN,FILE) ; extended validation of ssn
- ;       input:     ssn - social security number to validate
- ;                  file - optional "", 2 or 67, the only check is for
- ;                         reference lab file (#67) in which case ssn
- ;                         "000123456" is considered a valid ssn.
- ;        output:   0 - test patient or invalid ssn
- ;                  1 - valid ssn
- ;
- ;check input
- I $G(SSN)']"" Q 0
- S FILE=$G(FILE)
- I (FILE=67)&(SSN="000123456") Q 1
- I "89"[$E(SSN) Q 0
- I (SSN="123456789")!(SSN="111111111")!(SSN="222222222")!(SSN="333333333")!(SSN="444444444")!(SSN="555555555")!($E(SSN,1,3)="666")!($E(SSN,4,5)="00")!($E(SSN,1,3)="000") Q 0
- Q 1

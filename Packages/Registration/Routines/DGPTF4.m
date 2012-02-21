@@ -1,5 +1,5 @@
 DGPTF4 ;ALB/JDS - PTF ENTRY/EDIT-4 ; 2/19/04 9:33am
- ;;5.3;Registration;**114,115,397,510,517,478,683,775**;Aug 13, 1993;Build 3
+ ;;5.3;Registration;**114,115,397,510,517,478,683**;Aug 13, 1993
  ;
 WR ;
  W @IOF,HEAD,?72 S Z="<701>" D Z^DGPTFM K X S $P(X,"-",81)="" W !,X
@@ -58,9 +58,7 @@ CLS G NOT:('$D(DRG))!('DGDD)!('DGFC)
  ;
  ;change made to allow release of 470, before grouper released to vamc's
  ;  patch 115
- ;DGDAT = effective date of DRG used in DGPTICD (468=CMS-DRG,998=MS-DRG)
- I DRG=469,(+$G(DGDAT)<3071001)  W !!,*7,"Unable to release DRG ",DRG,". Please verify data entered.",*7 D HANG^DGPTUTL G EN1
- I DRG=998 W !!,*7,"Unable to release DRG ",DRG,".  Please verify data entered.",*7 D HANG^DGPTUTL G EN1
+ I DRG=469 W !!,*7,"Unable to release DRG ",DRG,". Please verify data entered.",*7 D HANG^DGPTUTL G EN1
  I $D(DGCST),'DGCST D CEN G EN1:'DGCST
  I '$P(^DGPT(PTF,0),"^",4) W !,"Updating TRANSFER DRGs..." S DGADM=$P(^DGPT(PTF,0),U,2) D SUDO1^DGPTSUDO
  I DGDD>(DT+1) W !,"Cannot close with Discharge date in future." D HANG^DGPTUTL G EN1

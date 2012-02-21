@@ -1,5 +1,5 @@
-PRSATP7 ;HISC/MGD-Timekeeper Post Absence ;04/18/06
- ;;4.0;PAID;**102,108**;Sep 21, 1995
+PRSATP7 ;HISC/MGD-Timekeeper Post Absence ;12/12/05
+ ;;4.0;PAID;**102**;Sep 21, 1995
  ;       
 DAH(PPIP,DFN,WDAY,DAH,QUIT) ;
  ; Find Day After Holiday - Called from PRSASR
@@ -60,5 +60,4 @@ DAH(PPIP,DFN,WDAY,DAH,QUIT) ;
  . Q:EINDX'=TINDX  ; not first 15 minutes
  . I ETOT'="NP"&(ETOT'="WP") S QUIT=1 Q  ; first 15 wasn't non-pay
  . S DAH=PPIP_U_WDAY_U_ETOT
- I DAH="" S QUIT=1
  Q

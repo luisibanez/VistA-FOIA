@@ -1,5 +1,5 @@
-VAFHUTL ;ALB/CM/PHH/EG/GAH UTILITIES ROUTINE ; 10/18/06
- ;;5.3;Registration;**91,151,568,585,725**;Jun 06, 1996;Build 12
+VAFHUTL ;ALB/CM/PHH/EG UTILITIES ROUTINE ; 1/21/05 2:11pm
+ ;;5.3;Registration;**91,151,568,585**;Jun 06, 1996
  ;
  ;
 LTD(DFN) ;
@@ -32,12 +32,16 @@ LTD(DFN) ;
  ; - get the last appointment and compare to LTD
  N SDDATE,SDARRAY,SDCLIEN,SDSTAT
  S SDDATE=LTD,SDARRAY("FLDS")=3,SDARRAY(4)=DFN
- I $$SDAPI^SDAMA301(.SDARRAY)>0 D
+ I $$SDAPI^SDAMA301(.SDARRAY) D
+ .;if there is data hanging from the 101 level, then
+ .;it is a valid appointment, otherwise
+ .;it is an error eg 01/20/2005
+ .I $D(^TMP($J,"SDAMA301",101))=1 Q
  .S SDCLIEN=0
  .F  S SDCLIEN=$O(^TMP($J,"SDAMA301",DFN,SDCLIEN)) Q:'SDCLIEN!(SDDATE>DT)  D
  ..F  S SDDATE=$O(^TMP($J,"SDAMA301",DFN,SDCLIEN,SDDATE)) Q:'SDDATE!(SDDATE>DT)  D
  ...S SDSTAT=$P($P(^TMP($J,"SDAMA301",DFN,SDCLIEN,SDDATE),"^",3),";")
- ...I SDSTAT="R" D
+ ...I SDSTAT="" D
  ....S LAST=SDDATE,LTD=SDDATE\1,FLG="A"
  ....I $D(VARPTR) K VARPTR
  K ^TMP($J,"SDAMA301")

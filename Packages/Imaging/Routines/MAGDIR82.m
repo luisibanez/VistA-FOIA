@@ -1,6 +1,5 @@
-MAGDIR82 ;WOIFO/PMK - Read a DICOM image file ; 10/30/2008 09:20
- ;;3.0;IMAGING;**11,30,51,20,54**;03-July-2009;;Build 1424
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDIR82 ;WOIFO/PMK - Read a DICOM image file ; 07/02/2004  08:05
+ ;;3.0;IMAGING;**11,30**;16-September-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDIR82 ;WOIFO/PMK - Read a DICOM image file ; 10/30/2008 09:20
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -15,14 +15,15 @@ MAGDIR82 ;WOIFO/PMK - Read a DICOM image file ; 10/30/2008 09:20
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;
  ; M2MB server
  ;
  ; This routine is invoked by the ^MAGDIR8 to update statistics & add
  ; an image to the background processor and auto-router queues.
- ;
+ ; 
  ; There are two entry points, one for the "ACQUIRED" RESULT item, and
  ; the other (POSTPROC) for the "PROCESSED" RESULT item.
- ;
+ ; 
 ACQUIRED ; update image acquisition statistics
  N INSTNAME,LOCATION,STATUS
  S STATUS=$P(ARGS,"|",1)
@@ -32,22 +33,17 @@ ACQUIRED ; update image acquisition statistics
  Q
  ;
 POSTPROC ; update image processing statistics and add to BP & AR queues
- N COUNTFLG,ERRCODE,EVAL,I,IMAGEPTR,INSTNAME,LOCATION,MACHID,MSG,STATUS
+ N COUNTFLG,ERRCODE,EVAL,I,IMAGEPTR,INSTNAME,LOCATION,MSG,STATUS
  S STATUS=$P(ARGS,"|",1)
  S LOCATION=$P(ARGS,"|",2)
  S INSTNAME=$P(ARGS,"|",3)
  S IMAGEPTR=$P(ARGS,"|",4)
  S COUNTFLG=$P(ARGS,"|",5) ; zero for multiframe images
  S EVAL=$P(ARGS,"|",6)
- S MACHID=$P(ARGS,"|",7)
- I COUNTFLG D
- . D COUNT("PROCESSED") ; update the count
- . Q:$T(SAVEUID^MAGDIR81)=""
- . D SAVEUID^MAGDIR81(MACHID,"") ; clear the last image UID
- . Q
+ I COUNTFLG D COUNT("PROCESSED")
  ;
  S ERRCODE=""
- ;
+ ; 
  I $$CONSOLID^MAGDFCNV D
  . D POSTPRO2 ; consolidation code
  . Q
@@ -60,10 +56,9 @@ POSTPROC ; update image processing statistics and add to BP & AR queues
  E  D
  . D ERROR^MAGDIR8(OPCODE,ERRCODE,.MSG,$T(+0))
  . Q
- Q
+ Q 
  ;
 POSTPRO1 ; non-consolidation code version of post processing
- Q:IMAGEPTR<0
  ; add the image to the jukebox queue
  D:'$$JUKEBOX^MAGBAPI(IMAGEPTR)
  . S I=$O(MSG(" "),-1)
@@ -92,7 +87,6 @@ POSTPRO1 ; non-consolidation code version of post processing
  ;
 POSTPRO2 ; consolidation code version of post processing
  N PLACE
- Q:IMAGEPTR<0
  S PLACE=$O(^MAG(2006.1,"B",LOCATION,""))
  ;
  ; add the image to the jukebox queue
@@ -122,10 +116,10 @@ POSTPRO2 ; consolidation code version of post processing
  Q
  ;
 COUNT(STEP) ; update today's count
- N D2,NOW,PC,TODAY,X
- S NOW=$$NOW^XLFDT,TODAY=NOW\1
- L +^MAGDAUDT(2006.5762,TODAY):1E9 ; Background job MUST wait
- D:'$D(^MAGDAUDT(2006.5762,TODAY))
+ N %,D2,%H,NOW,PC,TODAY,X
+ D NOW^%DTC S TODAY=X,NOW=%
+ L +^MAGDAUDT(2006.5762,TODAY)
+ D:'$D(^MAGDAUDT(2006.5752,TODAY))
  . S X=$G(^MAGDAUDT(2006.5762,0))
  . S $P(X,"^",1,2)="DICOM INSTRUMENT STATISTICS^2006.5762"
  . S $P(X,"^",3)=TODAY
@@ -133,7 +127,7 @@ COUNT(STEP) ; update today's count
  . S ^MAGDAUDT(2006.5762,0)=X
  . S ^MAGDAUDT(2006.5762,TODAY,0)=TODAY
  . S ^MAGDAUDT(2006.5762,"B",TODAY,TODAY)=""
- . Q
+ . Q 
  S D2=$O(^MAGDAUDT(2006.5762,TODAY,1,LOCATION,1,"B",INSTNAME,""))
  D:'D2
  . S D2=$O(^MAGDAUDT(2006.5762,TODAY,1,LOCATION,1," "),-1)+1
@@ -154,14 +148,14 @@ COUNT(STEP) ; update today's count
  L -^MAGDAUDT(2006.5762,TODAY)
  Q
  ;
-WARNROUT(PLACE) N LAST,X2,X3
+WARNROUT(PLACE) N LAST,X1,X2,X3
  D:'PLACE
  . S PLACE=$$PLACE^MAGDRPC2(LOCATION)
  . Q
  S LAST=$G(^MAG(2006.1,+PLACE,"LASTROUTE"))
  S (X2,X3)=LAST\1 D:X3
  . N DEST,E,I,PRI,T
- . Q:$$FMDIFF^XLFDT(DT,X2,1)<7
+ . S X1=DT D ^%DTC Q:X<7
  . S X2=$P(LAST,"^",2) Q:X2'<DT  ; Only send one message per day
  . S (E,T,I)=0 F  S I=$O(^MAGQUEUE(2006.03,"C",PLACE,"EVAL",I)) Q:I=""  S E=E+1
  . S PRI="" F  S PRI=$O(^MAGQUEUE(2006.035,"STS",LOCATION,"WAITING",PRI)) Q:PRI=""  D

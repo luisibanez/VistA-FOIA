@@ -1,32 +1,5 @@
 IBCEP9B ;ALB/TMP - UPDATE OF PROVIDER ID FROM FILE UTILITIES ;14-NOV-00
- ;;2.0;INTEGRATED BILLING;**137,200,320**;21-MAR-94
- ;
- Q
- ;
-READFILE ; Read records stored in ^TMP($J
- ;
- N D,DA,DIC,IBCT,IBP,IBQUIT,IBS,IBX,P,P3,X,Y,Z
- S (IBCT,IBQUIT,IBQUIT1,IBS)=0
- U IO(0)
- ;
- F  S IBCT=$O(^TMP($J,IBCT)) Q:'IBCT  S X=$G(^(IBCT)) I X'="" D  Q:IBQUIT
- . D  Q:IBQUIT
- .. I $P($G(IBPOS),U)="D" D
- ... D CSV(X,.IBX,$P(IBPOS,U,2),$P(IBPOS,U,3))
- ... D DSETUP(.IBX,.IBPOS,.P) K IBX
- .. I $P($G(IBPOS),U)'="D" D FSETUP(X,.IBPOS,.P)
- . ;
- . I $G(P(1))'="" S P(1)=$$NOPUNCT^IBCEF(P(1),1),X=P(1),D="SSN",DIC="^VA(200,",DIC(0)="" D IX^DIC
- . S IBP=+Y,IBVNAME=$P(Y,U,2)
- . I $S($G(P(1))="":1,1:Y'>0) D  Q
- .. S ^TMP("IBPID-ERR",$J,1,$S($G(P(1))'="":P(1),1:"NO SSN"),$G(P(2))_" ","??")=""
- .. N IBID
- .. S IBID=$S(IBFT=0!(IBFT=1):$G(P("INST_ID")),1:$G(P("PROF_ID")))
- .. S ^TMP("IBPID-ERR",$J,1,$S($G(P(1))'="":P(1),1:"NO SSN"),$G(P(2))_" ","PROV ID")=IBID
- . ;
- . S ^TMP("IBPID_IN",$J,U,IBP)=P(1)_U_P(2)_U_IBVNAME
- . F Q0=0,"TID","UPIN","INST_ID","PROF_ID","CU","CRED" S ^TMP("IBPID_IN",$J,U,IBP,Q0)=$G(P(Q0))
- Q
+ ;;2.0;INTEGRATED BILLING;**137,200**;21-MAR-94
  ;
 CSV(X,IBX,IBDEL,IBQUOTES) ; Parse out fields from a delimited file
  ; X = data string in CSV format to be parsed
@@ -182,22 +155,4 @@ HDR(PG,IBSTOP,IBHDT) ; Prints error report header, function returns # of lines u
  S Z="",$P(Z,"=",81)="",IBLCT=IBLCT+1
  W !,Z
 HDRQ Q $G(IBLCT)
- ;
-LOCK(IBINS) ; Lock Parent and Children up
- N IBQUIT
- S IBQUIT=0
- I $P($G(^DIC(36,IBINS,3)),U,13)="P" D
- . L +^DIC(36,IBINS):5 E  S IBQUIT=1 Q
- . N CHILD
- . S CHILD="" F  S CHILD=$O(^DIC(36,"APC",IBINS,CHILD)) Q:'+CHILD  D  Q:IBQUIT
- .. L +^DIC(36,CHILD):5 E  S IBQUIT=1
- Q IBQUIT
- ;
-UNLOCK(IBINS) ; Unlock the family
- I $P($G(^DIC(36,IBINS,3)),U,13)="P" D
- . L -^DIC(36,IBINS)
- . N CHILD
- . S CHILD="" F  S CHILD=$O(^DIC(36,"APC",IBINS,CHILD)) Q:'+CHILD  D
- .. L -^DIC(36,CHILD)
- Q
  ;

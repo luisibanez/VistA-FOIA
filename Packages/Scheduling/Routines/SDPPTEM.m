@@ -1,5 +1,5 @@
 SDPPTEM ;BP-CIOFO/KEITH - Patient Profile Team Info ; 8/27/99 10:39am
- ;;5.3;Scheduling;**41,177,297**;AUG 13, 1993
+ ;;5.3;Scheduling;**41,177**;AUG 13, 1993
  ;
  ;Gathering Team Information for Patient Profile
  ;
@@ -32,11 +32,11 @@ TDATA(DFN,VALMCNT,SDATE,SDPRT,SDCOL) ;Team information - gather, format and opti
  .D STL(SDY)
  .Q
  ;
- ;AP
- S SDI=0 F  S SDI=$O(^TMP("SDPLIST",$J,DFN,"PCAP",SDI)) Q:'SDI  D
- .S SDX=$G(^TMP("SDPLIST",$J,DFN,"PCAP",SDI)) Q:'$L(SDX)
+ ;PCP
+ S SDI=0 F  S SDI=$O(^TMP("SDPLIST",$J,DFN,"PCPR",SDI)) Q:'SDI  D
+ .S SDX=$G(^TMP("SDPLIST",$J,DFN,"PCPR",SDI)) Q:'$L(SDX)
  .S SDY=""
- .D S1("Associate Provider",$P(SDX,U,2))
+ .D S1("PC Provider",$P(SDX,U,2))
  .D S2("Position",$P(SDX,U,4))
  .D STL(SDY)
  .D PHONE($P(SDX,U,1))
@@ -45,11 +45,12 @@ TDATA(DFN,VALMCNT,SDATE,SDPRT,SDCOL) ;Team information - gather, format and opti
  .D S4("Phone",PHONE)
  .D STL(SDY)
  .Q
- ;PCP
- S SDI=0 F  S SDI=$O(^TMP("SDPLIST",$J,DFN,"PCPR",SDI)) Q:'SDI  D
- .S SDX=$G(^TMP("SDPLIST",$J,DFN,"PCPR",SDI)) Q:'$L(SDX)
+ ;
+ ;AP
+ S SDI=0 F  S SDI=$O(^TMP("SDPLIST",$J,DFN,"PCAP",SDI)) Q:'SDI  D
+ .S SDX=$G(^TMP("SDPLIST",$J,DFN,"PCAP",SDI)) Q:'$L(SDX)
  .S SDY=""
- .D S1("PC Provider",$P(SDX,U,2))
+ .D S1("Associate Provider",$P(SDX,U,2))
  .D S2("Position",$P(SDX,U,4))
  .D STL(SDY)
  .D PHONE($P(SDX,U,1))

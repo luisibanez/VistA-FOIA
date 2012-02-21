@@ -1,5 +1,5 @@
-DGENELA1 ;ALB/CJM,RTK,TDM,PJR,RGL,LBD,EG,TMK,CKN,ERC - Patient Eligibility API ; 8/15/08 11:14am
- ;;5.3;Registration;**147,327,314,367,497,451,564,631,672,659,583,746,653,688**;Aug 13,1993;Build 29
+DGENELA1 ;ALB/CJM,RTK,TDM,PJR,RGL,LBD,EG - Patient Eligibility API ; 10/6/05 1:20pm
+ ;;5.3;Registration;**147,327,314,367,497,451,564,631,672**;Aug 13,1993
  ;
 CHECK(DGELG,DGPAT,DGCDIS,ERRMSG) ;
  ;Does validation checks on the eligibility contained in the DGELG array.
@@ -57,8 +57,8 @@ CHECK(DGELG,DGPAT,DGCDIS,ERRMSG) ;
  ..;
  ..S DGONV=$O(^DIC(21,"B","OTHER NON-VETERANS","")),INELDATE=$P($G(^DPT(DFN,.15)),"^",2)
  ..I INELDATE'="",DGPAT("INELDATE")'>0,DGELG("POS"),DGELG("POS")=DGONV,'$D(^DIC(21,DGELG("POS"),"E",DGELG("ELIG","CODE"))) D
- ...S DGTEXT="Patient was previously determined to be ineligible for VA health care.  Upon review, the individual is determined to be eligible for "
- ...S DGTEXT=DGTEXT_"VA care.  Please update period of service and other eligibility data as needed.."
+ ...S DGTEXT="Patient was previously determined to be ineligible for VA health care.  Upon review, the individual is now determined to be eligible for "
+ ...S DGTEXT=DGTEXT_"VA care.  Please update period of service and complete a new application for enrollment in VistA."
  ...D ADDMSG^DGENUPL3(.MSGS,DGTEXT,0)
  ..;
  ..I (DGPAT("VETERAN")="Y"),(DGELG("SC")="Y"),(NATCODE=1)!(NATCODE=3) S BAD=0 Q  ;primary eligibility OK
@@ -133,8 +133,8 @@ STORE(DGELG,DGPAT,DGCDIS,ERROR,SKIPCHK) ;
  .; greater than the USER ENROLLEE VALID THROUGH on file.
  .I $G(DATA(.3617))<$P($G(^DPT(DFN,.361)),"^",7) K DATA(.3617),DATA(.3618)
  .;
- .;update Patient file record with data from Z11
- .D UPDZ11^DGENELA2
+ .I '$$UPD^DGENDBS(2,DFN,.DATA) S ERROR="FILEMAN FAILED TO UPDATE THE PATIENT RECORD" Q
+ .;
  .;
  .;delete eligibilities that do not belong
  .D DELELIG^DGENELA2(DFN,.DGELG)
@@ -172,19 +172,17 @@ FIELD(SUB) ;
  Q:SUB="DISRET" .3602
  Q:SUB="DISLOD" .3603
  Q:SUB="MEDICAID" .381
- Q:SUB="MEDASKDT" .382 ;EVC - DG*5.3*653
  Q:SUB="AO" .32102
  Q:SUB="IR" .32103
- Q:SUB="EC" .322013  ;name change from Env Con, DG*5.3*688
+ Q:SUB="EC" .322013
  Q:SUB="MTSTA" ""  ;don't map Means Test Category
  Q:SUB="P&T" .304
- Q:SUB="P&TDT" .3013  ;field added with DG*5.3*688
  Q:SUB="POS" .323
  Q:SUB="UNEMPLOY" .305
  Q:SUB="SCAWDATE" .3012
  Q:SUB="RATEINC" .293
  Q:SUB="CLAIMNUM" .313
- Q:SUB="CLAIMLOC" .314
+ ;Q:SUB="CLAIMLOC" .312 ; ** removed **
  Q:SUB="VADISAB" .3025
  Q:SUB="ELIGSTA" .3611
  Q:SUB="ELIGSTADATE" .3612
@@ -200,7 +198,6 @@ FIELD(SUB) ;
  Q:SUB="UESITE" .3618
  Q:SUB="AOEXPLOC" .3213
  Q:SUB="CVELEDT" .5295
- Q:SUB="SHAD" .32115
  ;
  Q ""
  ;
@@ -217,6 +214,7 @@ CHKFIELD(SUB,VAL) ;
  I SUB="DISLOD",VAL'=0,VAL'=1 S BAD=1
  I SUB="MEDICAID",VAL'=0,VAL'=1 S BAD=1
  I SUB="RATEINC",VAL'=0,VAL'=1 S BAD=1
+ I SUB="CLAIMLOC",(VAL["""")!($A(VAL)=45)!($L(VAL)>40)!($L(VAL)<2) S BAD=1
  I SUB="ELIGSTA",VAL'="P",VAL'="R",VAL'="V" S BAD=1
  I SUB="POW",VAL'="Y",VAL'="N",VAL'="U" S BAD=1
  Q 'BAD

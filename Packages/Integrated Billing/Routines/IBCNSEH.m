@@ -1,6 +1,6 @@
-IBCNSEH ;ALB/AAS - EXTENDED HELP FOR INSURANCE MANAGEMENT ;28-MAY-93
- ;;2.0;INTEGRATED BILLING;**6,28,371**;21-MAR-94;Build 57
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCNSEH ;ALB/AAS - EXTENDED HELP FOR INSURANCE MANAGEMENT - 28-MAY-93
+ ;;Version 2.0 ; INTEGRATED BILLING ;**6,28**; 21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 INS ; -- Help for Insurance Type
  Q:'$G(IBCNSEH)
@@ -13,7 +13,12 @@ INS ; -- Help for Insurance Type
  Q
 PAT ; -- Help for entering patient specific information
  Q:'$G(IBCNSEH)
- W !!,"Now you may enter the patient specific policy information.",!
+ W !!,"Now you may enter the patient specific policy information."
+ W !,"Most of these fields will be familiar to experienced users.  The field"
+ W !,"'SUBSCRIBER ID' used to be called 'INSURANCE NUMBER' and "
+ W !,"has been modified to allow entering just 'SS' to retrieve"
+ W !,"the patients SSN.  This field is the identifier for the policy or patient"
+ W !,"that the carrier uses.  See the new help.",!
  Q
 POL ; -- Help for policy specific information
  Q:'$G(IBCNSEH)

@@ -1,5 +1,5 @@
-PXRMPARS ; SLC/PJH - Edit PXRM(800 reminder parameters. ;04/02/2007
- ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
+PXRMPARS ; SLC/PJH - Edit PXRM(800 reminder parameters. ;12/30/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;called by protocol PXRM EDIT SITE DISCLAIMER
  ;
@@ -8,15 +8,6 @@ DISC(DA) ;Edit default disclaimer
  N DIC,DIE,DR,Y
  ;Edit
  S DIC="^PXRM(800,",DIE=800,DR=2
- D ^DIE
- D FORMAT^PXRMDISC
- Q
- ;
-MH(DA) ;Edit MH default Question Value
- Q:'$$LOCK(DA)
- N DIC,DIE,DR,Y
- ;Edit
- S DIE="^PXRM(800,",DR=17
  D ^DIE
  Q
  ;
@@ -46,7 +37,7 @@ WSET ;Set node if not defined
  Q
  ;
 WURL(IEN) ;Edit individual URL
- N DA,DIC,DIE,DR,Y
+ N DA,DIC,DIE,DR,DTOUT,DUOUT,Y
  S DA(1)=IEN
  S DIC="^PXRM(800,"_IEN_",1,"
  S DIC(0)="QEAL"

@@ -1,5 +1,5 @@
-KMPDTU11 ;OAK/RAK - CP Tools Timing Utility ;5/1/07  15:07
- ;;2.0;CAPACITY MANAGEMENT TOOLS;**6**;Mar 22, 2002;Build 3
+KMPDTU11 ;OAK/RAK - CP Tools Timing Utility ;2/17/04  09:46
+ ;;2.0;CAPACITY MANAGEMENT TOOLS;;Mar 22, 2002
  ;
 RLTMHR(KMPDQIET,KMPDASK,KMPDEF) ;-- extrinsic function - real time hours
  ;-----------------------------------------------------------------------
@@ -41,38 +41,3 @@ RLTMHR(KMPDQIET,KMPDASK,KMPDEF) ;-- extrinsic function - real time hours
  S:KMPDEF DIR("B")=$O(HOURS(""))_"-"_$O(HOURS("A"),-1)
  W ! D ^DIR
  Q $S(Y=""!(Y="^"):"",1:$G(Y(0)))
- ;
-TIMING(KMPDSS,KMPDNODE,KMPDST,KMPDHTM,KMPDUZ,KMPDCL) ;-- start/stop timing stats
- ;--------------------------------------------------------------------
- ; KMPDSS... subscript (free text)
- ; KMPDNODE. node name (free text)
- ; KMPDST... start/stop
- ;            1 - start
- ;            2 - stop
- ; KMPDHTM.. (optional - if not defined the current $h will be used)
- ;           time in $h format
- ; KMPDUZ... (optional -if not defined the current duz will be used)
- ;           user duz
- ; KMPDCL... (optional - if not defined the current IO("CLNM")) will be used)
- ;           client name (free text)
- ; 
- ;--------------------------------------------------------------------
- ; quit if timing stats not turned on
- Q:'$G(^KMPTMP("KMPD-CPRS"))
- ; quit if no subscript
- Q:$G(KMPDSS)=""
- ; quit if no node
- Q:$G(KMPDNODE)=""
- ; start/stop
- S KMPDST=+$G(KMPDST)
- Q:KMPDST<1!(KMPDST>2)
- S:'$G(KMPDHTM) KMPDHTM=$H
- S:'$G(KMPDUZ) KMPDUZ=$G(DUZ)
- S:$G(KMPDCL)="" KMPDCL=$G(IO("CLNM"))
- ;
- ; start timing
- S:KMPDST=1 ^KMPTMP("KMPDT",KMPDSS,KMPDNODE)=KMPDHTM_"^^"_KMPDUZ_"^"_KMPDCL
- ; stop timing
- S:KMPDST=2 $P(^KMPTMP("KMPDT",KMPDSS,KMPDNODE),"^",2)=KMPDHTM
- ;
- Q

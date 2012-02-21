@@ -1,7 +1,7 @@
 PRCHNPO1 ;SF-ISC/RSD/RHD-CONT. OF NEW PO ;6/9/96  19:48
-V ;;5.1;IFCAP;**16,79,100,108**;Oct 20, 2000;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
- I ('$G(PRCHPC)!($G(PRCHPC)=2)),'$G(PRCHPHAM) D
+V ;;5.1;IFCAP;**16,79**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
+ I '$G(PRCHPC),'$G(PRCHPHAM) D
  .S PRCH=0,DIE="^PRC(442,",DR="[PRCHDISCNT]",(D0,DA,DA(1))=PRCHPO
  .I $G(PRCHDELV) S DR="[PRCHPROMPT]"
  .D ^DIE
@@ -27,54 +27,16 @@ E2 S DR=$S($G(PRCHPC)=2:"[PRCHAMT89 NEW]",$D(PRCHDELV):"[PRCHAMT89 NEW]",$D(PRCH
  ;New tasks for FPDS data collection, PRC*5.1*79.
  ;Look at the entry actions for POs created by a Purchasing Agent, a PC
  ;user and a Delivery Orders user and call the required input template.
- ;PRC*5.1*100 - If the user times out and does not complete the input
- ;template for the new FPDS, don't allow electronic sig. Check the last
- ;field required for the PO, based on the source code and menu.
- I '$D(PRCHPC)&("25"[PRCHSC) D  G:$G(PRCHER)=1 ERR^PRCHNPO
- . S DR="[PRCH NEW PO FPDS]" D ^DIE
- . I '$D(^PRC(442,PRCHPO,25)) S PRCHER=1 Q
- . I $P(^PRC(442,PRCHPO,25),U,6)="" S PRCHER=1 Q
- . ;Fund agency code & fund agency office code can be empty in pairs only.
- . I +$P(^PRC(442,PRCHPO,25),U,7)>0,$P(^PRC(442,PRCHPO,25),U,8)="" S PRCHER=1 Q
- ;
+ I '$D(PRCHPC)&("25"[PRCHSC) S DR="[PRCH NEW PO FPDS]" D ^DIE
  ;For FPDS purposes, consider any PO with any of the following source
- ;codes as a delivery order (including direct delivery POs)from a PA:
- ;If the user times out, don't allow electronic sig., PRC*5.1*100.
- I ("467B"[PRCHSC)&($D(^PRC(442,PRCHPO,14)))!($G(PRCHPC)=3) D  G:$G(PRCHER)=1 ERR^PRCHNPO
- . S DR="[PRCH NEW PO FPDS]" D ^DIE
- . I '$D(^PRC(442,PRCHPO,25)) S PRCHER=1 Q
- . I $P(^PRC(442,PRCHPO,25),U,15)'="" D POP Q
- . E  S PRCHER=1
- ;
- ;Get eligible Detailed purchase card orders. If the user times out,
- ;don't allow electronic signature, PRC*5.1*100.
- I $G(PRCHPC)=2 D  G:$G(PRCHER)=1 ERR^PRCHNPO
- . S DR="[PRCH NEW PC FPDS]" D ^DIE
- . I '$D(^PRC(442,PRCHPO,25)) S PRCHER=1 Q
- . S PRCHSC=$P(^PRCD(420.8,+PRCHSC,0),U,1)
- . I ("2"[PRCHSC)&($P(^PRC(442,PRCHPO,25),U,6)="") S PRCHER=1 Q
- . ;Fund agency code & fund agency office code can be empty in pairs only.
- . I ("2"[PRCHSC)&(+$P(^PRC(442,PRCHPO,25),U,7)>0),$P(^PRC(442,PRCHPO,25),U,8)="" S PRCHER=1 Q
- . I ("6B"[PRCHSC)&($P(^PRC(442,PRCHPO,25),U,13)="") S PRCHER=1 Q
- ;
- ;Get delivery orders from the separate Delivery Orders menu. If the
- ;user times out, don't allow electronic sig.; PRC*5.1*100.
- I $G(PRCHDELV)=1!($G(PRCHPHAM)=1) D  G:$G(PRCHER)=1 ERR^PRCHNPO
- . S DR="[PRCH NEW DEL FPDS]" D ^DIE
- . I '$D(^PRC(442,PRCHPO,25)) S PRCHER=1 Q
- . I $P(^PRC(442,PRCHPO,25),U,15)'="" D POP Q
- . E  S PRCHER=1
- ;
+ ;codes as a delivery order (including direct delivery POs):
+ I ("467B"[PRCHSC)&($D(^PRC(442,PRCHPO,14)))!($G(PRCHPC)=3) S DR="[PRCH NEW PO FPDS]" D ^DIE,POP
+ ;Get eligible Detailed purchase card orders
+ I $G(PRCHPC)=2 S DR="[PRCH NEW PC FPDS]" D ^DIE
+ ;Get delivery orders from the separate Delivery Orders menu
+ I $G(PRCHDELV)=1!($G(PRCHPHAM)=1) S DR="[PRCH NEW DEL FPDS]" D ^DIE,POP
  ;End of changes for PRC*5.1*79.
  K DIE F I=0:0 Q:'$D(PRCHPO)  S I=$O(^PRC(442,PRCHPO,9,I)) Q:'I  D ER2^PRCHNPO6:$P(^(I,0),"^",2)="",ER3^PRCHNPO6:'$O(^(1,0))
- ;PRC*5.1*100 - Quit if user fails to populate any required field in
- ;node 9 (amount, type code, pref. program, etc.) or just times out.
- ;
- N J,K,L S K=+$P(^PRC(442,PRCHPO,9,0),U,3)
- F L=1:1:K D  G:$G(PRCHER)=1 ERR^PRCHNPO
- . F J=1,2,4,5 D
- .. I $P(^PRC(442,PRCHPO,9,L,0),"^",J)="" S PRCHER=1
- ;End of changes for PRC*5.1*100.
  ;
 EST G ERR^PRCHNPO:'$D(PRCHPO) I 'PRCHEST,PRCHESTL S $P(^PRC(442,PRCHPO,0),U,18)=""
  D EN2^PRCHNPO7 I PRCHEST D EST^PRCHNPO6
@@ -108,11 +70,8 @@ PCTQ S (PRCHAMT,PRCHCN,PRCHX)=0,PRCHACT=PRCHLCNT F K=0:0 S PRCHCN=$O(PRCH("AM",P
 POP ;Set up place of performance for PRC*5.1*79, new FPDS. If station is the
  ;place of perf. for PO, send the state abbrev. and zip code, otherwise
  ;send the vendor's state and zip code. Applies to all Delivery POs.
- ;For Guaranteed Delivery orders, we have to choose the VAMC since users
- ;are not asked for a SHIP TO location - PRC*5.1*100.
- N PRCST,PRCSTL,PRCSZP,PRCPOP,PRCLOC,PRCROOT,PRCVAMC
+ N PRCST,PRCSTL,PRCSZP,PRCPOP,PRCLOC
  I $P(^PRC(442,PRCHPO,25),"^",15)="Y" D
- . I $P(^PRC(442,PRCHPO,0),"^",2)=4 D POP1 Q
  . S PRCLOC=$P(^PRC(442,PRCHPO,1),U,3) ;ship to location
  . S PRCST=$P(^PRC(411,PRC("SITE"),1,PRCLOC,0),"^",6)  ;station's state
  . S PRCSTL=$P(^DIC(5,PRCST,0),"^",2)
@@ -124,15 +83,6 @@ POP ;Set up place of performance for PRC*5.1*79, new FPDS. If station is the
  . S PRCSTL=$P(^DIC(5,PRCST,0),"^",2)
  . S PRCSZP=$E($P(^PRC(440,PRCHV,0),"^",8),1,5) ;vendor's zip
  . S PRCPOP=PRCSTL_PRCSZP,$P(^PRC(442,PRCHPO,25),"^",16)=PRCPOP
- Q
- ;
-POP1 ;Set up for Guaranteed Delivery orders - users are not asked for a SHIP
- ;TO location during PO creation - PRC*5.1*100.
- S PRCROOT=$G(^PRC(411,PRC("SITE"),0)),PRCVAMC=$G(^(3)) ; local VAMC
- S PRCST=$P(PRCVAMC,"^",4)
- S PRCSTL=$P(^DIC(5,PRCST,0),"^",2) ;station's state
- S PRCSZP=$E($P(PRCVAMC,"^",5),1,5) ;station's zip
- S PRCPOP=PRCSTL_PRCSZP,$P(^PRC(442,PRCHPO,25),"^",16)=PRCPOP
  Q
  ;End of changes for new FPDS
  ;

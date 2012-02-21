@@ -1,5 +1,5 @@
 SROESNR1 ;BIR/ADM - NURSE REPORT E-SIG UTILITY ;02/20/05
- ;;3.0; Surgery ;**100,143,157**;24 Jun 93;Build 3
+ ;;3.0; Surgery ;**100,143**;24 Jun 93
  ;
  ;** NOTICE: This routine is part of an implementation of a nationally
  ;**         controlled procedure.  Local modifications to this routine
@@ -75,15 +75,12 @@ PCB ;;Thermal Unit^0;.757^21,0
  ;;
 PJA ;;Prosthesis Installed^0;.47^1,0
  ;;Prosthesis Installed^01-Item-130.01,.01-2^1,0;1
- ;;Prosthesis Installed^02-Sterility Checked-130.01,8-4^1,2;1
- ;;Prosthesis Installed^03-Sterility Expiration Date-130.01,9-4^1,2;2
- ;;Prosthesis Installed^04-RN Verifier-130.01,10-4^1,2;3
- ;;Prosthesis Installed^05-Vendor-130.01,1-4^1,0;2
- ;;Prosthesis Installed^06-Model-130.01,2-4^1,0;3
- ;;Prosthesis Installed^07-Lot/Serial Number-130.01,2.5-4^1,0;5
- ;;Prosthesis Installed^08-Sterile Resp-130.01,5-4^1,0;7
- ;;Prosthesis Installed^09-Size-130.01,6-4^1,1;1
- ;;Prosthesis Installed^10-Quantity-130.01,7-4^1,1;2
+ ;;Prosthesis Installed^02-Vendor-130.01,1-4^1,0;2
+ ;;Prosthesis Installed^03-Model-130.01,2-4^1,0;3
+ ;;Prosthesis Installed^04-Lot/Serial Number-130.01,2.5-4^1,0;5
+ ;;Prosthesis Installed^05-Sterile Resp-130.01,5-4^1,0;7
+ ;;Prosthesis Installed^06-Size-130.01,6-4^1,1;1
+ ;;Prosthesis Installed^07-Quantity-130.01,7-4^1,1;2
  ;;
 PCC ;;Medications^0;.375^22,0
  ;;Medications^01-Medication-130.33,.01-2^22,0;1

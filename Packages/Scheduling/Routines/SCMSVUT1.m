@@ -1,5 +1,5 @@
 SCMSVUT1 ;ALB/JLU;validation utility routine;06/19/99 ; 4/30/03 11:58am
- ;;5.3;Scheduling;**66,143,180,239,247,258,296,295,321,341,387,459,394,442**;AUG 13,1993
+ ;;5.3;Scheduling;**66,143,180,239,247,258,296,295,321,341,387,459,394**;AUG 13,1993
  ;06/19/99 ACS - Added CPT Modifier API calls to PROCCOD(DATA)
  ;
 SEGERR(DATA,HLFS) ;
@@ -139,6 +139,7 @@ ENCDT(DATA,XMTFLG) ;
  I XMTFLG Q 1
  N VAR
  S VAR=$$OKTOXMIT^SCDXFU04(DATA)
+ ;I +VAR=1 Q 1
  I +VAR<4&(VAR'<0) Q 1  ;SD*5.3*247
  Q 0
  ;
@@ -185,6 +186,18 @@ DIAGCOD(DATA,ENCDT) ;
  I '$D(DATA) Q 0
  I DATA="" Q 0
  ;
+ ; CSV - change to use API
+ ;S VAR=$O(^ICD9("BA",DATA_" ",""))
+ ;I 'VAR Q 0
+ ;S VAR=$G(^ICD9(VAR,0))
+ ;I VAR']"" Q 0
+ ;this is the inactive flag
+ ;I $P(VAR,U,9)'=1 Q 1
+ ;S VAR=$P(VAR,U,11)
+ ;N %DT,X,Y
+ ;S %DT="ST",%DT(0)=-VAR,X=ENCDT
+ ;D ^%DT
+ ;Q $S(Y=-1:0,1:1)
  Q $P($$ICDDX^ICDCODE(DATA,ENCDT),"^",10)
  ;
 PRIOR(DATA) ;
@@ -312,7 +325,7 @@ CLAVET(DATA,DFN,TYPE,ENCPTR) ; SD*5.3*341 added parameter ENCPTR
  I '$D(DATA) Q 0
  I '$D(DFN) Q 0
  I '$D(TYPE) Q 0  ; SD*5.3*341
- N VET,SDELG0,SDDT  ; SD*5.3*341
+ N VET,SDELG0,SDDT  ; SD*5.3*341 added 2 new variables
  S ENCPTR=$G(ENCPTR)  ; SD*5.3*341 added this plus next 3 lines
  S SDDT=+$G(^SCE(ENCPTR,0)) S:'SDDT SDDT=$$DT^XLFDT()
  S SDELG0=$$EL^SDCO22(DFN,ENCPTR)
@@ -413,18 +426,20 @@ PROCCOD(DATA,ENCDT) ;
  N VAR
  I '$D(DATA) Q 0
  I DATA="" Q 0
+ ;S VAR=+$O(^ICPT("B",DATA,""))
+ ;I '$D(^ICPT(VAR,0)) Q 0
+ ;
+ ; CSV - pass encounter date to API
+ ;I $$CPT^ICPTCOD(DATA,,1)'>0 Q 0
  I $$CPT^ICPTCOD(DATA,ENCDT,1)'>0 Q 0
  Q 1
  ;
 PROVCLS(DATA) ;
  ;INPUT DATA - The practitioner class to be checked.
  ;
- N INACT S INACT=""
  I '$D(DATA) Q 0
  I DATA="" Q 0
  I $$CODE2TXT^XUA4A72(DATA)']"" Q 0
- S INACT=$P($$IEN2DATA^XUA4A72($$VCLK^XUA4A72(DATA)),U,5)  ;SD*5.3*442
- I INACT'="" I ENCDT>INACT Q 0  ;SD*5.3*442
  Q 1
  ;
 ERI(DATA) ;

@@ -1,5 +1,5 @@
-PXRMPDS ; SLC/PKR - Routines for patient data source. ;07/10/2009
- ;;2.0;CLINICAL REMINDERS;**12**;Feb 04, 2005;Build 73
+PXRMPDS ; SLC/PKR - Routines for patient data source. ;12/30/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;====================================================
 KPDS(X,X1,X2,DAS) ;Kill the patient data source fields in the expanded
@@ -182,13 +182,13 @@ TEXT ;Taxonomy field Patient Data Source executable help text.
  ;
  ;====================================================
 UPDATE(FDA) ;
- N MSG,TEXT
+ N MSG
  D UPDATE^DIE("E","FDA","","MSG")
  I $D(MSG) D
- . S TEXT(1)="The expanded taxonomy search node update failed."
- . S TEXT(2)="UPDATE^DIE returned the following error message:"
- . D MES^XPDUTL(.TEXT)
+ . W !,"The expanded taxonomy search node update failed."
+ . W !,"UPDATE^DIE returned the following error message:"
  . D AWRITE^PXRMUTIL("MSG")
+ . W !,"Examine the above error message for the reason.",!
  . H 2
  Q
  ;

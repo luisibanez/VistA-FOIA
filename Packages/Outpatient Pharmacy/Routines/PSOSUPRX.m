@@ -1,5 +1,5 @@
 PSOSUPRX ;BIR/RTR - Suspense pull early ;3/1/96
- ;;7.0;OUTPATIENT PHARMACY;**8,36,130,185,148,287,358**;DEC 1997;Build 35
+ ;;7.0;OUTPATIENT PHARMACY;**8,36,130,185,148**;DEC 1997
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^PSSLOCK supported by DBIA 2789
 ST N PSOPLLRX D:'$D(PSOPAR) ^PSOLSET G:'$D(PSOPAR) ST
@@ -57,9 +57,6 @@ QUES I '$D(RTE) W ! K DIR S DIR("A")="Select routing for Rx(s)",DIR(0)="S^M:MAIL
  ; - Submitting Rx to ECME for 3rd Party Billing
  N RFL S RFL=RXFL(RXREC) I RFL="" S RFL=$$LSTRFL^PSOBPSU1(RXREC)
  D ECMESND^PSOBPSU1(RXREC,RFL,,"PE")
- ; Quit if there is an unresolved Tricare non-billable reject code, PSO*7*358
- I $$PSOET^PSOREJP3(RXREC,RFL) S PSOQFLAG=1 Q
- N PSOTRIC S PSOTRIC="",PSOTRIC=$$TRIC^PSOREJP1(RXREC,RFL,.PSOTRIC)
  I $$FIND^PSOREJUT(RXREC,RFL),$$HDLG^PSOREJU1(RXREC,RFL,"79,88","PE","IOQ","I")="Q" S PSOQFLAG=1 Q
  ;
  Q

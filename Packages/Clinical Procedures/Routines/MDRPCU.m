@@ -1,5 +1,5 @@
 MDRPCU ; HOIFO/DP - Object RPC Utilities ; [05-23-2003 10:16]
- ;;1.0;CLINICAL PROCEDURES;**4**;Apr 01, 2004;Build 3
+ ;;1.0;CLINICAL PROCEDURES;;Apr 01, 2004
  ; Integration Agreements:
  ; IA# 10039 [Supported] Ward Location File #42
  ; IA# 10035 [Supported] Access to DPT global
@@ -196,6 +196,5 @@ WARDS ; [Procedure] Return Active Set of Wards
  F D0=0:0 S D0=$O(^DIC(42,D0)) Q:'D0  D WIN^DGPMDDCF D:'X
  .S Y=$O(@RESULTS@(""),-1)+1
  .S @RESULTS@(Y)="42;"_D0_U_$P(^DIC(42,D0,0),U)
- S @RESULTS@(0)=+$O(@RESULTS@(""),-1)
  Q
  ;

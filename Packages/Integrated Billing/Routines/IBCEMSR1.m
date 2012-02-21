@@ -1,6 +1,6 @@
 IBCEMSR1 ;WOIFO/AAT - MRA STATISTICS REPORT CONT. ;09/03/04
- ;;2.0;INTEGRATED BILLING;**155,348,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**155**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  Q
  ;
@@ -34,8 +34,8 @@ DETAILS ; Print Details
  S REFH=$NA(@REF@(IBDVN,IBCLERK,2))
  ;
  D CHKP Q:IBQ  W !,"CLERK: ",IBCLERK
- D CHKP Q:IBQ  W !?7,"Primary UB-04 MRA Requests",?67,"Primary CMS-1500 MRA Requests"
- D CHKP Q:IBQ  W !?7,"--------------------------",?67,"-----------------------------"
+ D CHKP Q:IBQ  W !?7,"Primary UB92 MRA Requests",?67,"Primary HCFA 1500 MRA Requests"
+ D CHKP Q:IBQ  W !?7,"-------------------------",?67,"------------------------------"
  S IBTXT="Total number of MRA Requests:"
  D CHKP Q:IBQ  W !?7,IBTXT,?50,$J(+$G(@REFU@("ALL")),5),?67,IBTXT,?110,$J(+$G(@REFH@("ALL")),5)
  S IBTXT="Number of unique MRA Requests:",IBTU=+$G(@REFU@("TOT")),IBTH=+$G(@REFH@("TOT"))
@@ -63,8 +63,8 @@ SUMMARY ;Print summary
  S REFU=$NA(@REF@(IBDVN,0,3))
  S REFH=$NA(@REF@(IBDVN,0,2))
  ;
- D CHKP Q:IBQ  W !?7,"Primary UB-04 MRA Requests",?67,"Primary CMS-1500 MRA Requests"
- D CHKP Q:IBQ  W !?7,"--------------------------",?67,"-----------------------------"
+ D CHKP Q:IBQ  W !?7,"Primary UB92 MRA Requests",?67,"Primary HCFA 1500 MRA Requests"
+ D CHKP Q:IBQ  W !?7,"-------------------------",?67,"------------------------------"
  S IBTXT="Total number of MRA Requests:",IBTU=+$G(@REFU@("ALL")),IBTH=+$G(@REFH@("ALL"))
  D CHKP Q:IBQ  W !?7,IBTXT,?50,$J(IBTU,5),?67,IBTXT,?110,$J(IBTH,5)
  S IBTXT="Percent Resubmitted:",IBNU=+$G(@REFU@("ALLR")),IBNH=+$G(@REFH@("ALLR"))
@@ -101,8 +101,8 @@ SUMMARY ;Print summary
  Q
  ;
 SECONDRY ; Print 2ndary claims info
- D CHKP Q:IBQ  W !?7,"Secondary UB-04 claims",?67,"Secondary CMS-1500 claims"
- D CHKP Q:IBQ  W !?7,"----------------------",?67,"-------------------------"
+ D CHKP Q:IBQ  W !?7,"Secondary UB92 claims",?67,"Secondary HCFA 1500 claims"
+ D CHKP Q:IBQ  W !?7,"---------------------",?67,"--------------------------"
  S IBTXT="Authorized (not yet printed):"
  D CHKP Q:IBQ  W !?7,IBTXT,?50,$J(+$G(@REFU@("AUT")),5),?67,IBTXT,?110,$J(+$G(@REFH@("AUT")),5)
  ;

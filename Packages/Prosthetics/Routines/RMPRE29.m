@@ -1,5 +1,5 @@
 RMPRE29 ;PHX/JLT,RVD-EDIT 2319 ;10/2/03  13:04
- ;;3.0;PROSTHETICS;**36,41,51,57,62,74,81,61,145,150**;Feb 09, 1996;Build 10
+ ;;3.0;PROSTHETICS;**36,41,51,57,62,74,81,61**;Feb 09, 1996
  ;
  ;RVD patch #62 - call PCE API to update patient care encounter.
  ;              - add a screen display if no changes to the HCPCS.
@@ -7,7 +7,7 @@ RMPRE29 ;PHX/JLT,RVD-EDIT 2319 ;10/2/03  13:04
  ;                active for a given date.
  ;RVD patch #81 - roll back patch RMPR*3.0*74 and returns the screen
  ;                to the STATUS field of file #661.1.
- ;RVD patch #61 - added screen not to process stock issue entries.
+ ;RVD patch #61 - Bar Coding.  Don't include Stock Issue for ED2.
  ;uses DBIA # 1995 & 1997.
  W ! S DIC="^RMPR(660,",DIC(0)="AEMQZ",DIC("A")="Select PATIENT: "
  S DIC("W")="D EN^RMPRD1",RMEND=0
@@ -69,11 +69,16 @@ HCPC ;set type and ask item and HCPCS
  ..K DIR
  ..W:RMCPT=$P(R1(1),U,6) !!,"***Based on the information given above, CPT modifier string has not changed!!!",!
  ..W:RMCPT'=$P(R1(1),U,6) !,"NEW CPT MODIFIER: ",RMCPT
- S DR="9;21;16;28" D ^DIE
+ S DR="7;5;14;9;21;16;28" D ^DIE
  I RMTOTCOS'=$P(^RMPR(660,DA,0),U,16) S DR="35////^S X=DUZ;36////^S X=DT" D ^DIE
  I $D(DTOUT)!('$G(Y))!($D(DUOUT)) D CHK
 QED2 ;
  Q:$D(RMPREDT)
+ ;modified by #62
+ ;call PCE API to update patient care encounter.
+ I $D(^RMPR(660,RMPRDA,10)),$P(^RMPR(660,RMPRDA,10),U,12) D
+ .S RMCHK=$$SENDPCE^RMPRPCEA(RMPRDA)
+ .I RMCHK<1 H 3
  L -^RMPR(660,RMPRDA,0)
  K DIR W ! S DIR(0)="Y",DIR("A")="Would You like to Edit another Entry (Y/N) " D ^DIR
  G:'$D(DTOUT)&(Y>0) RMPRE29
@@ -115,6 +120,11 @@ QUICK ;quick edit for HCPCS and type
  .W:RMCPT'=$P(R1(1),U,6) !,"NEW CPT MODIFIER: ",RMCPT
  .S $P(^RMPR(660,DA,1),U,6)=RMCPT
 SET K DIR D CHK
+ ;modified by #62
+ ;call PCE API to update patient care encounter
+ I $D(^RMPR(660,RMPRDA,10)),$P(^RMPR(660,RMPRDA,10),U,12) D
+ .S RMCHK=$$SENDPCE^RMPRPCEA(RMPRDA)
+ .I RMCHK<1 H 3
  W ! S DIR(0)="Y",DIR("A")="Would You like to Edit another Entry (Y/N)" D ^DIR
  G:'$D(DTOUT)&(Y>0) QUICK^RMPRE29
  L -^RMPR(660,RMPRDA,0)

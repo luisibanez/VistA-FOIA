@@ -1,5 +1,5 @@
-SDWLREB ;BP/ESW - EWL matched with Canceled and Rebooked Appointment by Clinic ; 11/16/05 1:16pm  ; Compiled October 25, 2006 17:29:46
- ;;5.3;Scheduling;**467,491**;Aug 13, 1993;Build 53
+SDWLREB ;BP/ESW - EWL matched with Canceled and Rebooked Appointment by Clinic ; 11/16/05 1:16pm
+ ;;5.3;Scheduling;**467**;Aug 13, 1993
  ;
  ;SD*5.3*467 - Match canceled appointments in EWL entries 
  ;
@@ -34,7 +34,7 @@ DISREB(DFN,SDTRB,SC) ;DISPOSITION REBOOK OR NOT
  ; SDTRB - Scheduled Date/Time of Rebooked Appt
  ; SC - Clinic IEN
  ; Temporary ^TMP($J,"APPT" will be created with rebooked appt data
- N SDARR,SCNT,SDDIV
+ N SDARR,SCNT
  S SDDIV=""
  S SDARR(1)=SDTRB_";"_SDTRB
  S SDARR(2)=SC
@@ -45,8 +45,13 @@ DISREB(DFN,SDTRB,SC) ;DISPOSITION REBOOK OR NOT
  .Q:'$D(^TMP($J,"SDAMA301",DFN))
  .K ^TMP($J,"APPT") S SCNT=1
  .S ^TMP($J,"APPT",SCNT)=^TMP($J,"SDAMA301",DFN,SC,SDTRB)
- .N SFAC S SFAC=$$CLIN^SDWLPE(SC) D  ;SD/491
- ..S SDINST=+SFAC,SDINSTE=$P(SFAC,U,3),SDFAC=$P(SFAC,U,2)
+ .S SDINST=$$GET1^DIQ(44,SC_",",3,"I")  ; get Institution
+ .S SDINSTE=$$GET1^DIQ(44,SC_",",3,"E")
+ .S SDFAC=$S(SDINST="":"",1:$$GET1^DIQ(4,SDINST_",",99,"I"))  ; Station
+ .I SDFAC="" N SDDIV S SDDIV="" S SDDIV=$$GET1^DIQ(44,SC_",",3.5,"I") D
+ ..I SDDIV'="" S SDINST=$$GET1^DIQ(40.8,SDDIV_",",.07,"I") I SDINST'="" D
+ ...S SDFAC=$S(SDINST="":"",1:$$GET1^DIQ(4,SDINST_",",99,"I"))  ; Station
+ ..I SDDIV="" S SDFAC=$P($$SITE^VASITE(,),"^",3)
  .S $P(^TMP($J,"APPT",SCNT),"^",15)=SDINST_";"_SDINSTE
  .S $P(^TMP($J,"APPT",SCNT),"^",16)=SDFAC
  .K ^TMP($J,"SDAMA301",DFN,SC,SDTRB)

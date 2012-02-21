@@ -1,5 +1,5 @@
-ONCX10 ;HCIOFO/SG - HTTP 1.0 CLIENT ; 6/20/06 9:29am
- ;;2.11;ONCOLOGY;**40,41,46**;Mar 07, 1995;Build 39
+ONCX10 ;HCIOFO/SG - HTTP 1.0 CLIENT ; 9/20/04 8:12am
+ ;;2.11;ONCOLOGY;**40,41**;Mar 07, 1995
  ;
  Q
  ;
@@ -107,11 +107,7 @@ GETURL(URL,ONC8FLG,ONC8RDAT,ONC8RHDR,ONC8SDAT,ONC8SHDR,REDIR) ;
  ;--- Check the host name/address
  I HOST'?1.3N3(1"."1.3N)  D  Q:IPADDR="" $$ERROR^ONCXERR(-2,,HOST)
  . ;--- Resolve the host name into IP address(es)
- . S IPADDR=$$ADDRESS^XLFNSLK(HOST)  Q:IPADDR=""
- . ;--- Check for the Host header value
- . S I=""
- . F  S I=$O(ONC8SHDR(I))  Q:(I="")!($$UP^XLFSTR(I)="HOST")
- . S:I="" ONC8SHDR("Host")=HOST
+ . S IPADDR=$$ADDRESS^XLFNSLK(HOST)
  E  S IPADDR=HOST
  ;--- Connect to the host
  F I=1:1  S IP=$P(IPADDR,",",I)  Q:IP=""  D  Q:'$G(POP)

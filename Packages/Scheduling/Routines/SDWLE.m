@@ -1,5 +1,5 @@
-SDWLE ;BPOI/TEH - WAITING LIST-ENTER/EDIT;06/12/2002
- ;;5.3;scheduling;**263,415,446,524**;08/13/93;Build 29
+SDWLE ;;IOFO BAY PINES/TEH - WAITING LIST-ENTER/EDIT;06/12/2002 ; 20 Aug 2002  2:10 PM
+ ;;5.3;scheduling;**263,415**;AUG 13 1993
  ;
  ;
  ;******************************************************************
@@ -7,7 +7,7 @@ SDWLE ;BPOI/TEH - WAITING LIST-ENTER/EDIT;06/12/2002
  ;                                               
  ;   DATE                        PATCH                   DESCRIPTION
  ;   ----                        -----                   -----------
- ;   09JUN2005                   446                     Inter-Facility Transfer.
+ ;   09JUN2005                   415                     Disallow editing if an EWL entry is currently the subject of an Inter-Facility Transfer.
  ;   
  ;   
 EN ;ENTRY POINT - INTIALIZE VARIABLES
@@ -24,8 +24,7 @@ OPT S SDWLPCMM=0,SDWLERR=0 I $D(SDWLOPT),SDWLOPT D
  S SDWLDFN=DFN
  D 1^VADPT
  S (SDWLTEM,SDWLPOS)=0
-EN1 N SDWLNEW,SDWLERR,SDWLCN,SDWLWTE S SDWLNEW=0,SDWLERR=0,SDWLCN=0,SDWLWTE=0
- G:$$EN^SDWLE6(SDWLDFN,.SDWLERR) EN2  ; OG ; SD*5.3*446 ; Inter-facility transfer
+EN1 S SDWLNEW=0,SDWLERR=0,SDWLCN=0,SDWLWTE=0
  D DIS
  I $D(^SDWL(409.3,"B",DFN)),'SDWLCN W !!,"PATIENT: ",VADM(1),?40,VA("PID")
  S SDWLPS=$S(SDWLCN>1:1,SDWLCN=1:2,1:3)
@@ -42,11 +41,11 @@ EN1 N SDWLNEW,SDWLERR,SDWLCN,SDWLWTE S SDWLNEW=0,SDWLERR=0,SDWLCN=0,SDWLWTE=0
 ENO I SDWLPS=3 D  G EN3:SDWLERR=1 I SDWLERR=2 W *7," ??" G EN1
  .S SDWLERR=$S(X?1"N".E:1,X?1"n".E:1,X="":0,X?1"Y".E:0,X?1"y".E:0,$D(DUOUT):1,X["^":1,1:2) Q
  I SDWLPS=1!(SDWLPS=2),X?1N.N D
- .N DA,SDWLDA S (DA,SDWLDA)=$P($G(^TMP("SDWLD",$J,DFN,+X)),"~",2),SDWLEDIT=""
+ .S (DA,SDWLDA)=$P($G(^TMP("SDWLD",$J,DFN,+X)),"~",2),SDWLEDIT=""
  .;
  .;LOCK DATA FILE
  .;
- .L +^SDWL(409.3,DA):5 I '$T W !,"ANOTHER TERMINAL IS EDITING THIS ENTRY. TRY LATER." S DUOUT=1
+ .L ^SDWL(409.3,DA):5 I '$T W !,"ANOTHER TERMINAL IS EDITING THIS ENTRY. TRY LATER." S DUOUT=1
  .I $D(DUOUT) Q
  .N SDWLINNM,SDWLSTN  ; OG ; This and the following six lines added for patch 415
  .I $$GETTRN^SDWLIFT1(SDWLDA,.SDWLINNM,.SDWLSTN) D  S DUOUT=1 Q

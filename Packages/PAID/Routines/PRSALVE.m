@@ -1,6 +1,5 @@
 PRSALVE ;HISC/REL-Edit Leave Request ;12-SEP-00
- ;;4.0;PAID;**61,114**;Sep 21, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;**61**;Sep 21, 1995
  S DFN="",SSN=$P($G(^VA(200,DUZ,1)),"^",9) I SSN'="" S DFN=$O(^PRSPC("SSN",SSN,0))
  I 'DFN W !!,*7,"Your SSN was not found in both the New Person & Employee File!" G EX
  S TLE=$P($G(^PRSPC(DFN,0)),"^",8) S:TLE="" TLE="   " S TLI=+$O(^PRST(455.5,"B",TLE,0))
@@ -8,7 +7,7 @@ PRSALVE ;HISC/REL-Edit Leave Request ;12-SEP-00
  F K=1:1:11 I $E(ENT,$P(Z1," ",K)) S ZENT=ZENT_$P(Z2," ",K)_" "
  I ZENT="" W !!?5,"You are not entitled to any type of Leave." G EX
  W:$E(IOST,1,2)="C-" @IOF W !?26,"VA TIME & ATTENDANCE SYSTEM",!?30,"EDIT LEAVE REQUESTS"
- S X=$G(^PRSPC(DFN,0)) W !!,$P(X,"^",1) S X=$P(X,"^",9) I X W ?67,"XXX-XX-",$E(X,6,9)
+ S X=$G(^PRSPC(DFN,0)) W !!,$P(X,"^",1) S X=$P(X,"^",9) I X W ?67,$E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9)
  S X1=DT,X2=-5 D C^%DTC S EDT=9999999-X
  W ! D DISP
  G:'CNT EX

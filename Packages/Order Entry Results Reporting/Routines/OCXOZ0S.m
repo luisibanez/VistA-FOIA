@@ -1,5 +1,5 @@
-OCXOZ0S ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
+OCXOZ0S ;SLC/RJS,CLA - Order Check Scan ;OCT 20,2005 at 22:40
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221**;Dec 17,1997
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
  ; ***************************************************************
@@ -44,7 +44,7 @@ R48R2B ; Send Order Check, Notication messages and/or Execute code for  Rule #48
  Q
  ;
 R49R1A ; Verify all Event/Elements of  Rule #49 'SITE FLAGGED RESULT'  Relation #1 'INPATIENT AND (SITE FLAGGED LAB RESULT OR SITE FLA...'
- ;  Called from EL127+6^OCXOZ0G, and EL59+5^OCXOZ0G, and EL102+5^OCXOZ0G, and EL109+5^OCXOZ0G.
+ ;  Called from EL127+6^OCXOZ0G, and EL59+5^OCXOZ0G, and EL102+5^OCXOZ0G, and EL109+5^OCXOZ0H.
  ;
  Q:$G(OCXOERR)
  ;

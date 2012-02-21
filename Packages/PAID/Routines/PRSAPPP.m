@@ -1,7 +1,5 @@
 PRSAPPP ; HISC/REL-Payroll Process Prior PP ;5/31/95  10:00
- ;;4.0;PAID;**114**;Sep 21, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- S PRSTLV=7
+ ;;4.0;PAID;;Sep 21, 1995
  W:$E(IOST,1,2)="C-" @IOF W !?26,"VA TIME & ATTENDANCE SYSTEM"
  W !?26,"PRIOR PAY PERIOD CORRECTIONS"
 R0 R !!,"Select T&L Unit (or ALL): ",X:DTIME G:'$T!("^"[X) EX S X=$TR(X,"al","AL") I X="ALL" S TLE=""

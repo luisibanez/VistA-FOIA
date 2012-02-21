@@ -1,8 +1,7 @@
-ONCCSSTF ;Hines OIFO/GWB - COLLABORATIVE STAGING STUFFING ;01/07/04
- ;;2.11;ONCOLOGY;**40,43,46,48,49**;Mar 07, 1995;Build 38
+ONCCSSTF ;Hines OIFO/GWB - COLLABORATIVE STAGING STUFFING; 01/07/04
+ ;;2.11;ONCOLOGY;**40,43**;Mar 07, 1995
  ;
  Q:$G(TOP)=""
- N MM,MO
  S MO=$$HIST^ONCFUNC(D0)
  S MM="NO"
  I $$MELANOMA^ONCOU55(D0) D
@@ -29,7 +28,6 @@ ONCCSSTF ;Hines OIFO/GWB - COLLABORATIVE STAGING STUFFING ;01/07/04
  ;Prostate
  I TOP=67619 D
  .S:$P($G(^ONCO(165.5,D0,2.2)),U,2)=99 $P(^ONCO(165.5,D0,"CS"),U,7)="097"
- .N GS
  .S GS=$$GET1^DIQ(165.5,D0,623)
  .I GS'="" S GS=$S(GS="02":"002",GS="03":"003",GS="04":"004",GS="05":"005",GS="06":"006",GS="07":"007",GS="08":"008",GS="09":"009",GS="10":"010",1:"") S $P(^ONCO(165.5,D0,"CS"),U,10)=GS
  ;Other & Unspecified Male Genital Organs
@@ -80,13 +78,12 @@ HRIMN ;Hematopoietic, Reticuloendothelial, Immunoproliferative, &
  I (MO'<97310)&(MO'>99899) D EVAL9,LN,SSF168 D  Q
  .S $P(^ONCO(165.5,D0,"CS1"),U,10)=888
  .S $P(^ONCO(165.5,D0,"CS"),U,3)=88
- .;EXTENSION (CS) (165.5,30.2) stuffing with 80 (Systemic disease)
- .I (MO'=97313)&($E(MO,1,4)'=9740)&($E(MO,1,4)'=9750)&($E(MO,1,4)'=9755)&($E(MO,1,4)'=9756)&($E(MO,1,4)'=9757)&($E(MO,1,4)'=9758)&($E(MO,1,4)'=9930) D
- ..S $P(^ONCO(165.5,D0,"CS"),U,11)=80
  ;
 SSF16 ;SITE-SPECIFIC FACTOR 1-6 = 888 (Not applicable for this site)
  ;Esophagus
  I ($E(TOP,3,4)=15) D SSF168 Q
+ ;Stomach
+ I ($E(TOP,3,4)=16) D SSF168 Q
  ;Small Intestine
  I ($E(TOP,3,4)=17) D SSF168 Q
  ;Anus
@@ -120,7 +117,7 @@ SSF16 ;SITE-SPECIFIC FACTOR 1-6 = 888 (Not applicable for this site)
  ;Skin
  ;(excl. Mycosis Fungoides & Sezary Disease)
  I (TOP=67440)!(TOP=67442)!(TOP=67443)!(TOP=67444)!(TOP=67445)!(TOP=67446)!(TOP=67447)!(TOP=67448)!(TOP=67449),MO'=97003,MO'=97013 D SSF168 Q
- ;Skin of Eyelid
+ ;Skin of Eylid
  I TOP=67441 D SSF168 Q
  ;Peripheral Nerves & Autonomic Nervous System;
  ;Connective, Subcutaneous, & Other Soft Tissues
@@ -173,6 +170,8 @@ SSF16 ;SITE-SPECIFIC FACTOR 1-6 = 888 (Not applicable for this site)
  .S $P(^ONCO(165.5,D0,"CS"),U,3)=88
  ;
 SSF26 ;SITE-SPECIFIC FACTOR 2-6 = 888 (Not applicable for this site)
+ ;Colon
+ ;Rectosigmoid, Rectum
  ;Pleura
  ;Mycosis Fungoides & Sezary Disease (9700-9701)
  ;Ovary
@@ -182,8 +181,7 @@ SSF26 ;SITE-SPECIFIC FACTOR 2-6 = 888 (Not applicable for this site)
  ;Other Parts of CNS
  ;Thyroid
  ;Thymus, Adrenal (Suprarenal) Gland, & Other Endocrine Glands
- ;Stomach
- I (TOP=67384)!(MO=97003)!(MO=97013)!(TOP=67569)!(TOP=67589)!(MM="YES")!(TOP=67700)!($E(TOP,3,4)=71)!(TOP=67701)!(TOP=67709)!($E(TOP,3,4)=72)!(TOP=67739)!(TOP=67379)!($E(TOP,3,4)=74)!($E(TOP,3,4)=75)!($E(TOP,3,4)=16) D  Q
+ I ($E(TOP,3,4)=18)!(TOP=67199)!(TOP=67209)!(TOP=67384)!(MO=97003)!(MO=97013)!(TOP=67569)!(TOP=67589)!(MM="YES")!(TOP=67700)!($E(TOP,3,4)=71)!(TOP=67701)!(TOP=67709)!($E(TOP,3,4)=72)!(TOP=67739)!(TOP=67379)!($E(TOP,3,4)=74)!($E(TOP,3,4)=75) D  Q
  .S $P(^ONCO(165.5,D0,"CS"),U,6)=888
  .S $P(^ONCO(165.5,D0,"CS"),U,7)=888
  .S $P(^ONCO(165.5,D0,"CS"),U,8)=888
@@ -191,10 +189,8 @@ SSF26 ;SITE-SPECIFIC FACTOR 2-6 = 888 (Not applicable for this site)
  .S $P(^ONCO(165.5,D0,"CS"),U,10)=888
  ;
 SSF36 ;SITE-SPECIFIC FACTOR 3-6 = 888 (Not applicable for this site)
- ;Colon
- ;Rectosigmoid, Rectum
  ;Liver & Intrahepatic Bile Ducts
- I ($E(TOP,3,4)=18)!(TOP=67199)!(TOP=67209)!($E(TOP,3,4)=22) D  Q
+ I ($E(TOP,3,4)=22) D  Q
  .S $P(^ONCO(165.5,D0,"CS"),U,7)=888
  .S $P(^ONCO(165.5,D0,"CS"),U,8)=888
  .S $P(^ONCO(165.5,D0,"CS"),U,9)=888

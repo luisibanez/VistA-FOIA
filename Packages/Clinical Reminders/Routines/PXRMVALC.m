@@ -1,5 +1,5 @@
-PXRMVALC ; SLC/KR - VAL Validate Codes (format/value)    ;08/15/2006
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMVALC ; SLC/KR - VAL Validate Codes (format/value)    ;04/10/2003  12:03
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  Q
  ;   
  ; Entry points (extrinsic functions)
@@ -132,15 +132,14 @@ ICP(X) ; Validate ICD-9-CM Procedure Code from file 80.1
  . S:(+(IFOUT)+(IFIN))>0 ERR="Inactive "_TY
  G AQ
  ;            
-CPT(X) ; Validate Procedure Code from file 81
+CPT(X) ; Validate CPT-4 Procedure Code from file 81
  S X=$G(X),U="^"
  N CHR,CHKD,CIN,CODE,COUT,DIC,ERR,ES,FNUM,FORM,IENI,IENO,IFIN,IFOUT
  N NAME,NUMERIC,PAT,STATUS,TEMP,TY,VAL,Y
- S VAL=1,FNUM=81,DIC="ICPT(",(IFIN,IFOUT,NAME)="",CIN=$TR(X,"""","")
- S FORM=$S(CIN?5N:1,CIN?1A4N:2,CIN?4N1A:2,1:0)
- S TY=$S(FORM=1:"CPT-4 code",FORM=2:"HCPCS code",1:"unknown")
- S CHKD=$S(FORM=1:"CPT-4 procedure code",FORM=2:"HCPCS procedure code",1:"Unknown format")
- S PAT=$S(FORM=1:"NNNNN",FORM=2:"ANNNN or NNNNA",1:"")
+ S VAL=1,FNUM=81,DIC="ICPT(",(IFIN,IFOUT,NAME)="",CIN=$TR(X,"""",""),U="^",FORM=$S($E(X,1)?1N:1,$E(X,1)?1U:2,1:1)
+ S TY=$S(FORM=1:"CPT-4 code",FORM=2:"HCPCS code",1:"Procedure code")
+ S CHKD=$S(FORM=1:"CPT-4 procedure code",FORM=2:"HCPCS procedure code",1:"CPT-4 procedure code")
+ S PAT=$S(FORM=1:"NNNNN",FORM=2:"UNNNN",1:"NNNNN or UNNNN")
  S ES="Invalid "_TY_" format "
  ; Code transformation
  ;    HCPCS
@@ -170,9 +169,14 @@ CPT(X) ; Validate Procedure Code from file 81
  I $L(CIN)<5 D ERR((ES_"(not enough characters)")) G AQ
  ;    too many characters
  I $L(CIN)>5 D ERR((ES_"(too many characters)")) G AQ
- ; Invalid pattern
- I FORM=0 D ERR(ES_PAT) G AQ
- ; Value not found
+ ;    invalid pattern
+ ;       CPT-4
+ I $E(CIN,1)?1N,CIN'?5N D ERR((ES_"("_PAT_")")) G AQ
+ ;       HCPCS
+ I $E(CIN,1)?1U,CIN'?1U4N D ERR((ES_"("_PAT_")")) G AQ
+ I CIN'?5N&(CIN'?1U.4N) D ERR(("Invalid code format (NNNNN or UNNNN)")) G AQ
+ ; Value
+ ;    not found
  I +$$CODEN^ICPTCOD(CIN)<1 D ERR((TY_" not found in the CPT file (#81)")) S COUT="" G AQ
  ;    found
  I +$$CODEN^ICPTCOD(CIN)>0 D  G AQ

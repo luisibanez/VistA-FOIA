@@ -1,5 +1,5 @@
-PSOREF ;BIR/SAB-refill data entry ;4/25/07 8:45am
- ;;7.0;OUTPATIENT PHARMACY;**1,23,27,36,46,78,130,131,148,206**;DEC 1997;Build 39
+PSOREF ;BIR/SAB-refill data entry ;07/07/96
+ ;;7.0;OUTPATIENT PHARMACY;**1,23,27,36,46,78,130,131,148**;DEC 1997
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External references PSOL and PSOUL^PSSLOCK supported by DBIA 2789
  ;
@@ -84,7 +84,7 @@ REFILL(PLACER) ;passes flag to CPRS for front door refill request
  I '$P($G(^PSRX(RXN,"OR1")),"^"),'$P($G(^PSDRUG(PSODRG,2)),"^") Q "0^Cannot Refill. Drug not matched to a Pharmacy Orderable Item."
  I '$P($G(^PSRX(RXN,"OR1")),"^"),$P($G(^PSDRUG(PSODRG,2)),"^") S $P(^PSRX(RXN,"OR1"),"^")=$P(^PSDRUG(PSODRG,2),"^")
  S CLOZPAT=$S($P($G(^PSDRUG(PSODRG,"CLOZ1")),"^")="PSOCLO1":1,1:0)
- I 'CLOZPAT I PSODEA["A"&(PSODEA'["B")!(PSODEA["F")!(PSODEA[1)!(PSODEA[2) Q "0^"_$S(PSODEA["A":"Narcotic Drug. ",1:"")_"Order Non-Refillable."
+ I 'CLOZPAT I PSODEA["A"&(PSODEA'["B")!(PSODEA["F") Q "0^"_$S(PSODEA["F":"",1:"Narcotic Drug. ")_"Order Non-Refillable."
  K CLOZPAT I DT>$P($G(^PSRX(RXN,2)),"^",6) Q "0^Non-Refillable.  Prescription has Expired."
  I $P(^PSRX(RXN,3),"^",2)>$P(^PSRX(RXN,2),"^",6) Q "0^Next Refill Date Past Expiration Date.  New Order Required."
  I '$P($G(^PS(59,DIV,1)),"^",11),$G(^PSDRUG(PSODRG,"I"))]"",DT>$G(^("I")) Q "0^Inactive Drug, Non Refillable."

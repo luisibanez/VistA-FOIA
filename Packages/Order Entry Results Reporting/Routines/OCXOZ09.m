@@ -1,5 +1,5 @@
-OCXOZ09 ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
+OCXOZ09 ;SLC/RJS,CLA - Order Check Scan ;OCT 20,2005 at 22:40
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221**;Dec 17,1997
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
  ; ***************************************************************
@@ -25,7 +25,7 @@ CHK188 ; Look through the current environment for valid Event/Elements for this 
  ; EQTERM( ----------> EQUALS TERM OPERATOR
  ;
  I $$EQTERM(OCXDF(47),"ANGIOGRAM (PERIPHERAL)") S OCXDF(40)=$G(OCXPSM) I $L(OCXDF(40)),(OCXDF(40)="SESSION") D CHK192
- I $$CLIST($$UP^XLFSTR(OCXDF(47)),$$UP^XLFSTR("GLUCOPHAGE,METFORMIN")) S OCXDF(40)=$G(OCXPSM) I $L(OCXDF(40)),(OCXDF(40)="SELECT") S OCXDF(2)=$P($G(OCXPSD),"|",2) D CHK279^OCXOZ0B
+ I $$CLIST(OCXDF(47),"GLUCOPHAGE,METFORMIN") S OCXDF(40)=$G(OCXPSM) I $L(OCXDF(40)),(OCXDF(40)="SELECT") S OCXDF(2)=$P($G(OCXPSD),"|",2) I $L(OCXDF(2)) D CHK279^OCXOZ0B
  Q
  ;
 CHK192 ; Look through the current environment for valid Event/Elements for this patient.
@@ -44,7 +44,7 @@ CHK192 ; Look through the current environment for valid Event/Elements for this 
  Q
  ;
 CHK196 ; Look through the current environment for valid Event/Elements for this patient.
- ;  Called from CHK163+19^OCXOZ07.
+ ;  Called from CHK163+13^OCXOZ07.
  ;
  Q:$G(OCXOERR)
  ;
@@ -53,16 +53,20 @@ CHK196 ; Look through the current environment for valid Event/Elements for this 
  ; OCXDF(37) ---> Data Field: PATIENT IEN (NUMERIC)
  ; OCXDF(67) ---> Data Field: CONTRAST MEDIA CODE (FREE TEXT)
  ; OCXDF(73) ---> Data Field: ORDERABLE ITEM IEN (NUMERIC)
+ ; OCXDF(156) --> Data Field: ALLERGY ASSESSMENT (BOOLEAN)
  ;
  ;      Local Extrinsic Functions
+ ; ALRGY( -----------> ALLERGY ASSESSMENT
  ; CLIST( -----------> STRING CONTAINS ONE OF A LIST OF VALUES
+ ; FILE(DFN,136, ----> FILE DATA IN PATIENT ACTIVE DATA FILE  (Event/Element: NO ALLERGY ASSESSMENT)
  ;
  S OCXDF(2)=$P($G(OCXPSD),"|",2) I $L(OCXDF(2)) D CHK198
- S OCXDF(73)=$P($G(OCXPSD),"|",1) I $L(OCXDF(73)) S OCXDF(67)=$$CM^ORQQRA(OCXDF(73)) I $L(OCXDF(67)),$$CLIST(OCXDF(67),"M,I,N") S OCXDF(37)=$G(DFN) I $L(OCXDF(37)) D CHK458^OCXOZ0E
+ S OCXDF(73)=$P($G(OCXPSD),"|",1) I $L(OCXDF(73)) S OCXDF(67)=$$CM^ORQQRA(OCXDF(73)) I $L(OCXDF(67)),$$CLIST(OCXDF(67),"M,I,N") S OCXDF(37)=$G(DFN) I $L(OCXDF(37)) D CHK465^OCXOZ0E
+ S OCXDF(37)=$G(DFN) I $L(OCXDF(37)) S OCXDF(156)=$$ALRGY(OCXDF(37)) I $L(OCXDF(156)),'(OCXDF(156)) S OCXOERR=$$FILE(DFN,136,"") Q:OCXOERR 
  Q
  ;
 CHK198 ; Look through the current environment for valid Event/Elements for this patient.
- ;  Called from CHK196+14.
+ ;  Called from CHK196+17.
  ;
  Q:$G(OCXOERR)
  ;
@@ -70,7 +74,7 @@ CHK198 ; Look through the current environment for valid Event/Elements for this 
  ; OCXDF(2) ----> Data Field: FILLER (FREE TEXT)
  ;
  I (OCXDF(2)="RA") D CHK199
- I ($E(OCXDF(2),1,2)="PS") D CHK360^OCXOZ0C
+ I ($E(OCXDF(2),1,2)="PS") D CHK361^OCXOZ0C
  Q
  ;
 CHK199 ; Look through the current environment for valid Event/Elements for this patient.
@@ -83,7 +87,7 @@ CHK199 ; Look through the current environment for valid Event/Elements for this 
  ; OCXDF(73) ---> Data Field: ORDERABLE ITEM IEN (NUMERIC)
  ;
  S OCXDF(37)=$G(DFN) I $L(OCXDF(37)) D CHK201
- S OCXDF(73)=$P($G(OCXPSD),"|",1) I $L(OCXDF(73)) D CHK236^OCXOZ0A
+ S OCXDF(73)=$P($G(OCXPSD),"|",1) I $L(OCXDF(73)) D CHK235^OCXOZ0A
  Q
  ;
 CHK201 ; Look through the current environment for valid Event/Elements for this patient.
@@ -102,7 +106,7 @@ CHK201 ; Look through the current environment for valid Event/Elements for this 
  ; RECBAR( ----------> RECENT BARIUM STUDY
  ;
  S OCXDF(65)=$$ORCHK^GMRAOR(OCXDF(37),"CM","") I $L(OCXDF(65)),(OCXDF(65)) S OCXDF(73)=$P($G(OCXPSD),"|",1) I $L(OCXDF(73)) S OCXDF(67)=$$CM^ORQQRA(OCXDF(73)) D CHK207
- S OCXDF(69)=$P($$RECBAR(OCXDF(37),48),"^",1) I $L(OCXDF(69)),(OCXDF(69)) S OCXDF(73)=$P($G(OCXPSD),"|",1) I $L(OCXDF(73)) S OCXDF(67)=$$CM^ORQQRA(OCXDF(73)) D CHK217
+ S OCXDF(69)=$P($$RECBAR(OCXDF(37),48),"^",1) I $L(OCXDF(69)),(OCXDF(69)) S OCXDF(73)=$P($G(OCXPSD),"|",1) I $L(OCXDF(73)) S OCXDF(67)=$$CM^ORQQRA(OCXDF(73)) D CHK216
  Q
  ;
 CHK207 ; Look through the current environment for valid Event/Elements for this patient.
@@ -111,35 +115,23 @@ CHK207 ; Look through the current environment for valid Event/Elements for this 
  Q:$G(OCXOERR)
  ;
  ;    Local CHK207 Variables
- ; OCXDF(37) ---> Data Field: PATIENT IEN (NUMERIC)
  ; OCXDF(66) ---> Data Field: CONTRAST MEDIA CODE TRANSLATION (FREE TEXT)
  ; OCXDF(67) ---> Data Field: CONTRAST MEDIA CODE (FREE TEXT)
- ; OCXDF(159) --> Data Field: ALLERGY CONTRAST MEDIA LOCATION (FREE TEXT)
  ;
  ;      Local Extrinsic Functions
  ; CLIST( -----------> STRING CONTAINS ONE OF A LIST OF VALUES
  ; CONTRANS( --------> CONTRAST MEDIA CODE TRANSLATION
- ;
- I $L(OCXDF(67)),$$CLIST(OCXDF(67),"M,I,N,L,C,G,B") S OCXDF(66)=$$CONTRANS(OCXDF(67)),OCXDF(159)=$P($$ORCHK^GMRAOR(OCXDF(37),"CM","",1),"^",2) D CHK211
- Q
- ;
-CHK211 ; Look through the current environment for valid Event/Elements for this patient.
- ;  Called from CHK207+15.
- ;
- Q:$G(OCXOERR)
- ;
- ;      Local Extrinsic Functions
  ; FILE(DFN,66, -----> FILE DATA IN PATIENT ACTIVE DATA FILE  (Event/Element: CONTRAST MEDIA ALLERGY)
  ;
- S OCXOERR=$$FILE(DFN,66,"66,159") Q:OCXOERR 
+ I $L(OCXDF(67)),$$CLIST(OCXDF(67),"M,I,N,L,C,G,B") S OCXDF(66)=$$CONTRANS(OCXDF(67)),OCXOERR=$$FILE(DFN,66,"66") Q:OCXOERR 
  Q
  ;
-CHK217 ; Look through the current environment for valid Event/Elements for this patient.
+CHK216 ; Look through the current environment for valid Event/Elements for this patient.
  ;  Called from CHK201+16.
  ;
  Q:$G(OCXOERR)
  ;
- ;    Local CHK217 Variables
+ ;    Local CHK216 Variables
  ; OCXDF(37) ---> Data Field: PATIENT IEN (NUMERIC)
  ; OCXDF(67) ---> Data Field: CONTRAST MEDIA CODE (FREE TEXT)
  ; OCXDF(70) ---> Data Field: RECENT BARIUM STUDY TEXT (FREE TEXT)
@@ -152,6 +144,13 @@ CHK217 ; Look through the current environment for valid Event/Elements for this 
  ;
  I $L(OCXDF(67)),(OCXDF(67)["B") S OCXDF(70)=$P($$RECBAR(OCXDF(37),48),"^",3),OCXDF(121)=$P($$RECBARST(OCXDF(37),48),"^",2),OCXOERR=$$FILE(DFN,67,"70,121") Q:OCXOERR 
  Q
+ ;
+ALRGY(ORPT)   ; determine if pt has an allergy assessment
+ ; rtn 0 if no allergy assessment, 1 if allergy assessment or NKA
+ N ORALRGY
+ D EN1^GMRAOR1(ORPT,"ORALRGY")
+ Q:$G(ORALRGY)="" 0
+ Q 1
  ;
 CLIST(DATA,LIST) ;   DOES THE DATA FIELD CONTAIN AN ELEMENT IN THE LIST
  ;

@@ -1,5 +1,5 @@
 PXKFPOV ;ISL/JVS - Fields for V PURPOSE OF VISIT (POV) file ;3/1/04 10:46am
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,130,124,168**;Aug 12, 1996;Build 14
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,130,124**;Aug 12, 1996
  ;
  ;  Adding or Editing of data in a particular field can be controlled
  ;by adding a ~ as a delimiter and the letters A and/or E to the
@@ -76,7 +76,6 @@ ADD ;Add an entry to the file
  ;;80005///^S X=$G(
  ;;80006///^S X=$G(
  ;;80007///^S X=$G(
- ;;80008///^S X=$G(
 801 ;;
  ;;80101///^S X=1;
  ;;80102///^S X=$G(PXKAUDIT);

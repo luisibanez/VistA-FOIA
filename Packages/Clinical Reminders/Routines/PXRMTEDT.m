@@ -1,5 +1,5 @@
-PXRMTEDT ; SLC/PKR - Edit a taxonomy item. ;12/23/2005
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMTEDT ; SLC/PKR - Edit a taxonomy item. ;04/29/2003
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;===============================================
  N CS1,CS2,DA,DIC,DLAYGO,DTOUT,DUOUT,Y
@@ -30,70 +30,69 @@ END ;
 EDIT(ROOT,DA) ;
  N DIE,DR,DIDEL,RESULT,X
  S DIE=ROOT,DIDEL=811.2
- S DIE("NO^")="OUTOK"
  W !!,"General Taxonomy Data"
-NAME S DR=".01"
+ S DR=".01"
  D ^DIE
  ;If DA is undefined then the entry was deleted.
  I '$D(DA) Q
  I $D(Y) Q
  ;
-BD S DR=".02"
+ S DR=".02"
  D ^DIE
  I '$D(DA) Q
- I $D(Y) G NAME
+ I $D(Y) Q
  ;
 CLASS ;
  ;Class
  W !!
  S DR="100"
  D ^DIE
- I $D(Y) G BD
+ I $D(Y) Q
  ;Sponsor
  S DR="101"
  D ^DIE
- I $D(Y) G CLASS
+ I $D(Y) Q
  ;Make sure Class and Sponsor Class are in synch.
  S RESULT=$$VSPONSOR^PXRMINTR(X)
  I RESULT=0 G CLASS
  ;Review date
-RD W !!
+ W !!
  S DR="102"
  D ^DIE
- I $D(Y) G CLASS
+ I $D(Y) Q
  ;
-PDS W !!
+ W !!
  S DR="4"
  D ^DIE
  I '$D(DA) Q
- I $D(Y) G RD
+ I $D(Y) Q
  ;
-UINP S DR="10"
+ S DR="10"
  D ^DIE
  I '$D(DA) Q
- I $D(Y) G PDS
+ I $D(Y) Q
  ;
-IFL S DR="1.6"
+ S DR="1.6"
  D ^DIE
  I '$D(DA) Q
- I $D(Y) G UINP
+ I $D(Y) Q
  ;
-ICD0 W !!,"ICD0 Range of Coded Values"
+ W !!,"ICD0 Range of Coded Values"
  S DR="2103"
  S DR(2,811.22103)=".01;1"
  D ^DIE
  I $D(Y) Q
  ;
-ICD9 W !!,"ICD9 Range of Coded Values"
+ W !!,"ICD9 Range of Coded Values"
  S DR="2102"
  S DR(2,811.22102)=".01;1"
  D ^DIE
- I $D(Y) G ICD0
+ I $D(Y) Q
  ;
-CPT W !!,"CPT Range of Coded Values"
+ W !!,"CPT Range of Coded Values"
  S DR="2104"
  S DR(2,811.22104)=".01;1"
  D ^DIE
- I $D(Y) G ICD9
+ I $D(Y) Q
  Q
  ;

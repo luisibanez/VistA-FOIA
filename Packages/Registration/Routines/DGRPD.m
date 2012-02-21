@@ -1,5 +1,5 @@
-DGRPD ;ALB/MRL/MLR/JAN/LBD/EG/BRM/JRC/BAJ-PATIENT INQUIRY (NEW) ; 05/03/06
- ;;5.3;Registration;**109,124,121,57,161,149,286,358,436,445,489,498,506,513,518,550,545,568,585,677,703,688**;Aug 13, 1993;Build 29
+DGRPD ;ALB/MRL/MLR/JAN/LBD/EG/BRM/JRC-PATIENT INQUIRY (NEW) ; 3/9/06 11:17am
+ ;;5.3;Registration;**109,124,121,57,161,149,286,358,436,445,489,498,506,513,518,550,545,568,585,677,703**;Aug 13, 1993
  ;  *286*  Newing variables X,Y in OKLINE subroutine
  ;  *358*  If a patient is on a domiciliary ward, don't display MEANS
  ;         TEST required/Medication Copayment Exemption messages
@@ -7,7 +7,6 @@ DGRPD ;ALB/MRL/MLR/JAN/LBD/EG/BRM/JRC/BAJ-PATIENT INQUIRY (NEW) ; 05/03/06
  ;         Medication Copayment Exemption message
  ;  *545*  Add death information near the remarks field
  ;  *677*  Added Emergency Response
- ;  *688*  Modified to display Country and Foreign Address
 SEL K DFN,DGRPOUT W ! S DIC="^DPT(",DIC(0)="AEQMZ" D ^DIC G Q:Y'>0 S DFN=+Y N Y W ! S DIR(0)="E" D ^DIR G SEL:$D(DTOUT)!($D(DUOUT)) D EN G SEL
 EN ;call to display patient inquiry - input DFN
  ;MPI/PD CHANGE
@@ -15,15 +14,13 @@ EN ;call to display patient inquiry - input DFN
  S DGLOCATN=$$FIND1^DIC(4,"","MX","`"_+$P(DGMPI,U,3)),DGLOCATN=$S(+DGLOCATN>0:$P($$NS^XUAF4(DGLOCATN),U),1:"NOT LISTED")
  I $D(DGMPI),$D(DGLOCATN) S DGCMOR=$P(DGLOCATN,"^")
  ;END MPI/PD CHANGE
- K DGRPOUT,DGHOW S DGABBRV=$S($D(^DG(43,1,0)):+$P(^(0),"^",38),1:0),DGRPU="UNSPECIFIED" D DEM^VADPT,HDR^DGRPD1 F I=0,.11,.13,.121,.122,.31,.32,.36,.361,.141,.3 S DGRP(I)=$S($D(^DPT(DFN,I)):^(I),1:"")
+ K DGRPOUT,DGHOW S DGABBRV=$S($D(^DG(43,1,0)):+$P(^(0),"^",38),1:0),DGRPU="UNSPECIFIED" D DEM^VADPT,HDR F I=0,.11,.13,.121,.31,.32,.36,.361,.141,.3 S DGRP(I)=$S($D(^DPT(DFN,I)):^(I),1:"")
  S DGAD=.11,(DGA1,DGA2)=1 D A^DGRPU S DGTMPAD=0 I $P(DGRP(.121),"^",9)="Y" S DGTMPAD=$S('$P(DGRP(.121),"^",8):1,$P(DGRP(.121),"^",8)'<DT:1,1:0) I DGTMPAD S DGAD=.121,DGA1=1,DGA2=2 D A^DGRPU
  W ?1,"Address: ",$S($D(DGA(1)):DGA(1),1:"NONE ON FILE"),?40,"Temporary: ",$S($D(DGA(2)):DGA(2),1:"NO TEMPORARY ADDRESS")
- S I=2 F I1=0:0 S I=$O(DGA(I)) Q:I=""  W:(I#2)!($X>50) !?9 W:'(I#2) ?48 W DGA(I)
- S DGCC=+$P(DGRP(.11),U,7),DGST=+$P(DGRP(.11),U,5),DGCC=$S($D(^DIC(5,DGST,1,DGCC,0)):$E($P(^(0),U,1),1,20)_$S($P(^(0),U,3)]"":" ("_$P(^(0),U,3)_")",1:""),1:DGRPU)
- N DGCNTRY,DGFORGN S DGCNTRY=$P(DGRP(.11),"^",10),DGFORGN=$$FORIEN^DGADDUTL(DGCNTRY) I 'DGFORGN W !?2,"County: ",DGCC
+ S I=2 F I1=0:0 S I=$O(DGA(I)) Q:I=""  W:(I#2)!($X>50) !?10 W:'(I#2) ?51 W DGA(I)
+ S DGCC=+$P(DGRP(.11),U,7),DGST=+$P(DGRP(.11),U,5),DGCC=$S($D(^DIC(5,DGST,1,DGCC,0)):$E($P(^(0),U,1),1,20)_$S($P(^(0),U,3)]"":" ("_$P(^(0),U,3)_")",1:""),1:DGRPU) W !?2,"County: ",DGCC
  S X="NOT APPLICABLE" I DGTMPAD S Y=$P(DGRP(.121),U,7) X:Y]"" ^DD("DD") S X=$S(Y]"":Y,1:DGRPU)_"-",Y=$P(DGRP(.121),U,8) X:Y]"" ^DD("DD") S X=X_$S(Y]"":Y,1:DGRPU)
- N DGSKIP S DGSKIP=$S(DGFORGN:"!,?42,""From/To: """,1:"?42, ""From/To: """)
- W @DGSKIP,X,!?3,"Phone: ",$S($P(DGRP(.13),U,1)]"":$P(DGRP(.13),U,1),1:DGRPU),?44,"Phone: ",$S('DGTMPAD:X,$P(DGRP(.121),U,10)]"":$P(DGRP(.121),U,10),1:DGRPU) K DGTMPADW
+ W ?42,"From/To: ",X,!?3,"Phone: ",$S($P(DGRP(.13),U,1)]"":$P(DGRP(.13),U,1),1:DGRPU),?44,"Phone: ",$S('DGTMPAD:X,$P(DGRP(.121),U,10)]"":$P(DGRP(.121),U,10),1:DGRPU) K DGTMPAD
  W !?2,"Office: ",$S($P(DGRP(.13),U,2)]"":$P(DGRP(.13),U,2),1:DGRPU)
  W !?4,"Cell: ",$S($P(DGRP(.13),U,4)]"":$P(DGRP(.13),U,4),1:DGRPU)
  W !?2,"E-mail: ",$S($P(DGRP(.13),U,3)]"":$P(DGRP(.13),U,3),1:DGRPU)
@@ -52,19 +49,19 @@ EN ;call to display patient inquiry - input DFN
  .K ^UTILITY($J,"W")
  .W ?3,"Race: ",RACE(1,0),?40,"Ethnicity: ",ETHNIC(1,0)
  .F X=2:1 Q:'$D(RACE(X,0))&'$D(ETHNIC(X,0))  W !,?9,$G(RACE(X,0)),?51,$G(ETHNIC(X,0))
- I '$$OKLINE^DGRPD1(16) G Q
+ I '$$OKLINE(16) G Q
  ;display cv status #4156
  N DGCV S DGCV=$$CVEDT^DGCV(+DFN)
  W !!,?2,"Combat Vet Status: "_$S($P(DGCV,U,3)=1:"ELIGIBLE",$P(DGCV,U,3)="":"NOT ELIGIBLE",1:"EXPIRED") I DGCV>0 W ?45,"End Date: "_$$FMTE^XLFDT($P(DGCV,U,2),"5DZ")
  ;display primary eligibility
  S X1=DGRP(.36),X=$P(DGRP(.361),"^",1) W !,"Primary Eligibility: ",$S($D(^DIC(8,+X1,0)):$P(^(0),"^",1)_" ("_$S(X="V":"VERIFIED",X="P":"PENDING VERIFICATION",X="R":"PENDING REVERIFICATION",1:"NOT VERIFIED")_")",1:DGRPU)
  W !,"Other Eligibilities: " F I=0:0 S I=$O(^DIC(8,I)) Q:'I  I $D(^DIC(8,I,0)),I'=+X1 S X=$P(^(0),"^",1)_", " I $D(^DPT("AEL",DFN,I)) W:$X+$L(X)>79 !?21 W X
- I '$$OKLINE^DGRPD1(16) G Q
+ I '$$OKLINE(16) G Q
  ;employability status
  W !?6,"Unemployable: ",$S($P(DGRP(.3),U,5)="Y":"YES",1:"NO")
  ;display the catastrophic disability review date if there is one
  D CATDIS^DGRPD1
- I $G(DGPRFLG)=1 G Q:'$$OKLINE^DGRPD1(19) D
+ I $G(DGPRFLG)=1 G Q:'$$OKLINE(19) D
  . N DGPDT,DGPTM
  . W !,$$REPEAT^XLFSTR("-",78)
  . S DGPDT="",DGPDT=$O(^DGS(41.41,"ADC",DFN,DGPDT),-1)
@@ -76,7 +73,7 @@ EN ;call to display patient inquiry - input DFN
  ; If inpatient is on a DOM ward, don't display MT or CP messages
  ; If inpatient is NOT on a DOM ward, don't display CP message
  N DGDOM,DGDOM1,VAHOW,VAROOT,VAINDT,VAIP,VAERR
- G Q:'$$OKLINE^DGRPD1(14)
+ G Q:'$$OKLINE(14)
  D DOM^DGMTR
  I '$G(DGDOM) D
  .D DIS^DGMTU(DFN)
@@ -85,8 +82,8 @@ EN ;call to display patient inquiry - input DFN
  ;I 'DGABBRV,$E(IOST,1,2)="C-" F I=$Y:1:20 W !
  D DIS^EASECU(DFN)   ;Added for LTC III (DG*5.3*518)
  S VAIP("L")=""
- I $$OKLINE^DGRPD1(14) D INP
- I '$G(DGRPOUT),($$OKLINE^DGRPD1(17)) D SA
+ I $$OKLINE(14) D INP
+ I '$G(DGRPOUT),($$OKLINE(17)) D SA
  ;MPI/PD CHANGE
 Q D KVA^VADPT K %DT,D0,D1,DGA,DGA1,DGA2,DGABBRV,DGAD,DGCC,DGCMOR,DGDOM,DGLOCATN,DGMPI,DGRP,DGRPU,DGS,DGST,DGXFR0,DIC,DIR,DTOUT,DUOUT,DIRUT,DIROUT,I,I1,L,LDM,POP,SDCT,VA,X,X1,Y Q
 CA ;Confidential Address
@@ -111,10 +108,14 @@ CA ;Confidential Address
  S I=0 F I1=0:0 S I=$O(DGA(I)) Q:I=""  W:(I#2)!($X>43) !?9 W:'(I#2) ?44 W DGA(I)
  W !?1,"From/To:  ",$$FMTE^XLFDT(DGCABEG)_"-"_$S(DGCAEND'="":$$FMTE^XLFDT(DGCAEND),1:"UNANSWERED")
  Q
+HDR I '$D(IOF) S IOP="HOME" D ^%ZIS K IOP
+ ;MPI/PD CHANGE
+ W @IOF,!,$P(VADM(1),"^",1),?40,$P(VADM(2),"^",2),?65,$P(VADM(3),"^",2) S X="",$P(X,"=",78)="" W !,X,!?15,"COORDINATING MASTER OF RECORD: ",DGCMOR,! Q
+ ;END MPI/PD CHANGE
 INP S VAIP("D")="L" D INP^DGPMV10
  S DGPMT=0
  D CS^DGPMV10 K DGPMT,DGPMIFN K:'$D(DGSWITCH) DGPMVI,DGPMDCD Q
-SA F I=0:0 S I=$O(^DGS(41.1,"B",DFN,I)) G CL:'I S X=^DGS(41.1,I,0) I $P(X,"^",2)>(DT-1),$P(X,"^",13)']"",'$P(X,"^",17) S L=$P(X,"^",2) D:$$OKLINE^DGRPD1(17) SAA Q:$G(DGRPOUT)
+SA F I=0:0 S I=$O(^DGS(41.1,"B",DFN,I)) G CL:'I S X=^DGS(41.1,I,0) I $P(X,"^",2)>(DT-1),$P(X,"^",13)']"",'$P(X,"^",17) S L=$P(X,"^",2) D:$$OKLINE(17) SAA Q:$G(DGRPOUT)
  Q
 SAA ;Scheduled Admit Data
  W !!?14,"Scheduled Admit"
@@ -125,7 +126,7 @@ SAA ;Scheduled Admit Data
  ;
 CL G FA:$O(^DPT(DFN,"DE",0))="" S SDCT=0 F I=0:0 S I=$O(^DPT(DFN,"DE",I)) Q:'I  I $D(^(I,0)),$P(^(0),"^",2)'="I",$O(^(0)) S SDCT=SDCT+1 W:SDCT=1 !!,"Currently enrolled in " W:$X>50 !?22 W $S($D(^SC(+^(0),0)):$P(^(0),"^",1)_", ",1:"")
  ;
-FA G:'$$OKLINE^DGRPD1(20) RMK
+FA G:'$$OKLINE(20) RMK
  ;
  N DGARRAY,SDCNT
  S DGARRAY("FLDS")="1;2;3;18",DGARRAY(4)=DFN,DGARRAY(1)=DT,DGARRAY("SORT")="P"
@@ -146,7 +147,7 @@ FA G:'$$OKLINE^DGRPD1(20) RMK
  ..W ?39,$P($P(^TMP($J,"SDAMA301",DFN,FA),U,2),";",2)," ",COV
  ..Q
  I $O(^TMP($J,"SDAMA301",DFN,FA))>0 W !,"See Scheduling options for additional appointments."
-RMK I '$G(DGRPOUT),($$OKLINE^DGRPD1(21)) W !!,"Remarks: ",$P(^DPT(DFN,0),"^",10)
+RMK I '$G(DGRPOUT),($$OKLINE(21)) W !!,"Remarks: ",$P(^DPT(DFN,0),"^",10)
  D GETS^DIQ(2,DFN_",",".351;.353;.354;.355","E","PDTHINFO")
  W !!
  W "Date of Death Information"
@@ -154,7 +155,7 @@ RMK I '$G(DGRPOUT),($$OKLINE^DGRPD1(21)) W !!,"Remarks: ",$P(^DPT(DFN,0),"^",10)
  W !,?5,"Source of Notification: ",$G(PDTHINFO(2,DFN_",",.353,"E"))
  W !,?5,"Updated Date/Time: ",$G(PDTHINFO(2,DFN_",",.354,"E"))
  W !,?5,"Last Edited By: ",$G(PDTHINFO(2,DFN_",",.355,"E")),!
- I $$OKLINE^DGRPD1(14) D EC^DGRPD1
+ I $$OKLINE(14) D EC^DGRPD1
  K DGARRAY,SDCNT,^TMP($J,"SDAMA301"),ADM,L,TRN,DIS,SSN,FA,C,COV,NOW,CT,DGD,DGD1,I ;Y killed after dghinqky
  Q
 COV S COV=$S(+$P(^TMP($J,"SDAMA301",DFN,FA),U,18)=7:" (Collateral) ",1:"")
@@ -163,3 +164,13 @@ COV S COV=$S(+$P(^TMP($J,"SDAMA301",DFN,FA),U,18)=7:" (Collateral) ",1:"")
  ;
 OREN S XQORQUIT=1 Q:'$D(ORVP)  S DFN=+ORVP D EN R !!,"Press RETURN to CONTINUE: ",X:DTIME
  Q
+OKLINE(DGLINE) ;DOES PAUSE/HEADER IF $Y EXCEEDS DGLINE
+ ;
+ ;IN:   DGLINE --MAX LINE COUNT W/O PAUSE
+ ;OUT:  DGLINE[RETURNED] -- 0 IF TIMEOUT/UP ARROW
+ ;      DGRPOUT[SET]     -- 1 IF "
+ N X,Y  ;**286** MLR 09/25/00  Newing X & Y variables prior to ^DIR
+ I $G(IOST)["P-" Q DGLINE ; if printer, quit
+ I $Y>DGLINE N DIR S DIR(0)="E" D ^DIR D:Y HDR I 'Y S DGRPOUT=1,DGLINE=0
+ Q DGLINE
+ ;

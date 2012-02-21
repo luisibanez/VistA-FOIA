@@ -1,8 +1,7 @@
-PRSDSERV ;WOIFO/MGD,PLT - PAID DOWNLOAD MESSAGE SERVER ;12/3/07
- ;;4.0;PAID;**6,78,82,116,107**;Sep 21, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRSDSERV ;HISC/MGD-PAID DOWNLOAD MESSAGE SERVER ;09/13/2003
+ ;;4.0;PAID;**6,78,82**;Sep 21, 1995
  D NOW^%DTC S TIME=% S XMPOS=1 D REC^XMS3 G:XMER'=0 EXIT
- S LPE=$E(XMRG,1,7) I LPE'?1"**"2N1"PDH",LPE'="****PDH" G EXIT
+ G:$E(XMRG,1,7)'="****PDH" EXIT
  ; EMPCNT = # emp in this mail message
  ; SEQNUM = Mail message sequence number if more than one message
  S EMPCNT=+$E(XMRG,9,12),SEQNUM=$E(XMRG,13,16),TYPE=$E(XMRG,23)
@@ -11,8 +10,6 @@ PRSDSERV ;WOIFO/MGD,PLT - PAID DOWNLOAD MESSAGE SERVER ;12/3/07
  ; Check to see if the message was previously loaded
  I $D(^PRSD(450.12,"B",XMZ)) G EXIT
  S MTYPE=$S(TYPE="I":"Initial",TYPE="E":"Edit & Update",TYPE="P":"Payrun",TYPE="T":"Transfer",1:"")
- ; Set Lines Per Employee (LPE) for the correct interface
- S LPE=$E(LPE,3,4),LPE=$S(LPE?2N:+LPE,TYPE="I":20,(TYPE="E")!(TYPE="T"):15,TYPE="P":9,1:0)
  D REC^XMS3 G:XMER'=0 EXIT S STA=$E(XMRG,1,3) I STA'?3N G EXIT
  I TYPE="D" D ^PRSDDL G EXIT  ; Process Separation download
  ; Mark message as received.  This info is for the reports sent to the
@@ -25,7 +22,8 @@ PRSDSERV ;WOIFO/MGD,PLT - PAID DOWNLOAD MESSAGE SERVER ;12/3/07
  S PRSDIEN=+Y,$P(^PRSD(450.12,+Y,0),U,2)=TYPE_"-"_DATE_"-"_STA_"-"_SEQNUM
  S $P(^PRSD(450.12,+Y,0),U,3)="R",$P(^PRSD(450.12,+Y,0),U,4)=TIME
  S ^PRSD(450.12,"C",TYPE_"-"_DATE_"-"_STA_"-"_SEQNUM,+Y)=""
-SETPRS ;start employee record
+ ; Set Lines Per Employee (LPE) for the correct interface
+SETPRS S LPE=$S(TYPE="I":20,(TYPE="E")!(TYPE="T"):15,TYPE="P":9,1:0)
  S XMPOS=2 F A=1:1:EMPCNT D SSNLOOP Q:SSN=999999999
  I $D(^XTMP("PRS","MNR",TYPE,DATE,STA,SEQNUM)) K ^XTMP("PRS","MNR",TYPE,DATE,STA,SEQNUM) Q
  S:SSN'=999999999 $P(^PRSD(450.12,PRSDIEN,0),U,3)="S"
@@ -69,7 +67,7 @@ START ; Process download
  . . . D:ERRFLG="Y" TMPERR D UNL
  Q
  ; Piece together the routine name and call the routine
-PROC S TMPIEN="" F  S TMPIEN=$O(^XTMP("PRS",SUB,DATE,TYPE,STA,SSN,TMPIEN)) Q:TMPIEN=""  S RCD=^XTMP("PRS",SUB,DATE,TYPE,STA,SSN,TMPIEN),RTNNUM=$P(TMPIEN,"-",3) S:$L(RTNNUM)=1 RTNNUM=0_RTNNUM S RTN="^PRSD"_RTYPE_RTNNUM D:$T(@RTN)]"" @RTN
+PROC S TMPIEN="" F  S TMPIEN=$O(^XTMP("PRS",SUB,DATE,TYPE,STA,SSN,TMPIEN)) Q:TMPIEN=""  S RCD=^XTMP("PRS",SUB,DATE,TYPE,STA,SSN,TMPIEN),RTNNUM=$P(TMPIEN,"-",3) S:$L(RTNNUM)=1 RTNNUM=0_RTNNUM S RTN="^PRSD"_RTYPE_RTNNUM D @RTN
  Q
 PROC2 I TYPE="P",PP'="" D ^PRSDCOMP  ;Compute calculated fields
  S NODE=0 F EE=1:1 S NODE=$O(^PRSPC(IEN,NODE)) Q:NODE=""  I $D(^PRSPC(IEN,NODE))#2 S DATA=^PRSPC(IEN,NODE) I $L(DATA,U)-1=$L(DATA) K ^PRSPC(IEN,NODE)
@@ -110,7 +108,7 @@ LDLOAD() ; Retrieve current Labor Distribution Values from #450
 LDCMP ; Compare Initial and Final Labor Distribution for changes
  ; and update audit trail in #458 if necessary.
  Q:LDINIT=LDFNL
- N PPA,I,IENS,IENS1,INDX,J,LDA,PRSFDA,TLDPER,E458IEN
+ N PPA,I,IENS,IENS1,INDX,J,LDA,PRSFDA,TLDPER
  ; Get IEN for current Pay Period
  S PPA=$P($G(^PRST(458,"AD",$P(TIME,".",1))),U,1)
  Q:PPA=""
@@ -130,24 +128,13 @@ LDCMP ; Compare Initial and Final Labor Distribution for changes
  ;
  ; If there is no entry for this employee in the Pay Period, create
  ; a record for them
- I '$D(^PRST(458,PPA,"E",IEN)) D
+ I '$D(^PRSPC(458,PPA,"E",IEN)) D
  . S IENS=","_PPA_","
- . S E458IEN(1)=IEN
  . S PRSFDA(458.01,"?+1"_IENS,.01)=IEN
- . S PRSFDA(458.01,"?+1"_IENS,1)="T"
- . D UPDATE^DIE("","PRSFDA","E458IEN")
- ;
- ; PRS*107 - undefined PPA caused errors
- ; PRS*107 - undefined LDA caused errors
- ; PRS*107 - IENS not set properly 
- S PPA=$P($G(^PRST(458,"AD",$P(TIME,".",1))),U,1)
- Q:PPA=""
- S LDA="A",LDA=$O(^PRST(458,PPA,"E",IEN,"LDAUD",LDA),-1)
- S LDA=$S(LDA>0:LDA+1,1:1)
- S IENS=","_IEN_","_PPA_","
+ . D UPDATE^DIE("","PRSFDA")
  ;
  ; Set LD AUDIT record into #458.1105
- ; S IENS=","_IEN_IENS  - PRS*107 REPLACED WITH IENS SET 3 LINES ABOVE
+ S IENS=","_IEN_IENS
  K PRSFDA
  S PRSFDA(458.1105,"?+1"_IENS,.01)=LDA
  S PRSFDA(458.1105,"?+1"_IENS,1)=TIME

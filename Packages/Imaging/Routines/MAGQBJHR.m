@@ -1,5 +1,5 @@
-MAGQBJHR ;WOIFO/RP; Report of Currently Queued items [ 03/28/2001 18:40 ]
- ;;3.0;IMAGING;**20**;Apr 12, 2006
+MAGQBJHR ;WOIFO/RP; Report of Currently Queued items [ 06/20/2001 08:57 ]
+ ;;3.0;IMAGING;;Mar 01, 2002
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -9,20 +9,20 @@ MAGQBJHR ;WOIFO/RP; Report of Currently Queued items [ 03/28/2001 18:40 ]
  ;; | telephone (301) 734-0100.                                     |
  ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
- ;; | a Class II medical device.  As such, it may not be changed    |
- ;; | in any way.  Modifications to this software may result in an  |
- ;; | adulterated medical device under 21CFR820, the use of which   |
- ;; | is considered to be a violation of US Federal Statutes.       |
+ ;; | a medical device.  As such, it may not be changed in any way. |
+ ;; | Modifications to this software may result in an adulterated   |
+ ;; | medical device under 21CFR820, the use of which is considered |
+ ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
  ;Report of currently queued JBTOHD
 JHRPT(RESULT) ;[MAGQ JH RPT]
- N INDEX,CNT,TYPE,SUBTYPE,PDUZ,PAT,IEN,QUEUER,SESS,PLACE
- S TYPE="JBTOHD",CNT=-1,PLACE=$$PLACE^MAGBAPI(+$G(DUZ(2)))
+ N INDEX,CNT,TYPE,SUBTYPE,PDUZ,PAT,IEN,QUEUER,SESS
+ S TYPE="JBTOHD",CNT=-1
  ;S INDEX=550
- S INDEX=$P($G(^MAGQUEUE(2006.031,$O(^MAGQUEUE(2006.031,"C",PLACE,TYPE,0)),0)),"^",2)
+ S INDEX=$P($G(^MAGQUEUE(2006.031,$O(^MAGQUEUE(2006.031,"B",TYPE,0)),0)),"^",2)
  D SL("Current JBTOHD queue: "_INDEX_" "_$P($G(^MAGQUEUE(2006.03,INDEX,0)),"^",4),2)
- F  S INDEX=$O(^MAGQUEUE(2006.03,"C",PLACE,TYPE,INDEX)) Q:INDEX'?1N.N  D
+ F  S INDEX=$O(^MAGQUEUE(2006.03,"B",TYPE,INDEX)) Q:INDEX'?1N.N  D
  . S NODE=$G(^MAGQUEUE(2006.03,INDEX,0))
  . Q:NODE=""
  . S SUBTYPE=$P(NODE,"^",8),PDUZ=+$P(NODE,"^",2),IEN=$P(NODE,"^",7)
@@ -33,7 +33,6 @@ JHRPT(RESULT) ;[MAGQ JH RPT]
  . S ^TMP("MAGQJDE",$J,PDUZ,SUBTYPE)=+$G(^TMP("MAGQJDE",$J,PDUZ,SUBTYPE))+1
  ;Reporting
  S INDEX=""
- N TITLE
  F  S INDEX=$O(^TMP("MAGQJDE",$J,INDEX)) Q:INDEX'?1N.N  D
  . S QUEUER=$$GET1^DIQ(200,INDEX,.01)
  . Q:QUEUER=""
@@ -53,6 +52,9 @@ JHRPT(RESULT) ;[MAGQ JH RPT]
  . D SL(" ",1)
  K ^TMP("MAGQJDE")
  Q
+TIT(UIEN) ; 
+ N MAGDA
+ Q $$GET1^DIQ(200,UIEN,8)
 SL(LINE,CR) ;
  S CNT=CNT+1
  S RESULT(CNT)=LINE

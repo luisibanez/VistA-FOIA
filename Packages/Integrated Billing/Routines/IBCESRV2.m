@@ -1,6 +1,5 @@
 IBCESRV2 ;ALB/TMP - Server based Auto-update utilities - IB EDI ;03/05/96
- ;;2.0;INTEGRATED BILLING;**137,191,155,296,403**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,191,155,296**;21-MAR-94
  Q
  ;
 CON837 ; Confirmation of 837 batch - auto update
@@ -171,11 +170,11 @@ UPDCONF(IBBDA,IBTDA,IBTYP,IBAUTO) ; Add status msgs to STATUS file #361
  .. D BILLSTAC(IBIDA,IBS)
  . ;
  . I 'IBTYP D
- .. S DR="20///NOW"
+ .. S DR="20///N0W"
  .. S:$P($G(^DGCR(399,IBBILL,"TX")),U,5)="1N" DR=DR_";24///1R"
  .. S DA=IBBILL,DIE="^DGCR(399," D ^DIE
  ;
- I 'IBTYP D DELMSG(IBTDA)   ; remove Austin batch confirmation record from file 364.2
+ I 'IBTYP D DELMSG(IBTDA)
  ;
  I 'IBBDA,$P(IB0,U,5) D
  . N IB

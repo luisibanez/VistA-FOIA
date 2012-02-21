@@ -1,12 +1,12 @@
 IBCFP ;ALB/ARH - PRINT AUTHORIZED BILLS IN ORDER ;6-DEC-94
- ;;2.0;INTEGRATED BILLING;**41,54,137,155,348**;21-MAR-94;Build 5
+ ;;2.0;INTEGRATED BILLING;**41,54,137,155**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
  S IBPAR1=$G(^IBE(350.9,1,1))
- S IBFT=$G(^IBE(353,3,0)) I $P(IBFT,U,2)="" W !!,"Default printer in billing not defined for the "_$P(IBFT,U,1)_", none will print!",!
- I +$P(IBPAR1,U,22) S IBFT=$G(^IBE(353,2,0)) I $P(IBFT,U,2)="" W !!,"Default printer in billing not defined for the "_$P(IBFT,U,1)_", none will print!",!
- I '$D(^DGCR(399,"AST")) W !!,"There are no Authorized but not Printed bills to print!" G END
+ S IBFT=$G(^IBE(353,+$P(IBPAR1,U,26),0)) I $P(IBFT,U,2)="" W !,"Default printer in billing not defined for the "_$P(IBFT,U,1)_", none will print!",!
+ I +$P(IBPAR1,U,22),$P($G(^IBE(353,+$$FNT^IBCU3("HCFA 1500"),0)),U,2)="" W !,"Default printer in billing not defined for the HCFA 1500, none will print!",!
+ I '$D(^DGCR(399,"AST")) W !,"There are no Authorized but not Printed bills to print!" G END
  ;
  S IBS="",IBZ="Z:ZIP;I:INSURANCE COMPANY NAME;P:PATIENT NAME;"
 ORDER S DIR("?")="This option prints all non-transmittable bills with a Status of Authorized in the order requested.  The printed bills may be sorted by: Zip Code, Insurance Company Name, and Patient name."

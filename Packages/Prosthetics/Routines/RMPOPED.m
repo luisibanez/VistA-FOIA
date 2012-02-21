@@ -1,5 +1,5 @@
 RMPOPED ;EDS/MDB,DDW,RVD - HOME OXYGEN MISC FILE EDITS ;7/24/98
- ;;3.0;PROSTHETICS;**29,44,41,52,77,110,140,148**;Feb 09, 1996;Build 1
+ ;;3.0;PROSTHETICS;**29,44,41,52,77**;Feb 09, 1996
  ;
  ; HNC - patch 52
  ;                 modified SITECHK sub
@@ -10,7 +10,8 @@ RMPOPED ;EDS/MDB,DDW,RVD - HOME OXYGEN MISC FILE EDITS ;7/24/98
  Q
 UNLOCK I $D(RMPODFN) L -^RMPR(665,RMPODFN)
  Q
-EXIT K DIC,DIE,DIR,DIK,X,Y,Z,DR,DA,DD,DO,D0,DTOUT,DIROUT,DUOUT,DIRUT,QUIT,DFN,ITEM,ITEMS,IEN,IENS,ITMACT,ITM,C,S,W,PI,VDR,ZST
+EXIT K DIC,DIE,DIR,DIK,X,Y,Z,DR,DA,DD,DO,D0,DTOUT,DIROUT,DUOUT,DIRUT,QUIT,DFN
+ K ITEM,ITEMS,IEN,IENS,ITMACT,ITM,C,S,W,PI,VDR,ZST
  D UNLOCK
  Q
  ;
@@ -19,7 +20,7 @@ KEY ;user must have the RMPRSUPERVISOR key in order to add a new patient.
  N KEY
  S KEY=$O(^DIC(19.1,"B","RMPRSUPERVISOR",0))
  I '$D(^VA(200,DUZ,51,KEY)) D  Q
- . W !!,"You do not hold the RMPSUPERVISOR key!!"
+ . W !!,"You do not hold the RMPSUPERVISOR key !!"
  G PAT
  ;
 SITE ; Editing of Home Oxygen site parameter file.
@@ -48,7 +49,8 @@ FCPIX ; Input transform for FCP multiple in 669.9
  ;
  Q:'$D(X)
  I $L(X)>30!($L(X)<3) K X Q
- S ZST=$P(^RMPR(669.9,D0,4),U,1),RMPOX=X
+ S ZST=$P(^RMPR(669.9,D0,4),U,1)
+ S RMPOX=X
  D FIND^DIC(420.01,","_ZST_",",".01;","M",X,1,,,,"X")
  S X=$S($D(X("DILIST","ID",1,.01)):X("DILIST","ID",1,.01),1:RMPOX)
  K X("DILIST"),RMPOX
@@ -170,12 +172,11 @@ DEMOG ;First edit the patient's basic fields
  ;
 RX ;Edit the Rx Data
  ;
- N RXD,RXDI
  K DIC,DIE,DA,DR
  S DIC="^RMPR(665,"_RMPODFN_",""RMPOB"",",DIC(0)="AEQLZ"
  S DA(1)=RMPODFN,DIC("P")="665.193D"
- S RXD=$O(^RMPR(665,DA(1),"RMPOB","B",""),-1) D:RXD
- . S DIC("B")=$$FMTE^XLFDT(RXD)
+ I $D(^DISV(DUZ,DIC)) S Y=^(DIC) I $D(@(DIC_(+Y)_",0)")) D
+ . S DIC("B")=$P(^(0),U,1)
  D ^DIC Q:Y<0!$$QUIT
  S DIE=DIC,DA=+Y,DR=".01;2//^D EXPIRE^RMPOBIL4;3" D ^DIE Q:$$EQUIT
  Q
@@ -230,7 +231,7 @@ ITEME ; Edit an Item
  S RMCPRENT=$P($G(^RMPR(661.1,RMCPTHCP,5)),U,1)
  I RMCPT["RR",(RMCPRENT=1) S DR="11;"
  I RMCPT["QH" S DR=DR_"12;"
- S DR=DR_"1R;2R;3R;4;7;8;9R" K RMCPRENT,RMCPTHCP
+ S DR=DR_"1R;2R;3R;4;7:9" K RMCPRENT,RMCPTHCP
  D ^DIE I $D(DA),$D(RMCPT),(RMCPT'["RR") S $P(^RMPR(665,DA(1),"RMPOC",DA,0),U,12)=""
  I $D(DA),$D(RMCPT),(RMCPT'["QH") S $P(^RMPR(665,DA(1),"RMPOC",DA,0),U,13)=""
  Q:$$EQUIT

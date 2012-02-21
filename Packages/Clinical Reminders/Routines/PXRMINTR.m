@@ -1,5 +1,5 @@
-PXRMINTR ; SLC/PKR/PJH - Input transforms for Clinical Reminders.;09/29/2009
- ;;2.0;CLINICAL REMINDERS;**4,12,16**;Feb 04, 2005;Build 119
+PXRMINTR ; SLC/PKR/PJH - Input transforms for Clinical Reminders.;12/23/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;=======================================================
 VASP(DA,X) ;Check for valid associate sponsor in file 811.6.
  ;Do not execute as part of a verify fields.
@@ -48,8 +48,8 @@ VDT(X) ;Check for a valid date/time. Input transform on
  ;
  ;=======================================================
 VFINDING(X) ;Check X to see if it is a valid finding. This is the input
- ;transform on the .01 field of the reminder findings multiple for
- ;definitions and terms.
+ ;transform on the .01 field of the reminder findings multiple. Data
+ ;element 811.902,.01.
  ;Include stubs for all possible finding types in case we need input
  ;transforms on them.
  ;I X["AUTTEDT(" Q 1
@@ -67,7 +67,7 @@ VFINDING(X) ;Check X to see if it is a valid finding. This is the input
  ;I X["PSDRUG(" Q 1
  ;I X["PSNDF(50.6," Q 1
  ;I X["RAMIS(71," Q 1
- ;I X["YTT(601," Q 1
+ I X["YTT(601," Q $$VMH(X)
  Q 1
  ;
  ;=======================================================
@@ -78,15 +78,13 @@ VHF(X) ;Check for valid health factor findings. It must be a factor, not
  S TEMP=$G(^AUTTHF(IEN,0))
  S TYPE=$P(TEMP,U,10)
  I TYPE="C" D  Q 0
- . D EN^DDIOL("Category health factors cannot be used as a finding!")
+ . D EN^DDIOL("Category health factors cannot be used in reminder definitions!")
  I TYPE'="F" D  Q 0
- . D EN^DDIOL("Only factor health factors can be used as a finding!")
+ . D EN^DDIOL("Only factor health factors can be used in reminder definitions!")
  ;Make sure that the health factor has a category.
  S CAT=$P(TEMP,U,3)
  I CAT="" D  Q 0
  . D EN^DDIOL("Factor health factors must have a category!")
- I '$D(^AUTTHF(CAT)) D  Q 0
- . D EN^DDIOL("The category for this health factor does not exist!")
  Q 1
  ;
  ;=======================================================
@@ -123,41 +121,49 @@ VIGNAC(X) ;Check X to see if it contains valid IGNORE ON N/A codes.
  ;=======================================================
 VLAB(X) ;Check for valid lab findings. Everything but a panel is ok.
  I X'["LAB(60" Q 1
- N DATANAME,LAB0,LABTEST,SUB,TEST,TEXT
+ N DATANAME,LAB0,LABTEST,SUB,TEST
  S LABTEST=$P(X,";",1)
- ;DBIA #91-A
  S LAB0=^LAB(60,LABTEST,0)
  S SUB=$P(LAB0,U,4)
- ;BB and WK not allowed
- I (SUB="BB")!(SUB="WK") D  Q 0
- . S TEXT=SUB_" tests cannot be used as reminder findings."
- . D EN^DDIOL(.TEXT)
  ;The concept of lab panel only applies to CH tests.
  I SUB'["CH" Q 1
  S DATANAME=$P(LAB0,U,5)
  ;If DATA NAME is null then it is a panel.
  I DATANAME="" D  Q 0
- . S TEXT(1)=$P(LAB0,U,1)_" is a lab panel, it cannot be used as a reminder finding!"
+ . N TEXT
+ . S TEXT(1)=$P(LAB0,U,1)_" is a lab panel, cannot be used for a reminder!"
  . S TEXT(2)="Contact your Lab ADPAC for help"
  . D EN^DDIOL(.TEXT)
  Q 1
  ;
  ;=======================================================
-VNAME(NAME) ;Check for a valid .01 value. The names of national reminder
- ;components start with "VA-" and normal users are not allowed to
- ;create them.
+VMH(X) ;The site must have the routine YTAPI installed in order to use
+ ;mental health instrument findings.
+ N EXISTS
+ S EXISTS=$$EXISTS^PXRMEXCF("YTAPI")
+ I EXISTS Q 1
+ N TEXT
+ S TEXT(1)="Your site does not have the routine YTAPI installed."
+ S TEXT(2)="It is required in order to use Mental Instrument findings."
+ S TEXT(3)="The routine was originally released in patch YS*5.01*53."
+ S TEXT(4)=" "
+ D EN^DDIOL(.TEXT)
+ Q 0
+ ;
+ ;=======================================================
+VNAME(NAME,FILE) ;Check for valid .01 value.
+ ;For files 801.41, 811.2, 811.4 and 811.9 the name cannot start with VA-
+ ;unless this is a national reminder.
  ;Do not execute as part of a verify fields.
  I $G(DIUTIL)="VERIFY FIELDS" Q 1
  ;Do not execute as part of exchange.
  I $G(PXRMEXCH) Q 1
- N AUTH,STEXT,TEXT,VALID
- S NAME=$$UP^XLFSTR(NAME)
+ N STEXT,TEXT,VALID
  S VALID=1
- S STEXT=$E(NAME,1,3)
- I (STEXT="VA-") D
- . S AUTH=($G(PXRMINST)=1)&(DUZ(0)="@")
- . I 'AUTH D
- .. S TEXT="Name cannot start with ""VA-"", reserved for national reminder components!"
+ I (FILE=811.2)!(FILE=811.4)!(FILE=811.9)!(FILE=801.41) D
+ . S STEXT=$E(NAME,1,3)
+ . I (STEXT="VA-"),(($G(PXRMINST)'=1)!(DUZ(0)'="@")) D
+ .. S TEXT=NAME_" cannot start with ""VA-"", reserved for national distribution!"
  .. D EN^DDIOL(TEXT)
  .. H 2
  .. S VALID=0
@@ -171,16 +177,15 @@ VSPONSOR(X) ;Make sure file Class and Sponsor Class match.
  I $G(DIUTIL)="VERIFY FIELDS" Q 1
  ;Do not execute as part of exchange.
  I $G(PXRMEXCH) Q 1
- N FCLASS,FILENUM,SCLASS,TEXT,VALID
+ N FCLASS,SCLASS,TEXT,VALID
  S VALID=1
  I $G(X)="" Q VALID
  I $G(DIC)="" Q 0
- S FILENUM=+$P(@(DIC_"0)"),U,2)
  S FCLASS=$P(@(DIC_DA_",100)"),U,1)
- S SCLASS=$P(^PXRMD(811.6,X,100),U,1)
+ S SCLASS=$P(^PXRMD(811.6,X,0),U,2)
  I SCLASS'=FCLASS D
- . S FCLASS=$$EXTERNAL^DILFD(FILENUM,100,"",FCLASS)
- . S SCLASS=$$EXTERNAL^DILFD(811.6,100,"",SCLASS)
+ . S FCLASS=$$EXTERNAL^DILFD(811.6,.02,"",FCLASS)
+ . S SCLASS=$$EXTERNAL^DILFD(811.6,.02,"",SCLASS)
  . S TEXT="Sponsor Class is "_SCLASS_", File Class is "_FCLASS_" they must match!"
  . D EN^DDIOL(TEXT)
  . S VALID=0
@@ -193,7 +198,7 @@ VTAX(X) ;Make sure the taxonomy is active.
  S INACTIVE=$P(^PXD(811.2,IEN,0),U,6)
  I INACTIVE D  Q 0
  . D EN^DDIOL("This taxonomy is inactive and cannot be selected.")
- Q 1
+ E  Q 1
  ;
  ;=======================================================
 VTPER(X) ;Check for valid time period. They must be of the form NS,
@@ -211,7 +216,6 @@ VUSAGE(X) ;Check X to see if it contains valid USAGE codes.
  ;USAGE field is 10 characters. The valid codes are:
  ;   C - CPRS
  ;   L - Reminder Patient List
- ;   O - Reminder Order Checks
  ;   P - Patient
  ;   R - Reports
  ;   X - Extracts
@@ -224,7 +228,6 @@ VUSAGE(X) ;Check X to see if it contains valid USAGE codes.
  S TEMP=$$UP^XLFSTR(X)
  S TEMP=$TR(TEMP,"C","")
  S TEMP=$TR(TEMP,"L","")
- S TEMP=$TR(TEMP,"O","")
  S TEMP=$TR(TEMP,"P","")
  S TEMP=$TR(TEMP,"R","")
  S TEMP=$TR(TEMP,"X","")

@@ -1,8 +1,6 @@
-PRCPUX2 ;WISC/RFJ/VAC/DST-extrinsic functions                              ; 2/21/07 10:52am
- ;;5.1;IFCAP;**98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
- ;*98 Added three new calls to support On-Demand Items
- ;*98 Added fourth call to support ODI All items or single item
+PRCPUX2 ;WISC/RFJ-extrinsic functions                              ;11 Jul 94
+ ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
@@ -31,7 +29,7 @@ SHPERCNT(V1,V2,V3,V4,V5,V6) ; display percent complete
  ;  v2=display this many v3 for each entry
  ;  v3=character to display
  ;  v4=reverse video on (optional)
- ;  v5=reverse video off (optional)
+ ;  v5=reverse vidoe off (optional)
  ;  return last one displayed
  N %
  S X=V1*V2\1 S:X>50 X=50 F %=((V1-1*V2\1)+1):1:X W V4,V3,V5 I $X>50,$D(PRCP("XY")) X PRCP("XY")
@@ -71,65 +69,3 @@ DISPLAY(DX1,DX2,X) ;  display message
  .   W !?DX1,"|",$E(TEXT,1,END-1),?DX2,"|" S TEXT=$E(TEXT,END+1,255)
  W !?DX1,PRCPLINE
  Q
- ;
-ODITEM(INVPT,ITEMDA) ;Return a flag for On-Demand Item
- ; If an item is in the warehouse, return a "W", if the item is an 
- ;   on-demand item, return a "Y", otherwise return a null.
- Q:$P($G(^PRCP(445,INVPT,0)),"^",3)="W" "W"
- Q:$P($G(^PRCP(445,INVPT,1,ITEMDA,0)),"^",30)="N" ""
- Q $P($G(^PRCP(445,INVPT,1,ITEMDA,0)),"^",30)
- ;
-ODIPROM(Y) ; Display prompt to user for On-Demand Items selection
- ;
- ; DIRUT - "^" entered, exit from this option and return to menu.
- ; Y - user selection, passed to calling routine for further process:
- ;        if Y = 1 - display Standard Items on the report only.
- ;        if Y = 2 - display On-Demand Items on the report only.
- ;        if Y = 3 - display All Items on the report.
- ;
- N X
- W !
- S X(1)=" Select On-Demand/Standard items to include on this report:             "
- D DISPLAY^PRCPUX2(3,75,.X)
- ; Choose one
- K DIR
- S DIR(0)="S^1:Standard Items Only;2:On-Demand Items Only;3:All Items (Both Standard and On-Demand)"
- S DIR("A")="Display information for"
- D ^DIR
- K DIR
- Q:$D(DIRUT) 0
- Q Y
- ;
-SRTPRMP(Y) ; Display prompt for On-Demand Items SORT selection
- ;
- ; DIRUT - "^" entered, exit from this option and return to menu.
- ; Y - user selection, passed to calling routine for further process:
- ;     If Y = 1, report sorted by Item Description 
- ;        Y = 2, report sorted by Item Number
- N X
- W !
- S X(1)=" Select the order in which you want the item information to appear.      "
- D DISPLAY^PRCPUX2(3,42,.X)
- K DIR
- S DIR(0)="S^1:ITEM DESCRIPTION;2:ITEM NUMBER"
- S DIR("A")="Sort By"
- D ^DIR
- K DIR
- Q:$D(DIRUT) 0
- Q Y
- ;
-SINGIT(PRCPIP) ; Prompt for selecting a single item or all items
- ; *98 Used by PRCPRODA
- ; ITEMSEL=NULL for all items selected or non-NULL for a single item
- N XP,ITEMSEL
-SING1 S %=0,ITEMSEL=""
- W !
- W "To select All items, press RETURN."
- S ITEMSEL=$$ITEM^PRCPUITM(PRCPIP,0,"","")
- I ITEMSEL=0 D  G SING1:%=2
- .S XP="Do you want to select ALL items"
- .W !
- .S %=$$YN^PRCPUYN(1)
- .I %=1 S ITEMSEL="" Q
- .S ITEMSEL="^"
- Q ITEMSEL

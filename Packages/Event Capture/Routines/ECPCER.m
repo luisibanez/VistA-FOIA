@@ -1,5 +1,5 @@
-ECPCER ;BIR/JPW - Event Capture PCE Data Summary ;1 Jul 2008
- ;;2.0; EVENT CAPTURE ;**4,18,23,47,72,95**;8 May 96;Build 26
+ECPCER ;BIR/JPW-Event Capture PCE Data Summary ;21 Jan 97
+ ;;2.0; EVENT CAPTURE ;**4,18,23,47,72**;8 May 96
 EN ; entry point
  K DIC S DIC=2,DIC(0)="QEAMZ",DIC("A")="Select Patient: " D ^DIC K DIC G:Y<0 END S ECDFN=+Y,ECPAT=$P(Y,"^",2)
 DATE K %DT S %DT="AEX",%DT("A")="Start with Date:  " D ^%DT G:Y<0 END S ECSD=Y,%DT("A")="End with Date:  " D ^%DT G:Y<0 END S ECED=Y I ECED<ECSD W !,"End date must be after start date",! G DATE
@@ -11,13 +11,11 @@ SUM ; entry when queued
  U IO S DATE=$O(^ECH("APAT",ECDFN,ECSD)) I 'DATE W:$Y @IOF W !!,"No Data for "_ECPAT_" during the time selected." G END
  S ECFN=+$O(^ECH("APAT",ECDFN,DATE,0)),ECL=+$P(^ECH(ECFN,0),"^",4) D HDR1
  S DATE=ECSD,(ECFN,ECOUT)=0 F  S DATE=$O(^ECH("APAT",ECDFN,DATE)) Q:'DATE!(DATE>ECED)!(ECOUT)  F  S ECFN=$O(^ECH("APAT",ECDFN,DATE,ECFN)) Q:'ECFN!(ECOUT)  D SET
- D FOOTER  ;print footer on last page
 END I $D(ECGUI) D ^ECKILL Q
  W ! I $E(IOST,1,2)="C-" W !!,"Press <RET> to continue  " R X:DTIME
  W @IOF D ^%ZISC D ^ECKILL S:$D(ZTQUEUED) ZTREQ="@"
  Q
 PAGE ; end of page
- I $G(X)'["?" D FOOTER
  S X="" I $E(IOST,1,2)="C-" W !!,"Press <RET> to continue, or ^ to quit   " R X:DTIME I '$T!(X="^") S ECOUT=1 Q
  I X["?" W !!,"If you want to continue with this report, press <RET>.  Entering an ^ will",!,"exit you from this option." G PAGE
  D HDR1
@@ -32,13 +30,8 @@ HDR1 ; print heading without categories
  F LINE=1:1:132 W "-"
  W !
  Q
-FOOTER ;print page footer
- W !!?4,"Volume totals may represent days, minutes, numbers of procedures"
- W !?4,"and/or a combination of these."
- Q
- ;
 SET ; set data
- I $Y+10>IOSL D PAGE I ECOUT Q
+ I $Y+7>IOSL D PAGE I ECOUT Q
  Q:'$D(^ECH(ECFN,"PCE"))  S ECEC=$G(^ECH(ECFN,"PCE"))
  I '$P($G(^ECH(ECFN,"P")),"^",7) Q
  S ECL=+$P(ECEC,"~",4),ECCPT=+$P(ECEC,"~",10),ECD=+$P(ECEC,"~",3),ECV=+$P(ECEC,"~",9),ECDX=+$P(ECEC,"~",11),ECID=$P(ECEC,"~",5),ECDT=+$P(ECEC,"~")
@@ -66,7 +59,7 @@ PRT W !,ECDT,?25,ECPN_" ("_ECV_")",?78,ECUN,!
  F I=1:1 S MOD=$P(ECMOD,";",I) Q:MOD=""  D  I ECOUT Q
  . S MODESC=$$MODP^ICPTMOD(ECCPT,MOD,"E",$P(ECEC,"~")) I +MODESC'>0 Q
  . W ?25,$S(I>1:$G(ECDXS(I)),1:""),?79,"- ",MOD," ",$P(MODESC,"^",2),!
- . K ECDXS(I) I ($Y+6)>IOSL D PAGE I ECOUT Q
+ . K ECDXS(I) I ($Y+3)>IOSL D PAGE I ECOUT Q
  W:ECMOD="" ! S DXS=""
  F  S DXS=$O(ECDXS(DXS)) Q:DXS=""  W ?25,ECDXS(DXS),!
  K I,MOD,MODESC,ECI,DXS,DXSIEN,ECDXS,ECDXN,ECDXSN

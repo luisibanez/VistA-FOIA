@@ -1,5 +1,5 @@
 ORWDLR32 ; SLC/KCM/REV/JDL - Lab Calls 6/28/2002
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,141,215,250,243**;Dec 17, 1997;Build 242
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,141,215**;Dec 17, 1997
  ;
  ; DBIA 2263   GETLST^XPAR  ^TMP($J,"WC")
  ;
@@ -19,16 +19,11 @@ DEF(LST,ALOC,ADIV) ; procedure
  S LST($$NXT)="~Common" D COMMON
  Q
 SHORT ; from DEF, get short list of lab quick orders
- N I,ORTMP,ORDG,A
- S I=$O(^ORD(100.98,"B","LAB",0))  ; get IEN of parent lab
- D DG^ORCHANG1(I,"BILD",.ORDG)   ; find members groups for parent lab
- S I=0
- F  S I=$O(ORDG(I)) Q:'I  D   ; loop through list of members groups
- . I $E($P($G(^ORD(100.98,I,0)),"^",3),1,2)="VB" Q
- . D GETQLST^ORWDXQ(.ORTMP,I,"Q")   ;get quick order of each members groups
- . S A=0 F  S A=$O(ORTMP(A)) Q:'A  D   ; loop through returned quick orders and
- . . S LST($$NXT)="i"_ORTMP(A)  ; move quick orders to display list
- . K ORTMP   ; clean up for next members groups of quick orders
+ N I,ORTMP
+ S I=$O(^ORD(100.98,"B","LAB",0))
+ D GETQLST^ORWDXQ(.ORTMP,I,"Q")
+ S I=0 F  S I=$O(ORTMP(I)) Q:'I  D
+ . S LST($$NXT)="i"_ORTMP(I)
  Q
 LCOLLTM ; get collection times
  N TDAY,TMRW,IGNOR,CNT,ICTM,ORCTM,DOW,AMPM,DAY,TIME,TXDT
@@ -117,17 +112,12 @@ URGENCY ; return default urgency for lab
  S LST($$NXT)="d"_URG_U_$P(^LAB(62.05,URG,0),U,1)
  Q
 SCHED ; return list of schedules available for lab tests
- N X,X0,IEN,TYPE,FREQ
- K ^TMP($J,"ORWDLR32 APLR")
- D AP^PSS51P1("LR",,,,"ORWDLR32 APLR")
- S X="" F  S X=$O(^TMP($J,"ORWDLR32 APLR","APLR",X)) Q:X=""  D
- .S IEN=$O(^TMP($J,"ORWDLR32 APLR","APLR",X,"")) I IEN'>0 Q
- .S TYPE=$P($G(^TMP($J,"ORWDLR32 APLR",IEN,5)),U)
- .S FREQ=+$G(^TMP($J,"ORWDLR32 APLR",IEN,2))
- .I ((TYPE="C")!(TYPE="D")),FREQ=0 Q
- .S LST($$NXT)="i"_IEN_U_X_U_TYPE_U_FREQ
- .I X="ONE TIME" S LST($$NXT)="d"_IEN_U_X
- K ^TMP($J,"ORWDLR32 APLR")
+ N X,X0,IEN
+ S X="" F  S X=$O(^PS(51.1,"APLR",X)) Q:X=""  S IEN=$O(^(X,0)) I IEN D
+ . S X0=$G(^PS(51.1,IEN,0)) Q:X0=""
+ . I (($P(X0,U,5)="C")!($P(X0,U,5)="D")),(+$P(X0,U,3)=0) Q
+ . S LST($$NXT)="i"_IEN_U_X_U_$P(X0,U,5)_U_$P(X0,U,3)
+ . I X="ONE TIME" S LST($$NXT)="d"_IEN_U_X
  Q
 COMMON ; return list of commonly ordered lab tests
  N ORLST,IEN,I
@@ -139,18 +129,19 @@ COMMON ; return list of commonly ordered lab tests
 LOAD(LST,TESTID) ; procedure
  ; Return sample, specimen, & urgency info about a lab test
  N I,J,X,X1,X4,ORY,ORLABID,ILST,PARAM
- S ILST=0,X=$P(^ORD(101.43,TESTID,0),"^"),ORLABID=$P(^(0),U,2)
+ S ILST=0
  S LST($$NXT)="~Test Name"
- S LST($$NXT)="d"_X
+ S LST($$NXT)="d"_$P(^ORD(101.43,TESTID,0),U,1),ORLABID=$P(^(0),U,2)
  S LST($$NXT)="~Item ID"
  S LST($$NXT)="d"_+ORLABID
- S X1=$S($P($P(^ORD(101.43,TESTID,0),U,2),";",2)="99VBC":$O(^LAB(60,"B",$P(^ORD(101.43,TESTID,0),"^")_" - LAB",0)),1:$P($P(^ORD(101.43,TESTID,0),U,2),";",1)) Q:'X1
- S X4=$P($G(^LAB(60,X1,0)),U,4)
+ S X=$P(ORLABID,";",1),X1=$P(ORLABID,";",2)
+ I $E(X1,1,4)="99VB" S X1=$O(^LAB(60,"B","VBECS "_$P(^ORD(101.43,TESTID,0),"^"),0)) Q:'X1  S X=X1
+ S X4=$P($G(^LAB(60,X,0)),U,4)
  S LST(ILST)=LST(ILST)_U_X4
  I $D(^ORD(101.43,TESTID,8))>1 S LST($$NXT)="~OIMessage"
  S I=0 F  S I=$O(^ORD(101.43,TESTID,8,I)) Q:'I  S LST($$NXT)="t"_^(I,0)
  S TESTID=+$P(^ORD(101.43,TESTID,0),U,2)
- D TEST^LR7OR3(X1,.ORY)
+ D TEST^LR7OR3(TESTID,.ORY)
  S PARAM="" F  S PARAM=$O(ORY(PARAM)) Q:PARAM=""  D
  . S LST($$NXT)="~"_PARAM
  . I PARAM="ReqCom" D

@@ -1,5 +1,5 @@
-MHVU1 ;WAS/GPM - UTILITIES  ; 7/25/05 3:48pm [12/13/07 12:06am]
- ;;1.0;My HealtheVet;**2**;Aug 23, 2005;Build 22
+MHVU1 ;WAS/GPM - MHV UTILITIES  ; [8/22/05 6:20pm]
+ ;;1.0;My HealtheVet;;Aug 23, 2005
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  Q
@@ -27,20 +27,13 @@ NOTIFY(ADM) ; Notify MHV server of patch installation, and configuration data
  ;
  ;
  N XMT
- D LOG^MHVUL2("MFN-Z01 UPDATE","BEGIN","S","TRACE")
- D LOG^MHVUL2("ADM",.ADM,"M","TRACE")
+ D LOG^MHV7U("ADM",.ADM,"M",1)
  S XMT("BUILDER")="MFNZ01^MHV7B0"
  S XMT("PROTOCOL")="MHV MFN-Z01 Event Driver"
- S XMT("MODE")="A"
- D XMIT^MHV7T(.ADM,.XMT,"","","")
- ;
- ; code to use Email transmitter
- ;S XMT("SAF")=ADM("SITE NUMBER")
- ;S XMT("EMAIL")="VHAMHVSITECOMMCONFIG@MED.VA.GOV"
- ;D EMAIL^MHV7T(.ADM,.XMT,"","","")
- ;
- D LOG^MHVUL2("MFN-Z01 UPDATE","END","S","TRACE")
- ;
+ ; Use email transmitter for now
+ S XMT("SAF")=ADM("SITE NUMBER")
+ S XMT("EMAIL")="VHAMHVSITECOMMCONFIG@MED.VA.GOV"
+ D EMAIL^MHV7T(.ADM,.XMT,"","","")
  Q
  ;
 SETADM(ADM) ; Set up ADM array of site information

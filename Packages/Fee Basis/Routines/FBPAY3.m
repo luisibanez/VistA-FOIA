@@ -1,6 +1,6 @@
-FBPAY3 ;AISC/GRR,TET-PHARMACY PAYMENT HISTORY, SORT/PRINT ;21/NOV/2006
- ;;3.5;FEE BASIS;**12,32,69,101**;JAN 30, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+FBPAY3 ;AISC/GRR,TET-PHARMACY PAYMENT HISTORY, SORT/PRINT ;7/9/2001
+ ;;3.5;FEE BASIS;**12,32,69**;JAN 30, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
 EN ;entry point
  I FBSORT S FBPNAME=FBNAME,FBPID=FBID,(DFN,J)=FBIEN,FBDOB=$$FMTE^XLFDT($P($G(^DPT(DFN,0)),U,3)) D SORT
  I 'FBSORT S FBVNAME=$E(FBNAME,1,23),FBVID=FBID,FBVI=FBIEN,FBVCHAIN=$P($G(^FBAAV(FBVI,0)),U,10),FBDA1=0 D
@@ -94,7 +94,7 @@ HDR ;main header
 SH ;subheader - vendor if fbsort; patient if  'fbsort, prints when name changes
  I ($Y+10)>IOSL D:FBCRT CR Q:FBOUT  D HDR
  I FBSORT W !!,"Vendor:",$P(FBVI,";"),?41,"Vendor ID: ",$P(FBVI,";",2),?65,"Chain #: ",$P($G(^TMP($J,"FB",FBPI,FBVI)),U)
- I 'FBSORT W !!,"Patient: ",$P(FBPT,";"),?41,"Pat. ID: ",$$SSNL4^FBAAUTL($$SSN^FBAAUTL($P(FBPT,";",2))),?62,"DOB: ",$P($G(^TMP($J,"FB",FBPI,FBVI,FBPT)),U)
+ I 'FBSORT W !!,"Patient: ",$P(FBPT,";"),?41,"Pat. ID: ",$$SSN^FBAAUTL($P(FBPT,";",2)),?62,"DOB: ",$P($G(^TMP($J,"FB",FBPI,FBVI,FBPT)),U)
  Q
 CR ;read for display
  S DIR(0)="E" W ! D ^DIR K DIR S:$D(DUOUT)!($D(DTOUT)) FBOUT=1

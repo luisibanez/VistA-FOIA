@@ -1,5 +1,5 @@
 GMTSUP ; SLC/KER - Utilities for Paging HS           ; 01/06/2003
- ;;2.7;Health Summary;**2,7,21,27,28,30,35,47,56,58,85**;Oct 20, 1995;Build 24
+ ;;2.7;Health Summary;**2,7,21,27,28,30,35,47,56,58**;Oct 20, 1995
  ;
  ; External References
  ;   DBIA 10026  ^DIR
@@ -117,7 +117,6 @@ HEADER ; Print Running Header
  I '$D(GMTSOBJ)!($D(GMTSOBJ("CONFIDENTIAL"))) W !,GMTSHDR,"*"
  ;     Name, SSAN, Ward, DOB
  I '$D(GMTSLFG) D
- .I $G(GMTSTITL)'["AD HOC",($G(GMTSTITL)'["PDX"),($G(HSTAG)="") D EN^GMTSHCPR  ;GMTS,85 restrict ssn/dob on HS Type hard copies 
  . I $G(GMTSPHDR("TWO")) D
  . . I $D(GMTSOBJ),'$D(GMTSOBJ("REPORT HEADER")),$L($G(GMTSOBJ("LABEL"))) D LABEL
  . . I $D(GMTSOBJ),'$D(GMTSOBJ("REPORT HEADER")) Q

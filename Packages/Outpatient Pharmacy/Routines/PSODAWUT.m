@@ -1,5 +1,5 @@
 PSODAWUT ;BIRM/MFR - BPS (ECME) - DAW Utilities ;10/15/04
- ;;7.0;OUTPATIENT PHARMACY;**148,260**;DEC 1997;Build 84
+ ;;7.0;OUTPATIENT PHARMACY;**148**;DEC 1997
  ;Reference to $$DAWEXT^PSSDAWUT supported by IA 4708
  ;
 GETDAW(RX,RFL) ; Returns the DAW code for a specific Prescription/Fill
@@ -16,9 +16,6 @@ SAVDAW(RX,RFL,DAW) ; - Saves the DAW code for a specific Prescription/Fill
  ;       (o) RFL - Refill #  (Default: most recent)
  ;
  I '$D(RFL) S RFL=$$LSTRFL^PSOBPSU1(RX)
- ;
- I $$GETDAW(RX,RFL)'=DAW D
- . D RXACT^PSOBPSU2(RX,RFL,"DAW CODE changed from "_$$GETDAW(RX,RFL)_" to "_DAW_".","E")
  ;
  N DIE,DA,DR
  S DR="81///"_+DAW

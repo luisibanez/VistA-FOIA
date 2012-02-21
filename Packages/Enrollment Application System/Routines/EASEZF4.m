@@ -1,5 +1,5 @@
 EASEZF4 ;ALB/jap - Filing 1010EZ Data to Patient Database ;10/31/00  13:07
- ;;1.0;ENROLLMENT APPLICATION SYSTEM;**1,51,57,70**;Mar 15, 2001;Build 26
+ ;;1.0;ENROLLMENT APPLICATION SYSTEM;**1,51,57**;Mar 15, 2001
  ;
 CN ;file Dependent/Child data
  N MULTIPLE,FILE,SUBFILE,FLD,XDATA,ACCEPT,SUBIEN,SEX,SSN,EZDATA,EAS,ERR,X,Y
@@ -73,13 +73,11 @@ LINKUP ;
  . Q:FILE>408.22
  . I SUBFILE=408.1275 S FILE=SUBFILE
  . I DATANM["CHILD" S TYPE="CN"
- . I DATANM["ASSET(N)" S TYPE="CN"   ;EAS*1.0*70
  . I DATANM["CHILD(N)" D
  . . ;necessary because some version 6 income data for child1 is brought-in via a child(n) multiple
  . . S MULTIPLE=MULTIPLE+1
  . . Q:$G(EASVRSN)<6
- . . ;EAS*1.0*70 -- added up-arrows on next line
- . . I FILE=408.21,("^.08^.14^.17^"[("^"_FIELD_"^")) S MULTIPLE=MULTIPLE-1
+ . . I FILE=408.21,(".08;.14;.17"[FIELD) S MULTIPLE=MULTIPLE-1
  . I DATANM["SPOUSE" S TYPE="SP"
  . I TYPE="" S TYPE="AP"
  . S LINK=$G(FLINK(TYPE,MULTIPLE,FILE))

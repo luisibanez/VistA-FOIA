@@ -1,5 +1,5 @@
 SDMULT ;ALB/TMP - MAKE MULTI-CLINIC APPOINTMENTS ; 02 Jan 2000  6:30 PM
- ;;5.3;Scheduling;**63,168,380,478**;Aug 13, 1993
+ ;;5.3;Scheduling;**63,168,380**;Aug 13, 1993
  I '$D(DT) D DT^SDUTL
  S IOP=$S($D(ION):ION,1:"HOME") D ^%ZIS K SDNEXT,SDC1,IOP
 1 K SDAPTYP S SDMLT="",DIC="^DPT(",DIC(0)="AQZME" D ^DIC S DFN=+Y I "^"[X K FND S SDNEXT="" K SDMLT,SDAPTYP G END^SDMULT0
@@ -15,7 +15,7 @@ RD S DIC="^SC(",DIC(0)="AEMQZ",DIC("S")="I $P(^(0),""^"",3)=""C"",'$G(^(""OOS"")
  I 'SDRES W !,?5,"Clinic MUST be corrected before continuing." G RD
  G:Y'>0 RD I $D(SDC1(+Y)) W !,*7,"This clinic has already been selected" G RD
 C I $D(^SC(+Y,"SDPROT")),$P(^("SDPROT"),"^",1)="Y",'$D(^SC(+Y,"SDPRIV",DUZ)) W !,*7,"Access to ",$$CNAM(+Y)," is prohibited!",!,"Only users with a special code may access this clinic.",*7 G RD
- I '$D(SDNEXT) S SDOK=0,SC=+Y,SDHY=Y,Y=$S($D(^SC(SC,"SL")):$P(^("SL"),"^",5),1:"") K SD S SDMULT=1 D EN2^SDM S Y=SDHY K SDHY I 'SDOK W !,"CLINIC IGNORED!!" G RD ;SD/478
+ I '$D(SDNEXT) S SDOK=0,SC=+Y,SDHY=Y,Y=$S($D(^SC(SC,"SL")):$P(^("SL"),"^",5),1:"") K SD D EN2^SDM S Y=SDHY K SDHY I 'SDOK W !,"CLINIC IGNORED!!" G RD
  K SDOK I '$D(^SC(+Y,"SL")) W !,"No appt length specified - cannot book appts" G RD
  S SL=^("SL"),SDL=+SL ;NAKED REFERENCE ^SC(IFN,"SL")
 LEN I $P(SL,"^",2)]"" W !,"  APPOINTMENT LENGTH DESIRED: ",+SL R "// ",X:DTIME G:$L(X)>3 LEN G:X["^" END^SDMULT0 I X]"" S POP=0,S=X D L^SDM1 G:POP LEN S SDL=S

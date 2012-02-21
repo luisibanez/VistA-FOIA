@@ -1,5 +1,5 @@
 AWCMFTP ;VISN 7/THM-FTP FILES TO SERVER from VISTA ; Feb 27, 2004
- ;;7.3;TOOLKIT;**84,86,103**;Jan 09, 2004;Build 4
+ ;;7.3;TOOLKIT;**84,86**;Jan 09, 2004
  ;
  W *7,!,"Enter at line EN^AWCMFTP.",!
  Q
@@ -105,9 +105,7 @@ PURDEL ; purging/deletion script - whether this occurs is controlled in file 177
  I AWCMVMSD=1 S AWC=AWC+1,^TMP("AWCMFTPD",$J,AWC,0)="$ delete "_AWCDIR_"AWCMOVEHTM.COM;*"
  I AWCMVMSD=0 S AWC=AWC+1,^TMP("AWCMFTPD",$J,AWC,0)="$ purge/keep=1 "_AWCDIR_"AWCMOVEHTM.COM;*"
  ; delete the web pages - automatic, not user controlled
- ; patch 103 change for RDPC environment  jls/oak-oifo 10/2006
- ;S AWC=AWC+1,^TMP("AWCMFTPD",$J,AWC,0)="$ delete "_$P(AWCHFIL1,"_",1)_"*.*;*"
- S AWC=AWC+1,^TMP("AWCMFTPD",$J,AWC,0)="$ delete "_AWCDIR_$P(AWCDTAX,U,6)_"*.*;*"
+ S AWC=AWC+1,^TMP("AWCMFTPD",$J,AWC,0)="$ delete "_$P(AWCHFIL1,"_",1)_"*.*;*"
  S AWC=AWC+1,^TMP("AWCMFTPD",$J,AWC,0)="$ exit"
  ; send to VMS
  S Y=$$GTF^%ZISH($NA(^TMP("AWCMFTPD",$J,1,0)),3,AWCDIR,AWCHFILE)

@@ -1,5 +1,5 @@
 SCRPEC2 ;ALB/CMM - Detail List of Pts & Enroll Clinics Continued ; 29 Jun 99  04:11PM
- ;;5.3;Scheduling;**41,140,174,177,526**;AUG 13, 1993;Build 8
+ ;;5.3;Scheduling;**41,140,174,177**;AUG 13, 1993
  ;
  ;Detailed Listing of Patients and Their Enrolled Clinics Report
  ;
@@ -105,7 +105,7 @@ HEADER ;report column titles
  S $E(@STORE@("SUBHEADER",HLD),115)="Associate"
  S HLD="H1"
  S @STORE@("SUBHEADER",HLD)="Patient Name"
- S $E(@STORE@("SUBHEADER",HLD),16)="Pt ID"
+ S $E(@STORE@("SUBHEADER",HLD),18)="Pt ID"
  S $E(@STORE@("SUBHEADER",HLD),25)="Stat"
  S $E(@STORE@("SUBHEADER",HLD),31)="Elig"
  ;Removed by patch 174
@@ -128,9 +128,9 @@ FORMAT(PTIEN,INS,TIEN,PDATA,CNAME,CIEN) ;format data for report
  ;CNAME - clinic name
  ;CIEN - clinic ien
  ;
- S @STORE@(INS,TIEN,CIEN,PTIEN)=$E($P(PDATA,"^"),1,12) ;patient name
- S $E(@STORE@(INS,TIEN,CIEN,PTIEN),14)=$P(PDATA,"^",2) ;primary long id 9 digit
- S $E(@STORE@(INS,TIEN,CIEN,PTIEN),26)=$P(PDATA,"^",3) ;means test category
+ S @STORE@(INS,TIEN,CIEN,PTIEN)=$E($P(PDATA,"^"),1,15) ;patient name
+ S $E(@STORE@(INS,TIEN,CIEN,PTIEN),18)=$E($P(PDATA,"^",2),6,10) ;primary long id last 4 plus P
+ S $E(@STORE@(INS,TIEN,CIEN,PTIEN),25)=$P(PDATA,"^",3) ;means test category
  S $E(@STORE@(INS,TIEN,CIEN,PTIEN),31)=$P(PDATA,"^",4) ;primary eligibility
  ;Removed by patch 174
  ;S $E(@STORE@(INS,TIEN,CIEN,PTIEN),31)=$P(PDATA,"^",5) ;patient status

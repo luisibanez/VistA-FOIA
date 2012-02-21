@@ -1,5 +1,5 @@
 TIURL ; SLC/JER - List Management Library ;2/21/01
- ;;1.0;TEXT INTEGRATION UTILITIES;**88,100,224**;Jun 20, 1997;Build 7
+ ;;1.0;TEXT INTEGRATION UTILITIES;**88,100**;Jun 20, 1997
  ; 11/14/00 Moved UPDATEID, etc to TIURL1
  ;
 UPRBLD(TIUCHNG,ITEMS) ; Refreshes, updates, or rebuilds the list
@@ -21,9 +21,6 @@ UPRBLD(TIUCHNG,ITEMS) ; Refreshes, updates, or rebuilds the list
  ; -- If TIUROR screen needs changes, it is always
  ;    rebuilt, not updated:
  I RTN="TIUROR",$G(TIUCHNG("UPDATE")) S TIUCHNG("RBLD")=1
- ;VMP/ELR ADDED THE FOLLOWING 2 LINES IN PATCH 224
- I RTN="TIUR",$G(TIUCHNG("UPDATE")) S TIUCHNG("RBLD")=1
- I RTN="TIURM",$G(TIUCHNG("UPDATE")) S TIUCHNG("RBLD")=1
  ; -- Rebuild, Update, or Refresh list:
  ;    (In cases (e.g.browse) where more than one action
  ;    was performed, TIUCHNG("RBLD") may coexist w TIUCHNG("UPDATE"),
@@ -43,8 +40,6 @@ UPRBLD(TIUCHNG,ITEMS) ; Refreshes, updates, or rebuilds the list
  . W !,"Updating the list..."
  . F  S TIUI=$O(ITEMS(TIUI)) Q:'TIUI  D
  . . D SETREC(TIUI,.TIUREC)
- . . ;VMP/ELR ADDED THE FOLLOWING LINE IN PATCH 224
- . . I $G(TIUREC)="" Q
  . . S ^TMP("TIUR",$J,TIUI,0)=TIUREC
  I $G(TIUCHNG("REFRESH")) D  Q
  . W !,"Refreshing the list..."

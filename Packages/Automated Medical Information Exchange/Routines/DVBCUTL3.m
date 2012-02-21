@@ -1,5 +1,5 @@
 DVBCUTL3 ;ALB/GTS-557/THM-DVBCUTL2, CONTINUED ; 5/17/91  11:35 AM
- ;;2.7;AMIE;**132**;Apr 10, 1995;Build 2
+ ;;2.7;AMIE;;Apr 10, 1995
  ;
 KILL I $D(LKILL) K LKILL D LKILL
  K C0,DVBCLTR,DVBCNOW,DVBCSORT,LI,LREXMDT,LV,PGRN,ROUT,RT,TSTAT,XMB,XT,EXNAME,OTHDIS1,OTHDIS2,PG,REQRO,RSTAT,TIME,ZI,ZZI,DAYEX,DINUM,DTCAN,ERDAYS,EXMDA,FB,OLDAYS,^TMP("DVBC",$J),^TMP("DVBCLAB",$J),DVBCBDT,DVBCLOC,DVBCN,DVBCRLOC
@@ -45,8 +45,7 @@ TST1 I $Y>(IOSL-3) W !,"VA Form 21-2507" I IOST?1"C-".E D TERM Q:($D(GETOUT))
  I $D(^DVB(396.4,DA,"CAN")) S TSTA1=$P(^DVB(396.4,DA,"CAN"),U,3)
  I $D(^DVB(396.4,DA,"TRAN")) S X=$P(^DVB(396.4,DA,"TRAN"),U,3)
  S:TSTA1]"" TSTA1=$P(^DVB(396.5,TSTA1,0),U,1) ;tsta1=cancellation reason
- ;DVBA*132 - added Exam Ref# to end of Write command below
- W:(($L(PRTNM)+$L(TSTA1)+$X)>55!($D(DVBAINSF))) !?1 W $S(PRTNM]"":PRTNM,1:"Missing exam name")_$S(TSTA1]"":" - cancelled ("_TSTA1_")",TSTAT="T":" - Transferred",TSTAT="":" (Unknown status)",1:"")," (Exam Ref#: ",DA,")"
+ W:(($L(PRTNM)+$L(TSTA1)+$X)>55!($D(DVBAINSF))) !?1 W $S(PRTNM]"":PRTNM,1:"Missing exam name")_$S(TSTA1]"":" - cancelled ("_TSTA1_")",TSTAT="T":" - Transferred",TSTAT="":" (Unknown status)",1:"")
  I TSTAT="T" S X=$S($D(^DIC(4.2,+X,0)):$P(^(0),U,1),1:"unknown site") W " to ",$P(X,".",1)
  W "; "
  I $D(DVBAINSF) DO

@@ -1,5 +1,5 @@
-IVMCMF1 ;ALB/RMM,CKN - CHECK ANNUAL INCOME DATA ; 11/8/05 3:27pm
- ;;2.0;INCOME VERIFICATION MATCH;**71,82,107,105**;21-OCT-94;Build 2
+IVMCMF1 ;ALB/RMM - CHECK ANNUAL INCOME DATA ; 04/28/2005
+ ;;2.0;INCOME VERIFICATION MATCH;**71,82,107**;21-OCT-94
  ;
  ; This routine is called from IVMCMF.
  ;
@@ -19,14 +19,9 @@ ZIR(STRING,DEPIEN) ; Check validity of ZIR segment
  ; Input:  STRING as ZIR segment
  ;         DEPIEN as the IEN of the dependent in the array, if applicable
  ;
- N I,FND1,X
- S X=$P(STRING,HLFS,14)
- I X]"",(X'="Y"),(X'="N") S CNT=CNT+1,FND1=1,IVMERR(CNT)="DEPENDENT CHILD SCHOOL INDICATOR contains unacceptable value."
+ N I,FND1
  I '$G(DEPIEN) D
- .I X]"" S CNT=CNT+1,FND1=1,IVMERR(CNT)="DEPENDENT CHILD SCHOOL INDICATOR should not be filled in for Veteran."
  .I '$P(STRING,HLFS,3),SPOUSE,($P(STRING,HLFS,4)<600) S FND1=0 F I=3:1:20 Q:FND1  I $P(ARRAY(SPOUSE,"ZIC"),HLFS,I) S FND1=1,CNT=CNT+1,IVMERR(CNT)="No income data allowed if spouse didn't live w/vet & amt contributed <$600"
- I $G(DEPIEN)=SPOUSE D
- . I X]"" S CNT=CNT+1,FND1=1,IVMERR(CNT)="DEPENDENT CHILD SCHOOL INDICATOR should not be filled in for spouse ZIR."
  I $G(DEPIEN),(DEPIEN'=SPOUSE) D
  .I '$P(STRING,HLFS,8) S FND1=0 F I=3:1:20 Q:FND1  I $P(ARRAY(DEPIEN,"ZIC"),HLFS,I) S CNT=CNT+1,IVMERR(CNT)="Shouldn't have income data if Child Had Income is NO",FND1=1
 ZIRQ Q

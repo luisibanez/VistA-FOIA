@@ -1,5 +1,5 @@
-QANQUCK ;HISC/GJC-Initial sighting of an Incident for a QA person ; 10/29/03 10:34am
- ;;2.0;Incident Reporting;**1,9,14,27,26,28,29,32**;08/07/1992;Build 3
+QANQUCK ;HISC/GJC-Initial sighting of an Incident for a QA person ;10/9/92
+ ;;2.0;Incident Reporting;**1,9,14,27,26,28,29**;08/07/1992
  ;
  K QANLOCK
  D NEWREC^QANCDNT
@@ -43,7 +43,7 @@ PAT ;Patient data.
  S QANDOB=$P(^DPT(QANPIEN,0),U,3)
  I QANDOB]"" S X=DT,X1=X,X2=QANDOB,X="" D:X2 ^%DTC S X=X\365.25,QANAGE=X
  S QANPSDO(0)=Y(0),QANPSDO(0,0)=Y(0,0)
- S QANPID=$$QANPID^QANCDNT(.Y)
+ S QANPID=$E($P(Y(0,0),",",2))_$E($P(Y(0,0)," ",2))_$E($P(Y(0,0),","))_$E(QANSSN,6,9)
  D ADMDT^QANUTL1
  ;L +^QA(742):10 I '$T W !!,"Another user is editing this file." Q
  K DIC,DD,DO,DINUM,DLAYGO S DLAYGO=742,DIC="^QA(742,",DIC(0)="L",X=QANPIEN D FILE^DICN K DIC,DD,DO,DINUM,DLAYGO

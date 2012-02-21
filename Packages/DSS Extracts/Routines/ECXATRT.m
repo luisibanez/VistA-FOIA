@@ -1,5 +1,5 @@
-ECXATRT ;ALB/JAP - TRT Extract Audit Report ;O4/12/2007
- ;;3.0;DSS EXTRACTS;**1,6,8,107,105**;Dec 22, 1997;Build 70
+ECXATRT ;ALB/JAP - TRT Extract Audit Report ;Oct 16, 1997
+ ;;3.0;DSS EXTRACTS;**1,6,8**;Dec 22, 1997
  ;
 EN ;entry point for TRT extract audit report
  N %X,%Y,X,Y,DIC,DA,DR,DIQ,DIR
@@ -81,16 +81,9 @@ PROCESS ;process data in file #727.817
  ..;filter out those records which are definitely provider-only changes;
  ..;these are the records that have 'losing treating specialty los' which is null;
  ..;but for extracts done prior to patch #1, still need to compare old & new specialty.
- ..;
- ..;convert 15th and 16th piece from PTF code back to Specialty
- ..;ECX*3.0*107
- ..;
- ..N ECXTS
- ..S ECXTS=$P(DATA,U,15) I ECXTS'="" S ECXTS=$O(^DIC(42.4,"C",$G(ECXTS),0)),$P(DATA,U,15)=ECXTS
- ..S ECXTS=$P(DATA,U,16) I ECXTS'="" S ECXTS=$O(^DIC(42.4,"C",$G(ECXTS),0)),$P(DATA,U,16)=ECXTS
  ..S NEWTS=$P(DATA,U,15),TS=$P(DATA,U,16),LOS=$P(DATA,U,17)
  ..;leaving this next line in here for v3.0 extracts done prior to patch #1
- ..Q:(NUM(+TS)=1)&(NEWTS=TS)
+ ..Q:(NUM(TS)=1)&(NEWTS=TS)
  ..Q:LOS=""
  ..S $P(^(TS),U,1)=$P(^TMP($J,"ECXSPEC",DIV,TS),U,1)+1,CNT=CNT+1
  ..I $D(ZTQUEUED),(CNT>499),'(CNT#500),$$S^%ZTLOAD S QQFLG=1,ZTSTOP=1 K ZTREQ

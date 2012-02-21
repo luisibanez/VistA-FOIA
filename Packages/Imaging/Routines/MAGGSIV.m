@@ -1,6 +1,5 @@
-MAGGSIV ;WOIFO/GEK/NST - Imaging RPC Broker calls. Validate Image data array ; 12 Apr 2010 12:52 PM
- ;;3.0;IMAGING;**7,8,20,59,108**;Mar 19, 2002;Build 1738;May 20, 2010
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGGSIV ;WOIFO/GEK - Imaging RPC Broker calls. Validate Image data array ; [ 12/27/2000 10:49 ]
+ ;;3.0;IMAGING;**7,8**;Sep 15, 2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGGSIV ;WOIFO/GEK/NST - Imaging RPC Broker calls. Validate Image data array ; 1
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -20,7 +20,7 @@ VAL(MAGRY,MAGARRAY,ALL) ;RPC [MAG4 VALIDATE DATA]
  ;Call to Validate the Image Data Array before a new image/modified entry is attempted.  
  ; Called from MAGGSIA, MAGGSIUI and Capture GUI.
  ;  Parameters : 
- ;    MAGARRAY - array of 'Field numbers'|'Action codes'  and their Values 
+ ;    MAGARRAY - array of 'Field numbers'/'Action codes'  and their Values 
  ;                     MAGARRAY(1)="5^38"  Field#:  5   Value: 38
  ;         an example of an action code is the Code for File Extension    
  ;                     MAGARRAY(2)="EXT^JPG"  Action: EXT Value: JPG                        
@@ -33,16 +33,13 @@ VAL(MAGRY,MAGARRAY,ALL) ;RPC [MAG4 VALIDATE DATA]
  ;      UNsuccessful MAGRY(0) = 0^Error desc
  ;                   IF ALL then MAGRY(1..N) =0^Error desc of all errors
  N MAGGFLD,MAGGDAT,MAGFSPEC,CHKOK,MAGETXT,MAGRET,MAGRES
- N Y,AITEM,CT,MAGERR,DFNFLAG,DAT1,X,MAX
- N $ETRAP,$ESTACK S $ETRAP="D ERR^"_$T(+0)
+ N Y,AITEM,CT,MAGERR,DFNFLAG,DAT1
+ ;N $ETRAP,$ESTACK S $ETRAP="D ERR^MAGGSERR"
  S ALL=$G(ALL)
  S MAGRY(0)="0^Validating the Data Array..."
  S MAGERR="",DFNFLAG=0,CT=0
  ;  Do we have any data ? 
  I ($D(MAGARRAY)<10) S MAGRY(0)="0^No input data, Operation CANCELED" Q
- ;  Flag if from Maximus
- S MAX=0
- S X="" F  S X=$O(MAGARRAY(X)) Q:X=""  I $P(MAGARRAY(X),U,1)="TRKID"!($P(MAGARRAY(X),U,1)="108") I $P($P(MAGARRAY(X),U,2),";",1)="MAX" S MAX=1
  ;  Loop through Input Array
  S AITEM="" F  S AITEM=$O(MAGARRAY(AITEM)) Q:AITEM=""  D  I $L(MAGERR) Q:'ALL  S CT=CT+1,MAGRY(CT)=MAGERR,MAGERR=""
  . S MAGERR=""
@@ -50,7 +47,7 @@ VAL(MAGRY,MAGARRAY,ALL) ;RPC [MAG4 VALIDATE DATA]
  . I MAGGFLD="" S MAGERR="0^A Field Number/Action Code is required: "_" Item: "_MAGARRAY(AITEM) Q
  . I MAGGDAT="" S MAGERR="0^A Value is required."_" Item: "_MAGARRAY(AITEM) Q
  . I MAGGFLD=5 S DFNFLAG=1
- . ; This inadvertently disallowed Tracking ID's on Group Images.
+ . ; This inadvertantly disallowed Tracking ID's on Group Images.
  . ;I MAGGFLD=108 I $D(^MAG(2005,"ATRKID",MAGGDAT)) S MAGERR="0^Tracking ID Must be Unique !" Q
  . I MAGGFLD=108 I ($L(MAGGDAT,";")<2) S MAGRY(0)="0^Tracking ID Must have "";"" Delimiter" Q
  . ; Check for possible action codes that could be in the array.
@@ -70,12 +67,39 @@ VAL(MAGRY,MAGARRAY,ALL) ;RPC [MAG4 VALIDATE DATA]
  . . I $P(^MAG(2005,MAGGDAT,0),U,10) S MAGERR="0^The Image to be added to the Group, already has a Group Parent"_" Item: "_MAGARRAY(AITEM)
  . ; if we are getting a WP line of text for Long Desc Field.  Can't validate it.
  . I MAGGFLD=11 Q  ; this is a line of the WP Long Desc field.
- . I (MAGGFLD=17),(MAGGDAT=0) Q  ; Patch 108 BP work around don't check -  a new TIU stub will be created 
  . ; NEW CALL TO VALIDATE FILE,FIELD,DATA 
  . S DAT1=MAGGDAT
  . I '$$VALID^MAGGSIV1(2005,MAGGFLD,.MAGGDAT,.MAGRES) S MAGERR="0^"_MAGRES Q
  . I DAT1'=MAGGDAT S MAGARRAY(AITEM)=MAGGFLD_"^"_MAGGDAT
  . Q
+ . ;// ;if a BAD field number
+ . ;// I '$$VFIELD^DILFD(2005,MAGGFLD) S MAGERR="0^Field Number "_MAGGFLD_" doesn't exist"_" Item: "_MAGARRAY(AITEM) Q
+ . ;// ;
+ . ;// ; Get Field Specifiers
+ . ;// D FIELD^DID(2005,MAGGFLD,"","LABEL;SPECIFIER","MAGFSPEC")
+ . ;// ; 
+ . ;// I (MAGFSPEC("SPECIFIER")["D") D  Q:$L(MAGERR)
+ . ;// . S %DT="T",X=MAGGDAT D ^%DT
+ . ;// . I Y=-1 S MAGERR="0^Invalid Date: "_MAGGDAT_" Item: "_MAGARRAY(AITEM) Q
+ . ;// . S MAGGDAT=Y
+ . ;// . S MAGARRAY(AITEM)=MAGGFLD_"^"_MAGGDAT
+ . ;// ;  Usually for Pointer fields, we're getting the Internal value. So
+ . ;// ;  We'll test for that here, and if success, we quit.
+ . ;// ;  If not success, then maybe it's the external value being passed in,
+ . ;// ;  so we continue, letting it get validated again.
+ . ;// I (MAGFSPEC("SPECIFIER")["P") D  Q:CHKOK
+ . ;// . S CHKOK=0
+ . ;// . ; If MAGGDAT="75XKXKSK" AND 75 IS VALID, THIS NEXT CALL RETURNS TRUE.
+ . ;// . I $$EXTERNAL^DILFD(2005,MAGGFLD,"",MAGGDAT)'="" S CHKOK=1 Q  ; Valid Internal value, returned the external
+ . ;// . D CHK^DIE(2005,MAGGFLD,"",MAGGDAT,.MAGRET,"MAGETXT") I 'MAGRET Q  ; Let it get error message below
+ . ;// . ; Valid External Value is in .MAGRET
+ . ;// . S MAGGDAT=MAGRET
+ . ;// . S MAGARRAY(AITEM)=MAGGFLD_"^"_MAGGDAT S CHKOK=1
+ . ;// . Q
+ . ;// ; Validate all fields here.  
+ . ;// S MAGRET=""
+ . ;// D VAL^DIE(2005,"",MAGGFLD,"",MAGGDAT,.MAGRET,"","MAGETXT") I MAGRET="^" D  Q
+ . ;// . S MAGERR="0^"_MAGETXT("DIERR",1,"TEXT",1)_" Item: "_MAGARRAY(AITEM)
  ;
  ; if there was an Error in data we'll quit now.
  ; If ALL is true, then MAGRY(1...N) will exist if there were errors.
@@ -93,36 +117,18 @@ ACTCODE(CODE) ;Function that returns True (1) if this code is a valid Import API
  ; Patch 8.  We're adding 107 as an action code, so it will pass validation even if the entry
  ;   in the Acquisition Device File doesn't exist;
  ;   it will be validated in PRE^MAGGSIA1 and a new Acquisition Device entry made if needed.
- I $E(CODE,1,8)="PXTIUTXT" Q 1 ; P108
- I ",107,PXSGNTYP,PXTIUTCNT,PXNEW,PXTIUTTL,ACQD,IEN,EXT,ABS,JB,WRITE,BIG,DICOMSN,DICOMIN,ACQS,ACQL,STATUSCB,CALLMTH,USERNAME,PASSWORD,DELFLAG,TRNSTYP,"[(","_CODE_",") Q 1
+ I ",107,ACQD,IEN,EXT,ABS,JB,WRITE,BIG,DICOMSN,DICOMIN,ACQS,ACQL,STATUSCB,CALLMTH,USERNAME,PASSWORD,DELFLAG,TRNSTYP,"[(","_CODE_",") Q 1
  Q 0
 VALCODE(CODE,VALUE) ; We validate the values for the possible action codes
  N MAGY
  I VALUE="" Q "0^NO VALUE in Action Code string: """_X_""
  ; Patch 8, added 107 
- I ",ACQL,CALLMTH,USERNAME,PASSWORD,"[(","_CODE_",") Q 1 ; NO VALIDATION FOR THESE CODES
- I ($E(CODE,1,8)="PXTIUTXT")!(CODE="PXTIUTCNT") Q 1  ; NO VALIDATION FOR TIU TEXT 
+ I ",ACQS,ACQL,CALLMTH,USERNAME,PASSWORD,"[(","_CODE_",") Q 1 ; NO VALIDATION FOR THESE CODES
  D @CODE
  Q MAGY
  ;  Each Tag is a valid Action code
 IEN I $D(^MAG(2005,VALUE)) S MAGY=1
  E  S MAGY="0^INVALID IMAGE IEN."
- Q
-PXNEW  ; New Package (TIU note)
- I (PXNEW'=0),(PXNEW'=1),(PXNEW'="") D
- . S MAGY="0^Invalid New Package Value."
- . S CT=CT+1,MAGRY(CT)="Invalid PXNEW value - 0, 1, or blank only!"
- E  S MAGY=1
- Q
-PXSGNTYP  ; Signature type
- I (PXSGNTYP'=0),(PXSGNTYP'=1),(PXSGNTYP'="") D
- . S MAGY="0^Invalid Signature type Value."
- . S CT=CT+1,MAGRY(CT)="Invalid PXSGNTYP value - 0, 1, or blank only!"
- E  S MAGY=1
- Q
-PXTIUTTL  ; Check for valid TIU title
- N VALIEN
- I $$GETTIUDA^MAGGSIV(.MAGY,VALUE,.VALIEN) S VALUE=VALIEN
  Q
 EXT ; code will go here to validate the extension type.  i.e. we won't let types .exe .bat .com .zip ... etc.
  ;  Maybe a modification to Object Type file, to have allowable extensions in the file, and a 
@@ -160,64 +166,13 @@ STATUSCB ; Meaning: This is the TAG^RTN that Imaging calls to report the
  I '$L($T(@VALUE)) S MAGY="0^Invalid Status CallBack "_VALUE
  E  S MAGY=1
  Q
-ACQS ; We need to make sure the ACQS (Acquisition Site) is a Valid entry in Imaging Site Params.
- S VALUE=$P(VALUE,";") ; Stop error, when old OCX sends data.
- ; Next Block is for VIC (Maximus) that sends Station Number.
- N ERR S ERR=0
- I MAX D  Q:ERR
- . S X=$O(^DIC(4,"D",VALUE,""))
- . I X="" S MAGY="0^Invalid STATION NUMBER: (ACQS): "_VALUE,ERR=1 Q
- . S VALUE=X
- . Q
- I '$$CONSOLID^MAGBAPI S MAGY=1 Q
- ;Patch 20 will have this.
- I '$D(^MAG(2006.1,"B",VALUE)) S MAGY="0^Acquisition Site ("_VALUE_") is Not in Site Param File." Q
- S MAGY=1
- Q
 107 ;    107 and ACQD are the same.  Calling 107 falls into validation for ACQD.
 ACQD ; 107 and ACQD are ACQUISITION DEVICE FILE (2006.04) pointers or Values.
  ; If it is an integer, We assume the value is an IEN and validate it here.
- I ((+VALUE)=VALUE),'$D(^MAG(2006.04,VALUE)) S MAGY="0^Invalid IEN ("_VALUE_") for ACQUISITION DEVICE File." Q
+ I +VALUE,'$D(^MAG(2006.04,VALUE)) S MAGY="0^Invalid IEN ("_VALUE_") for ACQUISITION DEVICE File." Q
  ; if it is not an integer, it is either a new/existing entry for 2006.04 Result is Success,
  ;       and it will be validated in PRE^MAGGSIA1 and added to File 2006.04 if needed.
  S MAGY=1
  Q
 UPPER(X) ;
  Q $TR(X,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
- ;
-ERR ; ERROR TRAP FOR Import API
- N ERR S ERR=$$EC^%ZOSV
- S MAGRY(0)="0^ETRAP: "_ERR
- D @^%ZOSF("ERRTN")
- Q
- ;
- ;***** Verify and return TIU Title IEN
- ;
- ; Input Parameters
- ; ================
- ; TITLE - an Integer (the IEN of file 8925.1)  or Text value of the entry in 8925.1 
- ;  
- ; Return Values
- ; =============
- ; Returns 0 if TITLE is valid
- ; Returns 1 if TITLE is not valid
- ;
- ; if TITLE is not valid then MAGY = "0^error message"
- ; if TITLE is valid then MAGY = 1 and TIEN = TIU Title IEN
- ;
-GETTIUDA(MAGY,TITLE,TIEN) ;
- I TITLE="" S MAGY="0^Invalid data: Note TITLE is blank!" Q 0
- ; Is TITLE integer (IEN)
- I TITLE?1.N D  Q +MAGY
- . I $D(^TIU(8925.1,"AT","DOC",TITLE)) S MAGY=1 S TIEN=TITLE Q
- . S MAGY="0^Invalid data: Note TITLE ("_TITLE_") is invalid"
- . Q
- N DONE
- S (DONE,TIEN)=""
- S TITLE=$$UP^XLFSTR(TITLE) ; IA #10104
- F  Q:DONE  S TIEN=$O(^TIU(8925.1,"B",TITLE,TIEN)) Q:TIEN=""  D
- . I $D(^TIU(8925.1,"AT","DOC",TIEN)) S DONE=1
- . Q
- I DONE S MAGY=1 ; TIEN is already set
- E  S MAGY="0^Invalid data: TITLE IEN ("_TITLE_") is invalid"
- Q +MAGY

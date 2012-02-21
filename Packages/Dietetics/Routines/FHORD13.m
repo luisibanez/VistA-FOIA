@@ -1,5 +1,5 @@
 FHORD13 ; HISC/REL/NCA/RVD - Reprint Diet Label ;2/26/96  11:57
- ;;5.5;DIETETICS;**1,5,8**;Jan 28, 2005;Build 28
+ ;;5.5;DIETETICS;**1**;Jan 28, 2005
  W @IOF,!!?21,"R E P R I N T   D I E T   L A B E L S"
 F0 R !!,"Reprint by COMMUNICATION OFFICE, PATIENT, LOCATION or ALL? PATIENT// ",X:DTIME G:'$T!(X["^") KIL S:X="" X="P" D TR^FH
  I $P("COMMUNICATION OFFICE",X,1)'="",$P("PATIENT",X,1)'="",$P("LOCATION",X,1)'="",$P("ALL",X,1)'="" W *7,!!,"  Answer with C, L, P or A" G F0
@@ -68,9 +68,8 @@ LST ;
  F A1=1:1:5 S D3=$P(FHOR,"^",A1) I D3 S:Y'="" Y=Y_", " S Y=Y_$P(^FH(111,D3,0),"^",7)
  S IS=$P(X0,"^",10),X1=$P(X,"^",8) I IS S IS=^FH(119.4,IS,0),X1=X1_"-"_$P(IS,"^",2)_$P(IS,"^",3)
  ;
-L1 S ALG="" D ALG^FHCLN
- I LAB>2 D LL Q
- W !,$E(N1,1,S2-5-$L(W1)),?(S2-3-$L(W1)),W1,!,BID W @FHIO("EON") W ?(S2-3\2),X1 W @FHIO("EOF") W ?(S2-3-$L(R1)),R1 W @FHIO("EON") I $L(Y)<S2 W:LAB=2 ! W !,$S(ALG="":"",1:"*ALG"),!,Y,!!
+L1 I LAB>2 D LL Q
+ W !,$E(N1,1,S2-5-$L(W1)),?(S2-3-$L(W1)),W1,!,BID W @FHIO("EON") W ?(S2-3\2),X1 W @FHIO("EOF") W ?(S2-3-$L(R1)),R1 W @FHIO("EON") I $L(Y)<S2 W:LAB=2 ! W !!,Y,!!
  E  S L=$S($L($P(Y,",",1,3))<S2:3,1:2) W !!,$P(Y,",",1,L) W:LAB=2 ! W !,$E($P(Y,",",L+1,5),2,99),!
  W @FHIO("EOF") W:LAB=2 ?(S2-20),DTP,!! Q
  ;
@@ -99,15 +98,12 @@ OUTP ;process outpatient dat
  ...S:$D(^FH(119.6,FHW1,0)) FHLOC=$P(^FH(119.6,FHW1,0),U,8)
  ...I $G(FHFHPSAV),$G(FHLOC),(FHFHPSAV'=FHLOC) Q
  ...S FHDFN1=$P(^FHPT(FHDFN,0),U,1)
- ...S FHRMB=$P(FHKDAT,U,18)
  ...D OUTW
  ;next guest
- K FHDIET1,FHDIET2,FHDIET3,FHDIET4,FHDIET5
  F FHKD=FHD1:0 S FHKD=$O(^FHPT("GM",FHKD)) Q:(FHKD'>0)!(FHKD>FHD2)  D
  .F FHDFN=0:0 S FHDFN=$O(^FHPT("GM",FHKD,FHDFN)) Q:FHDFN'>0  D
  ..I FHPR="P",'$D(FHDFNSAV(FHDFN)) Q
  ..S FHKDAT=^FHPT(FHDFN,"GM",FHKD,0)
- ..I $P(FHKDAT,U,9)="C" Q
  ..S (W1,FHW1)=$P(FHKDAT,U,5)
  ..S FHDIET=$P(FHKDAT,U,6),FHMEAL=$P(FHKDAT,U,3)
  ..I $G(FHW1SAV),(FHW1'=FHW1SAV) Q
@@ -116,7 +112,6 @@ OUTP ;process outpatient dat
  ..S:$D(^FH(119.6,FHW1,0)) FHLOC=$P(^FH(119.6,FHW1,0),U,8)
  ..I $G(FHFHPSAV),$G(FHLOC),(FHFHPSAV'=FHLOC) Q
  ..S FHDFN1=$P(^FHPT(FHDFN,0),U,1)
- ..S FHRMB=$P(FHKDAT,U,11)
  ..D OUTW
  ;next SPECIAL
  F FHKD=FHD1:0 S FHKD=$O(^FHPT("SM",FHKD)) Q:(FHKD'>0)!(FHKD>FHD2)  D
@@ -133,7 +128,6 @@ OUTP ;process outpatient dat
  ..S:$D(^FH(119.6,FHW1,0)) FHLOC=$P(^FH(119.6,FHW1,0),U,8)
  ..I $G(FHFHPSAV),$G(FHLOC),(FHFHPSAV'=FHLOC) Q
  ..S FHDFN1=$P(^FHPT(FHDFN,0),U,1)
- ..S FHRMB=$P(FHKDAT,U,13)
  ..D OUTW
  Q
  ;
@@ -164,10 +158,7 @@ OUTW ;set all outpt data for printing
  I $G(FHDIET5) S FHDIET5=$P(^FH(111,FHDIET5,0),U,7) D
  .I FHDIET="" S FHDIET=FHDIET_FHDIET5 Q
  .I FHDIET'="" S FHDIET=FHDIET_", "_FHDIET5
- S FHRM=""
- I $G(FHRMB),$D(^DG(405.4,FHRMB,0)) S FHRM=$P(^DG(405.4,FHRMB,0),U,1)
- S:FHRM'="" FHRM=$E(FHRM,1,12)
- S ^TMP($J,"OUT",P0_"~"_$E(FHW1N,1,20)_"~"_$E(FHPTNM,1,26),FHDFN)=FHPTNM_"^"_FHW1N_"^"_FHBID_"^"_FHDIET_"^"_FHTC_"^"_FHRM
+ S ^TMP($J,"OUT",P0_"~"_$E(FHW1N,1,20)_"~"_$E(FHPTNM,1,26),FHDFN)=FHPTNM_"^"_FHW1N_"^"_FHBID_"^"_FHDIET_"^"_FHTC
  Q
  ;
 PROUT ;print outptlabels
@@ -176,11 +167,10 @@ PROUT ;print outptlabels
  .F FHDFN=0:0 S FHDFN=$O(^TMP($J,"OUT",RM,FHDFN)) Q:FHDFN'>0  D
  ..S FHOU=^TMP($J,"OUT",RM,FHDFN)
  ..S N1=$P(FHOU,U,1)
- ..S W1=$E($P(FHOU,U,2),1,12)
+ ..S W1=$P(FHOU,U,2)
  ..S BID=$P(FHOU,U,3)
  ..S (Y,FHDIET)=$P(FHOU,U,4)
  ..S X1=$P(FHOU,U,5)
- ..S R1=$P(FHOU,U,6)
  ..D L1
  Q
  ;

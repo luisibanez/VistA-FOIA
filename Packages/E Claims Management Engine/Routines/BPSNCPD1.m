@@ -1,57 +1,65 @@
 BPSNCPD1 ;BHAM ISC/LJE - Pharmacy API part 2 ;06/16/2004
- ;;1.0;E CLAIMS MGMT ENGINE;**1,3,5,6,7,8,9,10**;JUN 2004;Build 27
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
+ ;External reference to file #50.68 supported by DBIA 3735
  ;
- ; Procedure STARRAY - Retrieve information for API call to IB and store in BPSARRY
+ ; STARRAY - Retrieve information for API call to IB and store in ARRAY
  ; Incoming Parameters
  ;    BRXIEN - Prescription IEN
  ;    BFILL  - Fill Number
  ;    BWHERE - RX action
- ;    BPSARRY  - Array that is built (passed by reference)
- ;    BPSITE - OUTPATIENT SITE file #59 ien
- ; background parameters:
- ; DFN - patient's IEN
- ; BILLNDC - NDC
- ; BFILLDAT - fill date
-STARRAY(BRXIEN,BFILL,BWHERE,BPSARRY,BPSITE) ;
- N DRUGIEN,BPARR,BPSARR,QTY
- D RXAPI^BPSUTIL1(BRXIEN,"6;7;8;17;31","BPARR","I")
- I BFILL>0 D RXSUBF^BPSUTIL1(BRXIEN,52,52.1,BFILL,"1;1.1;1.2;17","BPARR","I")
- S BPSARRY("DFN")=DFN
- S BPSARRY("DAYS SUPPLY")=$S(BFILL=0:$G(BPARR(52,BRXIEN,8,"I")),1:$G(BPARR(52.1,BFILL,1.1,"I")))
- S BPSARRY("IEN")=BRXIEN
- S BPSARRY("FILL NUMBER")=BFILL
- S BPSARRY("NDC")=BILLNDC
- S (BPSARRY("DRUG"),DRUGIEN)=BPARR(52,BRXIEN,6,"I")
- S BPSARRY("DEA")=$$DRUGDIE^BPSUTIL1(DRUGIEN,3)
- S BPSARRY("COST")=$S(BFILL=0:$G(BPARR(52,BRXIEN,17,"I")),1:$G(BPARR(52.1,BFILL,1.2,"I")))
- S QTY=$S(BFILL=0:$G(BPARR(52,BRXIEN,7,"I")),1:$G(BPARR(52.1,BFILL,1,"I")))
- S BPSARRY("QTY")=QTY     ; esg - 4/28/10 - use the Rx QTY at this point (*8)
- S BPSARRY("FILL DATE")=BFILLDAT
- S BPSARRY("RELEASE DATE")=$P($S(BFILL=0:$G(BPARR(52,BRXIEN,31,"I")),1:$G(BPARR(52.1,BFILL,17,"I"))),".")
- S BPSARRY("SC/EI OVR")=0
- ;determine BPS PHARMACY
- I $G(BPSITE)>0 S BPSARRY("EPHARM")=$$GETPHARM^BPSUTIL(BPSITE)
+ ;    ARRAY  - Array that is built (passed by reference)
+STARRAY(BRXIEN,BFILL,BWHERE,ARRAY) ;
+ N RXINFO,DRUGIEN,DRUGINFO,CMOP,EIS
+ S ARRAY("DFN")=DFN
+ S ARRAY("DRUG")=$G(PSODRUG("NAME"))
+ I ARRAY("DRUG")="" S ARRAY("DRUG")=$P(^PSRX(BRXIEN,0),"^",6)
+ S ARRAY("DAYS SUPPLY")=$G(PSOX("DAYS SUPPLY"))
+ I ARRAY("DAYS SUPPLY")="" S ARRAY("DAYS SUPPLY")=$P(^PSRX(BRXIEN,0),"^",8)
+ S ARRAY("IEN")=BRXIEN
+ S ARRAY("FILL NUMBER")=BFILL
+ S ARRAY("NDC")=BILLNDC
+ S RXINFO=^PSRX(BRXIEN,0)
+ S DRUGIEN=$P(RXINFO,"^",6),DRUGINFO=^PSDRUG(DRUGIEN,0)
+ S CMOP=0 S CMOP=$P($G(^PSDRUG(DRUGIEN,3)),"^") S:CMOP="" CMOP=0
+ S ARRAY("DEA")=$P(DRUGINFO,U,3)
+ S ARRAY("COST")=$P($G(^PSDRUG(DRUGIEN,660)),U,6)
+ S ARRAY("QTY")=$P(RXINFO,U,7)
+ S ARRAY("FILL DATE")=BFILLDAT
+ S ARRAY("DIVISION")=$$MCDIV^BPSBUTL(BRXIEN,BFILL)
+ S ARRAY("RELEASE DATE")=$P($S(BFILL=0:$P(^PSRX(BRXIEN,2),"^",13),1:$P(^PSRX(BRXIEN,1,BFILL,0),"^",18)),".")
+ S ARRAY("AO")="",ARRAY("EC")="",ARRAY("HNC")="",ARRAY("IR")="",ARRAY("MST")="",ARRAY("SC")="",ARRAY("CV")=""
+ ;
+ ; New way of getting SC/EI (CIDC)
+ S EIS=$G(^PSRX(BRXIEN,"ICD",1,0))
+ I $G(EIS)]"" D
+ . S ARRAY("AO")=$P(EIS,U,2)
+ . S ARRAY("EC")=$P(EIS,U,5)
+ . S ARRAY("HNC")=$P(EIS,U,7)
+ . S ARRAY("CV")=$P(EIS,U,8)
+ . S ARRAY("IR")=$P(EIS,U,3)
+ . S ARRAY("SC")=$P(EIS,U,4)
+ . S ARRAY("MST")=$P(EIS,U,6)
+ ; If not available, pull from IBQ node (old way)
+ E  S EIS=$G(^PSRX(BRXIEN,"IBQ")) I EIS'="" D
+ . S ARRAY("AO")=$P(EIS,U,3)
+ . S ARRAY("EC")=$P(EIS,U,5)
+ . S ARRAY("HNC")=$P(EIS,U,6)
+ . S ARRAY("CV")=$P(EIS,U,7)
+ . S ARRAY("IR")=$P(EIS,U,4)
+ . S ARRAY("SC")=$P(EIS,U,1)
+ . S ARRAY("MST")=$P(EIS,U,2)
  ;
  ; Add user so that it is stored correctly in the IB Event Log
  ;  Note: Auto-Reversals (AREV) and CMOP/OPAI (CR*/PC/RL) use postmaster (.5)
- I ",AREV,CRLB,CRLX,CRLR,PC,RL,"[(","_BWHERE_",") S BPSARRY("USER")=.5
- E  S BPSARRY("USER")=DUZ
+ I ",AREV,CRLB,CRLX,CRLR,PC,RL,"[(","_BWHERE_",") S ARRAY("USER")=.5
+ E  S ARRAY("USER")=DUZ
  Q
  ;
  ; Called by BPSNCPDP to display progress of claim
- ; BRXIEN = Prescription IEN
- ; BFILL = Fill Number
- ; REBILL = rebill flag
- ; REVONLY = reversal only flag
- ; BPSTART = date/time
- ; BWHERE  = RX Action (see BPSNCPDP comments above for details)
- ; BPREQIEN = the BPS REQUESTS (#9002313.77) IEN
-STATUS(BRXIEN,BFILL,REBILL,REVONLY,BPSTART,BWHERE,BPREQIEN,BPSCOB) ;
+STATUS(BRXIEN,BFILL,REBILL,REVONLY,BPSTART,BWHERE) ;
  ; Initialization
- N TRANSIEN,CERTUSER,BPSTO,END,IBSEQ,BPQ,BP77OLD,BP77,BPQQ
- N CLMSTAT,OCLMSTAT,RESFL,BPACTTYP
- S BPACTTYP=$$ACTTYPE^BPSOSRX5(BWHERE)
+ N TRANSIEN,CERTUSER,BPSTO,END,IBSEQ,BPQ
+ N CLMSTAT,OCLMSTAT,RESUB,RESFL
  S (CLMSTAT,OCLMSTAT)=0
  ;
  ; Set CERTUSER to true if this user is the certifier
@@ -61,47 +69,44 @@ STATUS(BRXIEN,BFILL,REBILL,REVONLY,BPSTART,BWHERE,BPREQIEN,BPSCOB) ;
  S TRANSIEN=BRXIEN_"."_$E($TR($J("",4-$L(BFILL))," ","0")_BFILL,1,4)_1
  ;
  ; Write Rebill and Status Messages
- ;
  W !!,"Claim Status: "
- I REBILL,BPACTTYP="UC" W !,"Reversing and Rebilling a previously submitted claim..." ;,!,"Reversing..."
- I REBILL,BPACTTYP="U" W !,"Reversing..."
+ I REBILL W !,"Reversing and Rebilling a previously submitted claim...",!,"Reversing..."
  ;
  ; Get the ECME Timeout and set the display timeout
  S BPSTO=$$GET1^DIQ(9002313.99,"1,",3.01),END=$S(CERTUSER:50,$G(BPSTO)]"":BPSTO,1:5)
  ;
  ; For remaining time, loop through and display status
- S (BPQ,RESFL,BP77OLD)=0
+ S (BPQ,RESFL)=0
  F IBSEQ=1:1:END D  Q:BPQ=1
  . H 1
  . ;
  . ; Get status of resubmit, last update, and claim status
- . S CLMSTAT=$$STATUS^BPSOSRX(BRXIEN,BFILL,1,$G(BPREQIEN),BPSCOB)
+ . S CLMSTAT=$$STATUS^BPSOSRX(BRXIEN,BFILL,1)
+ . S RESUB=$$GET1^DIQ(9002313.59,TRANSIEN_",",1.12,"I")
  . ;
  . ; Format status message
  . S CLMSTAT=$P(CLMSTAT,"^",1)_$S($P(CLMSTAT,"^",1)["IN PROGRESS":"-"_$P(CLMSTAT,"^",3),1:"")
  . ;
- . ;If the status has changed, display the new message
- . I OCLMSTAT'=CLMSTAT W !,CLMSTAT S OCLMSTAT=CLMSTAT I CLMSTAT="E REJECTED",$G(BPSELIG)'="V" D
- .. N BPSRTEXT,BPSRESP,BPSPOS,X
- .. S BPSRESP=$P($G(^BPST(IEN59,0)),"^",5) Q:'BPSRESP
- .. S BPSPOS=+$O(^BPSR(BPSRESP,1000,":"),-1) Q:'BPSPOS
- .. D REJTEXT^BPSOS03(BPSRESP,BPSPOS,.BPSRTEXT)
- .. S X=0 F  S X=$O(BPSRTEXT(X)) Q:'X  W !?4,$P(BPSRTEXT(X),":")," - ",$P(BPSRTEXT(X),":",2)
+ . ; If we are starting the resubmit, display message
+ . I REBILL,RESFL=0,RESUB=1,CLMSTAT["Resubmitting" W !,"Resubmitting..." S RESFL=1 Q
+ . I REBILL,RESFL=0,RESUB=2,CLMSTAT["IN PROGRESS" W !,"Resubmitting..." S RESFL=1
+ . ;
+ . ; If the status has changed, display the new message
+ . I OCLMSTAT'=CLMSTAT W !,CLMSTAT S OCLMSTAT=CLMSTAT
  . ;
  . ; If the status is not IN PROGRESS, then we are done
- . I CLMSTAT'["IN PROGRESS",'$D(^BPS(9002313.77,"D",BRXIEN,BFILL,BPSCOB)) S BPQ=1
+ . I CLMSTAT'["IN PROGRESS" S BPQ=1
  W !
+ ;
+ ; Log messages to developer log
+ D LOG^BPSNCPDP($T(+0)_" - After Status Loop")
  Q
  ;
  ; Bulletin to the OPECC
- ; BPST=Tricare flag 1 is Tricare Related
-BULL(RXI,RXR,SITE,DFN,PATNAME,BPST,BPSERTXT,BPSRESP) ;
+BULL(RXI,RXR,SITE,DFN,PATNAME) ;
  N BTXT,XMSUB,XMY,XMTEXT,XMDUZ
  N SSN,X,SITENM
- I $G(SITE) D
- . K ^TMP($J,"BPSARR")
- . D PSS^PSO59(SITE,,"BPSARR")
- . S SITENM=$G(^TMP($J,"BPSARR",SITE,.01))
+ I $G(SITE) S SITENM=$P($G(^PS(59,SITE,0)),U)
  I $G(DFN) D
  . S X=$P($G(^DPT(DFN,0)),U,9)
  . S SSN=$E(X,$L(X)-3,$L(X))
@@ -113,49 +118,30 @@ BULL(RXI,RXR,SITE,DFN,PATNAME,BPST,BPSERTXT,BPSRESP) ;
  N %,%H,%I,X
  D NOW^%DTC
  S ZTIO="",ZTDTH=%,ZTDESC="IN PROGRESS BULLETIN"
- S (ZTSAVE("RXR"),ZTSAVE("RXI"),ZTSAVE("BPSERTXT"))="",ZTSAVE("BPSRESP")=""
- S (ZTSAVE("SITENM"),ZTSAVE("PATNAME"),ZTSAVE("SSN"),ZTSAVE("BPST"))=""
+ S ZTSAVE("RXR")="",ZTSAVE("RXI")=""
+ S ZTSAVE("SITENM")="",ZTSAVE("PATNAME")=""
+ S ZTSAVE("SSN")=""
  S ZTRTN="BULL1^BPSNCPD1"
  D ^%ZTLOAD
  Q
  ;
- ;
 BULL1 ;
- N BPSRX,BPSL,XMDUZ,XMY,BPSX,XMZ,XMSUB
- S BPSL=0,BPSRX=$$RXAPI1^BPSUTIL1(RXI,.01,"E")
- S XMSUB=$S($G(BPST):"TRICARE ",1:"")_"RX not processed for site "_$G(SITENM)
- I $G(BPST) D
- . S BPSL=BPSL+1,BPSX(BPSL)="Prescription "_BPSRX_" for fill number "_(+RXR)_" could not be filled because of a"
- . S BPSL=BPSL+1,BPSX(BPSL)="delay in processing the third party claim. The Rx was placed on suspense"
- . S BPSL=BPSL+1,BPSX(BPSL)="because TRICARE Rx's may not be filled unless they have a payable third"
- . S BPSL=BPSL+1,BPSX(BPSL)="party claim."
- . S BPSL=BPSL+1,BPSX(BPSL)=" "
- . S BPSL=BPSL+1,BPSX(BPSL)="Please monitor the progress of the claim.  If the claim is eventually"
- . S BPSL=BPSL+1,BPSX(BPSL)="returned as payable, the Rx label will be printed when Print from Suspense"
- . S BPSL=BPSL+1,BPSX(BPSL)="occurs or it may be Pulled Early from Suspense.  If a reject occurs, the"
- . S BPSL=BPSL+1,BPSX(BPSL)="Rx will be placed in the REFILL TOO SOON/DUR REJECTS (Third Party) section"
- . S BPSL=BPSL+1,BPSX(BPSL)="of the medication profile and placed on the Pharmacy Reject Worklist."
+ S XMSUB="RX not processed for site "_$G(SITENM)
+ S BTXT(1)="Prescription "_$P(^PSRX(RXI,0),"^",1)_" and fill number "_+RXR_" could "
+ S BTXT(1)=BTXT(1)_"not be processed because the "
+ S BTXT(2)="previous request was in progress.  There may have been a delay in processing "
+ S BTXT(3)="of the previous claim or the previous claim may be stranded."
+ S BTXT(4)=""
+ S BTXT(5)="For more information on this prescription's activity, please view the "
+ S BTXT(6)="ECME log within the View Prescription (VP) option on the Further Research (FR) "
+ S BTXT(7)="menu of the ECME user screen."
+ S BTXT(8)=""
+ S BTXT(9)="Patient Name: "_$G(PATNAME)
+ S BTXT(10)="Last four digits of SSN: "_$G(SSN)
+ S BTXT(11)=""
  ;
- ;
- I $G(BPSERTXT)'="" S BPSL=BPSL+1,BPSX(BPSL)=BPSERTXT
- S BPSL=BPSL+1,BPSX(BPSL)=" "
- I $G(BPSRESP)'=4 D
- . S BPSL=BPSL+1,BPSX(BPSL)="For more information on this prescription's activity, please view the ECME"
- . S BPSL=BPSL+1,BPSX(BPSL)="log within the View Prescription (VP) option on the Further Research (FR)"
- . S BPSL=BPSL+1,BPSX(BPSL)="menu of the ECME user screen."
- . S BPSL=BPSL+1,BPSX(BPSL)=" "
- S BPSL=BPSL+1,BPSX(BPSL)=$S($G(BPST):"TRICARE ",1:"")_"Patient Name: "_$G(PATNAME)_" ("_$G(SSN)_")"
- S BPSL=BPSL+1,BPSX(BPSL)="Prescription: "_BPSRX_"  Fill: "_(+RXR)
- S BPSL=BPSL+1,BPSX(BPSL)="Drug Name:  "_$$RXAPI1^BPSUTIL1(RXI,6,"E")
- ;
- S XMDUZ="BPS PACKAGE",XMTEXT="BPSX("
- ;
- ;****add by bld on 7/25/2010 for tricare enhancement 10 ****
- I $G(BPST) S XMY("G.BPS TRICARE")=""
- E  S XMY("G.BPS OPECC")=""
- ;*******************************
- ;
+ S XMDUZ="BPS PACKAGE",XMTEXT="BTXT("
+ S XMY("G.BPS OPECC")=""
  I $G(DUZ)'<1 S XMY(DUZ)=""
  D ^XMD
- I $G(BPST),$G(XMZ) D PRIORITY^XMXEDIT(XMZ)
- Q 
+ Q

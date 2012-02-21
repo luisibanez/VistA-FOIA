@@ -1,13 +1,7 @@
-PXRMGECZ ;SLC/JVS - GEC Debug Utilities#3 ;7/14/05  10:46
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMGECZ ;SLC/JVS - GEC Debug Utilities#3 ;08/21/2003  08:55
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  Q
-PAGE ;On printed reports, form feed and add page numbers
- I $Y=(IOSL-2)!($Y>IOSL) W @IOF D
- .S PAGE=PAGE+1
- .W !,?(IOM-10),"Page "_PAGE,!
- Q
- ;
 MATCHB ;Build tmp global with origingal health factor names from PXRMGECY
  ;
  N GECNA,I,GECDA
@@ -146,8 +140,8 @@ COMQ ;FORMAT PRINTED COMMENT
  .W !,?6,"Comment:"
  .S WORD="" F I=1:1:$L(COMMENT," ") S WORD=$P(COMMENT," ",I) D
  ..S SENT=SENT_" "_WORD
- ..I $L(SENT)>51 W !,?6,SENT S SENT="" D PAGE
- I SENT'="" W !,?6,SENT D PAGE
+ ..I $L(SENT)>51 W !,?6,SENT S SENT=""
+ I SENT'="" W !,?6,SENT
  Q
  ;
 OBJECT(DFN) ;

@@ -1,5 +1,5 @@
-PSOORRNW ;BIR/SAB-finish OP renew orders from OE/RR ;4/25/07 8:46am
- ;;7.0;OUTPATIENT PHARMACY;**11,27,51,46,71,94,130,131,146,206,225**;DEC 1997;Build 29
+PSOORRNW ;BIR/SAB-finish OP renew orders from OE/RR ;3/28/95
+ ;;7.0;OUTPATIENT PHARMACY;**11,27,51,46,71,94,130,131,146**;DEC 1997
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^PS(50.607 supported by DBIA 2221
  ;External reference to ^PS(51.2 supported by DBIA 2226
@@ -10,16 +10,6 @@ PSOORRNW ;BIR/SAB-finish OP renew orders from OE/RR ;4/25/07 8:46am
  .W $C(7),!!,"Another person is editing Rx "_$P($G(^PSRX(PSORENXX,0)),"^")
  K PSOMSG N OI,VALMCNT K POERR("DFLG") D FULL^VALM1 S (PSORX("DFLG"),PSORENW("DFLG"))=0,(PSORNW("FILL DATE"),PSORENW("FILL DATE"))=DT
  S Y=DT X ^DD("DD") S PSORX("FILL DATE")=Y K Y
- ;
- I $G(ORD),+$P($G(^PS(52.41,+ORD,0)),"^",23)=1 D  Q:$D(DIRUT)!'Y  D EN1^ORCFLAG(+$P($G(^PS(52.41,ORD,0)),"^")) H 1
- . K DIRUT,DUOUT,DTOUT,DIR
- . S DIR("A",1)="This Renewal Request is flagged. In order to process it"
- . S DIR("A",2)="you must unflag it first."
- . S DIR("A",3)=""
- . S DIR(0)="Y",DIR("A")="Unflag Renewal Request",DIR("B")="NO"
- . W ! D ^DIR I $D(DIRUT)!'Y S VALMBCK="Q"
- I $G(ORD),+$P($G(^PS(52.41,+ORD,0)),"^",23)=1 Q
- ;
  W !!,"Now Renewing Rx # "_$P(^PSRX($P(OR0,"^",21),0),"^")_"   Drug: "_$P($G(^PSDRUG($P(^PSRX($P(OR0,"^",21),0),"^",6),0)),"^"),! H 2
  I $P($G(^PSRX($P(OR0,"^",21),"OR1")),"^",4) D  D PROCESSX^PSORENW0 D UL Q
  .W !!,"Cannot Renew Rx # "_$P(^PSRX($P(OR0,"^",21),0),"^"),!," Drug: "_$P($G(^PSDRUG($P(^PSRX($P(OR0,"^",21),0),"^",6),0)),"^")_"."
@@ -28,7 +18,7 @@ PSOORRNW ;BIR/SAB-finish OP renew orders from OE/RR ;4/25/07 8:46am
  I '$G(PSOTPBFG) D DSPL^PSOTPCAN(ORD)
  S (PSORX("PROVIDER NAME"),PSORENW("PROVIDER NAME"))=$P(^VA(200,$P(OR0,"^",5),0),"^"),PSORENW("NOO")=$P(OR0,"^",7)
  S PSORENW("PROVIDER")=$P(OR0,"^",5),PSORENW("MAIL/WINDOW")=$S($P(OR0,"^",17)="M":"M",1:"W")
- ;I $O(^PSRX($P(OR0,"^",21),"PRC",0)) F I=0:0 S I=$O(^PSRX($P(OR0,"^",21),"PRC",I)) Q:'I  S PRC(I)=^PSRX($P(OR0,"^",21),"PRC",I,0)
+ I $O(^PSRX($P(OR0,"^",21),"PRC",0)) F I=0:0 S I=$O(^PSRX($P(OR0,"^",21),"PRC",I)) Q:'I  S PRC(I)=^PSRX($P(OR0,"^",21),"PRC",I,0)
  K II F I=0:0 S I=$O(^PS(52.41,ORD,1,I)) Q:'I  S DOSE=$G(^PS(52.41,ORD,1,I,1)),DOSE1=$G(^(2)) D 
  .S II=$G(II)+1
  .S PSORENW("DOSE",II)=$P(DOSE1,"^"),PSORENW("DOSE ORDERED",II)=$P(DOSE1,"^",2),PSORENW("UNITS",II)=$P(DOSE,"^",9),PSORENW("NOUN",II)=$P(DOSE,"^",5)
@@ -52,7 +42,6 @@ PSOORRNW ;BIR/SAB-finish OP renew orders from OE/RR ;4/25/07 8:46am
  ;D CHK
  S PSOFXRN=0,PSOFXRNX=1
  S PSORENW("POE")=$S($G(^PS(52.41,ORD,"POE"))=1:1,'$O(^PSRX($P(OR0,"^",21),6,0)):1,1:"")
- S PSORENW("PENDING ORDER")=ORD
  D EN^PSOORNE4(.PSORENW) K PSORENW,PSORX("FILL DATE")
  I '$G(PSOFXRN) D UL
  D KLIB^PSORENW1
@@ -62,8 +51,7 @@ CHK ;check for valid # of refills
  I $G(PSODRUG("DEA"))]"" D
  .S PSOCS=0 K DIR,DIC,PSOX
  .F DEA=1:1 Q:$E(PSODRUG("DEA"),DEA)=""  I $E(+PSODRUG("DEA"),DEA)>1,$E(+PSODRUG("DEA"),DEA)<6 S $P(PSOCS,"^")=1 S:$E(+PSODRUG("DEA"),DEA)=2 $P(PSOCS,"^",2)=1
- .;PSO*7*206
- .S PSOMAX=$S(PSOCS:5,1:11) I PSODRUG("DEA")["A"&(PSODRUG("DEA")'["B")!(PSODRUG("DEA")["F")!(PSODRUG("DEA")[1)!(PSODRUG("DEA")[2) S PSOMAX=0
+ .S PSOMAX=$S(PSOCS:5,1:11) I PSODRUG("DEA")["A"&(PSODRUG("DEA")'["B")!(PSODRUG("DEA")["F") S PSOMAX=0
  E  S PSOMAX=$P(OR0,"^",11)
  S RXPT=+$P(PSORENW("RX0"),"^",3) I $G(^PS(53,RXPT,0))]"" D
  .S PSORENW("# OF REFILLS")=$S(+$P(OR0,"^",11)>+$P(^PS(53,RXPT,0),"^",4):+$P(^PS(53,RXPT,0),"^",4),1:+$P(OR0,"^",11)),PSOX=+$P(^PS(53,RXPT,0),"^",4)

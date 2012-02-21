@@ -1,5 +1,5 @@
-ORWPCE1 ;SLC/KCM - PCE Calls from CPRS GUI; 10/26/04 ;11/20/09  09:25
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,132,148,187,190,215,243,280**;Dec 17, 1997;Build 85
+ORWPCE1 ;SLC/KCM - PCE Calls from CPRS GUI; 10/26/04
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,132,148,187,190,215**;Dec 17, 1997
  ;
  ; DBIA 1365   DSELECT^GMPLENFM   ^TMP("IB",$J)
  ;
@@ -50,7 +50,7 @@ DQSAVE ; Background Call to DATA2PCE
  . . I CODE="PT" S @ROOT@("PATIENT")=$P(X,U,3),DFN=$P(X,U,3) Q
  . . I CODE="HL" S @ROOT@("HOS LOC")=$P(X,U,3) Q
  . . I CODE="PR" S @ROOT@("PARENT")=$P(X,U,3) Q
- . . ;prevents checkout!
+ . . ;prevents checkout! 
  . . I CODE="VC" S @ROOT@("SERVICE CATEGORY")=$P(X,U,3) Q
  . . I CODE="SC" S @ROOT@("SC")=$P(X,U,3) Q
  . . I CODE="AO" S @ROOT@("AO")=$P(X,U,3) Q
@@ -59,7 +59,6 @@ DQSAVE ; Background Call to DATA2PCE
  . . I CODE="MST" S @ROOT@("MST")=$P(X,U,3) Q
  . . I CODE="HNC" S @ROOT@("HNC")=$P(X,U,3) Q
  . . I CODE="CV" S @ROOT@("CV")=$P(X,U,3) Q
- . . I CODE="SHD" S @ROOT@("SHAD")=$P(X,U,3) Q
  . . I CODE="OL" D  Q
  . . . I +$P(X,U,3) S @ROOT@("INSTITUTION")=$P(X,U,3)
  . . . E  I $P(X,U,4)'="",$P(X,U,4)'="0" D
@@ -68,7 +67,7 @@ DQSAVE ; Background Call to DATA2PCE
  . I $E(TYP,1,3)="CPT" D  Q
  . . Q:'$L(CODE)
  . . S CPT=CPT+1,ROOT="ORPXAPI(""PROCEDURE"","_CPT_")"
- . . S IEN=$$CODEN^ICPTCOD(CODE) ;ICR #1995
+ . . S IEN=+$O(^ICPT("B",CODE,0))
  . . S @ROOT@("PROCEDURE")=IEN
  . . I +$P(X,U,9) D
  . . . S MODS=$P(X,U,9),MODCNT=+MODS
@@ -84,7 +83,7 @@ DQSAVE ; Background Call to DATA2PCE
  . I $E(TYP,1,3)="POV" D  Q
  . . Q:'$L(CODE)
  . . S ICD=ICD+1,ROOT="ORPXAPI(""DX/PL"","_ICD_")"
- . . S IEN=+$$CODEN^ICDCODE(CODE,80) ;ICR #3990
+ . . S IEN=+$O(^ICD9("AB",CODE_" ",0))
  . . S @ROOT@("DIAGNOSIS")=IEN
  . . S @ROOT@("PRIMARY")=$P(X,U,5)
  . . S:$L(CAT) @ROOT@("CATEGORY")=CAT
@@ -190,7 +189,7 @@ DATA2PCE ;
  S ZTSTAT=0  ; clear sync flag
  Q
  ;
-MDS(X,ORLOC) ; return TRUE if checkout is needed
+MDS(X,ORLOC) ; return TRUE if checkout is needed 
  I $$CHKOUT^ORWPCE2(ORLOC) Q 1
  N I,ORAUTO,OROK
  S (OROK,I)=0

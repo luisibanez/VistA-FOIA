@@ -1,5 +1,5 @@
 IBAMTC ;ALB/CPM-MEANS TEST NIGHTLY COMPILATION JOB ;09-OCT-91
-V ;;2.0;INTEGRATED BILLING;**34,52,70,93,100,118,115,132,150,153,137,176,215,275,321,312**;21-MAR-94
+V ;;2.0;INTEGRATED BILLING;**34,52,70,93,100,118,115,132,150,153,137,176,215,275,321**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 INIT ; Entry point - initialize variables and parameters
@@ -19,8 +19,7 @@ INIT ; Entry point - initialize variables and parameters
  ;
  K IBDT D BJ^IBJDE  ; Automated DM extract monthly background job.
  ;
- ; - transfer pricing background job
- I '+$$SWSTAT^IBBAPI() D ^IBATEI1                           ;IB*2.0*312
+ D ^IBATEI1 ; transfer pricing background job
  ;
  D NIGHT^IBARXMA ; transmit copay cap info
  ;
@@ -30,16 +29,13 @@ INIT ; Entry point - initialize variables and parameters
  D SERV^IBAUTL2 I IBY<1 D ERR G CLEAN
  ;
  ; Compile Means Test copay and per diem charges for all inpatients
- ; Check PFSS Switch                                        ;IB*2.0*312
- I '+$$SWSTAT^IBBAPI() S (IBWARD,DFN)="" F  S IBWARD=$O(^DPT("CN",IBWARD)) Q:IBWARD=""  F  S DFN=$O(^DPT("CN",IBWARD,DFN)) Q:'DFN  W !,DFN S IBA=^(DFN),IBY=1 D PROC
+ S (IBWARD,DFN)="" F  S IBWARD=$O(^DPT("CN",IBWARD)) Q:IBWARD=""  F  S DFN=$O(^DPT("CN",IBWARD,DFN)) Q:'DFN  W !,DFN S IBA=^(DFN),IBY=1 D PROC
  ;
  ;send inpatients' CV (CombatVet) expiration e-mail alert
  D CVEXMAIL^IBACV(DT)
  ;
  ;check & start LTC Monthly Job LTC if necessary
- ; This code may need to be expanded, IF we don't          ;IB*2.0*312 
- ; implement on the 1st of the month, for a clean cut over ;IB*2.0*312
- I '+$$SWSTAT^IBBAPI() D NJ^IBAECN1                        ;IB*2.0*312
+ D NJ^IBAECN1
  ;
  D EN^IBCE ; Transmit electronic bills
  ; Clean up expired Means Test billing clocks
@@ -58,7 +54,7 @@ CLEAN S %H=+$H-1 D YMD^%DTC S IBDT=X,(IBN,DFN)=0,IBWHER=23
  ;D ^IBAMTC1
  ;
  ; Send bulletin reporting job completion
- I '+$$SWSTAT^IBBAPI() D BULL^IBAMTC1                     ;IB*2.0*312
+ D BULL^IBAMTC1
  ;
  ; -- purge alerts
  D PURGE^IBAERR3

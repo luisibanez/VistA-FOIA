@@ -1,5 +1,5 @@
-PXRMEXCF ; SLC/PKR - Reminder exchange routines for computed findings. ;10/17/2008
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
+PXRMEXCF ; SLC/PKR - Reminder exchange routines for computed findings. ;12/22/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;==============================================
 EXISTS(ROUTINE) ;Return true if routine ROUTINE exists.
  I ROUTINE="" Q 0
@@ -9,34 +9,29 @@ EXISTS(ROUTINE) ;Return true if routine ROUTINE exists.
  ;
  ;==============================================
 GETRACT(ATTR,NEWNAME,NAMECHG,RTN,EXISTS) ;Get the action for a routine.
- N ACTION,CHOICES,CSUM,DIR,DIROUT,DIRUT,DTOUT,DUOUT,ECS,IND,MSG
+ N ACTION,CHOICES,DIR,DIROUT,DIRUT,DTOUT,DUOUT,ECS,IND,MSG
  N PCS,ROUTINE,SAME,TEXT,X,Y
  S NEWNAME=""
+ ;If the routine exists compare the existing routine checksum with the
+ ;the checksum of the routine in the packed definition.
  S ROUTINE=ATTR("NAME")
  I EXISTS="" S EXISTS=$$EXISTS^PXRMEXCF(ROUTINE)
  S CHOICES=$S(EXISTS:"COQS",1:"CIQS")
  I EXISTS D
- .;If the routine exists compare the existing routine checksum with the
- .;the checksum of the routine in the packed definition.
- . S CSUM=$$RTNCS^PXRMEXCS(ROUTINE)
- . S SAME=$S(ATTR("CHECKSUM")=CSUM:1,1:0)
+ . S SAME=$$SAME(.ATTR,.RTN)
  . S TEXT(1)="Routine "_ROUTINE_" already exists "
- . I SAME D
- .. S TEXT(1)=TEXT(1)_"and the packed routine is identical, skipping."
- .. I $D(PXRMDEBG) W !,TEXT(1),! H 2
- .. S ACTION="S"
- . I 'SAME D
- .. S TEXT(1)=TEXT(1)_"but the packed routine is different,"
- .. S TEXT(2)="what do you want to do?"
- .. W !,TEXT(1),!,TEXT(2)
- .. S DIR("B")="O"
- .. S ACTION=$$GETACT^PXRMEXIU(CHOICES,.DIR)
+ . I SAME S TEXT(1)=TEXT(1)_"and the packed routine is identical,"
+ . I 'SAME S TEXT(1)=TEXT(1)_"but the packed routine is different,"
+ . S TEXT(2)="what do you want to do?"
+ . D EN^DDIOL(.TEXT)
+ . S DIR("B")="S"
+ . S ACTION=$$GETACT^PXRMEXIU(CHOICES,.DIR)
  E  D
- . W !!,"Routine "_ROUTINE_" is new, what do you want to do?"
+ . W !!,"Routine "_ROUTINE_" is NEW, what do you want to do?"
  . S DIR("B")="I"
  . S ACTION=$$GETACT^PXRMEXIU(CHOICES,.DIR)
  ;
- I (ACTION="Q")!(ACTION="S") Q ACTION
+ I ACTION="Q" Q ACTION
  ;
  I ACTION="C" D
  . N CDONE
@@ -63,4 +58,19 @@ GETRACT(ATTR,NEWNAME,NAMECHG,RTN,EXISTS) ;Get the action for a routine.
  . I 'Y S ACTION="S"
  . S NAMECHG(ATTR("FILE NUMBER"),ROUTINE)=NEWNAME
  Q ACTION
+ ;
+ ;==============================================
+SAME(ATTR,RTN) ;Compare the existing routine and the new version
+ ;in RTN to see if they are the same.
+ N ECS,DIF,NEWCS,RT,SAME,X,XCNP
+ ;Load the existing routine into RT.
+ S XCNP=0
+ S DIF="RT("
+ S X=ATTR("NAME")
+ X ^%ZOSF("LOAD")
+ S ECS=$$ROUTINE^PXRMEXCS(.RT)
+ K RT
+ S NEWCS=$$ROUTINE^PXRMEXCS(.RTN)
+ S SAME=$S(ECS=NEWCS:1,1:0)
+ Q SAME
  ;

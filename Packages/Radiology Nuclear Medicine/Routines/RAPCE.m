@@ -1,8 +1,5 @@
 RAPCE ;HIRMFO/GJC-Interface with PCE APIs for wrkload, visits ;9/7/04 12:36pm
- ;;5.0;Radiology/Nuclear Medicine;**10,17,21,26,41,57,56**;Mar 16, 1998;Build 3
- ;Supported IA #2053 FILE^DIE
- ;Supported IA #4663 SWSTAT^IBBAPI
- ;Controlled IA #1889 DATA2PCE^PXAPI
+ ;;5.0;Radiology/Nuclear Medicine;**10,17,21,26,41,57**;Mar 16, 1998
  Q
 COMPLETE(RADFN,RADTI,RACNI) ; When an exam status changes to 'complete'
  ; Input: RADFN-> Patient DFN, RADTI-> Exam Timestamp, RACNI-> Case IEN
@@ -136,8 +133,7 @@ SETUP ; Setup examination data node information
  S RA7003(12)=$P(RA7003,"^",12) ; Pri. Inter. Resident
  S RA7003(14)=$P(RA7003,"^",14) ; Requesting Physician.
  S RA7003(15)=$P(RA7003,"^",15) ; Pri. Inter. Staff
- ; OK to send if missing resident/staff ONLY if report Elec. Filed
- I (RA7003(12)="")&(RA7003(15)=""),$P($G(^RARPT(+$P(RA7003,U,17),0)),U,5)'="EF" S RABAD=1 Q
+ I (RA7003(12)="")&(RA7003(15)="") S RABAD=1 Q
  S RA71=$G(^RAMIS(71,+$P(RA7003,"^",2),0))
  ; store CPT Modifiers' .01 value
  K RACPTM S RA=0 F  S RA=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"CMOD",RA)) Q:'RA  S RA1=$$BASICMOD^RACPTMSC($P($G(^(RA,0)),"^"),+$P(RA7002,"^")) S:+RA1>0 RACPTM(RA)=$P(RA1,"^",2) ;only valid cpt mods

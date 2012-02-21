@@ -1,5 +1,5 @@
 RGEX03 ;BAY/ALS-LIST MANAGER FOR MPI/PD EXCEPTIONS ;10/13/99
- ;;1.0;CLINICAL INFO RESOURCE NETWORK;**3,12,19,23,27,30,38,39,43,44,48,54,57**;30 Apr 99;Build 2
+ ;;1.0;CLINICAL INFO RESOURCE NETWORK;**3,12,19,23,27,30,38,39,43**;30 Apr 99
  ;
  ;Reference to START^VAFCPDAT supported by IA #3299
  ;Reference to ^DIA(2 supported by IA #2097
@@ -8,8 +8,7 @@ RGEX03 ;BAY/ALS-LIST MANAGER FOR MPI/PD EXCEPTIONS ;10/13/99
  ;Reference to CIRNEXC^MPIFQ0 supported by IA #2942
  ;Reference to VTQ^MPIFSAQ supported by IA #2941
  ;Reference to NOTICE^DGSEC4 and PTSEC^DGSEC4 supported by IA#3027
- ;Reference to POT^MPIFDUP supported by IA #4464;**57 MPIC_1893 call obsolete; removed PMR
- ;Reference to $$NCEDIT^DPTNAME supported by private IA #4116
+ ;Reference to POT^MPIFDUP supported by IA #4464
  ;
 EN(DATA) ; -- main entry point for RG EXCPT ACTION
  D EN^VALM("RG EXCPT ACTION")
@@ -21,15 +20,14 @@ INIT ; -- init variables and list array
  K ^TMP("RGEXC2",$J)
  K @VALMAR
  I DATA="" Q
- S STR="",LIN=1,STATUS="",NAME="",DOB="",SSN="",DFN="",CHKSM="" ;**44
+ S STR="",LIN=1,STATUS="",NAME="",DOB="",SSN=""
  S NAME=$P(DATA,"^",1),DOB=$P(DATA,"^",8),SSN=$P(DATA,"^",2)
- S DFN=$P(DATA,"^",5),CHKSM=$P($G(^DPT(DFN,"MPI")),"^",2) ;**44
  S STR=$$SETSTR^VALM1("Name:",STR,6,6),STR=$$SETSTR^VALM1(NAME,STR,14,30) D ADDTMP
  S STR=$$SETSTR^VALM1(" SSN:",STR,6,6),STR=$$SETSTR^VALM1(SSN,STR,14,12) D ADDTMP
  S STR=$$SETSTR^VALM1(" DOB:",STR,6,6),STR=$$SETSTR^VALM1(DOB,STR,14,20) D ADDTMP
- S STR=$$SETSTR^VALM1(" DFN:",STR,6,6),STR=$$SETSTR^VALM1(DFN,STR,14,12) D ADDTMP ;**44
+ S STR=$$SETSTR^VALM1(" DFN:",STR,6,6),STR=$$SETSTR^VALM1($P(DATA,"^",5),STR,14,12) D ADDTMP
  S STR=$$SETSTR^VALM1(" ICN:",STR,6,6),ICN="" S ICN=$P(DATA,"^",6) I ICN<0 S ICN=""
- S STR=$$SETSTR^VALM1(ICN_($S(CHKSM="":"",1:"V"_CHKSM)),STR,14,20) D ADDTMP ;**44
+ S STR=$$SETSTR^VALM1(ICN,STR,14,15) D ADDTMP
  S STR=$$SETSTR^VALM1("Date of Death:",STR,6,20),STR=$$SETSTR^VALM1($P(DATA,"^",13),STR,26,20) D ADDTMP
  S STR=$$SETSTR^VALM1("Exception Type:",STR,6,20),STR=$$SETSTR^VALM1($P(DATA,"^",4),STR,26,50) D ADDTMP
  S STR=$$SETSTR^VALM1("Exception Date:",STR,6,20),STR=$$SETSTR^VALM1($P(DATA,"^",3),STR,26,30) D ADDTMP
@@ -58,14 +56,11 @@ ADDTMP ;
  S ^TMP("RGEXC2",$J,LIN,0)=STR,^TMP("RGEXC2",$J,"IDX",LIN,LIN)="",LIN=LIN+1,STR=""
  Q
 UPD ;
- N PROCDT,%,X,%I,%H
  W !,"This option updates the exception status to PROCESSED.",!,"After it is processed it will not be listed in the summary."
  S DIR("A")="Are you sure you want to change the status? ",DIR(0)="YA",DIR("B")="YES"
  D ^DIR Q:$D(DIRUT)  I Y>0 D
- .;**48 populating the date/time marked as processed and who marked it as processed
- .D NOW^%DTC S PROCDT=%
  .S IEN="",IEN2="",IEN=$P(DATA,"^",10),IEN2=$P(DATA,"^",11) L +^RGHL7(991.1,IEN):10
- .S DA(1)=IEN,DA=IEN2,DR="6///"_1_";7///"_PROCDT_";8////"_$G(DUZ),DIE="^RGHL7(991.1,"_DA(1)_",1," D ^DIE K DIE,DA,DR ;**57,MPIC_2024
+ .S DA(1)=IEN,DA=IEN2,DR="6///"_1,DIE="^RGHL7(991.1,"_DA(1)_",1," D ^DIE K DIE,DA,DR
  .L -^RGHL7(991.1,IEN) S $P(DATA,"^",9)=1
  .D INIT
  K DIR,DIRUT S VALMBCK="R"
@@ -85,23 +80,22 @@ DISP ; Display Only Query
  D VTQ^MPIFSAQ(.MPIVAR) D PAUSE^VALM1
  S VALMBCK="R" K MPIVAR
  Q
- ;
-POT ;Potential Match on MPI, Query MPI, resolve duplicate if needed. **43;**57 MPIC_1893 OBSOLETE; remove PMR
- ;D POT^MPIFDUP
- ;D INIT S VALMBCK="R" K PROCESS
+INTL ; Single Patient Initialization to MPI ; **43 THIS ENTRY POINT IS NO LONGER AVAILABLE
  Q
- ;
-REJ ;Primary View Reject. **44 Added entry point
- D REJ^RGPVREJ
+ S VALMBCK="",MPIFRES="",MPIFINT=""
+ D FULL^VALM1 D CIRNEXC^MPIFQ0 D PAUSE^VALM1 K MPIFRES,MPIFINT
+ S ICN=+$$GETICN^MPIF001(DFN),$P(DATA,"^",6)=$G(ICN),HOME=$$SITE^VASITE()
+ ; If patient has a nation ICN, change status to processed
+ I $E(ICN,1,3)'=$E($P(HOME,"^",3),1,3)&(ICN>0) D
+ .S IEN="",IEN2="",IEN=$P(DATA,"^",10),IEN2=$P(DATA,"^",11) L +^RGHL7(991.1,IEN):10
+ .S DA(1)=IEN,DA=IEN2,DR="6///"_1,DIE="^RGHL7(991.1,"_DA(1)_",1," D ^DIE K DIE,DA,DR
+ .L -^RGHL7(991.1,IEN) S $P(DATA,"^",9)=1
  D INIT S VALMBCK="R"
  Q
- ;
-MPIPV ;MPI Primary View PDAT. **48 Added entry point
- S SAPV=0 ;from EH, not stand alone option
- D SEND^RGPVMPI
- D INIT S VALMBCK="R"
+POT ;Potential Match on MPI, Query MPI, resolve duplicate if needed. **43 Added this entry point
+ D POT^MPIFDUP
+ D INIT S VALMBCK="R" K PROCESS
  Q
- ;
 LOAD ; Edit Patient Data, if patient's eligibility is verified - check for DG ELIGIBILITY key for user
  S VALMBCK="",DATAOLD=""
  D FULL^VALM1 D ELIG^VADPT
@@ -154,30 +148,16 @@ REC ; Check if user is attempting to access own record
 DEATH ; Check for access to edit date of death
  I $D(^XUSEC("DG DETAIL",+DUZ)) D
  .K VADM,DIE,DA,DR
- .S (DOD1,DOD2,SRS)=""
+ .S DOD=""
  .D DEM^VADPT
- .S DOD1=$P($G(VADM(6)),"^",2) ;DOD original value
- .S DIC="2",DA=DFN,DR=".353",DIQ(0)="E" D EN^DIQ1 ;**54
- .S SRS=$G(^UTILITY("DIQ1",$J,2,DA,.353,"E")) ;source of notification original value
- .S DIE="^DPT(",DA=DFN,DR=".351//^S X=DOD1" D DIEC ;ask DOD, prompt with original value
- .;was a change made to DOD?
- .D DEM^VADPT
- .S DOD2=$P($G(VADM(6)),"^",2) D  ;DOD value after DIE call
- ..I DOD1="",DOD2="" Q  ;original and added DOD both null; don't prompt for .353
- ..I DOD1'="",DOD2="" S DIE="^DPT(",DA=DFN,DR=".353////@" D DIEC Q  ;DOD now null - deleted; remove source field
- ..;Else DOD added or changed; so prompt for source
- ..I (DOD1=""&DOD2'="")!(DOD1'=DOD2) D
- ...S DIE="^DPT(",DA=DFN,DR=".353//^S X=SRS" D DIEC Q
+ .S DOD=$P($G(VADM(6)),"^",2)
+ .S DIE="^DPT(",DA=DFN,DR=".351//^S X=DOD"
+ .L +^DPT(DFN):10
+ .D ^DIE
+ .L -^DPT(DFN)
  E  W !!,"You do not have the proper security to edit date of death." D PAUSE^VALM1 D INIT S VALMBCK="R"
- K VADM,DIE,DA,DR,DOD1,DOD2,SRS,X,Y
+ K VADM,DIE,DA,DR,DOD
  Q
- ;
-DIEC ;Do the ^DIE call from the DEATH module
- L +^DPT(DFN):10
- D ^DIE
- L -^DPT(DFN)
- Q
- ;
 INQ ; Patient Inquiry
  S VALMBCK=""
  D FULL^VALM1 D EN^DGRPD D PAUSE^VALM1 D CLEAN^VALM10 D INIT
@@ -225,7 +205,7 @@ HELP ; -- help code
  S X="?" D DISP^XQORM1 W !!
  Q
 EXIT ; -- exit code
- S VALMBCK="" K ^TMP("RGEXC2",$J),CHKSM,DFN,DIR,EXCTEXT,IEN,IEN2,NAME,DOB,SSN,LIN,STATUS,STR,VAFCDFN,X,Y
+ S VALMBCK="" K ^TMP("RGEXC2",$J),DFN,DIR,EXCTEXT,IEN,IEN2,NAME,DOB,SSN,LIN,STATUS,STR,VAFCDFN,X,Y
  S VALMBCK="R",RGBG=1
  Q
 EXPND ; -- expand code

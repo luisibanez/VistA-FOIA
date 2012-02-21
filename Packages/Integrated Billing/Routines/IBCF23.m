@@ -1,6 +1,6 @@
 IBCF23 ;ALB/ARH - HCFA 1500 19-90 DATA (block 24, procs and charges) ;12-JUN-93
- ;;2.0;INTEGRATED BILLING;**52,80,106,122,51,152,137,402,432**;21-MAR-94;Build 192
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,80,106,122,51,152,137**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;requires IBIFN,IB(0),IB("U"),IB("U1"), returns # of line items in IBFLD(24)
  ;rev code array: IBRC("proc^division^basc flag^bedsection^rev code^unit chrg^Rx seq #")=units
@@ -45,7 +45,6 @@ RVCE(IBXIEN,IBIFN) ;Entry for EDI formatter call (IBXIEN will be defined)
  .. S $P(IBLINK(+$P(IBLN,U,11),IBI),U,7)=$P(IBLN,U,14)
  . I $P(IBLN,U,10) D
  .. S IBLINK1(IBSS,IBI)=$P(IBLN,U,10)_U_+$P(IBLN,U,11)
- . S IBRC(IBSS,"LNK")=IBI
  ;
  S IBSSO="" F  S IBSSO=$O(IBRC(IBSSO)) Q:IBSSO=""  I $D(IBRC(IBSSO,"RX")) D
  . S IBSS=IBSSO,IBI=$P(IBRC(IBSSO,"RX"),U,2),IB11=$P(IBRC(IBSSO,"RX"),U,3)
@@ -56,7 +55,7 @@ PO ; print order array w/chrgs
  ; combine multiple entries of same proc onto one line item via print order
  ;if both have print orders defined then they should not be combined onto one line item
  ;"proc^division^basc^dx^pos^tos^modifier(s)^unit chrg^purchased chg" must all be the same as well as the emergency indicator and all 'aux flds'
- N IBP,Z,IBPO11
+ N IBP,Z
  S IBPO="" F  S IBPO=$O(IBCP(IBPO)) Q:'IBPO  S IBCP=IBCP(IBPO),IBSS=$P(IBCP,U,2,9),IBSS1="*"_$G(IBCP(IBPO,"AUX")),IBAUX=0 D
  . I $D(IBSS(IBSS)),'$D(IBCP(IBPO,"RX")),IBPO>1000 D  Q  ; combine lines
  .. I 'IBAUX S IBAUX=$$AUXOK^IBCF23A(.IBSS,IBSS1)
@@ -97,13 +96,11 @@ PRTARR ;print proc array
  .... I ($P(Z,U,2)+1)>Z Q
  .... S $P(IBPO(IBPO1,IBEMG,IBPO2),U,2)=($P(Z,U,2)+1),IBPO2=(IBPO2\1)_".99"
  ... S Z=0 F  S Z=$O(IBPO(IBPO1,IBEMG,IBPO2,Z)) Q:'Z  S IBUNIT=IBUNIT+1
- ... I $D(IBCP(IBPO1)) S IBPO11=IBPO1
- ... S IBPO2A=$S($D(IBCP(IBPO2\1)):IBPO2\1,'$D(IBCP(IBPO2)):IBPO11,1:IBPO2)
+ ... S IBPO2A=$S('$D(IBCP(IBPO2)):IBPO2\1,1:IBPO2)
  ... S IBCHARG=$P(IBCP(IBPO2A),U,9),IBPCHG=$P(IBCP(IBPO2A),U,10)
  ... I IBCHARG<10000,IBCHARG*(IBUNIT+1)'<10000 D  Q  ;$9,999 limit per line
  .... N Z S Z=$O(IBPO(IBPO1\1+1),-1),Z=Z+$S(IBPO1+.001'=Z:.001,1:0) M IBPO(Z,IBEMG,IBPO2)=IBPO(IBPO1,IBEMG,IBPO2) K IBPO(IBPO1,IBEMG,IBPO2)
  ... S IBUNIT=IBUNIT+1,IBSS=IBCP(IBPO2A),IBMIN=IBMIN+$P(IBSS,U,11)
- ... S IBSS=$G(IBSS)_U_$G(IBCP(IBPO2A,"LNK"))
  ... S Z=$O(IBPO(IBPO1,IBEMG,IBPO2,"L",0)) I Z D
  .... S Z0=0
  .... F Z=Z:1 Q:'$O(IBPO(IBPO1,IBEMG,IBPO2,"L",0))!(Z0=IBUNIT)  I $D(IBPO(IBPO1,IBEMG,IBPO2,"L",Z))  S IBSS("L",Z)=IBPO(IBPO1,IBEMG,IBPO2,"L",Z),Z0=Z0+1 K IBPO(IBPO1,IBEMG,IBPO2,"L",Z)
@@ -116,7 +113,6 @@ PRTARR ;print proc array
  S IBRV="" F  S IBRV=$O(IBRC(IBRV)) Q:IBRV=""  I +IBRC(IBRV) D  D B24^IBCF23A K IBRXF
  . S IBUNIT=+IBRC(IBRV),IBCHARG=$P(IBRV,U,6),IBDT1=+IB("U"),IBDT2=$P(IB("U"),U,2),IBREV=$P(IBRV,U,5),IBEMG=0,IBAUX=""
  . S IBSS="^"_$S(+IBRV:$P(IBRV,U),1:$P($G(^DGCR(399.1,+$P(IBRV,U,4),0)),U))
- . S IBSS=$G(IBSS)_U_$$RC2CP^IBCEF22(IBIFN,+$G(IBRC(IBRV,"LNK")))
  . S Z=$O(IBLINK1(IBRV,0)) I Z D
  .. S Z0=0
  .. F Z=Z:1 Q:'$O(IBLINK1(IBRV,0))!(Z0=IBUNIT)  I $D(IBLINK1(IBRV,Z)) S IBSS("L",Z)=IBLINK1(IBRV,Z),Z0=Z0+1 K IBLINK1(IBRV,Z)

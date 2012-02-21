@@ -1,5 +1,5 @@
 RCFMOBR ;WASH-ISC@ALTOONA,PA/RWT-BILL RECONCILIATIONS LIST ;11/20/96  2:30 PM
-V ;;4.5;Accounts Receivable;**2,20,40,53,249**;Mar 20, 1995;Build 2
+V ;;4.5;Accounts Receivable;**2,20,40,53**;Mar 20, 1995
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
 EN ;Creates report from OBR data in file 423.6
  ;
@@ -74,14 +74,9 @@ EN2 ;Entry point from Regenerate Prior Month OBRs option
  ;
 EN3 ;Deletes OBRs over 60 days old
  N A0,A1,A2,DA,DIK,X,X1,X2
- S A0="OBR-" F  S A0=$O(^PRCF(423.6,"B",A0)) Q:A0=""!(A0'["OBR-")  S A1=$E($P(A0,"-",2),1,8),A2=0 F  S A2=$O(^PRCF(423.6,"B",A0,A2)) Q:+A2=0  D
- .S X1=DT,X2=$$RCDT(A1) D ^%DTC I X>60 S DIK="^PRCF(423.6,",DA=A2 D ^DIK
+ S A0="OBR-" F  S A0=$O(^PRCF(423.6,"B",A0)) Q:A0=""!(A0'["OBR-")  S A1=2_$E($P(A0,"-",2),3,8),A2=0 F  S A2=$O(^PRCF(423.6,"B",A0,A2)) Q:+A2=0  D
+ .S X1=DT,X2=A1 D ^%DTC I X>60 S DIK="^PRCF(423.6,",DA=A2 D ^DIK
  Q
-RCDT(A1) ;Convert yyyymmdd to FM date
- N X,Y
- S X=A1,X=$E(X,5,6)_" "_$E(X,7,8)_", "_$E(X,1,4)
- D ^%DT
- Q Y
 PURGE ;purge unprocessed document file
  N DIR,Y,X,X1,X2,RCDT
  S DIR("A")="How many days worth of DATA do you want to retain"

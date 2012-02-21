@@ -1,5 +1,5 @@
 DGAPI1 ;ALB/DWS - DG API TO COMUNICATE WITH PCE ;6/16/05 1:44pm
- ;;5.3;Registration;**635,664**;Aug 13, 1993;Build 15
+ ;;5.3;Registration;**635**;Aug 13, 1993
 DATA2PCE(DFN,PTF,DGZP) ;SEND CPT PROCEDURE TRANSACTIONS TO PCE
  ;
  N DGVISIT,DR,DIE,DA,X,Y
@@ -8,9 +8,7 @@ DATA2PCE(DFN,PTF,DGZP) ;SEND CPT PROCEDURE TRANSACTIONS TO PCE
  ;
  I $P($G(DGZPRF(DGZP)),U,6) S DGVISIT=$P(DGZPRF(DGZP),U,6)
  ;
- I $D(DGREL) S DGRELSV=DGREL ;save DGREL, it gets killed off in SCDXMSG1
  S RES=$$DATA2PCE^PXAPI("^TMP(""DGPCE1"",$J,""PXAPI"")",107,"801 SCREEN",.DGVISIT)
- I $D(DGRELSV) S DGREL=DGRELSV K DGRELSV ;restore DGREL
  ;
  D:$D(^TMP("DGPCE1",$J,"PXAPI","DIERR")) ERR
  ;
@@ -103,7 +101,6 @@ BUILD ; now build array for passing data to PCE
  . . I $L($P(DGY,"^",6)) S @DGAPI@("DX/PL",DGDXC,"PL MST")=$P(DGY,"^",6)
  . . I $L($P(DGY,"^",7)) S @DGAPI@("DX/PL",DGDXC,"PL HNC")=$P(DGY,"^",7)
  . . I $L($P(DGY,"^",8)) S @DGAPI@("DX/PL",DGDXC,"PL CV")=$P(DGY,"^",8)
- . . I $L($P(DGY,"^",9)) S @DGAPI@("DX/PL",DGDXC,"PL SHAD")=$P(DGY,"^",9)
  ;
  Q
  ;

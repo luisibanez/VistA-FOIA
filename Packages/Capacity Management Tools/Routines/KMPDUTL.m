@@ -1,5 +1,5 @@
-KMPDUTL ;OAK/RAK - CM Tools Utility ;5/1/07  15:08
- ;;2.0;CAPACITY MANAGEMENT TOOLS;**1,2,3,4,5,6**;Mar 22, 2002;Build 3
+KMPDUTL ;OAK/RAK - CM Tools Utility ;4/6/06  08:40
+ ;;2.0;CAPACITY MANAGEMENT TOOLS;**1,2,3,4,5**;Mar 22, 2002
  ;
 QUEBKG(KMPDOPT,KMPDTIME,KMPDFREQ,KMPDDEL) ;-- queue background job
  ;-----------------------------------------------------------------------
@@ -90,9 +90,9 @@ PTCHINFO ; -- patch information: routine name ^ current version ^ current patch(
  ;;KMPDSS^2.0^**3**
  ;;KMPDSS1^2.0^**3**
  ;;KMPDSSD^2.0^**3**
- ;;KMPDSSD1^2.0^**3,6**
+ ;;KMPDSSD1^2.0^**3**
  ;;KMPDSSR^2.0^**3**
- ;;KMPDSSS^2.0^**3,6**
+ ;;KMPDSSS^2.0^**3**
  ;;KMPDTM^2.0^**1,4**
  ;;KMPDTP1^2.0^**4**
  ;;KMPDTP2^2.0^**4**
@@ -104,7 +104,7 @@ PTCHINFO ; -- patch information: routine name ^ current version ^ current patch(
  ;;KMPDTU01^2.0^**4,5**
  ;;KMPDTU02^2.0
  ;;KMPDTU10^2.0^**4**
- ;;KMPDTU11^2.0^**6**
+ ;;KMPDTU11^2.0
  ;;KMPDU^2.0^**2**
  ;;KMPDU1^2.0
  ;;KMPDU2^2.0^**2**
@@ -124,7 +124,7 @@ PTCHINFO ; -- patch information: routine name ^ current version ^ current patch(
  ;;KMPDUT4B^2.0
  ;;KMPDUT4C^2.0
  ;;KMPDUT5^2.0
- ;;KMPDUTL^2.0^**1,2,3,4,5,6**
+ ;;KMPDUTL^2.0^**1,2,3,4,5**
  ;;KMPDUTL1^2.0^**3**
  ;;KMPDUTL2^2.0^**4**
  ;;KMPDUTL3^2.0

@@ -1,5 +1,5 @@
 RMPR5HQ4 ;HCIOFO/ODJ - INVENTORY REPORT - PARAMETER DATA ENTRY ; 20 SEP 00
- ;;3.0;PROSTHETICS;**51,84,103,152**;Feb 09, 1996;Build 3
+ ;;3.0;PROSTHETICS;**51,84,103**;Feb 09, 1996
  ;
  ; AAC Patch 84, 02-25-04, additions, deletions and change descriptions for Groups and lines.
  ;
@@ -284,8 +284,7 @@ GRPLST(LIST) ;
  S $P(LIST,";",12)="930:ADAPTIVE EQUIPMENT"
  S $P(LIST,";",13)="940:HISA"
  S $P(LIST,";",14)="960:SURGICAL IMPLANTS"
- S $P(LIST,";",15)="970:BIOLOGICAL IMPLANTS"
- S $P(LIST,";",16)="999:MISC"
+ S $P(LIST,";",15)="999:MISC"
  Q
  ;
  ; Same as above but set into array

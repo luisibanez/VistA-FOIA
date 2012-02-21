@@ -1,5 +1,5 @@
-PSGCAPP0 ;BIR/CML3-PRINT DATA FOR ACTION PROFILE CONT. ; 4/1/08 3:05pm
- ;;5.0; INPATIENT MEDICATIONS ;**8,20,85,169,203**;16 DEC 97;Build 13
+PSGCAPP0 ;BIR/CML3-PRINT DATA FOR ACTION PROFILE CONT. ;01 Feb 99 / 8:48 AM
+ ;;5.0; INPATIENT MEDICATIONS ;**8,20,85**;16 DEC 97
  ;
 H1 ; first header for patient
  I $E(IOST,1)="C" K DIR S DIR(0)="E" D ^DIR K DIR S:$D(DTOUT)!$D(DUOUT) PSJDLW=1 I $D(DTOUT)!$D(DUOUT) Q
@@ -15,8 +15,7 @@ H1 ; first header for patient
  ;
  S PSGP=$P(PN,U,2) S:PSGP=$G(PSGPTMP) PPAGE=PPAGE+1 I PSGP'=$G(PSGPTMP) S PSGPTMP=PSGP,PPAGE=1
  S ALFLG=0 D ATS^PSJMUTL(68,68,2)
- ; PSJ*5*169 Make the allergy/ADR algorithm consistent with one used in PSJHEAD for AP-1 report.
- W !?1,"Allergies: " D:PSGALG+PSGVALG+PSGADR+PSGVADR=0 NONE I PSGALG+PSGVALG+PSGADR+PSGVADR>0 D ALG^PSJHEAD,ADR^PSJHEAD I ALFLG D
+ W !?1,"Allergies: " D:PSGALG=0&(PSGADR=0) NONE I PSGALG>0!(PSGADR>0) D ALG^PSJHEAD,ADR^PSJHEAD I ALFLG D
  .W "See patient's first ",$S($E(IOST)="C":"screen",1:"page")," for Allergies/Adverse Reactions"
  W !,LINE,!,"No. Action",?16,"Drug",?46,"ST Start Stop  Status/Info",!,ALN
  Q
@@ -38,6 +37,6 @@ ENRCT ;
  N DFN,GMRA,GMRAL,RCT,X S DFN=PSGP,GMRA="0^0^111" D ^GMRADPT
  S X=0 F  S X=$O(GMRAL(X)) Q:'X  I $P(GMRAL(X),U,2)]"" S RCT($P(GMRAL(X),U,2))=""
  ;W:'$D(RCT) "____________________" S RCT="" F X=1:1 S RCT=$O(RCT(RCT)) Q:RCT=""  W:X>1 "," W:$X+$L(RCT)>77 ! W " ",RCT
- W:'$D(RCT) "No Allergy Assessment" S RCT="" F X=1:1 S RCT=$O(RCT(RCT)) Q:RCT=""  W:X>1 "," W:$X+$L(RCT)>77 ! W " ",RCT
+ W:'$D(RCT) "No Allergy Assessmen" S RCT="" F X=1:1 S RCT=$O(RCT(RCT)) Q:RCT=""  W:X>1 "," W:$X+$L(RCT)>77 ! W " ",RCT
  W !,LINE,!," No.",?11,"Drug",?46,"ST Start Stop  Status/Info",!,ALN
  Q

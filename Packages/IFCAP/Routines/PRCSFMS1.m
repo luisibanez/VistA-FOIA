@@ -1,5 +1,5 @@
 PRCSFMS1 ;WISC/KMB-FMS TRANSACTIONS FOR CP QUARTERLY REPORT ;10-17-94 11:05
-V ;;5.1;IFCAP;**90**;Oct 20, 2000
+V ;;5.1;IFCAP;;Oct 20, 2000
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 BEGIN ;   this routine is called from PRCSQR
  ;   find FMS transactions, for selected quarter, for CP
@@ -26,7 +26,7 @@ HOLD1 ;
  G HDR1:$D(ZTQUEUED),HDR1:IO'=IO(0) W !,"Press return to continue, uparrow (^) to exit: " R Z1:DTIME S:'$T Z1=U D:Z1'=U HDR1 Q
 HDR1 ;
  S P1=1
- S P=P+1 W @IOF W "QUARTERLY REPORT "_"- "_Z(0)_" "_$E($P(PRC("CP")," ",2),1,10),?50,RDATE1,?73,"PAGE ",P
+ S P=P+1 W @IOF W "QUARTERLY REPORT "_"- "_Z(0)_" "_$E($P(PRC("CP")," ",2),1,10),?53,RDATE1,?76,"PAGE ",P
  W !,?40,"FMS Transactions",!
  W !,"TRANS",?32,"TRANS",?42,"CONTROL PT.",?54,"UNCOMMITTED",?68,"UNOBLIGATED",!,"DATE",?13,"REF #",?24,"TYPE",?32,"AMOUNT",?42,"REQ TOT",?54,"BALANCE",?68,"BALANCE"
  S L="",$P(L,"=",IOM)="=" W !,L S L="" Q
@@ -66,7 +66,7 @@ HOLD2 ;
  G HDR2:$D(ZTQUEUED),HDR2:IO'=IO(0) W !,"Press return to continue, uparrow (^) to exit: " R Z1:DTIME S:'$T Z1=U D:Z1'=U HDR2 Q
 HDR2 ;
  S P1=1
- S P=P+1 W @IOF W "QUARTERLY REPORT "_Z(0)_" "_$E($P(PRC("CP")," ",2),1,10),?50,RDATE1,?73,"PAGE ",P
+ S P=P+1 W @IOF W "QUARTERLY REPORT "_Z(0)_" "_$E($P(PRC("CP")," ",2),1,10),?54,RDATE1,?76,"PAGE ",P
  W !,?5,"__________PO TRANSACTIONS WITHOUT 2237______________",!
  W !,"PO/",?15,"PO ",?30,"OBLIGATED",?41,"CONTROL PT.",?55,"UNCOMMITTED",?69,"UNOBLIGATED",!,"OBL#",?15,"DATE",?30,"AMOUNT",?42,"REQ TOT",?55,"BALANCE",?69,"BALANCE"
  S L="",$P(L,"=",IOM)="=" W !,L S L="" Q

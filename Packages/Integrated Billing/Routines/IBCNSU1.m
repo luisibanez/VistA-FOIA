@@ -1,6 +1,6 @@
-IBCNSU1 ;ALB/AAS - INSURANCE UTILITY ROUTINE ;19-MAY-93
- ;;2.0;INTEGRATED BILLING;**103,133,244,371,416**;21-MAR-94;Build 58
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCNSU1 ;ALB/AAS - INSURANCE UTILITY ROUTINE ; 19-MAY-93
+ ;;2.0;INTEGRATED BILLING;**103,133,244**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 RCHK(X) ; -- Input transform for different revenue codes in file 36
  ;    Returns 1 if passes, 0 if not pass input transform
@@ -69,7 +69,6 @@ VET() ; -- Input Transform for sub-file 2.312, Name of Insured (#17)
  ;    Quit 0 to not stuff and allow editing
  ;
  N IBY,IB0 S IBY=0
- G VETQ    ; IB*2*371 - Allow edits to the patient name in all cases
  S IB0=$G(^DPT(+$G(DA(1)),.312,+$G(DA),0))
  I $P(IB0,"^",6)'="v" G VETQ
  I +IB0'=+$$GETWNR^IBCNSMM1 S IBY=1 G VETQ
@@ -78,19 +77,27 @@ VETQ Q IBY
  ;
  ;
 SUBID ; -- Input Transform for sub-file #2.312, Subscriber ID (#1)
- N NODE,L,X1
- S NODE=$G(^DPT(DA(1),.312,DA,0))
+ N NODE,L,R,CHAR,X1
+ S CHAR="~`!@#$%^&*()_-+={}[]|\/?.,<>;:' """
+ S NODE=^DPT(DA(1),.312,DA,0)
  ;
  ; - if the policy is a Medicare policy, make sure the subscriber ID
  ;   is a valid HICN number
- I $P(NODE,U,1)=+$$GETWNR^IBCNSMM1 S X=$TR(X,"-","") I '$$VALHIC^IBCNSMM(X) D HLP^IBCNSM32 K X Q
+ I $P(NODE,U)=+$$GETWNR^IBCNSMM1 S X=$TR(X,"-","") I '$$VALHIC^IBCNSMM(X) D HLP^IBCNSM32 K X Q
  ;
- ; If subscriber ID is the SSN of patient, remove all extraneous characters
- S L=$$NOPUNCT^IBCEF($P($G(^DPT(DA(1),0)),U,9),1)    ; patient SSN
- S X1=$$NOPUNCT^IBCEF(X,1)  ; X1 is user's response w/o punctuation
- I X1?9N,X1=L S X=X1
+ S R=$P(NODE,U,16)
+ S L=$TR($P(^DPT(DA(1),0),U,9),CHAR,"")
+ S R=$S(R="01":1,R="":1,1:0)
  ;
- K:$L(X)>20!($L(X)<3) X     ; Answer must be 3-20 characters in length
+ ; - if subscriber ID is the SSN of patient, remove all extraneous
+ ;   characters
+ S X1=$TR(X,CHAR,"") I X1?9N,X1=L S X=X1
+ ;
+ ; - if "SS" is entered, and the policy belongs to the patient,
+ ;   convert that string to the patient's SSN
+ I R=1,X="SS" W "  ",L S X=L
+ ;
+ K:$L(X)>20!($L(X)<3) X
  Q
  ;
  ;
@@ -108,44 +115,3 @@ HICN(DFN) ; -- return Patient's Medicare HIC number
  .I $P(IB0,U,2)]"" S IBY=$TR($P(IB0,U,2),"- ","")
  S:IBY="" IBY=-1
 HICNQ Q IBY
- ;
-CHKQUAL(DFN,IEN,QUAL,PC1,PC2) ; check for duplicate qualifiers for patient
- ; and subscriber secondary ID's.  All parameters required.
- ;
- ;   DFN - internal patient#
- ;   IEN - ien of 2.312 subfile
- ;  QUAL - passed in response of the user (this is what is being 
- ;         checked to see if it is valid)
- ;   PC1 - this is the piece# for one of the other qualifiers
- ;   PC2 - this is the piece# for one of the other qualifiers
- ;
- ; Function returns 1 if the entered qualifier is OK.
- ; Function returns 0 if the entered qualifier is not OK.  It is either
- ;                    a duplicate or is otherwise invalid.
- ;
- NEW OK,DATA,INS
- S OK=1
- I $G(QUAL)="" G CHKQUALX
- S DATA=$G(^DPT(+$G(DFN),.312,+$G(IEN),5))
- I $G(QUAL)=$P(DATA,U,+$G(PC1)) D CQ1 G CHKQUALX   ; duplicate
- I $G(QUAL)=$P(DATA,U,+$G(PC2)) D CQ1 G CHKQUALX   ; duplicate
- ;
- ; prevent the SSN qualifier when Medicare is the payer
- S INS=+$G(^DPT(+$G(DFN),.312,+$G(IEN),0))
- I $G(QUAL)="SY",$$MCRWNR^IBEFUNC(INS) D CQ2 G CHKQUALX
- ;
-CHKQUALX ;
- Q OK
- ;
-CQ1 ; specific error message#1
- S OK=0
- D EN^DDIOL("You cannot use the same qualifier more than once.",,"!!")
- D EN^DDIOL("",,"!!?5")
- Q
- ;
-CQ2 ; specific error message#2
- S OK=0
- D EN^DDIOL("You cannot use qualifier 'SY' for Medicare.",,"!!")
- D EN^DDIOL("",,"!!?5")
- Q
- ;

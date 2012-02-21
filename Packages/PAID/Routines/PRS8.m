@@ -1,6 +1,5 @@
-PRS8 ;HISC/MRL,WIRMFO/JAH-DECOMPOSITION, PROCESSOR ;01/30/2007
- ;;4.0;PAID;**22,111**;Sep 21, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRS8 ;HISC/MRL,WIRMFO/JAH-DECOMPOSITION, PROCESSOR ;AUG 07, 1997
+ ;;4.0;PAID;**22**;Sep 21, 1995
  ;
  ;This is the routine which is used to start the decomposition
  ;process.  There are several entry points which allow one to
@@ -105,52 +104,19 @@ NOPE ; --- can't process
  ;
 END ; --- all done here/kill variables
  Q
+AUTOPINI(PPIEN,EMPIEN) ;
+ ; loop through days looking for Physicians Leave that
+ ; has been auto posted.  Clean out auto posted nodes since the time
+ ; card may have been changed and the old auto posting is obsolete.
  ;
-AUTOPINI(PPIEN,EMPIEN,PRIOR,PRVAL) ; initialize auto-posted data
- ; This call backs out auto-posted data from the time card (if any)
- ; inputs
- ;   PPIEN  = pay period IEN (file 458)
- ;   EMPIEN = employee IEN (file 450, sub-file 458.01)
- ;   PRIOR  = optional flag, true (=1) to return original data
- ;   PRVAL  = optional array, required if PRIOR true
- ;            passed by reference
- ;            contains the original data (before removal) in the format
- ;              PRVAL(day number,node number)=value of node
- ;            if no auto-posted data then array would be undefined
+ N DAY
  ;
- N DAY,NODE,TOUR
- I $G(PRIOR) K PRVAL
- ;
- ; loop thru days of employee time card
- S DAY=0 F  S DAY=$O(^PRST(458,PPIEN,"E",EMPIEN,"D",DAY))  Q:DAY=""  D
- . ; quit if day not auto-posted (DUZ not = .5 POSTMASTER)
- . Q:$P($G(^PRST(458,PPIEN,"E",EMPIEN,"D",DAY,10)),"^",2)'=.5
- . ;
- . ; if PRIOR true then save the current data
- . I $G(PRIOR) F NODE=2,3,10 D
- . . S PRVAL(DAY,NODE)=$G(^PRST(458,PPIEN,"E",EMPIEN,"D",DAY,NODE))
- . ;
- . ; determine tour of duty
- . S TOUR=$P($G(^PRST(458,PPIEN,"E",EMPIEN,"D",DAY,0)),"^",2)
- . ;
- . ; if day off then delete auto-posted data else restore day to HX
- . I TOUR=1 K ^PRST(458,PPIEN,"E",EMPIEN,"D",DAY,2),^(3),^(10)
- . E  D
- . . S $P(^PRST(458,PPIEN,"E",EMPIEN,"D",DAY,2),"^",3)="HX"
- . . K ^PRST(458,PPIEN,"E",EMPIEN,"D",DAY,3)
- Q
- ;
-AUTOPRES(PPIEN,EMPIEN,PRVAL) ; restore auto-posted data
- ; This call restores original auto-posted data that was initialized
- ; by AUTOPINI. See AUTOPINI for description of inputs.
- ;
- N DAY,NODE
- ;
- ; loop thru days with auto-posted data
- S DAY=0 F  S DAY=$O(PRVAL(DAY)) Q:'DAY  D
- . ; loop thru nodes and restore original data
- . F NODE=2,3,10 I $D(PRVAL(DAY,NODE)) D
- . . S ^PRST(458,PPIEN,"E",EMPIEN,"D",DAY,NODE)=PRVAL(DAY,NODE)
+ S DAY=0
+ F  S DAY=$O(^PRST(458,PPIEN,"E",EMPIEN,"D",DAY))  Q:DAY=""  D
+ .;
+ .;If time was posted by post master (ien .5) then it was auto posted.
+ .I $P($G(^PRST(458,PPIEN,"E",EMPIEN,"D",DAY,10)),"^",2)=.5 D
+ ..K ^PRST(458,PPIEN,"E",EMPIEN,"D",DAY,2),^(3),^(10)
  Q
  ;
 ER ; error messages

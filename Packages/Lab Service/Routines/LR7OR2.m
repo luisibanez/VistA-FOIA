@@ -1,5 +1,5 @@
 LR7OR2 ;DALOI/dcm - Get Lab results (cont.) ;8/11/97
- ;;5.2;LAB SERVICE;**121,187,219,285,286,372**;Sep 27, 1994;Build 11
+ ;;5.2;LAB SERVICE;**121,187,219,285,286**;Sep 27, 1994
  ;
  ;
 CH(SDATE,EDATE,TEST,COUNT,SPEC,UNVER) ;Get CH subscript data
@@ -31,7 +31,7 @@ SETTST(ISUB,ZERO) ;Set test data in ^TMP
  I $P($G(^LAB(60,Y1,64)),"^") S Y9=$P(^(64),"^"),Y9=$P(^LAM(Y9,0),"^",2),Y10=$P(^(0),"^"),Y11="99NLT"
  ;D UNIT^LR7OB63(Y1,$P(X0,"^",5),SEX,DOB,AGE)
  S LRX=$$TSTRES^LRRPU(LRDFN,"CH",IVDT,ISUB,Y1)
- S Y2=$P(LRX,"^"),Y3=$P(LRX,"^",2),Y4=$P(LRX,"^",5),Y5=$$EN^LRLRRVF($P(LRX,"^",3),$P(LRX,"^",4))
+ S Y2=$P(LRX,"^"),Y3=$P(LRX,"^",2),Y4=$P(LRX,"^",5),Y5=$P(LRX,"^",3)_$S($P(LRX,"^",4)'="":"-"_$P(LRX,"^",4),1:"")
  I $P(LRX,"^",7) S Y14="T"
  S Y2=$$TRIM^XLFSTR($$RESULT^LR7OB63(Y1,Y2),"RL"," ")
  S ^TMP("LRRR",$J,DFN,"CH",IVDT,ISUB)=Y1_"^"_Y2_"^"_Y3_"^"_Y4_"^"_Y5_"^"_Y6_"^^^"_Y9_"^"_Y10_"^"_Y11_"^"_Y12_"^^"_Y14_"^"_Y15_"^"_Y16_"^"_$G(ORD)_"^^"_Y19

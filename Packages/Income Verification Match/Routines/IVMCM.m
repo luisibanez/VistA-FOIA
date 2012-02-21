@@ -1,5 +1,5 @@
-IVMCM ;ALB/SEK,KCL,RTK,AEG,BRM,AEG - PROCESS INCOME TEST (Z10) TRANSMISSIONS ; 8/15/08 10:18am
- ;;2.0;INCOME VERIFICATION MATCH;**12,17,28,41,44,53,34,49,59,55,63,77,74,123,115**;21-OCT-94;Build 28
+IVMCM ;ALB/SEK,KCL,RTK,AEG,BRM,AEG - PROCESS INCOME TEST (Z10) TRANSMISSIONS ; 04/23/03 1:43pm
+ ;;2.0;INCOME VERIFICATION MATCH;**12,17,28,41,44,53,34,49,59,55,63,77,74**;21-OCT-94
  ;
  ;
 ORF ; Handler for ORF type HL7 messages received from HEC
@@ -74,12 +74,15 @@ ORU ; Entry point for receipt of ORU~Z10 trans (called by IVMPREC2)
  ; - loop through the msg in (#772 file), and process (PROC) msgs
  S IVMDA=0 F  S IVMDA=$O(^TMP($J,IVMRTN,IVMDA)) Q:'IVMDA  S IVMSEG=$G(^(IVMDA,0)) I $E(IVMSEG,1,3)="MSH" D PROC Q:'IVMDA
  ;
- ; - if ORF msg flag, update the Query Tran Log
+ ; - if ORF msg flag, update the Query Tran Log and send ACK
  I $G(IVMORF) D
  .I $G(DFN),$D(IVMMCI) D
  ..N IVMCR
  ..S IVMCR=$P("1^2^3^7^5^6^4","^",IVMTYPE)  ;map reason to test type
  ..D FIND^IVMCQ2(DFN,IVMMCI,HLDT,$S($D(HLERR):5,1:IVMCR),1)
+ .;D ACK^IVMPREC:'$D(HLERR)
+ .;N HLRESLTA,HLP
+ .;D GENACK^HLMA1(HLEID,HLMTIEN,HLEIDS,"LM",1,.HLRESLTA,"",.HLP)
  ;
  ; - if tests are uploaded, generate notification msg
  I $D(^TMP($J,"IVMBULL")) D ^IVMCMB
@@ -129,7 +132,7 @@ PROC ; Process each HL7 message from (#772) file
  ;
  ;
 MT ; If transmission is a Means Test
- N NODE0,RET,CODE,DATA,MTSIG,MTSIGDT
+ N NODE0,RET,CODE,DATA
  S HLQ=$G(HL("Q"))
  S:HLQ="" HLQ=""""""
  I IVMTYPE=1 D  I $D(HLERR) G PROCQ
@@ -137,13 +140,8 @@ MT ; If transmission is a Means Test
  .S TMSTAMP=$$FMDATE^HLFNC($P($G(^TMP($J,"IVMCM","ZMT1")),HLFS,25))
  .S HSDATE=$$FMDATE^HLFNC($P($G(^TMP($J,"IVMCM","ZMT1")),HLFS,24))
  .S SOURCE=$P($G(^TMP($J,"IVMCM","ZMT1")),HLFS,22)
- .S MTSIG=$P($G(^TMP($J,"IVMCM","ZMT1")),HLFS,27)
- .S MTSIGDT=$$FMDATE^HLFNC($P($G(^TMP($J,"IVMCM","ZMT1")),HLFS,15))
  .S IVMLAST=$$LST^DGMTU(DFN,$E(IVMMTDT,1,3)_1231,1)
- .; Check that test is for same year
- .I $P(IVMLAST,U,2),$E($P(IVMLAST,U,2),1,3)'=$E(IVMMTDT,1,3) S IVMLAST=""
- .Q:$$UPDMTSIG^IVMCMF(+IVMLAST,TMSTAMP,MTSIG,MTSIGDT)
- .I $$Z06MT^EASPTRN1(+IVMLAST) D PROB^IVMCMC("IVM Means Test already on file for this year") Q
+ .I $$Z06MT^EASPTRN1(+IVMLAST) Q
  .I '$$ELIG^IVMUFNC5(DFN) S ERRMSG="Means Test upload not appropriate for current patient"
  .I $$AGE^IVMUFNC5(DT)>$$INCY^IVMUFNC5(IVMMTDT) D
  ..N CATCZMT S CATCZMT=$G(^TMP($J,"IVMCM","ZMT1"))

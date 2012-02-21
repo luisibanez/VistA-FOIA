@@ -1,41 +1,41 @@
-LRAPRES1 ;DALOI/WTY/KLL/CKA - AP ESIG RELEASE REPORT/ALERT;11/13/01
- ;;5.2;LAB SERVICE;**259,336,369,365,397**;Sep 27, 1994;Build 1
+LRAPRES1 ;DALOI/WTY/KLL - AP ESIG RELEASE REPORT/ALERT;11/13/01
+ ;;5.2;LAB SERVICE;**259,336**;Sep 27, 1994
  ;
- ;Reference to FILE^TIUSRVP supported by IA #3540
- ;Reference to ^TIULQ supported by IA #2693 
- ;Reference to ^ORB3LAB supported by IA #4287
- ;Reference to DIC lookup on MAIL GROUP file (#3.8) supported by IA #10111
+ ;Reference  to FILE^TIUSRVP supported by IA #3540
+ ;Reference  to ^TIULQ supported by IA #2693 
  ;
 MAIN(LRDFN,LRSS,LRI,LRSF,LRP,LRAC) ;Main subroutine
  Q:'$D(LRDFN)!('$D(LRSS))!('$D(LRP))!('$D(LRAC))
- N LRDOCS,LRMSG,LRC,LRDOCSN,LRNUM,LRADL,LRMORE,LRQUIT,LRXQA
+ N LRDOCS,LRMSG,XQA,LRC,LRDOCSN,LRNUM,LRADL,LRMORE,LRQUIT
  N DIR,DIRUT,DTOUT,DUOUT,X,Y,DIC,XQA,XQAMSG
  S LRQUIT=0
- ;
- ; CPRS alerts only sent for "patients" related to Patient file (#2)
- I $P($G(^LR(LRDFN,0)),"^",2)'=2 Q
- ;
- I $G(LRAU) D
- .S LRA=^LR(LRDFN,"AU")
- .S LRI=$P(LRA,U)
- D DOCS
+ D ASK
  Q:LRQUIT
  D MORE
- I LRMORE D LOOKUP
- D SEND
+ Q:LRQUIT
+ D:LRMORE LOOKUP
+ D ALERT
  Q
-DOCS ;GET ORDERING PROVIDER AND PCP TO SEND ALERT
+ASK ;Ask if alert is to be sent
  W !
+ S DIR(0)="Y",DIR("B")="NO"
+ S DIR("A")="Do you wish to send an alert"
+ S DIR("??")="^D AHELP^LRAPRES1"
+ D ^DIR
+ I 'Y S LRQUIT=1 Q
  S:$G(LRSF)="" LRSF=63
  D GETDOCS^LRAPUTL(.LRDOCS,LRDFN,LRSS,$G(LRI),LRSF)
  S:LRDOCS(1)=LRDOCS(2) LRDOCS(2)=0
+ S LRQUIT=1
  F LRC=1:1:2 D
  .I LRDOCS(LRC) D
- ..S LRDOCSN(LRC)=$$NAME^XUSER(LRDOCS(LRC),"F")
- ..I LRDOCSN(LRC)'="" S LRXQA(LRDOCS(LRC))=""
+ ..S LRQUIT=0
+ ..S X=LRDOCS(LRC) D D^LRUA S LRDOCSN(LRC)=X
+ ..I LRDOCSN(LRC)'="" S XQA(LRDOCS(LRC))=""
+ ;Q:LRQUIT
  S LRNUM=1
  K LRMSG
- D
+ I 'LRQUIT D
  .S LRMSG(LRNUM)="Alert will be sent to:",LRMSG(LRNUM,"F")="!!"
  .I LRDOCS(1) D
  ..S LRNUM=LRNUM+1,LRMSG(LRNUM)=LRDOCSN(1),LRMSG(LRNUM,"F")="?24"
@@ -43,37 +43,32 @@ DOCS ;GET ORDERING PROVIDER AND PCP TO SEND ALERT
  ..S LRNUM=LRNUM+1,LRMSG(LRNUM)=LRDOCSN(2)
  ..S LRMSG(LRNUM,"F")=$S(LRDOCS(1):"!",1:"")_"?24"
  I LRQUIT D
- .S LRMSG(LRNUM)="No Ordering Provider or PCP for alert"
+ .S LRMSG(LRNUM)="No Physician or PCP selected for alert"
  .S LRMSG(LRNUM,"F")="!!"
+ .S LRQUIT=0
  D EN^DDIOL(.LRMSG)
  Q
 MORE ;Add names or mail groups to the lookup list?
- N DIR,DIRUT,DTOUT,DUOUT,X,Y
  W !
  S LRMORE=1
- S DIR(0)="Y"
+ S DIR(0)="Y",DIR("B")="NO"
  S DIR("A")="Send the alert to additional names or mail groups"
- S X=$$GET^XPAR("USR^DIV^PKG","LRAPRES1 AP ALERT",1,"Q")
- S X=$S(X=1:"YES",X=0:"NO",1:"NO")
- S DIR("B")=X
  D ^DIR
  I Y=0 S LRMORE=0 Q
- I $D(DUOUT)!($D(DTOUT)) S LRQUIT=1,LRMORE=0
+ I $D(DUOUT)!($D(DTOUT)) S LRQUIT=1
  Q
 LOOKUP ;Add additional names or mail groups to alert list.
  F  D  Q:LRQUIT
  .W !
  .K DIR
  .;S DIR(0)="F^3:30^I X'?1""U."".E&(X'?1""G."".E) K X"
- .S DIR(0)="FO^3:30^I X["".""&((X'?1""G."".E)&(X'?1""g."".E)) K X"
+ .S DIR(0)="F^3:30^I X["".""&(X'?1""G."".E) K X"
  .S DIR("A")="Enter name or mail group"
  .S DIR("?")="Enter lastname,firstname OR G.mailgroup OR ^ to exit"
  .D ^DIR
- .I $D(DIRUT) S LRQUIT=1 Q
+ .I $D(DUOUT)!($D(DTOUT)) S LRQUIT=1 Q
  .S X=Y,LRADL=""
  .I Y["." S LRADL=$P(Y,"."),X=$P(Y,".",2)
- .S Y=$$UP^XLFSTR(Y)
- .I LRADL="g" S LRADL="G"
  .K DIC
  .S DIC(0)="QEZ"
  .S DIC=$S(LRADL="G":3.8,1:200)
@@ -81,24 +76,25 @@ LOOKUP ;Add additional names or mail groups to alert list.
  .Q:Y=-1
  .S:LRADL="" XQA($P(Y,"^"))=""
  .S:LRADL="G" XQA("G."_$P(Y,"^",2))=""
- Q
-SEND ;Send the alert
- ;S XQAMSG=$E(LRP,1,9)_" ("_$E(LRP,1)_VA("BID")_"): Pathology report signed for "_LRAC_"."
- ;D SETUP^XQALERT
- M XQA=LRXQA
- D LAB^ORB3LAB(DFN,LRDFN,LRI,$G(LRA),LRSS,.XQA)
- I $D(LRADL) D
- .S LRMSG="Alerts have been sent to the specified additional users."
- .D EN^DDIOL(LRMSG,"","!!")
  .K LRMSG
+ .S LRMSG=$S(LRADL="G":"Mail group ",1:"User ")_$P(Y,"^",2)
+ .S LRMSG=LRMSG_" added to alert list."
+ .D EN^DDIOL(LRMSG,"","!!")
+ Q
+ALERT ;Send the alert
+ S XQAMSG="Pathology report signed for "_LRAC_" - "_$E(LRP,1,30)
+ D SETUP^XQALERT
+ S LRMSG="Alerts have been sent."
+ D EN^DDIOL(LRMSG,"","!!")
+ K LRMSG
  Q
 AHELP ;Help Frame
  K LRMSG
  S LRMSG(1)="If answered 'Yes', the alert will notify the primary care"
  S LRMSG(1,"F")="!"
- S LRMSG(2)="provider and the surgeon/physician that this report has"
- S LRMSG(3)="been electronically signed and is now available for"
- S LRMSG(4)="viewing. You will also have the opportunity to send the"
+ S LRMSG(2)="provider  and  the surgeon/physician that this report has"
+ S LRMSG(3)="been  electronically  signed  and  is  now  available for"
+ S LRMSG(4)="viewing.   You will also have the opportunity to send the"
  S LRMSG(5)="alert to additional names or mail groups."
  D EN^DDIOL(.LRMSG)
  Q
@@ -139,9 +135,8 @@ CLSSCHK(DUZ,LREND) ;Determine if user has the proper class settings and
  ;Next, check the provider class
  S LRPRCLSS=$$GET1^DIQ(200,DUZ_",",53.5)
  ;PROVIDER CL MUST CONTAIN PHYSICIAN, OR CYTOTECH ONLY FOR CY SECTION
- ;OR DENTIST FOR ORAL AND MAXILLOFACIAL PATHOLOGY
  S LRMTCH=0
- I LRPRCLSS'["PHYSICIAN",LRPRCLSS'["DENTIST" D
+ I LRPRCLSS'["PHYSICIAN" D
  .I LRPRCLSS'["CYTOTECH" S LRMTCH=1
  .I LRSS'="CY" S LRMTCH=1
  I LRMTCH=1 D  Q
@@ -151,10 +146,8 @@ CLSSCHK(DUZ,LREND) ;Determine if user has the proper class settings and
  .S LRMSG(1,"F")="!!"
  .S LRMSG(2)="PROVIDER CLASS must include PHYSICIAN,"
  .S LRMSG(2,"F")="!"
- .S LRMSG(3)="  OR CYTOTECHNOLOGIST FOR CY SECTIONS ONLY,"
+ .S LRMSG(3)="  OR CYTOTECHNOLOGIST FOR CY SECTIONS ONLY."
  .S LRMSG(3,"F")="!"
- .S LRMSG(4)=" OR DENTIST FOR ORAL AND MAXILLOFACIAL PATHOLOGY."
- .S LRMSG(4,"F")="!"
  .D EN^DDIOL(.LRMSG) K LRMSG
  .S LREND=1
  ;Finally, check the person class
@@ -182,8 +175,6 @@ CLSSCHK(DUZ,LREND) ;Determine if user has the proper class settings and
  .I LRVCDE="V182413" S LRMTCH=1
  I LRPRCLSS["CYTOTECH" D
  .I LRVCDE="V150113" S LRMTCH=1
- I LRPRCLSS["DENTIST" D
- .I LRVCDE="V030503" S LRMTCH=1
  I 'LRMTCH D
  .K LRMSG
  .S LRMSG="Invalid PERSON CLASS.  Electronic Signature is not "

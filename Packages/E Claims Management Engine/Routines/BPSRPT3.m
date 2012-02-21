@@ -1,6 +1,6 @@
 BPSRPT3 ;BHAM ISC/BEE - ECME REPORTS ;14-FEB-05
- ;;1.0;E CLAIMS MGMT ENGINE;**1,3,5,7**;JUN 2004;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  Q
  ;
@@ -91,25 +91,61 @@ SELSMDET(DFLT) N DIR,DIRUT,DTOUT,DUOUT,X,Y
  S Y=$S(Y="S":1,Y="D":0,1:Y)
  Q Y
  ;
+ ; Select to Display Single (I)nsurance Company or (A)ll
+ ;
+ ; Input Variable -> DFLT = 1 Single Insurance
+ ;                          0 All Insurance
+ ;                          
+ ; Return Value ->   ptr to #36^Insurance Company Name
+ ;                     0 = All Insurances
+ ;                     ^ = Exit
+ ;
+SELINSIN(DFLT) N DIC,DIR,DIRUT,DUOUT,INS,X,Y
+ ;
+ S DFLT=$S($G(DFLT)=1:"Single Insurance",1:"ALL")
+ S DIR(0)="S^I:Single Insurance;A:ALL"
+ S DIR("A")="Display Single (I)nsurance Company or (A)LL",DIR("B")=DFLT
+ D ^DIR
+ I ($G(DUOUT)=1)!($G(DTOUT)=1) S Y="^"
+ S INS=$S(Y="I":1,Y="A":0,1:Y)
+ ;
+ ;Check for "^" or timeout, otherwise define INS
+ I ($G(DUOUT)=1)!($G(DTOUT)=1) S (INS,Y)="^"
+ ;
+ ;If single insurance selected, ask prompt
+ I $G(INS)=1 D
+ .;
+ .;Prompt for entry
+ .W ! S Y=$$SELINS^BPSRPT6()
+ .;
+ .;Check for "^", timeout, or blank entry
+ .I ($G(DUOUT)=1)!($G(DTOUT)=1)!($G(X)="") S (INS,Y)="^" Q
+ .;
+ .;If valid entry, setup INS
+ .I Y'="^" S INS=Y
+ ;
+ Q INS
+ ;
  ; Display (C)MOP or (M)ail or (W)indow or (A)ll
  ; 
- ;    Input Variable -> DFLT = C CMOP
- ;                             W Window
- ;                             M Mail
- ;                             A All
+ ;    Input Variable -> DFLT = 4 CMOP
+ ;                             3 Window
+ ;                             2 Mail
+ ;                             1 All
  ;                          
- ;    Return Value ->   C = CMOP
- ;                      W = Window
- ;                      M = Mail
- ;                      A = All
+ ;    Return Value ->   4 = CMOP
+ ;                      3 = Window
+ ;                      2 = Mail
+ ;                      1 = All
  ;                      ^ = Exit
  ; 
 SELMWC(DFLT) N DIR,DIRUT,DTOUT,DUOUT,X,Y
- S DFLT=$S($G(DFLT)="C":"CMOP",$G(DFLT)="W":"Window",$G(DFLT)="M":"Mail",1:"ALL")
+ S DFLT=$S($G(DFLT)="4":"CMOP",$G(DFLT)="3":"Window",$G(DFLT)="2":"Mail",1:"ALL")
  S DIR(0)="S^C:CMOP;M:Mail;W:Window;A:ALL"
  S DIR("A")="Display (C)MOP or (M)ail or (W)indow or (A)LL",DIR("B")=DFLT
  D ^DIR
  I ($G(DUOUT)=1)!($G(DTOUT)=1) S Y="^"
+ S Y=$S(Y="A":1,Y="M":2,Y="W":3,Y="C":4,1:Y)
  Q Y
  ;
  ; Display (R)ealTime Fills or (B)ackbills or (A)LL
@@ -165,7 +201,7 @@ SELDRG() N DIC,DIRUT,DUOUT,X,Y
  W ! D SELDRG^BPSRPT6
  ;
  ;Check for "^", timeout, or blank entry
- I ($G(DUOUT)=1)!($G(DTOUT)=1) S Y="^"
+ I ($G(DUOUT)=1)!($G(DTOUT)=1)!($G(X)="") S Y="^"
  ;
  ;Check for Valid Entry
  I +Y>0 S Y=+Y
@@ -221,41 +257,3 @@ SELDATE1 S VAL="",DIR(0)="DA^:DT:EX",DIR("A")="START WITH "_TYPE_" DATE: ",DIR("
  .S $P(VAL,U,2)=Y
  ;
  Q VAL
- ;
- ; Select to Include Eligibility of (V)eteran, (T)ricare, or (A)ll
- ; 
- ; Input Variable -> DFLT = 0 = All
- ;                          1 = Veteran
- ;                          2 = Tricare
- ;                          3 = ChampVA (Reserved for future use)
- ; 
- ; Return Value ->  V, T, or 0 for All
-SELELIG(DFLT) N DIC,DIR,DIRUT,DUOUT,X,Y
- ;
- S DFLT=$S($G(DFLT)=1:"V",$G(DFLT)=2:"T",$G(DFLT)=3:"C",1:"A")
- S DIR(0)="S^V:VETERAN;T:TRICARE;A:ALL"
- S DIR("A")="Include Certain Eligibility Type or (A)ll",DIR("B")=DFLT
- D ^DIR
- I ($G(DUOUT)=1)!($G(DTOUT)=1) S Y="^"
- ;
- S Y=$S(Y="A":0,1:Y)
- Q Y
- ;
- ; Select to Include Open or Closed or All claims
- ; 
- ; Input Variable -> DFLT = 0 = All
- ;                          1 = Closed
- ;                          2 = Open
- ; 
- ; Return Value -> 0 = All, 1 = Closed, 2 = Open
-SELOPCL(DFLT) N DIC,DIR,DIRUT,DUOUT,X,Y
- ;
- S DFLT=$S($G(DFLT)=1:"C",$G(DFLT)=2:"O",1:"A")
- S DIR(0)="S^O:OPEN;C:CLOSED;A:ALL"
- S DIR("A")="Include (O)pen, (C)losed, or (A)ll Claims",DIR("B")=DFLT
- D ^DIR
- I ($G(DUOUT)=1)!($G(DTOUT)=1) S Y="^"
- ;
- S Y=$S(Y="C":1,Y="O":2,1:0)
- Q Y
- ;

@@ -1,5 +1,5 @@
 ORWU ; SLC/KCM - General Utilites for Windows Calls; 2/28/01 [1/15/04 11:43am]
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,148,149,187,195,215,243**;Dec 17, 1997;Build 242
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,148,149,187,195,215**;Dec 17, 1997
  ;
 DT(Y,X,%DT) ; Internal Fileman Date/Time
  ; change the '00:00' that could be passed so Fileman doesn't reject
@@ -88,10 +88,10 @@ HASOPTN(VAL,OPTION) ; returns TRUE if the user has access to a menu option
  I VAL'>0 S VAL=0
  E  S VAL=1
  Q
-NPHASKEY(VAL,NP,KEY) ; returns TRUE if the person has the security key
+NPHASKEY(VAL,NP,KEY)    ; returns TRUE if the person has the security key
  S VAL=''$D(^XUSEC(KEY,NP))
  Q
-ORDROLE() ; returns the role a person takes in ordering
+ORDROLE()    ; returns the role a person takes in ordering
  ; VAL: 0=nokey, 1=clerk, 2=nurse, 3=physician, 4=student, 5=bad keys
  ;I '$G(ORWCLVER) Q 0  ; version of client is to old for ordering
  I ($D(^XUSEC("OREMAS",DUZ))+$D(^XUSEC("ORELSE",DUZ))+$D(^XUSEC("ORES",DUZ)))>1 Q 5
@@ -165,13 +165,9 @@ EXTNAME(VAL,IEN,FN) ; return external form of pointer
  N REF S REF=$G(^DIC(FN,0,"GL")),VAL=""
  I $L(REF),+IEN S VAL=$P($G(@(REF_IEN_",0)")),U)
  Q
-PARAM(VAL,APARAM) ; return a parameter value for a user
+PARAM(VAL,APARAM)       ; return a parameter value for a user
  ; call assumes current user, default entities, single instance
  S VAL=$$GET^XPAR("ALL",APARAM,1,"I")
- Q
-PARAMS(ORLIST,APARAM) ; return a list of parameter values
- ; call assumes current user, default entities, multiple instances
- D GETLST^XPAR(.ORLIST,"ALL",APARAM,"Q")
  Q
 DEVICE(Y,FROM,DIR) ; Return a subset of entries from the Device file
  ; .LST(n)=IEN;Name^DisplayName^Location^RMar^PLen
@@ -204,7 +200,7 @@ PATCH(VAL,X) ; Return 1 if patch X is installed
 VERSION(VAL,X) ;Return version of package or namespace
  S VAL=$$VERSION^XPDUTL(X)
  Q
-VERSRV(VAL,X,CLVER) ; Return server version of option name
+VERSRV(VAL,X,CLVER)   ; Return server version of option name
  S ORWCLVER=$G(CLVER)  ; leave in partition for session
  N BADVAL,ORLST
  D FIND^DIC(19,"",1,"X",X,1,,,,"ORLST")

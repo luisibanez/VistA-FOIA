@@ -1,6 +1,6 @@
 PRCPUSEL ;WISC/RFJ/DAP-utilities: setup inventory variables ;14 Feb 91
-V ;;5.1;IFCAP;**1,83,110,118**;Oct 20, 2000;Build 7
- ;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;5.1;IFCAP;**1,83**;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;  enter distribution point--input variables:
  ;  prcp("dptype")=distribution point type code [W,P,S]
  ;  returns the following variables:
@@ -19,7 +19,7 @@ V ;;5.1;IFCAP;**1,83,110,118**;Oct 20, 2000;Build 7
  S %=0 F I="FY","PARAM","PER","QTR","SITE" I '+$G(PRC(I)) S %=1 Q
  I % S PRCF("X")="S" D ^PRCFSITE I '+$G(PRC("SITE")) K PRC,PRCP Q
  ;
- S %=0 F I="DPTYPE","HIS","I","IN","INV" I $G(PRCP(I))="" S %=1 Q
+ S %=0 F I="DPTYPE","HIS","I","IN","INV" I '$D(PRCP(I)) S %=1 Q
  I '% D DISPLAY Q
  ;
  ;  allow adding new whse if not one for station
@@ -100,7 +100,7 @@ NOMENU ;  user did not select a valid inventory point, do not allow access
  Q
  ;
  ;
-PARAM(INVPT) ;  set up parameters for inventory point
+PARAM(INVPT)       ;  set up parameters for inventory point
  K PRCP
  N DATA
  S DATA=$G(^PRCP(445,INVPT,0)) I DATA="" Q

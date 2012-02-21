@@ -1,6 +1,5 @@
 MAGGTLB ;WOIFO/LB - RPC call for Laboratory/Imaging interface ; [ 11/24/2004 04:06 ]
- ;;3.0;IMAGING;**48,72**;10-November-2008;;Build 1324
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.0;IMAGING;**48**;Jan 11, 2005
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGGTLB ;WOIFO/LB - RPC call for Laboratory/Imaging interface ; [ 11/24/2004 04:
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -71,10 +71,9 @@ START(MAGRY,SECT,YR,ACNUM,XXX) ;RPC Call to Return a list of specimens
  . ;No data for the year accession #
  S LRDFN=$O(^LR(MAGX,YR,MAGABV,ACNUM,0)),LRI=$O(^(LRDFN,0))
  S MAGDFN=$P(^LR(LRDFN,0),"^",3),FILE=$P(^LR(LRDFN,0),"^",2)
- S (MAGNM,MAGSSN)=""
  I FILE=2 S X=^DPT(MAGDFN,0),MAGNM=$P(X,"^"),MAGSSN=$P(X,"^",9) ;Patient file
  I FILE[67 D  Q:MAGNM="" 
- . D GETS^DIQ(67,MAGDFN,".01;.09","E","MAGZZ","MAGERR")
+ . D GETS^DIQ(67,MAGDFN,".01;.09","E",MAGZZ,MAGERR)
  . I $D(MAGERR("DIERR")) S MAGRY(0)="0^Patient lookup failed" Q
  . S MAGNM=$G(MAGZZ(67,MAGDFN_",",".01","E"))
  . S MAGSSN=$G(MAGZZ(67,MAGDFN_",",".09","E"))

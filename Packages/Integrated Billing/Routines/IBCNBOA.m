@@ -1,5 +1,5 @@
 IBCNBOA ;ALB/ARH-Ins Buffer: Activity Report ;1 Jun 97
- ;;2.0;INTEGRATED BILLING;**82,305**;21-MAR-94
+ ;;2.0;INTEGRATED BILLING;**82**;21-MAR-94
  ;
 EN ;get parameters then run the report
  ;
@@ -19,8 +19,7 @@ DEV ;get the device
 RPT ; run report
  S IBQUIT=0
  ;
- ;Patch 305- QUIT in line below inserted for transmission to ARC
- D SEARCH(IBBEG,IBEND,IBMONTH) Q:$G(IBARFLAG)  G:IBQUIT EXIT
+ D SEARCH(IBBEG,IBEND,IBMONTH) G:IBQUIT EXIT
  D PRINT(IBBEG,IBEND)
  ;
 EXIT K ^TMP($J),IBHDR,IBBEG,IBEND,IBMONTH,IBQUIT
@@ -146,7 +145,7 @@ HDR ;print the report header
  S IBI="",$P(IBI,"-",IOM+1)="" W IBI,!
  Q
  ;
-PAUSE() ;pause at end of screen if being displayed on a terminal
+PAUSE() ;pause at end of screen if beeing displayed on a terminal
  N IBX,DIR,DIRUT,X,Y S IBX=0
  I $E(IOST,1,2)["C-" W !! S DIR(0)="E" D ^DIR K DIR I $D(DUOUT)!($D(DIRUT)) S IBX=1
  Q IBX
@@ -154,15 +153,3 @@ PAUSE() ;pause at end of screen if being displayed on a terminal
 STOP() ;determine if user has requested the queued report to stop
  I $D(ZTQUEUED),$$S^%ZTLOAD S ZTSTOP=1 K ZTREQ I +$G(IBPGN) W !,"***TASK STOPPED BY USER***"
  Q +$G(ZTSTOP)
- ;
-IBAR(IBBEG,IBEND) ;Entry point for Vista IB AR data to ARC
- ;patch 305 - called by IBRFN4
- N IBMONTH,IBARFLAG,IBARDATA,IBTM,IBCNT
- S IBMONTH=0,IBARFLAG=1 K ^TMP($J)
- D RPT
- S IBTM=$G(^TMP($J,"IBCNBOA",99999,2,2,"TM"))
- S IBCNT=$G(^TMP($J,"IBCNBOA",99999,2,2,"CNT"))
- I 'IBCNT S IBARDATA=0 G IBARQ
- S IBARDATA=$FN($$STD((IBTM/IBCNT)),"",1)
- K ^TMP($J)
-IBARQ Q IBARDATA

@@ -1,4 +1,4 @@
-DGPTX44 ; ;12/12/07
+DGPTX44 ; ;12/28/04
  D DE G BEGIN
 DE S DIE="^DGPT(D0,""S"",",DIC=DIE,DP=45.01,DL=2,DIEL=1,DU="" K DG,DE,DB Q:$O(^DGPT(D0,"S",DA,""))=""
  I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,11) S:%]"" DE(1)=% S %=$P(%Z,U,12) S:%]"" DE(6)=%
@@ -107,7 +107,7 @@ X11 D SCAN^DGPTSCAN I '$D(DGBPC) S Y="@899"
 X12 I '$D(DGBPC(1)) S Y="@899"
  Q
 13 D:$D(DG)>9 F^DIE17,DE S DQ=13,DW="300;1",DV="SX",DU="",DLB="KIDNEY SOURCE",DIFLD=300.01
- S DU="1:Live Donor;2:Cadaver;"
+ S DU="1:Live Donor;2:Cadavar;"
  G RE
 X13 S DGFLAG=1 D 401^DGPTSC01 K:DGER X K DGER,DGFLAG
  Q

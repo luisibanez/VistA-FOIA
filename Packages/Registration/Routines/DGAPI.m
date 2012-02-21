@@ -1,5 +1,5 @@
 DGAPI ;WASH/DWS - PTF's APIs ;7/29/04 7:33am
- ;;5.3;Registration;**517,594,664**;Aug 13, 1993;Build 15
+ ;;5.3;Registration;**517,594**;Aug 13, 1993
  Q
  ;
 DATA2PTF(DFN,PTF,PSDATE,USER,FLAG,SOURCE) ;API to pass data for add/edit/delete to PTF
@@ -64,7 +64,7 @@ DIAG ;FILE DIAGNOSIS INFORMATION IN ^DGCPT
  I STR S Y=+STR G DIAGFL  ;if rec num in DGICD9 is passed, overlay without any verification of DGN code passed
  F  S DGJ=$O(^DGICD9(46.1,"C",PTF,DGJ)) Q:DGJ'>0  I $P(^DGICD9(46.1,DGJ,0),U)=$P(STR,U,2),'$G(^(9)) S STR=DGJ_STR,Y=DGJ,^TMP("PTF",$J,46.1,DGI)=STR Q
  I 'STR K DO S DIC="^DGICD9(46.1,",DIC(0)="F",X=$P(STR,U,2) D FILE^DICN K DIC,X Q:Y'>0  S STR=+Y_STR,^TMP("PTF",$J,46.1,DGI)=STR
-DIAGFL S Y=+Y_"," F I=1:1:9 S DIAG(46.1,Y,I/100)=$P(STR,U,I+1)
+DIAGFL S Y=+Y_"," F I=1:1:8 S DIAG(46.1,Y,I/100)=$P(STR,U,I+1)
  S DIAG(46.1,Y,1.1)=$G(SOURCE),DIAG(46.1,Y,1.2)=$G(USER)
  S DIAG(46.1,Y,1)=PTF D FILE^DIE("K","DIAG","^TMP(""PTF"",$J,46.1,DGI)")
  I $D(^TMP("PTF",$J,46.1,DGI,"DIERR")) S FL=1 I +$G(FLAG),$D(^("DIERR",1,"TEXT",1)) W !,^(1)

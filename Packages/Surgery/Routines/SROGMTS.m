@@ -1,5 +1,5 @@
 SROGMTS ;BIR/ADM - SURGERY HEALTH SUMMARY ; [ 08/08/01  7:12 AM ]
- ;;3.0; Surgery ;**100,127,162**;24 Jun 93;Build 4
+ ;;3.0; Surgery ;**100,127**;24 Jun 93
  ;
  ;** NOTICE: This routine is part of an implementation of a nationally
  ;**         controlled procedure.  Local modifications to this routine
@@ -21,8 +21,16 @@ HS(X) ; return case information for a surical or non-OR case
  S:+SRSG DR=".09;.04;.14;.164;.205;.22;.23;.31;10;15;17;26;27;32;34;36;39;43;49;50"
  S:'SRSG DR=".09;.31;26;27;33;50;55;59;66;121;122;123;124;125"
  D EN^DIQ1 S REC(130,IEN,"STATUS")=$$OS(IEN) S:+SRSG REC(130,IEN,"VERIFIED")=$S($G(REC(130,IEN,43,"I"))'="Y":"(Unverified)",1:"")
- S SRM=$G(REC(130,IEN,27,"I")) I SRM>0 D CPT(SRM,$P($G(^SRF(IEN,0)),"^",9),130,27)
- D DICT^SROGMTS0,SUB,SPD
+ S SRM=$G(REC(130,IEN,27,"I")) I SRM>0 D
+ . S SRC=$$CPT^ICPTCOD(SRM,$P($G(^SRF(IEN,0)),"^",9)),(SRCS,SRS)=$$EN2^SROGMTS0($P(SRC,"^",3))
+ . S REC(130,IEN,27,"X")=$P(SRC,"^",2)_"^"_$P(SRC,"^",3)
+ . S SRC=$P(SRC,"^",2),SRT=$$EN2^SROGMTS0($G(REC(130,IEN,26,"E")))
+ . S:$L(SRS)&(SRS'=SRT) SRT=SRT_" - "_SRS
+ . S:$L(SRC)=5 SRT=SRT_" (CPT "_SRC_")",SRCS=SRCS_" (CPT "_SRC_")"
+ . S REC(130,IEN,27,"N")=SRS
+ . S (REC(130,IEN,26,"S"),REC(130,IEN,27,"S"))=SRT
+ . S REC(130,IEN,27,"S")=SRCS
+ D DICT^SROGMTS0,SUB
  S:$D(REC(130,IEN,32)) REC(130,IEN,32,"S")=$$EN2^SROGMTS0($G(REC(130,IEN,32,"E")))
  S:$D(REC(130,IEN,33)) REC(130,IEN,33,"S")=$$EN2^SROGMTS0($G(REC(130,IEN,33,"E")))
  S:$D(REC(130,IEN,34)) REC(130,IEN,34,"S")=$$EN2^SROGMTS0($G(REC(130,IEN,34,"E")))
@@ -103,7 +111,16 @@ SUB ;
  . K REC(SUB) S SRI=0 F  S SRI=$O(^SRF(+($G(IEN)),"OPMOD",SRI)) Q:+SRI=0  D
  . . S DA(SUB)=SRI
  . . D EN^DIQ1
- . . S SRM=+($G(REC(130,+($G(IEN)),SUB,+($G(SRI)),.01,"I"))) I SRM>0 D MOD(SRM,FILE,SUB)
+ . . S SRM=+($G(REC(130,+($G(IEN)),SUB,+($G(SRI)),.01,"I")))
+ . . I SRM>0 N SRMOD D
+ . . . S SRMOD=$$MOD^ICPTMOD(+SRM,"I",$P($G(^SRF(IEN,0)),"^",9))
+ . . . S SRC=$P(SRMOD,"^",2)
+ . . . S SRS=$P(SRMOD,"^",3)
+ . . . S REC(130,IEN,SUB,SRI,.01,"MID")=SRC
+ . . . S REC(130,IEN,SUB,SRI,.01,"MOD")=SRS
+ . . . S SRT=$$EN2^SROGMTS0(SRS)
+ . . . S:$L(SRC) SRT=SRT_" (CPT Mod "_SRC_")"
+ . . . S REC(130,IEN,SUB,SRI,.01,"S")=SRT
  ;
  ; ^SRF(DO,13,I)                .42  Other Proc          13;0  130.16
  ; $P(^SRF(DO,13,I,0),U)        .01  Other Proc           0;1  Text      
@@ -146,43 +163,3 @@ SUB ;
  Q
 SG(X) ; Surgical (Operative) Record
  S X=$$GET1^DIQ(130,+($G(X)),118,"I") S X=$S(X["Y":0,1:1) Q X
-CPT(SRM,SRDOO,SRFIL,SRFLD) ;Set CPT code into REC array
- S SRC=$$CPT^ICPTCOD(SRM,SRDOO),(SRCS,SRS)=$$EN2^SROGMTS0($P(SRC,"^",3))
- S REC(SRFIL,IEN,SRFLD,"X")=$P(SRC,"^",2)_"^"_$P(SRC,"^",3)
- S SRC=$P(SRC,"^",2),SRT=$$EN2^SROGMTS0($G(REC(130,IEN,26,"E")))
- S:$L(SRS)&(SRS'=SRT) SRT=SRT_" - "_SRS
- S:$L(SRC)=5 SRT=SRT_" (CPT "_SRC_")",SRCS=SRCS_" (CPT "_SRC_")"
- S REC(SRFIL,IEN,SRFLD,"N")=SRS
- S:SRFIL=130 REC(130,IEN,26,"S")=SRT
- S REC(SRFIL,IEN,SRFLD,"S")=SRT
- S REC(SRFIL,IEN,SRFLD,"S")=SRCS
- Q
-MOD(SRM,SRFIL,SUB) ;Set CPT Modifier into REC array
- S SRMOD=$$MOD^ICPTMOD(+SRM,"I",$P($G(^SRF(IEN,0)),"^",9))
- S SRC=$P(SRMOD,"^",2)
- S SRS=$P(SRMOD,"^",3)
- S REC(SRFIL,IEN,SUB,SRI,.01,"MID")=SRC
- S REC(SRFIL,IEN,SUB,SRI,.01,"MOD")=SRS
- S SRT=$$EN2^SROGMTS0(SRS)
- S:$L(SRC) SRT=SRT_" (CPT Mod "_SRC_")"
- S REC(SRFIL,IEN,SUB,SRI,.01,"S")=SRT
- Q
-SPD ;Obtain Surgery Procedure/Diagnosis Code File entry
- S (FILE,DIC)=136,DA=+($G(IEN)),DIQ="REC(",DIQ(0)="IE"
- S DR=".01;.02;.03;10"
- D EN^DIQ1
- Q:'+$G(REC(FILE,IEN,10,"I"))
- S SRM=+$G(REC(FILE,IEN,.02,"I"))
- Q:'(SRM>0)  D CPT(SRM,$P($G(^SRF(IEN,0)),"^",9),FILE,.02)
- S SUB=136.01,DR=1,DR(SUB)=".01",DIQ="REC(136,"_IEN_","
- K REC(FILE,IEN,SUB) S SRI=0 F  S SRI=$O(^SRO(FILE,(+$G(IEN)),DR,SRI))  Q:+SRI=0  D
- .S DA(SUB)=SRI
- .D EN^DIQ1
- .S SRM=REC(FILE,IEN,SUB,SRI,.01,"I") I SRM>0 D MOD(SRM,FILE,SUB)
- N DA S DA=IEN,SUB=136.011,DR=11,DR(SUB)=".01;1"
- K REC(FILE,IEN,SUB) S SRI=0 F  S SRI=$O(^SRO(FILE,(+$G(IEN)),DR,SRI)) Q:+SRI=0  D
- . S DA(SUB)=SRI
- . D EN^DIQ1
- S $P(REC(130,IEN,26,"S"),"-",2)=" "_REC(FILE,IEN,.02,"S")
- K REC(130,IEN,130.028) M REC(130,IEN,130.028)=REC(FILE,IEN,136.01)
- Q

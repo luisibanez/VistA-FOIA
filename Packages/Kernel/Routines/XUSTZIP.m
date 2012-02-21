@@ -1,5 +1,5 @@
 XUSTZIP ;WRJ/DAF,ISF/RWF - Security Twilight Zone, Failed Access Attempts ;03/24/2004  11:12
- ;;8.0;KERNEL;**265,419**;Jul 10, 1995;Build 5
+ ;;8.0;KERNEL;**265**;Jul 10, 1995
  Q
  ;The subfiles in KSP file.
  ;405.2 List of Terminal Servers, slack, last reset
@@ -24,14 +24,13 @@ CLEAN ;CLEAN UP OLD LOCKED IP NODES, ^XUSEC(3,
  L -^XUSEC(4,0)
  Q
 X6IP ;EXAMINE AND ALLOW RESET OF LOCKED IPS
- N I,ZFDA,DIR,XUNOW,ZNM,ZNUM,Y S ZNM="",I=0
+ N I,ZFDA,DIR,XUNOW,ZNM,ZNUM,Y S ZNM=""
  I '$D(^XUSEC(3,"B")) W !,"There are no IP's to Clear" Q
- F  S ZNM=$O(^XUSEC(3,"B",ZNM)) Q:ZNM']""  S ZNUM=$O(^XUSEC(3,"B",ZNM,"")) D
- . I '$D(^XUSEC(3,ZNUM,0)) K ^XUSEC(3,"B",ZNM) Q  ;419
- . S I=I+1,ZNM(I)=ZNUM_"^"_ZNM
- . W !,I_". ",ZNM,"  lock out till: ",$$FMTE^XLFDT($P(^XUSEC(3,ZNUM,0),"^",2))
- . Q
- S DIR(0)="N^1:"_I,DIR("A")="Choose the number of the IP to reset" D ^DIR Q:$D(DIRUT)
+ F I=1:1 S ZNM=$O(^XUSEC(3,"B",ZNM)) Q:ZNM']""  S ZNUM=$O(^XUSEC(3,"B",ZNM,"")) D
+ .S ZNM(I)=ZNUM_"^"_ZNM
+ .Q:'$D(^XUSEC(3,ZNUM,0))
+ .W !,I_". ",ZNM,"  lock out till: ",$$FMTE^XLFDT($P(^XUSEC(3,ZNUM,0),"^",2))
+ S DIR(0)="N^1:"_(I-1),DIR("A")="Choose the number of the IP to reset" D ^DIR Q:$D(DIRUT)
  S ZNM=$P(ZNM(Y),"^",2),ZNUM=+ZNM(Y)
  ;Call with IEN
  D LKDEL(ZNUM)
@@ -82,7 +81,8 @@ LKREC(IP) ;Get the Lock record
  Q $G(^XUSEC(3,ZNUM,0))
  ;
 LKDEL(ZNUM) ;Delete LOCKED IP
- N DIK,DA ;419
+ N IP,DIK,DA,ZIEN,Y
+ S IP=$P(^XUSEC(3,ZNUM,0),"^",1)
  S DIK="^XUSEC(3,",DA=ZNUM D ^DIK
  Q
  ;

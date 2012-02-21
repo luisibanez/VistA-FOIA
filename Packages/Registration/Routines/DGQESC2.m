@@ -1,5 +1,5 @@
 DGQESC2 ;ALB/JFP - VIC OUTPATIENT CLINIC SCAN ROUTINE ; 03/29/2004
- ;;5.3;Registration;**73,568,725**;Aug 13, 1993;Build 12
+ ;;5.3;Registration;**73,568**;Aug 13, 1993
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 ENO ; -- Entry Point
@@ -86,7 +86,8 @@ SDAMA ; Build TMP Global with Appointment API Data for Report
  S DGARRAY("FLDS")="2;3"
  F I=1:1 Q:'$D(CLNARRAY(I))  D
  .S DGARRAY(2)=CLNARRAY(I)
- .I $$SDAPI^SDAMA301(.DGARRAY)>0 M ^TMP($J,"SDAMA")=^TMP($J,"SDAMA301")
+ .S SDCNT=$$SDAPI^SDAMA301(.DGARRAY)
+ .M ^TMP($J,"SDAMA")=^TMP($J,"SDAMA301")
  .K ^TMP($J,"SDAMA301")
  Q
 BLDHL7 ; -- Building HL7 batch message

@@ -1,5 +1,5 @@
 PSOHLDA ;BIR/MFR - HOLD/UNHOLD functionality (cont.) ;07/15/96
- ;;7.0;OUTPATIENT PHARMACY;**148,225**;DEC 1997;Build 29
+ ;;7.0;OUTPATIENT PHARMACY;**148**;DEC 1997
  ;
 HOLD ;hold function
  I $P($G(^PSRX(DA,"STA")),"^")=3 Q
@@ -17,7 +17,8 @@ HOLD ;hold function
  I +$G(PSDA) S DA=$O(^PS(52.5,"B",PSDA,0)) I DA S:$P($G(^PS(52.5,DA,"P")),"^")=0 PSUS=1 S DIK="^PS(52.5," D ^DIK K DA,DIK
  S:+$G(PSDA) DA=PSDA D ACT
  S PSOHNX=+$P($G(^PSRX(+$G(DA),"H")),"^") D
- .I $G(PSOHNX),$P($G(^PSRX(DA,"H")),"^",2)'="" S COMM=$P($G(^("H")),"^",2) Q
+ .I $G(PSOHNX),$G(PSOHNX)'=99 S COMM=$P($P($P(^DD(52,99,0),"^",3),";",PSOHNX),":",2) Q
+ .I $G(PSOHNX)=99,$P($G(^PSRX(DA,"H")),"^",2)'="" S COMM=$P($G(^("H")),"^",2) Q
  .S COMM="Medication placed on Hold "_$E(DT,4,5)_"-"_$E(DT,6,7)_"-"_$E(DT,2,3)
  D EN^PSOHLSN1(DA,"OH","",COMM,PSONOOR) K COMM,PSOHNX
  ;

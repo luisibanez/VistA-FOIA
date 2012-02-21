@@ -1,10 +1,6 @@
-ACKQUTL4 ;HCIOFO/BH-NEW/EDIT Visit Template Utilities for QUASAR ; 11/13/08 12:57pm
- ;;3.0;QUASAR;**1,8,14,17,16**;Feb 11, 2000;Build 37
+ACKQUTL4 ;HCIOFO/BH-NEW/EDIT Visit Template Utilities for QUASAR ; 04/01/99
+ ;;3.0;QUASAR;**1,8**;Feb 11, 2000
  ;Per VHA Directive 10-93-142, this routine SHOULD NOT be modified.
- ;
- ;Reference/IA
- ;GETCUR^DGNTAPI/3457
- ;CVEDT^DGCV/4156
  ;
 CHK(Y,ACKVD) ;
  N ACKQQD
@@ -28,7 +24,7 @@ MST(ACKPCE,ACKVD,ACKPAT) ;
  I $P(ACKRET,"^",2)="Y" Q 1
  Q 0
  ;
-PROB(ACKPCE,ACKDIV) ;  Decides if Update PCE Problem List prompt appears
+PROB(ACKPCE,ACKDIV) ;  Decides if Update PCE Problem List prompt appaers
  I 'ACKPCE Q 0
  I '$$GET1^DIQ(509850.83,ACKDIV_",1",".09","I") Q 0
  Q 1
@@ -65,8 +61,9 @@ SETUP ;  Called from within the New/Edit visit template to set up parameters
  S ACKATS=1
  S ACKX=$O(^ACK(509850.6,"AMD",ACKPAT,0)),ACKD0=$O(^ACK(509850.6,"AMD",ACKPAT,+ACKX,0))
  I 'ACKX!('$D(^ACK(509850.6,+ACKD0,0))) S ACKATS=0
- ; 
- S (ACKAO,ACKRAD,ACKENV,ACKHNC,ACKCV)=0,(ACKLOSS,ACKLAMD)=""
+ ;
+ ;   
+ S ACKAO=0,ACKRAD=0,ACKENV=0,ACKLOSS="",ACKLAMD=""
  I ACKPCE D STATUS
  S:ACKSC ACKQSER=1 S:ACKAO ACKQORG=1
  S:ACKRAD ACKQIR=1 S:ACKENV ACKQECON=1
@@ -86,22 +83,19 @@ PCE(ACKDIV,ACKVD) ;  Sets ACKPCE to 1 if - The send to PCE flag is set
  . I $$GET1^DIQ(509850.83,ACKDIV_",1",".03","I"),ACKVD'<$$GET1^DIQ(509850.83,ACKDIV_",1",".08","I") S ACKOUT=1
  Q ACKOUT
  ;
-STATUS ;  Sets Agent orange, Radiation and Environmental Contaminant and Combat indicators
- ;  AO,Rad
+ ;  ---------------------------------------------------
+STATUS ;  Sets Agent orange, Radiation and Environmental Contaiment indicators
+ ;  if present.
+ ;
+ ;  Agent Orange and Radiation
  D SVC^VADPT S ACKAO=VASV(2),ACKRAD=VASV(3)
- ; Combat Veteran
- ; DBIA 4156
- S:$G(ACKVD) ACKCV=+$P($$CVEDT^DGCV(ACKPAT,ACKVD),U,3)
- ;  HNC
- N ACKHNC0
- D GETCUR^DGNTAPI(DFN,"ACKHNC0")
- S ACKHNC=$S((".3.4.5."[("."_$P($G(ACKHNC0("STAT")),U)_".")):1,1:0)
- ;  ENV
+ ;
+ ;  Environmental Contaminents
  S ACKENV=$$GET1^DIQ(2,ACKPAT,.322013,"I")
  I ACKENV="Y" S ACKENV=1
  S:ACKENV'="1" ACKENV=0
  Q
- ;-----
+ ;  -----------------------------------------------------
  ;
 AUDIO() ;  Pass back 1 if user is valid to enter audimetric scores else 0
  ;
@@ -109,7 +103,7 @@ AUDIO() ;  Pass back 1 if user is valid to enter audimetric scores else 0
  I ACKLOSS,'ACKBA Q 1
  Q 0
  ;
- ;-----
+ ;  ------------------------------------------------------
  ;
 ELIG ;  Set up eligibiliy variables and if more than one eligibility create
  ;  display array used in block ELIGDISP
@@ -143,29 +137,27 @@ ELIG ;  Set up eligibiliy variables and if more than one eligibility create
  ;
  Q
  ;
-ELIGDIS  ;  Display patients eligibilities
+ELIGDIS ;  Display patients eligibilities
  ;
- N ACKK2,RC
+ N ACKK2
  D ENS^%ZISS
- S RC=$$PAGE^ACKQNQ(6)  Q:RC<0  W:'RC !!
- W IOUON,"This Patient has other Entitled Eligibilities",IOUOFF,!!
+ W !,IOUON,"This Patient has other Entitled Eligibilities",IOUOFF,!
  S ACKK2=""
- F  S ACKK2=$O(ACKELDIS(ACKK2)) Q:ACKK2=""  D  Q:RC<0
+ F  S ACKK2=$O(ACKELDIS(ACKK2)) Q:ACKK2=""  D
  .Q:$P(ACKELDIS(ACKK2),U,2)=ACKELIG
- .S RC=$$PAGE^ACKQNQ(2) Q:RC<0
- .W:RC IOUON,"Other Entitled Eligibilities (cont'd)",IOUOFF,!!
  .W ?1,$P(ACKELDIS(ACKK2),U,2)_" "
  .W $$GET1^DIQ(8,ACKK2,5),!
- Q
- ;-----
- ;  Display Patient data concerning Rated Disabilities and service class.
+ K ACCK2 Q 
+ ;
+ ;  -----------------------------------------------------
+ ;  Display Patient data concerning Rated Disabilities and service clas.
 PATDIS ;
- S DFN=ACKPAT  D RATDIS^ACKQNQ
+ S DFN=ACKPAT D RATDIS^ACKQNQ
  D CLASDIS^ACKQNQ
  Q
  ;
-ACKCP() ;  This initializes the C&P Parameter.
- ;  First check site parameters file for C&P flag
+ACKCP() ;  This initialises the C&P Paramter.
+ ;  First check site parameteres file for C&P flag
  ;
  I '$$GET1^DIQ(509850.83,ACKDIV_",1",".06","I") Q 0
  ;
@@ -174,11 +166,10 @@ ACKCP() ;  This initializes the C&P Parameter.
  S:ACKQCPS>0 ACKQCPS=$P(ACKQCPS,U)
  I $S(ACKCSC'="A":1,$$EN1^DVBCTRN(ACKPAT,"AUDIO",ACKQCPS)<1:1,$O(^ACK(509850.6,"ALCP",ACKQCPS,0))=ACKVIEN:0,$D(^ACK(509850.6,"ALCP",ACKQCPS)):1,1:0) Q 0
  Q "1^"_ACKQCPS
+ ;  -----------------------------------------------------
  ;
- ;-----
 PROVDIS ;  Get providers already filed and display
  ;
- N RC
  D ENS^%ZISS
  N ACKK1,ACKPROV,ACKK2,D0,ACKARR,ACKTGT,ACKMSG
  D LIST^DIC(509850.66,","_ACKVIEN_",",".01","","*","","","","","","ACKTGT","ACKMSG")
@@ -188,17 +179,13 @@ PROVDIS ;  Get providers already filed and display
  K ACKPROV S ACKK2=ACKVIEN_","
  D GETS^DIQ(509850.6,ACKK2,"6;7","E","ACKPROV")
  I '$D(ACKARR),$G(ACKPROV(509850.6,ACKK2,"6","E"))="",$G(ACKPROV(509850.6,ACKK2,"7","E"))="" Q
- S RC=$$PAGE^ACKQNQ(5) Q:RC<0  W:'RC !!
- W " ",IOUON,"Providers currently recorded for this visit",IOUOFF,!
+ W !!," ",IOUON,"Providers currently recorded for this visit",IOUOFF,!
  I $G(ACKPROV(509850.6,ACKK2,"6","E"))'="" W !," Primary Provider   - "_ACKPROV(509850.6,ACKK2,"6","E")
- I $D(ACKARR)>1  S RC=0  D  Q:RC<0
+ I $D(ACKARR) D
  . S ACKK1=""
- . F  S ACKK1=$O(ACKARR(ACKK1))  Q:ACKK1=""  D  Q:RC<0
- . . S RC=$$PAGE^ACKQNQ(2)  Q:RC<0
+ . F  S ACKK1=$O(ACKARR(ACKK1)) Q:ACKK1=""  D
  . . W !," Secondary Provider - "_ACKARR(ACKK1)
- D:$G(ACKPROV(509850.6,ACKK2,"7","E"))'=""
- . S RC=$$PAGE^ACKQNQ(2)  Q:RC<0
- . W !," Student            - "_ACKPROV(509850.6,ACKK2,"7","E")
+ I $G(ACKPROV(509850.6,ACKK2,"7","E"))'="" W !," Student            - "_ACKPROV(509850.6,ACKK2,"7","E")
  W !
  Q
  ;
@@ -237,11 +224,10 @@ CPTDIS ;  Get procedures already filed and display
  ;
 DIAGDIS ;  Get diagnoses already filed and display
  D ENS^%ZISS
- N ACK1,D0,ACKDIAGD,ACKK3,ACKK4,ACKI,ACKD,RC
+ N ACK1,D0,ACKDIAGD,ACKK3,ACKK4,ACKI,ACKD
  D LIST^DIC(509850.63,","_ACKVIEN_",",".01;.12","I","*","","","","","","ACKDIAGD")
  I '$D(ACKDIAGD("DILIST",1)) Q
- S RC=$$PAGE^ACKQNQ(5)  Q:RC<0  W:'RC !!
- W " ",IOUON,"Diagnoses currently entered for this visit:",IOUOFF,!
+ W !!," ",IOUON,"Diagnoses currently entered for this visit",IOUOFF,!
  S ACKK3="",ACKSP="                                   "
  F  S ACKK3=$O(ACKDIAGD("DILIST",1,ACKK3)) Q:ACKK3=""  D
  . S ACKK4=ACKDIAGD("DILIST",1,ACKK3)
@@ -250,8 +236,6 @@ DIAGDIS ;  Get diagnoses already filed and display
  ;
  S ACK1=""
  F  S ACK1=$O(ACKD(ACK1)) Q:ACK1=""  D
- . S RC=$$PAGE^ACKQNQ(3)  Q:RC<0
- . W:RC IOUON,"Diagnoses currently entered for this visit (cont'd)",IOUOFF,!
  . W !," ",ACKD(ACK1)
  W !
  Q
@@ -276,16 +260,19 @@ MODDIS ;  Display Modifiers - Called within Executable Help of Modiifer
  ;
 CONVERT(ACKPRV) ; Converts the QSR Prov Code into a name string from file 200.
  ;
- ;ACKQ*3*17
- Q $$GET1^DIQ(509850.3,ACKPRV,.07)
+ N ACKPRV1,ACKPRV2
+ S ACKPRV1=$P(^ACK(509850.3,ACKPRV,0),U,1)
+ S ACKPRV2=$P(^USR(8930.3,ACKPRV1,0),U,1)
+ Q $$GET1^DIQ(200,ACKPRV2_",",.01)
  ;
 CONVERT1(ACKPRV) ;  Converts the Provider IEN number used within Quasar
  ;                  to its equivalent code used on the 200 file.
- ;ACKQ*3*17
- Q +$$GET1^DIQ(509850.3,ACKPRV,.07,"I")
+ N ACKPRV1
+ S ACKPRV1=$P(^ACK(509850.3,ACKPRV,0),U,1)
+ Q $P(^USR(8930.3,ACKPRV1,0),U,1)
  ;
 CONVERT2(ACKPRV) ;  Converts the Provider IEN number used within Quasar
  ;                  to its equivalent code used on the 200 file.
- ;ACKQ*3*17
- Q +$$GET1^DIQ(509850.3,ACKPRV,.07,"I")
- ;
+ N ACKPRV1
+ S ACKPRV1=$P(^ACK(509850.3,ACKPRV,0),U,1)
+ Q $P($G(^USR(8930.3,ACKPRV1,0)),U,1)

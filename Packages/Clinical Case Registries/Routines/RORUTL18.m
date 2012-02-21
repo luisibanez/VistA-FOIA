@@ -1,5 +1,5 @@
-RORUTL18 ;HCIOFO/SG - MISCELLANEOUS UTILITIES ; 4/4/07 1:19pm
- ;;1.5;CLINICAL CASE REGISTRIES;**2**;Feb 17, 2006;Build 6
+RORUTL18 ;HCIOFO/SG - MISCELLANEOUS UTILITIES ; 1/25/06 9:21am
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IA's:
  ;
@@ -116,26 +116,6 @@ ORALERT(MSG,DFN,XQA) ;
  ;
 PENDING(IEN) ;
  Q ($P($G(^RORDATA(798,+IEN,0)),U,5)=4)
- ;
- ;***** EMULATES $QUERY WITH 'DIRECTION' PARAMETER
- ;
- ; NODE          Closed root of a node
- ;
- ; [DIR]          Direction:
- ;                  $G(DIR)'<0  forward
- ;                  DIR<0       backward
- ;
-Q(NODE,DIR) ;
- Q:$G(DIR)'<0 $Q(@NODE)
- N I,DN,PI,TMP
- S TMP=$QL(NODE)  Q:TMP'>0 ""
- S I=$QS(NODE,TMP),NODE=$NA(@NODE,TMP-1)
- S PI=""
- F  S I=$O(@NODE@(I),-1)  Q:I=""  D  Q:PI'=""
- . S DN=$D(@NODE@(I))
- . I DN#10  S PI=$NA(@NODE@(I))  Q
- . S:DN>1 PI=$$Q($NA(@NODE@(I,"")),-1)
- Q PI
  ;
  ;***** COUNTS THE REGISTRY PATIENTS
  ;

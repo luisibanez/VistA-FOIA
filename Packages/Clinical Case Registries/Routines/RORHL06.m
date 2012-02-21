@@ -1,9 +1,10 @@
-RORHL06 ;HOIFO/BH,CRT - HL7 LIVER BIOPSY: OBR,OBX ; 3/13/06 9:23am
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORHL06 ;HOIFO/BH,CRT - HL7 LIVER BIOPSY: OBR,OBX ; 8/1/05 3:53pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
  ; #1995         $$CPT^ICPTCOD (supported)
+ ; #2503         LRDFN^LR7OR1 (controlled)
  ; #10035        Read access to the PATIENT file (supported)
  ;
  Q

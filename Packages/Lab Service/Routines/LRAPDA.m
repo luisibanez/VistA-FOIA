@@ -1,5 +1,5 @@
-LRAPDA ;DALOI/REG/WTY/KLL/CKA - ANATOMIC PATH DATA ENTRY;11/02/01
- ;;5.2;LAB SERVICE;**72,73,91,121,248,259,295,317,365**;Sep 27, 1994;Build 9
+LRAPDA ;AVAMC/REG/WTY/KLL - ANATOMIC PATH DATA ENTRY;11/02/01 ;10/21/04  08:38
+ ;;5.2;LAB SERVICE;**72,73,91,121,248,259,295**;Sep 27, 1994
  ;
  ;Reference to ^%DT supported by IA #10003
  ;Reference to ^DIE supported by IA #10018
@@ -29,10 +29,9 @@ W K X,Y,LR("CK")
  .W !!,"Enter the year ",LRH(0)," ",LRO(68)," accession number to be "
  .W "updated"
  .W !,"or locate the accession by entering the patient name."
- I LRAN'?1N.N D PNAME G:LRAN<1 W D OE1^LR7OB63D,REST,OERR^LR7OB63D G W
+ I LRAN'?1N.N D PNAME G:LRAN<1 W D OE1^LR7OB63D,DIE,OERR^LR7OB63D G W
  D OE1^LR7OB63D,REST S:$D(DR(1))#2 DR=DR(1) D OERR^LR7OB63D G W
 REST ;
- N LRXSTOP,LRX,LRX1
  W "  for ",LRH(0)
  I '$D(^LRO(68,LRAA,1,LRAD,1,LRAN,0)) D  Q
  .W $C(7),!!,"Accession # ",LRAN," for ",LRH(0)," not in ",LRO(68),!!
@@ -47,23 +46,6 @@ REST ;
  .W !,"Specimen(s):"
  .S X=0 F  S X=$O(^LR(LRDFN,LRSS,LRI,.1,X)) Q:'X  D
  ..W !,$P($G(^LR(LRDFN,LRSS,LRI,.1,X,0)),"^")
- ;
- ;Don't allow supp. report to be added to a released report if 
- ; modifications are being added via MM option
- S LRXSTOP=0,(LRX,LRX1)=""
- I LRSS'="AU",LRD(1)="S" D
- .S LRX=$P($G(^LR(LRDFN,LRSS,LRI,0)),"^",11) ;release date/time
- .S LRX1=$P($G(^LR(LRDFN,LRSS,LRI,0)),"^",15) ;orig rel date/time
- I LRSS="AU",LRSOP="R" D
- .S LRX=$P($G(^LR(LRDFN,"AU")),"^",15)  ;release date/time
- .S LRX1=$P($G(^LR(LRDFN,"AU")),"^",3)  ;date report completed
- I 'LRX,LRX1 D
- .W $C(7),!!,"This "_$G(LRAA(1))_" report is currently being"
- .W !,"modified; it must first be released before Supplementary"
- .W !,"report can be added.",!
- .S LRXSTOP=1
- Q:LRXSTOP 
- ;
 DIE ;Edit
  I LRSS="AU" D AUE Q
  N LRRDT1,LRRDT2,LRIENS,LREL,LRQUIT,LRSNO,LRCPT,LRESCPT
@@ -71,7 +53,6 @@ DIE ;Edit
  S LRRDT1=$$GET1^DIQ(LRSF,LRIENS,.11,"I")
  S LRRDT2=$$GET1^DIQ(LRSF,LRIENS,.15,"I")
  S:LRRDT1!LRRDT2 LREL=1
- ;Determine if CPT activated
  I $T(ES^LRCAPES)'="" S LRESCPT=$$ES^LRCAPES()
  I LRSOP="G",LREL D  Q
  .W $C(7),!!,"Report verified.  Cannot edit with this option."
@@ -97,12 +78,9 @@ DIE ;Edit
  .I LRSOP="B",'LRCPT,'LRSNO S LRQUIT=1
 RESET ;Reset DR string if altered by prior accession/patient
  ;Reset DR to orig value in LRAPD1
- I LRSOP'="","AMBS"[LRSOP,$G(LRD)'="" D @LRD
- I LRSFLG="S",$G(LRD)'="" D @LRD  ;For CY,EM Supp entry
+ I LRSOP'="","AMB"[LRSOP,$G(LRD)'="" D @LRD
  S:LRSNO DR=10    ;Modify DR string if only SNOMED coding permitted
  I 'LRSNO,LRCPT S DR=""  ;Set DR string to null in only CPT coding
- ;If adding supp rpt to released rpt, remove date rpt completed from DR
- I LRRDT1,LRSOP="S"!(LRSFLG="S") S DR=".09///^S X=LRWHO;10"
 EDIT ;Call to ^DIE
  W ! S LRA=^LR(LRDFN,LRSS,LRI,0),LRRC=$P(LRA,"^",10)
  I LRCAPA,"SPCYEM"[LRSS D C^LRAPSWK
@@ -113,11 +91,7 @@ EDIT ;Call to ^DIE
  .W !,"Be sure 'FROZEN SECTION' is entered as a SNOMED code in the "
  .W "PROCEDURE field"
  .W !,"for the appropriate organ or tissue.",!!
- ;Code S LRELSD is in DR string setup in LRAPR
- N LRELSD S LRELSD=0
  D ^DIE
- S LRAC=$P(LRA,U,6)
- I LRELSD D MAIN^LRAPRES1(LRDFN,LRSS,LRI,LRSF,LRP,LRAC)
  D UPDATE^LRPXRM(LRDFN,LRSS,LRI)
  D:LRSFLG="S"&('$D(Y)) ^LRAPDSR
  D FRE^LRU
@@ -138,7 +112,7 @@ QUEUES ;Update Queues
  .S ^LRO(69.2,LRAA,1,LRAN,0)=LRDFN_"^"_LRI_"^"_LRH(0)
  .S X=^LRO(69.2,LRAA,1,0),^(0)=$P(X,"^",1,2)_"^"_LRAN_"^"_($P(X,"^",4)+1)
  .L -^LRO(69.2,LRAA,1)
- I "CYEMSP"[LRSS,$D(LR(7)),'$D(^LRO(69.2,LRAA,2,LRAN,0)),LRD(1)'="S" D
+ I "CYEMSP"[LRSS,$D(LR(7)),'$D(^LRO(69.2,LRAA,2,LRAN,0)) D
  .L +^LRO(69.2,LRAA,2):5 I '$T D  Q
  ..S MSG(1)="The final reports queue is in use by another person.  "
  ..S MSG(1,"F")="!!"
@@ -160,10 +134,8 @@ AUE ;Autopsy Data Entry
  N LREL,LRQUIT,LRSNO,LRESCPT,LRCPT
  S (LREL,LRQUIT,LRSNO,LRCPT)=0
  S LREL=+$$GET1^DIQ(63,LRDFN_",",14.7,"I")
- ;Determine if CPT activated
  I $T(ES^LRCAPES)'="" S LRESCPT=$$ES^LRCAPES()
- ;  Allow supp report to be added on verified AU
- I LRSOP'="","AFIP"[LRSOP,LREL D  Q:LRQUIT
+ I LRSOP'="","AFIPR"[LRSOP,LREL D  Q:LRQUIT
  .Q:LRESCPT&("AP"[LRSOP)
  .W $C(7),!!,"Report verified.  Cannot edit with this option!"
  .S LRQUIT=1
@@ -196,13 +168,8 @@ AURESET ;Reset DR to orig value in LRAUDA
  .S MSG=MSG_"Please wait and try again."
  .D EN^DDIOL(MSG,"","!!") K MSG
  I LRSFLG'="S" D
- .N LRELSD S LRELSD=0
  .S DIE="^LR(",DA=LRDFN
  .D ^DIE
- .S LRA=^LR(LRDFN,"AU")
- .S LRI=$P(LRA,U)
- .S LRAC=$P(LRA,U,6)
- .I LRELSD D MAIN^LRAPRES1(LRDFN,LRSS,LRI,LRSF,LRP,LRAC)
  D:LRSFLG="S" ^LRAPDSR
  D UPDATE^LRPXRM(LRDFN,"AU")
  L -^LR(LRDFN)

@@ -1,5 +1,5 @@
-ECRDSSU ;ALB/ESD - DSS Unit Workload Summary Report ; 1 Jul 2008
- ;;2.0; EVENT CAPTURE ;**5,8,10,14,18,47,63,72,95**;8 May 96;Build 26
+ECRDSSU ;ALB/ESD - DSS Unit Workload Summary Report ; 5 Aug 97
+ ;;2.0; EVENT CAPTURE ;**5,8,10,14,18,47,63,72**;8 May 96
  ;
 EN ;- Get location(s), DSS Unit(s), start & end dates, device
  ;
@@ -118,13 +118,13 @@ PRTCAT ;- Print category
  . I ECCPT'="" S ECPI=$$CPT^ICPTCOD(ECCPT,$P(ECENDDT,".")),ECCPT=$P(ECPI,"^",2)
  . S ECPNAM=$S($P(ECPR,";",2)="E":$G(^EC(725,+$P(ECPR,";"),0)),$P(ECPR,";",2)="I":$P(ECPI,"^",3),1:"") S:$P(ECPR,";",2)="E" ECPNAM=$P(ECPNAM,"^",2)_" "_$P(ECPNAM,"^")
  . Q:ECQUIT
- . I $Y>(IOSL-11) D PAUSE Q:ECQUIT  D HDR
+ . I $Y>(IOSL-8) D PAUSE Q:ECQUIT  D HDR
  . W:'ECFLG !!?1,"Category:",!?2,ECCNAM S ECFLG=1
  . W !?3,ECCPT,?9,$E(ECPNAM,1,35),?46,$S(ECSYN]"":$E(ECSYN,1,21),1:""),?69,$J($P($G(ECTMP(ECLOC,ECDSS,ECC,ECPR)),"^"),6)
  . S ECCATOT=ECCATOT+$P($G(ECTMP(ECLOC,ECDSS,ECC,ECPR)),"^")
  . I $O(ECTMP(ECLOC,ECDSS,ECC,ECPR,""))'="" D PRTMOD I ECQUIT Q
  G:ECQUIT PRTCATQ
- I $Y>(IOSL-11) D PAUSE G:ECQUIT PRTCATQ D HDR
+ I $Y>(IOSL-8) D PAUSE G:ECQUIT PRTCATQ D HDR
  W !?69,"------"
  W !?6,"Total Procedures for ",ECCNAM,?69,$J(ECCATOT,6),!
  S ECDSSTOT=ECDSSTOT+ECCATOT
@@ -134,7 +134,7 @@ PRTCATQ K ECTMP
 PRTMOD ;ALB/JAM - Print CPT modifiers
  N MOD,IEN,MODESC,MODI S IEN=""
  F  S IEN=$O(ECTMP(ECLOC,ECDSS,ECC,ECPR,IEN)) Q:IEN=""  D
- . I $Y>(IOSL-8) D PAUSE Q:ECQUIT  D HDR
+ . I $Y>(IOSL-5) D PAUSE Q:ECQUIT  D HDR
  . S MODI=$$MOD^ICPTMOD(IEN,"I",$P(ECENDDT,"."))
  . S MOD=$P(MODI,"^",2) I MOD="" Q
  . S MODESC=$P(MODI,"^",3) I MODESC="" S MODESC="Unknown"
@@ -146,7 +146,7 @@ DSSCHG ;- DSS Unit change
  ;
  Q:'$G(ECDSSTOT)
  I ECDSSTOT>0 D
- . I $Y>(IOSL-11) D PAUSE Q:ECQUIT  D HDR
+ . I $Y>(IOSL-8) D PAUSE Q:ECQUIT  D HDR
  . W !!?69,"======"
  . W !?6,"Total Procedures for ",$G(ECDSSNM),?69,$J(ECDSSTOT,6)
  . S ECDSSTOT=0,(ECLOCNM,ECDSSNM)=""
@@ -182,17 +182,10 @@ DSSUNAM ;- Get DSS Unit name
  ;
  ;
 PAUSE ;- Pause for screen output
- D FOOTER
  Q:'ECCRT
  N DIR,DIRUT,DUOUT
  I IOSL<30 F  W ! Q:$Y>(IOSL-4)
  W ! S DIR(0)="E" D ^DIR I $D(DIRUT)!($D(DUOUT)) S ECQUIT=1
- Q
- ;
- ;
-FOOTER ;- Print page footer
- W !!?4,"Volume totals may represent days, minutes, numbers of procedures"
- W !?4,"and/or a combination of these."
  Q
  ;
  ;

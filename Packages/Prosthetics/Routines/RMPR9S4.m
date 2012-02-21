@@ -1,5 +1,5 @@
-RMPR9S4 ;HOIFO/HNC - GUI 2319 ITEM TRANSACTIONS LIST ;9/10/02  08:42
- ;;3.0;PROSTHETICS;**59,99,90,75,162**;Feb 09, 1996;Build 5
+RMPR9S4 ;HOIFO/HNC - GUI 2319ITEM TRANSACTIONS LIST ;9/10/02  08:42
+ ;;3.0;PROSTHETICS;**59,99,90**;Feb 09, 1996
  ;IEN = INTERNAL ENTRY NUMBER OF FILE 668
  Q
 A1(IEN) G A2
@@ -22,18 +22,26 @@ A2 S (RA,AN,ANS,RK,RZ)=0 K ^TMP($J,"TT"),^TMP($J,"AG"),IT
  . .I ND S ND=$P(^RMPR(661.1,ND,0),U,8)
  . .S:ND="" ND=2
  . .S:GN="" GN=BC
- . .S ^TMP($J,"AG",GN,BC,ND)=B  ;set linked grouper counter structure differently in array;RMPR*3.0*162
- ;COMBINE ITEMS FOR CALC FLAG
- ;modified linked grouper structure determination in patch RMPR*3.0*162
+ . .S ^TMP($J,"AG",GN,ND,BC)=B
  S B=""
- F  S B=$O(^TMP($J,"AG",B)),ITM=0,HITM=0 Q:B=""!(B]"@")  D
- .F  S ITM=$O(^TMP($J,"AG",B,ITM)),BC=0 Q:+ITM=0  D
- . .F  S BC=$O(^TMP($J,"AG",B,ITM,BC)) Q:+BC=0  D
- . . .I $P($G(^RMPR(660,ITM,0)),U,17) Q
- . . .I HITM=0,BC=2 Q
- . . .I BC=1 S HITM=ITM,BDAT=^TMP($J,"AG",B,ITM,BC)
- . . .S $P(^TMP($J,"TT",BDAT,HITM),U,3)=$P(^TMP($J,"TT",BDAT,HITM),U,3)+$P($G(^RMPR(660,ITM,0)),U,16)
- . . .I BC=2 K ^TMP($J,"TT",BDAT,ITM)
+ F  S B=$O(^TMP($J,"AG",B)) Q:B'>0  D
+ .S BC=""
+ .F  S BC=$O(^TMP($J,"AG",B,BC)) Q:BC'>0  D
+ . .Q:BC=2
+ . .MERGE ^TMP($J,"AGG")=^TMP($J,"AG",B)
+ . .S HC="",GTCST=0
+ . .K HCC1
+ . .F  S HC=$O(^TMP($J,"AGG",HC)) Q:HC'>0  D
+ . . .S HCC=0
+ . . .;changes for Surgical Implants
+ . . .S BDC=""
+ . . .F BDC=1:1 S HCC=$O(^TMP($J,"AGG",HC,HCC)) Q:HCC'>0  D
+ . . . .S GTCST=GTCST+$P(^RMPR(660,HCC,0),U,16)
+ . . . .I BDC=1&(HC'=2) S HCC1=HCC
+ . . . .I BDC'=1 K ^TMP($J,"TT",^TMP($J,"AGG",HC,HCC),HCC)
+ . . . .I HC=2 K ^TMP($J,"TT",^TMP($J,"AGG",HC,HCC),HCC)
+ . .I $G(HCC1) S $P(^TMP($J,"TT",^TMP($J,"AGG",1,HCC1),HCC1),U,3)=GTCST K HCC1
+ . .K GTCST,^TMP($J,"AGG")
  K ^TMP($J,"AG"),BDC
  S B=0,RC=1
  F  S B=$O(^TMP($J,"TT",B)) Q:B'>0  D
@@ -67,7 +75,7 @@ EXIT ;common exit point
  ;S RESULT=$NA(^TMP($J))
  M RESULTS=^TMP($J,"RMPRB")
  I '$D(RESULTS) S RESULTS(0)="NOTHING TO REPORT"
- K I,J,L,R0,RA,AMIS,AN,ANS,CST,FRM,RC,RK,RMPRDFN,RMPRNC,RZ,STA,TRANS,TRANS,TYPE,BDAT,HITM,ITM,TRANS1
+ K I,J,L,R0,RA
  Q
 PRT ;
  S DATE=$P(RMPRY,U,3),TYPE=$P(RMPRY,U,6),QTY=$P(RMPRY,U,7)
@@ -82,11 +90,8 @@ PRT ;
  .I RMPRLPRO="W" S RMPRLPRO="WHEELCHAIR" Q
  .I RMPRLPRO="N" S RMPRLPRO="FOOT CENTER" Q
  .I RMPRLPRO="D" S RMPRLPRO="DDC" Q
- .I RMPRLPRO="E" S RMPRLPRO="EYE GLASS" Q
- .I RMPRLPRO="" K RMPRLPRO
  ;form requested on
- S FRM=$P(RMPRY,U,13)
- S RMPRNC=$P($G(^RMPR(660,AN,"AM")),U,2)
+ S FRM=$P(RMPRY,U,13),REM=$P(RMPRY,U,18)
  S DATE=$$DAT2^RMPRUTL1(DATE)
  S TYPE=$P($G(^RMPR(660,AN,1)),U,4)
  ;S TYPE=$S(TYPE="":"",$D(^RMPR(661,TYPE,0)):$P(^(0),U,1),1:"")
@@ -110,6 +115,8 @@ PRT ;
  ;
  ;display source of procurement for 2529-3 under vendor header
  I $D(RMPRLPRO) S ^TMP($J,"RMPRB",RK)=^TMP($J,"RMPRB",RK)_U_RMPRLPRO
+ ;E  S ^TMP($J,"RMPRB",RK)=^TMP($J,"RMPRB",RK)_U_VEN
+ ;I '$D(RMPRLPRO),VEN'="" 
  E  S:VEN'="" ^TMP($J,"RMPRB",RK)=^TMP($J,"RMPRB",RK)_U_$E(VEN,1,10)
  I VEN=""&'$D(RMPRLPRO) S:'$D(^RMPR(660,$P(^TMP($J,"RMPRC",RK),U,1),"HST")) ^TMP($J,"RMPRB",RK)=^TMP($J,"RMPRB",RK)_U_$E(VEN,1,10)
  I VEN=""&'$D(RMPRLPRO) S:$D(^RMPR(660,$P(^TMP($J,"RMPRC",RK),U,1),"HST")) ^TMP($J,"RMPRB",RK)=^TMP($J,"RMPRB",RK)_U_$E($P(^RMPR(660,$P(^TMP($J,"RMPRC",RK),U,1),"HST"),U,3),1,10)
@@ -120,7 +127,7 @@ PRT ;
  I $P(^TMP($J,"RMPRC",RK),U,3) S CST=$P(^TMP($J,"RMPRC",RK),U,3)
  S COST=$J($FN($S(CST'="":CST,$P(RMPRY,U,17):$P(RMPRY,U,17),1:""),"T",2),9)
  ;
- S ^TMP($J,"RMPRB",RK)=^TMP($J,"RMPRB",RK)_U_COST_U_RMPRNC
+ S ^TMP($J,"RMPRB",RK)=^TMP($J,"RMPRB",RK)_U_COST_U_REM
  ;
  I $P(^TMP($J,"RMPRC",RK),U,2)="" S $P(^TMP($J,"RMPRC",RK),U,2)=RZ
  K DATE,QTY,ITEM,HCPSC,RMPRLPRO,VEN,SN,DEL,COST,REM

@@ -1,5 +1,5 @@
-MAGDMEDK ;WOIFO/LB Routine to find Medicine subspecialty [ 06/20/2001 08:56 ] ; 06/06/2005  09:25
- ;;3.0;IMAGING;**51**;26-August-2005
+MAGDMEDK ;WOIFO/LB Routine to find Medicine subspecialty [ 06/20/2001 08:56 ]
+ ;;3.0;IMAGING;;Mar 01, 2002
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -19,7 +19,7 @@ MAGDMEDK ;WOIFO/LB Routine to find Medicine subspecialty [ 06/20/2001 08:56 ] ; 
 SUB(MAGSUB,MAGPAT) ;Get Medicine subspecialty and entries.
  ; an array should be produced and only for entries found from call to
  ; api SUB^MCARUTL2:
- ;  MAGMC(#)=data formatted from call to SUB^MCARUTL2
+ ;  MAGMC(#)=data formated from call to SUB^MCARUTL2
  Q:'$D(MAGPAT)!'$D(MAGSUB)
  N I,II,X,Y,MAGMC,MAGXX,SUB
  S MAGMC(0)="0^0"
@@ -41,7 +41,7 @@ PATSUB(MAGSUB1,MAGDFN) ;
  Q:'$D(MAGX(0))
  S MAGSUB1(0)="1^"_+MAGX_"^"_$P(MAGX(0),"^",2)
  ; MAGSUB1(0)=1^#entries^msg text
- S I=0 F  S I=$O(MAGX(I)) Q:'I  D
+ S I=0 F  S I=$O(MAGX(I)) Q:'I  D 
  . S MAGSUB1(I)=$P(MAGX(I),"^")_" ("_$P(MAGX(I),"^",2)_")"
  . ; MAGSUB1(#)=OPH (25)  --25 being ien for procedure
  Q

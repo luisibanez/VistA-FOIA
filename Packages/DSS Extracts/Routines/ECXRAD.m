@@ -1,5 +1,5 @@
-ECXRAD ;ALB/JAP,BIR/PDW,PTD-Extract for Radiology ;10/14/10  16:04
- ;;3.0;DSS EXTRACTS;**11,8,13,16,24,33,39,46,71,84,92,105,120,127**;Dec 22, 1997;Build 36
+ECXRAD ;ALB/JAP,BIR/PDW,PTD-Extract for Radiology ; 10/25/05 8:35am
+ ;;3.0;DSS EXTRACTS;**11,8,13,16,24,33,39,46,71,84**;Dec 22, 1997
 BEG ;entry point from option
  D SETUP I ECFILE="" Q
  D ^ECXTRAC,^ECXKILL
@@ -16,7 +16,7 @@ START ;start rad extract
  Q
  ;
 GET ;get data
- N ECXIEN,X,SUB,TYPE,ECDOCPC,ECXIS,ECXISPC,ECXPRCL,ECXCSC,ECXUSRTN
+ N ECXIEN,X,SUB,TYPE,ECDOCPC,ECXIS,ECXISPC,ECXPRCL,ECXCSC
  S ^TMP("ECL",$J,ECXDFN)=""
  ;with dfn get all exams within date range
  S ECXMDT=ECSD-.1
@@ -25,11 +25,9 @@ GET ;get data
  .S ECXIEN=+$P($G(^RADPT(ECXDFN,"DT",ECXMDA,"P",1,0)),U,11)
  .S ECTM=$$ECXTIME^ECXUTL(ECXMDT) S:ECTM>235959 ECTM=235959
  .S ECXDAY=$$ECXDATE^ECXUTL(ECXMDT,ECXYM)
- .K ECXPAT S OK=$$PAT^ECXUTL3(ECXDFN,$P(ECXMDT,"."),"1;3",.ECXPAT)
+ .K ECXPAT S OK=$$PAT^ECXUTL3(ECXDFN,$P(ECXMDT,"."),"1;",.ECXPAT)
  .Q:'OK
  .S ECXPNM=ECXPAT("NAME"),ECXSSN=ECXPAT("SSN"),ECXMPI=ECXPAT("MPI")
- .;get emergency response indicator (FEMA)
- .S ECXERI=ECXPAT("ERI")
  .S X=$$PRIMARY^ECXUTL2(ECXDFN,$P(ECXMDT,"."),ECPROF)
  .S ECPTTM=$P(X,U,1),ECPTPR=$P(X,U,2),ECCLAS=$P(X,U,3),ECPTNPI=$P(X,U,4)
  .S ECASPR=$P(X,U,5),ECCLAS2=$P(X,U,6),ECASNPI=$P(X,U,7)
@@ -50,8 +48,6 @@ GET ;get data
  ..S ECXIEN=+$P($G(^RADPT(ECXDFN,"DT",ECXMDA,"P",1,0)),U,11)
  ..S ECXORDDT=$$ECXDATE^ECXUTL($P($G(^RAO(75.1,ECXIEN,0)),U,16),ECXYM)
  ..;
- ..;******* - PATCH 127, ADD PATCAT CODE ********
- ..S ECXPATCAT=$$PATCAT^ECXUTL(ECXDFN)
  ..;- If no encounter number don't file record
  ..S ECXENC=$$ENCNUM^ECXUTL4(ECXA,ECXSSN,ECXADMDT,ECXMDT,ECXTS,ECXOBS,ECHEAD,ECTY,) Q:ECXENC=""
  ..;procedures and modifiers for specific exam (case numbers)
@@ -61,17 +57,12 @@ GET ;get data
  ...S ECCA=^RADPT(ECXDFN,"DT",ECXMDA,"P",ECCN,0)
  ...S ECXW=$P(ECCA,U,6),ECXW=$P($G(^DIC(42,+ECXW,44)),U)
  ...S:ECXW="" ECXW=$P(ECCA,U,8)
- ...S ECDOCNPI=$$NPI^XUSNPI("Individual_ID",$P(ECCA,U,14),ECDT)
- ...S:+ECDOCNPI'>0 ECDOCNPI="" S ECDOCNPI=$P(ECDOCNPI,U)
  ...S (ECXDSSD,ECXDSSP)=""
- ...S ECS=$P(ECCA,U,7),ECDOC=ECPROF_$P(ECCA,U,14),ECDI=$P(ECCA,U,13),ECDOCPC=$$PRVCLASS^ECXUTL($P(ECCA,U,14),ECDT)
+ ...S ECS=$P(ECCA,U,7),ECDOC=ECPROF_$P(ECCA,U,14),ECDOCNPI="",ECDI=$P(ECCA,U,13),ECDOCPC=$$PRVCLASS^ECXUTL($P(ECCA,U,14),ECDT)
  ...S ECPRO=$P(ECCA,U,2),ECSTAT=$P($G(^RA(72,+$P(ECCA,U,3),0)),U,3)
  ...;get the primary interpreting staff and the person class DBIA #65
  ...S ECXIS=$P(ECCA,U,15),ECXISPC=$$PRVCLASS^ECXUTL(ECXIS,ECDT)
- ...S ECISNPI=$$NPI^XUSNPI("Individual_ID",ECXIS,ECDT)
- ...S:+ECISNPI'>0 ECISNPI="" S ECISNPI=$P(ECISNPI,U)
- ...;prefix interpreting radiologist with a "2" if not null
- ...S ECXIS=$S(ECXIS:"2"_ECXIS,1:"")
+ ...S ECXIS="2"_ECXIS
  ...;get the principal clinic ien DBIA #65
  ...S ECXPRCL=$P(ECCA,U,8)
  ...;get the clinic stop code from file #44
@@ -105,33 +96,23 @@ FILE ;file record
  ;ser^diag code^req physician^modifiers^mov #^treat spec^time^
  ;imaging type^primary care team^primary care provider
  ;node1
- ;mpi^dss dept^placeholder^placeholder^pc prov person class^
- ;assoc pc provider^assoc pc prov person class^placeholder^dom^
+ ;mpi^dss dept^req physician npi^pc provider npi^pc prov person class^
+ ;assoc pc provider^assoc pc prov person class^assoc pc prov npi^dom^
  ;observ pat ind^encounter num^ord stop code^ord date^division^
  ;dss product ECXDSSP^requesting provider person class ECDOCPC^interp-
  ;reting radiologist ECXIS^interpreting radiologist pc ECXISPC^princi-
- ;pal clinic ECXPRCL^clinc stop code ECXCSC^emergency response indicator
- ;(FEMA) ECXERI^assoc pc provider npi^interpreting rad npi^pc provider npi^req physician npi
- ;
- ;convert specialty to PTF Code for transmission
- N ECXDATA,ECXTSC
- S ECXDATA=$$TSDATA^DGACT(42.4,+ECXTS,.ECXDATA)
- S ECXTSC=$G(ECXDATA(7))
- ;done
+ ;pal clinic ECXPRCL^clinc stop code ECXCSC
  N DA,DIK
  S EC7=$O(^ECX(ECFILE,999999999),-1),EC7=EC7+1
  S ECODE=EC7_U_EC23_U_ECXDIV_U_ECXDFN_U_ECXSSN_U_ECXPNM_U_ECXA_U
  S ECODE=ECODE_ECXDAY_U_ECXCPT_U_ECPRO_U_ECLOC_U_ECXW_U_ECS_U_ECDI_U
- S ECODE=ECODE_ECDOC_U_ECMODS_U_ECXMN_U_ECXTSC_U_ECTM_U_ECTY_U_ECPTTM_U
+ S ECODE=ECODE_ECDOC_U_ECMODS_U_ECXMN_U_ECXTS_U_ECTM_U_ECTY_U_ECPTTM_U
  S ECODE=ECODE_ECPTPR_U
- S ECODE1=ECXMPI_U_ECXDSSD_U_U_U_ECCLAS_U_ECASPR_U
- S ECODE1=ECODE1_ECCLAS2_U_U_ECXDOM_U_ECXOBS_U_ECXENC_U_ECXORDST_U
+ S ECODE1=ECXMPI_U_ECXDSSD_U_ECDOCNPI_U_ECPTNPI_U_ECCLAS_U_ECASPR_U
+ S ECODE1=ECODE1_ECCLAS2_U_ECASNPI_U_ECXDOM_U_ECXOBS_U_ECXENC_U_ECXORDST_U
  S ECODE1=ECODE1_ECXORDDT_U_ECXPDIV_U
  I ECXLOGIC>2004 S ECODE1=ECODE1_ECXDSSP_U_ECDOCPC
  I ECXLOGIC>2005 S ECODE1=ECODE1_U_ECXIS_U_ECXISPC_U_ECXPRCL_U_ECXCSC
- I ECXLOGIC>2006 S ECODE1=ECODE1_U_ECXERI
- I ECXLOGIC>2007 S ECODE1=ECODE1_U_ECASNPI_U_ECISNPI_U_ECPTNPI_U_ECDOCNPI
- I ECXLOGIC>2010 S ECODE1=ECODE1_U_ECXPATCAT ;127 PATCAT
  S ^ECX(ECFILE,EC7,0)=ECODE,^ECX(ECFILE,EC7,1)=ECODE1,ECRN=ECRN+1
  S DA=EC7,DIK="^ECX("_ECFILE_"," D IX1^DIK K DIK,DA
  I $D(ZTQUEUED),$$S^%ZTLOAD S QFLG=1

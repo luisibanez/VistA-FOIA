@@ -1,5 +1,5 @@
 PSXVND ;BIR/WPB,HTW,PWC-File Release Data at the Remote Facility ;10/29/98  2:13 PM
- ;;2.0;CMOP;**1,2,4,5,14,18,19,15,24,23,27,35,39,36,48,62,58**;11 Apr 97;Build 2
+ ;;2.0;CMOP;**4,5,14,18,19,15,24,23,27,35,39,36,48**;11 Apr 97
  ;Reference to ^PSDRUG( supported by DBIA #1983
  ;Reference to ^PSRX( supported by DBIA #1977
  ;Reference to ^PS(59 supported by DBIA #1976
@@ -60,7 +60,7 @@ PAR ..S PSOPAR=$G(^PS(59,PSOSITE,1))
  .I $G(STAT)=1 D
  ..I FILL=0 S DA=RXN,DIE="^PSRX(",DR="31///"_RELDT D ^DIE K DIE,DA,DR
  ..I FILL>0 S DA(1)=RXN,DA=FILL,DIE="^PSRX("_RXN_",1,",DR="17///"_RELDT_";10.1///"_RELDT D ^DIE K DIE,DR,DA
- ..; I $$VERSION^XPDUTL("OUTPATIENT PHARMACY")<7 S X="RGEQ" X ^%ZOSF("TEST") I  D EN^RGEQ("RX",RXN)  ;CIRN
+ ..I $$VERSION^XPDUTL("OUTPATIENT PHARMACY")<7 S X="RGEQ" X ^%ZOSF("TEST") I  D EN^RGEQ("RX",RXN)  ;CIRN
  ..I $$VERSION^XPDUTL("OUTPATIENT PHARMACY")>6 D EN^PSOHLSN1(RXN,"ZD")
  .S DA(1)=RXN,DA=RECD,DIE="^PSRX("_RXN_",4,"
  .S DR="3////"_$S(STAT=2:3,STAT=1:1,1:"")_";4////"_NDC_";5////"_$S(STAT=2:RELDT,STAT=1:"",1:"")_";8////"_$S(STAT=2:"^S X=$G(REASON)",STAT=1:"",1:"")_";10////"_$G(CARRIER)_";11////"_$G(PKGID)_";9////"_$G(SHPDT)
@@ -79,7 +79,7 @@ LOT S ALOT=$P(XMRG,"|",2)
  .S:'$D(^PSRX(RXN,5,0)) ^PSRX(RXN,5,0)="^52.0401A^^"
  .F RR=1:1 Q:$P(ALOT,"\",RR)=""  S LOT1=$P(ALOT,"\",RR),LOT=$P(LOT1,"^",1),EXDT=$P(LOT1,"^",2) D
  ..S DA(1)=RXN,X=LOT,DIC="^PSRX("_RXN_",5,",DIC("DR")="1////"_EXDT_";2////"_XFILL,DIC(0)="Z"
-FF ..D FILE^DICN K DIC("DR"),DIC,DA,LOT,EXDT,DD,DO
+FF ..D FILE^DICN K DIC("DR"),DIC,DA,LOT,EXDT
  Q
 TMP S ^TMP($J,"PSXVND",RX)=FLAG_"^"_XFILL_"^"_P515A_"^"_P515B_"^"_HERE_"^"_$S(FLAG=1:RLDT,1:"") Q
 MAIL S XMSUB="CMOP Release Data Acknowledgement",LCNT=1,XMDUZ=.5

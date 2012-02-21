@@ -1,5 +1,5 @@
 BPSSCRU4 ;BHAM ISC/SS - ECME SCREEN UTILITIES ;05-APR-05
- ;;1.0;E CLAIMS MGMT ENGINE;**1,3**;JUN 2004;Build 20
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
  ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;USER SCREEN
  Q
@@ -33,7 +33,7 @@ ASKLINE(BPROMPT,BPTYPE,BPERRMES,BPDFLT) ;
  . I BPCNT<1 S BPCNT=BPCNT+1 W !
  . E  S BPCNT=0 D RE^VALM4
  . I BPRET=-1 W " - Invalid line number" ; (invalid Patient summary line)"
- . I BPRET=-8 W " - ",$S($G(BPERRMES)]"":BPERRMES,1:" Invalid line number")
+ . I BPRET=-8 W " - ",$S($G(BPERRMES):BPERRMES,1:" Invalid line number")
  . I BPRET=-4 W " - Invalid line number" ; (invalid RX line)"
  . I BPRET=-2 W " - Please select Patient's summary line."
  . I BPRET=-3 W " - Please specify RX line."

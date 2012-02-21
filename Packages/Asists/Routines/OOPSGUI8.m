@@ -1,5 +1,5 @@
 OOPSGUI8 ;WIOFO/LLH-RPC Broker calls for GUI ;10/23/01
- ;;2.0;ASISTS;**8,7,11,15,21**;Jun 03, 2002;Build 7
+ ;;2.0;ASISTS;**8,7,11**;Jun 03, 2002
  ;
 EN1(RESULTS,INPUT) ; Entry point for routine
  ;  Input:  INPUT contains the IEN of the ASISTS record and the 
@@ -27,34 +27,23 @@ EN1(RESULTS,INPUT) ; Entry point for routine
 WCPS4E ; allow WCP to sign for employee if all approvals given
  N CONT,EHS,SIGN,SOS,VALID,VIEW
  S SIGN=0,VALID=0,VIEW=1
- ; V2_P15 - all code related to safety and occ health signing is obsolete, commented out
- ;S SOS=$$GET1^DIQ(2260,IEN,76,"I")
- ;S EHS=$$GET1^DIQ(2260,IEN,79,"I")
- ;S CONT=$S(DUZ=SOS:"S",DUZ=EHS:"H",1:"")
- ;I (CONT="S")!(CONT="H") D
- ;. S RESULTS(CN)="You have approved as "_$S(CONT="S":"Safety Officer",CONT="H":"Occ Health Rep",1:"")
- ;. S RESULTS(CN)=RESULTS(0)_" and cannot sign as Employee.",CN=CN+1
- ;. S RESULTS(CN)="Three different individuals must be involved."
- ;. S VIEW=0
- ;I '$G(SOS) S VIEW=0 D
- ;. S RESULTS(CN)="Safety Officer has not approved WCP signing for employee.",CN=CN+1
- ;I '$G(EHS) S VIEW=0 D
- ;. S RESULTS(CN)="Occupational Health has not approved WCP signing for employee.",CN=CN+1
+ S SOS=$$GET1^DIQ(2260,IEN,76,"I")
+ S EHS=$$GET1^DIQ(2260,IEN,79,"I")
+ S CONT=$S(DUZ=SOS:"S",DUZ=EHS:"H",1:"")
+ I (CONT="S")!(CONT="H") D
+ . S RESULTS(CN)="You have approved as "_$S(CONT="S":"Safety Officer",CONT="H":"Occ Health Rep",1:"")
+ . S RESULTS(CN)=RESULTS(0)_" and cannot sign as Employee.",CN=CN+1
+ . S RESULTS(CN)="Three different individuals must be involved."
+ . S VIEW=0
+ I '$G(SOS) S VIEW=0 D
+ . S RESULTS(CN)="Safety Officer has not approved WCP signing for employee.",CN=CN+1
+ I '$G(EHS) S VIEW=0 D
+ . S RESULTS(CN)="Occupational Health has not approved WCP signing for employee.",CN=CN+1
  I VIEW D
  . ; Allow clearing WCP signature, employee may be able to sign
  . I $$GET1^DIQ(2260,IEN,119,"I") D CLRES^OOPSUTL1(IEN,"E",FORM)
- . ;V2P15 - needed to change the logic in the remaining code due to new functionality where
- . ;        Safety and Occ Health do not need to approve prior to WC signing for employee.
- . ;        Must now check required fields are completed before letting WC sign.
- . ;D VALIDATE^OOPSUTL4(IEN,FORM,"E",.VALID)
- . ;V2_P15 llh - modifed for patch 15 - RESULTS will contain the list of invalid fields if any
- . ;             from OOPSGUI9.  If all fields ok, set RESULTS(0) to indicate that by setting =1
- . S RESULTS(0)="The following required fields must be completed before signing"
- . D VALIDATE^OOPSGUI9(IEN,FORM,"E",.VALID)
- . ;09/15/09 - v2_P21 remedy ticket 300258 - put next line back in - took out ;
+ . D VALIDATE^OOPSUTL4(IEN,FORM,"E",.VALID)
  . I 'VALID S RESULTS(CN)="All required fields not completed",CN=CN+1 Q
- . I VALID S RESULTS(0)=1
- . I CALL="W" N CALLER S CALLER="E"
  . D EMP^OOPSVAL1
 EXIT ;
  Q
@@ -62,7 +51,6 @@ VALID() ; make sure same person is not signing for both safety and EH and if
  ; signed from menu option being called not needed again - so quit
  N CONT,EHAPP,ERR,SOAPP,VALID
  S VALID=1,ERR=0
- ;
  S SOAPP=$P($G(^OOPS(2260,IEN,"WCSE")),U)
  S EHAPP=$P($G(^OOPS(2260,IEN,"WCSE")),U,4)
  S CONT=$S(DUZ=SOAPP:"S",DUZ=EHAPP:"H",1:"")

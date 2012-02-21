@@ -1,105 +1,15 @@
-TIUPS209 ; SLC/AJB - Active Titles Report & Cleanup v2; 06/01/06 ; 7/26/06 11:46am
- ;;1.0;TEXT INTEGRATION UTILITIES;**209,218**;Jun 20, 1997;Build 1
+TIUPS209 ; SLC/AJB - Active Titles Report & Cleanup ; 03/24/06
+ ;;1.0;TEXT INTEGRATION UTILITIES;**209**;Jun 20, 1997
  ;
  Q
 EN ; control segment
- N ANS,TIUOMIT
+ N ANS,HDR,RECS,RPT,TEMP,TMP,TIUNAME,TIUOMIT,TIUUNK
  W @IOF
  D ASKUSER(.ANS,"Inactivate the unused Document Titles at this time") Q:$G(ANS("EXIT"))="YES"
  D
  .N POP,TIUDESC,TIURTN,TIUSAVE
  .S TIUDESC="TIUPS209 Active Title Report & Cleanup",TIURTN="REPORT^TIUPS209",TIUSAVE("*")=""
- .W ! D EN^XUTMDEVQ(TIURTN,TIUDESC,.TIUSAVE)
- Q
-REPORT ;
- N CNT,ENDDT,ENDTIME,GBL,LINE,LINETXT,STRDT,STRTIME,TIUDA,TMP,TOTTIME,TIUX,TIUY
- S STRTIME=$$NOW^XLFDT ; start time of search
-RESTART ;
- S CNT=$NA(CNT) ; counters
- S GBL=$NA(^TIU(8925.1,"B")) ; global to be searched
- S TMP=$NA(^TMP("TIUPS209",$J)) ; sets temporary storage location
- S @CNT@("T#8925.1")=0 ; number of document titles in 8925.1
- S (TIUX,TIUY)=0 ; gets all document titles from 8925.1
- F  S TIUX=$O(@GBL@(TIUX)) Q:TIUX=""  F  S TIUY=$O(@GBL@(TIUX,TIUY)) Q:'+TIUY  D
- . I $P($G(^TIU(8925.1,TIUY,0)),U,4)="DOC" S @TMP@("B",TIUY)=0,@CNT@("T#8925.1")=@CNT@("T#8925.1")+1
- S GBL=$NA(^TIU(8925,"F")) ; global to be searched
- S STRDT=$P($$FMADD^XLFDT($$NOW^XLFDT,-365),".") ; start date to search
- S ENDDT=$P($$NOW^XLFDT,".")_".24" ; end date to search
- S @CNT@("T#8925")=0 ; number of documents searched in 8925
- S @CNT@("T#M0NODE")=0 ; number of documents with invalid .01 field
- S @CNT@("T#WT8925.1")=0 ; number of documents with incorrect .01 field (non title - 8925.1)
- S @CNT@("T#ADD8925.1")=0 ; number of document titles added due to wrong type
- S @CNT@("T#GDOCS")=0 ; number of documents
- S TIUDA=0
- F  S STRDT=$O(@GBL@(STRDT)) Q:'+STRDT!(STRDT>ENDDT)  F  S TIUDA=$O(@GBL@(STRDT,TIUDA)) Q:'+TIUDA  D
- . S @CNT@("T#8925")=@CNT@("T#8925")+1 ; count of documents searched
- . N TIUD0,TIUD12,TIUX S TIUD0=$G(^TIU(8925,TIUDA,0)),TIUD12=$G(^TIU(8925,TIUDA,12))
- . I '+TIUD0 S @TMP@("UNK",+TIUDA)="",@CNT@("T#M0NODE")=@CNT@("T#M0NODE")+1 Q  ; track documents with invalid .01 field
- . I $P($G(^TIU(8925.1,+TIUD0,0)),U,4)'="DOC" S TIUX=1,@CNT@("T#WT8925.1")=@CNT@("T#WT8925.1")+1,@TMP@("WRT",+TIUD0)=""
- . I '+$D(@TMP@("B",+TIUD0)) S @TMP@("B",+TIUD0)=0,@CNT@("T#ADD8925.1")=@CNT@("T#ADD8925.1")+1
- . S @TMP@("B",+TIUD0)=(+@TMP@("B",+TIUD0)+1) S:'+$G(TIUX) @CNT@("T#GDOCS")=@CNT@("T#GDOCS")+1
- . S @TMP@("B",+TIUD0)=@TMP@("B",+TIUD0)_U_+$P(TIUD12,".")_U_$P(TIUD12,U,2)_U_+TIUD0_U_$P(^TIU(8925.1,+TIUD0,0),U,7)
- S @CNT@("T#ERR8925.1")=0 ; number of errorneous document titles
- S @CNT@("T#U8925.1")=0 ; number of used document titles
- S @CNT@("T#UN8925.1")=0 ; number of unused document titles
- S TIUDA=0
- F  S TIUDA=$O(@TMP@("B",TIUDA)) Q:'+TIUDA  D
- . I +$L($P($G(^TIU(8925.1,TIUDA,0)),U))<3 S @CNT@("T#ERR8925.1")=@CNT@("T#ERR8925.1")+1,@TMP@("B.1",+TIUDA)="" Q
- . I +@TMP@("B",TIUDA) S @CNT@("T#U8925.1")=@CNT@("T#U8925.1")+1,@TMP@("RPT","USED",$$GET1^DIQ(8925.1,+TIUDA,.01))=@TMP@("B",+TIUDA) Q
- . S @CNT@("T#UN8925.1")=@CNT@("T#UN8925.1")+1,@TMP@("RPT","UNUSED",$$GET1^DIQ(8925.1,+TIUDA,.01))=$$GETLAST(+TIUDA)
- S ENDTIME=$$NOW^XLFDT,TOTTIME=$FN($$FMDIFF^XLFDT(STRTIME,ENDTIME,2)/60,"-")
- I $G(ANS("INACT"))="YES" D UPDATE K @TMP S ANS("INACT")="" G RESTART
- F LINE=1:1 S LINETXT=$P($T(RPT+LINE),";;",2) Q:LINETXT="EOM"  W !,@LINETXT
- S TIUX=""
- F TIUY="UNUSED","USED" F  S TIUX=$O(@TMP@("RPT",TIUY,TIUX)) Q:TIUX=""  D
- . N DATA,DISPLAY,STATUS,TITLE
- . S DATA=@TMP@("RPT",TIUY,TIUX)
- . I TIUY="UNUSED",$P(DATA,U,5)=13 Q  ; don't print unused/inactive titles
- . S STATUS=$S($P(DATA,U,5)=11:"",$P(DATA,U,5)=13:" [Inactive]",1:" [unknown]")
- . S TITLE=TIUX_STATUS,TITLE=$$WRAP^TIULS(TITLE,38)
- . S DISPLAY=$$SETSTR^VALM1($P(TITLE,"|"),"",1,38)
- . S DISPLAY=$$SETSTR^VALM1($$SPACER(+DATA,5,1),DISPLAY,40,5)
- . S DISPLAY=$$SETSTR^VALM1($$FMTE^XLFDT($P(DATA,U,2)),DISPLAY,47,12)
- . S DISPLAY=$$SETSTR^VALM1($S($P(DATA,U,3)="N/A":"N/A",1:$$GET1^DIQ(200,+$P(DATA,U,3),.01)),DISPLAY,61,18)
- . W !,DISPLAY
- . I $L(TITLE,"|")>1 F DATA=2:1:$L(TITLE,"|") W !,?2,$P(TITLE,"|",DATA)
- I +$D(@TMP@("B.1")) D
- . W !!,"The following IENs from File #8925.1 have an invalid #.01 Field.",!
- . S TIUDA=0 F  S TIUDA=$O(@TMP@("B.1",TIUDA)) Q:'+TIUDA  W !,TIUDA
- I +$D(@TMP@("WRT")) D
- . W !!,"The following IENs from File #8925.1 have an incorrect #.04 Field.",!
- . S TIUDA=0 F  S TIUDA=$O(@TMP@("WRT",TIUDA)) Q:'+TIUDA  D
- . . N DATA,TITLE S TITLE=$$GET1^DIQ(8925.1,TIUDA,.01),TITLE=$$WRAP^TIULS(TITLE,50)
- . . W !,$$SPACER(TIUDA,12)_$P(TITLE,"|")_" ["_$$GET1^DIQ(8925.1,TIUDA,.04)_"]"
- . . I $L(TITLE,"|")>1 F DATA=2:1:$L(TITLE,"|") W !,?14,$P(TITLE,"|",DATA)
- I +$D(@TMP@("UNK")) D
- . W !!,"The following DOCUMENT IENs have an incorrect (null or zero) #.01 Field.",!
- . S TIUDA=0 F  S TIUDA=$O(@TMP@("UNK",TIUDA)) Q:'+TIUDA  W !,$$SPACER(TIUDA,12) ; I +@TMP@("UNK",TIUDA) W $$GET1^DIQ(8925.1,@TMP@("UNK",TIUDA),.01)
- K @TMP
- Q
-RPT ;
- ;;"Elapsed Time:    "_(TOTTIME\1)_" minute(s) "_($FN((TOTTIME#1)*60,"-",0))_" second(s)"
- ;;""
- ;;"                 # of Used Titles  : "_$$SPACER(@CNT@("T#U8925.1"),10,1)
- ;;"               # of Unused Titles  : "_$$SPACER(@CNT@("T#UN8925.1"),10,1)
- ;;"              # of Invalid Titles  : "_$$SPACER(@CNT@("T#ERR8925.1"),10,1)_$S(+@CNT@("T#ERR8925.1"):" (See End of Report)",1:"")
- ;;"                                     ----------"
- ;;"                # of Total Titles  : "_$$SPACER((@CNT@("T#8925.1")+@CNT@("T#ADD8925.1")),10,1)
- ;;""
- ;;"                        # of Docs  : "_$$SPACER(@CNT@("T#GDOCS"),10,1)
- ;;"    # of Docs Incorrect .01 Field  : "_$$SPACER(@CNT@("T#WT8925.1"),10,1)_$S(+@CNT@("T#WT8925.1"):" (See End of Report)",1:"")
- ;;"    # of Docs Zero/Null .01 Field  : "_$$SPACER(@CNT@("T#M0NODE"),10,1)_$S(+@CNT@("T#M0NODE"):" (See End of Report)",1:"")
- ;;"                                     ----------"
- ;;"         # of Total Docs Searched  : "_$$SPACER(@CNT@("T#8925"),10,1)
- ;;""
- ;;"       Current User:  "_($$GET1^DIQ(200,+$G(DUZ),.01))
- ;;"       Current Date:  "_($$HTE^XLFDT($H))
- ;;"Date range searched:  "_($$FMTE^XLFDT($P($$FMADD^XLFDT($$NOW^XLFDT,-365),"."),"D"))_" - "_($$FMTE^XLFDT(ENDDT,"D"))
- ;;""
- ;;"                                        # of"
- ;;"Document Title                          Docs  Last DT Used  Author/Dictator"
- ;;"--------------                          ----  ------------  ---------------"
- ;;EOM
+ .W ! D PREP,EN^XUTMDEVQ(TIURTN,TIUDESC,.TIUSAVE)
  Q
 ASKUSER(ANS,DIR,TIUQUIT) ; ask the user if they want to update titles now
  I $G(ANS("EXIT"))="YES"!($G(ANS("INACT"))="NO") Q
@@ -119,16 +29,104 @@ ASKUSER(ANS,DIR,TIUQUIT) ; ask the user if they want to update titles now
  . D ASKUSER(.ANS,"Are you sure you want to change their status to INACTIVE",1)
  . I ANS("INACT")="YES" D OMIT
  Q
-GETLAST(TIUDA) ;
- N IEN,GBL,ST,TDT,TEMP,TIUY
- S GBL=$NA(^TIU(8925,"ALL","ANY",TIUDA))
- S TIUY="0^N/A^N/A"_U_TIUDA_U_$P($G(^TIU(8925.1,TIUDA,0)),U,7)
- S ST="" F  S ST=$O(@GBL@(ST)) Q:'ST  S TDT="",TDT=$O(@GBL@(+ST,TDT)),IEN="",IEN=$O(@GBL@(+ST,+TDT,IEN)) S TEMP(TDT)=IEN
- S TDT="",TDT=$O(TEMP(TDT)) I +$G(TEMP(+TDT)) S IEN=+TEMP(TDT) D
- . N TIUD0,TIUD12 S TIUD0=$G(^TIU(8925,IEN,0)),TIUD12=$G(^TIU(8925,IEN,12))
- . I '+TIUD0,'$D(@TMP@("UNK",+IEN)) S @TMP@("UNK",+IEN)="",@CNT@("T#M0NODE")=@CNT@("T#M0NODE")+1,@CNT@("T#8925")=@CNT@("T#8925")+1
- . S $P(TIUY,U,2)=$P(+TIUD12,"."),$P(TIUY,U,3)=$P(TIUD12,U,2)
+GETLAST(TIUDA) ; finds last date a document title is used
+ N TIUD0,TIUD12,TIUDB,TIUDT,TIUSTAT,TIUX,TIUY
+ S TIUY=0_U_"N/A"_U_"N/A"_U_TIUDA
+ S (TIUDT,TIUSTAT)=0 F  S TIUSTAT=$O(^TIU(8925,"ALL","ANY",TIUDA,TIUSTAT)) Q:'+TIUSTAT  D
+ . S (TIUX,TIUY)="",TIUX=$O(^TIU(8925,"ALL","ANY",TIUDA,TIUSTAT,TIUX))
+ . S:+TIUX TIUY=$O(^TIU(8925,"ALL","ANY",TIUDA,TIUSTAT,TIUX,TIUY))
+ . S:+TIUY TIUSTAT(TIUX)=TIUY
+ S TIUX="",TIUX=$O(TIUSTAT(TIUX)) I +TIUX S TIUDB=TIUSTAT(TIUX),TIUD0=$G(^TIU(8925,TIUDB,0)),TIUD12=$G(^TIU(8925,TIUDB,12)) I '+TIUD0 S TIUUNK(TIUDB)=""
+ I +$G(TIUD12) S TIUY=0_U_+$P(TIUD12,".")_U_$P(TIUD12,U,2)_U_+TIUDA
  Q TIUY
+OUTPUT ; prints report
+ N NUM S NUM=""
+ F  S NUM=$O(HDR(NUM)) Q:NUM=""  W HDR(NUM),!
+ F  S NUM=$O(RPT(NUM)) Q:NUM=""  W RPT(NUM),!
+ Q
+PREP ; prepares list of document titles
+ N TIUD0,TIUDA,TIUTITLE
+ S TIUNAME=$NA(^TMP("TIUPS209",$J)),TIUNAME(1)=$NA(^TEMP("TIUPS209",$J)),(TIUDA,TIUTITLE)="",RECS("TOTAL")=0
+ K @TIUNAME,@TIUNAME(1) ; cleans globals before use
+ F  S TIUTITLE=$O(^TIU(8925.1,"B",TIUTITLE)) Q:TIUTITLE=""  F  S TIUDA=$O(^TIU(8925.1,"B",TIUTITLE,TIUDA)) Q:'+TIUDA  S TIUD0=$G(^TIU(8925.1,TIUDA,0)) I $P(TIUD0,U,4)="DOC" S @TIUNAME@(TIUDA)=0,RECS("TOTAL")=RECS("TOTAL")+1
+ Q
+REPORT ;
+ N SPACER,TIU,TIUCNT,TIUDA,TIULVL,TIUTITLE
+ ;
+ ; get documents used in the last year
+ ;
+ S TIU("EDT")=$P($$NOW^XLFDT,".")_".24",TIU("SDT")=$P($$FMADD^XLFDT($$NOW^XLFDT,-365),"."),TIU("START")=$$NOW^XLFDT,TIUDA=""
+ F  S TIU("SDT")=$O(^TIU(8925,"F",TIU("SDT"))) Q:'+TIU("SDT")!(TIU("SDT")>TIU("EDT"))  F  S TIUDA=$O(^TIU(8925,"F",TIU("SDT"),TIUDA)) Q:'+TIUDA  D
+ . N TIUD0,TIUD12 S TIUD0=$G(^TIU(8925,TIUDA,0)),TIUD12=$G(^TIU(8925,TIUDA,12))
+ . I '+$D(@TIUNAME@(+TIUD0)) S @TIUNAME@(+TIUD0)=0
+ . I '+TIUD0 S TIUUNK(TIUDA)=""
+ . S @TIUNAME@(+TIUD0)=(@TIUNAME@(+TIUD0)+1)_U_+$P(TIUD12,".")_U_$P(TIUD12,U,2)_U_+TIUD0
+ ;
+ ; sort documents
+ ;
+ S (RECS("INACT"),RECS("ACT"))=0,TIUDA="" F  S TIUDA=$O(@TIUNAME@(TIUDA)) Q:TIUDA=""  D
+ . I '+@TIUNAME@(TIUDA) S RECS("INACT")=RECS("INACT")+1,@TIUNAME(1)@("A",$P(^TIU(8925.1,TIUDA,0),U))=$$GETLAST(TIUDA) Q
+ . S RECS("ACT")=RECS("ACT")+1,@TIUNAME(1)@("B",$S(+$L($P($G(^TIU(8925.1,TIUDA,0)),U)):$P(^TIU(8925.1,TIUDA,0),U),1:"UNKNOWN"))=@TIUNAME@(TIUDA) ; $P(^TIU(8925.1,TIUDA,0),U)
+ S TIU("STOP")=$$NOW^XLFDT,TIU("ELAPSED")=$FN($$FMDIFF^XLFDT(TIU("START"),TIU("STOP"),2)/60,"-")
+ ;
+ ; prepare report
+ ;
+ S HDR(1)="Elapsed Time:    "_(TIU("ELAPSED")\1)_" minute(s) "_($FN((TIU("ELAPSED")#1)*60,"-",0))_" second(s)"
+ S HDR(2)=""
+ S SPACER="",$P(SPACER," ",(8-$L(RECS("INACT"))))=" "
+ S HDR(3)="# of Records:      Unused Titles "_SPACER_RECS("INACT")
+ S SPACER="",$P(SPACER," ",(8-$L(RECS("ACT"))))=" "
+ S HDR(4)="                     Used Titles "_SPACER_RECS("ACT")
+ S SPACER="",$P(SPACER," ",(8-$L(RECS("TOTAL"))))=" "
+ S HDR(5)="                    Total Titles "_SPACER_RECS("TOTAL")
+ S HDR(6)=""
+ S RPT(1)="       Current User:  "_($$GET1^DIQ(200,+$G(DUZ),.01))
+ S RPT(2)="       Current Date:  "_($$HTE^XLFDT($H))
+ S RPT(3)="Date range searched:  "_($$FMTE^XLFDT($P($$FMADD^XLFDT($$NOW^XLFDT,-365),"."),"D"))_" - "_($$FMTE^XLFDT(TIU("EDT"),"D"))
+ S RPT(4)=""
+ S RPT(5)="                                         # of"
+ S RPT(6)="Document Title                           Docs  Last DT Used  Author/Dictator"
+ S RPT(7)="--------------                           ----  ------------  ---------------"
+ ;
+ ; inactivate if selected
+ ;
+ D:$G(ANS("INACT"))="YES" UPDATE
+ ;
+ ; process report body
+ ;
+ S (TIULVL,TIUTITLE)="",TIUCNT=7
+ F  S TIULVL=$O(@TIUNAME(1)@(TIULVL)) Q:TIULVL=""  F  S TIUTITLE=$O(@TIUNAME(1)@(TIULVL,TIUTITLE)) Q:TIUTITLE=""  D
+ . N TIUDISP,TIUTIT,TIUTMP
+ . S TIUTMP=@TIUNAME(1)@(TIULVL,TIUTITLE)
+ . D  I TIULVL="A",$P($G(^TIU(8925.1,$P(TIUTMP,U,4),0)),U,7)=13 Q
+ . . S:$P($G(^TIU(8925.1,$P(TIUTMP,U,4),0)),U,7)=13 TIUTMP(1)=" [currently inactive]"
+ . . S:$P($G(^TIU(8925.1,$P(TIUTMP,U,4),0)),U,4)'="DOC" TIUTMP(1)=" *["_$S(+$L($$GET1^DIQ(8925.1,$P(TIUTMP,U,4),.04)):$$GET1^DIQ(8925.1,$P(TIUTMP,U,4),.04),1:"missing")_"]*"
+ . S TIUTIT=$$WRAP^TIULS(TIUTITLE_$G(TIUTMP(1)),40)
+ . S TIUDISP=$$SETSTR^VALM1($P(TIUTIT,"|"),"",1,40)
+ . S TIUDISP=$$SETSTR^VALM1(+TIUTMP,TIUDISP,42,5)
+ . S TIUDISP=$$SETSTR^VALM1($$FMTE^XLFDT($P(TIUTMP,U,2)),TIUDISP,48,12)
+ . S TIUDISP=$$SETSTR^VALM1($S(+$P(TIUTMP,U,3):$$GET1^DIQ(200,$P(TIUTMP,U,3),.01),1:$P(TIUTMP,U,3)),TIUDISP,62,17)
+ . S TIUCNT=TIUCNT+1,RPT(TIUCNT)=TIUDISP
+ . I $L(TIUTIT,"|")>1 S TIUCNT=TIUCNT+1,RPT(TIUCNT)="     "_$P(TIUTIT,"|",2)
+ ;
+ I +$D(TIUUNK) D
+ . N TIUDA
+ . S TIUCNT=TIUCNT+1,RPT(TIUCNT)=""
+ . S TIUCNT=TIUCNT+1,RPT(TIUCNT)="The following DOCUMENT IENs have an incorrect #.01 Field (DOCUMENT TYPE)."
+ . S TIUCNT=TIUCNT+1,RPT(TIUCNT)=""
+ . S TIUDA="" F  S TIUDA=$O(TIUUNK(TIUDA)) Q:'+TIUDA  S TIUCNT=TIUCNT+1,RPT(TIUCNT)=TIUDA
+ ;
+ ; print report
+ ;
+ D OUTPUT,^%ZISC
+ ;
+ ; clean globals
+ ;
+ K @TIUNAME,@TIUNAME(1)
+ Q
+UPDATE ; updates status field of TIU Document Title to INACTIVE
+ N TIUDA S TIUDA=0 F  S TIUDA=$O(@TIUNAME@(TIUDA)) Q:'TIUDA  I '+@TIUNAME@(TIUDA),'+$D(TIUOMIT(TIUDA)) S $P(^TIU(8925.1,TIUDA,0),U,7)=13
+ Q
 OMIT ;
  N TIUCONT,TIUQUIT
  F  D  Q:$G(TIUQUIT)=1!($G(TIUCONT)=1)
@@ -147,15 +145,4 @@ OMIT ;
  . S DIR(0)="Y",DIR("A")="Is this correct",DIR("B")="YES"
  . D ^DIR I +Y'=1 W !! K TIUOMIT S:Y=U TIUQUIT=1 Q
  . S TIUCONT=1
- Q
-SPACER(TEXT,LENGTH,REV) ;
- N SPACER
- S SPACER=""
- S $P(SPACER," ",(LENGTH-$L(TEXT)))=" "
- S:'$D(REV) TEXT=TEXT_SPACER
- S:$D(REV) TEXT=SPACER_TEXT
- Q TEXT
-UPDATE ; updates status field of TIU Document Title to INACTIVE
- N TIUDA,TIUMSG,TIUUPDT
- S TIUDA=0 F  S TIUDA=$O(@TMP@("B",TIUDA)) Q:'+TIUDA  I '+@TMP@("B",TIUDA),'$D(TIUOMIT(TIUDA)) S TIUUPDT(8925.1,TIUDA_",",.07)=13 D FILE^DIE("","TIUUPDT","TIUMSG")
  Q

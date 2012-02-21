@@ -1,6 +1,6 @@
-FBUCLET1 ;ALBISC/TET - UNAUTHORIZED CLAIM LETTER (continued) ;29/NOV/2006
- ;;3.5;FEE BASIS;**12,23,32,38,101**;JAN 30, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+FBUCLET1 ;ALBISC/TET - UNAUTHORIZED CLAIM LETTER (continued) ;12/4/2001
+ ;;3.5;FEE BASIS;**12,23,32,38**;JAN 30, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
 PRINT ;print letter, don't update if variable fbnoup exists
  ;INPUT:  FBDA = ien of unauthorized claim, file 162.7
  ;        FBORDER = (optional) order number of status
@@ -55,7 +55,7 @@ PRINT ;print letter, don't update if variable fbnoup exists
  .W !?4,$$PDATE^FBUCUTL2(DT),!
  .W:'$P(FBUC,U,8) ?47,"In Reply Refer To: " W ?66,FBSTANUM,"/",FBMCODE
  .W !?50,$$GETNAME(+$P(FBUCA,U,4),2,"F","C")
- .S (FBCT,FBI)=0 F  S FBI=$O(FBADD(FBI)) Q:'FBI  W !?4,FBADD(FBI) S FBCT=FBCT+1 I FBI=1 W ?50,$$SSNL4^FBAAUTL($$SSN^FBAAUTL(+$P(FBUCA,U,4)))
+ .S (FBCT,FBI)=0 F  S FBI=$O(FBADD(FBI)) Q:'FBI  W !?4,FBADD(FBI) S FBCT=FBCT+1 I FBI=1 W ?50,$$SSN^FBAAUTL(+$P(FBUCA,U,4))
  .D HED
  .S DIWF="WC79I4",DIWL=1 D:$Y+$S(FBCCI>10&FBCC:FBCCI,1:10)>IOSL PAGE D TXT^FBUCUTL2("^FBAA(161.3,",FBLIEN,1,DIWF,DIWL,1,.FBCC,FBCCI) W !
  .S DIWF="WC72I8",DIWL=1
@@ -133,7 +133,7 @@ PAGE ;new page
  I $G(FBPS)=1 D
  .W:'$P(FBUC,U,8) ?47,"In Reply Refer To: " W ?66,FBSTANUM,"/",FBMCODE
  .W !?50,$$GETNAME(+$P(FBUCA,U,4),2,"F","C")
- .W !?50,$$SSNL4^FBAAUTL($$SSN^FBAAUTL(+$P(FBUCA,U,4)))
+ .W !?50,$$SSN^FBAAUTL(+$P(FBUCA,U,4))
 HED ;header to print after address and on each new page
  W !!!!?8,"REGARDING:",?20,FBRE,?38,FBNAM I $D(FBNAM1) W !?20,"VENDOR:",?38,FBNAM1
  W !?20,"FEE PROGRAM:",?38,FBPROG

@@ -1,5 +1,5 @@
-SDRPA08 ;BP-OIFO/OWAIN,ESW - Patient Appointment Data Compilation  ; 9/10/04 9:41am  ; Compiled April 24, 2006 16:55:01  ; Compiled July 1, 2008 16:48:16
- ;;5.3;Scheduling;**290,333,349,376,528**;AUG 13, 1993;Build 4
+SDRPA08 ;BP-OIFO/OWAIN,ESW - Patient Appointment Data Compilation  ; 9/10/04 9:41am
+ ;;5.3;Scheduling;**290,333,349,376**;AUG 13, 1993
  ;This program generates appointment data into ^TMP("SDDPT",$J to be used by HL7 builder
  Q
  ;
@@ -16,15 +16,15 @@ APPT(DFN,SDADT,SDDM,SDCL,SDSTAT) ;
  S SDCSTOP1=$G(ARRAY(44,SDCL_",",2503,"I"))  ; DSS credit stop of clinic.
  S SDCSTOP="",SDCSTOPD=""
  I SDCSTOP1>0 S SDCSTOP=$$GET1^DIQ(40.7,SDCSTOP1_",",1,"I"),SDCSTOPD=$$GET1^DIQ(40.7,SDCSTOP1_",",.01,"I")
- ;retrieve institution and station number through the division path
- S SDDIV=$$GET1^DIQ(44,SDCL_",",3.5,"I")
- S SDFAC=""
- I SDDIV'="" S SDINST=$$GET1^DIQ(40.8,SDDIV_",",.07,"I") D
- .S SDFAC=$S(SDINST="":"",1:$$GET1^DIQ(4,SDINST_",",99,"I"))  ; Station
- I SDFAC="" D
- .I SDDIV'="" S SDFAC1=$P($$SITE^VASITE(,SDDIV),"^",3) Q
- .S SDFAC=$P($$SITE^VASITE(,),"^",3)
+ S SDINST=$G(ARRAY(44,SDCL_",",3,"I"))  ; Institution
+ S SDFAC=$S(SDINST="":"",1:$$GET1^DIQ(4,SDINST_",",99,"I"))  ; Station
+ I SDFAC="" S SDDIV=$$GET1^DIQ(44,SDCL_",",3.5,"I") D
+ .I SDDIV'="" S SDINST=$$GET1^DIQ(40.8,SDDIV_",",.07,"I") I SDINST'="" D
+ ..S SDFAC=$S(SDINST="":"",1:$$GET1^DIQ(4,SDINST_",",99,"I"))  ; Station
+ .I SDDIV="" S SDFAC=$P($$SITE^VASITE(,),"^",3)
  ;
+ ;N SEQ S SEQ=0 F  S SEQ=$O(^SC(SDCL,"S",SDADT,1,SEQ)) Q:+SEQ'=SEQ  I $P(^SC(SDCL,"S",SDADT,1,SEQ,0),"^")=DFN Q
+ ;S SDCHKOUT=$$DTCONV($$GET1^DIQ(44.003,SEQ_","_SDADT_","_SDCL_",",303,"I"))  ; Checked out date.
  S SDCHKOUT=""
  I $P(SDSTAT,"^",5)'="" S SDCHKOUT=$$DTCONV($P(SDSTAT,"^",5))
  S SD8RD=""
@@ -43,7 +43,7 @@ APPT(DFN,SDADT,SDDM,SDCL,SDSTAT) ;
  S SD6A=$P(SDSTAT,"^",3) S SD8A=$P(SDSTAT,"^",4)
  S ^TMP("SDDPT",$J,DFN,SDADT)=$$DTCONV(SDADT)_"^"_SDDM_"^"_SDSDDT_"^^"_SDNAVA_"^"_SDCHKOUT_"^"_$$DTCONV(SDCDT)_"^^"_SDARDT
  S ^TMP("SDDPT",$J,DFN,SDADT)=^TMP("SDDPT",$J,DFN,SDADT)_"^"_SDNEW_"^^"_SDCL_"^"_SDCLNM_"^"_SDSTOP_"^"_SDCSTOP_"^"_SDFAC
- S ^TMP("SDDPT",$J,DFN,SDADT,"SCH")=$P(SDSTAT,U,1,6)_U_SD8RD ;446 added consult request date in SDRPA07
+ S ^TMP("SDDPT",$J,DFN,SDADT,"SCH")=$P(SDSTAT,U,1,6)_U_SD8RD
  S ^TMP("SDDPT",$J,DFN,SDADT,"STDC")=SDSTOPD_"^"_SDCSTOPD
  ; Outpatient classification.
  S SDSCE=$$GET1^DIQ(2.98,SDADT_","_DFN_",",21,"I")
@@ -73,10 +73,12 @@ NEWAT(DFN,SDADT,SDSTOP1,SDCSTOP1,SDFAC) ; New to facility/clinic flag.
  .S SDCL=$$GET1^DIQ(2.98,SDADT_","_DFN_",",.01,"I")
  .Q:$$GET1^DIQ(44,SDCL_",",8,"I")'=SDSTOP1
  .Q:$$GET1^DIQ(44,SDCL_",",2503,"I")'=SDCSTOP1
- .S SDDIV=$$GET1^DIQ(44,SDCL_",",3.5,"I")
- .S SDFAC1=""
- .I SDDIV'="" S SDINST=$$GET1^DIQ(40.8,SDDIV_",",.07,"I") D
- ..S SDFAC1=$S(SDINST="":"",1:$$GET1^DIQ(4,SDINST_",",99,"I"))  ; Station
+ .D GETS^DIQ(44,SDCL_",","3","I","ARRAY")
+ .S SDINST=$G(ARRAY(44,SDCL_",",3,"I"))  ; Institution
+ .S SDFAC1=$S(SDINST="":"",1:$$GET1^DIQ(4,SDINST_",",99,"I"))  ; Facility.
+ .I SDFAC1="" S SDDIV=$$GET1^DIQ(44,SDCL_",",3.5,"I") I SDDIV'="" D
+ ..S SDINST=$$GET1^DIQ(40.8,SDDIV_",",.07,"I") I SDINST'="" D
+ ...S SDFAC1=$S(SDINST="":"",1:$$GET1^DIQ(4,SDINST_",",99,"I"))  ; Facility.
  .I SDFAC1="" D
  ..I SDDIV'="" S SDFAC1=$P($$SITE^VASITE(,SDDIV),"^",3) Q
  ..S SDFAC1=$P($$SITE^VASITE(,),"^",3)
@@ -88,10 +90,12 @@ NEWAT(DFN,SDADT,SDSTOP1,SDCSTOP1,SDFAC) ; New to facility/clinic flag.
  .N SDCL,SDDIV,ARRAY
  .S SDCL=$$GET1^DIQ(2.98,SDADT_","_DFN_",",.01,"I")
  .Q:$$GET1^DIQ(44,SDCL_",",8,"I")'=SDSTOP1
- .S SDDIV=$$GET1^DIQ(44,SDCL_",",3.5,"I")
- .S SDFAC1=""
- .I SDDIV'="" S SDINST=$$GET1^DIQ(40.8,SDDIV_",",.07,"I") D
- ..S SDFAC1=$S(SDINST="":"",1:$$GET1^DIQ(4,SDINST_",",99,"I"))  ; Station
+ .D GETS^DIQ(44,SDCL_",","3","I","ARRAY")
+ .S SDINST=$G(ARRAY(44,SDCL_",",3,"I"))  ; Institution
+ .S SDFAC1=$S(SDINST="":"",1:$$GET1^DIQ(4,SDINST_",",99,"I"))  ; Facility.
+ .I SDFAC1="" S SDDIV=$$GET1^DIQ(44,SDCL_",",3.5,"I") I SDDIV'="" D
+ ..S SDINST=$$GET1^DIQ(40.8,SDDIV_",",.07,"I") I SDINST'="" D
+ ...S SDFAC1=$S(SDINST="":"",1:$$GET1^DIQ(4,SDINST_",",99,"I"))  ; Facility.
  .I SDFAC1="" D
  ..I SDDIV'="" S SDFAC1=$P($$SITE^VASITE(,SDDIV),"^",3) Q
  ..S SDFAC1=$P($$SITE^VASITE(,),"^",3)

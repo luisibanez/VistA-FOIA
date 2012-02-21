@@ -1,8 +1,8 @@
-PRSLIB01 ;JAH/WCIOFO-PAID UTILITIES AND LIBRARY 01 ;Mar 25, 2005
- ;;4.0;PAID;**45,93**;Sep 21, 1995;Build 7
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRSLIB01 ;JAH/WCIOFO-PAID UTILITIES AND LIBRARY 01;APRIL 1, 1999
+ ;;4.0;PAID;**45**;Sep 21, 1995
+ ;
  Q
-MAIN ;DISPLAY MONTHLY CALENDAR FOR ANY DATE
+MAIN ;DISPLAY MONTHLY CALENDER FOR ANY DATE
  N OUT
  F  D CALENDAR(.OUT) Q:OUT
  Q
@@ -15,14 +15,10 @@ CALENDAR(OUT) ;
  ;  Display the month.
  ;
  S OUT=1
- N ZFMDATE,%DT,DAY1,Y,MONTH,DAYS,YEAR,FIRSTDAY,LASTDAY,SHOWJULI,HIGHLITE
- N COUNT,HDR
+ N ZFMDATE,%DT,DAY1,Y,MONTH,DAYS,YEAR,FIRSTDAY,LASTDAY,SHOWJULI
  ;
  S %DT="AE" D ^%DT S ZFMDATE=Y ;          Ask date.
  Q:Y<1
- ; if picked month has today-highlight
- S HIGHLITE=0
- I $E(Y,1,5)=$E(DT,1,5) S HIGHLITE=+$E(DT,6,7)
  ;
  ; Ask if they want to see the elapsed days calendar.
  S SHOWJULI=$$ASKJULIA()
@@ -41,12 +37,11 @@ CALENDAR(OUT) ;
  S DAY1=$$WEEKDAY1(ZFMDATE) ;             Weekday of the 1st.
  ;
  ;
- S HDR=$$GETHEAD(Y)
+ S HEADER=$$GETHEAD(Y)
  W @IOF,!
- W "---------------",HDR,"------------"
- D DISPMO(DAY1,DAYS,HIGHLITE) ;                    Display month.
+ W "---------------",HEADER,"------------"
+ D DISPMO(DAY1,DAYS) ;                    Display month.
  I SHOWJULI D
- .   N JULID1
  .   S JULID1=$$GETJULI(FIRSTDAY,YEAR)
  .   W !!,"-------Elapsed Days Calendar---------"
  .   D DISPJULI(DAY1,DAYS,JULID1)
@@ -54,7 +49,7 @@ CALENDAR(OUT) ;
  ;
  ;DISPLAY HOLIDAYS
  ;
- N HO,HD,PRS8D,HOLIDAY
+ N HO,HD
  S PRS8D=$E(ZFMDATE,2,3) D EN^PRS8HD
  S FIRSTDAY=$E(FIRSTDAY,1,5)_"00"
  S HOLIDAY=FIRSTDAY
@@ -67,43 +62,6 @@ CALENDAR(OUT) ;
  I COUNT<1 W !,"  No Holidays this month."
  W !,"-----------------------------------",!
  S OUT=0
- Q
- ;= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
- ;
-SILMO(PRSDT) ;SILENT CALL TO DISPLAY MONTH
- ;  INPUT: PRSDT - must be fileman date
- ;
- N X,Y,%DT,DAY1,Y,MONTH,DAYS,YEAR,FIRSTDAY,LASTDAY,HIGHLITE,COUNT,HDR
- S X=PRSDT D ^%DT Q:Y<0
- ; if month has today-highlight
- S HIGHLITE=0
- I $E(Y,1,5)=$E(DT,1,5) S HIGHLITE=+$E(DT,6,7)
- S MONTH=$E(PRSDT,4,5),YEAR=$E(PRSDT,1,3)+1700
- S DAYS=$$DAYSINMO(YEAR,MONTH)
- S FIRSTDAY=$E(PRSDT,1,5)_"01",LASTDAY=$E(PRSDT,1,5)_DAYS
- ;
- ;Get day #s of pps in month
- N PPS
- I FIRSTDAY<3130000 D GETPPS(FIRSTDAY,LASTDAY)
- S DAY1=$$WEEKDAY1(PRSDT)
- S HDR=$$GETHEAD(Y)
- W @IOF,!,"---------------",HDR,"------------"
- D DISPMO(DAY1,DAYS,HIGHLITE)
- W !,"---------------Holidays------------",!
- ;
- ;holidays
- N HO,HD,PRS8D,HOLIDAY
- S PRS8D=$E(PRSDT,2,3) D EN^PRS8HD
- S FIRSTDAY=$E(FIRSTDAY,1,5)_"00"
- S HOLIDAY=FIRSTDAY
- S COUNT=0
- I FIRSTDAY<3140000 D
- .F  S HOLIDAY=$O(HD(HOLIDAY)) Q:HOLIDAY>LASTDAY!(HOLIDAY="")  D
- .. W !,?2,$P(HD(HOLIDAY),"^",2)," ",+$E(HOLIDAY,6,7),?15,$P(HD(HOLIDAY),"^")
- .. S COUNT=COUNT+1
- E  W "  Sorry, Can't find holidays past 2013." S COUNT=COUNT+1
- I COUNT<1 W !,"  No Holidays this month."
- W !,"-----------------------------------",!
  Q
  ;= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
  ;
@@ -123,11 +81,11 @@ GETPPS(FIRSTDAY,LASTDAY) ;
  ;= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
  ;
 GETHEAD(Y) ;
- N YEAR,MONTH,HDR,LENOFDT
- S HDR=$$FMTE^XLFDT(Y,"1D")
- S MONTH=$P(HDR," ")
- S LENOFDT=$L(HDR," ")
- S YEAR=$P(HDR," ",LENOFDT)
+ N YEAR,MONTH
+ S HEADER=$$FMTE^XLFDT(Y,"1D")
+ S MONTH=$P(HEADER," ")
+ S LENOFDT=$L(HEADER," ")
+ S YEAR=$P(HEADER," ",LENOFDT)
  Q MONTH_" "_YEAR
  ;
  ;= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -141,32 +99,18 @@ WEEKDAY1(ZDATE) ;get the weekday of the 1st day of the month
  Q $$DOW^XLFDT(ZDATE,1)
  ;= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
  ;
-DISPMO(DAYNO,NODAYS,HL) ;DISPLAY ENTIRE MONTH
+DISPMO(DAYNO,NODAYS) ;DISPLAY ENTIRE MONTH
  ;SAMPLE CALL:  D DISPMO(4,30) Produces a 30 month with day 1
  ;                                 beginning on Wednesday.
  ;
- ;Set up reverse video ON & OFF for today highlight
- I $G(HL)>0 N IORVOFF,IORVON S X="IORVOFF;IORVON" D ENDR^%ZISS
- ;
- N DAYS,DAYPOS,I,PPOFFSET,CNTDWN,BLDTAB
- S PPOFFSET=6,(BLDTAB,CNTDWN)=0
+ N DAYS,DAYPOS,I,PPOFFSET
+ S PPOFFSET=6
  S DAYS="SUN MON TUE WED THU FRI SAT"
  W !,?PPOFFSET,"  ",DAYS,!
  F I=1:1:NODAYS D
  . S DAYPOS=(DAYNO+I-1)#7
  . I DAYPOS=0 W ! I $G(PPS(I))'="" W PPS(I)
- . I ($G(HL)=I)!($G(CNTDWN)>0) D
- ..  I $G(HL)=I D
- ...   S BLDTAB=(PPOFFSET+((DAYPOS+1)*(4)-$S($L(I)=2:1,1:0)))
- ...   W ?BLDTAB,IORVON,I,IORVOFF
- ...   S BLDTAB=($X-BLDTAB)-$L(I)
- ...;   S BLDTAB=($X-BLDTAB)-1
- ...   S CNTDWN=6-DAYPOS
- ..  E  D
- ...   W ?(BLDTAB+(PPOFFSET+((DAYPOS+1)*(4)-$S($L(I)=2:1,1:0)))),I
- ...   S CNTDWN=CNTDWN-1
- . E  D
- ..  W ?(PPOFFSET+((DAYPOS+1)*(4)-$S($L(I)=2:1,1:0))),I
+ . W ?(PPOFFSET+((DAYPOS+1)*(4)-$S($L(I)=2:1,1:0))),I
  Q
  ;= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
  ;=======================
@@ -182,7 +126,7 @@ ASKJULIA() ;RETURN RESPONSE--DO YOU WANT A CALENDAR A with dates
  S DIR("?",2)="the number of days elapsed since January 1."
  S DIR("?",3)="Days are numbered sequentially from 1 to 365 or 366 in a"
  S DIR("?",4)="leap year.  January 1st is day number 1 and December 31st"
- S DIR("?",5)="is day 365 in a non leap year.  This calendar is often"
+ S DIR("?",5)="is day 365 in a non leap year.  This calender is often"
  S DIR("?",6)="(but incorrectly), called a Julian Calendar."
  S DIR("?",7)="------------------------------------------------------"
  S DIR("?",8)="Julian Calendar"
@@ -234,8 +178,9 @@ DAYSINMO(Y,M) ; Return number of days in month based on year and month
  Q $P("31^"_(28+$$LEAPYR^PRSLIB00(YEAR))_"^31^30^31^30^31^31^30^31^30^31",U,MONTH)
  ;= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 GETJULI(ZFMDATE,YEAR) ;
- N X1,X2
  S X2=YEAR-1700_"0101"
  S X1=ZFMDATE
  D ^%DTC
  Q X
+ ;= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+ Q

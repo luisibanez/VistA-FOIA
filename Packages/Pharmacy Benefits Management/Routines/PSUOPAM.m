@@ -1,5 +1,5 @@
-PSUOPAM ;BIR/DAM - PSU PBM Outpatient AMIS Pharmacy Data Collection; March 2004 ; 1/11/08 11:46am
- ;;4.0;PHARMACY BENEFITS MANAGEMENT;**13**;MARCH, 2005;Build 3
+PSUOPAM ;BIR/DAM - PSU PBM Outpatient AMIS Pharmacy Data Collection; March 2004
+ ;;4.0;PHARMACY BENEFITS MANAGEMENT;;MARCH, 2005
  ;
  ;DBIA's
  ;Reference to File (#52)     supported by DBIA 1878
@@ -19,8 +19,7 @@ EN ;entry point to gather additional AMIS data.  Called from PSUOP2
  ;
 CO ;Copay status: found in file (#52), field (#105)
  ;
- ;PSU*4*13 Corrected to show the COPAY.
- S PSUCO=$P($G(^TMP("PSOR",$J,PSURXIEN,"IB")),U,1)
+ S PSUCO=$P($G(^TMP("PSOR",$J,PSURXIEN,"IB",0)),U,1)
  I $G(PSUCO) S PSUCOPAY="Y"
  I '$G(PSUCO) S PSUCOPAY="N"
  Q

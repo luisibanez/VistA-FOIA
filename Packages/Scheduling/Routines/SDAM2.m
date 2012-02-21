@@ -1,10 +1,10 @@
-SDAM2 ;ALB/MJK - Appt Mgt (cont); 8/18/05 12:10pm  ; Compiled April 16, 2007 09:43:32
- ;;5.3;Scheduling;**250,296,327,478,446**;Aug 13, 1993;Build 77
+SDAM2 ;ALB/MJK - Appt Mgt (cont); 12/1/91 ; 5/24/05 8:11am
+ ;;5.3;Scheduling;**250,296,327**;Aug 13, 1993
  ;
 CI ; -- protocol SDAM APPT CHECK IN entry pt
  ; input:  VALMY := array entries
  ;
- N %,SDI,SDAT,VALMY,SDAMCIDT,SDCIACT
+ N SDI,SDAT,VALMY,SDAMCIDT,SDCIACT
  D SEL^VALM2 S SDI=0,SDCIACT=""
  D NOW^%DTC S SDAMCIDT=$P(%,".")_"."_$E($P(%,".",2)_"0000",1,4)
  F  S SDI=$O(VALMY(SDI)) Q:'SDI  I $D(^TMP("SDAMIDX",$J,SDI)) K SDAT D
@@ -65,7 +65,7 @@ FIND(DFN,SDT,SDCL) ; -- return appt ifn for pat
  ;  output: [returned] := ifn if pat has appt on date/time
  ;
  N Y
- S Y=0 F  S Y=$O(^SC(SDCL,"S",SDT,1,Y)) Q:'Y  I $D(^(Y,0)),DFN=+^(0),$D(^DPT(+DFN,"S",SDT,0)),$$VALID(DFN,SDCL,SDT,Y) S CNSTLNK=$P($G(^SC(SDCL,"S",SDT,1,Y,"CONS")),U) K:CNSTLNK="" CNSTLNK Q  ;SD/478
+ S Y=0 F  S Y=$O(^SC(SDCL,"S",SDT,1,Y)) Q:'Y  I $D(^(Y,0)),DFN=+^(0),$D(^DPT(+DFN,"S",SDT,0)),$$VALID(DFN,SDCL,SDT,Y) Q
  Q Y
  ;
 UPD(TEXT,FLD,LINE,SAVE) ; -- update data for screen
@@ -92,23 +92,25 @@ WI ; -- walk-in visit action
 EWLCHK ;check if patient has any open EWL entries (SD/372)
  ;CLN expected as clinic IEN
  I '$D(DFN) Q
- Q:'$D(SDT)
- K ^TMP($J,"SDAMA301"),^TMP($J,"APPT")
- N SD S SD=SDT
- I '$D(SC) S SC=+$G(CLN)
- ;
- K ^TMP($J,"SDAMA301"),^TMP($J,"APPT")
- W:$D(IOF) @IOF D APPT^SDWLEVAL(DFN,SD,SC)
- Q:'$D(^TMP($J,"APPT"))
- N SDEV D EN^SDWLEVAL(DFN,.SDEV) I SDEV,$L(SDEV(1))>0 D
- .K ^TMP("SDWLPL",$J),^TMP($J,"SDWLPL")
- .D INIT^SDWLPL(DFN,"M")
- .Q:'$D(^TMP($J,"SDWLPL"))
- .D LIST^SDWLPL("M",DFN)
- .F  Q:'$D(^TMP($J,"SDWLPL"))  N SDR D ANSW^SDWLEVAL(1,.SDR) I 'SDR D LIST^SDWLPL("M",DFN) D
- ..F  N SDR  D ANSW^SDWLEVAL(0,.SDR) Q:'$D(^TMP($J,"SDWLPL"))  I 'SDR W !,"MUST ENTER A REASON NOT TO DISPOSITION MATCHED EWL ENTRY",!
- I $D(^TMP($J,"APPT")) N SDEV D EN^SDWLEVAL(DFN,.SDEV) I SDEV,$L(SDEV(1))>0 D
- .Q:'$D(^TMP($J,"SDWLPL"))  D ASKREM^SDWLEVAL S SDCTN=1 ;display and process selected open EWL entries
+ I $D(SDT) N SDEV D EN^SDWLEVAL(DFN,.SDEV) D
+ .I SDEV,$L(SDEV(1))>0 W !,SDEV(1),! D
+ ..;display appointment
+ ..K ^TMP($J,"SDAMA301"),^TMP($J,"APPT")
+ ..N SD S SD=SDT
+ ..;S SC=+$G(SDATA)
+ ..I '$D(SC) S SC=+$G(CLN)
+ ..W:$D(IOF) @IOF D APPT^SDWLEVAL(DFN,SD,SC)
+ ..Q:'$D(^TMP($J,"APPT"))
+ ..D APPTD^SDWLEVAL ;display appointment
+ .Q:'$D(^TMP($J,"APPT"))  ;no appointment created
+ .N SDTC D EWLANS^SDWLEVAL(.SDTC) ;user may reject EWL
+ .;ask for selection of EWL to display
+ .;ASKS - returned answer (A/C/S/^)
+ .;    ^TMP("SDWLPL",$J) and ^TMP($J,"SDWLPL") are used
+ .;      to generate EWL open entries
+ .I SDTC N SDCTN S SDCTN=0 F  N ASKS K ^TMP("SDWLPL",$J),^TMP($J,"SDWLPL") D ANS2^SDWLPL(DFN,.ASKS) Q:ASKS="^"  D  Q:SDCTN
+ ..Q:'$D(^TMP($J,"SDWLPL"))  D ASKREM^SDWLEVAL S SDCTN=1 ;display and process selected open EWL entries
+ .I 'SDTC Q  ;no EWL evaluation per user's decision
  .Q
  Q
  ;

@@ -1,5 +1,5 @@
 SDCO21 ;ALB/RMO - Classification Cont. - Check Out;30 MAR 1993 2:10 pm ; 3/12/04 4:33pm
- ;;5.3;Scheduling;**150,244,325,441**;Aug 13, 1993;Build 14
+ ;;5.3;Scheduling;**150,244,325**;Aug 13, 1993
  ;
 CL(DFN,SDDT,SDOE,SDCLY) ;Build Classification Array
  ; Input  -- DFN      Patient file IEN  
@@ -65,5 +65,5 @@ CHKQ Q
 SEQ() ;Classification Type Sequence by IEN
  ; Input  -- None
  ; Output -- Classification Type Sequence by IEN
- ;           Current Sequence is:  SC, CV, AO, IR, EC, SHAD, MST, HNC
- Q "3,7,1,2,4,8,5,6"
+ ;           Current Sequence is:  SC, CV, AO, IR, EC, MST, HNC
+ Q "3,7,1,2,4,5,6"

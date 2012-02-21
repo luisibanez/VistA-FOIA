@@ -1,26 +1,33 @@
 BPSOS03 ;BHAM ISC/FCS/DRS - 9002313.03 utilities ;06/01/2004
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5,10**;JUN 2004;Build 27
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
+ ;-----------------------------------------------------------
+ ;IHS/SD/lwj  9/11/02  When running this report, the sites 
+ ; were encountering an undefined error.  The error was caused
+ ; by insurers being used on claims, and then removed from the 
+ ; BPS INSURER file.  This can only be done by either someone
+ ; at the programmer level, or site manager level, and should
+ ; not be done.  The fix was to simply $g the retrieval code.
+ ;-----------------------------------------------------------
  Q
  ; General utilities for retrieval from 9002313.03, Claim Response
  ; $$INSPAID is used by BPSOSQL
-INSPAID(N) ;EP - from BPSOSQL -  total amount paid by insurer
+INSPAID(N)         ;EP - from BPSOSQL -  total amount paid by insurer
  N RX,TOT,X S (TOT,RX)=0
  F  S RX=$O(^BPSR(N,1000,RX)) Q:'RX  D
  . ; Try Gross Amount Due, and if that's zero, Usual and Customary
  . S X=$$INSPAID1(N,RX)
  . S TOT=TOT+X
- Q TOT
+ Q
 INSPAID1(N,RX) ;EP -
  N X S X=$$509(N,RX) Q X
-NETPAID1(N,RX) ; EP - computed field in 9002313.57 and 9002313.59
+NETPAID1(N,RX) ; EP - computed field in 9002313.57
  N X S X=$$509(N,RX) ; X = (#509) Total Amount Paid
  N SUB S SUB=1 ; Do we need to subtract (#505) Patient Pay Amount?
  N IEN02,INS,FMT S IEN02=$P(^BPSR(RESP,0),U)
  I IEN02 D
  . S INS=$P($G(^BPSC(IEN02,0)),U,2) Q:'INS    ;IHS/SD/lwj 9/11/02
- . S FMT=INS
+ . I ^BPS(9002313.99,1,"SITE TYPE")=0 S FMT=INS  ;VA/SDD/DLF 7/29/03 CHECK FOR VA OR IHS SITE TYPE
+ . I ^BPS(9002313.99,1,"SITE TYPE")=1 S FMT=$P($G(^BPSEI(INS,100)),U) Q:'FMT     ;IHS/SD/lwj 9/11/02
  . N X S X=$P(^BPSF(9002313.92,FMT,1),U,10)
  . I X S SUB=0 ; Total paid means total paid by insurance
  I SUB S X=X-$$505(N,RX)
@@ -41,16 +48,10 @@ REJTEXT(RESP,POS,ARR) ; EP - fills array (passed by ref)
  . S I=I+1,ARR(I)=X
  Q
 MESSAGE(RESP,POS,N) ; EP - get additional message from response
- I '$G(RESP) Q ""
- I '$G(POS) S POS=1
- I $G(N)=1 Q $P($G(^BPSR(RESP,504)),U)
- I $G(N)=2 N MSG S MSG="" D  Q MSG
- . N ADDMESS,N
- . D ADDMESS^BPSSCRLG(RESP,POS,.ADDMESS)
- . S N="" F  S N=$O(ADDMESS(N)) Q:'N  S MSG=MSG_$S(N=1:"",1:"~")_ADDMESS(N)
+ I $G(N)=1 Q $P($G(^BPSR(RESP,1000,POS,504)),U)
+ I $G(N)=2 Q $P($G(^BPSR(RESP,1000,POS,526)),U)
  Q $$MESSAGE(RESP,POS,1)_$$MESSAGE(RESP,POS,2)
- ;
-DFF2EXT(X) Q $$DFF2EXT^BPSECFM(X)
+DFF2EXT(X)         Q $$DFF2EXT^BPSECFM(X)
 505(M,N) Q $$500(M,N,5) ; Patient Pay Amount
 506(M,N) Q $$500(M,N,6) ; Ingredient Cost Paid
 507(M,N) Q $$500(M,N,7) ; Contract Fee Paid
@@ -65,7 +66,7 @@ DFF2EXT(X) Q $$DFF2EXT^BPSECFM(X)
 520(M,N) Q $$500(M,N,20) ; Amt Exceed Per Benefit Max
 521(M,N) Q $$500(M,N,21) ; Incentive Fee Paid
 523(M,N) Q $$500(M,N,23) ; Amount Attributed to Sales Tax
-500(M,N,J) ; field #500+J signed numeric
+500(M,N,J)         ; field #500+J signed numeric
  Q:'M!'N ""
  N X S X=$P($G(^BPSR(M,1000,N,500)),U,J)
  I $E(X,1,2)?2U S X=$E(X,3,$L(X))

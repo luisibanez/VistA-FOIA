@@ -1,5 +1,5 @@
-MAGBRTE3 ;WOIFO/EdM - Find value of variable ; 08/26/2005  07:46
- ;;3.0;IMAGING;**11,51**;26-August-2005
+MAGBRTE3 ;WOIFO/EdM - Find value of variable ; 03/08/2004  11:12
+ ;;3.0;IMAGING;**11**;14-April-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -31,7 +31,7 @@ MAGBRTE3 ;WOIFO/EdM - Find value of variable ; 08/26/2005  07:46
  ;
 DICOM(NAME,TYPE,VAL) N C,I,N,X
  ;
- ; Arbitrary decision: the routine stops when the first occurrence
+ ; Arbitrary decision: the routine stops when the first occurence
  ; of a value is found.
  ; Should we continue until we find all codes that have values?
  ;

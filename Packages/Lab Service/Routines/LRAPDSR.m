@@ -1,27 +1,21 @@
-LRAPDSR ;DALOI/WTY/KLL - AP SUPPLEMENTARY REPORT ENTRY;12/05/00
- ;;5.2;LAB SERVICE;**248,259,295,317**;Sep 27, 1994
+LRAPDSR ;DALOI/WTY - AP SUPPLEMENTARY REPORT ENTRY;12/05/00
+ ;;5.2;LAB SERVICE;**248,259,295**;Sep 27, 1994
  ;
- N LRYTMP,LRWPROOT,LRRLS,LRRLS1,LRRLS2,LRX,LRIENS,LRFILE1,LRFILE,LRA
- N LRIENS1,LRXTMP,LRFDA,LRNOW,LRIENS2,LRFIELD,LRORIEN,LRFLG,LRDA,LRQUIT
+ N LRYTMP,LRWPROOT,LRRLS,LRRLS1,LRX,LRIENS,LRFILE1,LRFILE,LRA,LRQUIT
+ N LRIENS1,LRXTMP,LRFDA,LRNOW,LRIENS2,LRFIELD,LRORIEN,LRFLG,LRDA
  ;
 MAIN ;Main Subroutine
  D RELEAS1
  D GETRPT
  Q:LRQUIT
- D RELEAS2
+ D:'LRRLS RELEAS2
  D:LRRLS COPY
  Q:LRQUIT
  D RPT
- ;Add supp report to the PRELIMINARY print queue
- D QUESP
  Q:LRQUIT
  D COMPARE
  Q:LRQUIT
- ;If supp report is already released (LRRLS1), unrelease it,
- ;   but only if the E-Sign Switch is ON (LRESSW)
- N LRESSW
- D GETDATA^LRAPESON(.LRESSW)
- I LRRLS1,LRESSW D UNRELEAS
+ D:LRRLS1 UNRELEAS
  D UPDATE
  Q:LRQUIT
  D STORE
@@ -36,7 +30,6 @@ RELEAS1 ;Is the ENTIRE report already released?
  .W !,"will create an audit trail.",!
  .S LRRLS=1    ;Report has been released so auditing will occur.
  S LRX=$P($G(^LR(LRDFN,LRSS,LRI,0)),"^",11)
- ;
  I LRX D
  .W $C(7),!!,"This "_$G(LRAA(1))_" report has been released."
  .W !,"Supplementary report additions/modifications will create"
@@ -55,11 +48,10 @@ GETRPT ;First, select the report
  S:Y=-1 LRQUIT=1
  Q
 RELEAS2 ;Is the supplementary report already released?
- S LRRLS2=0
  S:LRSS'="AU" LRX=$G(^LR(LRDFN,LRSS,LRI,1.2,+Y,0))
  S:LRSS="AU" LRX=$G(^LR(LRDFN,84,+Y,0))
- S LRRLS2=+$P(LRX,"^",2)
- I LRRLS2 D
+ S LRRLS=+$P(LRX,"^",2)
+ I LRRLS D
  .W $C(7),!!,"This supplementary report has been released.  Additions/"
  .W "modifications",!,"will create an audit trail.",!
  .S LRRLS1=1
@@ -80,23 +72,6 @@ RPT ;
  S:LRSS'="AU" DA(1)=LRI,DA(2)=LRDFN
  S DR=".01;1" D ^DIE
  I 'LRRLS S LRQUIT=1
- Q
-QUESP ;Update the preliminary report print queue
- N LRIENS
- I '$D(^LRO(69.2,LRAA,1,LRAN,0)) D
- .K LRFDA
- .L +^LRO(69.2,LRAA,1):5 I '$T D  Q
- ..S MSG(1)="The preliminary reports queue is in use.  "
- ..S MSG(1,"F")="!!"
- ..S MSG(2)="You will need to add this accession to the queue later."
- ..D EN^DDIOL(.MSG) K MSG
- .S LRIENS="+1,"_LRAA_","
- .S LRFDA(69.21,LRIENS,.01)=LRDFN
- .S LRFDA(69.21,LRIENS,1)=LRI
- .S LRFDA(69.21,LRIENS,2)=LRH(0)
- .S LRORIEN(1)=LRAN
- .D UPDATE^DIE("","LRFDA","LRORIEN")
- .L -^LRO(69.2,LRAA,1)
  Q
 COMPARE ;Compare reports
  I '$D(^TMP("DIQ1",$J)) S LRQUIT=1 Q
@@ -137,11 +112,6 @@ UPDATE ;File changes
  S LRFDA(1,LRFILE,LRIENS1,.01)=LRNOW
  S LRFDA(1,LRFILE,LRIENS1,.02)=DUZ,LRFIELD=1
  D UPDATE^DIE("","LRFDA(1)","LRORIEN")
- ;If E-Sign switch OFF,set 3rd piece .03 SUPP REPORT MODIFIED to 1
- ;  to flag the supp report so it can be released via RS
- I 'LRESSW D
- .S:LRSS'="AU" $P(^LR(LRDFN,LRSS,LRI,1.2,LRDA,0),"^",3)=1
- .S:LRSS="AU" $P(^LR(LRDFN,84,LRDA,0),"^",3)=1
  Q
 STORE ;Second, store the original report
  S LRIENS2=LRORIEN(1)_","_LRIENS

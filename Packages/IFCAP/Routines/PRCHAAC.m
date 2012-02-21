@@ -1,5 +1,5 @@
 PRCHAAC ;WIFO/CR-CREATE HL7 IFCAP MESSAGE FOR AUSTIN AUTOMATION CENTER ;2/22/05 10:50 AM
- ;;5.1;IFCAP;**79,121**;Oct 20, 2000;Build 2
+ ;;5.1;IFCAP;**79**;Oct 20, 2000
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ; This routine will gather FPDS data for the new report requested
  ; by the Austin Automation Center (AAC), create an HL7 message, and send
@@ -26,7 +26,7 @@ AAC ; Start FPDS report here: Options for Detailed PC orders, Delivery
  I '$D(^PRC(442,PRCHPO,25))!('$D(^PRC(442,PRCHPO,9,1,0))) D EN^DDIOL("This PO is not required for FPDS transmission.") Q
  ;
  S PRCMOP=$P(^PRC(442,PRCHPO,0),U,2)
- S PRCMOP=$S(PRCMOP=25:"Y",1:"N")        ; if a PC order, flag it with Y
+ S PRCMOP=$S(PRCMOP=25:"Y",1:"N")        ; if a PC order, flag it with Y 
  ; Vendor pointer and name             
  S PRCPT=$P(^PRC(442,PRCHPO,1),U,1),PRCVEN=$P(^PRC(440,PRCPT,0),U,1)
  ; If the vendor has '&' in its name, replace it with 'AND'
@@ -156,7 +156,6 @@ AAC ; Start FPDS report here: Options for Detailed PC orders, Delivery
  I $D(^PRC(442,PRCHPO,6,0)) S PRCAM=1 D
  . S PRCMN=$P(^PRC(442,PRCHPO,6,0),U,3) ; last amendment = modification #
  . S PRCRM=$P(^PRC(442,PRCHPO,6,+PRCMN,0),U,4) ; reason for mod. pointer
- . I 'PRCRM S PRCRMC="" Q
  . S PRCRMC=$P(^PRCD(442.2,+PRCRM,0),U,1) ; reason mod. code desc.
  . S PRCRMC=$S(PRCRMC="A":"D",PRCRMC="B":"M",PRCRMC="C":"B",PRCRMC="D":"D",PRCRMC="E":"N",1:"")
  G ^PRCHAAC1

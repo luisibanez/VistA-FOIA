@@ -1,6 +1,6 @@
 IBATLM1B ;LL/ELZ - TRANSFER PRICING TRANSACTION LIST MENU ; 15-SEP-1998
- ;;2.0;INTEGRATED BILLING;**115,261,389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**115,261**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 CF ; -- change facility from patient level
  D LMOPT^IBATUTL,CFP^IBATLM0A(DFN),HDR^IBATLM1
@@ -128,7 +128,7 @@ P ; -- select an rx
  D H
  Q
 R ; -- select an prosthetic
- N IBBDT,IBEDT,IBCOUNT,IBOUT,IBDA,IBDATA,IBDATA1,IBP,IBC,IBCOUNT,%,DIRUT
+ N IBBDT,IBEDT,IBCOUNT,IBOUT,IBDA,IBDATA,IBP,IBC,IBCOUNT,%,DIRUT
  ;
  S (IBCOUNT,IBOUT)=0
  Q:$$SLDR^IBATUTL
@@ -137,13 +137,13 @@ R ; -- select an prosthetic
  S IBDA="" F  S IBDA=$O(^RMPR(660,"C",DFN,IBDA)) Q:'IBDA  D
  . ;
  . ; valid data
- . S IBDATA=$G(^RMPR(660,+IBDA,0)) Q:IBDATA=""  S IBDATA1=$G(^RMPR(660,+IBDA,1))
+ . S IBDATA=$G(^RMPR(660,+IBDA,0)) Q:IBDATA=""
  . ;
  . ; valid date range
  . I $P(IBDATA,"^",12)<IBBDT!($P(IBDATA,"^",12)>IBEDT) Q
  . ;
  . ; checks from RMPRBIL copied 4/7/2000 with mod for AM node patients
- . I $S('$D(^RMPR(660,IBDA,"AM")):1,$P(IBDATA,"^",9)="":1,$P(IBDATA,"^",12)="":1,$P(IBDATA1,"^",4)="":1,$P(IBDATA,"^",14)="V":1,$P(IBDATA,"^",15)="*":1,1:0) Q
+ . I $S('$D(^RMPR(660,IBDA,"AM")):1,$P(IBDATA,"^",9)="":1,$P(IBDATA,"^",12)="":1,$P(IBDATA,"^",6)="":1,$P(IBDATA,"^",14)="V":1,$P(IBDATA,"^",15)="*":1,1:0) Q
  . ;
  . ; set array
  . S IBCOUNT=IBCOUNT+1,IBP(IBCOUNT,IBDA)=IBDATA
@@ -154,7 +154,7 @@ R ; -- select an prosthetic
  F IBC=1:1:IBCOUNT Q:IBOUT  D
  . S IBDATA=IBP(IBC,$O(IBP(IBC,0)))
  . W !,IBC,?4,$$FMTE^XLFDT($P(IBDATA,"^",12),"5D")
- . W ?20,$E($P($$PIN^IBATUTL($O(IBP(IBC,0))),U,2),1,28),?50,"("
+ . W ?20,$$EX^IBATUTL(660,4,$P(IBDATA,"^",6)),?40,"("
  . W $$EX^IBATUTL(660,62,$P(^RMPR(660,$O(IBP(IBC,0)),"AM"),"^",3)),")"
  . W ?65,$J($FN($P(IBDATA,"^",16),",",2),12)
  ;
@@ -165,7 +165,7 @@ R ; -- select an prosthetic
  D DUP(IBDA_";RMPR(660,",.DIRUT)
  I $D(DIRUT) D H Q
  W !!,"Adding Transaction number ",$$SITE^IBATUTL
- W $$RMPR^IBATFILE(DFN,$P(IBDATA,"^",12),$$PPF^IBATUTL(DFN),(IBDA_";RMPR(660,"),,$P(IBDATA,"^",16))
+ W $$RMPR^IBATFILE(DFN,$P(IBDATA,"^",12),$$PPF^IBATUTL(DFN),(IBDA_";RMPR(660,"),$P(IBDATA,"^",6),$P(IBDATA,"^",16))
  W "!" H 1
  D H
  Q

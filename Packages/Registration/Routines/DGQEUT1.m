@@ -1,5 +1,5 @@
 DGQEUT1 ;ALB/RPM - VIC REPLACEMENT UTILITIES #1 ; 10/03/05
- ;;5.3;Registration;**571,679,732**;Aug 13, 1993;Build 2
+ ;;5.3;Registration;**571,679**;Aug 13, 1993
  ;
  ; This routine contains the following VIC Redesign API's:
  ;   INITARR   - initialize data array
@@ -249,9 +249,6 @@ FNDPOW(DGEL) ;find POW eligibility code
  N DGRSLT  ;function value
  ;
  S DGRSLT="N"
- ;
- ;Check primary eligibility code
- I $P($G(DGEL(1)),U,2)="PRISONER OF WAR" Q "Y"
  ;
  S DGEC=0
  F  S DGEC=$O(DGEL(1,DGEC)) Q:'DGEC  D  Q:DGRSLT="Y"

@@ -1,6 +1,6 @@
 IBEFURF ;ALB/ARH - UTILITY: FIND RELATED FIRST PARTY BILLS ; 3/7/00
- ;;2.0;INTEGRATED BILLING;**130,347**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**130**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; the following procedures search for First Party charges for specific events, matchs are returned in TMP
  ; only a single record of a charge event is returned, defining the charges current status, although there may 
@@ -32,16 +32,10 @@ FPOPV(DFN,DT1,DT2,XRF) ; given a patient and date range, find any Outpatient Cha
  ;
 FPRX(RXIFN,FILLDT,XRF) ; given the prescription ifn (52) and the fill date, find any First Party charges
  ; get specific charge entry for an Rx from the Prescription file (52,106 and 52,52,9)
- N IBFPIFN,IBFILLN,DFN S IBFPIFN=""
- I '+$G(RXIFN) Q
- I '+$G(FILLDT) Q
- S DFN=$$FILE^IBRXUTL(RXIFN,2) Q:'DFN
- I $$FILE^IBRXUTL(RXIFN,22)=$G(FILLDT) D
- . S IBFPIFN=+$P($$IBND^IBRXUTL(DFN,RXIFN),"^",2)
- . D FPONE(IBFPIFN,$G(XRF))
- E  D
- . S IBFILLN=$$RFLNUM^IBRXUTL(RXIFN,FILLDT)
- . S IBFPIFN=+$$IBNDFL^IBRXUTL(DFN,RXIFN,IBFILLN)
+ N IBFPIFN,IBFILLN S IBFPIFN=""
+ I +$G(RXIFN),+$G(FILLDT) S IBFILLN=$O(^PSRX("AD",FILLDT,RXIFN,"")) I IBFILLN'="" D
+ . I IBFILLN=0 S IBFPIFN=+$P($G(^PSRX(RXIFN,"IB")),U,2)
+ . I IBFILLN>0 S IBFPIFN=+$G(^PSRX(RXIFN,1,IBFILLN,"IB"))
  . D FPONE(IBFPIFN,$G(XRF))
  Q
  ;
@@ -107,7 +101,7 @@ RXDT(FPIFN) ; return fill date of rx being billed, Resulting From must be 52
  ; fill date for Original = (52,22), for Refill = (52,52,.01)
  N IBX,IBY,IB0,IBRX,IBRXN S IBX="",IB0=$G(^IB(+$G(FPIFN),0)) I IB0="" G RXDTQ
  S IBY=$P(IB0,U,4) I +IBY=52 S IBRX=+$P(IBY,":",2),IBRXN=+$P(IBY,":",3) D  I +IBY S IBX=IBY\1
- . S IBY=$S('IBRXN:$$FILE^IBRXUTL(IBRX,22),1:+$$SUBFILE^IBRXUTL(IBRX,IBRXN,52,.01))
+ . S IBY=$S('IBRXN:$P($G(^PSRX(IBRX,2)),U,2),1:+$G(^PSRX(IBRX,1,IBRXN,0)))
 RXDTQ Q IBX
  ;
 OHDT(FPIFN) ; return the bills # DAYS ON HOLD, if the bill is currently in the On Hold Status

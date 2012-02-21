@@ -1,5 +1,5 @@
-PSOORAL1 ;BHAM ISC/SAB - Build Listman activity logs ; 12/4/07 12:25pm
- ;;7.0;OUTPATIENT PHARMACY;**71,156,148,247,240,287**;DEC 1997;Build 77
+PSOORAL1 ;BHAM ISC/SAB - Build Listman activity logs ;11/16/92 13:11
+ ;;7.0;OUTPATIENT PHARMACY;**71,156,148**;DEC 1997
  N RX0,VALMCNT K DIR,DTOUT,DUOUT,DIRUT,^TMP("PSOAL",$J) S DA=$P(PSOLST(ORN),"^",2),RX0=^PSRX(DA,0),J=DA,RX2=$G(^(2)),R3=$G(^(3)),CMOP=$O(^PSRX(DA,4,0))
  S IEN=0,DIR(0)="LO^1:"_$S(CMOP:8,1:7),DIR("A",1)=" ",DIR("A",2)="Select Activity Log by  number",DIR("A",3)="1.  Refill      2.  Partial      3.  Activity     4.  Labels"
  S DIR("A")=$S(CMOP:"5.  Copay       6.  ECME         7.  CMOP Events  8.  All Logs",1:"5.  Copay       6.  ECME         7.  All Logs")
@@ -33,12 +33,13 @@ ACT ;activity log
  .;S:$P(P1,"^",5)]"" IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Comments: "_$P(P1,"^",5)
  .I $P(P1,"^",5)]"" N PSOACBRK,PSOACBRV D
  ..S PSOACBRV=$P(P1,"^",5)
- ..;PSO*7*240 Use fileman for parsing
- ..K ^UTILITY($J,"W") S X="Comments: "_PSOACBRV,(DIWR,DIWL)=1,DIWF="C80" D ^DIWP F I=1:1:^UTILITY($J,"W",1) S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)=$G(^UTILITY($J,"W",1,I,0))
+ ..I $L(PSOACBRV)<71 S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Comments: "_PSOACBRV Q
+ ..I $E(PSOACBRV,1,70)'[" " S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Comments: "_$E(PSOACBRV,1,70),IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)=$E(PSOACBRV,71,245) Q
+ ..F PSOACBRK=245:-1 Q:PSOACBRK=0  I $E(PSOACBRV,PSOACBRK)=" ",PSOACBRK<71 S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Comments: "_$E(PSOACBRV,1,PSOACBRK),IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)=$E(PSOACBRV,PSOACBRK,245) Q
  .I $P($G(^PSRX(DA,"A",N,1)),"^")]"" S IEN=IEN+1,$P(^TMP("PSOAL",$J,IEN,0)," ",5)=$P($G(^PSRX(DA,"A",N,1)),"^") I $P($G(^PSRX(DA,"A",N,1)),"^",2)]"" S ^TMP("PSOAL",$J,IEN,0)=^TMP("PSOAL",$J,IEN,0)_":"_$P($G(^PSRX(DA,"A",N,1)),"^",2)
  .I $O(^PSRX(DA,"A",N,2,0)) F I=0:0 S I=$O(^PSRX(DA,"A",N,2,I)) Q:'I  S MIG=^PSRX(DA,"A",N,2,I,0) D
  ..F SG=1:1:$L(MIG) S:$L(^TMP("PSOAL",$J,IEN,0)_" "_$P(MIG," ",SG))>80 IEN=IEN+1,$P(^TMP("PSOAL",$J,IEN,0)," ",9)=" " S:$P(MIG," ",SG)'="" ^TMP("PSOAL",$J,IEN,0)=$G(^TMP("PSOAL",$J,IEN,0))_" "_$P(MIG," ",SG)
- K MIG,SG,I,^UTILITY($J,"W"),DIWF,DIWL,DIWR
+ K MIG,SG,I
  Q
 LBL ;label log
  S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)=" ",IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Label Log:"
@@ -83,14 +84,14 @@ ECME ; ECME activity log
  .S ^TMP("PSOAL",$J,IEN,0)=LINE
  .I $P(P1,"^",5)]"" D
  ..S PSOACBRV=$P(P1,"^",5)
- ..;PSO*7*240 Use fileman for parsing
- ..K ^UTILITY($J,"W") S X="Comments: "_PSOACBRV,(DIWR,DIWL)=1,DIWF="C80" D ^DIWP F I=1:1:^UTILITY($J,"W",1) S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)=$G(^UTILITY($J,"W",1,I,0))
+ ..I $L(PSOACBRV)<71 S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Comments: "_PSOACBRV Q
+ ..I $E(PSOACBRV,1,70)'[" " S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Comments: "_$E(PSOACBRV,1,70),IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)=$E(PSOACBRV,71,245) Q
+ ..F PSOACBRK=245:-1 Q:PSOACBRK=0  I $E(PSOACBRV,PSOACBRK)=" ",PSOACBRK<71 S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Comments: "_$E(PSOACBRV,1,PSOACBRK),IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)=$E(PSOACBRV,PSOACBRK,245) Q
  .I $O(^PSRX(DA,"A",N,2,0)) F I=0:0 S I=$O(^PSRX(DA,"A",N,2,I)) Q:'I  S MIG=^PSRX(DA,"A",N,2,I,0) D
  ..F SG=1:1:$L(MIG) D
  ...S:$L(^TMP("PSOAL",$J,IEN,0)_" "_$P(MIG," ",SG))>80 IEN=IEN+1,$P(^TMP("PSOAL",$J,IEN,0)," ",9)=" "
  ...S:$P(MIG," ",SG)'="" ^TMP("PSOAL",$J,IEN,0)=$G(^TMP("PSOAL",$J,IEN,0))_" "_$P(MIG," ",SG)
  D DISPREJ
- K ^UTILITY($J,"W"),DIWR,DIWF,DIWL
  Q
  ;
 DISPREJ  ;
@@ -99,16 +100,14 @@ DISPREJ  ;
  S PRI="PSOAL",$P(LN,"=",80)="",SEQ=0
  S IEN=$G(IEN)+1,^TMP(PRI,$J,IEN,0)=" "
  S IEN=IEN+1,^TMP(PRI,$J,IEN,0)="ECME REJECT Log:"
- S IEN=IEN+1,^TMP(PRI,$J,IEN,0)="#  Date/Time Rcvd    Rx Ref    Reject Type     STATUS     Date/Time Resolved"
+ S IEN=IEN+1,^TMP(PRI,$J,IEN,0)="#   Date/Time         Rx Ref    Reject                   STATUS"
  S IEN=IEN+1,^TMP(PRI,$J,IEN,0)=LN
  F REJ=0:0 S REJ=$O(^PSRX(DA,"REJ",REJ)) Q:'REJ  D
  . S VAR=$G(^PSRX(DA,"REJ",REJ,0))
  . S RFT=+$P(VAR,"^",4)
- . S SEQ=SEQ+1,X=SEQ,$E(X,4)=$$FMTE^XLFDT($P(VAR,"^",2),2),$E(X,22)=$S(RFT:"REFILL "_RFT,1:"ORIGINAL")
- . S $E(X,32)=$S(+VAR=79:"REFILL TOO SOON",+VAR=88:"DUR",1:$E($$EXP^PSOREJP1($P(VAR,"^",1)),1,15))  ;can't + default because values can be 07, 08, etc.
- . S $E(X,48)=$S($P(VAR,"^",5):"RESOLVED",1:"UNRESOLVED")
- . S:$P(VAR,"^",6) $E(X,59)=$$FMTE^XLFDT($P(VAR,"^",6),2)
- . ; S:$P(VAR,"^",14) $E(X,67)="(RE-OPENED)"
+ . S SEQ=SEQ+1,X=SEQ,$E(X,5)=$$FMTE^XLFDT($P(VAR,"^",2),2),$E(X,23)=$S(RFT:"REFILL "_RFT,1:"ORIGINAL")
+ . S $E(X,33)=$S(+VAR=79:"REFILL TOO SOON",1:"DRUG UTILIZATION REVIEW")
+ . S $E(X,58)=$S($P(VAR,"^",5):"RESOLVED",1:"UNRESOLVED") S:$P(VAR,"^",14) $E(X,67)="(RE-OPENED)"
  . S IEN=IEN+1,^TMP(PRI,$J,IEN,0)=X
  . I $P(VAR,"^",5) D
  . . S IEN=IEN+1,X=$$GET1^DIQ(52.25,REJ_","_DA,12)

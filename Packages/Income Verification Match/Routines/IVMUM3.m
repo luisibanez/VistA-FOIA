@@ -1,5 +1,5 @@
-IVMUM3 ;ALB/SEK,GTS - ADD NEW DEPENDENT TO PATIENT RELATIONS FILE ; 12 MAY 94
- ;;2.0;INCOME VERIFICATION MATCH;**1,17,101**;21-OCT-94;Build 5
+IVMUM3 ;ALB/SEK - ADD NEW DEPENDENT TO PATIENT RELATIONS FILE ; 12 MAY 94
+ ;;2.0;INCOME VERIFICATION MATCH;**1,17**;21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; this routine will add entries for new dependents to PATIENT
@@ -32,13 +32,7 @@ EN ; this routine will add entries for new dependents to PATIENT
  .S (IVMTEXT(6),HLERR)="Can't create stub for file 408.1275"
  .D ERRBULL^IVMPREC7,MAIL^IVMUFNC()
  .S IVMFERR=""
- ;
- ;Set value of FILED BY IVM field : GTS - IVM*2*101
- ;DGFIVM is YES when source of Means Test is DCD or IVM
- N DGFIVM ;IVM*2*101
- S DGFIVM=$$SRCOFMT^IVMCM3(DGMTI) ;IVM*2*101
- ;
- L +^DGPR(408.12,+DGPRI) S $P(^DGPR(408.12,DA(1),"E",DA,0),"^",2,4)=1_"^"_DGFIVM_"^"_DGMTI D IX1^DIK L -^DGPR(408.12,+DGPRI)
+ L +^DGPR(408.12,+DGPRI) S $P(^DGPR(408.12,DA(1),"E",DA,0),"^",2,4)=1_"^"_1_"^"_DGMTI D IX1^DIK L -^DGPR(408.12,+DGPRI)
  K IVMEFFDT,DA,DIC,DIK
  ;
  ; replace relationship in 408.12 with IVM relationship if different
@@ -57,7 +51,6 @@ NEWPR ;Add entry to file #408.12
  ;      ivmreln  IVM relationship
  ;Out - dgpri ien of new 408.12 entry
  ;
- N DGFIVM ;IVM*2*101
  S DGRP0ND=DFN_"^"_IVMRELN_"^"_+DGIPI_";DGPR(408.13,"
  ;
  K DINUM
@@ -68,13 +61,7 @@ NEWPR ;Add entry to file #408.12
  .S (IVMTEXT(6),HLERR)="Can't create stub for file 408.12"
  .D ERRBULL^IVMPREC7,MAIL^IVMUFNC()
  .S IVMFERR=""
- ;
- ;Set value of FILED BY IVM field : GTS - IVM*2*101
- ;DGFIVM is YES when source of Means Test is DCD or IVM
- S DGFIVM=$$SRCOFMT^IVMCM3(DGMTI)
- ;
- ;Create Patient Relation record : GTS - IVM*2*101 (DGFIVM replaces default of 1)
- L +^DGPR(408.12,+DGPRI) S ^DGPR(408.12,+DGPRI,0)=DGRP0ND,^DGPR(408.12,+DGPRI,"E",0)="^408.1275D^1^1",^(1,0)=IVMEFFDT_"^"_1_"^"_DGFIVM_"^"_DGMTI D IX1^DIK L -^DGPR(408.12,+DGPRI)
+ L +^DGPR(408.12,+DGPRI) S ^DGPR(408.12,+DGPRI,0)=DGRP0ND,^DGPR(408.12,+DGPRI,"E",0)="^408.1275D^1^1",^(1,0)=IVMEFFDT_"^"_1_"^"_1_"^"_DGMTI D IX1^DIK L -^DGPR(408.12,+DGPRI)
  K IVMEFFDT,DA,DIC,DIK
  ;
  ; to prevent the logic in IVMUM2 from matching a dependent sent from

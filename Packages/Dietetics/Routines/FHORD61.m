@@ -1,5 +1,5 @@
 FHORD61 ; HISC/REL/NCA - Diet Inquiry (cont) ;3/13/01  15:08
- ;;5.5;DIETETICS;**5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;;Jan 28, 2005
  S X1=NOW,X2=-1 D C^%DTC S LST=X,CT=0
  F K=0:0 S K=$O(^FHPT(FHDFN,"A",ADM,"OO",K)) Q:K<1  S X=^(K,0) I $P(X,"^",2)'<LST!($P(X,"^",5)="S"),$P(X,"^",5)'="X" D L1 Q:QT="^"
  G:QT="^" KIL^FHORD6
@@ -18,12 +18,8 @@ F4 W ! S CT=0 F K=NOW:0 S K=$O(^FHPT(FHDFN,"A",ADM,"EL",K)) Q:K<1  S CT=CT+1,Y=^
 F5 S CT=0 F K=0:0 S K=$O(^FHPT(FHDFN,"A",ADM,"DR",K)) Q:K<1  D:$Y>(IOSL-5) HDR^FHORD6 Q:QT="^"  D CD
  G:QT="^" KIL^FHORD6
  I 'CT D:$Y>(IOSL-4) HDR^FHORD6 G:QT="^" KIL^FHORD6 W !!,"No Active Consultations for this Admission"
-F6 ;S CT=0 F KK=0:0 S KK=$O(^FHPT(FHDFN,"A",ADM,"MO","AC",KK)) Q:KK<1!(QT="^")  F K=0:0 S K=$O(^FHPT(FHDFN,"A",ADM,"MO","AC",KK,K)) Q:K<1  D:$Y>(IOSL-5) HDR^FHORD6 Q:QT="^"  D MO
- S FHTTLM="",FHTTLM=$P($G(^FHPT(FHDFN,"A",ADM,"MO",0)),U,3)
- I FHTTLM="" W !!,"No Monitors on file" G KIL^FHORD6
- S FHMONS=$S(FHTTLM-FHNUM<0:0,1:FHTTLM-FHNUM)
- F NDT=FHMONS:0 S NDT=$O(^FHPT(FHDFN,"A",ADM,"MO",NDT)) Q:NDT<1!(QT="^")  S K=NDT D MO
- Q:QT="^"  I 'CT W !,"No Monitors on file."
+F6 S CT=0 F KK=0:0 S KK=$O(^FHPT(FHDFN,"A",ADM,"MO","AC",KK)) Q:KK<1!(QT="^")  F K=0:0 S K=$O(^FHPT(FHDFN,"A",ADM,"MO","AC",KK,K)) Q:K<1  D:$Y>(IOSL-5) HDR^FHORD6 Q:QT="^"  D MO
+ G:QT="^" KIL^FHORD6
  I 'CT D:$Y>(IOSL-4) HDR^FHORD6 G:QT="^" KIL^FHORD6 W !!,"No Monitors for this Admission"
  I $E(IOST,1,2)="C-" R !!,"Press return to continue  ",YN:DTIME
  W ! G KIL^FHORD6
@@ -44,6 +40,5 @@ T1 Q:'$D(^FHPT(FHDFN,"A",ADM,"DI",FHORD,0))  S DTP=KK D DTP^FH,C2^FHORD7
  S CT=CT+1 W !?5,DTP,?25,Y Q
 MO ; Display Monitors
  S Y=$G(^FHPT(FHDFN,"A",ADM,"MO",K,0)) Q:Y=""  S CT=CT+1
- D:$Y'<(IOSL-4) HDR^FHORD6 Q:QT="^"
  W !!,$P(Y,"^",1) S DTP=$P(Y,"^",2) D DTP^FH W ", ",DTP
  S COM=$P(Y,"^",3) W:COM'="" !?5,"Action: ",COM Q

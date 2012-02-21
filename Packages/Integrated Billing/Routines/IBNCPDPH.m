@@ -1,12 +1,13 @@
-IBNCPDPH ;DALOI/SS - ECME REPORT OF ON HOLD CHARGES FOR A PATIENT ;3/6/08  16:19
- ;;2.0;INTEGRATED BILLING;**276,347,384**;21-MAR-94;Build 74
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBNCPDPH ;DALOI/SS - ECME REPORT OF ON HOLD CHARGES FOR A PATIENT ;JUNE 08 2005
+ ;;2.0;INTEGRATED BILLING;**276**;21-MAR-94
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;made after IBOHPT1 to use with ECME User Screen
  ;see IA# with ECME
  ;
 ONHOLD(DFN) ;
+ Q:$$PFSSON^IBNCPDPI()  ;quit if PFSS is ON
  N IBQUIT,IBII,DIRUT,DUOUT,DTOUT,ZTIO,Y S IBQUIT=0
  N DPTNOFZY S DPTNOFZY=1  ;Suppress PATIENT file fuzzy lookups
  ;
@@ -120,13 +121,13 @@ OPT ; outpatient bills
  Q
 RX ; rx refill bills
  Q:'IBIBRX
- S (IBRX,IBRXN,IBRF,IBRDT)=0
+ S (IBRX,IBRXN,IBRF,IBRDT)=0 N IENS
  I $P(IBND,"^",4)'["52:" Q
  ;
  S IBRXN=$P($P(IBND,"^",4),":",2),IBRX=$P($P(IBND,"^",8),"-"),IBRF=$P($P(IBND,"^",4),":",3)
  ;
- I +IBRF>0 S IBRDT=$$SUBFILE^IBRXUTL(+IBRXN,IBRF,52,.01)
- I +IBRF=0 S IBRDT=$$FILE^IBRXUTL(+IBRXN,22)
+ I +IBRF>0 S IENS=+IBRF_","_+IBRXN_",",IBRDT=$$GET1^DIQ(52.1,IENS,.01,"I")
+ I +IBRF=0 S IENS=+IBRXN_",",IBRDT=$$GET1^DIQ(52,IENS,22,"I")
  ;
  Q:(IBRX="")!('IBRDT)
  N X,IBBILL,IBBILL0,IBFILL,IBFILL0,IBOK S IBBILL=0

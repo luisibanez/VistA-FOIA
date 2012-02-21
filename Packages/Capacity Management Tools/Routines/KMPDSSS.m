@@ -1,5 +1,5 @@
-KMPDSSS ;OAK/RAK - CP Status - SAGG ;5/1/07  15:07
- ;;2.0;CAPACITY MANAGEMENT TOOLS;**3,6**;Mar 22, 2002;Build 3
+KMPDSSS ;OAK/RAK - CP Status - SAGG ;2/14/05  13:56
+ ;;2.0;CAPACITY MANAGEMENT TOOLS;**3**;Mar 22, 2002
  ;
  ;
 FORMAT(KMPDLN) ;-format text for dislay
@@ -46,7 +46,7 @@ FORMAT(KMPDLN) ;-format text for dislay
  ;
 BKGRND ;- background
  ;
- N CURSTAT,LOC,OPT,PLTFRM,PROD,SITENUM,STAT,TEXT,VOL,VOLDA
+ N CURSTAT,DASH,LOC,OPT,PLTFRM,PROD,SITENUM,STAT,TEXT,VOL,VOLDA
  ;
  S SITENUM=$P($$SITE^VASITE(),U,3) Q:'SITENUM
  S OPT="KMPS SAGG REPORT",STAT=$$TSKSTAT^KMPSUTL1(OPT),CURSTAT=$$CURSTAT^KMPDUTL1(STAT)
@@ -72,22 +72,27 @@ BKGRND ;- background
  D SET^VALM10(LN,"   SAGG Project collection routines will monitor the following:")
  S LN=LN+1
  D SET^VALM10(LN,"")
- S (TEXT,VOL)=""
+ S DASH=0,(TEXT,VOL)=""
  F  S VOL=$O(^KMPS(8970.1,1,1,"B",VOL)) Q:VOL=""  D
  .S VOLDA=$O(^KMPS(8970.1,1,1,"B",VOL,0))
  .S LOC=$P(^KMPS(8970.1,1,1,VOLDA,0),U,2)
  .S:LOC="" LOC=PROD
- .S TEXT=$J(" ",10)_VOL,LN=LN+1
- .D SET^VALM10(LN,TEXT)
+ .S TEXT=TEXT_$J(" ",10)
+ .S:DASH TEXT=TEXT_$J(" ",40-$L(TEXT))
+ .S TEXT=TEXT_$S(PLTFRM="DSM":LOC_",",1:"")_VOL
+ .S DASH=1
+ .I $L(TEXT)>60 S DASH=0,LN=LN+1 D SET^VALM10(LN,TEXT) S TEXT=""
  ;
  I '+CURSTAT&$D(^XTMP("KMPS","START")) D 
  .S LN=LN+1 D SET^VALM10(LN,"") S LN=LN+1 D SET^VALM10(LN,"")
  .S LN=LN+1
  .D SET^VALM10(LN,"   SAGG Project collection routines are still running on:")
- .S (TEXT,VOL)=""
+ .S DASH=0,(TEXT,VOL)=""
  .F  S VOL=$O(^XTMP("KMPS","START",VOL)) Q:VOL=""  D
- ..S TEXT=$J(" ",10)_VOL,LN=LN+1
- ..D SET^VALM10(LN,TEXT)
+ ..S:DASH TEXT=TEXT_$J(" ",40-$L(TEXT))
+ ..S TEXT=TEXT_VOL
+ ..S DASH=1
+ ..I $L(TEXT)>60 S DASH=0,LN=LN+1 D SET^VALM10(LN,TEXT) S TEXT=""
  ;
  ; check for any reported errors
  I $D(^XTMP("KMPS","ERROR")) D 
@@ -97,10 +102,12 @@ BKGRND ;- background
  .S LN=LN+1
  .D SET^VALM10(LN,"   the following Volume Set(s):")
  .S LN=LN+1 D SET^VALM10(LN,"")
- .S (TEXT,VOL)=""
+ .S DASH=0,(TEXT,VOL)=""
  .F  S VOL=$O(^XTMP("KMPS","ERROR",VOL)) Q:VOL=""  D
- ..S TEXT=$J(" ",10)_VOL,LN=LN+1
- ..D SET^VALM10(LN,TEXT) S TEXT=""
+ ..S:DASH TEXT=TEXT_$J(" ",40-$L(TEXT))
+ ..S TEXT=TEXT_VOL
+ ..S DASH=1
+ ..I $L(TEXT)>60 S DASH=0,LN=LN+1 D SET^VALM10(LN,TEXT) S TEXT=""
  ;
  ; check to see if SAGG was told to stop or has reported errors
  I (+CURSTAT)>3 D 
@@ -163,7 +170,7 @@ STATUS ;-- current status
  .D SET^VALM10(LN,"   Session Number.............. "_SESSNUM)
  .S DOW=$$DOW^XLFDT(STRTDT)
  .S LN=LN+1
- .D SET^VALM10(LN,"   Start Date.................. "_$$FMTE^XLFDT(STRTDT,"P")_" ("_DOW_")")
+ .D SET^VALM10(LN,"   Start Date.................. "_$$FMTE^XLFDT(STRTDT,"P")_" (",DOW,")")
  ;
  S LN=LN+1
  D SET^VALM10(LN,"")

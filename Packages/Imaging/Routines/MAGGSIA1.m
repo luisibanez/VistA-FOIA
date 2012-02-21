@@ -1,6 +1,5 @@
-MAGGSIA1 ;WOIFO/GEK/SG/NST - RPC Call to Add Image File entry ; 01 Nov 2010 2:08 PM
- ;;3.0;IMAGING;**7,8,85,59,93,106,117**;Mar 19, 2002;Build 2238;Jul 15, 2011
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGGSIA1 ;WOIFO/GEK - RPC Call to Add Image File entry ; [ 12/27/2000 10:49 ]
+ ;;3.0;IMAGING;**7,8**;Sep 15, 2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGGSIA1 ;WOIFO/GEK/SG/NST - RPC Call to Add Image File entry ; 01 Nov 2010 2:08
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -20,12 +20,6 @@ PRE(MAGERR,MAGGFDA,MAGGRP,MAGGDRV,MAGREF) ;
  ;  Check on some possible problems: required fields etc.
  ;  Object Type and (Patient, or Short Desc) Required.
  N MAGRSLT,X,Z
- ; Patch 106: PRE^MAGGSIA1 is called by Import API only so
- ; if CAPTURE APPLICATION field (#8.1) is not set we set it to "I"
- ; For VI Capture and DICOM Gateway the value of #8.1 is set
- ; in ADD^MAGGTIA 
- I '$D(MAGGFDA(2005,"+1,",8.1)) S MAGGFDA(2005,"+1,",8.1)="I"
- S:$G(MAGGFDA(2005,"+1,",113))="" MAGGFDA(2005,"+1,",113)=1  ; Patch 117 Set STATUS (#113) to Viewable (1)
  I '$D(MAGGFDA(2005,"+1,",3)) D OBJTYPE
  I '$D(MAGGFDA(2005,"+1,",3)) S MAGERR="0^Need an Object Type " Q
  I '$D(MAGGFDA(2005,"+1,",5)),'$D(MAGGFDA(2005,"+1,",10)) D  Q
@@ -33,7 +27,7 @@ PRE(MAGERR,MAGGFDA,MAGGRP,MAGGDRV,MAGREF) ;
  ; IF no Procedure text we'll give it some so crossref will set.
  D PATCHK(.MAGRSLT) I 'MAGRSLT S MAGERR=MAGRSLT Q
  ; Patch 8 IAPI We Create IXCLS (#41 CLASS) and  IXPKG (#40 Package) if TYPE is in Data.
- ; But we are not making TYPE required yet for backward compatibility.
+ ; But we are not making TYPE required yet for backward compatibality.
  I $D(MAGGFDA(2005,"+1,",42)) D
  . I $$GET1^DIQ(2005.83,MAGGFDA(2005,"+1,",42),2,"E")="INACTIVE" D  S MAGRY=MAGERR Q
  . . S MAGERR="0^Index Type: "_$$GET1^DIQ(2005.83,MAGGFDA(2005,"+1,",42),.01,"E")_"is INACTIVE"
@@ -58,19 +52,13 @@ PRE(MAGERR,MAGGFDA,MAGGRP,MAGGDRV,MAGREF) ;
  I '$D(MAGGFDA(2005,"+1,",10)) S MAGGFDA(2005,"+1,",10)=$G(MAGGFDA(2005,"+1,",6))
  ; Name (.01)
  I '$D(MAGGFDA(2005,"+1,",.01)) S MAGGFDA(2005,"+1,",.01)=$$MAKENAME^MAGGSIU1(.MAGGFDA)
- I '$D(MAGGFDA(2005,"+1,",8)) S MAGGFDA(2005,"+1,",8)=$G(DUZ)
- ; Acquisition Site, Use it to tell where to save the file.
- I $D(MAGACT("ACQS")) D
- . ; Patch 8 Have to modify: Field 105 (Acquisition Site) is NOW Field .05
- . I $P(MAGACT("ACQS"),";")]"" S MAGGFDA(2005,"+1,",.05)=$P(MAGACT("ACQS"),";")
  ; Only get drive:dir if not a group
+ I '$D(MAGGFDA(2005,"+1,",8)) S MAGGFDA(2005,"+1,",8)=$G(DUZ)
  I 'MAGGRP D  I $L(MAGERR) Q
  . ; The value of the Action Code "WRITE^value" OVERRIDES any Write Location
  . ; sent as field # 2 in the input array. (The only value we check for is "PACS" from peter's code)
  . S X=$S($D(MAGACT("WRITE")):MAGACT("WRITE"),$D(MAGGFDA(2005,"+1,",2)):MAGGFDA(2005,"+1,",2),1:"")
- . ;P85 Send ACQS as second Param. $$DRIVE will use ACQS If X = ""
- . ;
- . S Z=$$DRIVE^MAGGTU1(X,$G(MAGGFDA(2005,"+1,",.05))) ;Drv:Dir to Write
+ . S Z=$$DRIVE^MAGGTU1(X) ;Drv:Dir to Write
  . I 'Z S MAGERR=Z Q
  . S MAGGDRV=$P(Z,U,2)
  . S MAGGFDA(2005,"+1,",2)=+Z               ;Disk & Vol magnetic
@@ -81,6 +69,10 @@ PRE(MAGERR,MAGGFDA,MAGGRP,MAGGDRV,MAGREF) ;
  . S MAGREF=+Z ; save network location ien for $$DIRHASH in ^MAGGSIA1
  . I $G(MAGACT("ABS"))="STUFFONLY" S MAGGFDA(2005,"+1,",2.1)=+Z
  ;
+ ; If an Acquisition Site is passed, save it in image file
+ I $D(MAGACT("ACQS")) D
+ . ; Patch 8 Have to modify: Field 105 (Acquisition Site) is NOW Field .05
+ . I $P(MAGACT("ACQS"),";")]"" S MAGGFDA(2005,"+1,",.05)=$P(MAGACT("ACQS"),";")
  I $D(MAGACT("ACQL")) S MAGGFDA(2005,"+1,",101)=MAGACT("ACQL")
  ; HERE we are putting PRE Processing for the Import API action codes.
  ; "ACQD,ACQS" If Acquisition device entry doesn't exist, create it.
@@ -101,10 +93,9 @@ PRE(MAGERR,MAGGFDA,MAGGRP,MAGGDRV,MAGREF) ;
  . ;   now it is sent as it's own value in ACQL
  . D UPDATE^DIE("","MAGDFDA","MAGDIEN","MAGDXE")
  . S MAGGFDA(2005,"+1,",107)=MAGDIEN(1)
- ;~~~ Delete this comment and the following line of code when
- ;    the IMAGE AUDIT file (#2005.1) is completely eliminated.
- ;    If the last IEN in the IMAGE AUDIT file is greater than the
- ;~~~ last IEN in the IMAGE file, update the IMAGE file header.
+ ;
+ ;  Check the last entry in Audit File to see if it is greater than 
+ ; last image in Image File.  IF yes, change Image File (0) node entry.
  I ($O(^MAG(2005,"A"),-1)<$O(^MAG(2005.1,"A"),-1)) S $P(^MAG(2005,0),U,3)=$O(^MAG(2005.1,"A"),-1)
  ;
  Q

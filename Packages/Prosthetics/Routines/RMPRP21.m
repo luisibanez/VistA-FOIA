@@ -1,11 +1,11 @@
 RMPRP21 ;PHX/RFM-PRINT 10-2421 ;8/29/1994
- ;;3.0;PROSTHETICS;**3,19,55,90,129,133,139,153**;Feb 09, 1996;Build 10
+ ;;3.0;PROSTHETICS;**3,19,55,90**;Feb 09, 1996
  ;
  ; ODJ - patch 55 - 1/29/01 - extrinsic to get mail routing code
  ;                            from site param. replaces hard code 121
  ;                            nois AUG-1097-32118
  ;
- I '$D(RMPR)!'$D(RMPRSITE) D DIV4^RMPRSIT Q:$D(X)
+ I '$D(RMPR) D DIV4^RMPRSIT Q:$D(X)
  I +$P(^RMPR(669.9,RMPRSITE,0),U,5) I $D(RMPRA)&($D(^%ZIS(1,$P(^RMPR(669.9,RMPRSITE,0),U,5),0))) S IOP="Q;"_$P(^(0),U,1) S %ZIS="MQ" D ^%ZIS G:POP EX S ZTIO=ION G PT
  I $D(RMPRA)&('$P(^RMPR(669.9,RMPRSITE,0),U,5)) G ZIS
 EN ;ENTRY POINT FOR REPRINTING A 10-2421 FORM
@@ -22,12 +22,10 @@ PT S ZTDTH=$H,ZTSAVE("RMPRPN")="",ZTSAVE("RMPRA")="",ZTSAVE("RMPRSITE")="",ZTSAV
   S:$D(RMPRPRIV) ZTSAVE("RMPRPRIV")="" D ^%ZTLOAD W !,$S($D(ZTSK):"<REQUEST QUEUED>",1:"<REQUEST NOT QUEUED>") D HOME^%ZIS H 3 G EX
 PRT ;ENTRY POINT TO PRINT 2421S
  S %X="^RMPR(664,RMPRA,",%Y="R664(" D %XY^%RCR K %X,%Y
- S RDUZ=$P(R664(0),U,9),RDUZ=$P(^VA(200,RDUZ,0),U,1),DFN=$P(R664(0),U,2),RTN=$P(R664(0),U,7),CP=$P(R664(0),U,6),CP=$P($G(^PRCS(410,CP,0)),U,1),RMPRPAGE=2
+ S RDUZ=$P(R664(0),U,9),RDUZ=$P(^VA(200,RDUZ,0),U,1),DFN=$P(R664(0),U,2),RTN=$P(R664(0),U,7),CP=$P(R664(0),U,6),CP=$P(^PRCS(410,CP,0),U,1),RMPRPAGE=2
  D ADD^VADPT,DEM^VADPT,ELIG^VADPT
  W:$Y>0 @IOF W ?20,"OMB Number 2900-0188",?50,"PO#: "
- W !,"By receiving this purchase order you agree to take appropriate measures to"
- W !,"secure the information and ensure the confidentiality of the patient information"
- W !,"is maintained. ORIGINAL PO AND INVOICE MUST BE SUBMITTED TO THE VAMC BELOW"
+ W !!?7,"***ORIGINAL COPY AND COMMERCIAL INVOICE MUST BE SUBMITTED***",!?15,"TO THE VAMC PROSTHETIC ACTIVITY LISTED BELOW"
 HDR ;PRINT HEADER FOR 2421 ADDRESS INFO
  I $P($G(R664(4)),U,8) W !,?30,"***WORKING COPY***"
  S (RMPRT,RMPRB)="",$P(RMPRT,"_",IOM)="",$P(RMPRB,"-",IOM)="" W !,RMPRT,!,"Department of Veterans Affairs"_"|"_"Prosthetic Authorization for Items or Services",!,RMPRB
@@ -58,7 +56,7 @@ HDR ;PRINT HEADER FOR 2421 ADDRESS INFO
  I VAPA(2)="" W ?5,VAPA(4)_","_$P(VAPA(5),U,2)_" "_VAPA(6),?40,$E(RMPRB,1,40),!,?40,"9. Authority For Issuance  CFR 17.115",!,?5,VAPA(8),?43,"CHARGE MEDICAL APPROPRIATION"
  I VAPA(2)'="" W ?5,VAPA(2),?40,$E(RMPRB,1,40),!,?5,VAPA(4)_","_$P(VAPA(5),U,2)_" "_VAPA(6),?40,"9. Authority For Issuance  CFR 17.115",!,?5,VAPA(8),?43,"CHARGE MEDICAL APPROPRIATION"
  W !,RMPRB
- W !,"7. Claim Number",?40,"8. SSN",!,RMPRB,!,"10. Statistical Data",?30,"11. FOB Point",?46,"12. Discount",?61,"13. Delivery Time"
+ W !,"7. Claim Number"_" "_VAEL(7),?40,"8. SSN"_" "_$P(VADM(2),U,2),!,RMPRB,!,"10. Statistical Data",?30,"11. FOB Point",?46,"12. Discount",?61,"13. Delivery Time"
  S R664("E")=$O(R664(1,0)),CAT=$P(R664(1,R664("E"),0),U,10)
  S RMPRCAT=$S(CAT=1:"SC/OP",CAT=2:"SC/IP",CAT=3:"NSC/IP",CAT=4:"NSC/OP",1:"") S SPE=$P(R664(1,R664("E"),0),U,11)
  S RMPRSCAT=$S(SPE=1:"SPECIAL LEGISLATION",SPE=2:"A&A",SPE=3:"PHC",SPE=4:"ELIGIBILITY REFORM",1:"")

@@ -1,8 +1,6 @@
 PRCACM ;WASH-ISC@ALTOONA,PA/RGY-COMMENT ADJUSTMENT TRANSACTION ;6/2/95  2:41 PM
- ;;4.5;Accounts Receivable;**8,67,125,169,254**;Mar 20, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ; DBIA 3820-A used for direct global read into file 399.
- ;
+V ;;4.5;Accounts Receivable;**8,67,125,169**;Mar 20, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;This is a routine for adjustment transaction.
  NEW PRCABN,PRCAEN,PRCAA1,DR,DIE,DA,D0,PRCAD,RCASK,PRCAA2,DIROUT,DIRUT,DIR,DUOUT,PRCA,PRCATY
 ADJUST D BEGIN G:('$D(PRCABN))!('$D(PRCAEN)) Q
@@ -56,10 +54,7 @@ TI() ;
  N %DT D NOW^%DTC S %DT("A")="Request Time to Queue? ",%DT("B")="NOW"
  S %DT="AERX",%DT(0)=% D ^%DT
  Q Y
-BEGIN K PRCATERM,PRCABN,PRCAEN,PRCA("CKSITE"),PRCAIBS D BILL^PRCAUTL Q:('$D(PRCABN))
- S PRCAIBS=$P($G(^DGCR(399,PRCABN,0)),U,13)        ; IB claim status - DBIA3820-A
- I PRCAIBS=1 W !!,"**  You cannot add AR Comments to an Entered/Not Reviewed claim.  **",!,*7 G BEGIN
- I PRCAIBS=2 W !!,"**  You cannot add AR Comments to an MRA Request claim.  **",!,*7 G BEGIN
- I '$D(^PRCA(430,PRCABN,2,0)),PRCAIBS=7 W !!,"**  You cannot add AR Comments to a claim Cancelled/not passed to AR.  **",!,*7 G BEGIN
+BEGIN K PRCATERM,PRCABN,PRCAEN,PRCA("CKSITE") D BILL^PRCAUTL Q:('$D(PRCABN))
+ I '$D(^PRCA(430,PRCABN,2,0)) W !!,"**  This bill was cancelled in IB before it was passed to AR.  **",!,*7 G BEGIN
  I $P($G(^PRCA(430,PRCABN,0)),"^",8)=49 W !!,"**  Comments CANNOT be entered on an ARCHIVED bill.  **",!,*7 G BEGIN
  D SETTR^PRCAUTL,PATTR^PRCAUTL S DIC="^PRCA(433," K PRCAMT,PRCAD("DELETE") Q

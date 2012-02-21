@@ -1,5 +1,5 @@
 DGPTAE04 ;ALB/MTC/ADL - 401 Edit Checks Cont ; 13 NOV 92
- ;;5.3;Registration;**510,744**;Aug 13, 1993;Build 5
+ ;;5.3;Registration;**510**;Aug 13, 1993
  ;;ADL;Updated for CSV Project;;Mar 24, 2003
  ;
 TRAN ;-- verify transplant status
@@ -44,10 +44,7 @@ CHKOPC ;
 GEN ;
  S DGPTOPP=$O(^ICD0("AB",DGPTOC,0)) I DGPTOPP="" S DGPTERC=451 Q
  S DGPTTMP=$$ICDOP^ICDCODE(DGPTOPP,$S($G(DGPTSDD)'="":DGPTSDD,1:DT))  ;use date of surgery from rec if it exists, else today
- ; DG*744 - check against discharge date
- ;I DGPTTMP=-1!('$P(DGPTTMP,U,10)) S DGPTERC=451 Q
- I DGPTTMP=-1!('$P(DGPTTMP,U,10)) S DGPTERC=451 N DGPTDAT S DGPTDAT=+$G(^DGPT(PTF,70)) I DGPTDAT S DGPTTMP=$$ICDOP^ICDCODE(DGPTOPP,DGPTDAT) I $P(DGPTTMP,U,10)=1 S DGPTERC=0
- I DGPTERC=451 Q
+ I DGPTTMP=-1!('$P(DGPTTMP,U,10)) S DGPTERC=451 Q
  I $P(DGPTTMP,U,11)]""&(DGPTGEN'=$P(DGPTTMP,U,11)) S DGPTERC=451 Q
 CURR ;
  S DGPTTMP=$$ICDOP^ICDCODE(DGPTOPP,$S($G(DGPTSDD)'="":DGPTSDD,1:DT))  ;use date of surgery from rec if it exists, else today

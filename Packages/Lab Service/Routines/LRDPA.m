@@ -1,5 +1,5 @@
 LRDPA ;SLC/RWF/WTY/KLL - FILE OF FILES LOOKUP ON ENTITIES ; 2/28/03 4:10pm
- ;;5.2;LAB SERVICE;**137,121,153,202,211,248,305,360**;Sep 27, 1994;Build 1
+ ;;5.2;LAB SERVICE;**137,121,153,202,211,248,305**;Sep 27, 1994
  ;
  ;Reference to ^DIC( supported by IA #916
  ;Reference to ^DIC("AC" supported by IA #511
@@ -50,7 +50,7 @@ EN ;
  ;the VIC card is used.  If the user ^'s out, Y will be equal to -1.
  ;If Y is greater than 0 the data is valid and DUOUT should be ignored.
  I Y<1 K DIC D LAYG G DPA
- S DFN=+Y,PNM=$P(Y(0),"^") D PT^LRX D:DOD'="" WARN G END
+ S DFN=+Y,PNM=$P(Y(0),"^") D PT^LRX G END
  ;
 LAYG ;Don't allow DLAYGO on second pass.
  K DLAYGO S DIC(0)="EQMZ" Q
@@ -128,14 +128,4 @@ EN2(DFN,LOCK,TALK) ;Patient Lock
  S X=DFN_";DPT("
  I LOCK D LK^ORX2
  I 'LOCK D ULK^ORX2
- Q
-WARN ;Warn the user the patient has died and display date of death (LR*5.2*360)
- S Y=DOD D DD^LRX
- W !?10,@LRVIDO,"Patient ",PNM," died on: ",Y,@LRVIDOF,!
- S DIR(0)="Y"
- S DIR("A")="Do you wish to continue with this patient [Yes/No]"
- S DIR("T")=120
- D ^DIR K DIR
- I Y=0!($D(DIRUT)) S DFN=-1
- K DIRUT
  Q

@@ -1,5 +1,5 @@
-SDWLCU6 ;IOFO BAY PINES/DMR - EWL FILE 409.3 CLEANUP - print ;2/15/05  ; Compiled August 20, 2007 15:12:20
- ;;5.3;scheduling;**427,491**;AUG 13 1993;Build 53
+SDWLCU6 ;IOFO BAY PINES/DMR - EWL FILE 409.3 CLEANUP - print ;2/15/05
+ ;;5.3;scheduling;**427**;AUG 13 1993
  N XFL,XFL1,XFLG,XDATA,END,SDWLAPTD,I,J,SDWLPD,SDWLPG,SDWLWD,SDWLTP,SDWLTP1
  S (IEN,PAT)="",(CC,SDWLPG,SDWLTP)=0,U="^",END=""
  D NOW^%DTC S Y=% D DD^%DT S SDWLDTP=Y
@@ -26,11 +26,10 @@ SDWLCU6 ;IOFO BAY PINES/DMR - EWL FILE 409.3 CLEANUP - print ;2/15/05  ; Compile
 CLINIC ;Display all clinics in file 409.32 that need to be cleaned up in file 44 in mail message
  S INST="",CLINIC=0,CC=0
  F  S CLINIC=$O(^SDWL(409.32,CLINIC)) Q:'CLINIC  D
- . N CL,INSTST S CL=+$G(^SDWL(409.32,CLINIC,0)) Q:CL'>0
- . S INSTST=$$CLIN^SDWLPE(CL)
- . I $P(INSTST,U,6)'="" W !,*7,$P(INSTST,U,6) D 
+ . S INST=$$GET1^DIQ(44,+$G(^SDWL(409.32,CLINIC,0))_",",3,"I")
+ . I $$GET1^DIQ(4,INST_",",11,"I")'="N"!('$$TF^XUAF4(INST)) D
  .. S CC=CC+1
- .. I CC=1 W !!!,"The following clinics need to have the institution updated in file 44:",!!
+ .. I CC=1 W !!!,"The following clinics need to have the institution cleaned in file 44:",!!
  .. W !,?20,$$GET1^DIQ(44,+$G(^SDWL(409.32,CLINIC,0))_",",.01)
  Q
 FIX ;fix corrupted Wait List Type piece 5
@@ -46,6 +45,6 @@ HD ;HDR
  S SDWLPG=SDWLPG+1 W:SDWLPG'=1 @IOF
  W !,?15,"Wait List Key Field 'NULL' Report"
  S Y=DT D DD^%DT S SDWLPD=Y W ?57,SDWLPD,?72,"Page: ",SDWLPG
- W !!,"STATION: "_+$$SITE^VASITE(,)
+ W !!,"STATION: "_DUZ(2)
  W !!,"IEN   Patient Name",?42,"Wait Date",?53,"STS",?58,"Null Fields"
  Q

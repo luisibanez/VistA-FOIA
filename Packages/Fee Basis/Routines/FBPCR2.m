@@ -1,5 +1,5 @@
-FBPCR2 ;AISC/DMK,GRR,TET-OUTPATIENT POTENTIAL COST RECOVERY SORT/PRINT ;07/01/2006
- ;;3.5;FEE BASIS;**4,48,55,69,76,98**;JAN 30, 1995;Build 54
+FBPCR2 ;ALBISC/DMK,GRR,TET-OUTPATIENT POTENTIAL COST RECOVERY SORT/PRINT ;5/12/1999
+ ;;3.5;FEE BASIS;**4,48,55,69,76**;JAN 30, 1995
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
 EN ;entry point
  S (FBCATC,FBINS,FBPSF)=0
@@ -16,7 +16,7 @@ SET ;set variables - also entry point from FBPCR67
  N FBPCR,FBX
  S Y=$G(^FBAAC(J,1,K,1,L,1,M,0)) Q:'+$P(Y,U,9)!($G(^FBAAC(J,1,K,1,L,1,M,"FBREJ"))]"")
  S FBY=$G(^FBAAC(J,1,K,1,L,1,M,2))
- S FBVNAME=$E($P($G(^FBAAV(K,0)),U),1,23),FBVID=$S(FBVNAME]"":$P(^(0),U,2)_"/"_$S($P($G(^(3)),U,2)]"":$P(^(3),U,2),1:"**********"),1:"")
+ S FBVNAME=$E($P($G(^FBAAV(K,0)),U),1,23),FBVID=$S(FBVNAME]"":$P(^(0),U,2),1:"")
  S FBP=+$P(Y,U,9),FBSC=$P(Y,U,27),FBPDX=+$P(Y,U,23),FBPSF=+$P(Y,U,12)
  S FBSC=$S(FBSC="Y":"YES",FBSC="N":"NO",1:"-")
  S T=$P(Y,U,5),D2=$P(Y,U,6),FBDOS=D2,D2=$$DATX^FBAAUTL(D2),FBCP=$P(Y,U,18),FBCP=$S(FBCP=1:"(C&P)",1:"")
@@ -102,9 +102,7 @@ HDR1 W !!?(IOM-(13+$L(FBXPROG))/2),"FEE PROGRAM: ",FBXPROG
  Q
 SH ;subheader - vendor, prints when name changed
  I ($Y+6)>IOSL D HDR Q:FBOUT
- ;W !!,"Vendor: ",$P(FBVI,";"),?41,"Vendor ID/NPI: ",$P(FBVI,";",2)
- W !!,"Vendor: ",$P(FBVI,";"),?41,"Vendor ID: ",$P($P(FBVI,";",2),"/",1)
- W !?20,"Fee Basis Billing Provider NPI: ",$P(FBVI,"/",2)
+ W !!,"Vendor: ",$P(FBVI,";"),?41,"Vendor ID: ",$P(FBVI,";",2)
  Q
 CR ;read for display
  S DIR(0)="E" W ! D ^DIR K DIR S:$D(DUOUT)!($D(DTOUT)) FBOUT=1

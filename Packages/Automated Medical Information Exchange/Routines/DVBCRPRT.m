@@ -1,5 +1,5 @@
 DVBCRPRT ;ALB/GTS-557/THM-REPRINT C&P REPORT ; 5/17/91  10:28 AM
- ;;2.7;AMIE;**31,42,119**;Apr 10, 1995;Build 10
+ ;;2.7;AMIE;**31,42**;Apr 10, 1995
  ;
  ; ** DVBCRPRT is called from DVBCRPON only **
 PHYS S PHYS=$S($D(^DVB(396.4,DA,0)):$P(^(0),U,7),1:"")
@@ -21,10 +21,7 @@ STEP3 ;  ** Called from STEP2A only **
  D ^DIWW S PRINT=1 S DA=OLDA,DA(1)=OLDA1
  Q
 STEP3A ;  ** Called from STEP3 only **
- I +$G(DVBGUI) D
-        .I $Y>(IOSL-9) D HDR^DVBCRPR1
- I '+$G(DVBGUI) D
- .I $Y>(IOSL-9) D UP^DVBCRPR1,NEXT,HDR^DVBCRPR1 W:$O(^DVB(396.4,OLDA,"RES",LINE))]""&&('+$G(DVBGUI)) !!,"Exam Results Continued",!!
+ I $Y>(IOSL-9) D UP^DVBCRPR1,NEXT,HDR^DVBCRPR1 W:$O(^DVB(396.4,OLDA,"RES",LINE))]"" !!,"Exam Results Continued",!!
  Q
 GO ;  ** An external entry point called from DVBCRPON **
  U IO K ^TMP($J),DVBAON2 D HDA^DVBCRPR1 S (XCNT,XPRINT)=0

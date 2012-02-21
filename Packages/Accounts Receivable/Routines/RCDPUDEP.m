@@ -1,6 +1,6 @@
-RCDPUDEP ;WISC/RFJ-deposit utilities ;29/MAY/2008
- ;;4.5;Accounts Receivable;**114,173,257**;Mar 20, 1995;Build 3
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+RCDPUDEP ;WISC/RFJ-deposit utilities ;1 Jun 99
+ ;;4.5;Accounts Receivable;**114,173**;Mar 20, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
@@ -63,10 +63,8 @@ LOOKUP ;  special lookup on deposits, called from ^dd(344.1,.01,7.5)
  I X["O."!(X["o.") S DIC("S")="I $P(^(0),U,12)=1" S X="?" Q
  ;  user entered C.? for lookup on confirmed deposits
  I X["C."!(X["c.") S DIC("S")="I $P(^(0),U,12)=3" S X="?" Q
- ;  deposit ticket # manually added is for electronic ticket only
- I $G(DIC(0))["L",$$AUTODEP(X) D EN^DDIOL(" ** Deposit #'s starting with "_$E(X,1,3)_" can only be used by automatic deposits",,"!") S X="" Q
- ; Do not allow for 7-, 8-, or 9-digit electronic ticket to be added.
- I $G(DIC(0))["L",'$D(^RCY(344.1,"B",X)),$L(X)>6,$L(X)<10 D EN^DDIOL(" ** Deposit # of "_$L(X)_" digits not allowed. "_$S($L(X)=9:"9 digits limited to automatic deposits.",1:""),,"!") S X="" Q
+ ;  deposit ticket # manually entered is for electronic ticket only
+ I $G(DIC(0))["L",$$AUTODEP(X) D EN^DDIOL(" ** Deposit #'s starting with "_$E(X,1,3)_" can only be used by automatic deposits",,"!") S X=""
  K DIC("S")
  Q
  ;
@@ -110,11 +108,9 @@ TOTAL(RCDEPTDA) ;  compute total dollars for all receipts on the deposit
  Q +$G(TOTAL)
  ;
 AUTODEP(X) ; Function returns 1 if the deposit ticket # in X is in the auto
- ; deposit number space 269xxx, 369xxx, 469xxx, 569xxx, or 669xxx
- ; and hasn't been previously entered via lockbox interface.
- ; 
+ ; deposit number space 269xxx, 369xxx, 469xxx, 569xxx
  N Y
  S Y=0
- I $L(X)=6,$E(X,2,3)="69","23456"[$E(X),'$D(^RCY(344.1,"B",X)) S Y=1
+ I $L(X)=6,$E(X,2,3)="69","2345"[$E(X),'$D(^RCY(344.1,"B",X)) S Y=1
  Q Y
  ;

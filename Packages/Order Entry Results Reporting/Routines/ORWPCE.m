@@ -1,11 +1,11 @@
-ORWPCE ; SLC/JM/REV - wrap calls to PCE and AICS ;11/19/09  13:07
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,173,190,195,215,243,295,280**;Dec 17, 1997;Build 85
+ORWPCE ; SLC/JM/REV - wrap calls to PCE and AICS;04/01/2003 ;07/05/04
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,173,190,195,215**;Dec 17, 1997
  ;
  ; DBIA 2950   LOOK^LEXA          ^TMP("LEXFND",$J)
  ; DBIA 1609   CONFIG^LEXSET      ^TMP("LEXSCH",$J)
  ; DBIA 1365   DSELECT^GMPLENFM   ^TMP("IB",$J)
  ; DBIA 3991   $$STATCHK^ICDAPIU
- ;
+ ; 
  Q
 VISIT(LST,CLINIC,ORDATE) ; get list of visit types for clinic
  S:'+$G(ORDATE) ORDATE=DT
@@ -71,7 +71,6 @@ ACTPROB(GLST,DFN,ORDATE) ;get list of patient's active problems
  S ORPROBIX=0
  F  S ORPROBIX=$O(^TMP("IB",$J,"INTERFACES","GMP SELECT PATIENT ACTIVE PROBLEMS",ORPROBIX)) Q:'ORPROBIX  D  ;DBIA 1365
  . S ORPROB=$P(^TMP("IB",$J,"INTERFACES","GMP SELECT PATIENT ACTIVE PROBLEMS",ORPROBIX),"^",2,3)
- . I $L(ORPROB)>255 S $P(ORPROB,U)=$E($P(ORPROB,U),1,245)
  . I $E(ORPROB,1)="$" S ORPROB=$E(ORPROB,2,255)
  . I '$D(ORPROB(ORPROB)) D
  .. S ORPROB(ORPROB)=""
@@ -82,22 +81,18 @@ ACTPROB(GLST,DFN,ORDATE) ;get list of patient's active problems
  N ORWINDEX,ORITEM
  S ORWINDEX=0
  F  S ORWINDEX=$O(^TMP("IB",$J,"INTERFACES","GMP SELECT PATIENT ACTIVE PROBLEMS",ORWINDEX)) Q:'ORWINDEX  D:$P(^TMP("IB",$J,"INTERFACES","GMP SELECT PATIENT ACTIVE PROBLEMS",ORWINDEX),"^",1)]""
- . N ORICD,ORICDI,ORI
  . S ORITEM=^TMP("IB",$J,"INTERFACES","GMP SELECT PATIENT ACTIVE PROBLEMS",ORWINDEX)
- . S ORICD=$P(ORITEM,"^",3)
- . F ORI=1:1:$L(ORICD,"/") D
- . . S ORICDI=$P(ORICD,"/",ORI)
- . . I '+$$STATCHK^ICDAPIU(ORICDI,ORDATE) S $P(ORITEM,"^",11)="#"  ;DBIA 3991
+ . I '+$$STATCHK^ICDAPIU($P(ORITEM,"^",3),ORDATE) S $P(ORITEM,"^",11)="#"  ;DBIA 3991
  . S ^TMP("IB",$J,"INTERFACES","GMP SELECT PATIENT ACTIVE PROBLEMS",ORWINDEX)=ORITEM
  S ^TMP("IB",$J,"INTERFACES","GMP SELECT PATIENT ACTIVE PROBLEMS",0)=ORPRCNT
  S GLST="^TMP(""IB"","_$J_",""INTERFACES"",""GMP SELECT PATIENT ACTIVE PROBLEMS"")"
  Q
 SCSEL(VAL,DFN,ATM,LOC,VST) ; return SC conditions that may be selected
  ; VAL=SCallow^SCdflt;AOallow^AOdflt;IRallow^IRdflt;ECallow^ECdflt;
- ;     MSTallow^MSTdflt;HNCallow^HNCdflt;CVAllow^CVDflt;SHADAllow^SHADDflt
+ ;     MSTallow^MSTdflt;HNCallow^HNCdflt;CVAllow^CVDflt
  N ORX,S S S=";"
  D SCCOND^PXUTLSCC(DFN,ATM,LOC,$G(VST),.ORX)
- S VAL=$G(ORX("SC"))_S_$G(ORX("AO"))_S_$G(ORX("IR"))_S_$G(ORX("EC"))_S_$G(ORX("MST"))_S_$G(ORX("HNC"))_S_$G(ORX("CV"))_S_$G(ORX("SHAD"))
+ S VAL=$G(ORX("SC"))_S_$G(ORX("AO"))_S_$G(ORX("IR"))_S_$G(ORX("EC"))_S_$G(ORX("MST"))_S_$G(ORX("HNC"))_S_$G(ORX("CV"))
  Q
 SCDIS(LST,DFN) ; Return service connected % and rated disabilities
  N VAEL,VAERR,I,ILST,DIS,SC,X
@@ -127,10 +122,9 @@ HASVISIT(ORY,IEN,DFN,ORLOC,ORDTE) ;Has visit or is stand alone
  I +$G(ORVISIT)>0 S ORY=$$VST2APPT^PXAPI(ORVISIT)
  Q
 DELETE(VAL,VSTR,DFN) ; delete PCE info when deleting a note
- N VISIT,ORCOUNT,ORDTE,ORLOC
+ N VISIT,ORCOUNT
  N ZTIO,ZTRTN,ZTDTH,ZTSAVE,ZTDESC,ZTSYNC,ZTSK
- S ORLOC=$P(VSTR,";"),ORDTE=$P(VSTR,";",2)
- I '$D(^TMP("ORWPCE",$J,VSTR))&('$$GETENC^PXAPI(DFN,ORDTE,ORLOC)) S VAL=0 Q  ; no PCE data saved yet
+ I '$D(^TMP("ORWPCE",$J,VSTR)) S VAL=0 Q  ; no PCE data saved yet
  I $P(VSTR,";",3)="H" S VAL=0 Q           ; leave inpatient alone
  I $L($T(DOCCNT^TIUSRVLV))=0 S VAL=0 Q    ; leave if no tiu entry point
  D DOCCNT^TIUSRVLV(.ORCOUNT,DFN,VSTR)     ; Do not delete if another
@@ -164,14 +158,13 @@ LEX(LST,X,APP,ORDATE)   ; return list after lexicon lookup
  . ; Set Applications Default Flag (Lexicon can not overwrite filter)
  . S ^TMP("LEXSCH",$J,"ADF",0)=1
  D LOOK^LEXA(X,APP,1,"",ORDATE)
- I '$D(LEX("LIST",1)) D  G LEXX
- . S LST(1)="-1^No matches found.^"_APP
+ I '$D(LEX("LIST",1)) S LST(1)="-1^No matches found." Q
  S LST(1)=LEX("LIST",1),ILST=1
  S (I,IEN)=""
  F  S I=$O(^TMP("LEXFND",$J,I)) Q:I=""  D  ;DBIA 2950
  .F  S IEN=$O(^TMP("LEXFND",$J,I,IEN)) Q:IEN=""  D
  ..S ILST=ILST+1,LST(ILST)=IEN_U_^TMP("LEXFND",$J,I,IEN)
-LEXX K ^TMP("LEXFND",$J),^TMP("LEXHIT",$J),^TMP("LEXSCH",$J),^TMP("LEXLE",$J)
+ K ^TMP("LEXFND",$J),^TMP("LEXHIT",$J)
  Q
 LEXCODE(VAL,IEN,APP,ORDATE)     ; return code for a lexicon entry
  S VAL=""

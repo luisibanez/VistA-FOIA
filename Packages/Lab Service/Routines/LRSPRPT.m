@@ -1,5 +1,5 @@
 LRSPRPT ;AVAMC/REG/WTY/KLL - CY/EM/SP PATIENT RPT ;08/22/01
- ;;5.2;LAB SERVICE;**1,72,248,259,317**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**1,72,248,259**;Sep 27, 1994
  ;
  W !!?20,LRO(68)," FINAL PATIENT REPORTS"
  K LRSAV,LRAP,LRS(99)
@@ -143,9 +143,6 @@ EN ;from LRSPT
  S LR("F")=1 W !,"Submitted by: ",LRW(5),?44,"Date obtained: ",LRTK
  D:LRA W
  W !,"Specimen (Received ",LRTK(1),"):" S LRV=.1 D A Q:LR("Q")
- I $P($G(^LR(LRDFN,LRSS,LRI,1.2,0)),"^",4) D
- .W !?14,"*+* SUPPLEMENTARY REPORT HAS BEEN ADDED *+*"
- .W !?19,"*+* REFER TO BOTTOM OF REPORT *+*",!
  D:LRA W W !,"Brief Clinical History:" S LRV=.2 D F Q:LR("Q")
  D:LRA W W !,"Preoperative Diagnosis:" S LRV=.3 D F Q:LR("Q")
  D:LRA W W !,"Operative Findings:" S LRV=.4 D F Q:LR("Q")
@@ -227,15 +224,13 @@ SUPA ;Print supplementary report audit information
  .S B=A
  Q:LR("Q")
  Q:'$D(^LR(LRDFN,LRSS,LRI,1.2,LRV,2,B,0))
- S A=^(0),Y=+A,LRSGN=" typed by ",A=$P(A,"^",2)
+ S A=^(0),Y=+A,LRSGN="  typed by ",A=$P(A,"^",2)
  I $P(^LR(LRDFN,LRSS,LRI,1.2,LRV,2,B,0),"^",3) D
  .S A=^(0),LRSGN=" signed by ",A2=$P(A,"^",3),Y=$P(A,"^",4)
  .S A=A2
  S A=$S($D(^VA(200,A,0)):$P(^(0),"^"),1:A)
  ;If supp rpt is released, display 'signed by' instead of 'typed by'
  D D^LRU W Y,LRSGN,A,")"
- ;If RELEASE SUPP REPORT MODIFIED set to 1, display "NOT VERIFIED"
- I $P(^LR(LRDFN,LRSS,LRI,1.2,LRV,0),"^",3) W !,?25,"**-* NOT VERIFIED *-**"
  D:$D(LRQ(9)) SUPM
  Q
 SUPM ;Print previous versions of supplementary reports

@@ -1,5 +1,5 @@
-LRLNCC ;DALOI/CA-LOINC COMMON CODE;1-JAN-2001 ; 5/10/07 2:31pm
- ;;5.2;LAB SERVICE;**232,280,334**;Sep 27, 1994;Build 12
+LRLNCC ;DALOI/CA-LOINC COMMON CODE;1-JAN-2001
+ ;;5.2;LAB SERVICE;**232,280**;Sep 27,1994
  ;============================================================
  ;Not valid entry call
  Q
@@ -14,7 +14,7 @@ CODE ;ask which code to map
  ..S DIR(0)="E" D ^DIR
  ..S:$S($G(DIRUT):1,$G(DUOUT):1,1:0) LREND=1
  .W !,I,":",LRLOINC("DILIST","ID",I,80)
- K DIRUT,DUOUT,DIR
+ K DIRUT,DUOUT
  W !!
  S DIR(0)="N^1:"_$S($G(LREND):I-2,1:$P(LRLOINC("DILIST",0),U),1:0)
  S DIR("A")="LOINC code to map this test"
@@ -24,16 +24,12 @@ CODE ;ask which code to map
 DISPL ;Show LOINC entry selected in file 95.3
  ;display header-system and class
  ;display LOINC code, component, property, time aspect, scale type and method type
- ; LRDEL = Deprecated code
- K LRLNC0,DA S LRLNC0(8)=$P($G(^LAB(95.3,LRCODE,0)),U,8)
- N LRDEL,LRLNC0,LRLNCNAM,I
  S DA=LRCODE
- S LRLNC0=^LAB(95.3,DA,0) S:$G(^LAB(95.3,DA,4)) LRDEL=1
- F I=2,6,7,8,9,10,11,14,15 S LRLNC0(I)=$P(LRLNC0,U,I)
+ S LRLNC0=^LAB(95.3,DA,0)
+ F I=2,6,7,8,9,10,11,14 S LRLNC0(I)=$P(LRLNC0,U,I)
  S LRLNCNAM=$P($G(^LAB(95.3,DA,80)),U)
  W @IOF
- I $G(LRDEL) W !,"   **** Deprecated ****"
- W !,"LOINC CODE: ",LRCODE_"-"_LRLNC0(15),"   ",LRLNCNAM
+ W !,"LOINC CODE: ",LRCODE,"   ",LRLNCNAM
  W !,"SYSTEM: ",$P($G(^LAB(64.061,+LRLNC0(8),0)),U),?40,"CLASS: ",$P($G(^LAB(64.061,+LRLNC0(11),0)),U)
  W:LRLNC0(2) !,"COMPONENT: ",$P($G(^LAB(95.31,+LRLNC0(2),0)),U)
  W:LRLNC0(6) !,"PROPERTY: ",$P($G(^LAB(64.061,+LRLNC0(6),0)),U)
@@ -42,9 +38,10 @@ DISPL ;Show LOINC entry selected in file 95.3
  W:LRLNC0(10) !,"METHOD TYPE: ",$P($G(^LAB(64.2,+LRLNC0(10),0)),U)
  W:LRLNC0(14) !,"UNITS: ",$P($G(^LAB(64.061,+LRLNC0(14),0)),U)
  Q
+ Q 
 ENTERLNC ;Enter LOINC code when already know the LOINC code
- W !! N DIR
- S LREND=0,DIR(0)="PO^95.3:AEMZ",DIR("A")="Enter LOINC Code/Name "
+ W !! K DIR S LREND=0,DIR(0)="PO^95.3:AEMZ",DIR("A")="Enter LOINC Code/Name "
+ S DIR("S")="I '$G(^(4))"
  S DIR("?")="Enter LOINC Code Name or LOINC Number"
  S DIR("?",1)="You can see possible LOINC CODES/Specimen by entering the"
  S DIR("?",2)="LOINC Test Name..Specimen   example( GLUCOSE..UR )"

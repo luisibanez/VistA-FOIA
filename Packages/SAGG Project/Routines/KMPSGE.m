@@ -1,13 +1,12 @@
-KMPSGE ;OAK/KAK - Master Routine ;5/3/07  13:57
- ;;2.0;SAGG;;Jul 02, 2007
+KMPSGE ;OAK/KAK - Master Routine ;27 AUG 97 1:12 pm
+ ;;1.8;SAGG PROJECT;**1,2,3**;Jul 26, 2004
  ;
 EN ;-- this routine can only be run as a TaskMan background job
  ;
  Q:'$D(ZTQUEUED)
  ;
- N CNT,COMPDT,HANG,KMPSVOLS,KMPSZE,LOC,MAXJOB,MGR,NOWDT,OS
- N PROD,PTCHINFO,QUIT,SESSNUM,SITENUM,TEMP,TEXT,UCI,UCIVOL
- N VOL,X,ZUZR
+ N CNT,COMPDT,HANG,KMPSVOLS,LOC,MAXJOB,MGR,NOWDT,OS
+ N PROD,QUIT,SESSNUM,SITENUM,TEMP,TEXT,UCI,UCIVOL,VOL,X
  ;
  ; maximum number of consecutively running jobs
  S MAXJOB=6
@@ -113,24 +112,22 @@ LOOP(HANG,SESSNUM,OS)    ;
  S GBL=""
  F  S GBL=$O(^XTMP("KMPS",SITENUM,SESSNUM,NOWDT,GBL)) Q:GBL=""  D
  .S UCIVOL1=""
- .F  S UCIVOL1=$O(^XTMP("KMPS",SITENUM,SESSNUM,NOWDT,GBL,UCIVOL1)) Q:UCIVOL1=""  D 
- ..K UCIVOL(UCIVOL1)
+ .F  S UCIVOL1=$O(^XTMP("KMPS",SITENUM,SESSNUM,NOWDT,GBL,UCIVOL1)) Q:UCIVOL1=""  K UCIVOL(UCIVOL1)
  S UCIVOL1=""
  F  S UCIVOL1=$O(^XTMP("KMPS",SITENUM,SESSNUM," NO GLOBALS ",UCIVOL1)) Q:UCIVOL1=""  K UCIVOL(UCIVOL1)
  ;
  I $D(UCIVOL) D  Q
  .N I,J,K,TEXT
  .S QUIT=1
- .S TEXT(1)=" The SAGG Project collection routines did NOT monitor the following:"
- .S TEXT(2)=""
- .S I=3,UCIVOL1=""
- .F  S UCIVOL1=$O(UCIVOL(UCIVOL1)) Q:UCIVOL1=""  D 
- ..S I=I+1
- ..S TEXT(I)=$J(" ",12)_UCIVOL1
- .S I=I+1,TEXT(I)=""
- .S I=I+1,TEXT(I)=" Please ensure that the SAGG PROJECT file is properly setup.  Then use"
- .S I=I+1,TEXT(I)=" the 'One-time Option Queue' under Task Manager to re-run the 'SAGG"
- .S I=I+1,TEXT(I)=" Master Background Task' [KMPS SAGG REPORT] option."
+ .S TEXT(1)=" The SAGG Project collection routines did NOT monitor the following:",TEXT(2)=""
+ .S K=0,UCIVOL1=""
+ .F I=3:1 Q:K  D
+ ..S TEXT(I)="          "
+ ..F J=1:1:5 S UCIVOL1=$O(UCIVOL(UCIVOL1)) S:UCIVOL1="" K=1 Q:UCIVOL1=""  S TEXT(I)=TEXT(I)_UCIVOL1_"   "
+ .S TEXT(I)=""
+ .S TEXT(I+1)=" Please ensure that the SAGG PROJECT file is properly setup.  Then use"
+ .S TEXT(I+2)=" the 'One-time Option Queue' under Task Manager to re-run the 'SAGG"
+ .S TEXT(I+3)=" Master Background Task' [KMPS SAGG REPORT] option."
  .D MSG^KMPSLK(NOWDT,SESSNUM,.TEXT)
  ;
  Q
@@ -212,6 +209,21 @@ ERR1 ;
  S ^XTMP("KMPS","STOP")=""
  D MSG^KMPSLK(NOWDT,SESSNUM,.TEXT)
  G ^XUSCLEAN
+ ;
+DSM ;-- for DSM platform
+ J START^%ZOSVKSE:(OPTION="/ROUTINE=["_MGR_"]/UCI="_UCI_"/VOLUME="_VOL_"/DATA="""_TEMP_"""")
+ Q
+ ;
+MSM ;
+ J START^%ZOSVKSE(TEMP)[UCI,VOL]
+ Q
+ ;
+MSMV4 ;
+ N KMPSFS
+ ;
+ S KMPSFS=$E(VOL)_"S"_$E(VOL,3)
+ J START^%ZOSVKSE(TEMP)[UCI,VOL,KMPSFS]
+ Q
  ;
 CVMS ;-- for Cache for VMS platform
 CWINNT ;-- for Cache for Windows NT platform

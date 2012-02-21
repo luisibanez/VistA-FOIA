@@ -1,11 +1,10 @@
 PSJOEA ;BIR/MLM-INPATIENT ORDER ENTRY ;23 Jun 98 / 1:46 PM
- ;;5.0; INPATIENT MEDICATIONS ;**110,127,133,167,171**;16 DEC 97
+ ;;5.0; INPATIENT MEDICATIONS ;**110,127,133,167**;16 DEC 97
  ;
  ; Reference to ^PS(55 is supported by DBIA #2191.
  ; Reference to EN^VALM is supported by DBIA #10118.
  ; Reference to ^PSSLOCK is supported by DBIA #2789
  ; Reference to ^DPT is supported by DBIA #10035.
- ; Reference to SDIMO^SDAMA203 is supported by DBIA #4133.
  ;
 LOCK(DFN,PSJORD) ; Check to see if the order is already locked
  N Q S Q=0
@@ -72,7 +71,7 @@ ACTLOG(PSGORDP,DFN,PSGORD)  ;Store 53.1 activity log in local array to be moved 
  NEW PSGX,PSGXDA,PSGAL531,Q,QQ
  F PSGX=0:0 S PSGX=$O(^PS(53.1,+PSGORDP,"A",PSGX)) Q:'PSGX  D
  . S PSGAL531=$G(^PS(53.1,+PSGORDP,"A",PSGX,0))
- . S QQ=$G(^PS(55,DFN,5,+PSGORD,9,0)) S:QQ="" QQ="^55.09D" F Q=$P(QQ,U,3)+1:1 I '$D(^(Q)) S $P(QQ,U,3,4)=Q_U_Q,^(0)=QQ,PSGXDA=Q Q
+ . S QQ=$G(^PS(55,DFN,5,+PSGORD,9,0)) S:QQ="" QQ="^55,09D" F Q=$P(QQ,U,3)+1:1 I '$D(^(Q)) S $P(QQ,U,3,4)=Q_U_Q,^(0)=QQ,PSGXDA=Q Q
  . S ^PS(55,DFN,5,+PSGORD,9,PSGXDA,0)=PSGAL531
  Q
  ;

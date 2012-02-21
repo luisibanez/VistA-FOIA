@@ -1,5 +1,5 @@
 HBHCRP2 ; LR VAMC(IRMS)/MJT-HBHC report on file 631, individual patient evaluation/admission data, includes all fields, plus Case Manager ;2/5/98  15:18
- ;;1.0;HOSPITAL BASED HOME CARE;**1,2,5,6,9,19,22**;NOV 01, 1993;Build 2
+ ;;1.0;HOSPITAL BASED HOME CARE;**1,2,5,6,9,19**;NOV 01, 1993
 PROMPT ; Prompt user for patient name
  K DIC S DIC="^HBHC(631,",DIC(0)="AEMQZ" D ^DIC
  G:Y=-1 EXIT
@@ -39,7 +39,7 @@ PROCESS ; Process record
  W !,"16.  Admit/Reject Action:",?35,$P(HBHCY0,U,15),?38,"|",?41,"28.  Adaptive Tasks @ Admission:",?79,$P(HBHCY0,U,33),!,HBHCY
  W !,"17.  Reject/Withdraw Reason:",?34,$S($P(HBHCY0,U,16)]"":$P(^HBHC(631.1,$P(HBHCY0,U,16),0),U),1:""),?38,"|",?41,"29.  Behavior Problems @ Admission:",?79,$P(HBHCY0,U,34),!,HBHCY
  W !,"18.  Reject/Withdraw Disposition:",?35,$P(HBHCY0,U,17),?38,"|",?41,"30.  Disorientation @ Admission:",?79,$P(HBHCY0,U,35),!,HBHCY
- W !,"19.  Last Four:",?25,$E($P(HBHCDPT0,U,9),6,9),?38,"|",?41,"31.  Mood Disturbance @ Admission:",?79,$P(HBHCY0,U,36),!,HBHCY
+ W !,"19.  SSN:",?25,$E($P(HBHCDPT0,U,9),1,3)_"-"_$E($P(HBHCDPT0,U,9),4,5)_"-"_$E($P(HBHCDPT0,U,9),6,9),?38,"|",?41,"31.  Mood Disturbance @ Admission:",?79,$P(HBHCY0,U,36),!,HBHCY
  W !?38,"|",?41,"32.  Caregiver Limitations @ Adm:",?79,$P(HBHCY0,U,37),!,HBHCY
  W !?38,"|",?41,"33.  Person Completing Eval/Adm:",?76,$J($S($P(HBHCY0,U,38)]"":$P(^HBHC(631.4,$P(HBHCY0,U,38),0),U),1:""),4),!,HBHCY
  W !?38,"|",?46,"Date Eval/Adm Completed:",?72,$S($P(HBHCY0,U,39)]"":$E($P(HBHCY0,U,39),4,5)_"-"_$E($P(HBHCY0,U,39),6,7)_"-"_$E($P(HBHCY0,U,39),2,3),1:""),!,HBHCY

@@ -1,18 +1,5 @@
-GMRAPES0 ;HIRMFO/RM-SELECT PATIENT ALLERGY TO EDIT ;11/16/07  10:26
- ;;4.0;Adverse Reaction Tracking;**13,17,19,21,23,20,41**;Mar 29, 1996;Build 8
- ;DBIA Section
- ;PSN5067 - 4829
- ;DIC     - 10006
- ;DICN    - 10009
- ;DIQ     - 2056
- ;DIR     - 10026
- ;DIWE    - 10028
- ;PSNAPIS - 2574
- ;PSNDI   - 4554
- ;XLFDT   - 10103
- ;XLFSTR  - 10104
- ;XMD     - 10070
- ;XTID    - 4631
+GMRAPES0 ;HIRMFO/RM-SELECT PATIENT ALLERGY TO EDIT ;5/13/05  15:40
+ ;;4.0;Adverse Reaction Tracking;**13,17,19,21,23**;Mar 29, 1996
 EN1 ; GIVEN DFN, SELECT PATIENT ALLERGY
  N GMRAGOUT,ROOT,CNT,LST,NAM,DIR,GMRAET
  S GMRARET=0
@@ -32,12 +19,11 @@ NPA W !!,"Now checking GMR ALLERGIES (#120.82) file for matches...",!
 NDF ;find partial matches and select from NDF
  K Y,DTOUT,DUOUT
  W !!,"Now checking the National Drug File - Generic Names (#50.6)",!
- S DIC=50.6,X=GMRALAR,DIC(0)="EZM",DIC("S")="I $S($L($T(SCREEN^XTID)):'$$SCREEN^XTID(50.6,.01,Y_"",""),1:1)" D DIC^PSNDI(50.6,"GMRA",.DIC,.X,,$$DT^XLFDT) K DIC D DIC ;23,41
+ S DIC=50.6,X=GMRALAR,DIC(0)="EZM",DIC("S")="I $S($L($T(SCREEN^XTID)):'$$SCREEN^XTID(50.6,.01,Y_"",""),1:1)" D ^DIC K DIC D DIC ;23
  I +Y>0 S GMRAAR=+Y_";PSNDF(50.6,",GMRAAR(0)=$P(Y,U,2),GMRAAR("O")="D" D:'GMRAOUT ADAR^GMRAPES1 G EN1:GMRAPA'>0,Q1
  W !!,"Now checking the National Drug File - Trade Names (#50.67)",!
  K DUOUT,DTOUT,Y
- S ROOT="^TMP($J,""GMRASEL"",""B"")",CNT=0,X=GMRALAR ;41
- D ALL^PSN5067(,X,$$DT^XLFDT,"GMRASEL") ;41
+ S ROOT=$$T^PSNAPIS,CNT=0,X=GMRALAR
  I $D(@ROOT@(X)),$S($L($T(SCREEN^XTID)):'$$SCREEN^XTID(50.6,.01,$$TGTOG^PSNAPIS(X)_","),1:1) S CNT=CNT+1,LST(CNT)=$$TGTOG^PSNAPIS(X)_U_X ;23 Exact match stores IEN in 50.6 along with trade name
  S NAM=X F  S NAM=$O(@ROOT@(NAM)) Q:NAM=""!($E(NAM,1,$L(X))'=X)  D
  .Q:$S($L($T(SCREEN^XTID)):$$SCREEN^XTID(50.6,.01,$$TGTOG^PSNAPIS(NAM)_","),1:0)  ;23
@@ -51,16 +37,29 @@ NDF ;find partial matches and select from NDF
  .D ^DIR S Y=$S(+Y:+Y,1:-1) S:Y>0 Y(0)=LST(Y),X=$P(Y(0),U,2)
  D DIC I GMRAOUT S GMRAOUT=GMRAOUT=1 G:GMRAOUT Q1 G EN1
  I +Y>0 S GMRAAR=+Y(0)_";PSNDF(50.6,",GMRAAR(0)=$P(Y(0),U,2),GMRAAR("O")="D" D:'GMRAOUT ADAR^GMRAPES1 G EN1:GMRAPA'>0,Q1
- ;Selection from file 50 removed in patch 23 and code actually removed in 41
+ ;Selection from file 50 removed in patch 23
+DRUG ;W !!,"Now checking the DRUG (#50) file for matches...",! K Y,DTOUT,DUOUT
+ ;S CNT=0,X=GMRALAR K LST
+ ;F ROOT="^PSDRUG(""B"")","^PSDRUG(""C"")" D
+ ;.I $D(@ROOT@(X)) S CNT=CNT+1,LST(CNT)=$O(@ROOT@(X,0))_U_$S(ROOT["C":$$GET1^DIQ(50,$O(@ROOT@(X,0)),.01)_" <"_X_">",1:X)
+ ;.S NAM=X F  S NAM=$O(@ROOT@(NAM)) Q:NAM=""!($E(NAM,1,$L(X))'=X)  D
+ ;..S CNT=CNT+1,LST(CNT)=$O(@ROOT@(NAM,0))_U_$S(ROOT["C":$$GET1^DIQ(50,$O(@ROOT@(NAM,0)),.01)_" <"_NAM_">",1:NAM)
+ ;I 'CNT S Y=-1 ;No matches found
+ ;I CNT=1 S Y(0)=LST(1),X=$P(Y(0),U,2),Y=+LST(1) ;Only one choice
+ ;I CNT>1 D
+ ;.D MATCHES
+ ;.S DIR(0)="NAO^1:"_CNT,DIR("A")="Select 1-"_CNT_": "
+ ;.S DIR("?")="Select the number of desired causative agent"
+ ;.D ^DIR S Y=$S(+Y:+Y,1:-1) S:Y>0 Y(0)=LST(Y),X=$P(Y(0),U,2)
+ ;D DIC I GMRAOUT S GMRAOUT=GMRAOUT-1 G:GMRAOUT Q1 G EN1
+ ;I +Y>0 S GMRAAR=+Y(0)_";PSDRUG(",GMRAAR(0)=$$GET1^DIQ(50,+Y(0),.01),GMRAAR("O")="D" D:'GMRAOUT ADAR^GMRAPES1 G EN1:GMRAPA'>0,Q1
  ;19 - Moved ING and CLASS code here
 ING W !!,"Now checking the INGREDIENTS (#50.416) file for matches...",!
- K Y,DTOUT,DUOUT S D="P",DIC="^PS(50.416,",DIC(0)="SEMZ",DIC("S")="I $S($L($T(SCREEN^XTID)):'$$SCREEN^XTID(50.416,.01,Y_"",""),1:1)",X=GMRALAR D IX^PSNDI(50.416,"GMRA",.DIC,D,.X,,$$DT^XLFDT) K DIC D DIC ;41
- I GMRAOUT S GMRAOUT=GMRAOUT-1 G:GMRAOUT Q1 G EN1 ;41
+ K Y,DTOUT,DUOUT S D="P",DIC="^PS(50.416,",DIC(0)="SEMZ",DIC("S")="I $S($L($T(SCREEN^XTID)):'$$SCREEN^XTID(50.416,.01,Y_"",""),1:1)",X=GMRALAR D IX^DIC K DIC D DIC I GMRAOUT S GMRAOUT=GMRAOUT-1 G:GMRAOUT Q1 G EN1
  I +Y>0 S GMRAAR=+Y_";PS(50.416,",GMRAAR(0)=$S(X?1A.E:X,1:$P(Y,"^",2)),GMRAAR("O")="D" D:'GMRAOUT ADAR^GMRAPES1 G EN1:GMRAPA'>0,Q1
  G Q1:GMRAOUT,ING:X?1"?".E,EN1:Y=0
 CLASS W !!,"Now checking VA DRUG CLASS (50.605) file for matches...",!
- K Y,DTOUT,DUOUT S X=GMRALAR,DIC="^PS(50.605,",DIC(0)="SEZ",D="C",DIC("S")="I $S($L($T(SCREEN^XTID)):'$$SCREEN^XTID(50.605,.01,Y_"",""),1:1)" D IX^PSNDI(50.605,"GMRA",.DIC,D,.X,,$$DT^XLFDT) K DIC D DIC ;41
- I GMRAOUT S GMRAOUT=GMRAOUT-1 G:GMRAOUT Q1 G EN1 ;41
+ K Y,DTOUT,DUOUT S X=GMRALAR,DIC="^PS(50.605,",DIC(0)="SEZ",D="C",DIC("S")="I $S($L($T(SCREEN^XTID)):'$$SCREEN^XTID(50.605,.01,Y_"",""),1:1)" D IX^DIC K DIC D DIC I GMRAOUT S GMRAOUT=GMRAOUT-1 G:GMRAOUT Q1 G EN1
  I +Y>0 S GMRAAR=+Y_";PS(50.605,",GMRAAR(0)=$S(X?1A.E:X,1:$P(Y,"^",2)),GMRAAR("O")="D" D:'GMRAOUT ADAR^GMRAPES1 G EN1:GMRAPA'>0,Q1
  G Q1:GMRAOUT,CLASS:X?1"?".E,EN1:Y=0
 YNOTH W !!,"Could not find ",GMRALAR," in any files."
@@ -134,13 +133,13 @@ SENDREQ(USER,PAT,TEXT,GMRAET) ;Send email to GMRA REQUEST NEW REACTANT indicatin
  S GMRATXT(CNT)="Office Phone : "_GMRAUI(200,GMRAUS,.132,"E"),CNT=CNT+1
  S GMRATXT(CNT)="Digital Pager: "_GMRAUI(200,GMRAUS,.138,"E"),CNT=CNT+1
  S GMRATXT(CNT)="",CNT=CNT+1
- I $D(GMRAET) S GMRATXT(CNT)="The user added the following comment:",CNT=CNT+1,GMRATXT(CNT)="",CNT=CNT+1 F J=1:1:$P(GMRAET(0),U,3) S GMRATXT(CNT)=GMRAET(J,0),CNT=CNT+1 ;20 Added blank line following comment
+ I $D(GMRAET) S GMRATXT(CNT)="The user added the following comment:",CNT=CNT+1 F J=1:1:$P(GMRAET(0),U,3) S GMRATXT(CNT)=GMRAET(J,0),CNT=CNT+1
  I $D(GMRAET) S GMRATXT(CNT)="",CNT=CNT+1
  S GMRATXT(CNT)="Please verify with the user the intended reactant and then take the",CNT=CNT+1
  S GMRATXT(CNT)="appropriate action.  Be sure to try alternate spellings, etc before",CNT=CNT+1
  S GMRATXT(CNT)="requesting new reactants through NTRT (New Term Rapid Turnaround).",CNT=CNT+1 ;23
  S GMRATXT(CNT)="",CNT=CNT+1
- S GMRATXT(CNT)="Please note, an allergy to "_TEXT_" was NOT entered for this patient!",CNT=CNT+1 ;20
+ S GMRATXT(CNT)="Please note, a reaction WAS NOT entered for this patient!",CNT=CNT+1
  S XMTEXT="GMRATXT("
  D ^XMD
  Q $S($D(XMMG):"0^Mail group GMRA REQUEST NEW REACTANT has no members - contact IRM",1:1)

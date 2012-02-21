@@ -1,5 +1,5 @@
-OCXOZ0T ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
+OCXOZ0T ;SLC/RJS,CLA - Order Check Scan ;OCT 20,2005 at 22:40
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221**;Dec 17,1997
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
  ; ***************************************************************
@@ -11,7 +11,7 @@ OCXOZ0T ;SLC/RJS,CLA - Order Check Scan ;MAR 8,2011 at 13:52
  Q
  ;
 R49R2A ; Verify all Event/Elements of  Rule #49 'SITE FLAGGED RESULT'  Relation #2 'OUTPATIENT AND (SITE FLAGGED LAB RESULT OR SITE FL...'
- ;  Called from EL128+6^OCXOZ0G, and EL59+6^OCXOZ0G, and EL102+6^OCXOZ0G, and EL109+6^OCXOZ0G.
+ ;  Called from EL128+6^OCXOZ0G, and EL59+6^OCXOZ0G, and EL102+6^OCXOZ0G, and EL109+6^OCXOZ0H.
  ;
  Q:$G(OCXOERR)
  ;
@@ -63,7 +63,7 @@ R49R2B ; Send Order Check, Notication messages and/or Execute code for  Rule #49
  Q
  ;
 R50R1A ; Verify all Event/Elements of  Rule #50 'BIOCHEM ABNORMALITIES/CONTRAST MEDIA CHE...'  Relation #1 'CONTRAST MEDIA ORDER AND ABNORMAL RENAL RESULTS'
- ;  Called from EL129+5^OCXOZ0G, and EL130+5^OCXOZ0G.
+ ;  Called from EL129+5^OCXOZ0H, and EL130+5^OCXOZ0H.
  ;
  Q:$G(OCXOERR)
  ;

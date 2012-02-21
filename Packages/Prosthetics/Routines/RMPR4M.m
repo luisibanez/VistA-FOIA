@@ -1,5 +1,5 @@
 RMPR4M ;PHX/HNB,RVD - PURCHASE CARD MODULE FUNCTIONS ;3/1/1996
- ;;3.0;PROSTHETICS;**3,26,28,30,41,62,90,133**;Feb 09, 1996;Build 2
+ ;;3.0;PROSTHETICS;**3,26,28,30,41,62,90**;Feb 09, 1996
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; RVD patch #62 - pce and suspense link to 2319
@@ -87,7 +87,7 @@ SHIP ;for shipping entry in 2319
  .S DIC="^RMPR(660,",DIC(0)="L",X=DT
  .K DD,DO D FILE^DICN
  .S $P(^RMPR(664,RMPRA,0),U,12)=+Y
- .S R19IEN=$O(^RMPR(664,RMPRA,1,0)) Q:R19IEN=""
+ .S R19IEN=$O(^RMPR(664,RMPRA,1,0))
  .S R19I=$G(^RMPR(664,RMPRA,1,R19IEN,0))
  .S R19A=+Y
  .S R19(660,R19A_",",8)=RMPR("STA")
@@ -114,11 +114,10 @@ SHIP ;for shipping entry in 2319
  ;
 CAN ;for CANCELING entry in 2319
  ;call pce delete if patient encounter was recorded.
- N RMI
  I $D(^TMP("RM",$J,"C")) S DIK="^RMPR(660," F RMI=0:0 S RMI=$O(^TMP("RM",$J,"C",RMI)) Q:RMI'>0  D
  .I $D(^RMPR(660,RMI,10)),$P(^RMPR(660,RMI,10),U,12) D
- ..S RMCHK=0
- ..S RMCHK=$$DEL^RMPRPCED(RMI)
+ ..S RMCHK=0 N RMI
+ ..S RMCHK=$$DEL^RMPRPCED(RMPRAR)
  .S DA=RMI D ^DIK
  ;
 UPD ; Update Percent discount, Bank Authorization and remove shipping entry.

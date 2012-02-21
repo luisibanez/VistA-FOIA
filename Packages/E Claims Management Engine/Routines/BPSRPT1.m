@@ -1,6 +1,6 @@
 BPSRPT1 ;BHAM ISC/BEE - ECME REPORTS ;14-FEB-05
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5,7,8,10**;JUN 2004;Build 27
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ; ECME Report Compile Routine - Looping/Filtering Routine
@@ -11,7 +11,7 @@ BPSRPT1 ;BHAM ISC/BEE - ECME REPORTS ;14-FEB-05
  ;  BPPHARM/BPPHARM(ptr) - Set to 0 for all pharmacies, if set to 1 array
  ;                         of internal pointers of selected pharmacies
  ;              BPSUMDET - (1) Summary or (0) Detail format
- ;              BPINSINF - Set to 0 for all insurances or list of file 36 IENs
+ ;              BPINSINF - Set to 0 for all insurances or insurance co name
  ;                 BPMWC - 1-ALL,2-Mail,3-Window,4-CMOP Prescriptions
  ;               BPRTBCK - 1-ALL,2-RealTime,3-Backbill Claim Submission
  ;               BPRLNRL - 1-ALL,2-RELEASED,3-NOT RELEASED
@@ -78,10 +78,7 @@ FM2YMD(BPFMDT) N Y,Y1
  ;
  ;Process each Entry
  ;
-PROCESS(BP59) ;
- N BPBCK,BPDFN,BPREF,BPPAYBL,BPPLAN,BPREJ,BPRLSDT,BPRX,BPRXDRG,BPSTATUS,BPSEQ
- ;
- S BPSEQ=$$COB59^BPSUTIL2(BP59)
+PROCESS(BP59) N BPBCK,BPDFN,BPREF,BPPAYBL,BPPLAN,BPREJ,BPRLSDT,BPRX,BPRXDRG,BPSTATUS
  ;
  ;Get ABSBRXI - ptr to #52
  S BPRX=+$P($G(^BPST(BP59,1)),U,11)
@@ -91,9 +88,6 @@ PROCESS(BP59) ;
  ;
  ;Get PATIENT - ptr to #2
  S BPDFN=+$P($G(^BPST(BP59,0)),U,6)
- ; 
- ; Skip eligibility verification transactions
- I $P($G(^BPST(BP59,0)),U,15)="E" G XPROC
  ;
  ;Check for correct BPS Pharmacy (DIVISION)
  I $G(BPPHARM)=1,$$CHKPHRM(BP59)=0 G XPROC
@@ -103,11 +97,10 @@ PROCESS(BP59) ;
  I BPRLNRL'=1 I ((BPRLNRL=2)&(BPRLSDT=0))!((BPRLNRL=3)&(BPRLSDT)) G XPROC
  ;
  ;Get Status
- S BPSTATUS=$$STATUS^BPSRPT6(BPRX,BPREF,BPSEQ)
+ S BPSTATUS=$$STATUS^BPSRPT6(BPRX,BPREF)
  ;
  ;if REVERSAL
  I BPRTYPE=4,BPSTATUS'["REVERSAL" G XPROC  ; exclude non-reversed
- I BPRTYPE=4,$$CLOSED02^BPSSCR03($P(^BPST(BP59,0),U,4))=1 G XPROC  ; exclude closed claims for Reversal Report
  ;
  ;if PAYABLE
  S BPPAYBL=BPSTATUS["PAYABLE"
@@ -118,6 +111,7 @@ PROCESS(BP59) ;
  S BPREJ=BPSTATUS["REJECTED"
  I BPRTYPE=2,BPSTATUS["REVERSAL" G XPROC ; exclude rejected reversals
  I BPRTYPE=2,'BPREJ G XPROC  ; exclude non-rejected
+ I BPRTYPE=2,$$CLSCLM(BP59) G XPROC  ;exclude closed claims
  ;
  ;if SUBMITTED NOT RELEASED exclude released ones
  I BPRTYPE=3,BPRLSDT'=0 G XPROC
@@ -128,10 +122,7 @@ PROCESS(BP59) ;
  ;
  ;if CLOSED
  I BPRTYPE=7,'$$CLSCLM(BP59) G XPROC  ;exclude open claims
- ;I BPRTYPE=7,BPSTATUS'["REJECTED" G XPROC  ;exclude non-rejected closed claims
- ;
- ;if Spending Account Report, check Pricing Segment for data
- I BPRTYPE=8,'$$PRICING^BPSRPT5(BP59) G XPROC
+ I BPRTYPE=7,BPSTATUS'["REJECTED" G XPROC  ;exclude non-rejected closed claims
  ;
  ;if Recent Transactions, exclude closed claims
  I BPRTYPE=5,$$CLSCLM(BP59) G XPROC
@@ -144,12 +135,11 @@ PROCESS(BP59) ;
  I BPRTBCK'=1 I ((BPRTBCK=2)&(BPBCK=0))!((BPRTBCK=3)&(BPBCK)) G XPROC
  ;
  ;Check for MAIL/WINDOW/CMOP/ALL
- I BPMWC'="A",$$MWC^BPSRPT6(BPRX,BPREF)'=BPMWC G XPROC
+ I BPMWC'=1,$$MWC^BPSRPT6(BPRX,BPREF)'=BPMWC G XPROC
  ;
  ;Check for selected insurance
- S BPPLAN=$$INSNAM^BPSRPT6(BP59)
- I BPINSINF'=0,'$$CHKINS^BPSSCRCU($P(BPPLAN,U,1),BPINSINF) G XPROC
- S BPPLAN=$P(BPPLAN,U,2)
+ S BPPLAN=$P($$INSNAM^BPSRPT6(BP59),U,2)
+ I BPINSINF'=0,BPINSINF'=BPPLAN G XPROC
  ;
  ;Check for selected drug
  S BPRXDRG=$$GETDRUG^BPSRPT6(BPRX)
@@ -168,12 +158,6 @@ PROCESS(BP59) ;
  ;
  ;Check for Specific Reject Code
  I BPREJCD'=0,'$$CKREJ(BP59,BPREJCD) G XPROC
- ;
- ;Check for Eligibility Code
- I BPELIG'=0,BPELIG'=$$ELIGCODE^BPSSCR05(BP59) G XPROC
- ;
- ;Check Open/Closed claim
- I BPOPCL'=0,((BPOPCL=2)&($$CLOSED02^BPSSCR03($P(^BPST(BP59,0),U,4))=1))!((BPOPCL=1)&($$CLOSED02^BPSSCR03($P(^BPST(BP59,0),U,4))'=1)) G XPROC
  ;
  ;Save Entry for Report
  D SETTMP^BPSRPT2(BPGLTMP,BPDFN,BPRX,BPREF,BP59,BPBEGDT,BPENDDT,.BPPHARM,BPSUMDET,BPPLAN,BPRLSDT,BPPAYBL,BPREJ,BPRXDRG,$P(BPSTATUS,U))
@@ -260,13 +244,12 @@ PAUSE2 N X
  ;
  ;Get ECME#
  ;
- ;BP59 - ptr to 9002313.59
- ;output :
- ;ECME number from 9002313.02
- ; 7 or 12 digits of the prescription IEN file 52
- ; or 12 spaces
-ECMENUM(BP59) ;*/
- Q $$ECMENUM^BPSSCRU2(BP59)
+ ; Input Variable: BP59 - Lookup to BPS TRANSACTION (#59)
+ ; Returned value -> Last 7 digits of ECME#
+ ; 
+ECMENUM(BP59) N BPY1,BPY2
+ S BPY1=(BP59\1),BPY2=$E(BPY1,$L(BPY1)-6,99) ;last 7 digits
+ Q BPY2
  ;
  ;Convert FM date or date.time to displayable (mm/dd/yy HH:MM) format
  ;
@@ -277,6 +260,10 @@ DATTIM(X) N DATE,BPT,BPM,BPH,BPAP
  S BPAP="AM" I BPH>12 S BPH=BPH-12,BPAP="PM" S:$L(BPH)<2 BPH="0"_BPH
  I BPT S:'BPH BPH=12 S DATE=DATE_" "_BPH_":"_BPM_BPAP
  Q $G(DATE)
+ ;
+ ;Display M-Mail,W-Window,C-CMOP or " "
+ ;
+MWCNAM(BPINDEX) Q $S(BPINDEX=2:"M",BPINDEX=3:"W",BPINDEX=4:"C",1:" ")
  ;
  ;Display RT-Realtime,BB-Backbill, or " "
  ;

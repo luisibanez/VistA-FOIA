@@ -1,5 +1,5 @@
 DGPTFMO ;ALB/JDS/ADL - DGPTF PRINT TEMPLATE ; 4/13/04 12:11pm
- ;;5.3;Registration;**195,397,510,590,594,606,683,729,664**;Aug 13, 1993;Build 15
+ ;;5.3;Registration;**195,397,510,590,594,606,683**;Aug 13, 1993
  ;;ADL;Updated for CSV Project;;Mar 4, 2003
  ;FOR PTF REPORT CALLED FROM TEMPLATE DGPTF
 EN K A,B,AD,ADA,DGDD,DGFC,HEAD,DGPTFE,DGST,DGN,T
@@ -18,10 +18,9 @@ WRITE D HEAD:$Y>(IOSL-12) G Q:'DN S Y=$P(DGM,U,10),DGL=+$P(DGM,U,2),DGL=$S($D(^D
  W:$P(DGM,U,31)'="" !,"Potentially Related to Combat: ",$S($P(DGM,U,31)="Y":"Yes",1:"No")
  W:$P(DGM,U,26)'="" !,"Treated for AO condition: ",$S($P(DGM,U,26)="Y":"Yes",1:"No")
  W:$P(DGM,U,27)'="" !,"Treated for IR condition: ",$S($P(DGM,U,27)="Y":"Yes",1:"No")
- W:$P(DGM,U,28)'="" !,"Treated for service in SW Asia: ",$S($P(DGM,U,28)="Y":"Yes",1:"No")
+ W:$P(DGM,U,28)'="" !,"Treated for EC condition: ",$S($P(DGM,U,28)="Y":"Yes",1:"No")
  W:$P(DGM,U,29)'="" !,"Treated for MST condition: ",$S($P(DGM,U,29)="Y":"Yes",$P(DGM,U,29)="N":"No",1:"Declined to answer") ; added 6/17/98 for MST enhancement
  W:$P(DGM,U,30)'="" !,"Treated for HEAD/NECK CA condition: ",$S($P(DGM,U,30)="Y":"Yes",1:"No")
- W:$P(DGM,U,32)'="" !,"Treated for SHAD Condition: ",$S($P(DGM,U,32)="Y":"Yes",1:"No")
  W:T(I)=1 !,"Discharge "
  S DGF="" F J=5:1:15 I J#10 S DGPTTMP=$$ICDDX^ICDCODE(+$P(DGM,U,J),$$GETDATE^ICDGTDRG(D0)),DGICD=$S(+DGPTTMP>0:$P(DGPTTMP,U,2,99),1:"") I DGICD]"" D 
  . W:DGF="" !!?13,"DX: " W $P(DGICD,U,3)_" ("_$P(DGICD,U)_")",!?17 S DGF=1
@@ -54,7 +53,7 @@ PROC S DGF="" F I=1:1:5 S DGPTTMP=$$ICDOP^ICDCODE(+$P(DGOP1,U,I),$$GETDATE^ICDGT
  F J=5:1:9 S DGPTTMP=$$ICDOP^ICDCODE(+$P(DG601,U,J),$$GETDATE^ICDGTDRG(D0)),DGPROC=$S(+DGPTTMP>0:$P(DGPTTMP,U,2,99),1:"") I DGPROC W !?17,$P(DGPROC,U,4)_" ("_$P(DGPROC,U)_")"
  Q
 DXLS D HEAD:$Y>(IOSL-16) S DGPTDAT=$$GETDATE^ICDGTDRG(D0)
- S DGPTTMP=$$ICDDX^ICDCODE(+$P(DGPT,U,10),DGPTDAT),DXLS=$S(+DGPTTMP>0:$P(DGPTTMP,U,2,99),1:"") I DXLS]"" W !!?11,"PRINCIPAL DIAGNOSIS: ",$P(DXLS,U,3)_" ("_$P(DXLS,U)_")"
+ S DGPTTMP=$$ICDDX^ICDCODE(+$P(DGPT,U,10),DGPTDAT),DXLS=$S(+DGPTTMP>0:$P(DGPTTMP,U,2,99),1:"") I DXLS]"" W !!?11,"DXLS: ",$P(DXLS,U,3)_" ("_$P(DXLS,U)_")"
  I 'DXLS S DGPTTMP=$$ICDDX^ICDCODE(+$P(DGPT,U,11),DGPTDAT),DGP=$S(+DGPTTMP>0:$P(DGPTTMP,U,2,99),1:"") I DGP]"" W !!," Principal Diag: ",$P(DGP,U,3)_" ("_$P(DGP,U)_")"
  S K=DGPT F I=16:1:24 D DSP
  S K=$G(^DGPT(D0,71)) F I=1:1:4 D DSP

@@ -1,6 +1,6 @@
 IBRFN2 ;ALB/AAS - PASS INSURANCE/BEDSECTION DATA TO A/R FOR MCCR/NDB ; 8-OCT-93
- ;;2.0;INTEGRATED BILLING;**75,80,345**;21-MAR-94;Build 28
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**75,80**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 CRIT(IBIFN) ; Pass AR insurance data for MCCR/NDB
  ;         Input:    IBIFN -- Internal entry of Bill (ptr to #399)
@@ -58,7 +58,7 @@ HOWID(IBIFN) ; -- compute how policy was identified
  S IBCDFN=$$POL(IBIFN) I 'IBCDFN G HOWIDQ
  S IBX=$P($G(^DPT(+$P($G(^DGCR(399,+$G(IBIFN),0)),"^",2),.312,IBCDFN,1)),"^",9)
  ;
-HOWIDQ I IBX<1!(IBX'?1N) S IBX=1 ; must be number, default=1 by interview
+HOWIDQ I IBX<1!(IBX>4)!(IBX'?1N) S IBX=1 ; must be number from 1-4, default=1 by interview
  Q IBX
  ;
  ;

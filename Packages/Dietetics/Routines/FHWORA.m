@@ -1,5 +1,5 @@
 FHWORA ; HISC/GJC - OE/RR Procedure Call (Assessments) ;11/6/97  15:35
- ;;5.5;DIETETICS;**8**;Jan 28, 2005;Build 28
+ ;;5.5;DIETETICS;;Jan 28, 2005
 FHWORADT(DFN) ; Pass back the Assessment Dates for a particular patient.
  ;----------------------------------------------------------------------
  ; Input : DFN -> the ien of the patient
@@ -13,14 +13,12 @@ FHWORADT(DFN) ; Pass back the Assessment Dates for a particular patient.
  S FHZ115="P"_DFN D CHECK^FHOMDPA I FHDFN="" Q "-1^patient data missing"
  Q:'$D(^FHPT(FHDFN,0)) "-1^invalid patient (not in Dietetics Patient file)"
  Q:'+$O(^FHPT(FHDFN,"N",0)) "-1^No assessments on file"
- ;K ^TMP($J,"FHADT",DFN) N FH115A,I S I=6929298 ;7/1/2007
- ;K ^TMP($J,"FHADT",DFN) N FH115A,I S I=6929398 ;6/1/2007
- K ^TMP($J,"FHADT",DFN) N FH115A,I S I=6928998 ;10/1/2007
+ K ^TMP($J,"FHADT",DFN) N FH115A,I S I=0
  F  S I=$O(^FHPT(FHDFN,"N",I)) Q:I'>0  D
  . S FH115A=$G(^FHPT(FHDFN,"N",I,0))
  . S ^TMP($J,"FHADT",DFN,I)=$$FMTE^XLFDT($P(FH115A,"^"),1)
  . Q
- Q $S($D(^TMP($J,"FHADT",DFN)):1,1:"-1^No assessments prior to 10/1/2007 on file")
+ Q $S($D(^TMP($J,"FHADT",DFN)):1,1:"-1^No assessments on file")
  ;
 FHWORASM(DFN,FHADTX) ; Store Assessment data so it can be displayed
  ;----------------------------------------------------------------------

@@ -1,5 +1,5 @@
 WVRALINK ;HCIOFO/FT-RAD/NM-WOMEN'S HEALTH LINK  ;6/10/04  14:51
- ;;1.0;WOMEN'S HEALTH;**3,5,7,9,10,16,18,23**;Sep 30, 1998;Build 5
+ ;;1.0;WOMEN'S HEALTH;**3,5,7,9,10,16,18**;Sep 30, 1998
  ;
  ; This routine uses the following IAs:
  ; #2480  - FILE 70         (private)
@@ -9,7 +9,6 @@ WVRALINK ;HCIOFO/FT-RAD/NM-WOMEN'S HEALTH LINK  ;6/10/04  14:51
  ; #10063 - ^%ZTLOAD        (supported)
  ; #10070 - ^XMD            (supported)
  ; #10141 - ^XPDUTL         (supported)
- ; #2541  - ^XUPARAM        (supported)
  ;
  ;;  Original routine created by IHS/ANMC/MWR
  ;;* MICHAEL REMILLARD, DDS * ALASKA NATIVE MEDICAL CENTER *
@@ -160,7 +159,7 @@ PROC ;---> CREATE MAMMOGRAM PROCEDURE IN WV PROCEDURE FILE #790.1.
  I (WVCPT=76856)!(WVCPT=76830)!(WVCPT=76645) D  Q  ;not breast related
  .D MAIL^WVRADWP(DFN,+Y,WVPROC,WVPROV) ;iens for patient, accession, procedure, provider/requestor
  .Q
- D CPRS^WVSNOMED(69,DFN,"",WVPROV,"Mammogram results available.",DATE_"~"_CASE)
+ D CPRS^WVSNOMED(69,DFN,"",WVPROV,"Mammogram results available.","")
  Q
  ;
 DELETE(DFN,DATE,CASE) ;EP

@@ -1,5 +1,5 @@
-XUSESIG ;SF/RWF - ROUTINE TO ENTER OR CHANGE ELECTRONIC SIGNATURE CODE ;10/16/2006
- ;;8.0;KERNEL;**14,55,437**;Jul 10, 1995;Build 2
+XUSESIG ;SF/RWF - ROUTINE TO ENTER OR CHANGE ELECTRONIC SIGNATURE CODE ;12/18/96  10:59
+ ;;8.0;KERNEL;**14,55**;Jul 10, 1995
 A ;Called by others from the top. See DBIC #936
  I $D(DUZ)[0 W "NO ACTION CAN BE TAKEN ON YOUR REQUEST     " Q
  N DA,DIE,DR,X1,K
@@ -10,7 +10,6 @@ A ;Called by others from the top. See DBIC #936
  W !,"In addition, you are permitted to enter a new Electronic Signature Code"
  W !,"or to change an existing code."
  W !! S DIE="^VA(200,",DR="1;20.2;20.3;.132;.137;.138" D ^DIE
- I $P($G(^VA(200,DA,20)),U,2)="" W !,"You must have a SIGNATURE BLOCK PRINTED NAME before you can have",!,"an ELECTRONIC SIGNATURE CODE." G OUT1
  S X1=$P($G(^VA(200,DA,20)),"^",4) I X1]"" S K=0 D S2 G:X1="" OUT1
  S X1=$$NEW() W !,$S(X1:"DONE",1:"  OPTION ABORTED."_$C(7))
  G OUT1

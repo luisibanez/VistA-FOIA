@@ -1,5 +1,5 @@
-MAGBRTLD ;WOIFO/EdM - List of destinations ; 03/09/2005  13:56
- ;;3.0;IMAGING;**9,11,30,51**;26-August-2005
+MAGBRTLD ;WOIFO/EdM - List of destinations ; 06/29/2004  15:01
+ ;;3.0;IMAGING;**9,11,30**;16-September-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -17,39 +17,17 @@ MAGBRTLD ;WOIFO/EdM - List of destinations ; 03/09/2005  13:56
  ;;
  Q
  ;
-LISTALL(TO,LIST) N DEST,N,X
+LIST(TO,LIST) N DEST,N,X
  S TO=$$UPNOPU(TO),N=0 K LIST
  ;
  S DEST="" F  S DEST=$O(^MAG(2005,"ROUTE",DEST)) Q:DEST=""  D
- . S:DEST["MAG(2005.2," DEST(+DEST)=""
+ . S DEST(DEST)=""
  . Q
  ;
  S DEST="" F  S DEST=$O(DEST(DEST)) Q:DEST=""  D
  . N PW
  . S PW=$P($G(^MAG(2005.2,DEST,2)),"^",1,2)
  . S $P(PW,"^",2)=$$DECRYP^MAGDRPC2($P(PW,"^",2))
- . S X=$G(^MAG(2005.2,DEST,0))
- . Q:$$UPNOPU($P(X,"^",1))'[TO
- . S N=N+1,LIST(N)=$P(X,"^",2)_"^"_$P($G(^MAG(2005.2,DEST,4)),"^",2)_"^"_$P(X,"^",8)_"^"_PW_"^"_$P($G(^MAG(2005.2,DEST,3)),"^",5)_"^"_DEST
- . Q
- S LIST=N
- Q
- ;
-LIST(TO,LIST) N DEST,N,ORI,PRI,X
- S TO=$$UPNOPU(TO),N=0 K LIST
- ;
- S ORI="" F  S ORI=$O(^MAGQUEUE(2006.035,"STS",ORI)) Q:ORI=""  D
- . S PRI="" F  S PRI=$O(^MAGQUEUE(2006.035,"STS",ORI,"SENT",PRI)) Q:PRI=""  D
- . . S DEST="" F  S DEST=$O(^MAGQUEUE(2006.035,"STS",ORI,"SENT",PRI,DEST)) Q:DEST=""  D
- . . . S:DEST["MAG(2005.2," DEST(+DEST)=""
- . . . Q
- . . Q
- . Q
- ;
- S DEST="" F  S DEST=$O(DEST(DEST)) Q:DEST=""  D
- . N PW
- . S PW=$P($G(^MAG(2005.2,DEST,2)),"^",1,2)
- . S $P(PW,"^",2)=$$DECRYP^XUSRB1($P(PW,"^",2))
  . S X=$G(^MAG(2005.2,DEST,0))
  . Q:$$UPNOPU($P(X,"^",1))'[TO
  . S N=N+1,LIST(N)=$P(X,"^",2)_"^"_$P($G(^MAG(2005.2,DEST,4)),"^",2)_"^"_$P(X,"^",8)_"^"_PW_"^"_$P($G(^MAG(2005.2,DEST,3)),"^",5)_"^"_DEST
@@ -73,7 +51,6 @@ UPNOPU(X) Q $TR(X,"abcdefghijklmnopqrstuvwxyz !""#$%&'()*+,-./:;<=>?@[\]^_`{|}~"
 PURGSTAT N COUNT,DATE,FIRST,IMAGE,LAST,LOC
  W !!,"Overview of images to be purged.",!
  S LOC="" F  S LOC=$O(^MAG(2005,"ROUTE",LOC)) Q:LOC=""  D
- . Q:LOC'["MAG(2005.2,"
  . S FIRST=$O(^MAG(2005,"ROUTE",LOC,""))\1
  . S LAST=$O(^MAG(2005,"ROUTE",LOC,""),-1)\1
  . S COUNT=0
@@ -81,7 +58,7 @@ PURGSTAT N COUNT,DATE,FIRST,IMAGE,LAST,LOC
  . . S IMAGE="" F  S IMAGE=$O(^MAG(2005,"ROUTE",LOC,DATE,IMAGE)) Q:IMAGE=""  S COUNT=COUNT+1
  . . Q
  . W !,COUNT," image" W:COUNT'=1 "s"
- . W " to be purged on ",$P(^MAG(2005.2,+LOC,0),"^",2)
+ . W " to be purged on ",$P(^MAG(2005.2,LOC,0),"^",2)
  . W !?5,"(transmitted "
  . I FIRST=LAST W " on ",$$FMD(FIRST)
  . E  W " between ",$$FMD(FIRST)," and ",$$FMD(LAST)

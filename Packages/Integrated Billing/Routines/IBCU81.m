@@ -1,6 +1,6 @@
 IBCU81 ;ALB/ARH - THIRD PARTY BILLING UTILITIES (AUTOMATED BILLER) ;02 JUL 93
- ;;2.0;INTEGRATED BILLING;**55,91,106,124,160,174,260,347**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**55,91,106,124,160,174,260**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EABD(IBETYP,IBTDT) ; -- compute earliest auto bill date: date entered plus days delay for event type
  ;the difference betwieen this and EABD^IBTUTL is that the autobill of the event type may be turned off
@@ -32,9 +32,9 @@ BILLQ Q X_E
  ;
 RXRF(IBTRN) ; returns rx # and fill date for given claims tracking rx entry
  N IBX,IBY,IBZ,X S (X,IBY)=""
- S IBX=$G(^IBT(356,+$G(IBTRN),0)) I IBX'="" S IBY=$$FILE^IBRXUTL(+$P(IBX,U,8),.01)
- I IBY'="",$P(IBX,U,10)=0 S IBZ=$$FILE^IBRXUTL(+$P(IBX,U,8),"22","I") I +IBZ S X=IBY_"^"_IBZ
- I IBY'="",+$P(IBX,U,10) S IBZ=+$$ZEROSUB^IBRXUTL(+$P(IBX,U,2),+$P(IBX,U,8),+$P(IBX,U,10)) I +IBZ S X=IBY_"^"_IBZ
+ S IBX=$G(^IBT(356,+$G(IBTRN),0)) I IBX'="" S IBY=$P($G(^PSRX(+$P(IBX,U,8),0)),U,1)
+ I IBY'="",$P(IBX,U,10)=0 S IBZ=$P($G(^PSRX(+$P(IBX,U,8),2)),U,2) I +IBZ S X=IBY_"^"_IBZ
+ I IBY'="",+$P(IBX,U,10) S IBZ=+$G(^PSRX(+$P(IBX,U,8),1,+$P(IBX,U,10),0)) I +IBZ S X=IBY_"^"_IBZ
  Q X
  ;
 NABSCT(IBTRN) ; -- true if CT outpatient visit should NOT be auto billed, based only on stop (1) and clinic (2) auto billable

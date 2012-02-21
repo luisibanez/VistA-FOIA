@@ -1,6 +1,6 @@
 RCRCXM1 ;ALB/CMS - AR/RC ORIGINAL TRANSMISSION SET ;09/08/97
-V ;;4.5;Accounts Receivable;**63,122,189,249,263**;Mar 20, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;4.5;Accounts Receivable;**63,122,189**;Mar 20, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  Q
  ;
@@ -39,21 +39,21 @@ IBS ;Set the IB Bill Information data line from RCRCVXM
  S ^TMP("RCRCVL",$J,"XM",PRCABN,1,2)="BN2^"_$G(RCIB("TCG"))_U_$G(RCIB("DFP"))_U_$G(RCIB("TAX"))_U_$G(PRCA("REF REASON"))
  S ^TMP("RCRCVL",$J,"XM",PRCABN,2,1)="BINS^"_$P($G(RCIB("PIN")),U,5)_U_$P($G(RCIB("PIN")),U,6)_U_$P($G(RCIB("PIN")),U,7)_U_$S($G(RCIB("CRE"))]"":RCIB("CRE"),$G(RCIB("CRA"))]"":RCIB("CRA"),$G(RCIB("CRO"))]"":RCIB("CRO"),1:"")
  S ^TMP("RCRCVL",$J,"XM",PRCABN,3,1)="PAT^"_$E($G(VADM(1),RCUNK),1,30)_U_$P($G(VADM(2)),U,1)_U_$P($G(VADM(3)),U,1)_U_$P($G(VADM(5)),U)_U_$G(RCIB("SR"))_U_$G(VAPA(1))_U_$G(VAPA(2))_U_$G(VAPA(3))_U_$G(VAPA(4))_U_$P($G(VAPA(5)),U,2)_U_+$G(VAPA(6))
- S ^TMP("RCRCVL",$J,"XM",PRCABN,4,1)="INS^"_$P($G(RCIB("PIN")),U,1)_U_$G(RCIB("PIN","MMA"))_U_$P($G(RCIB("PIN")),U,2,4)
+ S ^TMP("RCRCVL",$J,"XM",PRCABN,4,1)="INS^"_$P($G(RCIB("PIN")),U,1)_U_$G(RCIB("PIN","MMA"))_U_$P($G(RCIB("PIN")),2,4)
  ;
  ; - set multiples if defined
  I $O(RCIB("OPV",0)) S RCI=0 F  S RCI=$O(RCIB("OPV",RCI)) Q:'RCI  D
  .S ^TMP("RCRCVL",$J,"XM",PRCABN,6,RCI)="OPV^"_RCI_U_RCIB("OPV",RCI)
  I $O(RCIB("DXS",0)) S RCI=0 F  S RCI=$O(RCIB("DXS",RCI)) Q:'RCI  D
  .S ^TMP("RCRCVL",$J,"XM",PRCABN,7,RCI)="DXS^"_RCI_U_RCIB("DXS",RCI)
- I $O(RCIB("RVC",0)) S RCI=0 F  S RCI=$O(RCIB("RVC",RCI)) Q:'RCI  D
- .S ^TMP("RCRCVL",$J,"XM",PRCABN,8,RCI)="RVC^"_RCI_U_RCIB("RVC",RCI)
+ I $O(RCIB("RVC",0)) S RCI=0 F  S RCI=$O(RCIB("RCV",RCI)) Q:'RCI  D
+ .S ^TMP("RCRCVL",$J,"XM",PRCABN,8,RCI)="RVC^"_RCI_U_RCIB("RCV",RCI)
  I $O(RCIB("PRC",0)) S RCI=0 F  S RCI=$O(RCIB("PRC",RCI)) Q:'RCI  D
  .S ^TMP("RCRCVL",$J,"XM",PRCABN,9,RCI)="PRC^"_RCI_U_RCIB("PRC",RCI)
  I $O(RCIB("RXF",0)) S RCI=0 F  S RCI=$O(RCIB("RXF",RCI)) Q:'RCI  D
  .S ^TMP("RCRCVL",$J,"XM",PRCABN,10,RCI)="RXF^"_RCI_U_RCIB("RXF",RCI)
- I $O(RCIB("PRD",0)) S RCI=0 F  S RCI=$O(RCIB("PRD",RCI)) Q:'RCI  D
- .S ^TMP("RCRCVL",$J,"XM",PRCABN,11,RCI)="PRD^"_RCI_U_RCIB("PRD",RCI)
+ I $O(RCIB("PDR",0)) S RCI=0 F  S RCI=$O(RCIB("PDR",RCI)) Q:'RCI  D
+ .S ^TMP("RCRCVL",$J,"XM",PRCABN,11,RCI)="PDR^"_RCI_U_RCIB("PDR",RCI)
  ;
  ; - set Current Debtor Name and Address if different
  S RCI=""

@@ -1,6 +1,5 @@
-MAGDHW0 ;WOIFO/PMK - Capture Consult/Request data ; 28 Mar 2006  9:07 AM
- ;;3.0;IMAGING;**10,86,49**;Mar 19, 2002;Build 2033;Apr 07, 2011
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDHW0 ;WOIFO/PMK - Capture Consult/Request data ; 10/08/2003  09:53
+ ;;3.0;IMAGING;**10**;Nov 06, 2003
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGDHW0 ;WOIFO/PMK - Capture Consult/Request data ; 28 Mar 2006  9:07 AM
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -15,8 +15,6 @@ MAGDHW0 ;WOIFO/PMK - Capture Consult/Request data ; 28 Mar 2006  9:07 AM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
- ;
- ;
  Q
  ;
 INIT ;
@@ -78,7 +76,7 @@ OUTPUT ; output the message to ^MAGDHL7
  . . Q
  . S J=J+1,^MAGDHL7(2006.5,D0,1,J,0)=Y
  . Q
- ; The next line must be last, since WAIT^MAGDHRS1
+ ; The next line must be last, since WAIT^MAGDHR1A
  ; uses this node to determine that the entry is complete.
  S ^MAGDHL7(2006.5,D0,1,0)="^^"_J_"^"_J_"^"_FMDATETM
  Q

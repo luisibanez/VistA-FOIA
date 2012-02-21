@@ -1,5 +1,5 @@
 DGPTF5 ;ALB/MTC - PTF ENTRY/EDIT-4 ; 07 JUN 91 
- ;;5.3;Registration;**669,701,744**;Aug 13, 1993;Build 5
+ ;;5.3;Registration;**669**;Aug 13, 1993
  ;
 Z I 'DGN S Z=$S(IOST="C-QUME"&($L(DGVI)'=2):Z,1:"["_Z_"]") W @DGVI,Z,@DGVO
  E  W "   "
@@ -18,11 +18,7 @@ ASK W !,"Would you like to close this record for CENSUS" S %=2 D YN^DICN
 ICDEN ;enter icd codes
  I $G(X)["?" Q
  N DIC,Y I $G(X)="?BAD" S X="" Q
- ; DG*5.3*701 (movement)
- I DA'=$G(DGPTF),DA<25,$G(DA(1))>0 D CONFIG^LEXSET("ICD",,$$GETDATE^ICDGTDRG(DA(1)))
- ; DG*5.3*744 (801 screen)
- E  I DA'=$G(PTF),$D(^DGPT(PTF)) D CONFIG^LEXSET("ICD",,$$GETDATE^ICDGTDRG($G(PTF)))
- E  D CONFIG^LEXSET("ICD",,$$GETDATE^ICDGTDRG(DA))
+ D CONFIG^LEXSET("ICD",,$$GETDATE^ICDGTDRG(DA))
  S DIC="^LEX(757.01,",DIC(0)=$S('$L($G(X)):"",1:"")_"EQM"
  S DIC("A")="Enter ICD: "
  D ^DIC

@@ -1,24 +1,53 @@
-ORWGAPIA ; SLC/STAFF - Graph Application Calls ;2/22/07  11:16
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**215,251,260,243**;Dec 17, 1997;Build 242
+ORWGAPIA ; SLC/STAFF - Graph Application Calls ;4/13/06  10:34
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**215,251**;Dec 17, 1997
  ;
-ADMITX(DFN) ; $$(dfn) -> 1 if patient has data else 0
- Q $O(^DGPM("C",+$G(DFN),0))>0
- ;
-ALLERGYX(DFN) ; $$(dfn) -> 1 if patient has data else 0
- Q $O(^GMR(120.8,"B",+$G(DFN),0))>0
- ;
+AA(IEN) ; $$(ien) -> external display of accession area
+ Q $P($G(^LRO(68,IEN,0)),U)
+AALAB(TEST) ; $$(lab test) -> accession ien^acc name^acc abbrev
+ N AA,DIV
+ S TEST=+$G(TEST)
+ S DIV=+$G(DUZ(2))
+ S AA=+$P($G(^LAB(60,+TEST,8,DIV,0)),U,2)
+ I AA Q AA_U_$$ACCLAB(AA)
+ S AA=+$P($G(^LAB(60,+TEST,8,+$O(^LAB(60,+TEST,8,0)),0)),U,2)
+ I AA Q AA_U_$$ACCLAB(AA)
+ Q ""
+ACC(DATA) ; API - get accession areas   - from ORWGAPI
+ N CNT,IEN,TMP,RESULT,ZERO
+ D RETURN^ORWGAPIU(.TMP,.DATA)
+ S CNT=0
+ S IEN=0
+ F  S IEN=$O(^LRO(68,IEN)) Q:IEN<1  D
+ . S ZERO=$G(^LRO(68,IEN,0)) I '$L(ZERO) Q
+ . S RESULT="68^"_IEN_U_$P(ZERO,U)_U_$P(ZERO,U,11)
+ . D SETUP^ORWGAPIU(.DATA,RESULT,TMP,.CNT)
+ Q
+ACCLAB(AA) ; $$(accession ien) -> acc name^acc abbrev
+ N ZERO
+ S ZERO=$G(^LRO(68,AA,0)) I '$L(ZERO) Q ""
+ Q "lab - "_$P(ZERO,U)_U_$P(ZERO,U,11)
+ADDDRUG(NUM1) ; $$(additive) -> drug in 50 else ""
+ N RESULT K ^TMP($J,"RX")
+ I '$G(IEN) Q ""
+ D ZERO^PSS52P6(IEN,,,"RX")
+ S RESULT=$P($G(^TMP($J,"RX",IEN,1)),U)
+ K ^TMP($J,"RX")
+ Q RESULT
 ALLG(IEN) ; $$(ien) -> external display of allergies
  I IEN Q $P($G(^GMRD(120.83,IEN,0)),U) ; this is for rxn, allergy is free text
  Q IEN
- ;
-CPT(NODE,ORVALUE,VALUES) ; from ORWGAPI4
+CPT(NODE,ORVALUE) ; from ORWGAPI4
  D VCPT^PXPXRM(NODE,.ORVALUE)
- S VALUES=$$DATA^ORWGAPIW(.ORVALUE) ;*****************************
  Q
- ;
+DC(IEN) ; $$(ien) -> external display of drug class
+ N RESULT K ^TMP($J,"RX")
+ I '$G(IEN) Q ""
+ D IEN^PSN50P65(IEN,,"RX")
+ S RESULT=$G(^TMP($J,"RX",IEN,1))
+ K ^TMP($J,"RX")
+ Q RESULT
 DISCH(IEN) ; $$(pt movement ien) -> discharge date
  Q $P($G(^DGPM(+$P($G(^DGPM(+$G(IEN),0)),U,17),0)),U)
- ;
 DOCCLASS(DOCTYPE) ; $$(doc type) -> ien of tiu doc class
  N CONSULTS
  S DOCTYPE=$E(DOCTYPE,1)
@@ -26,48 +55,103 @@ DOCCLASS(DOCTYPE) ; $$(doc type) -> ien of tiu doc class
  I DOCTYPE="D" Q 244
  I DOCTYPE="C" D CNSLCLAS^TIUSRVD(.CONSULTS) Q CONSULTS
  Q 0
- ;
-EDU(NODE,ORVALUE,VALUES) ; from ORWGAPI4
+DRGCLASS(DRUG) ; $$(drug) -> drug class^classification
+ N RESULT K ^TMP($J,"RX")
+ I '$G(DRUG) Q ""
+ D DATA^PSS50(DRUG,,,,,"RX")
+ S RESULT=+$G(^TMP($J,"RX",DRUG,25))
+ K ^TMP($J,"RX")
+ Q RESULT_U_"drug - "_$$DC(RESULT)
+DRUG(NUM) ; $$(bcma entry) -> drug in 50 else ""
+ N DONE,DRUG,NUM1
+ S DONE=0,NUM=+$G(NUM)
+ S NUM1=0
+ F  S NUM1=$O(^PSB(53.79,NUM,.5,"B",NUM1)) Q:NUM1<1  S DONE=1 Q
+ I DONE Q NUM1
+ S DRUG=0
+ S NUM1=0
+ F  S NUM1=$O(^PSB(53.79,NUM,.6,"B",NUM1)) Q:NUM1<1  D  I DONE Q
+ . S DRUG=$$ADDDRUG(NUM1)
+ . I DRUG S DONE=1
+ I DONE Q DRUG
+ S DRUG=0
+ S NUM1=0
+ F  S NUM1=$O(^PSB(53.79,NUM,.7,"B",NUM1)) Q:NUM1<1  D  I DONE Q
+ . S DRUG=$$SOLDRUG(NUM1)
+ . I DRUG S DONE=1
+ I DONE Q DRUG
+ Q ""
+DRUGC(VALUES) ; API - get drug classes   - from ORWGAPI
+ N CLASS,IEN,NUM,ROOT K VALUES
+ S NUM=0
+ S ROOT=$$ROOT^PSN50P65(1)
+ S CLASS=""
+ F  S CLASS=$O(@ROOT@(CLASS)) Q:CLASS=""  D
+ . S IEN=0
+ . F  S IEN=$O(@ROOT@(CLASS,IEN)) Q:IEN=""  D
+ .. S NUM=NUM+1
+ .. S VALUES(NUM)="50.605^"_IEN_U_CLASS
+ M ^TMP("ORWGRPC",$J)=VALUES K VALUES
+ Q
+EDU(NODE,ORVALUE) ; from ORWGAPI4
  D VPEDU^PXPXRM(NODE,.ORVALUE)
- S VALUES=$$DATA^ORWGAPIW(.ORVALUE) ;*****************************
  Q
- ;
-EXAM(NODE,ORVALUE,VALUES) ; from ORWGAPI4
+EXAM(NODE,ORVALUE) ; from ORWGAPI4
  D VXAM^PXPXRM(NODE,.ORVALUE)
- S VALUES=$$DATA^ORWGAPIW(.ORVALUE) ;*****************************
  Q
- ;
 GETTIU(ORDATA,IEN) ; from ORWGAPID
  D TGET^TIUSRVR1(.ORDATA,IEN)
  Q
- ;
-HF(NODE,ORVALUE,VALUES) ; from ORWGAPI4
+HF(NODE,ORVALUE) ; from ORWGAPI4
  D VHF^PXPXRM(NODE,.ORVALUE)
- S VALUES=$$DATA^ORWGAPIW(.ORVALUE) ;*****************************
  Q
- ;
 ICD0(IEN) ; $$(ien) -> external display of IDC0
  Q $P($G(^ICD0(IEN,0)),U)_" "_$P($G(^ICD0(IEN,0)),U,4)
- ;
 ICD9(IEN) ; $$(ien) -> external display of IDC9
  Q $P($G(^ICD9(IEN,0)),U)_" "_$P($G(^ICD9(IEN,0)),U,3)
- ;
 ICPT(IEN,CSD) ; $$(ien) -> external display of CPT
  N X S X=$$CPT^ICPTCOD($G(IEN),$G(CSD))
  Q $P(X,U,2)_" "_$E($P(X,U,3),1,30)
- ;
-IMM(NODE,ORVALUE,VALUES) ; from ORWGAPI4
+IMM(NODE,ORVALUE) ; from ORWGAPI4
  D VIMM^PXPXRM(NODE,.ORVALUE)
- S VALUES=$$DATA^ORWGAPIW(.ORVALUE) ;*****************************
  Q
- ;
+INSIG(NODE) ; $$(node) -> sig
+ N DFN,DNUM,IEN,LNUM,SIG,SUB ; replace this code in v27 with INSIG^ORWGAPIX
+ S DFN=+$G(NODE)
+ S SUB=$P($G(NODE),";",2)
+ S IEN=+$P($G(NODE),";",3)
+ S SIG=""
+ I SUB=5 D
+ . S LNUM=$G(^PS(55,DFN,5,IEN,0))
+ . S DNUM=$G(^PS(55,DFN,5,IEN,.2))
+ . I $L(DNUM),$L(LNUM) D
+ .. S SIG="  Give: "_$$EXT^ORWGAPIX($P(LNUM,U,3),55.06,3)
+ .. S SIG=SIG_" "_$$EXT^ORWGAPIX($P(LNUM,U,7),55.06,7)
+ I SUB="IV" D
+ . S LNUM=$G(^PS(55,DFN,"IV",IEN,0))
+ . S DNUM=$G(^PS(55,DFN,"IV",IEN,.2))
+ . I $L(DNUM),$L(LNUM) D
+ .. S SIG="  Give: "_$P(DNUM,U,2)
+ .. S SIG=SIG_" "_$$EXT^ORWGAPIX($P(LNUM,U,2),55.01,.02)_" "_$P(LNUM,U,9)
+ Q SIG
 ISA(USER,CLASS,ORERR) ; $$(user,user class,err) -> 1 if user in class, else 0
  Q $$ISA^USRLM(USER,CLASS,.ORERR)
- ;
+LAB(ORVALUE,NODE,ITEM) ; from ORWGAPI3
+ D LRPXRM^LRPXAPI(.ORVALUE,NODE,ITEM,"VSC")
+ Q
+LABNAME(Y) ; $$(item ien) -> item name
+ I $P(Y,";")="A",$P(Y,";",2)="S" Q $P(Y,".",2,99)
+ Q $$ITEMNM^LRPXAPIU(Y)
+LABSUM(ORDATA,DFN,DATE1,DATE2,ORSUB) ; from ORWGAPID
+ D EN^LR7OSUM(.ORDATA,DFN,DATE1,DATE2,,80,.ORSUB)
+ Q
 LOS(DGPMIFN) ; $$(pt movement ien) -> length of stay
  N X D ^DGPMLOS
  Q +$P($G(X),U,5)
- ;
+LRDFN(DFN) ; $$(dfn) -> lrdfn
+ Q $$LRDFN^LRPXAPIU(DFN)
+LRIDT(LRDT) ;  $$(date) -> inverse date
+ Q $$LRIDT^LRPXAPIU(LRDT)
 MEDICINE(ARRAY,DFN) ;
  N DATE,FILE,IEN,NAME,NUM,REF,VALUES,XREF
  K ARRAY,^TMP("MCAR",$J),^TMP("OR",$J,"MCAR")
@@ -79,13 +163,12 @@ MEDICINE(ARRAY,DFN) ;
  S NUM=0
  F  S NUM=$O(^TMP("OR",$J,"MCAR","OT",NUM)) Q:NUM<1  D
  . S VALUES=^TMP("OR",$J,"MCAR","OT",NUM)
- . S DATE=$$DATETFM^ORWGAPIW($P(VALUES,U,6))
+ . S DATE=$$DATETFM^ORWGAPIU($P(VALUES,U,6))
  . S NAME=$P(VALUES,U) I '$L(NAME) Q
  . S IEN=+$O(@REF@(XREF,NAME,""))
  . I DATE,IEN S ARRAY(IEN,DATE)=NAME
  K ^TMP("MCAR",$J),^TMP("OR",$J,"MCAR")
  Q
- ;
 MEDVAL(VAL) ;
  N IEN,NAME,NAMES,REF,SEQ,XREF K NAMES,VAL
  D FILE^ORWGAPIU(690,.REF,.XREF)
@@ -103,62 +186,84 @@ MEDVAL(VAL) ;
  . S SEQ=SEQ+1
  . S VAL(SEQ)=690_U_IEN_U_NAMES(IEN)
  Q
- ;
-MH(ORVALUE,NODE,VALUES) ; from ORWGAPI4
+MH(ORVALUE,NODE) ; from ORWGAPI4
  D ENDAS^YTAPI10(.ORVALUE,NODE)
- S VALUES=$$DATA^ORWGAPIW(.ORVALUE) ;*****************************
  Q
- ;
-NOTEX(DFN) ; $$(dfn) -> 1 if patient has data else 0
- Q $$HASDOCMT^TIULX($G(DFN))
- ;
+NVASIG(NODE) ;  $$(node) -> sig on non-va drug
+ N RESULTS,SIG K RESULTS
+ I '$L(NODE) Q ""
+ D RXNVA(NODE,.RESULTS)
+ S SIG=RESULTS("DOSAGE")
+ S SIG=SIG_" "_RESULTS("MEDICATION ROUTE")
+ S SIG=SIG_" "_RESULTS("SCHEDULE")
+ Q SIG
 OITEM(DATA) ; API - get order display groups   -  from ORWGAPI
  N CNT,IEN,RESULT,TMP,ZERO
- D RETURN^ORWGAPIW(.TMP,.DATA)
+ D RETURN^ORWGAPIU(.TMP,.DATA)
  S CNT=0
  S IEN=0
  F  S IEN=$O(^ORD(100.98,IEN)) Q:IEN<1  D
  . S ZERO=$G(^ORD(100.98,IEN,0)) I '$L(ZERO) Q
  . S RESULT="100.98^"_IEN_U_$P(ZERO,U)_U_$P(ZERO,U,3)
- . D SETUP^ORWGAPIW(.DATA,RESULT,TMP,.CNT)
+ . D SETUP^ORWGAPIU(.DATA,RESULT,TMP,.CNT)
  Q
- ;
-POV(NODE,ORVALUE,VALUES) ; from ORWGAPI4
+POINAME(IEN) ; $$(poi entry) - > name and dosage form else ""
+ N NAME,RESULT K ^TMP($J,"RX")
+ I '$G(IEN) Q ""
+ D ZERO^PSS50P7(IEN,,,"RX")
+ S NAME=$P($G(^TMP($J,"RX",IEN,.01)),U)
+ S NAME=NAME_" "_$P($G(^TMP($J,"BOB",IEN,.02)),U,2)
+ K ^TMP($J,"RX")
+ I NAME'=" " Q NAME
+ Q ""
+POV(NODE,ORVALUE) ; from ORWGAPI4
  D VPOV^PXPXRM(NODE,.ORVALUE)
- S VALUES=$$DATA^ORWGAPIW(.ORVALUE) ;*****************************
  Q
- ;
 PROB(GMPLLEX,GMPLSTAT,GMPLICD,GMPLODAT,GMPLXDAT,NODE) ; from ORWGAPI4
  N GMPLPNAM,GMPLDLM,GMPLTXT,GMPLCOND,GMPLPRV,GMPLPRIO
  D CALL2^GMPLUTL3(NODE)
  Q
- ;
-PTF(NODE,ORVALUE,VALUES) ; from ORWGAPI3, ORWGAPI4
+PTF(NODE,ORVALUE) ; from ORWGAPI3, ORWGAPI4
  D PTF^DGPTPXRM(NODE,.ORVALUE)
- S VALUES=$$DATA^ORWGAPIW(.ORVALUE) ;*****************************
  Q
- ;
-RAD(NODE,ORVALUE,VALUES) ; from ORWGAPI3
+RAD(NODE,ORVALUE) ; from ORWGAPI3
  D EN1^RAPXRM(NODE,.ORVALUE)
- S VALUES=$$DATA^ORWGAPIW(.ORVALUE) ;*****************************
  Q
- ;
-SKIN(NODE,ORVALUE,VALUES) ; from ORWGAPI4
+RXIN(NODE,ORVALUE) ; from ORWGAPI3
+ D OEL^PSJPXRM1(NODE,.ORVALUE)
+ Q
+RXNVA(NODE,ORVALUE) ; from ORWGAPI1, ORWGAPI3
+ D NVA^PSOPXRM1(NODE,.ORVALUE)
+ Q
+RXOUT(NODE,ORVALUE) ; from ORWGAPI3
+ D PSRX^PSOPXRM1(NODE,.ORVALUE)
+ Q
+SIG(DFN,RXIEN) ; $$(dfn,prescription ien) -> sig
+ N LNUM,SIG K ^TMP($J,"RX")
+ S RXIEN=+$G(RXIEN)
+ D RX^PSO52API(DFN,"RX",RXIEN,,"M",,)
+ S SIG=""
+ S LNUM=0
+ F  S LNUM=$O(^TMP($J,"RX",DFN,RXIEN,"M",LNUM)) Q:LNUM<1  D
+ . S SIG=SIG_$G(^TMP($J,"RX",DFN,RXIEN,"M",LNUM,0))_" "
+ I $L(SIG) S SIG="  Sig: "_$$LOW^ORWGAPIX(SIG)
+ K ^TMP($J,"RX")
+ Q SIG
+SKIN(NODE,ORVALUE) ; from ORWGAPI4
  D VSKIN^PXPXRM(NODE,.ORVALUE)
- S VALUES=$$DATA^ORWGAPIW(.ORVALUE) ;*****************************
  Q
- ;
-SURG(ORSURG,DFN,VALUES) ; from ORWGAPI2, ORWGAPI4
+SOLDRUG(NUM1) ; $$(iv solution) -> drug in 50 else ""
+ N RESULT K ^TMP($J,"RX")
+ I '$G(IEN) Q ""
+ D ZERO^PSS52P7(IEN,,,"RX")
+ S RESULT=$P($G(^TMP($J,"RX",IEN,1)),U)
+ K ^TMP($J,"RX")
+ Q RESULT
+SURG(ORSURG,DFN) ; from ORWGAPI2, ORWGAPI4
  D GET^SROGTSR(.ORSURG,DFN)
- S VALUES=$$DATA^ORWGAPIW(.ORSURG) ;*****************************
  Q
- ;
-SURGX(DFN) ; $$(dfn) -> 1 if patient has data else 0
- Q $O(^SRF("B",+$G(DFN),0))>0
- ;
 TAX(IEN) ; $$(ien) -> external display of reminder taxonomy
  Q $P($G(^PXD(811.2,+$G(IEN),0)),U)
- ;
 TITLE(DOCTYPE) ; $$(document type) -> parent ien^parent^parent abbrev
  N IEN,RESULTS K RESULTS
  S DOCTYPE=+$G(^TIU(8925,+$G(DOCTYPE),0))
@@ -166,31 +271,39 @@ TITLE(DOCTYPE) ; $$(document type) -> parent ien^parent^parent abbrev
  D GETDATA^ORWGAPIX(.RESULTS,8925.1,".01;.02",IEN)
  I '$L($G(RESULTS(.01))) Q ""
  Q IEN_U_"note - "_RESULTS(.01)_U_$G(RESULTS(.02))
- ;
 TIU(ORVALUE,DOCIEN,ONE,DFN,OLDEST,NEWEST) ; from ORWGAPI1, ORWGAPI3
  D CONTEXT^TIUSRVLO(.ORVALUE,DOCIEN,ONE,DFN,$G(OLDEST),$G(NEWEST))
  Q
- ;
 TIUTITLE(DATA) ; API - get tiu document titles   - from ORWGAPI
- N CNT,IEN,RESULT,RESULTS,TMP K ^TMP("TIUTLS",$J)
- D RETURN^ORWGAPIW(.TMP,.DATA)
+ N CNT,IEN,RESULT,RESULTS,TMP
+ D RETURN^ORWGAPIU(.TMP,.DATA)
  S CNT=0
- D TITLIENS^TIULX
  S IEN=0
- F  S IEN=$O(^TMP("TIUTLS",$J,IEN)) Q:IEN<1  D
+ F  S IEN=$O(^TIU(8925.1,IEN)) Q:IEN<1  D
+ . I $P($G(^TIU(8925.1,IEN,0)),U,4)'="DOC" Q
  . K RESULTS
  . D GETDATA^ORWGAPIX(.RESULTS,8925.1,".01;.02",IEN)
  . I '$L($G(RESULTS(.01))) Q
  . S RESULT="8925.1^"_IEN_U_RESULTS(.01)_U_$G(RESULTS(.02))
- . D SETUP^ORWGAPIW(.DATA,RESULT,TMP,.CNT)
- K ^TMP("TIUTLS",$J)
+ . D SETUP^ORWGAPIU(.DATA,RESULT,TMP,.CNT)
  Q
- ;
-VISITX(DFN) ; $$(dfn) -> 1 if patient has data else 0
- Q $O(^AUPNVSIT("AET",+$G(DFN),0))>0
- ;
-VITAL(ORVALUE,NODE,VALUES) ; from ORWGAPI4
+VITAL(ORVALUE,NODE) ; from ORWGAPI4
  D EN^GMVPXRM(.ORVALUE,NODE)
- S VALUES=$$DATA^ORWGAPIW(.ORVALUE) ;*****************************
  Q
- ;
+ ; $$(dfn) -> 1 if patient has data else 0
+ADMITX(DFN) ;
+ Q $O(^DGPM("C",+$G(DFN),0))>0
+ALLERGYX(DFN) ;
+ Q $O(^GMR(120.8,"B",+$G(DFN),0))>0
+BCMAX(DFN) ;
+ Q $O(^PSB(53.79,"B",+$G(DFN),0))>0
+NOTEX(DFN) ;
+ Q $O(^TIU(8925,"C",+$G(DFN),0))>0
+NVAX(DFN) ;
+ Q $L($O(^PXRMINDX("55NVA","PI",+$G(DFN),"")))>0
+SURGX(DFN) ;
+ Q $O(^SRF("B",+$G(DFN),0))>0
+TREATX(DFN) ;
+ Q $L($O(^AUPNVTRT("AA",+$G(DFN),"")))>0
+VISITX(DFN) ;
+ Q $O(^AUPNVSIT("AET",+$G(DFN),0))>0

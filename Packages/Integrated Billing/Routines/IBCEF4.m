@@ -1,6 +1,5 @@
 IBCEF4 ;ALB/TMP - MRA/EDI ACTIVATED UTILITIES ;06-FEB-96
- ;;2.0;INTEGRATED BILLING;**51,137,232,155,296,327,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**51,137,232,155,296**;21-MAR-94
  ;
 EDIACTV(IBEDIMRA) ; Returns 0 if EDI or MRA is not active, 
  ; otherwise, returns 1
@@ -56,7 +55,7 @@ TXMT(IBIFN,IBWHY,IBNEW) ; Determine if bill # IBIFN is 'transmittable'
  I 'IBWHY S X1=$$INSOK(+IB(.07)) S:'X1 IBWHY=4
  I 'IBWHY,$$ISRX^IBCEF1(IBIFN) D  ;S:'X1 IBWHY=6
  . ; Check for Rxs and NDC # format valid (5-4-2)
- . ;IF THIS IS A UB FORM DO NOT SEND ELECTRONIC
+ . ;IF THIS IS A UB92 DO NOT SEND ELECTRONIC
  . I $$FT^IBCEF(IBIFN)=3 S IBWHY=1
  . ;
  . Q  ;;CHECK REMOVAL SO NON NDC FORMAT NUMBERS WILL GO
@@ -67,10 +66,6 @@ TXMT(IBIFN,IBWHY,IBNEW) ; Determine if bill # IBIFN is 'transmittable'
  ... Q:$S($P(Z00,U,8)="":1,1:$L($P(Z00,U,8))=11)
  ... I $P(Z00,U,9)'=4 S X1=0
  ; Only continue if general edits are passed
- I $$COB^IBCEF(IB)="S" D
- . S COBINS=$P($G(^DGCR(399,IB,"M")),U,IBCOB+1)
- . I 'COBINS Q
- . I IBMCR S IBWHY=1,$P(^DGCR(399,IBIFN,"TX"),U,8)=1
  I IBWHY S IBOK=0 G TXMTQ
  S IBOK=$$EDIT(IBIFN,.IB,.IBWHY)
  G:'IBOK TXMTQ

@@ -1,5 +1,5 @@
-SROVAR ;BIR/MAM,ADM - SITE PARAMETERS ; 7/21/09 1:37pm
- ;;3.0; Surgery ;**17,38,48,67,77,50,87,88,102,107,100,134,144,157,171**;24 Jun 93;Build 1
+SROVAR ;BIR/MAM,ADM - SITE PARAMETERS ;10/04/05
+ ;;3.0; Surgery ;**17,38,48,67,77,50,87,88,102,107,100,134,144**;24 Jun 93
  ;
  ; Reference to ^TMP("CSLSUR1" supported by DBIA #3498
  ;
@@ -79,7 +79,7 @@ TERM ; compare stop time with start time
  K %DT S %DT="EPTXR" D ^%DT S X=Y D OUT
  Q
 PLUS24 S:SRNULL SR130="TIME PAT IN OR" S (SRV,Y)=X X ^DD("DD") S SRY=Y
- N DIR S DIR("A",1)="",DIR("A",2)="The time you have entered is earlier than "_SR130_".",DIR("A")="Do you mean "_SRY_" (Y/N) ? ",DIR(0)="YA" D ^DIR K DIR I 'Y!$D(DTOUT)!$D(DUOUT) K X Q
+ K DIR S DIR("A",1)="",DIR("A",2)="The time you have entered is earlier than "_SR130_".",DIR("A")="Do you mean "_SRY_" (Y/N) ? ",DIR(0)="YA" D ^DIR K DIR I 'Y!$D(DTOUT)!$D(DUOUT) K X Q
  S X=SRV
  Q
 CLEAR ; clean-up case edit/lock flags in ^XTMP
@@ -88,10 +88,4 @@ CLEAR ; clean-up case edit/lock flags in ^XTMP
  .S SRJ=0 F  S SRJ=$O(^XTMP(SRC,DUZ,SRJ)) Q:'SRJ  D
  ..I SRJ=$J L -^XTMP(SRC,DUZ,SRJ) K ^XTMP(SRC,DUZ,SRJ) I '$O(^XTMP(SRC,0)) L -^XTMP(SRC) K ^XTMP(SRC) Q
  ..S SRNOW1=$P($G(^XTMP(SRC,0)),"^") I SRNOW>SRNOW1 L -^XTMP(SRC) K ^XTMP(SRC)
- Q
-EN3 ; the Sterility Expiration Date should be after the Date of Operation
- S:$D(SRTN) SRTDA=DA,DA=SRTN S X=$S(X?1.4N.A!(X?1.2N1":"2N.A):Z_"@"_X,1:X)
- S %DT="E" D ^%DT S X=Y I X>0 S SRSTART=$E($P(^SRF($S($D(SRTN):SRTN,1:D0),0),U,9),1,7) I SRSTART'="" D BEF
- S:$D(SRTDA) DA=SRTDA Q
-BEF I X<SRSTART W !!,"The date entered is before the 'DATE OF OPERATION'.  Please check the",!,"DATE entered for this field." K X H 2
  Q

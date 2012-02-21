@@ -1,5 +1,5 @@
-TIUAL1 ;SLC/AJB - TIU Alerts List Manager ; 7/6/05 4:06pm
- ;;1.0;TEXT INTEGRATION UTILITIES;**158,199**;Jun 20, 1997
+TIUAL1 ;SLC/AJB - TIU Alerts List Manager ; Mar 17, 2003
+ ;;1.0;TEXT INTEGRATION UTILITIES;**158**;Jun 20, 1997
  ;
  Q
 CHNGSRCH ; allows user to change search parameters
@@ -137,7 +137,6 @@ INIT2(TIUCAT) ;
  I $P(TIUCAT,U)="AE" F  S TIUDA=$O(^TIU(8925.7,"AE",TIUDA)) Q:TIUDA=""  I $D(^TIU(8925.7,"AE",TIUDA,TIU("P"))) D
  . S TIU("AS")="",TIU("AS")=$O(^TIU(8925.7,"AE",TIUDA,TIU("P"),TIU("AS")))
  . I $P($G(^TIU(8925.7,TIU("AS"),0)),U,4),$P($G(^TIU(8925.7,TIU("AS"),0)),U,5)=TIU("P") Q
- . I TIU("AS")'="",$P($G(^TIU(8925.7,TIU("AS"),0)),"^",9)=1 Q
  . N TIUD0,TIUD12,TIUD13
  . S TIUD0=$G(^TIU(8925,TIUDA,0))
  . S TIUD12=$G(^TIU(8925,TIUDA,12))

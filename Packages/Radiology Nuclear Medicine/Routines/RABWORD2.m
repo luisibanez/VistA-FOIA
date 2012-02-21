@@ -1,5 +1,5 @@
 RABWORD2 ;HOIFO/KAR - Radiology Billing Awareness ;12/20/04  3:55pm
- ;;5.0;Radiology/Nuclear Medicine;**41,70**;Mar 16, 1998;Build 7
+ ;;5.0;Radiology/Nuclear Medicine;**41**;Mar 16, 1998
  ;
  ; Rtn invokes IA #1300-A, #2083, #4419
  Q
@@ -48,14 +48,14 @@ PREV ;Prompt for Copying a previous Order's DX/SC/EC values.
  G:RAPREV PREV
  Q
 ELIG ;List the Service Connected ratios for the patient
- N RAY,RAELIG,RASC,RAPERC,RAAO,RAIR,RAEC,RASHAD
+ N RAY,RAELIG,RASC,RAPERC,RAAO,RAIR,RAEC
  D DEM^VADPT,ELIG^VADPT,SVC^VADPT
  S RAELIG=$P(VAEL(1),"^",2),RASC=$P(VAEL(3),"^"),RASC=$S(RASC:"YES",RASC=0:"NO",1:""),RAPERC=$P(VAEL(3),"^",2)
- S RAAO=$S(VASV(2):"YES",1:"NO"),RAIR=$S(VASV(3):"YES",1:"NO"),RASHAD=$S($G(VASV(11)):"YES",1:"NO")
+ S RAAO=$S(VASV(2):"YES",1:"NO"),RAIR=$S(VASV(3):"YES",1:"NO")
  S DIC=2,DA=RADFN,DR=".322013",DIQ="RAY",DIQ(0)="I" D EN^DIQ1 K DA,DIC,DIQ,DR
  S RAEC=RAY(2,RADFN,.322013,"I"),RAEC=$S(RAEC="Y":"YES",1:"NO")
  W @IOF,!,VADM(1)_"  ("_VA("PID")_")       ",$P(VAEL(6),"^",2),!!,"   * * * Eligibility Information and Service Connected Conditions * * *"
- W !!,?5,"Primary Eligibility: "_RAELIG,!,?5,"A/O Exp.: "_RAAO,?22,"ION Rad.: "_RAIR,?40,"SWAC: "_RAEC,?57,"SHAD: "_RASHAD,!
+ W !!,?5,"Primary Eligibility: "_RAELIG,!,?5,"A/O Exp.: "_RAAO,?24,"ION Rad.: "_RAIR,?44,"Env Contam: "_RAEC,!
  Q
 ADDEXAM ;Add DX/SC/EI data to new order when adding order to Last Visit
  Q:'$D(^XUSEC("PROVIDER",DUZ))  ;user provider key check

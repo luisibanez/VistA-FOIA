@@ -1,6 +1,6 @@
-BPSJAREG ;BHAM ISC/LJF - HL7 Application Registration MFN Message ;03/07/08  13:26
- ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5,7**;JUN 2004;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+BPSJAREG ;BHAM ISC/LJF - HL7 Application Registration MFN Message ;21-NOV-2003
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;  This program will process the outgoing registration MFN message
  ;
@@ -18,19 +18,21 @@ BPSJAREG ;BHAM ISC/LJF - HL7 Application Registration MFN Message ;03/07/08  13:
  ; MGRP    = E-Mail message group
  ; MSG     = Message
  ;
+INI ;
+INIT ; Unconditional jump....
+ G ^BPSJINIT
+ Q
  ;
 BPSJVAL(BPSJVAL) ; Validation entry point - HL7 message processing prevented
  ;
 TASKMAN ; Entry point for taskman to run this routine
  ;
- N DA,HL,HL7DTG,HLECH,HLEID,HLFS,HLLNK,HLRESET,HLPRO
+ N HL,HL7DTG,HLECH,HLEID,HLFS,HLLNK,HLRESET,HLPRO
  N IPA,IPP
- N MGRP,MSG,MCT,BPSJARES,BPVALFN,DA
+ N MGRP,MSG,MCT,BPSJARES
  ;
  S MCT=0,BPSJVAL=+$G(BPSJVAL)
  K ^TMP("HLS",$J)
- ;
- S BPVALFN=9002313.99,DA=1
  ;
  ;  Get Link data from HL7 table
  S HLPRO="BPSJ REGISTER",(IPA,IPP)=""
@@ -44,7 +46,6 @@ TASKMAN ; Entry point for taskman to run this routine
  ;
  ;  Initialize the HL7
  D INIT^HLFNC2(HLPRO,.HL)
- I $G(HL) S MCT=MCT+1,MSG(MCT)="HL7 initialization failed.",MCT=MCT+1,MSG(MCT)=HL Q
  S HLFS=$G(HL("FS")) I HLFS="" S HLFS="|"
  S HLECH=$E($G(HL("ECH")),1) I HLECH="" S HLECH="^"
  S HL("SITE")=$$SITE^VASITE,HL("SAF")=$P(HL("SITE"),U,2,3)
@@ -61,27 +62,26 @@ TASKMAN ; Entry point for taskman to run this routine
  ;
  ;  Set the MFE segment
  S ^TMP("HLS",$J,2)="MFE"_HLFS_"MUP"_HLFS_HLFS_HL7DTG_HLFS
- S ^TMP("HLS",$J,2)=^TMP("HLS",$J,2)_$P(HL("SITE"),"^",3)_HLFS_"ST"
+ S ^TMP("HLS",$J,2)=^TMP("HLS",$J,2)_+HL("SITE")_HLFS_"ST"
  ;
  ; Set the ZQR segment
  S ^TMP("HLS",$J,3)=$$EN^BPSJZQR(.HL)
  ;
- S BPSJARES=$$VAL1^BPSJVAL(BPSJVAL)   ; 0 = ok,
+ S BPSJARES=$$VAL1^BPSJVAL(BPSJVAL)  ; 0 = ok,
  I BPSJVAL=3 G FINI   ; Just checking to see if data valid.
  ;
  ;-Check if msg valid.
  I 'BPSJARES D  G FINI
- . N BPSHLRS
- . D GENERATE^HLMA(HLEID,"GM",1,.BPSHLRS,"")
- . I $P($G(BPSHLRS),U,2)]"" D  Q
+ . K HLRESLT
+ . D GENERATE^HLMA(HLEID,"GM",1,.HLRESLT,"")
+ . I $P($G(HLRESLT),U,2)]"" D  Q
  .. I BPSJVAL D  Q   ; Interactive: show no success
- ... W !!,"ECME Application Registration HL7 Message not created: "_BPSHLRS
- .. S MCT=MCT+1,MSG(MCT)="ECME Application Registration HL7 Message not created."
- .. S MCT=MCT+1,MSG(MCT)=BPSHLRS
- .. D MSG^BPSJUTL(.MSG,"ECME Application Registration")
+ ... W !!,"HL7 E-Pharm Application Registration Message not created: "_HLRESLT
+ .. S MCT=MCT+1,MSG(MCT)="HL7 E-Pharm Application Registration Message not created."
+ .. S MCT=MCT+1,MSG(MCT)=HLRESLT
+ .. D MSG^BPSJUTL(.MSG,"BPSJAREG")
  . I BPSJVAL D    ;Interactive: show success
- .. W !!,"ECME Application Registration HL7 Message successfully created."
- . S $P(^BPS(9002313.99,1,0),"^",4)=$$NOW^XLFDT
+ .. W !!,"HL7 E-Pharm Application Registration Message successfully created."
  ;
 FINI ; Clean up
  K ^TMP("HLS",$J)

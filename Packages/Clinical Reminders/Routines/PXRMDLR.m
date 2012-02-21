@@ -1,32 +1,24 @@
-PXRMDLR ;SLC/PJH - DIALOG RESULTS LOADER ;05/15/2007
- ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
+PXRMDLR ;SLC/PJH - DIALOG RESULTS LOADER ;06/09/2000
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;Build score related P/N text from score and result group
  ; 
  ;If not found
-START(ORY,RESULT,ORES) ;
  I '$G(RESULT) S ORY(1)="-1^no results for this test" Q
  ;
- N ARRAY,ERROR,INSERT,OK,SCORE,SUB,YT,X
+ N ARRAY,ERROR,INSERT,OK,SCORE,SUB,YT
  ;
- I RESULT["~" S RESULT=$P(RESULT,"~")
  S ERROR=0
  ;
  ;Get score using API
- K ^TMP($J,"YSCOR")
+ S DFN=$G(ORES("DFN"))
  I ORES("CODE")'="DOM80" D  Q:ERROR
  .M YT=ORES
- .F X=1:1:$L(YT("R1")) I $E(YT("R1"),X)'="X" S YT(X)=X_U_$E(YT("R1"),X)
- .K YT("R1")
- .D CHECKCR^YTQPXRM4(.ARRAY,.YT)
- .S OK=0
- .;D PREVIEW^YTAPI4(.ARRAY,.YT)
- .I ^TMP($J,"YSCOR",1)'="[DATA]" S ORY(1)="-1^"_^TMP($J,"YSCOR",1)_^TMP($J,"YSCOD",2),ERROR=1 Q 
- .;I ARRAY(1)'="[DATA]" S ORY(1)="-1^"_ARRAY(1)_ARRAY(2),ERROR=1 Q
- .I $P($G(^TMP($J,"YSCOR",2)),"=",2)'="" S SCORE=$P($G(^TMP($J,"YSCOR",2)),"=",2),OK=1
- .;S SUB=0,OK=0
- .;F  S SUB=$O(ARRAY(SUB)) Q:'SUB  D  Q:OK
- .;.I $P(ARRAY(SUB),U)="S1" S SCORE=$P(ARRAY(SUB),U,3),OK=1
+ .D PREVIEW^YTAPI4(.ARRAY,.YT)
+ .I ARRAY(1)'="[DATA]" S ORY(1)="-1^"_ARRAY(1)_ARRAY(2),ERROR=1 Q
+ .S SUB=0,OK=0
+ .F  S SUB=$O(ARRAY(SUB)) Q:'SUB  D  Q:OK
+ ..I $P(ARRAY(SUB),U)="S1" S SCORE=$P(ARRAY(SUB),U,3),OK=1
  .I 'OK S ORY(1)="-1^[ERROR] no score returned",ERROR=1 Q
  ;
  ;Except for DOM80
@@ -35,7 +27,6 @@ START(ORY,RESULT,ORES) ;
  .I $E(ORES("R1"),2,3)="YY",($E(ORES("R1"),4)>1) S SCORE=1 Q
  .S SCORE=0
  ;
- S DFN=$G(ORES("DFN"))
  S INSERT("SCORE")=SCORE
  ;
  ;For AIMS special formatting is required 
@@ -48,8 +39,6 @@ START(ORY,RESULT,ORES) ;
  ..I (CNT<8),(234[RESP) S SUM(RESP)=SUM(RESP)+1
  .F CNT=2,3,4 S INSERT("SUM"_CNT)=SUM(CNT)
  ;
-TEXT ;
- I RESULT["~" S RESULT=$P(RESULT,"~")
  ;Load dialog results into ORY array
  N DATA,DCON,DITEM,DSEQ,DSUB,DTYP,INS,SEP,TEXT
  ;Get the result elements
@@ -82,10 +71,6 @@ TEXT ;
  ..S OCNT=OCNT+1,ORY(OCNT)=7_U_TEXT
  Q
  ;
-MHDLL(ORES,RESULT,SCORE,DFN) ;
- S INSERT("SCORE")=SCORE
- D TEXT
- Q
 OUT(DATA) ;Display element details
  N DITEM S DITEM=$P(DATA,U,2) Q:'DITEM
  W $P($G(^PXRMD(801.41,DITEM,0)),U)

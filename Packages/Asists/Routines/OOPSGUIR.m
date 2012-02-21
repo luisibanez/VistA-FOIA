@@ -1,5 +1,5 @@
-OOPSGUIR ;WIOFO/LLH-RPC routine for misc reports ; 6/11/09 10:32am
- ;;2.0;ASISTS;**8,7,11,14,20**;Jun 03, 2002;Build 2
+OOPSGUIR ;WIOFO/LLH-RPC routine for misc reports ;03/16/04
+ ;;2.0;ASISTS;**8,7,11**;Jun 03, 2002
  ;
 ENT(RESULTS,INPUT,CALL) ; get the data for the report
  ;   Input:  INPUT - contains 3 values, the START AND END DATE, 
@@ -111,7 +111,7 @@ IRWSHT ; Incidence Rates Worksheet Report
  Q
 DETAIL ; now get employee information
 LOG300 ; entry point for the OSHA 300 LOG
- N CN,CASES,COLF,DOI,FLD,IEN,INC,STATION,TYPE
+ N CN,CASES,DOI,FLD,IEN,INC,STATION,TYPE
  S DOI=SDATE,CASES=0,CN=1
  F  S DOI=$O(^OOPS(2260,"AF",DOI)) Q:(DOI>EDATE)!(DOI="")  S IEN=0 D
  .F  S IEN=$O(^OOPS(2260,"AF",DOI,"Y",IEN)) Q:IEN=""  D
@@ -131,10 +131,7 @@ LOG300 ; entry point for the OSHA 300 LOG
  ...S ARR(3)=$$GET1^DIQ(2260,IEN,FLD)
  ...S ARR(4)=$P($$FMTE^XLFDT(($$GET1^DIQ(2260,IEN,4,"I")),2),"@")
  ...S ARR(5)=$$GET1^DIQ(2260,IEN,27,"E")
- ...;v2_P20 changed field to populate ARR(6) - Coluum F OSHA 300 log
- ...S COLF=$$GET1^DIQ(2260,IEN,384),ARR(6)=COLF
- ...I (SDATE<3081231.9999&(EDATE>3081231.9999)) S ARR(6)=COLF
- ...I EDATE<3090101&(COLF="") S ARR(6)=$$GET1^DIQ(2260,IEN,3)_";"_$$GET1^DIQ(2260,IEN,30)
+ ...S ARR(6)=$$GET1^DIQ(2260,IEN,3)_";"_$$GET1^DIQ(2260,IEN,30)
  ...S DATA=ARR(1)_U_ARR(2)_U_ARR(3)_U_ARR(4)_U_ARR(5)_U_ARR(6)_U_ARR(7)_U
  ...S DATA=DATA_ARR(8)_U_ARR(9)_U_ARR(10)
  ...S ^TMP($J,TAG,CN)=DATA,CN=CN+1
@@ -165,9 +162,9 @@ FLD95 ; use OUTC subrecord to retrieve data
  ..I $G(ED)=""!($G(ED)>EDATE) S DAYS=$$FMDIFF^XLFDT(EDATE,SD,1)+1
  .I TAG="LOG300",($G(ED)="") S DAYS=$$FMDIFF^XLFDT(TDAY,SD,1)+1
  .I '$G(DAYS) S DAYS=$S(OC="A":$P(S95,U,4),OC="J":$P(S95,U,5),1:0)
- .I DAYA+DAYJ>179 Q
+ .I DAYA+DAYJ>180 Q
  .S AVAIL=0
- .I DAYS>179 S AVAIL=(180-(DAYA+DAYJ))
+ .I DAYS>180 S AVAIL=180
  .I (DAYS<180) D
  ..I (DAYS+DAYA+DAYJ)<180 S AVAIL=DAYS
  ..I (DAYS+DAYA+DAYJ)>180 S AVAIL=(180-(DAYA+DAYJ))
@@ -206,7 +203,7 @@ EMPHRS ; get Total Num Employees and Hours worked
  S X1=$E(ED,1,3),X2=$E(SD,1,3)
  I X1>X2 D
  .S OK=0,X=(X1-X2) S:X>1 OK=(X-1)*12
- .S OK=OK+((12-$E(SD,4,5))+1)+$E(ED,4,5)
+ .S OK=OK+(($E(ED,4,5)-$E(SD,4,5))+1)+$E(SD,4,5)
  I X1=X2 S OK=($E(ED,4,5)-$E(SD,4,5))+1
  S MON=OK
  F  S WS=$O(^OOPS(2262,LV1,LV2,SIEN,2,WS)) Q:(WS'>0)  D

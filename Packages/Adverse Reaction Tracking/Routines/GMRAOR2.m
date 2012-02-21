@@ -1,5 +1,5 @@
-GMRAOR2 ;HIRMFO/RM-OERR UTILITIES ; 11/29/07 12:17pm
- ;;4.0;Adverse Reaction Tracking;**21,41**;Mar 29, 1996;Build 8
+GMRAOR2 ;HIRMFO/RM-OERR UTILITIES ;12/22/04  10:38
+ ;;4.0;Adverse Reaction Tracking;**21**;Mar 29, 1996
 EN1(IEN,ARRAY) ; This entry point returns detailed information about a
  ; particular patient allergy/adverse reaction.
  ; Input Variables
@@ -44,15 +44,13 @@ EN1(IEN,ARRAY) ; This entry point returns detailed information about a
  S GMRAI=0 F %=1:1 S GMRAI=$O(^GMR(120.8,GMRAPA,3,GMRAI)) Q:GMRAI<1  D
  .N GMRACOM
  .S GMRACOM=$G(^GMR(120.8,GMRAPA,3,GMRAI,0)) Q:GMRACOM=""
- .;S GMRAL("V",%)=$P($G(^PS(50.605,GMRACOM,0)),U,1,2)
- .S GMRAL("V",%)=$$CLP2CLDA^GMRAPENC(GMRACOM)
+ .S GMRAL("V",%)=$P($G(^PS(50.605,GMRACOM,0)),U,1,2)
  .Q
  ;Drug Ingredients
  S GMRAI=0 F %=1:1 S GMRAI=$O(^GMR(120.8,GMRAPA,2,GMRAI)) Q:GMRAI<1  D
  .N GMRACOM
  .S GMRACOM=$G(^GMR(120.8,GMRAPA,2,GMRAI,0)) Q:GMRACOM=""
- .;S GMRAL("I",%)=$P($G(^PS(50.416,GMRACOM,0)),U)
- .S GMRAL("I",%)=$$INP2INNA^GMRAPENC(GMRACOM)
+ .S GMRAL("I",%)=$P($G(^PS(50.416,GMRACOM,0)),U)
  .Q
  M @ARRAY=GMRAL
  Q

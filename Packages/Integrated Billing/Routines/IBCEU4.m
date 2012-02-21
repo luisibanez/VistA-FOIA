@@ -1,6 +1,5 @@
 IBCEU4 ;ALB/TMP - EDI UTILITIES ;02-OCT-96
- ;;2.0;INTEGRATED BILLING;**51,137,210,155,290,403**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**51,137,210,155,290**;21-MAR-94
  ;
 TESTFLD ;  Entrypoint to call to test the output the formatter will
  ;  produce for a specific entry in file 364.7
@@ -213,12 +212,3 @@ SLF(IBIFN) ;  Returns 1 if Attending/Rendering provider id is SLF000
  S:$G(IBZ)="SLF000" IB=1
  Q IB
  ;
-GETPOA(IBDX,PRTFLG) ; returns POA indicator for a given DX
- ; IBDX - ien in file 362.3
- ; PRTFLG - 1 if POA is fetched for printed form, 0 otherwise
- N POA
- S POA=""
- S:+IBDX>0 POA=$P($G(^IBA(362.3,IBDX,0)),U,4)
- ; on UB-04 print "" instead of "1" for blank.
- I PRTFLG,POA="1" S POA=""
- Q POA

@@ -1,10 +1,10 @@
 PSOCPBAK ;BIR/EJW-Tally unbilled NON-SERVICE CONNECTED copays ;03/28/03
- ;;7.0;OUTPATIENT PHARMACY;**137,268**;DEC 1997;Build 9
+ ;;7.0;OUTPATIENT PHARMACY;**137**;DEC 1997
  ;External reference to ^XUSEC supported by DBIA 10076
  ;External reference to IBARX supported by DBIA 125
  S ZTDTH=""
  I $D(ZTQUEUED) S ZTDTH=$H
- L +^XTMP("PSOCPBAK"):$S(+$G(^DD("DILOCKTM"))>0:+^DD("DILOCKTM"),1:3) I '$T D  Q
+ L +^XTMP("PSOCPBAK"):0 I '$T D  Q
  . I ZTDTH="" D BMES^XPDUTL("Tally job is already running.  Halting...")
  L -^XTMP("PSOCPBAK")
  I ZTDTH="" D
@@ -17,7 +17,7 @@ PSOCPBAK ;BIR/EJW-Tally unbilled NON-SERVICE CONNECTED copays ;03/28/03
  W:$D(ZTSK)&('$D(ZTQUEUED)) !!,"Task Queued !",!
  Q
 EN ;
- L +^XTMP("PSOCPBAK"):$S(+$G(^DD("DILOCKTM"))>0:+^DD("DILOCKTM"),1:3) I '$T S:$D(ZTQUEUED) ZTREQ="@" Q
+ L +^XTMP("PSOCPBAK"):0 I '$T S:$D(ZTQUEUED) ZTREQ="@" Q
  N PSODT,RXP,PSOTEXT,YY,PSOCNT,PSOSTART,PSOEND,PSOVETS
  S PSOCNT=0
  D NOW^%DTC S (Y,PSOS1)=% D DD^%DT S PSOSTART=Y

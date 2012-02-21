@@ -1,5 +1,5 @@
-PXRMREDT ; SLC/PKR,PJH - Edit PXRM reminder definition. ;03/20/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMREDT ; SLC/PKR,PJH - Edit PXRM reminder definition. ;01/03/2005
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;=======================================================
 EEDIT ;Entry point for PXRM DEFINITION EDIT option.
@@ -16,12 +16,11 @@ GETNAME ;Get the name of the reminder definition to edit.
  ;Set the starting place for additions.
  D SETSTART^PXRMCOPY(DIC)
  W !
- S DIC("W")="W $$LUDISP^PXRMREDT(Y)"
  D ^DIC
  I ($D(DTOUT))!($D(DUOUT)) Q
  I Y=-1 G END
  S DA=$P(Y,U,1)
- D ALL(DIC,DA,.DEF1)
+ D ALL(DIC,DA)
  G GETNAME
 END ;
  Q
@@ -29,7 +28,7 @@ END ;
  ;=======================================================
  ;Select section of reminder to edit, also called at ALL by PXRMEDIT.
  ;----------------------------------
-ALL(DIC,DA,DEF1) ;
+ALL(DIC,DA) ;
  ;Get list of findings/terms for reminder
  N BLDLOGIC,CS1,CS2,LIST,NODE,OPTION,TYPE
  S BLDLOGIC=0
@@ -37,18 +36,13 @@ ALL(DIC,DA,DEF1) ;
  S CS1=$$FILE^PXRMEXCS(811.9,DA)
  ;Build finding list
  S NODE="^PXD(811.9)"
- D LIST(NODE,DA,.DEF1,.LIST)
+ D LIST(NODE,DA,.LIST)
  ;If this is a new reminder enter all fields
  I $P(Y,U,3)=1 D EDIT(DIC,DA) Q 
  ;National reminder allows editing of term findings only 
  I '$$VEDIT^PXRMUTIL(DIC,DA) D  Q:$D(DUOUT)!$D(DTOUT)
- .S TYPE=""
- .F  S TYPE=$O(LIST(TYPE)) Q:TYPE=""  D
- .. I TYPE="RT" Q
- .. K LIST(TYPE)
- .I '$D(LIST) S DUOUT=1 Q
  .S BLDLOGIC=1
- .D TFIND(DA,.LIST)
+ .D FIND(.LIST)
  .I $D(Y) S DUOUT=1
  ;Otherwise choose fields to edit
  I $$VEDIT^PXRMUTIL(DIC,DA) F  D  Q:$D(DUOUT)!$D(DTOUT)
@@ -157,10 +151,6 @@ CLASS ;
  S DR="1.6"
  D ^DIE
  I $D(Y) Q
- ;Ignore on N/A
- S DR=1.8
- D ^DIE
- I $D(Y) Q
  ;
  ;Recision Date
  S DR="69"
@@ -194,12 +184,16 @@ BASE W !!,"Baseline Frequency"
  S DR=1.9
  D ^DIE
  I $D(Y) Q
-FARS ;
+ ;
+ ;Ignore on N/A
+ S DR=1.8
+ D ^DIE
+ I $D(Y) Q
+ ;
  W !!,"Baseline frequency age range set"
  S DR="7"
- S DR(2,811.97)=".01;1;2;3;4"
+ S DR(2,811.97)=".01;I X=""0Y"" S Y=0;1;2;3;4"
  D ^DIE
- I $$OVLAP^PXRMAGE G FARS
  D SNMLA^PXRMFNFT(DA)
  Q
  ;
@@ -239,7 +233,7 @@ WEB W !!,"Web Addresses for Reminder Information"
  ;
  ;Get full list of findings
  ;-------------------------
-LIST(GBL,DA,DEF1,ARRAY) ;
+LIST(GBL,DA,ARRAY) ;
  N CNT,DATA,GLOB,IEN,NAME,NODE,SUB,TYPE
  ;Clear passed arrays
  K ARRAY
@@ -257,7 +251,7 @@ LIST(GBL,DA,DEF1,ARRAY) ;
  .S CNT=CNT+1
  .I $P($G(@(U_GLOB_IEN_",0)")),U)="" D
  ..W !,"**WARNING** Finding #"_SUB_" does not exist, select finding `"_SUB_" to edit it." Q
- .E  S NAME=$P($G(@(U_GLOB_IEN_",0)")),U) S ARRAY(TYPE,NAME,SUB)=IEN
+ .E  S NAME=$P($G(@(U_GLOB_IEN_",0)")),U) S ARRAY(TYPE,NAME,SUB)=$G(SUB)
  Q
  ;
  ;Choose which part of Reminder to edit
@@ -283,38 +277,5 @@ OPTION N DIR,X,Y
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!$D(DUOUT) Q
  S OPTION=Y
- Q
- ;
- ;-------------------------------------
-LUDISP(IEN) ;Use for DIC("W") to augment look-up display.
- N CLASS,EM,INACTIVE,TEXT
- S INACTIVE=$P(^PXD(811.9,IEN,0),U,6)
- S CLASS=$P(^PXD(811.9,IEN,100),U,1)
- I INACTIVE'="" S INACTIVE="("_$$EXTERNAL^DILFD(811.9,1.6,"",INACTIVE,.EM)_")"
- S CLASS=$$EXTERNAL^DILFD(811.9,100,"",CLASS,.EM)
- S TEXT="  "_CLASS_" "_INACTIVE
- Q TEXT
- ;
- ;-------------------------------------
-TFIND(DA,LIST) ;Allow edit of term findings for national reminders.
- N DIR,IENLIST,IND,JND,NAME,NAMELIST,SUB,X,Y
- S IND=0,NAME=""
- F  S NAME=$O(LIST("RT",NAME)) Q:NAME=""  D
- . S IND=IND+1
- . S NAMELIST(IND)=$$RJ^XLFSTR(IND,3)_" "_NAME
- . S SUB=$O(LIST("RT",NAME,""))
- . S IENLIST(IND)=LIST("RT",NAME,SUB)
- M DIR("A")=NAMELIST
- S DIR("A")="Enter your list"
- S DIR(0)="LO^1:"_IND
- W !!,"Select term(s) for finding edit:"
- D ^DIR
- I $D(DIROUT)!$D(DIRUT) S LIST="" Q
- I $D(DUOUT)!$D(DTOUT) S LIST="" Q
- F IND=1:1:$L(Y,",")-1 D
- . S JND=$P(Y,",",IND)
- . S NAME=$P(NAMELIST(JND),JND,2)
- . W !!,"Reminder Term:",NAME
- . D TMAP^PXRMREDF(DA,IENLIST(JND))
  Q
  ;

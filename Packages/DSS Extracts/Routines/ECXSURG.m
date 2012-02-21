@@ -1,106 +1,56 @@
-ECXSURG ;ALB/JA,BIR/DMA,PTD-Surgery Extract for DSS ;7/21/11  14:37
- ;;3.0;DSS EXTRACTS;**1,11,8,13,25,24,33,39,41,42,46,50,71,84,92,99,105,112,128,127,132**;Dec 22, 1997;Build 18
+ECXSURG ;ALB/JA,BIR/DMA,PTD-Surgery Extract for DSS ; 9/15/05 2:49pm
+ ;;3.0;DSS EXTRACTS;**1,11,8,13,25,24,33,39,41,42,46,50,71,84**;Dec 22, 1997
 BEG ;entry point from option
  D SETUP I ECFILE="" Q
  D ^ECXTRAC,^ECXKILL
  Q
  ;
 START ;
- K ^TMP($J,"ECXS"),^TMP($J,"ECXCL")
  S QFLG=0,ECED=ECED+.3,ECD=ECSD1
  F  S ECD=$O(^SRF("AC",ECD)),ECD0=0 Q:('ECD)!(ECD>ECED)!(QFLG)  D
  .F  S ECD0=$O(^SRF("AC",ECD,ECD0)) Q:'ECD0  D
- ..I $D(^SRF(ECD0,0)) S EC=^SRF(ECD0,0),ECXDFN=+$P(EC,U),ECXVISIT=$P(EC,U,15) D STUFF Q:QFLG
- K ^TMP($J,"ECXS"),^TMP($J,"ECXCL")
+ ..I $D(^SRF(ECD0,0)) S ECXDFN=+$P(^(0),U,1) D STUFF Q:QFLG
  Q
  ;
 STUFF ;gather data
  N J,X,Y,PP,DATA1,DATA2,DATAOP,ARR,ERR,SUB,MOD,ECXNONL,ECXSTOP,TIMEDIF
  N ECPRO,ECXORCT,ECXPTHA,ECXNPRFI,ECXPA,ECXPAPC,ECSRPC,ECATPC,ECSAPC
- N ECXCRST,ECXSTCD,ECXCLIN,EC1A,EC2A,ECPQ,ECQA,EC1APC,EC2APC,ECPQPC
- N ECQAPC,EC1ANPI,EC2ANPI,ECPQNPI,ECQANPI
- N ECXORCET,ECXORCST,ECXTPOOR ;ECX*128
  S ECXDATE=ECD,ECXERR=0,ECXQ=""
- ;retrieve demographic variables
  Q:'$$PATDEM^ECXUTL2(ECXDFN,ECXDATE,"1;2;3;5;")
  I ECXADMDT="" S ECXADD=ECXADMDT
  I ECXADMDT'="" S ECXADD=$$ECXDATE^ECXUTL(ECXADMDT,ECXYM)
- S OK=$$PAT^ECXUTL3(ECXDFN,ECXDATE,"1;5",.ECXPAT)
- I 'OK S ECXERR=1 K ECXPAT Q
- ;OEF/OIF DATA
- S ECXOEF=ECXPAT("ECXOEF")
- S ECXOEFDT=ECXPAT("ECXOEFDT")
  S EC0=^SRF(ECD0,0)
  S DATA1=$S($D(^SRF(ECD0,.1)):^(.1),1:"")
  S DATA2=$S($D(^SRF(ECD0,.2)):^(.2),1:"")
- S DATAOP=$S($D(^SRO(136,ECD0,0)):^(0),1:"")
+ S DATAOP=$S($D(^SRF(ECD0,"OP")):^("OP"),1:"")
  S ECNO=$G(^SRF(ECD0,"NON"))
- ; if VISIT data exist get encounter data
- ; ECX*112
- S ECXVST=$P(^SRF(ECD0,0),U,15) D:ECXVST'=""
- . Q:'$D(^AUPNVSIT(ECXVST,800))
- . S ECENSC=$P(^AUPNVSIT(ECXVST,800),U,1)
- . S ECENSC=$S(ECENSC=0:"N",ECENSC=1:"Y",1:"")
  ;get data
  S ECSR=$P(DATA1,U,4),(ECATNPI,ECSANPI,ECSRNPI)="",ECAT=$P(DATA1,U,13)
- S ECSRNPI=$$NPI^XUSNPI("Individual_ID",ECSR,ECXDATE)
- S:+ECSRNPI'>0 ECSRNPI="" S ECSRNPI=$P(ECSRNPI,U)
  ;-Time patient in OR room (Nurse Time)
  S ECXTM=$$ECXTIME^ECXUTL($P(DATA2,U,10))
  S ECXDIV=$S($D(^SRF(ECD0,8)):^(8),1:ECINST)
  N ECXPDIV S ECXPDIV=$$RADDIV^ECXDEPT(ECXDIV)  ;Production Division
  S ECSA=$P($G(^SRF(ECD0,.3)),U,4),ECO=$P(EC0,U,2)
- S ECSANPI=$$NPI^XUSNPI("Individual_ID",ECSA,ECXDATE)
- S:+ECSANPI'>0 ECSANPI="" S ECSANPI=$P(ECSANPI,U)
  ;get principle anesthetist and person class DBIA #103
  S ECXPA=$P($G(^SRF(ECD0,.3)),U,1)
- S ECPANPI=$$NPI^XUSNPI("Individual_ID",ECXPA,ECXDATE)
- S:+ECPANPI'>0 ECPANPI="" S ECPANPI=$P(ECPANPI,U)
  S ECXPAPC=$$PRVCLASS^ECXUTL(ECXPA,ECXDATE)
- ;get first asst, 2nd asst, perfusionist, and asst perfusionist
- S EC1A=$P(DATA1,U,5),EC2A=$P(DATA1,U,6),ECPQ=$P(DATA1,U,19),ECQA=$P(DATA1,U,20)
- S EC1ANPI=$$NPI^XUSNPI("Individual_ID",EC1A,ECXDATE)
- S:+EC1ANPI'>0 EC1ANPI="" S EC1ANPI=$P(EC1ANPI,U)
- S EC2ANPI=$$NPI^XUSNPI("Individual_ID",EC2A,ECXDATE)
- S:+EC2ANPI'>0 EC2ANPI="" S EC2ANPI=$P(EC2ANPI,U)
- S ECPQNPI=$$NPI^XUSNPI("Individual_ID",ECPQ,ECXDATE)
- S:+ECPQNPI'>0 ECPQNPI="" S ECPQNPI=$P(ECPQNPI,U)
- S ECQANPI=$$NPI^XUSNPI("Individual_ID",ECQA,ECXDATE)
- S:+ECQANPI'>0 ECQANPI="" S ECQANPI=$P(ECQANPI,U)
  S ECORTY=$P($G(^SRS(+ECO,2)),U),ECO=$P($G(^SRS(+ECO,0)),U)
  S ECSS=$P($G(^SRO(137.45,+$P(EC0,U,4),0)),U,2)
  S ECSS=$$RJ^XLFSTR($P($G(^DIC(45.3,+ECSS,0)),U),3,0)
  S:ECSS="000" ECSS="999"
- ;get classification information
- S (ECXAO,ECXHNC,ECXSHAD,ECXSHADI)="" I ECXVISIT'="" D
- .D VISIT^ECXSCX1(ECXDFN,ECXVISIT,.ECXVIST,.ECXERR) I ECXERR K ECXERR
- .S ECXAO=$G(ECXVIST("AO")),ECXHNC=$G(ECXVIST("HNC"))
- .S ECENRI=$G(ECXVIST("IR")),ECENMST=$G(ECXVIST("MST"))
- .S ECENEC=$G(ECXVIST("PGE")),ECXSHAD=$G(ECXVIST("SHAD"))
  ; - Head and Neck Cancer Indicator
  S ECXHNCI=$$HNCI^ECXUTL4(ECXDFN)
- ; - Shad Encounter Field
- S ECXSHADI=$$SHAD^ECXUTL4(ECXDFN)
  ;look for non-OR
  S (ECNT,ECNL,ECXDSSD,ECXNONL,ECXSTOP)=""
  I $P(ECNO,U)="Y" D
  .S ECSR=$P(ECNO,U,6),ECAT=$P(ECNO,U,7)
- .S ECSRNPI=$$NPI^XUSNPI("Individual_ID",ECSR,ECXDATE)
- .S:+ECSRNPI'>0 ECSRNPI="" S ECSRNPI=$P(ECSRNPI,U)
- .S ECATNPI=$$NPI^XUSNPI("Individual_ID",ECAT,ECXDATE)
- .S:+ECATNPI'>0 ECATNPI="" S ECATNPI=$P(ECATNPI,U)
  .S ECXTM=$$ECXTIME^ECXUTL($P(ECNO,U,4))
  .S A1=$P(ECNO,U,5),A2=$P(ECNO,U,4),TIME="##" D:(A1&A2) TIME S ECNT=TIME
  .S (ECXNONL,ECNL)=+$P(ECNO,U,2),ECNL=$P($G(^ECX(728.44,ECNL,0)),U,9)
  .S:ECNL="" ECNL="UNKNOWN"
  .;
- .;- Get Primary or DSS Stop Code to use in encounter number
- .N P1 ;primary stop
- .D FEEDER^ECXSCX1(+$P(EC0,U,21),ECXDATE,.P1,,,,) S ECXSTOP=$E(P1,1,3)
- .S ECXSTOP=$S(ECXSTOP:ECXSTOP,1:$P($G(^ECX(728.44,ECXNONL,0)),U,4))
- ;
- ;- Get credit stop, stop code and clinic
- I $$SUR^ECXUTL6(.ECXCRST,.ECXSTCD,.ECXCLIN)
+ .;- Get DSS Stop Code to use in encounter number
+ .S ECXSTOP=$P($G(^ECX(728.44,ECXNONL,0)),U,4)
  ;
  ;- If surgery cancelled/aborted quit and go to next record
  S ECCAN=$P($G(^SRF(ECD0,30)),U)
@@ -110,21 +60,14 @@ STUFF ;gather data
  S ECATSV=$P($G(^DIC(49,+$G(^VA(200,+ECAT,5)),730)),U)
  ;
  ;get surgeon, attending and anesthesia super person classes
- ;get 1st asst, 2nd asst, perfusionist, and asst perfusionst person class
  S ECSRPC=$$PRVCLASS^ECXUTL(ECSR,ECXDATE)
  S ECATPC=$$PRVCLASS^ECXUTL(ECAT,ECXDATE)
  S ECSAPC=$$PRVCLASS^ECXUTL(ECSA,ECXDATE)
- S EC1APC=$$PRVCLASS^ECXUTL(EC1A,ECXDATE)
- S EC2APC=$$PRVCLASS^ECXUTL(EC2A,ECXDATE)
- S ECPQPC=$$PRVCLASS^ECXUTL(ECPQ,ECXDATE)
- S ECQAPC=$$PRVCLASS^ECXUTL(ECQA,ECXDATE)
  ;
  ;add leading 2s for pointer to 200
  S:ECAT ECAT="2"_ECAT S:ECSR ECSR="2"_ECSR S:ECSA ECSA="2"_ECSA
  ;add leading 2 to principle anesthetist IEN
  S:ECXPA ECXPA="2"_ECXPA
- ;add leading 2s for 1st asst, 2nd asst, perfusionist, asst perfusionist
- S:EC1A EC1A="2"_EC1A S:EC2A EC2A="2"_EC2A S:ECPQ ECPQ="2"_ECPQ S:ECQA ECQA="2"_ECQA
  ;anesthesia technique
  S ECANE="",PP=""
  I $D(^SRF(ECD0,6,0)) S ECXJ=0 D
@@ -165,18 +108,7 @@ STUFF ;gather data
  I ECNL]"" S $P(ECODE0,U,5)=ECNT
  ;
  ; -OR Clean Time in 15 min increments DBIA #103
- ;
- ; ECX*3.0*128 - Correct the calculation of OR Clean Time.
- S ECXORCT=0
- ; Set local variables. ECX*128
- S ECXTPOOR=$P($G(DATA2),U,12),ECXORCST=$P($G(DATA2),U,13),ECXORCET=$P($G(DATA2),U,14)
- I (ECXORCET'=""),(ECXORCST'="") D
- .S ECXORCT=($$FMDIFF^XLFDT(ECXORCET,ECXORCST,2)/60)/15
- I 'ECXORCT,(ECXORCET'=""),(ECXTPOOR'="") D
- .S ECXORCT=($$FMDIFF^XLFDT(ECXORCET,ECXTPOOR,2)/60)/15
- ; Make sure the final OR CLEAN TIME is an integer by rounding
- ; up for any decimal value  ECX*3.0*128
- I ECXORCT>0 S ECXORCT=$J(ECXORCT+.4999,0,0)
+ S ECXORCT=($$FMDIFF^XLFDT($P($G(DATA2),U,14),$P($G(DATA2),U,13),2)/60)/15
  ; -If no OR clean time recorded set it to 2
  I ECXORCT'>0 S ECXORCT=2
  ;
@@ -189,31 +121,21 @@ STUFF ;gather data
  ; -If hold time is =<0 set it to ""
  S:$G(ECXPTHA)'>0 ECXPTHA=""
  ;
- ;- get ASA CLASS
- S ECASA=$$GET1^DIQ(132.8,$$GET1^DIQ(130,ECD0,1.13,"I"),.01)
- ;
  ;- Observation Patient Indicator (yes/no)
  S ECXOBS=$$OBSPAT^ECXUTL4(ECXA,ECXTS,ECNL)
  ;
- ; ******* - PATCH 127, ADD PATCAT CODE ********
- S ECXPATCAT=$$PATCAT^ECXUTL(ECXDFN)
  ;- set national patient record flag if exist
  D NPRF^ECXUTL5
  ;
  ;- If no encounter number don't file record
  S ECXENC=$$ENCNUM^ECXUTL4(ECXA,ECXSSN,ECXADMDT,ECXDATE,ECXTS,ECXOBS,ECHEAD,ECXSTOP,ECSS) Q:ECXENC=""
  ;
- ;- Get postop diagnosis codes
- I $$SURPODX^ECXUTL6(.ECXPODX,.ECXPODX1,.ECXPODX2,.ECXPODX3,.ECXPODX4,.ECXPODX5)
- ;
- D FILE^ECXSURG1
+ D FILE
  ;get secondary procedures
  ;ecode0=s^cpt code
  S ECXJ=0
- F  S ECXJ=$O(^SRO(136,ECD0,3,ECXJ)) Q:'ECXJ  I $D(^(ECXJ,0)),$D(^(0)),$P(^(0),"^")]"" D
- .;S ECPT=$P(^SRF(ECD0,13,ECXJ,2),U),ECXCMOD=""
- .S ECPT=$P(^SRO(136,ECD0,3,ECXJ,0),U),ECXMOD=""
- .S ECPT=$P(^(0),"^"),ECXCMOD=""
+ F  S ECXJ=$O(^SRF(ECD0,13,ECXJ)) Q:'ECXJ  I $D(^(ECXJ,0)),$D(^(2)),$P(^(2),U)]"" D
+ .S ECPT=$P(^SRF(ECD0,13,ECXJ,2),U),ECXCMOD=""
  .K ARR,ERR
  .D FIELD^DID(130.16,4,,"LABEL","ARR","ERR") I $D(ARR("LABEL")) D
  ..K ARR,ERR
@@ -223,16 +145,60 @@ STUFF ;gather data
  ..F  S MOD=$O(^SRF(ECD0,13,ECXJ,SUB,MOD)) Q:MOD'>0  S ECXCMOD=ECXCMOD_$P(^(MOD,0),U)_";"
  .S ECXCPT=$$CPT^ECXUTL3(ECPT,ECXCMOD)
  .S ECODE0="S"_U   ;_ECPT
- .D FILE^ECXSURG1
+ .D FILE
  ;get prostheses
  ;ecode0=i^^^^^^prosthesis^old qty field (null)
  S ECXJ=0
  F  S ECXJ=$O(^SRF(ECD0,1,ECXJ)) Q:'ECXJ  I $D(^(ECXJ,0)) D
  .S ECXP=+^SRF(ECD0,1,ECXJ,0),ECXQ=$P($G(^(1)),U,2) S:'ECXQ ECXQ=1
  .S ECODE0="I"_U_U_U_U_U_U_ECXP_U_U
- .D FILE^ECXSURG1
+ .D FILE
  Q
  ;
+FILE ;file record
+ ;node0
+ ;division^dfn^ssn^name^in/out (ECXA)^day^case #^
+ ;surg specialty^or room #^
+ ;surgeon^attending^anesthesia supervisor^anesthesia technique^
+ ;primary/secondary/prostheses^cpt^^pt time^op time^anes time^
+ ;prostheses^qty^^
+ ;movement number^treating specialty^cancel/abort (ECCAN)^time^or type^
+ ;attending's service^non-or dss id^recovery room time^^
+ ;primary care team^primary care provider^admission date
+ ;node1
+ ;mpi^dss dept ECXDSSD^surgeon npi^attending npi^anes supervisor npi^
+ ;pc provider npi^pc prov person class^
+ ;assoc pc provider^assoc pc prov person class^assoc pc prov npi^
+ ;cpt&modifiers ECXCPT^dom ECXDOM^enrollment category ECXCAT^
+ ;enrollment status ECXSTAT^enrollment priority ECXPRIOR^
+ ;period of service ECXPOS^purple heart indicator ECXPHI^
+ ;observ pat ind ECXOBS^encounter num ECXENC^ao loc ECXAOL^
+ ;production division ECXPDIV^head & neck canc ind ECXHNCI^
+ ;ethnicity ECXETH^race1 ECXRC1^new quantity ECXQ^
+ ;^user enrollee ECXUESTA^patient type ECXPTYPE^combat vet elig
+ ;ECXCVE^combat vet elig end date ECXCVEDT^enc cv eligible ECXCVENC
+ ;or clean time ECXORCT^time pt in hold area ECXPTHA^national patient
+ ;record flag ECXNPRFI^princ anesthetist ECXPA^princ anesthetist PC
+ ;ECXPAPC^surgeon person class ECSRPC^attending person class ECATPC
+ ;^anesthesia super person class ECSAPC
+ N DA,DIK,STR
+ S EC7=$O(^ECX(ECFILE,999999999),-1),EC7=EC7+1
+ S ECODE=EC7_U_EC23_U_ECXDIV_U_ECXDFN_U_ECXSSN_U_ECXPNM_U_ECXA_U
+ S ECODE=ECODE_$$ECXDATE^ECXUTL(ECXDATE,ECXYM)_U_ECD0_U_ECSS_U_ECO_U
+ S ECODE=ECODE_ECSR_U_ECAT_U_ECSA_U_ECANE_U_ECODE0_U
+ S STR=ECXMN_U_ECXTS_U_$S(ECCAN'="":ECCAN,1:"")_U_ECXTM_U_ECORTY_U
+ S STR=STR_ECATSV_U_ECNL_U_ECRR_U_U_ECPTTM_U_ECPTPR_U_ECXADD_U
+ S $P(ECODE,U,26,38)=STR
+ S ECODE1=ECXMPI_U_ECXDSSD_U_ECSRNPI_U_ECATNPI_U_ECSANPI_U_ECPTNPI_U
+ S ECODE1=ECODE1_ECCLAS_U_ECASPR_U_ECCLAS2_U_ECASNPI_U_ECXCPT_U_ECXDOM_U
+ S ECODE1=ECODE1_ECXCAT_U_ECXSTAT_U_$S(ECXLOGIC<2005:ECXPRIOR,1:"")_U_ECXPOS_U_ECXPHI_U
+ S ECODE1=ECODE1_ECXOBS_U_ECXENC_U_ECXAOL_U_ECXPDIV_U_ECXHNCI_U
+ S ECODE1=ECODE1_ECXETH_U_ECXRC1_U_ECXQ_U
+ I ECXLOGIC>2004 S ECODE1=ECODE1_U_ECXPRIOR_ECXSBGRP_U_ECXUESTA_U_ECXPTYPE_U_ECXCVE_U_ECXCVEDT_U_ECXCVENC_U_ECXORCT_U_ECXPTHA_U_ECXNPRFI
+ I ECXLOGIC>2005 S ECODE1=ECODE1_U_ECXPA_U_ECSRPC_U,ECODE2=ECATPC_U_ECSAPC_U_ECXPAPC
+ S ^ECX(ECFILE,EC7,0)=ECODE,^ECX(ECFILE,EC7,1)=ECODE1,^ECX(ECFILE,EC7,2)=ECODE2,ECRN=ECRN+1
+ S DA=EC7,DIK="^ECX("_ECFILE_"," D IX1^DIK K DIK,DA
+ I $D(ZTQUEUED),$$S^%ZTLOAD S QFLG=1
  ;
 TIME ; given date/time get increment
  ;A1=later, A2=earlier, TIME=difference

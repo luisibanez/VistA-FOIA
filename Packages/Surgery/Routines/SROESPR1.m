@@ -1,5 +1,5 @@
 SROESPR1 ;BIR/ADM - SURGERY E-SIG UTILITY ; [ 04/21/04  12:08 PM ]
- ;;3.0; Surgery ;**100,128,162**;24 Jun 93;Build 4
+ ;;3.0; Surgery ;**100,128**;24 Jun 93
  ;
  ;** NOTICE: This routine is part of an implementation of a nationally
  ;**         controlled procedure.  Local modifications to this routine
@@ -97,7 +97,6 @@ ADDENDA ; Surgery Reports Addenda
  F  S SRADD=$O(^TMP("SRLQ",$J,SRDA,"ZADD",SRADD)) Q:SRADD'>0  D  Q:'SRCONT
  . S SRY=4 D SETCONT() Q:'SRCONT
  . W !!,$$DATE^SROESPR(^TMP("SRLQ",$J,SRDA,"ZADD",SRADD,1301,"I"),"MM/DD/CCYY HR:MIN"),?21,"ADDENDUM"
- . W ?41,"STATUS: ",^TMP("SRLQ",$J,SRDA,"ZADD",SRADD,.05,"E")
  . S SRI=0
  . F  S SRI=$O(^TMP("SRLQ",$J,SRDA,"ZADD",SRADD,"TEXT",SRI)) Q:SRI'>0  D  Q:'SRCONT
  . . D SETCONT() Q:'SRCONT

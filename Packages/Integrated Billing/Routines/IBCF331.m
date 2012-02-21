@@ -1,6 +1,6 @@
 IBCF331 ;ALB/ARH - UB92 HCFA-1450 (GATHER CODES CONT) ;25-AUG-1993
- ;;2.0;INTEGRATED BILLING;**52,210,309,389**; 21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,210,309**; 21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
 DX ;additional dx codes (ie more than 9 on bill)
@@ -31,7 +31,7 @@ PD ;add prosthetic items
  S IBZ="" D SET2
  S IBZ="PROSTHETIC ITEMS:" D SET2
  S IBX=0 F  S IBX=$O(IBARRAY(IBX)) Q:IBX=""  S IBY=0 F  S IBY=$O(IBARRAY(IBX,IBY)) Q:'IBY  D
- . S IBZ=$$FMTE^XLFDT(IBX,2)_" "_$J($S($P(IBARRAY(IBX,IBY),U,2):"$"_$FN($P(IBARRAY(IBX,IBY),U,2),",",2),1:""),10)_"  "_$E($$PINB^IBCSC5B(+IBARRAY(IBX,IBY)),1,54) D SET2
+ . S IBZ=$$FMTE^XLFDT(IBX,2)_" "_$J($S($P(IBARRAY(IBX,IBY),U,2):"$"_$FN($P(IBARRAY(IBX,IBY),U,2),",",2),1:""),10)_"  "_$E($P($$PIN^IBCSC5B(IBY),U,2),1,54) D SET2
  ;
 END Q
  ;

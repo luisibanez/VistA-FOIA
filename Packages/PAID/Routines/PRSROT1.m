@@ -1,7 +1,5 @@
 PRSROT1 ;HISC/JH-IND. OR ALL EMPLOYEE OT/CT REPORT ;1/12/98
- ;;4.0;PAID;**2,19,21,28,27,34,114**;Sep 21, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;
+ ;;4.0;PAID;**2,19,21,28,27,34**;Sep 21, 1995
 SUP S PRSTLV=3,PRSAI=1
  S PRSR=1
  D TLESEL^PRSRUT0
@@ -9,7 +7,7 @@ SUP S PRSTLV=3,PRSAI=1
  G EN1
  ;
  ;get Time & Leave unit and set up TLE array.
-FIS S PRSR=2,PRSTLV=7
+FIS S PRSR=2,PRSTLV=3
  D TLESEL^PRSRUT0
  G Q:TLE=""!(SSN="")
 EN1 W ! S X="T",%DT="" D ^%DT Q:Y<0  S DT=Y K %DT
@@ -94,5 +92,5 @@ NONE I IOSL<66 D VLIN0^PRSROT11
  Q
 MSG2 W $C(7),!!,"*** Enter Year: 92 , 1994 ... " G ASK
 MSG3 W $C(7),!!,"*** Year Entered is not on File." G ASK
-LOOP F X="D0","DA*","PPE*","NAM","TLE*","TL*","TLI","TLUNIT","SW","COS","ORG","YEAR","PRSRY","PRSTLV" S ZTSAVE(X)=""
+LOOP F X="D0","DA*","PPE*","NAM","TLE*","TL*","TLI","TLUNIT","SW","COS","ORG","YEAR","PRSRY" S ZTSAVE(X)=""
  Q

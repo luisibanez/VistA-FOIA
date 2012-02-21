@@ -1,5 +1,5 @@
 ORB3U1 ; slc/CLA - Utilities which support OE/RR 3 Notifications ;12/15/97
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**9,74,88,91,105,179,220,250**;Dec 17, 1997;Build 1
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**9,74,88,91,105,179,220**;Dec 17, 1997
  Q
 LIST(Y) ;return list of notifications from Notification File [#100.9]
  ; RETURN IEN^NAME^URGENCY
@@ -70,7 +70,7 @@ LMALT ; alternative selection code
  Q
 LMENTRY ; entry code for List Mgr display
  N ORBA,ORBAID,ORBDT,ORBMSG,ORBX,ORNUM,ORDATA,ORAD,LCNT,NUM
- N ORX,ORY,ORBMSGP1,ORBMSGP2
+ N ORX,ORY
  ;
  D CLEAN^VALM10
  ;
@@ -89,11 +89,6 @@ LMENTRY ; entry code for List Mgr display
  ...I ORDATA["@" S ORNUM=$P(ORDATA,"@")
  ...S ORNUM=$S(+$G(ORNUM)>0:"["_+ORNUM_"]",1:"")
  ...S ORBMSG=$P(ORBMSG,"): ",2)
- ...S ORBMSGP1=$P(ORBMSG,":",1)   ;jeh
- ...S ORBMSGP2=$P(ORBMSG,":",2,3)   ;jeh 
- ...I $G(ORBMSGP1)="Order(s) needing clarification" D    ;jeh Shorten output to make room for OR IEN 
- ....S ORBMSGP1="Order needs clarifying"  ;jeh
- ....S ORBMSG=ORBMSGP1_":"_ORBMSGP2   ;jeh
  ...S ORBMSG=$E(ORBMSG_$S($L(ORNUM):" "_$G(ORNUM),1:"")_U_"                                                            ",1,60)
  ...S ^TMP("OR",$J,"ALERTS","B",9999999-ORBDT_ORBAID)=ORBAID_U_$P(ORBMSG,U)_U_$$FMTE^XLFDT($E(ORBDT,1,12),"2")
  ;

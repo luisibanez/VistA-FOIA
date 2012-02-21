@@ -1,5 +1,5 @@
 IVMUM6 ;ALB/SEK - COMPLETE MEANS TEST ; 23 MAY 94
- ;;2.0;INCOME VERIFICATION MATCH;**1,3,17,115**;21-OCT-94;Build 28
+ ;;2.0;INCOME VERIFICATION MATCH;**1,3,17**;21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 EN ; this routine will call MAS routines to determine the following:
@@ -45,8 +45,7 @@ EN ; this routine will call MAS routines to determine the following:
  S IVM5=$$FMDATE^HLFNC($P(IVMSEG,"^",6)) ; dt/time of adjudication
  S IVM6=$$FMDATE^HLFNC($P(IVMSEG,"^",20)) ; dt ivm verified mt completed
  S IVM7=$P(IVMSEG,"^",21) ; refuse to sign
- S IVMSTAT=$P(IVMSEG,"^",3) ; means test status
- S IVM8=+$P(IVMSEG,"^",30) ; Means Test Version
+ S IVMSTAT=$P(IVMSEG,"^",3) ; means test status 
  ;
  I IVM4 S DGCAT="C" D STA^DGMTSCU2 ; make cat C if declines to give income info
  ;
@@ -55,8 +54,7 @@ EN ; this routine will call MAS routines to determine the following:
  ; add to annual means test file
  S:'$D(DGTHB) DGTHB=""
  S DA=DGMTI,DIE="^DGMT(408.31,"
- S DR=".03////^S X=DGMTS;.04////^S X=DGINT;.05////^S X=DGNWT;.06////^S X=DUZ;.07////^S X=IVM1;.11////^S X=IVM2"
- S DR=DR_";.12////^S X=DGTHA;.13////^S X=DGTHB;.14////^S X=IVM4;.15////^S X=DGDET;.18////^S X=DGND;.23////2;.24////^S X=IVM3;2.11////^S X=IVM8"
+ S DR=".03////^S X=DGMTS;.04////^S X=DGINT;.05////^S X=DGNWT;.06////^S X=DUZ;.07////^S X=IVM1;.11////^S X=IVM2;.12////^S X=DGTHA;.13////^S X=DGTHB;.14////^S X=IVM4;.15////^S X=DGDET;.18////^S X=DGND;.23////2;.24////^S X=IVM3"
  I $D(DGMTPAR("PREV")) S DR=DR_";.16////1"
  D ^DIE K DR
  S DR=".1////^S X=IVM5;.25////^S X=IVM6;.26////^S X=IVM7"
@@ -66,9 +64,9 @@ EN ; this routine will call MAS routines to determine the following:
  ; sent to ivm center
  ; dgcat (mt cat) is also created by d set^dgmtscu2
  I IVMSTAT'=DGCAT D  G MTDRIVER
- . S HLERR="Uploaded mt cat should be "_DGCAT
+ .S HLERR="Uploaded mt cat should be "_DGCAT
  I DGCAT="A" D
- . S HLERR="Uploaded mt cat is still A"
+ .S HLERR="Uploaded mt cat is still A"
  ;
 MTDRIVER ; call means test event driver
  S DGMTACT="UPL"
@@ -86,24 +84,24 @@ MTDRIVER ; call means test event driver
  S IVMCNTR=10
  S IVMCEA=$P($$RXST^IBARXEU(DFN),"^",2)
  I IVMCEA'=IVMCEB D
- . S IVMTEXT(10)=""
- . S IVMTEXT(11)="The patient is now "_IVMCEA_" from the prescription copayment."
- . S IVMCNTR=12
+ .S IVMTEXT(10)=""
+ .S IVMTEXT(11)="The patient is now "_IVMCEA_" from the prescription copayment."
+ .S IVMCNTR=12
  S IVMMTA=$P($$LST^DGMTU(DFN),"^",3)
  I IVMMTA'=IVMMTB D
- . S IVMTEXT(IVMCNTR)=""
- . S IVMTEXT(IVMCNTR+1)="The patient's current Means Test status is now "_IVMMTA_"."
- . S IVMCNTR=IVMCNTR+2
+ .S IVMTEXT(IVMCNTR)=""
+ .S IVMTEXT(IVMCNTR+1)="The patient's current Means Test status is now "_IVMMTA_"."
+ .S IVMCNTR=IVMCNTR+2
  I 'IVM2 D
- . S IVMTEXT(IVMCNTR)=""
- . I IVM2=0 D  Q
- . . S IVMTEXT(IVMCNTR+1)="The patient is CATEGORY C and doesn't agree to pay the deductible."
- . S IVMTEXT(IVMCNTR+1)="The patient is CATEGORY C and didn't answer agree to pay the deductible."
+ .S IVMTEXT(IVMCNTR)=""
+ .I IVM2=0 D  Q
+ ..S IVMTEXT(IVMCNTR+1)="The patient is CATEGORY C and doesn't agree to pay the deductible."
+ .S IVMTEXT(IVMCNTR+1)="The patient is CATEGORY C and didn't answer agree to pay the deductible."
  D MTBULL,MAIL^IVMUFNC()
  ;
  ; cleanup
  K DGCAT,DGCOMF,DGMTACT,DGMTI,DGMTINF,DGMTPAR,DGTHB
- K IVM1,IVM2,IVM3,IVM4,IVM5,IVM6,IVM7,IVMCEA,IVMCEB,IVMMTA,IVM8
+ K IVM1,IVM2,IVM3,IVM4,IVM5,IVM6,IVM7,IVMCEA,IVMCEB,IVMMTA
  Q
  ;
 MTBULL ; build mail message for transmission to IVM mail group notifying them

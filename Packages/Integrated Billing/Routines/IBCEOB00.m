@@ -1,13 +1,12 @@
-IBCEOB00 ;ALB/ESG/PJH - 835 EDI EOB MSG PROCESSING CONT ;30-JUN-2003
- ;;2.0;INTEGRATED BILLING;**155,349,377,431**;21-MAR-94;Build 106
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCEOB00 ;ALB/ESG - 835 EDI EOB MSG PROCESSING CONT ;30-JUN-2003
+ ;;2.0;INTEGRATED BILLING;**155**;21-MAR-94
  Q
  ;
 RCRU(IBZDATA,IB0,IBLN) ; Revenue Code Roll-up procedure check -
  ; Total up outbound line items by revenue code and compare with
  ; incoming EOB 40 record to see if it has been rolled up
  ;
- ; IBZDATA - UB output formatter array, passed by reference
+ ; IBZDATA - ub92 output formatter array, passed by reference
  ; IB0     - 40 record data
  ; IBLN    - output parameter, passed by reference
  ;
@@ -94,66 +93,6 @@ ICN(IBEOB,ICN,COBN,IBOK) ; File the 835 ICN into the Bill
 ICNX ;
  Q
  ;
-15(IB0,IBEGBL,IBEOB) ; Record '15'
- ;
- N A,IBOK
- ;
- S A="3;1.03;1;0;0^4;1.04;1;0;0^5;1.05;1;0;0^6;1.07;1;0;0^7;1.08;1;0;0^8;1.09;1;0;0^9;1.02;1;0;0^10;2.05;1;0;0"
- ;
- S IBOK=$$STORE^IBCEOB1(A,IB0,IBEOB)
- I 'IBOK S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Bad record 15 data" G Q15
- ;
- ; For Medicare MRA's only:
- ; If the Covered Amount is present (15 record, piece 3), then file
- ; a claim level adjustment with Group code=OA, Reason code=AB3.
- ;
- I $P($G(^IBM(361.1,IBEOB,0)),U,4)=1,+$P(IB0,U,3) D
- . N IB20
- . S IB20=20_U_$P(IB0,U,2)_U_"OA"_U_"AB3"_U_$P(IB0,U,3)_U_"0000000000"
- . S IB20=IB20_U_"Covered Amount"
- . S IBOK=$$20(IB20,IBEGBL,IBEOB)
- . I 'IBOK S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Could not file the OA-AB3 claim level adjustment for the Covered Amount"
- . K ^TMP($J,20)
- . Q
- ;
-Q15 Q IBOK
- ;
-20(IB0,IBEGBL,IBEOB) ; Record '20'
- ;
- N A,LEVEL,IBGRP,IBDA,IBOK
- ;
- S IBGRP=$P(IB0,U,3)
- I IBGRP'="" S ^TMP($J,20)=IBGRP
- I IBGRP="" S IBGRP=$G(^TMP($J,20))
- I IBGRP="" S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Missing claim level adjustment group code" G Q20
- ;
- S IBDA(1)=$O(^IBM(361.1,IBEOB,10,"B",IBGRP,0))
- ;
- I 'IBDA(1) D  ;Needs a new entry at group level
- . N X,Y,DA,DD,DO,DIC,DLAYGO
- . S DIC="^IBM(361.1,"_IBEOB_",10,",DIC(0)="L",DLAYGO=361.11,DA(1)=IBEOB
- . S DIC("P")=$$GETSPEC^IBEFUNC(361.1,10)
- . S X=IBGRP
- . D FILE^DICN K DIC,DO,DD,DLAYGO
- . I Y<0 K IBDA S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Adjustment group code could not be added" Q
- . S IBDA(1)=+Y
- ;
- I $G(IBDA(1)) D  ;Add a new entry at the reason code level
- . S DIC="^IBM(361.1,"_IBEOB_",10,"_IBDA(1)_",1,",DIC(0)="L",DLAYGO=361.111,DA(2)=IBEOB,DA(1)=IBDA(1)
- . S DIC("P")=$$GETSPEC^IBEFUNC(361.11,1)
- . S X=$P(IB0,U,4)
- . D FILE^DICN K DIC,DO,DD,DLAYGO
- . I Y<0 K IBDA S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Adjustment reason code could not be added" Q
- . S IBDA=+Y
- ;
- I $G(IBDA) D
- . S LEVEL=10,LEVEL("DIE")="^IBM(361.1,"_IBEOB_",10,"_IBDA(1)_",1,"
- . S LEVEL(0)=IBDA,LEVEL(1)=IBDA(1),LEVEL(2)=IBEOB
- . S A="5;.02;1;0;0^6;.03;0;1;1^7;.04;0;1;0"
- . S IBOK=$$STORE^IBCEOB1(A,IB0,IBEOB,.LEVEL)
- . I 'IBOK S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Bad adjustment reason code ("_$P(IB0,U,4)_") data" Q
-Q20 Q $G(IBOK)
- ;
 35(IB0,IBEGBL,IBEOB) ; Record '35'
  ;
  N A,IBOK
@@ -201,8 +140,8 @@ DET40(IB0,ARRAY) ; Format important details of record 40 for error
  I $P(IB0,U,5)'="" S ARRAY(5)=ARRAY(5)_"  Mods: " F Q=5:1:8 I $P(IB0,U,Q)'="" S ARRAY(5)=ARRAY(5)_$P(IB0,U,Q)_$S(Q=8:"",$P(IB0,U,Q+1)'="":",",1:"")
  Q
  ;
-DET4X(RECID,IB0,ARRAY) ; Format important details of record 41-46 for error
- ; RECID = 41,42,45,46
+DET4X(RECID,IB0,ARRAY) ; Format important details of record 41-45 for error
+ ; RECID = 41,42,45
  ; IB0 = data on RECID record
  ;  ARRAY(n)=formatted line is returned if passed by ref
  N CT,Q
@@ -216,12 +155,66 @@ DET4X(RECID,IB0,ARRAY) ; Format important details of record 41-46 for error
  I RECID=45 D
  . S ARRAY(1)="Adj Group Cd: "_$P(IB0,U,3)_"  Reason Cd: "_$P(IB0,U,4)_"  Amt: "_$J($P(IB0,U,5)/100,"",2)_"  Quantity: "_+$P(IB0,U,6)
  . I $P(IB0,U,7)'="" S CT=1 F Q=0:80:190 I $E($P(IB0,U,7),Q+1,Q+80)'="" S CT=CT+1,ARRAY(CT)=$E($P(IB0,U,7),Q+1,Q+80)
- ;
- I RECID=46 D
- . S ARRAY(1)="Payer Policy Reference: "_$P(IB0,U,3)
  Q
  ; 
 FDT(X) ; Format date in X (YYYYMMDD) to MM/DD/YYYY
  S:X'="" X=$E(X,5,6)_"/"_$E(X,7,8)_"/"_$E(X,1,4)
  Q X
+ ;
+UPDNM(IBEOB,IB0,IBBULL,IBDR) ; Update name on claim if it comes back changed
+ ; IBEOB = the internal entry # of the entry in file 361.1
+ ; IB0 = the raw data returned from the 835 flat file
+ ; IBBULL = holds result of name change check in piece 1 - if name
+ ;          changed, first '^' piece is 1, 3rd '^' piece is the old
+ ;          insured's name
+ ; IBDR = returned as the updated 'DR' string with the name changed
+ ;       fields to use to update the EOB file (361.1) - pass by reference
+ ;
+ N IBCHGED,IBIFN,IBNEW,IBCOB,DIE,DR,X,Y
+ I $P(IB0,U,7) D
+ . S IBNEW=$P(IB0,U,3)_","_$P(IB0,U,4)_$S($P(IB0,U,5)'="":" "_$P(IB0,U,5),1:""),$P(IBBULL,U)=1
+ . S IBCOB=+$P($G(^IBM(361.1,IBEOB,0)),U,15)
+ . S IBIFN=+$G(^IBM(361.1,+IBEOB,0))
+ . S IB=$G(^DGCR(399,IBIFN,"I"_IBCOB))
+ . ;
+ . I IB'="",$P(IB,U,17)'=IBNEW D
+ .. ; Update the claim data only
+ .. S $P(IBBULL,U,3)=$P(IB,U,17) ; save old value
+ .. S $P(IB,U,17)=IBNEW
+ .. S DIE="^DGCR(399,",DA=IBIFN,DR="30"_IBCOB_"////"_IB
+ .. D:DA ^DIE
+ .. S IBCHGED=1
+ . S IBDR=$G(IBDR)_"6.01////"_$P(IB0,U,3)_","_$P(IB0,U,4)_" "_$P(IB0,U,5)_";"
+ ;
+ Q $G(IBCHGED)
+ ;
+UPDID(IBEOB,IB0,IBBULL,IBDR) ; Update id # on claim and policy if it comes back
+ ;   changed
+ ; IBEOB = the internal entry # of the entry in file 361.1
+ ; IB0 = the raw data returned from the 835 flat file
+ ; IBBULL = holds result of id change check in piece 2 - if id changed,
+ ;          second '^' piece = 1,4th '^' piece is the old insured's id
+ ; IBDR = returned as the updated 'DR' string with the id changed fields
+ ;        to use to update the EOB file (361.1) - pass by reference
+ ;
+ N IBCHGED,IBNEW,IBCOB,IB,DIE,DR,DA,X,Y
+ I $P(IB0,U,8) D
+ . S IBNEW=$P(IB0,U,6),$P(IBBULL,U,2)=1
+ . S IBIFN=+$G(^IBM(361.1,+IBEOB,0))
+ . S IBCOB=+$P($G(^IBM(361.1,IBEOB,0)),U,15)
+ . S IB=$G(^DGCR(399,IBIFN,"I"_IBCOB))
+ . ;
+ . I IB'="",$P(IB,U,2)'=IBNEW D
+ .. ; Update the claim
+ .. S $P(IBBULL,U,4)=$P(IB,U,2) ; save old value
+ .. S $P(IB,U,2)=IBNEW
+ .. S DIE="^DGCR(399,",DA=IBIFN,DR="30"_IBCOB_"////"_IB D ^DIE
+ .. ;
+ .. ; Update the policy
+ .. S DA(1)=$P($G(^DGCR(399,IBIFN,0)),U,2),DA=$P($G(^("M")),U,(11+IBCOB)),DR="1////"_IBNEW,DIE="^DPT("_DA(1)_",.312,"
+ .. I DA(1),DA D ^DIE
+ .. S IBCHGED=1
+ . S IBDR=$G(IBDR)_"6.02////"_$P(IB0,U,6)_";"
+ ;
+ Q $G(IBCHGED)
  ;

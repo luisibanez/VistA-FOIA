@@ -1,6 +1,5 @@
 PRSACED2 ; HISC/FPT-T&A Edits ;11/24/1999
- ;;4.0;PAID;**45,54,112**;Sep 21, 1995;Build 54
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;**45,54**;Sep 21, 1995
  ;
  ; initialize array that stores 8b values.  This array is used
  ; for edit checks that involve more than one type of time.
@@ -35,8 +34,7 @@ E1 I "^R^C^"'[(U_PMP_U),E(3)>20!(E(4)>20) S ERR=55 D ERR^PRSACED
  I E(8)>X1 S ERR=81 D ERR^PRSACED
 E2 I NOR=112,DUT=1,'$P(C0,"^",42)!('$P(C1,"^",24)) S ERR=67 D ERR^PRSACED
  I E(9),'$P(C1,"^",46),E(9)'=+NOR S ERR=65 D ERR^PRSACED
- ;exclude 9/3 month employee
- I DUT=2,'(NOR="01"&("LMN"[PAY)),'(NOR="80"&(PAY="M")),$P(C0,"^",42)=""!($P(C1,"^",24)="") S ERR=66 D ERR^PRSACED
+ I DUT=2,'(NOR="01"&("LMN"[PAY)),$P(C0,"^",42)=""!($P(C1,"^",24)="") S ERR=66 D ERR^PRSACED
  G ^PRSACED3
 OA ;
 OE I "ABCKMN"[PAY,X>600 S ERR=35 D ERR^PRSACED

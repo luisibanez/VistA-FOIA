@@ -1,6 +1,6 @@
-PRCPRSS0 ;WISC/RFJ/DL/DAP-stock status report print for warehouse;1/28/98
-V ;;5.1;IFCAP;**98**;Oct 20, 2000;Build 37
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCPRSS0 ;WISC/RFJ/DL-stock status report print ;1/28/98
+V ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
@@ -14,10 +14,7 @@ PRINT ;  print report
  W $$SHOWVALU(TOTOPEN)
  W !!,"RECEIPTS",?14 S TOTAL=0 F ACCT=1,2,3,6,8 S %=$G(REC(ACCT)),TOTAL=TOTAL+%,OPEN(ACCT)=$G(OPEN(ACCT))+% W $$SHOWVALU(%)
  W $$SHOWVALU(TOTAL)
- ;
- ;*98 Changed previous displays of "issues" to "usage"
- ;
- W !,"USAGE",?14 S TOTISS=0 F ACCT=1,2,3,6,8 S %=$G(ISS(ACCT)),TOTISS=TOTISS+%,OPEN(ACCT)=$G(OPEN(ACCT))+% W $$SHOWVALU(%)
+ W !,"ISSUES",?14 S TOTISS=0 F ACCT=1,2,3,6,8 S %=$G(ISS(ACCT)),TOTISS=TOTISS+%,OPEN(ACCT)=$G(OPEN(ACCT))+% W $$SHOWVALU(%)
  W $$SHOWVALU(TOTISS)
  W !,"ADJUSTMENTS",?14 S TOTAL=0 F ACCT=1,2,3,6,8 S %=$G(ADJ(ACCT)),TOTAL=TOTAL+%,OPEN(ACCT)=$G(OPEN(ACCT))+% W $$SHOWVALU(%)
  W $$SHOWVALU(TOTAL)
@@ -26,10 +23,7 @@ PRINT ;  print report
  W $$SHOWVALU(TOTCLOS)
  W !!!,"# RECEIPTS",?13 S TOTAL=0 F ACCT=1,2,3,6,8 S %=$G(RECN(ACCT)),TOTAL=TOTAL+%,TOTN(ACCT)=% W $J(%,11,0)
  W $J(TOTAL,11,0)
- ;
- ;*98 Changed previous displays of "issues" to "usage"
- ;
- W !,"# USAGE",?13 S TOTAL=0 F ACCT=1,2,3,6,8 S %=$G(ISSN(ACCT)),TOTAL=TOTAL+%,TOTN(ACCT)=$G(TOTN(ACCT))+% W $J(%,11,0)
+ W !,"# ISSUES",?13 S TOTAL=0 F ACCT=1,2,3,6,8 S %=$G(ISSN(ACCT)),TOTAL=TOTAL+%,TOTN(ACCT)=$G(TOTN(ACCT))+% W $J(%,11,0)
  W $J(TOTAL,11,0)
  W !,"# ADJUSTMENTS",?13 S TOTAL=0 F ACCT=1,2,3,6,8 S %=$G(ADJN(ACCT)),TOTAL=TOTAL+%,TOTN(ACCT)=$G(TOTN(ACCT))+% W $J(%,11,0)
  W $J(TOTAL,11,0)
@@ -54,10 +48,7 @@ PRINT ;  print report
  W !,"% INACTIVE",?13 F ACCT=1,2,3,6,8 S %=$G(VALUE(ACCT)),%=$S('%:0,1:$G(INACT(ACCT))/%) W $J(%,11,2)
  S %=$S('TOTVAL:0,1:TOTAL/TOTVAL) W $J(%,11,2)
  S Y=$E(DATELONG,1,5)_"01" D DD^%DT
- ;
- ;*98 Showed correct range of 90 days for long supply on report section
- ;
- W !!?2,"LONG SUPPLY ITEMS AVERAGE FROM  ",Y,"  TO  ",$P(NOW,"@"),"  (>90 DAYS)",!,"# LONG SUPPLY",?13
+ W !!?2,"LONG SUPPLY ITEMS AVERAGE FROM  ",Y,"  TO  ",$P(NOW,"@"),"  (>270 DAYS)",!,"# LONG SUPPLY",?13
  S TOTAL=0 F ACCT=1,2,3,6,8 S %=$G(LONGN(ACCT)),TOTAL=TOTAL+% W $J(%,11,0)
  W $J(TOTAL,11,0)
  W !,"$ LONG SUPPLY",?14 S TOTAL=0 F ACCT=1,2,3,6,8 S %=$G(LONG(ACCT)),TOTAL=TOTAL+% W $$SHOWVALU(%)

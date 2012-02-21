@@ -1,6 +1,5 @@
 IBCEP4A ;ALB/TMP - EDI UTILITIES for provider ID ;29-SEP-00
- ;;2.0;INTEGRATED BILLING;**137,232,280,349,377**;21-MAR-94;Build 23
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,232,280**;21-MAR-94
  ;
 NEW(IB) ; Add care unit
  ; Assumes IBINS is defined as ins co ien (file 36)
@@ -22,14 +21,22 @@ CHANGE(IB) ; Edit a care unit name or combination for ins co IBINS
  ; Assumes IBINS is defined as ins co ien (file 36)
  ; IB = 0 or null if called from list manager, 1 if not
  N DIC,DIK,DIR,X,Y,Z,DA,DR,DIE,DO,DD,DLAYGO,IB95,IBOK,IBZ,IB0,IBEDIT,IBCK,IBDA,IBCHG,IBDELETE,Z100,DTOUT,DUOUT
- I '$G(IB) D FULL^VALM1 S Y=$$SEL()
- I $G(IB) S DIC("A")="CARE UNIT NAME: ",DIC(0)="AEMQ",DIC("S")="I $P(^(0),U,3)=+$G(IBINS)",DIC="^IBA(355.95," W ! D ^DIC K DIC
+ I '$G(IB) D FULL^VALM1
+ S DIC("A")="CARE UNIT NAME: ",DIC(0)="AEMQ",DIC("S")="I $P(^(0),U,3)=+$G(IBINS)",DIC="^IBA(355.95," W ! D ^DIC K DIC
  I Y'>0 G CHGQ
  S IB95("IBCU")=+Y,IBDELETE=0,IBDELETE(0)=$G(^IBA(355.95,0)),IBDELETE(1)=$G(^(1))
  ; Edit fields outside of FM to assure uniqueness of combos is maintained
  W ! S DIR("A")="CARE UNIT NAME: ",DIR("B")=$P($G(^IBA(355.95,+IB95("IBCU"),0)),U),DIR(0)="355.95,.01AO",DIR("S")="I $P(^(0),U,3)=IBINS" D ^DIR K DIR
  I $D(DTOUT)!$D(DUOUT) G CHGQ
- I X="@" S DIR(0)="EA",DIR("A")="NOTHING DELETED - PRESS ENTER TO CONTINUE" D ^DIR K DIR G CHGQ
+ ;
+ ; Care unit name was deleted
+ I X="@" D  G CHGQ
+ . S DIR("A",1)="THIS WILL DELETE THE CARE UNIT NAME AND ALL ITS COMBINATIONS",DIR("A")="ARE YOU SURE THIS IS WHAT YOU WANT TO DO?: ",DIR(0)="YA",DIR("B")="NO" D ^DIR K DIR
+ . I Y'=1 S IB95("IBCU")="" Q  ; Changed their mind - don't delete
+ . S Z=0 F  S Z=$O(^IBA(355.96,"B",IB95("IBCU"),Z)) Q:'Z  S DIK="^IBA(355.96,",DA=Z D ^DIK
+ . S DA=IB95("IBCU"),DIK="^IBA(355.95," D ^DIK
+ . W ! S DIR(0)="EA",DIR("A",1)="CARE UNIT AND ALL ITS COMBINATIONS WERE DELETED",DIR("A")="PRESS ENTER TO CONTINUE " D ^DIR K DIR D BLD^IBCEP4
+ ;
  I $P($G(^IBA(355.95,IB95("IBCU"),0)),U)'=Y S DIE="^IBA(355.95,",DR=".01///"_Y,DA=IB95("IBCU") D ^DIE ; File the name change
  S DR=".02",DIE="^IBA(355.95,",DA=IB95("IBCU") D ^DIE
  I $D(Y) G CHGQ
@@ -94,7 +101,7 @@ INSASS(IBINSZ,IB95) ; Assign care unit to or delete from an ins co
  .. N DA
  .. K IBDICS
  .. I Z=.04 D
- ... I $P($G(^IBE(355.97,+$G(IB95("IBPTYP")),0)),U,3)="1A" S IBDICS="I Y'=1 K X",DIR("B")="UB-04",DIR("?")="ONLY UB-04 IS VALID FOR A BLUE CROSS ID"
+ ... I $P($G(^IBE(355.97,+$G(IB95("IBPTYP")),0)),U,3)="1A" S IBDICS="I Y'=1 K X",DIR("B")="UB92",DIR("?")="ONLY UB92 IS VALID FOR A BLUE CROSS ID"
  .. S DIR(0)="355.96,"_Z_$S($G(IBDICS)="":"",1:"^^"_IBDICS) D ^DIR K DIR
  . I $D(DTOUT)!$D(DUOUT) S VALMBCK="R",Z="" K:$G(IB95)=2 IB95 Q
  . ;
@@ -150,26 +157,4 @@ ADDCU(IBINSZ,IBCU,IBFT,IBCT,IBPTYP) ;  Add a new care unit record to file 355.96
  S DIC(0)="L",DLAYGO=355.96,DIC="^IBA(355.96,",DIC("DR")=".03////"_IBINSZ_";.04////"_IBFT_";.05////"_IBCT_";.06////"_IBPTYP,X=IBCU
  D FILE^DICN
  Q Y
- ;
-DELETE(IB) ; delete a care unit name
- ; IB = 0 or null if called from list manager, 1 if not
- N DIR,X,Y
- I '$G(IB) D FULL^VALM1 S Y=$$SEL() I Y'>0 G DELETEQ
- S:'$G(IB) IB95("IBCU")=+Y
- S DIR("A",1)="THIS WILL DELETE THE CARE UNIT NAME AND ALL ITS COMBINATIONS",DIR("A")="ARE YOU SURE THIS IS WHAT YOU WANT TO DO?: ",DIR(0)="YA",DIR("B")="NO" D ^DIR K DIR
- I Y'=1 S IB95("IBCU")="" Q  ; Changed their mind - don't delete
- S Z=0 F  S Z=$O(^IBA(355.96,"B",IB95("IBCU"),Z)) Q:'Z  S DIK="^IBA(355.96,",DA=Z D ^DIK
- S DA=IB95("IBCU"),DIK="^IBA(355.95," D ^DIK
- W ! S DIR(0)="EA",DIR("A",1)="CARE UNIT AND ALL ITS COMBINATIONS WERE DELETED",DIR("A")="PRESS ENTER TO CONTINUE " D ^DIR K DIR D BLD^IBCEP4
-DELETEQ ;
- S:'$G(IB) VALMBCK="R"
- Q
- ;
-SEL() ; Select entry from list
- ; returns ien in file 355.95 for selected entry
- N VALMY,SEL
- D EN^VALM2($G(XQORNOD(0)),"S")
- S SEL=+$O(VALMY(""))
- I SEL'>0 Q 0
- Q +$G(^TMP("IBPRV_CU",$J,"ZIDX",SEL))
  ;

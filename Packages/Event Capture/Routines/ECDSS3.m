@@ -1,5 +1,5 @@
-ECDSS3 ;BIR/RHK,JPW-Active/Inactive Category Report ; 03 JUL 2008
- ;;2.0; EVENT CAPTURE ;**25,95**;8 May 96;Build 26
+ECDSS3 ;BIR/RHK,JPW-Active/Inactive Category Report ; 5/22/01 11:14am
+ ;;2.0; EVENT CAPTURE ;**25**;8 May 96
  ; Routine to report active and inactive procedures
 START ; Routine execution
  N ECRAS S ECRAS=1  ;roll and scroll flag
@@ -23,14 +23,14 @@ END ; Kill variables and exit
  D ^ECKILL
  Q
 LISTA ;list active categories
- K DIC S DIC="^EC(726,",FLDS=".01",BY=".01",(FR,TO)="",L=0,DHD="CATEGORY REPORT - ACTIVE",DIS(0)="I '$P(^EC(726,D0,0),""^"",3)" D EN1^DIP
+ K DIC S DIC="^EC(726,",FLDS=".01",BY=".01",(FR,TO)="",L=0,DHD="LIST OF ACTIVE LOCAL CATEGORIES",DIS(0)="I '$P(^EC(726,D0,0),""^"",3)" D EN1^DIP
  I $D(ECRAS) W !!,"Press <RET> to continue   " R X:DTIME
  Q
 LISTI ;list inactive categories
- K DIC S DIC="^EC(726,",FLDS=".01,2;""INACTIVE DATE""",BY=".01",(FR,TO)="",L=0,DHD="CATEGORY REPORT - INACTIVE",DIS(0)="I +$P(^EC(726,D0,0),""^"",3)" D EN1^DIP
+ K DIC S DIC="^EC(726,",FLDS=".01,2;""INACTIVE DATE""",BY=".01",(FR,TO)="",L=0,DHD="LIST OF INACTIVE LOCAL CATEGORIES",DIS(0)="I +$P(^EC(726,D0,0),""^"",3)" D EN1^DIP
  I $D(ECRAS) W !!,"Press <RET> to continue   " R X:DTIME
  Q
 LISTB ;list all cats
- K DIC S DIC="^EC(726,",FLDS=".01,2;""INACTIVE DATE""",BY=".01",(FR,TO)="",L=0,DHD="CATEGORY REPORT - BOTH ACTIVE AND INACTIVE" D EN1^DIP
+ K DIC S DIC="^EC(726,",FLDS=".01,2;""INACTIVE DATE""",BY=".01",(FR,TO)="",L=0,DHD="LIST OF ALL LOCAL CATEGORIRES" D EN1^DIP
  I $D(ECRAS) W !!,"Press <RET> to continue   " R X:DTIME
  Q

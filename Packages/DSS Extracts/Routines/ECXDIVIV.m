@@ -1,5 +1,5 @@
-ECXDIVIV ;BIR/CML-Enter/Edit and Print IV Room Division ; 3/13/07 10:48am
- ;;3.0;DSS EXTRACTS;**8,105**;Dec 22, 1997;Build 70
+ECXDIVIV ;BIR/CML-Enter/Edit and Print IV Room Division ; [ 11/15/96  11:12 AM ]
+ ;;3.0;DSS EXTRACTS;**8**;Dec 22, 1997
  ;
 ED ;enter/edit division field for iv rooms
  N CHKFLG,DIC,DIE,DA,DR
@@ -24,19 +24,16 @@ PRT ;print worksheet
  I POP D
  .W !,"NO DEVICE SELECTED OR REPORT PRINTED!!"
  .D PAUSE
- K ^TMP($J,"ECXDSS")
  Q
  ;
 START ;queued entry point
  N CHKFLG,DIV,DIVNM,INACT,IV,IVRM,JJ,LN1,LN2,PDT,PG,QFLG,SS,X,Y
  I '$D(DT) S DT=$$HTFM^XLFDT(+$H)
- K ^TMP("ECXDIVIV",$J),^TMP($J,"ECXDSS") S QFLG=0,IV=0
- ;call pharmacy encapsulation api and return all iv rooms information
- D ALL^PSJ59P5(,"??","ECXDSS")
- F  S IV=$O(^TMP($J,"ECXDSS",IV)) Q:'IV  D
- .S IVRM=$G(^TMP($J,"ECXDSS",IV,.01)),DIV=$P($G(^(.02)),U)
+ K ^TMP("ECXDIVIV",$J) S QFLG=0,IV=0
+ F  S IV=$O(^PS(59.5,IV)) Q:'IV  I $D(^PS(59.5,IV,0)) D
+ .S IVRM=$E($P(^PS(59.5,IV,0),U),1,30),DIV=$P(^(0),U,4)
  .S DIVNM=$S(DIV="":"ZZZ",1:$E($P(^DG(40.8,DIV,0),U),1,30))
- .K INACT I $P($G(^TMP($J,"ECXDSS",IV,19)),U)]"" S INACT=$P(^(19),U,2)
+ .K INACT I $P($G(^PS(59.5,IV,"I")),U)]"" S INACT=$$FMTE^XLFDT($P(^PS(59.5,IV,"I"),U),1)
  .S ^TMP("ECXDIVIV",$J,DIVNM,IVRM)=$S($D(INACT):INACT,1:"")
  ;print report
  S PG=0,PDT=$$FMTE^XLFDT(DT),$P(LN1,"-",81)="",$P(LN2,"_",30)=""
@@ -66,19 +63,18 @@ HDR ;header
  ;
 CHK ;check for existence of necessary files for division functionality
  S CHKFLG=0
- D ALL^PSJ59P5(,"??","ECXIV")
- I '$O(^TMP($J,"ECXIV",0)) D  I CHKFLG D EXIT Q
+ I '$O(^PS(59.5,0)) D  Q:CHKFLG
  .W !,"The IV Room file (#59.5) does not exist!"
  .S CHKFLG=1 D PAUSE
- I '$D(^ECX(728.113,0)) D  I CHKFLG D EXIT Q
+ I '$D(^ECX(728.113,0)) D  Q:CHKFLG
  .W $C(7),!!,"Your facility appears to be running a version of Inpatient Medications prior to"
  .W !,"version 4.5 which is necessary to use this option."
  .S CHKFLG=1 D PAUSE
- I '$D(^TMP($J,"ECXIV",$O(^TMP($J,"ECXIV",0)),.02)) D
+ K TEST1 D FIELD^DID(59.5,.02,"","TYPE","TEST1")
+ I '$D(TEST1) D
  .W $C(7),!!,"The Inpatient Medications Patch PSJ*4.5*27 has not yet been installed!"
  .W !,"It must be loaded before you can proceed with this option."
  .S CHKFLG=1 D PAUSE
-EXIT K ^TMP($J,"ECXIV")
  Q
  ;
 PAUSE ;pause screen

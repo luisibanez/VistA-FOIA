@@ -1,6 +1,5 @@
-MAGQE5 ;WOIFO/RMP - Support for MAG Enterprise ; 08/29/2006 09:48
- ;;3.0;IMAGING;**27,29,8,30,20,46,39**;Mar 19, 2002;Build 2010;Mar 08, 2011
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGQE5 ;WOIFO/RMP - Support for MAG Enterprise ; 05/06/2004  06:32
+ ;;3.0;IMAGING;**27,29,8,30**;16-September-2004
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +7,7 @@ MAGQE5 ;WOIFO/RMP - Support for MAG Enterprise ; 08/29/2006 09:48
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -15,12 +15,10 @@ MAGQE5 ;WOIFO/RMP - Support for MAG Enterprise ; 08/29/2006 09:48
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
- Q
 ISU2 ;
  ; Workstation Session and Patient counts
- N CCNT,D0,DATE,ICNT,M1,M2,PCNT,RES,SCNAD,SCNMN,SCNT,TD,TD1,UNSCN,VD,VI,X1,X2,YR,AI,DUP,IQ,TIOP,TGPP,TIEDP
- N GRPPRNT,IMAGE,DELETED
- S (SCNT,PCNT,ICNT,CCNT,DUP,TIOP,TGPP,TIEDP,GRPPRNT,IMAGE,DELETED)=0
+ N CCNT,D0,DATE,ICNT,M1,M2,PCNT,RES,SCNAD,SCNMN,SCNT,TD,TD1,UNSCN,VD,VI,X1,X2,YR
+ S (SCNT,PCNT,ICNT,CCNT)=0
  S (VD,VI)=""
  I '$$CONSOLID() D
  . S DATE="L"_START
@@ -67,14 +65,7 @@ ISU2 ;
  . Q
  K RES
  ;
- S AI=$$GETAI(PLACE)
- D COUNT^MAGQE3(START,STOP,INST,AI,.IQ,.DUP,.TIOP,.TGPP,.TIEDP,.GRPPRNT,.IMAGE,.DELETED)
- D MSG^MAGQE2("Total Image Objects for Place: "_TIOP)
- D MSG^MAGQE2("Total Group Parents for Place: "_TGPP)
- D MSG^MAGQE2("Total Image Entry Deletes for Place: "_TIEDP)
- D MSG^MAGQE2("Image file group parents: "_GRPPRNT)
- D MSG^MAGQE2("Image file objects: "_IMAGE)
- D MSG^MAGQE2("Image file deletes: "_DELETED)
+ D COUNT^MAGQE3(START,STOP,INST)
  ;
  S (I,D0)=0 F  S D0=$O(^TMP($J,"MAGQ","ACQPAT",D0)) Q:D0=""  S I=I+1
  D MSG^MAGQE2("Unique Image patients captured: "_I)
@@ -85,29 +76,23 @@ ISU2 ;
  S (I,D0)=0 F  S D0=$O(^TMP($J,"MAGQ","ALLPAT",D0)) Q:D0=""  S I=I+1
  D MSG^MAGQE2("Unique Image patients All: "_I)
  K ^TMP($J,"MAGQ","ALLPAT")
- D MSG^MAGQE2("Total Non-Verified Images for Place: "_$P(IQ,U,1))
- D MSG^MAGQE2("Total Verified Images for Place: "_$P(IQ,U,2))
- D MSG^MAGQE2("Total Integrity Issues for Place: "_$P(IQ,U,3))
- D MSG^MAGQE2("Total Duplicate Images for Place: "_DUP)
- D START^MAGQE6(START,STOP,INST,"TLR")
- D ADCNT^MAGQE3(START,STOP,INST,AI)
+ ;
+ D ADCNT^MAGQE3(START,STOP,INST)
  D GPACHX^MAGQE3()
  D GS1^MAGQE5() ;Get Share data
- D AI1^MAGQE5() ;Get Associated Institutions
- D GATH^MAGQE6(START,STOP,INST)    ;Gather remote va/dod views
  Q
  ;
 AHOPT ;
- N %DT,START,STOP,X,Y
+ N %DT,START,STOP
  S STOP=$$FMADD^XLFDT($$NOW^XLFDT()\100_"01",-1)
  S START=STOP\100_"01"
  S Y=START D DD^%DT S %DT("B")=Y
  S %DT="AEXP",%DT("A")="Enter starting Date: "
- D ^%DT I ((X="")!(X="^")!($D(DTOUT))) K %DT(0),DTOUT Q
+ D ^%DT I ((X="")!(X="^")!($D(DTOUT))) K %DT(0) Q
  S START=Y
  S Y=STOP D DD^%DT S %DT("B")=Y
  S %DT="AEXP",%DT("A")="Enter ending Date: "
- D ^%DT I ((X="")!(X="^")!($D(DTOUT))) K %DT(0),DTOUT Q
+ D ^%DT I ((X="")!(X="^")!($D(DTOUT))) K %DT(0) Q
  S STOP=Y
  W !!,"Creating ad-hoc report over the period "
  W $$DT(START)," until ",$$DT(STOP),".",!
@@ -175,35 +160,15 @@ MAGDUZ2() Q $G(DUZ(2),$$KSP^XUPARAM("INST"))
  ;
 GS1() ; Get local Network location share data
  N I,L,M,MSG,RESULT,TAR
- S RESULT(0)="NETWORK LOCATION^PHYSICAL REFERENCE^TOTAL SPACE^FREE SPACE^OPERATIONAL STATUS^READ ONLY^STORAGE TYPE^HASH^ROUTER"
- D LIST^DIC(2005.2,"","@;.01;1;2;4;5;5.5;6;7;26","","","","","","I $P(^(0),U,10)=PLACE","","TAR","MSG")
+ S RESULT(0)="NETWORK LOCATION^PHYSICAL REFERENCE^TOTAL SPACE^SPACE USED^FREE SPACE^OPERATIONAL STATUS^STORAGE TYPE^HASH"
+ D LIST^DIC(2005.2,"","@;.01;1;2;3;4;5;6;7","","","","","","","","TAR","MSG")
  Q:$D(MSG("DIERR"))
  S L=0 F  S L=$O(TAR("DILIST","ID",L)) Q:'L  D
  . S RESULT(L)=$P(TAR("DILIST","ID",L,.01),U,1)
- . F M=1,2,4,5,5.5,6,7,26 S RESULT(L)=RESULT(L)_U_$P(TAR("DILIST","ID",L,M),U,1)
+ . F M=1,2,3,4,5,6,7 S RESULT(L)=RESULT(L)_U_$P(TAR("DILIST","ID",L,M),U,1)
  . Q
  S I="" F  S I=$O(RESULT(I)) Q:I=""  D
  . D MSG^MAGQE2("LOCAL NETWORK LOCATIONS: "_I_"^"_RESULT(I))
  . Q
- K TAR,MSG,RESULT
  Q
-AI1() ; get Associated Institutions list per place
- N I,L,M,MSG,RESULT,TAR
- S RESULT(0)="Associated Institutions"
- D LIST^DIC(2006.12,","_PLACE_",","@;.01","","","","","","","","TAR","MSG")
- Q:$D(MSG("DIERR"))
- S L=0 F  S L=$O(TAR("DILIST","ID",L)) Q:'L  D
- . S RESULT(L)=$P(TAR("DILIST","ID",L,.01),U,1)
- . Q
- S I="" F  S I=$O(RESULT(I)) Q:I=""  D
- . D MSG^MAGQE2("ASSOCIATED INSTITUTIONS: "_I_"^"_RESULT(I))
- . Q
- K TAR,MSG,RESULT
- Q
-GETAI(PLACE,PARAM) ;
- N I,J
- S PARAM=$S('$D(PARAM):U,PARAM="":U,1:PARAM)
- S I="",J=PARAM
- F  S I=$O(^MAG(2006.1,PLACE,"INSTS","B",I)) Q:I=""  S J=J_I_PARAM
- Q J
  ;

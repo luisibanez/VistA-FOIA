@@ -1,5 +1,5 @@
-PXRMFFDB ;SLC/PKR - Function finding data structure builder. ;01/13/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMFFDB ;SLC/PKR - Function finding data structure builder. ;01/11/2005
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;===========================================
 BASE2(NUM) ;Convert a base 10 integer to base 2.
@@ -65,11 +65,10 @@ FFBUILD(X,DA) ;Given a function finding logical string build the data
  ;Do not execute as part of exchange.
  I $G(PXRMEXCH) Q
  N FDA,FUNNUM,FUNP,IENB,IENS,IND,JND,L2,L3,LEN,LIST,LOGIC,OPER,MSG
- N PFSTACK,REPL,RS,TEMP,TS,XS
+ N PFSTACK,REPL,RS,TEMP,TS
  S IENB=DA_","_DA(1)_","
- S OPER="!&-+<>='"
- S XS=$$PSPACE(X)
- D POSTFIX^PXRMSTAC(XS,OPER,.PFSTACK)
+ S OPER="!&<>='"
+ D POSTFIX^PXRMSTAC(X,OPER,.PFSTACK)
  S (FUNNUM,L2)=0
  F IND=1:1:PFSTACK(0) D
  . S TEMP=PFSTACK(IND)
@@ -80,16 +79,14 @@ FFBUILD(X,DA) ;Given a function finding logical string build the data
  .. S FDA(811.9255,IENS,.01)=FUNNUM
  .. S FDA(811.9255,IENS,.02)=FUNP
  .. S IND=IND+1
- .. S LIST=$TR(PFSTACK(IND),"~"," ")
+ .. S LIST=PFSTACK(IND)
  .. S REPL(FUNNUM)=TEMP_"("_LIST_")"_U_"FN("_FUNNUM_")"
  .. S L3=L2
  .. S LEN=$L(LIST,",")
  .. F JND=1:1:LEN D
  ... S L3=L3+1
  ... S IENS="+"_L3_",+"_L2_","_IENB
- ... S TS=$P(LIST,",",JND)
- ... S TS=$TR(TS,"""","")
- ... S FDA(811.9256,IENS,.01)=TS
+ ... S FDA(811.9256,IENS,.01)=$P(LIST,",",JND)
  .. S L2=L3
  ;Build the logic string
  S LOGIC=X
@@ -114,43 +111,19 @@ FFKILL(X,DA) ;This is the kill logic for the function string.
  Q
  ;
  ;=============================================================
-ISGRV(VAR) ;Return true if VAR is a global reminder variable.
- I VAR="PXRMAGE" Q 1
- I VAR="PXRMDOB" Q 1
- I VAR="PXRMLAD" Q 1
- I VAR="PXRMSEX" Q 1
- Q 0
- ;
- ;=============================================================
 ISSTR(STRING) ;Return true if STRING really is a string and it is not
- ;executable MUMPS code.
+ ;executable Mumps code.
  N VALID,X
  S VALID=0
  ;Valid strings are "text" or because of $P ,"text" or ",U".
  I $E(STRING,1)="""",$E(STRING,$L(STRING))="""" S VALID=1
  I 'VALID,$E(STRING,1)=",",$E(STRING,2)="""",$E(STRING,$L(STRING))="""" S VALID=1
- ;I 'VALID,STRING=",U" S VALID=1
- I 'VALID,STRING?1",U,".N S VALID=1
+ I 'VALID,STRING=",U" S VALID=1
  I 'VALID Q VALID
  S X=STRING
  D ^DIM
  S VALID=$S($D(X)=0:1,1:0)
  Q VALID
- ;
- ;=============================================================
-PSPACE(OPR) ;OPR is an operand in a function finding, if some portion
- ;of OPR is a string translate a space into "~" so it is preserved.
- ;Note this will work for the entire function string.
- N DONE,END,START,TNS,TS
- S DONE=0,END=1
- F  Q:DONE  D
- . S START=$F(OPR,"""",END)
- . I START=0 S DONE=1 Q
- . S END=$F(OPR,"""",START)
- . S TS=$E(OPR,START,END-2)
- . S TNS=$TR(TS," ","~")
- . S OPR=$$STRREP^PXRMUTIL(OPR,TS,TNS)
- Q OPR
  ;
  ;=============================================================
 VFFORM(TEMP,X) ;Make sure the function has a valid form, i.e., function
@@ -180,8 +153,6 @@ VFINDING(X,DAI) ;Make sure a finding number is a valid member of the
  ;Do not execute as part of exchange.
  I $G(PXRMEXCH) Q 1
  I '$D(DAI) Q 1
- ;If X is not numeric it is not a finding number.
- I +X'=X Q 1
  I $D(^PXD(811.9,DAI,20,X,0)) Q 1
  E  D  Q 0
  . N TEXT
@@ -196,9 +167,9 @@ VFSTRING(FFSTRING,DA) ;Make sure a function finding string is valid.
  ;Do not execute as part of exchange.
  I $G(PXRMEXCH) Q 1
  I '$D(DA) Q 1
- N DAI,DATE,FUNIEN,IND,LIST,MFUN,OPER,PFSTACK,TEMP,TEXT,VALID
+ N DAI,DATE,IND,LIST,MFUN,OPER,PFSTACK,TEMP,TEXT,VALID
  S DAI=DA(1)
- S OPER="!&-+<>=']["
+ S OPER="!&<>='"
  ;Define the allowed M functions.
  S MFUN("$P")=""
  D POSTFIX^PXRMSTAC(FFSTRING,OPER,.PFSTACK)
@@ -208,18 +179,16 @@ VFSTRING(FFSTRING,DA) ;Make sure a function finding string is valid.
  . I $D(^PXRMD(802.4,"B",TEMP)) D  Q
  .. S VALID=$$VFFORM(TEMP,X)
  .. I 'VALID Q
- .. S FUNIEN=$O(^PXRMD(802.4,"B",TEMP,""))
  .. S IND=IND+1
  .. S LIST=$G(PFSTACK(IND))
- .. S VALID=$$VLIST(LIST,DAI,TEMP,FUNIEN)
+ .. ;I '$$VLIST(LIST,DAI) S VALID=0
+ .. S VALID=$$VLIST(LIST,DAI)
  .;Check for operator
  . I OPER[TEMP Q
  .;Check for number
  . I TEMP=+TEMP Q
  .;Check for allowed M function.
  . I $D(MFUN(TEMP)) Q
- .;Check for a global reminder variable
- . I $$ISGRV(TEMP) Q
  .;Check for a non-executable string.
  . I $$ISSTR(TEMP) Q
  . S VALID=0
@@ -236,24 +205,16 @@ VFSTRING(FFSTRING,DA) ;Make sure a function finding string is valid.
  Q VALID
  ;
  ;=============================================================
-VLIST(LIST,DAI,FUNCTION,FUNIEN) ;Make sure the function argument list
- ;is valid.
- N AT,IND,LEN,PATTERN,VALID,X
+VLIST(LIST,DAI) ;Make sure a list of findings is valid.
+ N IND,LEN,VALID,X
  S LEN=$L(LIST,",")
  I LEN=0 D  Q 0
  . N TEXT
- . S TEXT="The argument list is not defined!"
+ . S TEXT="The finding list is not defined!"
  . D EN^DDIOL(TEXT)
- S PATTERN=$P(^PXRMD(802.4,FUNIEN,0),U,5)
- S VALID=$S(LIST?@PATTERN:1,1:0)
- I 'VALID D  Q 0
- . N TEXT
- . S TEXT="Argument list "_LIST_" is not correct for function "_$P(^PXRMD(802.4,FUNIEN,0),U,1)
- . D EN^DDIOL(TEXT)
+ S VALID=1
  F IND=1:1:LEN D
  . S X=$P(LIST,",",IND)
- . S AT=$$ARGTYPE^PXRMFFAT(FUNCTION,IND)
- . I AT="U" S VALID=0 Q
- . I AT="F",'$$VFINDING(X,DAI) S VALID=0
+ . I '$$VFINDING(X,DAI) S VALID=0
  Q VALID
  ;

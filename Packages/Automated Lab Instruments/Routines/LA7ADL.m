@@ -1,5 +1,5 @@
-LA7ADL ;DALOI/JMC - Automatic Download of Test Orders;May 30, 2008
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**17,25,23,57,66**;Sep 27, 1994;Build 30
+LA7ADL ;DALOI/JMC - Automatic Download of Test Orders; 1/30/95 09:00
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**17,25,23,57**;Sep 27, 1994
  ;
  ; This routine will monitor the ^LA("ADL") node to check for accessions which are to have test orders automatically
  ; downloaded to another computer system. All entries in the auto instrument file which are flagged for automatic downloading
@@ -31,8 +31,15 @@ EN(LA7UID) ; Set flag to check accession for downloading, start background job i
  ; Quit if "Don't Start" flag set.
  I +$G(^LA("ADL","STOP"),0)=2 Q
  ;
+ ; Lock zeroth node.
+ ; Quit if another process has lock
+ ; - either another job setting node or the background job.
+ L +^LA("ADL",0):1
+ I '$T Q
+ ;
  ; Task background job to run.
- D CHKTSK
+ N ZTSK
+ D ZTSK
  ;
  ; Unlock node.
  L -^LA("ADL",0)
@@ -42,10 +49,13 @@ EN(LA7UID) ; Set flag to check accession for downloading, start background job i
  ;
 DQ ; Entry point from Taskman.
  ;
+ ; Set flag for taskman to cleanup task.
+ I $D(ZTQUEUED) S ZTREQ="@"
+ ;
  ; Wait for a little while in case another job checking for background job has lock.
  L +^LA("ADL",0):10
  ; Another process has lock, only want one at a time.
- I '$T S:$D(ZTQUEUED) ZTREQ="@" Q
+ I '$T Q
  ;
  ; No instrument flagged for auto downloading.
  I '$D(^LAB(62.4,"AE")) D EXIT Q
@@ -53,9 +63,7 @@ DQ ; Entry point from Taskman.
  ; Quit if "Don't Start/Collect" flags set.
  I +$G(^LA("ADL","STOP"),0)>1 Q
  ;
- ; Update XTMP entry to let auto download know we're running for this process
- ;  and build table of tests to check for downloading}
- D XTMP,BUILD
+ D BUILD
  ;
  F  D UID Q:TOUT>60
  D EXIT
@@ -71,9 +79,9 @@ UID ; Start loop to monitor for accessions to download.
  ;
  F  S LA7UID=$O(^LA("ADL","Q",LA7UID)) Q:LA7UID=""!(ZTSTOP)!(TOUT)  D
  . I +$G(^LA("ADL","STOP"))>0 S TOUT=61 Q
- . I $$S^%ZTLOAD("Processing Lab UID "_LA7UID) S ZTSTOP=1,TOUT=61 Q
+ . I $$S^%ZTLOAD S ZTSTOP=1,TOUT=61 Q
  . ; Lock this UID, synch setting/deleting when another job is attempting to set node.
- . D LOCK^DILF("^LA(""ADL"",""Q"",LA7UID)")
+ . L +^LA("ADL","Q",LA7UID):1
  . ; Unable to get lock, go on to next UID, check again on next go around.
  . I '$T Q
  . ; Get accession info from ^LRO(68,"C").
@@ -92,13 +100,13 @@ UID ; Start loop to monitor for accessions to download.
  . . N LA7UID
  . . ; File build (entry^routine) from fields #93 and #94 in file #62.4.
  . . D @$P(LA7AUTO(LA7INST,9),"^",3,4)
- . D CLEANUP,XTMP
+ . D CLEANUP
  ;
  F  D  Q:$O(^LA("ADL","Q",""))'=""  Q:TOUT>60 
  . I $G(^LA("ADL","STOP"))>1 S TOUT=61 Q
  . ; Task has been requested to stop.
- . I $$S^%ZTLOAD("Idle - waiting for new accessions to process") S TOUT=61,ZTSTOP=1 Q
- . S TOUT=TOUT+1 H 5 D XTMP
+ . I $$S^%ZTLOAD S TOUT=61,ZTSTOP=1 Q
+ . S TOUT=TOUT+1 H 5
  ;
  Q
  ;
@@ -188,27 +196,11 @@ CLEANUP ; Delete flag after accession has been checked.
  Q
  ;
  ;
-CHKTSK ; Check if we shoud task the auto download processing routine.
- ; Check if we recently tasked the processing routine for this process by compaing values in the XTMP global.
- ; Done to avoid repetitive locking attempts on each new accessione since the FileMan locking API uses a site-defined timeout which is usually 3 seconds
- ; but can be more. Slows down the interface if on each accession we are waiting 3 or more seconds for the lock to find out if the processing routine
- ; is already running.
- ;
- N LA7X,LA7Y
- S LA7X=$H,LA7Y=$G(^XTMP("LA7ADL",1))
- I $P(LA7X,",")=$P(LA7Y,","),($P(LA7X,",",2)-$P(LA7Y,",",2))<240 Q
- ;
- ; Lock zeroth node.
- ; Quit if another process has lock - either another job setting node or the background job.
- D LOCK^DILF("^LA(""ADL"",0)")
- I '$T Q
- ;
 ZTSK ; Task background job to run.
  ;
- ; Call here to queue this processing routine to run in the background.
+ N ZTDESC,ZTSAVE,ZTDTH,ZTIO,ZTRTN
  ;
  ; Task background job if not running.
- N ZTDESC,ZTSAVE,ZTDTH,ZTIO,ZTRTN
  S ZTRTN="DQ^LA7ADL",ZTDESC="Lab Auto Download",ZTIO="",ZTDTH=$H
  D ^%ZTLOAD
  ;
@@ -216,7 +208,6 @@ ZTSK ; Task background job to run.
  ;
  ;
 BUILD ; Build TMP global with list of tests for instruments flagged for auto download.
- ;
  D BUILD^LA7ADL1
  ;
  ; Set flag to "Running".
@@ -225,25 +216,17 @@ BUILD ; Build TMP global with list of tests for instruments flagged for auto dow
  Q
  ;
  ;
-XTMP ; Set/update XTMP with current run time of this processing routine
- ;
- S DT=$$DT^XLFDT
- S ^XTMP("LA7ADL",0)=DT_"^"_DT_"^LAB AUTO DOWNLOAD PROCESS TASKING"
- S ^XTMP("LA7ADL",1)=$H
- Q
- ;
- ;
 EXIT ; Exit and cleanup.
  ;
  ; Release lock on LA("ADL") global.
  L -^LA("ADL",0)
  ;
- K ^TMP("LA7",$J),^TMP($J),^XTMP("LA7ADL",1)
- K LA7ADL,LA7AUTO,LA7NVAF,LRAA,LRAD,LRAN,TOUT
+ K ^TMP("LA7",$J),^TMP($J)
+ K LA7ADL
+ K LRAA,LRAD,LRAN
+ K TOUT
  ;
  ; Clear flag if normal shutdown, no new accessions.
  I +$G(^LA("ADL","STOP"))<2 K ^LA("ADL","STOP")
  ;
- ; Set flag for taskman to cleanup task.
- I $D(ZTQUEUED) S ZTREQ="@"
  Q

@@ -1,119 +1,155 @@
-PRS8EX0 ;HISC/MRL,WOIFO/JAH,SAB-DECOMP,EXCEPTIONS (cont'd) ;1/30/2007
- ;;4.0;PAID;**2,22,56,111**;Sep 21, 1995;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRS8EX0 ;HISC/MRL,WIRMFO/JAH-DECOMP,EXCEPTIONS(cont'd) ;8/30/2000
+ ;;4.0;PAID;**2,22,56**;Sep 21, 1995
  ;
-ENCAP ;
- ; This routine checks if the current day encapsulates other days that
- ; should be automatically charged to WP or NP by the software. If so,
- ; appropriate encapsulated days are charged.  This routine is only
- ; called when the employee has a daily tour.
- ; inputs
- ;   PY - current pay period IEN
- ;   DY - current day number
- ;   TT - type of time posted on current day
- ;   TT(1) - data from ACT^PRS8EX for the type of time in TT
- ;   DFN - employee IEN
+LOOP ; --- return here to continue backing up days
  ;
- ; day must be in pay period and posted with WP or NP
- Q:(DY<1)!(DY>14)
- Q:"^NP^WP^"'[(U_TT_U)
+ ;   Loop forwards & backwards to find first working day 
+ ;   after & prior to this day off
  ;
- N SCHDY,SCHEX,SCHPY,CHGDAY
+ ;   I TT(PRIOR)=TT(AFTER) S X=? D SET
  ;
- ; find prior scheduled work day that is not holiday excused
- D WORKDAY(DFN,PY,DY,-1,.SCHPY,.SCHDY,.SCHEX,.CHGDAY)
+ N HOLIDAY
+ S HOLIDAY=0 I DY<1!(DY>14) G END
+ S (BACK,FRONT)=PY_U_DY_U_0
+ N QUIT
  ;
- ; If prior work day is in a previous pay period and has same exception
- ; as the current day then charge the encapsulated days found between.
- ; Note: If prior work day is in current pay period then no action
- ; needed since the look forward from that prior day would have
- ; already taken care of encapsulated days.
- I SCHEX=TT,$D(CHGDAY),SCHPY'=PY D SET(DFN,PY,TT,$P(TT(1),U,4),.CHGDAY)
+ ; check previous days until we find a working day or Holiday with
+ ; this day as WP,NP, or SL
  ;
- ; find next scheduled work day that is not holiday excused
- D WORKDAY(DFN,PY,DY,1,.SCHPY,.SCHDY,.SCHEX,.CHGDAY)
+ S QUIT=0
+ F  S $P(BACK,U,1,2)=$$WRKDAY(.BACK,-1) Q:+BACK(0)  D  Q:QUIT
+ .; Set Quit if there was no working day in the current pay
+ .; period or the previous pay period.
+ .I $P(BACK,U,2)'>1&($P(BACK,U,1)=PPD(0)) S QUIT=1 Q
+ .S $P(BACK,U,3)=1
  ;
- ; If next work day has same exception as current day then charge
- ; encapsulated days found between.
- I SCHEX=TT,$D(CHGDAY) D SET(DFN,PY,TT,$P(TT(1),U,4),.CHGDAY)
+ ; check future days until we find a working day or Holiday with
+ ; this day as WP,NP, or SL
  ;
+ S QUIT=0
+ F  S $P(FRONT,U,1,2)=$$WRKDAY(.FRONT,1) Q:+FRONT(0)  D  Q:QUIT
+ .; Set Quit if there was no working day in the current pay
+ .; period or the next pay period.
+ .I $P(FRONT,U,2)'<14&($P(FRONT,U,1)=PPD(15)) S QUIT=1 Q
+ .S $P(FRONT,U,3)=1
+ K QUIT
+ ;
+ ; IF we ran into a holiday both ways (with current day '= SL,NP,WP)
+ ; OR IF the days on either side are work days THEN Quit.
+ G END:((+FRONT(0)=2)&(+BACK(0)=2))!('$P(BACK,U,3)&'$P(FRONT,U,3))
+ ;
+ I $P(BACK,U,3),+BACK'=+PY D  ; days off which go into prior PPD
+ . I $P(BACK(0),"^",2)]"",$P(DAY(DY,2),"^",3)=$P(BACK(0),"^",2) D
+ ..; 
+ ..; set days off when ??
+ ..  I $P(BACK(0),"^",2)="SL",HOLIDAY=1 F Z=1:1:DY-2 D
+ ...;  never charge leave on a holiday or a day that has already been
+ ...;  counted by ENCAP^PRS8EX0.
+ ...   I '($$HOLIDAY^PRS8UT(PY,DFN,Z)),'$D(^TMP($J,"PRS8",Z,2,0)) D
+ ....     D SETOFF
+ ....     D AUTO^PRSATP0
+ ..  E  F Z=1:1:DY-1 D
+ ...;  never charge leave on a holiday or a day that has already been
+ ...;  counted by ENCAP^PRS8EX0.
+ ...   I '$$HOLIDAY^PRS8UT(PY,DFN,Z),'$D(^TMP($J,"PRS8",Z,2,0)) D
+ ....      D SETOFF
+ ....      D AUTO^PRSATP0
+ ..Q
+ .Q
+ENCAP ; Check to see if the scheduled days off fall within a period of 
+ ; approved AL or a period or approved LWOP.  If they are then charge
+ ; them as AL or LWOP respectively.
+ ;
+ I $P(FRONT,U,3) D  ; days off after this day
+ .  I $P(FRONT(0),"^",2)="SL",HOLIDAY=1 S $P(FRONT,"^",2)=$P(FRONT,"^",2)-1
+ .  S D=$S(+FRONT=+PY:$P(FRONT,U,2),1:15)
+ .  I $P(FRONT(0),"^",2)]"",$P(DAY(DY,2),"^",3)=$P(FRONT(0),"^",2) D
+ ..    F Z=DY+1:1:D-1 D
+ ...;    never charge leave on a holiday or a day that has already been
+ ...;    counted by ENCAP^PRS8EX0.
+ ...     I '$$HOLIDAY^PRS8UT(PY,DFN,Z),'$D(^TMP($J,"PRS8",Z,2,0)) D
+ ....       D SETOFF
+ ....       D AUTO^PRSATP0
+ ..Q
+ .Q
+ ;
+END ; --- all done here     
  Q
  ;
-WORKDAY(DFN,PY,DY,PRSDIR,SCHPY,SCHDY,SCHEX,CHGDAY) ; find work day
- ; inputs
- ;   DFN - employee IEN
- ;   PY  - current pay period IEN
- ;   DY  - current day number
- ;   PRSDIR - direction (-1 to look back or +1 to look forward)
- ; outputs
- ;   SCHPY - passed by reference, work day pay period or null
- ;   SCHDY - passed by reference, work day day number or null
- ;   SCHEX - passed by reference, work day exception or null
- ;   CHGDAY() - passed by reference, array of days in current pay period
- ;              that could be charged due to encapsulation and were
- ;              encounted during the search for the work day
- ;              format ENCDAY(day number)=null value
+WRKDAY(BACK,Y) ;function increments or decrements the day passed in BACK. 
+ ; If the new day is a work day, the function returns true and the 
+ ; posted type of work for that day in BACK(0).
  ;
- N DONE,EXC,LOOPPY,LOOPDY,PPCNT,TOD
- ; init outputs
- S (SCHPY,SCHDY,SCHEX)=""
- K CHGDAY
+ ;Variables
+ ; BACK    = Contains 3 pieces delimited by ^ .
+ ;           Piece 1 = pay period ien.
+ ;           Piece 2 = current day number
+ ;           Piece 3 = 0
+ ; BACK(0) = Since BACK is called by reference this is returned
+ ;           to the calling function.
+ ;           it is set to false (0) if we didn't find a 
+ ;           working day.
+ ; Y       = Flag determines if we're looking fore or aft.
+ ; DY      = Day number
+ ; PY      = Pay period ien
+ ; TT      = Type of time posted on the stationary day being examined.
  ;
- ; loop thru days to find the first scheduled work day that is
- ; not holiday excused
- S DONE=0,LOOPPY=PY,LOOPDY=DY,PPCNT=1
- F  D  I DONE Q
- . ; move one day in appropriate direction
- . S LOOPDY=LOOPDY+PRSDIR
- . ;
- . ; check if loop day moved into a different pay period
- . I LOOPDY<1 S LOOPPY=$O(^PRST(458,LOOPPY),-1),LOOPDY=14,PPCNT=PPCNT+1
- . I LOOPDY>14 S LOOPPY=$O(^PRST(458,LOOPPY),1),LOOPDY=1,PPCNT=PPCNT+1
- . ;
- . ; check for loop ending conditions (related to pay period/time card)
- . I PPCNT>2 S DONE=1 Q  ; only check current and one other pay period
- . I LOOPPY'>0 S DONE=1 Q  ; ran out of pay periods
- . I '$D(^PRST(458,LOOPPY,"E",DFN,0)) S DONE=1 Q  ; no empl. time card
- . ;
- . ; determine tour and exception for loop day
- . S TOD=$P($G(^PRST(458,LOOPPY,"E",DFN,"D",LOOPDY,0)),U,2)
- . S EXC=$P($G(^PRST(458,LOOPPY,"E",DFN,"D",LOOPDY,2)),U,3)
- . ;
- . ; check if work day found
- . I TOD'=1,EXC'="HX" S SCHPY=LOOPPY,SCHDY=LOOPDY,SCHEX=EXC,DONE=1 Q
- . ;
- . ; work day was not found yet
- . ; add this day to list if it could potentially be charged
- . Q:LOOPPY'=PY  ; not in current pay period
- . Q:$D(^TMP($J,"PRS8",LOOPDY,2,0))  ; day already charged
- . I TOD=1,"^CP^NP^"'[(U_EXC_U) S CHGDAY(LOOPDY)="" ; add day off to list
- . I TOD>1,EXC="HX" S CHGDAY(LOOPDY)="" ; add holiday to list
+ N DY,PY
+ ;
+ ; I don't see how Y can be anything but 1 or -1 since it is
+ ; passed by value.
+ I Y>14!(Y<-14) S BACK(0)=2 Q "-1^-1"
+ ;
+ S PY=+BACK,DY=+$P(BACK,"^",2)
+ ;
+ ; If not at bounds of pay period increment or decrement day,
+ ; else we are at the last or first day & need to move into the 
+ ; previous or next pay period respectively.
+ ;
+ I Y<0&(DY+Y>0)!(Y>0&(DY+Y<15)) S DY=DY+Y
+ E  I Y<0 S DY=DY+Y+14,PY=+PPD(0)
+ E  I Y>0 S DY=DY+Y-14,PY=+PPD(15)
+ ;
+ ; If this day is holiday & type of time is either (W/Out Pay,
+ ; Non Pay, or Sick Leave) then quit.
+ ;
+ S HOLIDAY=$$HOLIDAY^PRS8UT(PY,DFN,DY)
+ I HOLIDAY,TT'="WP",TT'="NP",TT'="SL",TT'="AL",TT'="RL" S BACK(0)=2 Q "-1^-1"
+ ;
+ ; If current day is a day off (tour of duty = 1) then return 
+ ; back(0) as false,
+ ; Or if current day is holiday excused & type of time is either
+ ; (W/Out Pay, Non Pay, or Sick Leave) return back(0)=false & quit,
+ ; Otherwise set BACK(0) = true^type of time posted on current day.
+ ;
+ I $P($G(^PRST(458,PY,"E",DFN,"D",DY,0)),"^",2)=1 S BACK(0)=0
+ E  I $P($G(^PRST(458,PY,"E",DFN,"D",DY,2)),"^",3)="HX" D
+ .I TT="WP"!(TT="NP")!(TT="SL")!(TT="AL")!(TT="RL") S BACK(0)=0
+ E  S BACK(0)="1^"_$P($G(^PRST(458,PY,"E",DFN,"D",DY,2)),"^",3)
+ ;
+ Q PY_U_DY
+ ;
+SETOFF ; --- enter here to set days off
+ N ZZ
+ S ZZ=WK,WK=$S(Z<8:1,1:2),X=$P(TT(1),"^",4)
+ I X]"" D
+ .S DAY(DY,"W")=$P(TT(1),"^",3) D SET
+ .I VAR="V" S X="M" D SET
+ .Q
+ S WK=ZZ
  Q
+SET ; --- enter here to set without VAL defined
+ ; Quit if this day has already been counted.
  ;
-SET(DFN,PY,TT,PC,CHGDAY) ; automatically charge days
+ Q:$D(^TMP($J,"PRS8",Z,2,0))
  ;
- ; inputs
- ;   DFN - employee IEN
- ;   PY - pay period IEN
- ;   TT - type of time to charge
- ;   PC - 4th piece of data from ACT^PRS8EX for TT
- ;   CHGDAY - array of days passed by reference, CHGDAY(day number)=""
+ I +X S $P(WK(WK),"^",+X)=$P(WK(WK),"^",+X)+1
+ E  S X=$A(X)-64,$P(WK(3),"^",+X)=$P(WK(3),"^",+X)+1
  ;
- N LOOPDY,PC3,WEEK
+ ; Update the ^TMP global denoting that this day has been charged
+ ; because it was wholly within a period of AL or wholly within
+ ; a period of LWOP.
+ ; This will keep this day from being accidently counted twice.
  ;
- ; loop thru days in list
- S LOOPDY=0 F  S LOOPDY=$O(CHGDAY(LOOPDY)) Q:'LOOPDY  D
- . ;
- . ; increment WK() count
- . I +PC S WEEK=$S(LOOPDY>7:2,1:1),$P(WK(WEEK),"^",+PC)=$P(WK(WEEK),"^",+PC)+1
- . E  S PC3=$A(PC)-64,$P(WK(3),"^",+PC3)=$P(WK(3),"^",+PC3)+1
- . ;
- . ; track days have been automatically charged in ^TMP
- . S ^TMP($J,"PRS8",LOOPDY,2,0)=TT
- . ;
- . ; update time card if decomp called from pay period certification
- . I $G(APDT) D
- . . S $P(^PRST(458,PY,"E",DFN,"D",LOOPDY,2),"^",3)=TT
- . . S ^PRST(458,PY,"E",DFN,"D",LOOPDY,3)="Leave posted automatically"
- . . S $P(^PRST(458,PY,"E",DFN,"D",LOOPDY,10),"^",1,4)="T^.5^"_APDT_"^2"
+ S ^TMP($J,"PRS8",Z,2,0)=$S(X=1:"AL",X=2:"SL",X=3:"WP",X=6:"RL",1:"NP")
  Q

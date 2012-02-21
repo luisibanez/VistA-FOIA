@@ -1,5 +1,5 @@
-PXBPORD ;ISL/JVS - PROMPT ORDERING PROVIDER ; 6/27/07 6:45pm
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**124,186**;Aug 12, 1996;Build 3
+PXBPORD ;ISL/JVS - PROMPT ORDERING PROVIDER ;6/17/03  08:56
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**124**;Aug 12, 1996
  ;
 ORD ;--Ordering Provider
  N TIMED,DATA,DIC,X,Y,CPTORD
@@ -8,11 +8,7 @@ ORD ;--Ordering Provider
  D WIN17^PXBCC(PXBCNT),LOC^PXBCC(16,0)
  W IOSC,IOEDEOP
 O ;--SECOND ENTRY POINT
- ; begin patch *186*
- ;W IORC," Enter Ordering Provider: "_$G(CPTORD)_"//",IOELEOL
- W IORC," Enter Ordering Provider: "_$G(CPTORD)_" // "
- W IOSC,IOELEOL
- ; end patch *186*
+ W IORC," Enter Ordering Provider: "_$G(CPTORD)_"//",IOELEOL
  R DATA:DTIME
 O1 ;---
  X TIMED I  G ORDX
@@ -29,19 +25,8 @@ O1 ;---
  I DATA'=" ",DATA'["^",DATA'="" S ^DISV(DUZ,"PXBORD-22")=DATA
  I DATA=" ",$D(^DISV(DUZ,"PXBORD-22")) S DATA=^DISV(DUZ,"PXBORD-22") W DATA
  ;--If a "?" is NOT entered during lookup
- ; begin patch *186*
- ; S X=DATA,DIC=200,DIC(0)="OQME" D ^DIC
- ; I Y=-1 S $P(REQE,U,22)="" G ORDX
- S DIC("S")="I $$ACTIVPRV^PXAPI(Y,$G(IDATE,DT))"
  S X=DATA,DIC=200,DIC(0)="OQME" D ^DIC
- I +Y>0 D
- . W IORC W:$G(CPTORD)'=X X W IOEDEOP
- E  D  G O
- . N EDATA S EDATA=X
- . D LOC^PXBCC(16,0),HELP^PXBUTL0("PRVM")
- . D HELP1^PXBUTL1("CON") R X:DTIME
- . D LOC^PXBCC(16,0) W IOSC,IOEDEOP
- ; end patch *186*
+ I Y=-1 S $P(REQE,U,22)="" G ORDX
  ;
  S $P(REQI,U,22)=+Y,$P(REQE,U,22)=$P(Y,U,2)
 ORDX ;--EXIT AND CLEANUP

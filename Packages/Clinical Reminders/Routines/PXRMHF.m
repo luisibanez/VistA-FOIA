@@ -1,5 +1,5 @@
-PXRMHF ; SLC/PKR - Handle Health Factor findings. ;11/02/2009
- ;;2.0;CLINICAL REMINDERS;**6,17**;Feb 04, 2005;Build 102
+PXRMHF ; SLC/PKR - Handle Health Factor findings. ;12/23/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;=====================================================
 CATSORT(FIEVAL,FIND0,FARR) ;Sort all the true health factor findings
@@ -141,7 +141,6 @@ OUTPUT(INDENT,IFIEVAL,NLINES,TEXT) ;Produce the clinical
  ;maintenance output.
  N EM,FIEN,IND,JND,LVL,NOUT,PNAME,TEMP,TEXTOUT,VDATE
  S FIEN=$P(IFIEVAL("FINDING"),";",1)
- ;DBIA #3083
  S PNAME=$P(^AUTTHF(FIEN,0),U,1)
  S NLINES=NLINES+1
  S TEXT(NLINES)=$$INSCHR^PXRMEXLC(INDENT," ")_"Health Factor: "_PNAME
@@ -170,6 +169,6 @@ WARN(HF0) ;Issue a warning if a health factor is missing its category.
  S ^TMP("PXRMXMZ",$J,1,0)="Health Factor "_$P(HF0,U,1)
  S ^TMP("PXRMXMZ",$J,2,0)="does not have a category, this is a required field."
  S ^TMP("PXRMXMZ",$J,3,0)="This health factor will be ignored for all patients until the problem is fixed."
- D SEND^PXRMMSG("PXRMXMZ",XMSUB)
+ D SEND^PXRMMSG(XMSUB)
  Q
  ;

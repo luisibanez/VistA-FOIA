@@ -1,6 +1,5 @@
-ORCD ; SLC/MKB - Order Dialog utilities ;12/15/2006
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**8,38,68,94,161,141,195,215,243**;Dec 17,1997;Build 242
- ;Per VHA Directive 2004-038, this routine should not be modified.
+ORCD ; SLC/MKB - Order Dialog utilities ;9/21/2005
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**8,38,68,94,161,141,195,215**;Dec 17,1997
 INPT() ; -- Return 1 or 0, if patient/order sheet = inpatient
  N Y S Y=$S($G(ORWARD):1,$G(^DPT(+ORVP,.105)):1,1:0)
  I $G(OREVENT) D  ;override if delayed order
@@ -16,7 +15,6 @@ EXT(P,I,F) ; -- Returns external value of ORDIALOG(Prompt,Instance)
  N TYPE,PARAM,FNUM,IENS,X,Y,J,Z
  S TYPE=$E($G(ORDIALOG(P,0))),PARAM=$P($G(ORDIALOG(P,0)),U,2)
  S X=$G(ORDIALOG(P,I)) I X="" Q ""
- I TYPE="N",X<1 S X=0_+X I X="00" S X=0
  I "FNW"[TYPE Q X
  I TYPE="Y" Q $S(X:"YES",X=0:"NO",1:"")
  I TYPE="D" S:'$L($G(F)) F=1 Q $$FMTE^XLFDT(X,F)
@@ -67,9 +65,9 @@ FTDCOMP(X1,X2,OPER) ; -- Compares free text dates from prompts X1 & X2
  ;
 TIME(X) ; -- Returns 00:00 PM formatted time
  N Y,Z,%DT
- I X?1U,"BNE"[X Q $S(X="B":"BREAKFAST",X="N":"NOON",X="E":"EVENING",1:"")
  I "NOON"[X Q X
  I "MIDNIGHT"[X Q "MIDNIGHT"
+ I X?1U,"BNE"[X Q $S(X="B":"BREAKFAST",X="N":"NOON",X="E":"EVENING",1:"")
  S X="T@"_X,%DT="TX" D ^%DT I Y'>0 Q ""
  S Z=$$FMTE^XLFDT(Y,"2P"),Z=$P(Z," ",2)_$$UP^XLFSTR($P(Z," ",3))
  Q Z

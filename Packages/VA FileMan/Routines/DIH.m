@@ -1,13 +1,13 @@
-DIH ;SFISC/GFT-HISTOGRAM ;8:19 AM  28SEP2004
- ;;22.0;VA FileMan;**2,61,144**;Mar 30, 1999;Build 5
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIH ;SFISC/GFT-HISTOGRAM ;8:19 AM  21 Sep 2000
+ ;;22.0;VA FileMan;**2,61**;Mar 30, 1999
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  I $O(^DOSV(0,IO(0),0))'>0 W !,$C(7),"NO SUB-COUNTS WERE RUN" Q
  K ZTSK S:$D(^%ZTSK) %ZIS="QM" D ^%ZIS G ENDK:POP,QUE:$D(IO("Q"))
 DQ S J=$I,DN="=$O(^DOSV(0,J," F X=0:1 Q:'$D(^DOSV(0,J,"BY",X+1))
  G END:'X S A=^(1),DD=$P(A,U,3) I $D(^DD(+A,+$P(A,U,2),0)) S DD=^(0)
  S T=$P(DD,U,2),DP=$P(DD,U,3),DF=$S(T["S":1,T["P":2,T["D"!($P(A,U,7)["D"):3,1:0)
  S DMX=DN_X,DX="",F=X
-F S DMX=DMX_",D"_F,DX=DX_"S D"_F_"="""" F X=X:0 S D"_F_DMX_")) Q:D"_F_"=""""  "_$P("S X=X+1,DS(X)=0,DD(X)=0,DV(X)="_$E("-",$P(A,U,4)["-")_"D"_X_" ",U,F=X),F=F-1 G F:F
+F S DMX=DMX_",D"_F,DX=DX_"S D"_F_"="""" F X=X:0 S D"_F_DMX_")) Q:D"_F_"=""""  "_$P("S X=X+1,DS(X)=0,DD(X)=0,DV(X)=D"_X_" ",U,F=X),F=F-1 G F:F
  S DX=DX_"S:$D(^(D1,F,""N"")) DD(X)=DD(X)+^(""N"") S:$D(^(""S"")) DS(X)=DS(X)+^(""S"")"
  I $E(IOST)="C" S DIFF=1
  S F=-1,C="*",DIHIOM=IOM-23,DIHIOSL=IOSL-8 U IO W:$D(DIFF)&($Y) @IOF S DIFF=1

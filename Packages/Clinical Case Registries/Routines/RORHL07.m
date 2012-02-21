@@ -1,10 +1,12 @@
-RORHL07 ;HOIFO/BH - HL7 INPATIENT PHARMACY: ORC,RXE ; 5/22/06 1:29pm
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORHL07 ;HOIFO/BH - HL7 INPATIENT PHARMACY: ORC,RXE ; 8/26/05 2:40pm
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
  ; #93           Get stop code from the file #44 (controlled)
  ; #1876         Read access to file #59 (controlled)
+ ; #1977         Read access to file #52 (controlled)
+ ; #2497         Read access to file #55 (controlled)
  ; #10040        Read the INSTITUTION field of file #44 (supported)
  ; #10060        Read access to file #200 (supported)
  ; #10090        Read access to file #4 (supported)
@@ -13,8 +15,7 @@ RORHL07 ;HOIFO/BH - HL7 INPATIENT PHARMACY: ORC,RXE ; 5/22/06 1:29pm
  ;
  ;***** INPATIENT PHARMACY ORC SEGMENT BUILDER
  ;
- ; NODE          Closed root of a subtree that stores the output of
- ;               the PSS432^PSS55 Pharmacy API
+ ; RORIENS       IENS of Unit/Dose in subfile #55.06
  ;
  ; .RORORC       Array with info (from OEL^PSOORRL)
  ;
@@ -23,10 +24,12 @@ RORHL07 ;HOIFO/BH - HL7 INPATIENT PHARMACY: ORC,RXE ; 5/22/06 1:29pm
  ;        0  Ok
  ;       >0  Non-fatal error(s)
  ;
-ORC(NODE,RORORC) ;
+ORC(RORIENS,RORORC) ;
  N BUF,CS,ERRCNT,IEN42,IEN44,RC,RORMSG,RORSEG,TMP
  S (ERRCNT,RC)=0
  D ECH^RORHL7(.CS)
+ ;--- Check the parameters
+ S:$E(RORIENS,$L(RORIENS))'="," RORIENS=RORIENS_","
  ;
  ;--- Initialize the segment
  S RORSEG(0)="ORC"
@@ -35,7 +38,9 @@ ORC(NODE,RORORC) ;
  S RORSEG(1)="NW"
  ;
  ;--- ORC-2 - Placer Order Number
- S RORSEG(2)=RORDFN_"V"_$P($G(@NODE@(.01)),U)_CS_"IP"
+ S TMP=$$GET1^DIQ(55.06,RORIENS,.01,,,"RORMSG")
+ Q:$G(DIERR) $$DBS^RORERR("RORMSG",-9,,,55.06,RORIENS)
+ S RORSEG(2)=RORDFN_"V"_TMP_CS_"IP"
  ;
  ;--- ORC-12 - Provider
  S BUF=+$P($G(RORORC("P",0)),U)
@@ -54,7 +59,9 @@ ORC(NODE,RORORC) ;
  S RORSEG(16)=CS_CS_CS_CS_"NEW"
  ;
  ;--- ORC-17 - Division
- S IEN42=+$P($G(@NODE@(9)),U)
+ S IEN42=+$$GET1^DIQ(55.06,RORIENS,9,"I",,"RORMSG")
+ I $G(DIERR)  D  S ERRCNT=ERRCNT+1
+ . D DBS^RORERR("RORMSG",-99,,,55.06,RORIENS)
  I IEN42>0  D
  . S IEN44=+$$GET1^DIQ(42,IEN42_",",44,"I",,"RORMSG")
  . I $G(DIERR)  D  S ERRCNT=ERRCNT+1
@@ -68,9 +75,7 @@ ORC(NODE,RORORC) ;
  ;
  ;***** INPATIENT PHARMACY RXE SEGMENT BUILDER
  ;
- ; NODE          Closed root of a subtree that stores the output of
- ;               the PSS432^PSS55 Pharmacy API
- ;
+ ; RORIENS       IENS of Pharmacy Record in subfile #55.06
  ; .RORRXE       Array containing info (from OEL^PSJORRL)
  ;
  ; Return Values:
@@ -78,15 +83,21 @@ ORC(NODE,RORORC) ;
  ;        0  Ok
  ;       >0  Non-fatal error(s)
  ;
-RXE(NODE,RORRXE) ;
+RXE(RORIENS,RORRXE) ;
  N BUF,CS,ERRCNT,IDGN,II,INDF,RC,RORMSG,RORMR,ROROUT,RORUOUT,RORQT,RORSEG,TMP
- Q:$P($G(RORRXE(0)),U)="" 0
- D ECH^RORHL7(.CS)
  S (ERRCNT,RC)=0
+ D ECH^RORHL7(.CS)
+ ;--- Check the parameters
+ S:$E(RORIENS,$L(RORIENS))'="," RORIENS=RORIENS_","
+ ;
+ Q:$P($G(RORRXE(0)),U)="" 0
  ;
  ;--- Load the data
- S RORMR=$$ESCAPE^RORHL7($P($G(@NODE@(3)),U,2))
- S TMP=$P($G(@NODE@(26)),U),RORQT=""
+ D GETS^DIQ(55.06,RORIENS,"3;26","E","ROROUT","RORMSG")
+ I $G(DIERR)  D  S ERRCNT=ERRCNT+1
+ . D DBS^RORERR("RORMSG",-99,,,55.06,RORIENS)
+ S RORMR=$$ESCAPE^RORHL7($G(ROROUT(55.06,RORIENS,3,"E")))
+ S TMP=$G(ROROUT(55.06,RORIENS,26,"E")),RORQT=""
  S:TMP'="" $P(RORQT,CS,8)=$$ESCAPE^RORHL7(TMP)
  ;
  S II=0

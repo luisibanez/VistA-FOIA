@@ -1,8 +1,7 @@
-PSGVBWU ;BIR/CML3,MV-GET ORDERS FOR COMPLETE/VERIFY ; 6/2/10 10:44am
- ;;5.0; INPATIENT MEDICATIONS ;**3,44,47,67,58,110,111,196,241**;16 DEC 97;Build 10
+PSGVBWU ;BIR/CML3,MV-GET ORDERS FOR COMPLETE/VERIFY ;15 May 98 / 9:26 AM
+ ;;5.0; INPATIENT MEDICATIONS ;**3,44,47,67,58,110,111**;16 DEC 97
  ;
  ; Reference to ^PS(55 is supported by DBIA 2191.
- ; Reference to ^PS(51.1 is supported by DBIA #2177
  ;
 ECHK(DFN,O,DT,SD) ;
  N OK S OK=0
@@ -12,10 +11,7 @@ ECHK(DFN,O,DT,SD) ;
  Q OK
 ECHK2(DFN,O,DT,SD) ;
  N OK S OK=0
- ;*PSJ*5*241: Include one-time IV orders
- N SCH,STYPE S STYPE=0,SCH=$P($G(^PS(55,DFN,"IV",O,0)),U,9)
- S:SCH]"" SCH=$O(^PS(51.1,"APPSJ",SCH,STYPE)) S:SCH]"" STYPE=$P(^PS(51.1,SCH,0),U,5)
- I $P($G(^PS(55,DFN,"IV",O,0)),U,17)'["D" S ND=$G(^(0)) Q:ND="" 0  S ND4=$G(^(4)) D:(SD>PSGDT)!((SD>PSJPAD)&($G(STYPE)="O"))
+ I $P($G(^PS(55,DFN,"IV",O,0)),U,17)'["D" S ND=$G(^(0)) Q:ND="" 0  S ND4=$G(^(4)) D:SD>PSGDT
  . I (+PSJSYSU=1)&('$P(ND4,U,+PSJSYSU)) S OK=1 Q
  . I (+PSJSYSU=3)&('$P(ND4,U,+PSJSYSU+1)) S OK=1 Q
  Q OK
@@ -34,14 +30,10 @@ CNTORDRS ; Display # pending orders by type and ward group
  F STAT="P","N","I" F DFN=0:0 S DFN=$O(^PS(53.1,"AS",STAT,DFN)) Q:'DFN  D
  .W "." S PSJWG=$$WGNM($P($G(^DPT(DFN,.1)),U))
  .F ON=0:0 S ON=$O(^PS(53.1,"AS",STAT,DFN,ON)) Q:'ON  D
- .. N OWG,A,CGN,CGNM
- ..;GMZ:PSJ*5*196;Display order totals on all clinic groups in which a clinic belongs.
- .. S OWG=PSJWG I PSJWG="ZZ",$D(^PS(53.1,ON,"DSS")) S A=^("DSS") D CGNM(A,OWG,.CGNM) D
- ... I '$D(CGNM) S CGN=$P(^SC(+A,0),"^")_"^C",PSJWG=$P(^SC(+A,0),"^")_"^C" D
- ....I CGN]"" S TYP=$P($G(^PS(53.1,ON,0)),U,4),OTYP=$S((STAT="P")&(TYP="F"):1,(STAT="P")&(TYP="I"):1,(STAT="P")&(TYP="U"):2,TYP="F":3,TYP="I":3,1:4) D CNTSET(PSJWG,OTYP) S PSJWG=OWG Q 
- ... S PSJSQ="" F  S PSJSQ=$O(CGNM(+A,PSJSQ)) Q:PSJSQ=""  D
- .... S (PSJWG,CGN)=$P(CGNM(+A,PSJSQ),"^",1)_"^CG" I CGN]"" S TYP=$P($G(^PS(53.1,ON,0)),U,4),OTYP=$S((STAT="P")&(TYP="F"):1,(STAT="P")&(TYP="I"):1,(STAT="P")&(TYP="U"):2,TYP="F":3,TYP="I":3,1:4) D CNTSET(PSJWG,OTYP) S PSJWG=OWG
- .. Q:$G(CGN)]""  S TYP=$P($G(^PS(53.1,ON,0)),U,4),OTYP=$S((STAT="P")&(TYP="F"):1,(STAT="P")&(TYP="I"):1,(STAT="P")&(TYP="U"):2,TYP="F":3,TYP="I":3,1:4) D CNTSET(PSJWG,OTYP) S PSJWG=OWG
+ .. N OWG,A
+ .. S OWG=PSJWG I PSJWG="ZZ",$D(^PS(53.1,ON,"DSS")) S A=^("DSS"),PSJWG=$$CGNM(A,OWG)
+ ..;S TYP=$S(STAT="N"!(STAT="I"):"N",1:$P($G(^PS(53.1,ON,0)),U,4)) D CNTSET(PSJWG,$F("FIUN",TYP)-1)
+ ..S TYP=$P($G(^PS(53.1,ON,0)),U,4),OTYP=$S((STAT="P")&(TYP="F"):1,(STAT="P")&(TYP="I"):1,(STAT="P")&(TYP="U"):2,TYP="F":3,TYP="I":3,1:4) D CNTSET(PSJWG,OTYP) S PSJWG=OWG
  ;
  I '$D(^XTMP("PSJPVNV")) D
  .N PSJXR S PSJXR=$S(+PSJSYSU=3:"APV",1:"ANV") F DFN=0:0 S DFN=$O(^PS(55,PSJXR,DFN)) Q:'DFN  D
@@ -49,23 +41,15 @@ CNTORDRS ; Display # pending orders by type and ward group
  ...S PSGST=$P($G(^PS(55,DFN,5,PSGORD,0)),U,7),PSGFD=$P($G(^(2)),U,4) I ((PSGST="O")&(PSJPAD>0)&(PSGFD>PSJPAD))!((PSGST'="O")&(PSGFD'<PSGODT)) I $$ECHK(DFN,PSGORD,PSGDT,PSGFD) S PSJWD=$P($G(^DPT(DFN,.1)),U) I PSJWD]"" D
  ....S PSJWG=$$WGNM(PSJWD)
  .... N OWG,A
- ....;*PSJ*5*241:Rewrote CGNM call (5 lines)
- .... N CGNM,PSJWG1 S OWG=PSJWG I PSJWG="ZZ",$D(^PS(55,DFN,5,PSGORD,8)) S A=^(8) D CGNM(A,OWG,.CGNM) D
- ..... I '$D(CGNM) S PSJWG=$P(^SC(+A,0),"^")_"^C" D:PSJWG]"" CNTSET(PSJWG,4)
- ..... I $D(CGNM) S PSJWG="" F  S PSJWG=$O(CGNM(+A,PSJWG)) Q:PSJWG=""   D
- ......S PSJWG1=$P(CGNM(+A,PSJWG),U,1)_"^CG" D CNTSET(PSJWG1,4)
- .... D:(OWG'="ZZ")!('$D(^PS(55,DFN,5,PSGORD,8))) CNTSET(PSJWG,4) S PSJWG=OWG
+ .... S OWG=PSJWG I PSJWG="ZZ",$D(^PS(55,DFN,5,PSGORD,8)) S A=^(8),PSJWG=$$CGNM(A,OWG)
+ .... D CNTSET(PSJWG,4) S PSJWG=OWG
  .N PSJXR S PSJXR=$S(+PSJSYSU=3:"APIV",1:"ANIV") F DFN=0:0 S DFN=$O(^PS(55,PSJXR,DFN)) Q:'DFN  D
  ..W "." D IN5^VADPT S PSJPAD=+VAIP(3) K VAIP F PSGORD=0:0 S PSGORD=$O(^PS(55,PSJXR,DFN,PSGORD)) Q:'PSGORD  D
  ...S PSGFD=$P($G(^PS(55,DFN,"IV",PSGORD,0)),U,3) I $$ECHK2(DFN,PSGORD,PSGDT,PSGFD) S PSJWD=$P($G(^DPT(DFN,.1)),U) I PSJWD]"" D
  ....S PSJWG=$$WGNM(PSJWD)
  .... N OWG,A
- ....;*PSJ*5*241: Rewrote CGNM call (5 lines)
- .... N CGNM,PSJWG1 S OWG=PSJWG I PSJWG="ZZ",$D(^PS(55,DFN,"IV",PSGORD,"DSS")) S A=^("DSS") D CGNM(A,OWG,.CGNM) D
- ..... I '$D(CGNM) S PSJWG=$P(^SC(+A,0),"^")_"^C" D:PSJWG]"" CNTSET(PSJWG,3)
- ..... I $D(CGNM) S PSJWG="" F  S PSJWG=$O(CGNM(+A,PSJWG)) Q:PSJWG=""  D
- ...... S PSJWG1=$P(CGNM(+A,PSJWG),U,1)_"^CG" D CNTSET(PSJWG1,3)
- .... D:(OWG'="ZZ")!('$D(^PS(55,DFN,5,PSGORD,8))) CNTSET(PSJWG,3) S PSJWG=OWG
+ .... S OWG=PSJWG I PSJWG="ZZ",$D(^PS(55,DFN,"IV",PSGORD,"DSS")) S A=^("DSS"),PSJWG=$$CGNM(A,OWG)
+ .... D CNTSET(PSJWG,3) S PSJWG=OWG
  I $D(^XTMP("PSJPVNV")) S PSJWD="" F  S PSJWD=$O(^DPT("CN",PSJWD)) Q:PSJWD=""  S PSJWG=$$WGNM(PSJWD) F DFN=0:0 S DFN=$O(^DPT("CN",PSJWD,DFN)) Q:'DFN  D
  .; removed ref to ^DGPM
  .;S PSJPAD=9999999.9999999-$O(^DGPM("ATID1",DFN,0))
@@ -74,28 +58,19 @@ CNTORDRS ; Display # pending orders by type and ward group
  .F PSJST="C","O","OC","P","R" F PSGFD=$S(PSJST="O":PSJPAD,1:PSGODT):0 S PSGFD=$O(^PS(55,DFN,5,"AU",PSJST,PSGFD)) Q:'PSGFD  D
  ..F PSGORD=0:0 S PSGORD=$O(^PS(55,DFN,5,"AU",PSJST,PSGFD,PSGORD)) Q:'PSGORD  I $$ECHK(DFN,PSGORD,PSGDT,PSGFD) D
  ... N OWG,A
- ...;*PSJ*5*241: Rewrote CGNM call (5 lines)
- ... N CGNM,PSJWG1 S OWG=PSJWG I PSJWG="ZZ",$D(^PS(55,DFN,"IV",PSGORD,"DSS")) D CGNM(A,OWG,.CGNM) D
- .... I '$D(CGNM) S PSJWG=$P(^SC(+A,0),"^")_"^C" D:PSJWG]"" CNTSET(PSJWG,3)
- .... I $D(CGNM) S PSJWG="" F  S PSJWG=$O(CGNM(+A,PSJWG)) Q:PSJWG=""  D
- ..... S PSJWG1=$P(CGNM(+A,PSJWG),U,1)_"^CG" D CNTSET(PSJWG1,3)
- ... D:(OWG'="ZZ")!('$D(^PS(55,DFN,5,PSGORD,8))) CNTSET(PSJWG,3) S PSJWG=OWG
+ ... S OWG=PSJWG I PSJWG="ZZ",$D(^PS(55,DFN,"IV",PSGORD,"DSS")) S A=^("DSS"),PSJWG=$$CGNM(A,OWG)
+ ... D CNTSET(PSJWG,3) S PSJWG=OWG
  .F SD=+PSJPAD:0 S SD=$O(^PS(55,PSGP,"IV","AIS",SD)) Q:'SD  F O=0:0 S O=$O(^PS(55,PSGP,"IV","AIS",SD,O)) Q:'O  S ON=O_"V" I $$ECHK2(PSGP,O,PSGDT,SD) D
  .. N OWG,A
- ..;*PSJ*5*241: Rewrote CGNM call (5 lines)
- .. N CGNM,PSJWG1 S OWG=PSJWG I PSJWG="ZZ",$D(^PS(55,DFN,"IV",PSGORD,"DSS")) D CGNM(A,OWG,.CGNM) D
- ... I '$D(CGNM) S PSJWG=$P(^SC(+A,0),"^")_"^C" D:PSJWG]"" CNTSET(PSJWG,3)
- ... I $D(CGNM) S PSJWG="" F  S PSJWG=$O(CGNM(+A,PSJWG)) Q:PSJWG=""  D
- .... S PSJWG1=$P(CGNM(+A,PSJWG),U,1)_"^CG" D CNTSET(PSJWG1,3)
- .. D:(OWG'="ZZ")!('$D(^PS(55,DFN,5,PSGORD,8))) CNTSET(PSJWG,3) S PSJWG=OWG
+ .. S OWG=PSJWG I PSJWG="ZZ",$D(^PS(55,DFN,"IV",PSGORD,"DSS")) S A=^("DSS"),PSJWG=$$CGNM(A,OWG)
+ .. D CNTSET(PSJWG,3) S PSJWG=OWG
  ;
 DISPLAY ;
  N H,I
  D CNTHEAD I '$D(^TMP("PSJ",$J)) W ?21,"No pending/non-verified orders found.",! Q
  S H("WG")="Ward Groups",H("CG")="Clinic Groups",H("C")="Clinics"
  F I="WG","CG","C" I $D(^TMP("PSJ",$J,I)) D
- . I I'="CG" W !,H(I),!!
- . I I="CG" W !,H(I),?13,"- The same order may be listed under more than 1 Clinic Group;",!,?15,"Therefore sum of Orders listed may not match total number of",!,?15,"pending orders. ",!!
+ . W !,H(I),!!
  . S WG="" F  S WG=$O(^TMP("PSJ",$J,I,WG)) Q:WG=""!$D(DIRUT)  S X=$G(^(WG)) D
  .. ;W $S(WG="ZZ":"^OTHER",1:WG),?30,$J(+X,6),?44,$J(+$P(X,U,2),6),?58,$J(+$P(X,U,3),6),?72,$J(+$P(X,U,4),6),!
  .. W $S(WG="ZZ":"^OTHER",1:WG),?26,$J(+X,6),?36,$J(+$P(X,U,2),6),?51,$J(+$P(X,U,3),6),?63,$J(+$P(X,U,4),6),!
@@ -114,13 +89,12 @@ WGNM(WD) ; DETERMINE WARD GROUP NAME
  S:$G(WG)="" WG="ZZ"
  Q WG
  ;
-CGNM(A,WGN,CGNM) ;DETERMINE CLINIC GROUP NAME
- N B,CGN
+CGNM(A,WGN) ;DETERMINE CLINIC GROUP NAME
+ N CGN,B
  ;I $P(A,"^",2)="" Q WGN
- S (B,CGN)="" F  S B=$O(^PS(57.8,"AC",+A,B)) Q:B=""  D
- . S CGNM(+A,B)=$P(^PS(57.8,B,0),"^")
+ S CGN="",B=$O(^PS(57.8,"AC",+A,"")) I B]"" S CGN=$P(^PS(57.8,B,0),"^")_"^CG"
  I $P(CGN,"^")="" S CGN=$P(^SC(+A,0),"^")_"^C"
- Q
+ Q CGN
  ;
 CNTHEAD ; Header for order count.
  ;W @IOF,!,?16,"Pending/Non-Verified Order Totals by Ward Group",!!,?29,"Pending",?43,"Pending",?57,"Pending",!

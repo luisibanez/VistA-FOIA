@@ -1,9 +1,8 @@
-IBCNSP ;ALB/AAS - INSURANCE MANAGEMENT - EXPANDED POLICY ;05-MAR-1993
- ;;2.0;INTEGRATED BILLING;**6,28,43,52,85,251,363,371,416**;21-MAR-94;Build 58
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBCNSP ;ALB/AAS - INSURANCE MANAGEMENT - EXPANDED POLICY ; 05-MAR-1993
+ ;;2.0;INTEGRATED BILLING;**6,28,43,52,85,251**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
 % ;
 EN ; -- main entry point for IBCNS EXPANDED POLICY
- N IB1ST
  K VALMQUIT,IBPPOL
  S IBTOP="IBCNSP"
  D EN^VALM("IBCNS EXPANDED POLICY")
@@ -30,52 +29,35 @@ INIT ; -- init variables and list array
 BLD ; -- list builder
  K ^TMP("IBCNSVP",$J),^TMP("IBCNSVPDX",$J)
  D KILL^VALM10()
- F I=1:1:24 D BLANK(.I)    ; start with 24 blank lines
- N IBCDFND,IBCDFND1,IBCDFND2,IBCDFND4,IBCDFND5
- S IBCDFND=$G(^DPT(DFN,.312,$P(IBPPOL,U,4),0)),IBCDFND1=$G(^(1)),IBCDFND2=$G(^(2)),IBCDFND4=$G(^(4)),IBCDFND5=$G(^(5))
+ F I=1:1:50 D BLANK(.I)
+ S VALMCNT=50
+ N IBCDFND,IBCDFND1,IBCDFND2,IBCDFND4
+ S IBCDFND=$G(^DPT(DFN,.312,$P(IBPPOL,U,4),0)),IBCDFND1=$G(^(1)),IBCDFND2=$G(^(2)),IBCDFND4=$G(^(4))
  S IBCPOL=+$P(IBCDFND,U,18),IBCNS=+IBCDFND,IBCDFN=$P(IBPPOL,U,4)
  S IBCPOLD=$G(^IBA(355.3,+$P(IBCDFND,U,18),0)),IBCPOLD1=$G(^(1))
  S IBCPOLD2=$G(^IBA(355.3,+$G(IBCPOL),6)) ;; Daou/EEN adding BIN and PCN
- ;
- D POLICY^IBCNSP0                   ; plan information
- D INS^IBCNSP0                      ; insurance company
- D UR                               ; utilization review info
- D EFFECT                           ; effective dates & source of info
- D SUBSC^IBCNSP01                   ; subscriber info
- D EMP                              ; subscriber's employer info
- D SPON^IBCNSP0                     ; insured person's info
- D ID^IBCNSP01                      ; ins co ID numbers (IB*2*371)
- D PLIM                             ; plan coverage limitations
- D VER^IBCNSP01                     ; user/verifier/editor info
- D CONTACT^IBCNSP0                  ; last insurance contact
- D COMMENT                          ; comments - policy & plan
- D RIDER^IBCNSP01                   ; policy rider info
- ;
- S VALMCNT=+$O(^TMP("IBCNSVP",$J,""),-1)
+ S IBLCNT=0
+ D POLICY^IBCNSP0,INS^IBCNSP0,SPON^IBCNSP0,LIMBLD^IBCNSC41(36,2,.IBLCNT)
+ D CONTACT^IBCNSP0,EFFECT,UR,EMP,VER^IBCNSP01,COMMENT,^IBCNSP01
  Q
  ;
 COMMENT ; -- Comment region
  N START,OFFSET,IBL,IBI
- S (START,IBL)=$O(^TMP("IBCNSVP",$J,""),-1)+1,OFFSET=2
- S IB1ST("COMMENT")=START
+ S START=49+$G(IBLCNT),OFFSET=2,IBL=0
+ I '$D(@VALMAR@(START-1)) D SET(START-1,OFFSET,"  ")
  D SET(START,OFFSET," Comment -- Patient Policy ",IORVON,IORVOFF)
- S IBL=IBL+1
- D SET(IBL,OFFSET,$S($P(IBCDFND1,U,8)="":"None",1:$P(IBCDFND1,U,8)))
- S IBL=IBL+1
- D SET(IBL,OFFSET," ")
- S IBL=IBL+1
- D SET(IBL,OFFSET," Comment -- Group Plan ",IORVON,IORVOFF)
+ D SET(START+1,OFFSET,$S($P(IBCDFND1,U,8)="":"None",1:$P(IBCDFND1,U,8)))
+ I '$D(@VALMAR@(START+2)) D SET(START+2,OFFSET,"  ")
+ D SET(START+3,OFFSET," Comment -- Group Plan ",IORVON,IORVOFF)
  S IBI=0 F  S IBI=$O(^IBA(355.3,+IBCPOL,11,IBI)) Q:IBI<1  D
- . S IBL=IBL+1
- . D SET(IBL,OFFSET,"  "_$E($G(^IBA(355.3,+IBCPOL,11,IBI,0)),1,80))
- . Q
- S IBL=IBL+1 D SET(IBL,OFFSET," ")
- S IBL=IBL+1 D SET(IBL,OFFSET," ")
+ .S IBL=IBL+1
+ .D SET(START+IBL+3,OFFSET,"  "_$E($G(^IBA(355.3,+IBCPOL,11,IBI,0)),1,80))
+ S IBLCNT=$G(IBLCNT)+IBL+1 D SET(START+IBL+4,OFFSET,"  ")
  Q
  ;
 EFFECT ; -- Effective date region
  N START,OFFSET
- S START=16,OFFSET=45
+ S START=12,OFFSET=45
  D SET(START,OFFSET-4," Effective Dates & Source ",IORVON,IORVOFF)
  D SET(START+1,OFFSET," Effective Date: "_$$DAT1^IBOUTL($P(IBCDFND,U,8)))
  D SET(START+2,OFFSET,"Expiration Date: "_$$DAT1^IBOUTL($P(IBCDFND,U,4)))
@@ -85,7 +67,7 @@ EFFECT ; -- Effective date region
  ;
 UR ; -- UR of insurance region
  N START,OFFSET
- S START=16,OFFSET=2
+ S START=12,OFFSET=2
  D SET(START,OFFSET," Utilization Review Info ",IORVON,IORVOFF)
  D SET(START+1,OFFSET,"         Require UR: "_$$EXPAND^IBTRE(355.3,.05,$P(IBCPOLD,U,5)))
  D SET(START+2,OFFSET,"   Require Amb Cert: "_$$EXPAND^IBTRE(355.3,.12,$P(IBCPOLD,U,12)))
@@ -95,13 +77,14 @@ UR ; -- UR of insurance region
  Q
 EMP ; -- Insurance Employer Region
  N OFFSET,START,IBADD
- S START=24,OFFSET=40
+ S START=19,OFFSET=40
  D SET(START,OFFSET," Subscriber's Employer Information ",IORVON,IORVOFF)
  D SET(START+1,OFFSET,"Emp Sponsored Plan: "_$S(+$P(IBCDFND2,U,10):"Yes",1:"No"))
  D SET(START+2,OFFSET,"          Employer: "_$P(IBCDFND2,U,9))
  D SET(START+3,OFFSET," Employment Status: "_$$EXPAND^IBTRE(2.312,2.11,$P(IBCDFND2,U,11)))
  D SET(START+4,OFFSET,"   Retirement Date: "_$$DAT1^IBOUTL($P(IBCDFND2,U,12)))
  D SET(START+5,OFFSET,"Claims to Employer: "_$S(+IBCDFND2:"Yes, Send to Employer",1:"No, Send to Insurance Company"))
+ ;I +IBCDFND2 W !!,"If ROI applies, make sure current consent is signed.",!! D PAUSE^VALM1
  ;
  D SET(START+6,OFFSET,"            Street: "_$P(IBCDFND2,U,2)) S IBADD=1
  I $P(IBCDFND2,U,3)'="" D SET(START+7,OFFSET,"          Street 2: "_$P(IBCDFND2,U,3)) S IBADD=2
@@ -109,28 +92,14 @@ EMP ; -- Insurance Employer Region
  D SET(START+6+IBADD,OFFSET,"        City/State: "_$E($P(IBCDFND2,U,5),1,15)_$S($P(IBCDFND2,U,5)="":"",1:", ")_$P($G(^DIC(5,+$P(IBCDFND2,U,6),0)),U,2)_" "_$E($P(IBCDFND2,U,7),1,5))
  D SET(START+7+IBADD,OFFSET,"             Phone: "_$P(IBCDFND2,U,8))
  ;
- ; couple of blank lines to end this section
- D SET(START+8+IBADD,2," ")
- D SET(START+9+IBADD,2," ")
- ;
 EMPQ Q
- ;
-PLIM ; plan coverage limitations/plan limitation category display
- N START,END S START=$O(^TMP("IBCNSVP",$J,""),-1)+1
- S IB1ST("PLIM")=START
- D LIMBLD^IBCNSC41(START,2)
- S END=$O(^TMP("IBCNSVP",$J,""),-1)  ; last line constructed
- D SET(END+1,2," ")    ; 2 blank lines to end this section
- D SET(END+2,2," ")
-PLIMX ;
- Q
  ; 
 HELP ; -- help code
  S X="?" D DISP^XQORM1 W !!
  Q
  ;
 EXIT ; -- exit code
- K IBPPOL,VALMQUIT,IBCNS,IBCPOL,IBCPOLD,IBCPOLD1,IBCPOLD2,IBCDFND,IBCDFND1,IBCDFND2,IBVPCLBG,IBVPCLEN
+ K IBPPOL,VALMQUIT,IBCNS,IBCPOL,IBCPOLD,IBCPOLD1,IBCPOLD2,IBCDFND,IBCDFND1,IBCDFND2
  D CLEAN^VALM10,CLEAR^VALM1
  Q
  ;

@@ -1,5 +1,5 @@
 HBHCRP5 ; LR VAMC(IRMS)/MJT-HBHC report on file 631, individual patient discharge data, includes all fields ;9204
- ;;1.0;HOSPITAL BASED HOME CARE;**2,5,6,22**;NOV 01, 1993;Build 2
+ ;;1.0;HOSPITAL BASED HOME CARE;**2,5,6**;NOV 01, 1993
 PROMPT ; Prompt user for patient name
  K DIC S DIC="^HBHC(631,",DIC(0)="AEMQZ" D ^DIC
  G:Y=-1 EXIT
@@ -26,7 +26,7 @@ PROCESS ; Process record
  W !," 9.  Cause of Death:",?38,"|",?46,"Toilet Usage @ Discharge:",?79,$P(HBHCY0,U,54) I HBHCNOD1]"" W:$P(HBHCNOD1,U,15)]"" !?5,$P(HBHCNOD1,U,15),?38,"|"
  W !,HBHCY
  W !?5,"Name:",?25,$S($P(HBHCY0,U,18)]"":$E($P(HBHCY0,U,18),4,5)_$E($P(HBHCY0,U,18),6,7)_$E($P(HBHCY0,U,18),2,3),1:"")_$E($P(HBHCDPT0,U),1,5),?38,"|",?46,"Transferring @ Discharge:",?79,$P(HBHCY0,U,55),!,HBHCY
- W !?5,"Last Four:",?25,$E($P(HBHCDPT0,U,9),6,9),?38,"|",?46,"Eating @ Discharge:",?79,$S($P(HBHCNOD1,U)]"":$P(HBHCNOD1,U),1:""),!,HBHCY
+ W !?5,"SSN:",?25,$E($P(HBHCDPT0,U,9),1,3)_"-"_$E($P(HBHCDPT0,U,9),4,5)_"-"_$E($P(HBHCDPT0,U,9),6,9),?38,"|",?46,"Eating @ Discharge:",?79,$S($P(HBHCNOD1,U)]"":$P(HBHCNOD1,U),1:""),!,HBHCY
  W !?38,"|",?46,"Walking @ Discharge:",?79,$S($P(HBHCNOD1,U,2)]"":$P(HBHCNOD1,U,2),1:""),!,HBHCY
  W !?38,"|",?41,"26.  Bowel Continence @ Discharge:",?79,$S($P(HBHCNOD1,U,3)]"":$P(HBHCNOD1,U,3),1:""),!,HBHCY
  W !?38,"|",?46,"Bladder Continence @ Discharge:",?79,$S($P(HBHCNOD1,U,4)]"":$P(HBHCNOD1,U,4),1:""),!,HBHCY

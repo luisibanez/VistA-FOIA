@@ -1,7 +1,5 @@
 FHDCR1A ; HISC/REL/NCA/RVD - Build Diet Cards ;1/21/99  14:04
- ;;5.5;DIETETICS;**1,5,15**;Jan 28, 2005;Build 2
- ;patch #5 - added the screen for cancelled Guest meal.
- ;patch #15 - added the screen to prevent reprint of outpatient meal diet cards
+ ;;5.5;DIETETICS;**1**;Jan 28, 2005
 B1 ; Store wards
  K ^TMP($J),NN,N,P S MFLG=0 D Q1^FHDCR1B D NOW^%DTC S (DTP,TIM)=% D DTP^FH S HD=DTP S:MEAL="A" MFLG=1
  S DTP=D1 D DTP^FH S (MDT,MEALDT)=DTP,MEALDT=$J("",62-$L(MEALDT)\2)_MEALDT
@@ -58,13 +56,14 @@ OUTALL K ^TMP($J,"D")   ;reset/clean-up tmp global outpatient process.
  ..F FHKD=0:0 S FHKD=$O(^FHPT("RM",FHK1,FHDFN,FHKD)) Q:FHKD'>0  D
  ...S FHKDAT=^FHPT(FHDFN,"OP",FHKD,0)
  ...S (W1,FHW1)=$P(FHKDAT,U,3)
- ...S FHRMB=$P(FHKDAT,U,18)
- ...S FHDIET=$P(FHKDAT,U,2),FHMEAL=$P(FHKDAT,U,4),FHDCLP=$P(FHKDAT,U,14),FHSTAT=$P(FHKDAT,U,15),FHDRMLE=$P(FHKDAT,U,16)
- ...S:FHDIET="" FHDIET=$E(FHKDAT,7,11)
+ ...S FHDIET=$P(FHKDAT,U,2),FHMEAL=$P(FHKDAT,U,4),FHSTAT=$P(FHKDAT,U,15)
+ ...S:FHDIET="" FHDIET=$P(FHKDAT,U,7)
+ ...S:FHDIET="" FHDIET=$P(FHKDAT,U,8)
+ ...S:FHDIET="" FHDIET=$P(FHKDAT,U,9)
+ ...S:FHDIET="" FHDIET=$P(FHKDAT,U,10)
+ ...S:FHDIET="" FHDIET=$P(FHKDAT,U,11)
  ...I (FHMEALSA'="A"),(FHMEAL'=FHMEALSA) Q
  ...I FHSTAT="C" Q
- ...I UPD,FHDCLP'="",FHDRMLE="" Q
- ...I UPD,FHDCLP'="",FHDRMLE'="",FHDCLP>FHDRMLE Q
  ...I $G(FHW1SAV),(FHW1'=FHW1SAV) Q
  ...I $G(FHDFNSAV),(FHDFN'=FHDFNSAV) Q
  ...S FHLOC="",FHRGS="OP"
@@ -80,10 +79,6 @@ OUTALL K ^TMP($J,"D")   ;reset/clean-up tmp global outpatient process.
  .F FHDFN=0:0 S FHDFN=$O(^FHPT("GM",FHKD,FHDFN)) Q:FHDFN'>0  D
  ..S FHKDAT=^FHPT(FHDFN,"GM",FHKD,0)
  ..S (W1,FHW1)=$P(FHKDAT,U,5)
- ..S FHSTAT=$P(FHKDAT,U,9),FHDCLP=$P(FHKDAT,U,8)
- ..Q:FHSTAT="C"
- ..I UPD,FHDCLP'="" Q
- ..S FHRMB=$P(FHKDAT,U,11)
  ..S FHDIET=$P(FHKDAT,U,6),FHMEAL=$P(FHKDAT,U,3)
  ..I (FHMEALSA'="A"),(FHMEAL'=FHMEALSA) Q
  ..I $G(FHW1SAV),(FHW1'=FHW1SAV) Q
@@ -101,12 +96,10 @@ OUTALL K ^TMP($J,"D")   ;reset/clean-up tmp global outpatient process.
  .F FHDFN=0:0 S FHDFN=$O(^FHPT("SM",FHKD,FHDFN)) Q:FHDFN'>0  D
  ..S FHKDAT=^FHPT(FHDFN,"SM",FHKD,0)
  ..S (W1,FHW1)=$P(FHKDAT,U,3)
- ..S FHRMB=$P(FHKDAT,U,13)
  ..S FHDFN1=$P(^FHPT(FHDFN,0),U,1)
- ..S FHDIET=$P(FHKDAT,U,4),FHMEAL=$P(FHKDAT,U,9),FHSTAT=$P(FHKDAT,U,2),FHDCLP=$P(FHKDAT,U,11)
+ ..S FHDIET=$P(FHKDAT,U,4),FHMEAL=$P(FHKDAT,U,9),FHSTAT=$P(FHKDAT,U,2)
  ..I (FHMEALSA'="A"),(FHMEAL'=FHMEALSA) Q
  ..I (FHSTAT="C")!(FHSTAT="D") Q
- ..I UPD,FHDCLP'="" Q
  ..I $G(FHW1SAV),(FHW1'=FHW1SAV) Q
  ..I $G(FHDFNSAV),(FHDFN'=FHDFNSAV) Q
  ..S FHLOC="",FHRGS="SM"
@@ -124,7 +117,7 @@ OUTALL K ^TMP($J,"D")   ;reset/clean-up tmp global outpatient process.
  .D PATNAME^FHOMUTL
  .S FHKD=$P(FHX6,"^",3),W1=$P(FHX6,"^",4)
  .Q:$G(FHRGS)!('$G(FHKD))
- .S FHSTAT="",FHADM=FHKD
+ .S RM="***",FHSTAT=""
  .S FHKDAT=$G(^FHPT(FHDFN,""_FHRGS_"",FHKD,0))
  .I FHRGS="GM" S W1=$P(FHKDAT,U,5),FHDIET=$P(FHKDAT,U,6),FHMEAL=$P(FHKDAT,U,3)
  .I FHRGS="OP" S W1=$P(FHKDAT,U,3),FHDIET=$P(FHKDAT,U,2),FHMEAL=$P(FHKDAT,U,4),FHSTAT=$P(FHKDAT,U,15)
@@ -145,11 +138,10 @@ OUTALL K ^TMP($J,"D")   ;reset/clean-up tmp global outpatient process.
 UPD ; Update Date/Time Diet Card was Printed
  S $P(^FHPT(FHDFN,"A",ADM,0),"^",16)=TIM Q
 OUTP ;process outpatient using patient
- S RM="***"
  S K1=$G(^FH(119.6,+W1,0)),WRDN=$P(K1,"^",1),SP=$P(K1,"^",5),SP1=$P(K1,"^",6),FHPAR=$P(K1,"^",24)
  I 'SP Q:FHPAR'="Y"  S SP=SP1 Q:'SP
- K PP,S,MM S NBR=0,FHADM=FHKD I $G(FHRMB),$D(^DG(405.4,FHRMB,0)) S RM=$P(^DG(405.4,FHRMB,0),U,1)
- I 'TPP D OUT^FHDCR11 D:NBR @FHRGS,PRT^FHDCR1C K ^TMP($J,"MP"),^TMP($J,0),PP,S,TT,SRT Q
+ K PP,S,MM S NBR=0,RM="***"
+ I 'TPP D OUT^FHDCR11 D:NBR @FHRGS,PRT^FHDCR1C Q
  I 'MFLG D OUT^FHDCR1D D:NBR @FHRGS,PRT^FHMTK1C Q
  F MEAL="B","N","E" D OUT^FHDCR1D
  D @FHRGS
@@ -162,9 +154,7 @@ SM S $P(^FHPT(FHDFN,"SM",FHKD,0),"^",11)=TIM Q
 OUTW ;process outpatient using all and ward.
  ;F FHDFN=0:0 S FHDFN=$O(^FHPT("AW",W1,FHDFN)) Q:FHDFN<1  D
  D PATNAME^FHOMUTL
- S (RM,RMB)="***"
- I $G(FHRMB),$D(^DG(405.4,FHRMB,0)) S RMB=$P(^DG(405.4,FHRMB,0),U,1)
- I SORT="A" S RM=FHPTNM,DL=0
- E  S (RI,RE,DL)="***",RM=RMB
+ I SORT="A" S RM=FHPTNM,DL=0,RMB="***"
+ E  S (RI,RM,RE,RMB,DL)="***"
  S ^TMP($J,"D",DL_"~"_RM_"~"_$S(SORT="R":FHDFN,1:RMB)_FHMEAL)=FHDFN_"^"_FHRGS_"^"_FHKD_"^"_W1
  Q

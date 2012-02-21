@@ -1,73 +1,52 @@
-%ZIS3 ;SFISC/AC,RWF -- DEVICE HANDLER(DEVICE TYPES & PARAMETERS) ;06/09/10  17:47
- ;;8.0;KERNEL;**18,36,69,104,391,440,499,546**;JUL 10, 1995;Build 9
- ;Per VHA Directive 2004-038, this routine should not be modified
- ;Call with a Go from ^%ZIS2
- I %ZIS'["T",$G(^%ZIS(1,+%E,"POX"))]"" D XPOX^ZISX(%E) ;Pre-Open
+%ZIS3 ;SFISC/AC,RWF -- DEVICE HANDLER(DEVICE TYPES & PARAMETERS) ;10/06/2005  13:23
+ ;;8.0;KERNEL;**18,36,69,104,391**;JUL 10, 1995
+ I %ZIS'["T",$G(^%ZIS(1,+%E,"POX"))]"" D XPOX^ZISX(%E)
  I $D(%ZISQUIT) S POP=1 K %ZISQUIT
  S %ZISCHK=1
- ;See if need to lock.
- K %ZISLOCK
- I %ZIS'["T",+$G(^%ZIS(1,+%E,"GBL")) S %ZISLOCK=$NA(^%ZIS("lock",IO))
- ;
- I 'POP G TRM:(%ZTYPE["TRM"),@(%ZTYPE_"^%ZIS6") ;Jump to next part
- ;
-Q ;%ZIS6 Returns here
- ;See if need to un-lock.
- I $D(%ZISUOUT) K %ZISUOUT,%ZISHP,%ZISHPOP Q
- I POP S:%ZIS'["T" IO=""
- Q  ;Return to %ZIS1
- ;
+ I 'POP&(%ZISB)&(%ZTYPE'="RES")&(%ZTYPE'="OTH")&(%ZTYPE'="SDP")&(IO'["::") D DEVOK
+ G Q:POP
+ G @%ZTYPE:(%ZTYPE["TRM"),@(%ZTYPE_"^%ZIS6") ;Jump to next part
+ ; 
+Q I $D(%ZISUOUT) K %ZISUOUT,%ZISHP,%ZISHPOP Q
+ I $D(%ZISHPOP)&$S(IO="":1,1:'$D(IO(1,IO))) D HGBSY^%ZIS2 Q
+ I POP S:%IS'["T" IO="" I $D(%ZISHG(0)),%IS'["D",'$D(%ZISHPOP) G HUNT^%ZIS2
+ Q
 VTRM ;Virtual terminal type
-TRM ;Terminal type
- D MARGN:'POP,SETPAR:'POP ;Terminal type
- I 'POP,%ZIS'["T",%ZISB=1,'$D(IOP),IO'=IO(0),'$D(IO("Q")),%ZIS["Q" D AQUE
- D W("")
- I '$D(IO("Q")),'POP,%ZISB,%ZIS'["T" D O^%ZIS4
+TRM D OPEN^%ZIS4:'POP&(%ZISB&(%IS'["T")),MARGN:'POP,SETPAR:'POP ;Terminal type
+ I 'POP,%IS'["T",%ZISB=1,'$D(IOP),IO'=IO(0),'$D(IO("Q")),%IS["Q" D AQUE
+ W:'$D(IOP) ! I '$D(IO("Q")) D O^%ZIS4:'POP&(%ZISB&(%IS'["T"))
  G Q
-DEVOK N X,Y,X1 ;Not sure this is needed
+DEVOK N X,Y,X1
  S X=IO,X1=%ZTYPE
  D DEVOK^%ZOSV I Y=-99!(Y=0)!(Y=$J) Q
- I Y>0 S POP=1 D:(%ZIS["D") W($C(7)_"[Device Unavailable]") Q
- I Y=-1 S IO="",POP=1 D:(%ZIS["D") W($C(7)_"[Device does not Exist or Unavailable]") Q
+ I Y>0 S POP=1 W:'$D(IOP)&('$D(%ZISHG(0))!(%IS["D")) !,*7,"[Device Unavailable]" Q
+ I Y=-1 S IO="",POP=1 W:'$D(IOP)&('$D(ZISHG(0))!(%IS["D")) !,*7,"[Device does not Exist or Unavailable]" Q
  Q
  ;
 MARGN ;Get the margin and page length
  S %A=$P(%Y,";",1)
  I %A?1A.ANP D SUBIEN(.%A,1) I $D(^%ZIS(2,%A,1)) K %Z91 D ST(1) S %Y=$P(%Y,";",2,9),%ZISMY=$P(%ZISMY,";",2,9) G MARGN
  I %A>3 S $P(%Z91,"^")=$S(%A>255:255,1:+%A)
- I $P(%Y,";",2) S $P(%Z91,"^",3)=+$S($P(%Y,";",2)>65534:65534,1:$P(%Y,";",2)) ;Cache fix for $Y#65535 wrap
+ I $P(%Y,";",2) S $P(%Z91,"^",3)=+$S($P(%Y,";",2)>65530:65530,1:$P(%Y,";",2)) ;Cache fix for $Y#65535 wrap
  ;
 ALTP I '$D(IO("P")) Q:%A>3  G ASKMAR:%ZTYPE["TRM" Q
  S %X=$F(IO("P"),"M") I %X S %A=+$E(IO("P"),%X,99),$P(%Z91,"^")=$S(%A>255:255,1:%A)
  S %X=$F(IO("P"),"L") I %X S $P(%Z91,"^",3)=+$E(IO("P"),%X,99)
  Q:%A>3!(%ZTYPE'["TRM")
-ASKMAR I %ZIS["M",'$D(IOP),$S(%E=%H:+$P(%Z,"^",3),1:1),$P(%Z,"^",4) W "    Right Margin: " W:$P(%Z91,"^")]"" +%Z91,"// "
+ASKMAR I %IS["M",'$D(IOP),$S(%E=%H:+$P(%Z,"^",3),1:1),$P(%Z,"^",4) W "    Right Margin: " W:$P(%Z91,"^")]"" +%Z91,"// "
  E  Q
  D SBR^%ZIS1 I '$D(DTOUT)&'$D(DUOUT) S:%X=""&($P(%Z91,"^")]"") %X=+%Z91 G ASKMAR:%X'?1.N S $P(%Z91,"^")=$S(%X>255:255,1:%X) Q
- S POP=1 I %ZISB&(%ZTYPE["TRM") D C Q
+ S POP=1 I %ZISB&(%ZTYPE["TRM")&(IO'=IO(0)) C IO K IO(1,IO) Q
  Q
- ;
-W(%) ;Write text
- Q:$D(IOP)
- W !,%
+SETPAR S:%ZISOPAR]""&($A(%ZISOPAR)-40) %ZISOPAR="("_%ZISOPAR_")"
  Q
- ;
-C ;Close open device
- I IO'=$G(IO(0)),$D(IO(1,IO)) C IO K IO(1,IO)
- Q
- ;
-SETPAR S:$L(%ZISOPAR)&($E(%ZISOPAR)'="(") %ZISOPAR="("_%ZISOPAR_")"
- Q
- ;
-AQUE ;Ask about Queueing
- W ! S %=$S($D(IO("Q")):1,1:2)
+AQUE W ! S %=$S($D(IO("Q")):1,1:2),U="^",%ZISDTIM=60
  I $D(IO("Q")) W !,"Previously, you have selected queueing."
  W !,"Do you "_$S($D(IO("Q")):"STILL ",1:"")_"want your output QUEUED"
- D YN^%ZIS1 G AQUE:%=0 Q:$D(IO("Q"))
- I %=-1 S POP=1,%ZISHPOP=1,%ZISUOUT=1 D C Q
- I %=1 S IO("Q")=1 D C Q
+ D YN^%ZIS1 K %ZISDTIM G AQUE:%=0 Q:$D(IO("Q"))
+ I %=-1 S POP=1,%ZISHPOP=1,%ZISUOUT=1 C IO K IO(1,IO) Q
+ I %=1 S IO("Q")=1 C IO K IO(1,IO) Q
  Q
- ;
 ST(%ZISTP) ;
  S %ZISIOST(0)=%A,%ZISIOST=$P($G(^%ZIS(2,%A,0)),"^")
  S:'$D(%Z91) %Z91=$P($G(^%ZIS(2,%A,1),"132^#^60^$C(8)"),"^",1,4),$P(%Z91,"^",5)=$G(^("XY"))
@@ -89,3 +68,4 @@ SUBTYPE(%A) ;Called from %ZISH
  S IOM=$P(%Z91,U,1),IOF=$P(%Z91,U,2),IOSL=$P(%Z91,U,3),IOST=%ZISIOST,IOST(0)=%ZISIOST(0),IOBS="$C(8)"
  S:IOST="" IOST="P-OTHER",IOST(0)=0
  Q
+ 

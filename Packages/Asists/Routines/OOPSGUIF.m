@@ -1,5 +1,5 @@
 OOPSGUIF ;WIOFO/LLH-RPC routine for OSHA Log ;11/5/01
- ;;2.0;ASISTS;**6,7,11,15**;Jun 03, 2002;Build 9
+ ;;2.0;ASISTS;**6,7,11**;Jun 03, 2002
  ;
 OSHA(RESULTS,INPUT,CALL) ; get the data
  ;   Input:  INPUT - contains 4 values, the START AND END DATE, 
@@ -96,8 +96,7 @@ NSTICK(RESULTS,INPUT,CALL) ; NeedleStick Log get data logic
  .. I TYPE<11!(TYPE>14) Q
  .. ; now get the data and put in array.
  .. K OOPS,ARR S DIC="^OOPS(2260,"
- .. ; V2_P15 02/19/08 llh - added field 352 to use for lost time
- .. S DR=".01;1;3;4;15;14;29;30;33;37;38;51;52;82;86;108;352"
+ .. S DR=".01;1;3;4;15;14;29;30;33;37;38;51;52;82;86;108"
  .. S DA=IEN,DIQ="OOPS",DIQ(0)="IE" D EN^DIQ1
  .. S DOI=OOPS(2260,IEN,4,"E")
  .. ; PER A. BIERENBAUM, USE OCC DESC 5/13/02
@@ -105,8 +104,6 @@ NSTICK(RESULTS,INPUT,CALL) ; NeedleStick Log get data logic
  .. ; S OCC=$E(OOPS(2260,IEN,15,"E"),1,4)
  .. ; patch 7 remove lost time
  .. ; S LOST=OOPS(2260,IEN,33,"E")
- .. ; V2_P15 02/19/08 llh - now indicating lost time
- .. S LOST="No" I $G(OOPS(2260,IEN,352,"I"))="A" S LOST="Yes"
  .. S INJILL=OOPS(2260,IEN,52,"I")
  .. S INJILL=$S(INJILL=1:"Injury",INJILL=2:"Illness",1:"")
  .. ; patch 7 - only print privacy case in name field - all cases
@@ -120,8 +117,6 @@ NSTICK(RESULTS,INPUT,CALL) ; NeedleStick Log get data logic
  .. S ARR=ARR_U_OOPS(2260,IEN,30,"E")_U_$E(OOPS(2260,IEN,29,"E"),1,45)_U
  .. S ARR=ARR_$E(OOPS(2260,IEN,37,"E"),1,50)_U
  .. S ARR=ARR_$E(OOPS(2260,IEN,38,"E"),1,50)_U_OOPS(2260,IEN,82,"E")
- .. ;V2_P15 02/19/08 llh - added lost
- .. S ARR=ARR_U_LOST
  .. S ^TMP($J,"NS",CN)=ARR K ARR
  .. S CN=CN+1
  S RESULTS=$NA(^TMP($J,"NS"))

@@ -1,6 +1,6 @@
 IBCEF71 ;WOIFO/SS - FORMATTER AND EXTRACTOR SPECIFIC BILL FUNCTIONS ;31-JUL-03
- ;;2.0;INTEGRATED BILLING;**232,155,288,320,349,432**;21-MAR-94;Build 192
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**232,155,288**;21-MAR-94
+ ;; Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;---------
  ;OTHPAYC - from FORMAT code for OP1,OP2 ...
@@ -16,10 +16,9 @@ OTHPAYC(IBXIEN,IBSAVE,IBDATA,IBFUNC,IBVAL) ;
  N IB1,IB2,IBINS,IBFL
  S IBFL=$S(IBFUNC=3!(IBFUNC=4):1,1:0)
  F IB1=1,2 D
- . I $$ISINSUR($G(IBSAVE("PROVINF",IBXIEN,"O",IB1)),IBXIEN) D  Q  ;don't create anything if no such insurance
- .. ;*432/TAZ Attending/Rendering is no longer either/or so there can be both
- .. ;I IBFL S IBFUNC=$S($O(IBSAVE("PROVINF",IBXIEN,"O",IB1,3,0)):3,1:4)
- .. S:$O(IBSAVE("PROVINF",IBXIEN,"O",IB1,IBFUNC,0)) IBDATA(IB1)=IBVAL
+ . Q:'$$ISINSUR($G(IBSAVE("PROVINF",IBXIEN,"O",IB1)),IBXIEN)  ;don't create anything if no such insurance
+ . I IBFL S IBFUNC=$S($O(IBSAVE("PROVINF",IBXIEN,"O",IB1,3,0)):3,1:4)
+ . S:$O(IBSAVE("PROVINF",IBXIEN,"O",IB1,IBFUNC,0)) IBDATA(IB1)=IBVAL
  Q
  ;----
  ;OTHPAYV - called from FORMAT code for OP1,OP2 ...
@@ -38,10 +37,9 @@ OTHPAYV(IBXIEN,IBSAVE,IBDATA,IBFUNC,IBFLDTYP,IBSEQN) ;
  S IBFL=$S(IBFUNC=3!(IBFUNC=4):1,1:0)
  S IBPIECE=$S(IBFLDTYP="I":4,IBFLDTYP="Q":3,1:3)
  F IB1=1,2 D
- . I $$ISINSUR($G(IBSAVE("PROVINF",IBXIEN,"O",IB1)),IBXIEN) D  Q  ;don't create anything if there is no such insurance
- .. ;*432/TAZ Attending/Rendering is no longer either/or so there can be both
- .. ;I IBFL S IBFUNC=$S($O(IBSAVE("PROVINF",IBXIEN,"O",IB1,3,0)):3,1:4),IBFL=0
- .. S IBDATA(IB1)=$P($G(IBSAVE("PROVINF",IBXIEN,"O",IB1,IBFUNC,IBSEQN)),U,IBPIECE)
+ . Q:'$$ISINSUR($G(IBSAVE("PROVINF",IBXIEN,"O",IB1)),IBXIEN)  ;don't create anything if there is no such insurance
+ . I IBFL S IBFUNC=$S($O(IBSAVE("PROVINF",IBXIEN,"O",IB1,3,0)):3,1:4),IBFL=0
+ . S IBDATA(IB1)=$P($G(IBSAVE("PROVINF",IBXIEN,"O",IB1,IBFUNC,IBSEQN)),"^",IBPIECE)
  Q
  ;
  ;chk for ins
@@ -60,7 +58,7 @@ ISINSUR(IBINS,IBXIEN) ;
  ;Get list of all 355.9 or 355.93 records for prov
  ;Input: 
  ;IB399INS - ins co for bill to match PRACTIONER from 355.9
- ;IB399FRM - form type (0=unknwn/both,1=UB,2=1500) to 
+ ;IB399FRM - form type (0=unknwn/both,1=UB92,2=HCFA 1500) to 
  ;   match PRACTIONER from 355.9
  ;IB399CAR - BILL CARE (0=unknwn or both inp/outp,1=inpatient,
  ;   2=outpatient/3=Rx) to match PROV from 355.9
@@ -83,7 +81,7 @@ PRACT(IB399INS,IB399FRM,IB399CAR,IBPROV,IBARR,IBPROVTP,IBINSTP,IBFILE,IBINS) ;
  . S IBINSCO=$P($G(^IBA(IBFX,IB3559,0)),"^",$S(IBFILE=355.9&(IBF=""):2,1:1)) ;ins co. ptr
  . I IBINSCO'="" I IBINSCO'=IB399INS Q  ;exclude if different ins
  . S:IBINSCO="" IBINSCO="NONE" ;NONE will be included in the array
- . S IBFRMTYP=+$P($G(^IBA(IBFX,IB3559,0)),"^",4) ;form type (0=both,1=UB,2=1500)
+ . S IBFRMTYP=+$P($G(^IBA(IBFX,IB3559,0)),"^",4) ;form type (0=both,1=UB92,2=HCFA 1500)
  . I '(IBFRMTYP=0!(IB399FRM=0)) Q:IBFRMTYP'=IB399FRM  ;exclude if not "both" and different
  . S IBCARE=+$P($G(^IBA(IBFX,IB3559,0)),"^",5) ;0=both(inp and outp),1=inp,2=outp,3=prescr  -- OR -- division ptr
  . I $S(IBFILE=355.92:0,1:IBCARE=3) I IB399CAR'=3 Q  ; Id is only for Rx
@@ -127,9 +125,7 @@ ALLPRFAC(IBXIEN,IBXSAVE) ; Return all non-VA/outside facility prov ids
  K IBXSAVE("PROVINF_FAC",IBXIEN) ; Always rebuild this
  S IBCOBN=+$$COBN^IBCEF(IBXIEN)
  S IBFRMTYP=$$FT^IBCEF(IBXIEN),IBFRMTYP=$S(IBFRMTYP=2:2,IBFRMTYP=3:1,1:0)
- S IBPROV=$P($G(^DGCR(399,IBXIEN,"U2")),U,10)
- ; IB patch 320 - Build IBPROV variable better when a non-VA facility exists
- I IBPROV S IBPROV=IBPROV_";IBA(355.93,"
+ S IBPROV=$P($G(^DGCR(399,IBXIEN,"U2")),U,10)_";IBA(355.93,"
  I 'IBPROV S IBCARE=$P($G(^DGCR(399,IBXIEN,0)),U,22)
  I IBPROV D
  . S IBCARE=$S($$ISRX^IBCEF1(IBXIEN):3,1:0) ;if Rx refill bill
@@ -140,18 +136,10 @@ ALLPRFAC(IBXIEN,IBXSAVE) ; Return all non-VA/outside facility prov ids
  . S Z0="" F  S Z0=$O(IBRETARR(Z0)) Q:Z0=""  S Z1="" F  S Z1=$O(IBRETARR(Z0,Z1)) Q:Z1=""  D
  .. ; Sort by div/id type
  .. S IBRET1($S(IBPROV:0,1:+$P(IBRETARR(Z0,Z1),U,6)),+$P(IBRETARR(Z0,Z1),U,9))=IBRETARR(Z0,Z1)
- .. Q
- . ;
- . S Z0=$O(IBRET1(""),-1) Q:Z0=""  D
- .. ; IB patch 320 - loop thru all ID's
- .. S Z1="" F  S Z1=$O(IBRET1(Z0,Z1)) Q:Z1=""  D
- ... I Z=IBCOBN S IBXSAVE("PROVINF_FAC",IBXIEN,"C",1,0,$O(IBXSAVE("PROVINF_FAC",IBXIEN,"C",1,0," "),-1)+1)=IBRET1(Z0,Z1) Q
- ... S ZZ=$S(Z=1:1,Z=2:(IBCOBN=3)+1,1:2)
- ... S IBXSAVE("PROVINF_FAC",IBXIEN,"O",ZZ,0,$O(IBXSAVE("PROVINF_FAC",IBXIEN,"O",ZZ,0," "),-1)+1)=IBRET1(Z0,Z1),IBXSAVE("PROVINF_FAC",IBXIEN,"O",ZZ)=$E("PST",Z)
- ... Q
- .. Q
- . Q
- ;
+ . S Z0=$O(IBRET1(""),-1) Q:Z0=""  S Z1="" S Z1=$O(IBRET1(Z0,Z1)) Q:Z1=""  D
+ .. I Z=IBCOBN S IBXSAVE("PROVINF_FAC",IBXIEN,"C",1,0,$O(IBXSAVE("PROVINF_FAC",IBXIEN,"C",1,0," "),-1)+1)=IBRET1(Z0,Z1) Q
+ .. S ZZ=$S(Z=1:1,Z=2:(IBCOBN=3)+1,1:2)
+ .. S IBXSAVE("PROVINF_FAC",IBXIEN,"O",ZZ,0,$O(IBXSAVE("PROVINF_FAC",IBXIEN,"O",ZZ,0," "),-1)+1)=IBRET1(Z0,Z1),IBXSAVE("PROVINF_FAC",IBXIEN,"O",ZZ)=$E("PST",Z)
  S IBXSAVE("PROVINF_FAC",IBXIEN)=IBXIEN,IBXSAVE("PROVINF_FAC",IBXIEN,"C",1)=$E("PST",IBCOBN)
  Q
  ;

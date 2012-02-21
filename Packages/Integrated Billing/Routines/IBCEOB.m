@@ -1,7 +1,5 @@
-IBCEOB ;ALB/TMP/PJH - 835 EDI EOB MESSAGE PROCESSING ; 8/19/10 6:33pm
- ;;2.0;INTEGRATED BILLING;**137,135,265,155,377,407,431,432**;21-MAR-94;Build 192
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;
+IBCEOB ;ALB/TMP - 835 EDI EOB MESSAGE PROCESSING ;20-JAN-99
+ ;;2.0;INTEGRATED BILLING;**137,135,265,155**;21-MAR-94
  Q
  ;
 UPDEOB(IBTDA) ; Update EXPLANATION OF BENEFITS file (#361.1) from return msg
@@ -19,11 +17,11 @@ UPDEOB(IBTDA) ; Update EXPLANATION OF BENEFITS file (#361.1) from return msg
  S IBMNUM=+$P(IB0,U)
  S X=+$G(^IBA(364,+$P(IB0,U,5),0))
  ;
- I IBMNUM=""!(X="") G UPDQ
+ G:$S(IBMNUM=""!(X=""):1,1:$D(^IBM(361.1,"AC",IBMNUM))) UPDQ
  ;
  ; Duplicate EOB Check
  S IBFILE="^IBA(364.2,"_IBTDA_",2)"
- I $$DUP(IBFILE,X) D DELMSG^IBCESRV2(IBTDA) G UPDQ
+ I $$DUP(IBFILE,X) G UPDQ
  ;
  I '$$LOCK^IBCEM(IBTDA) G UPDQ ;Lock msg file 364.2
  S IBEOB=+$$ADD3611(IBMNUM,$P(IB0,U,5),$P(IB0,U,4),X,0,IBFILE)
@@ -33,7 +31,6 @@ UPDEOB(IBTDA) ; Update EXPLANATION OF BENEFITS file (#361.1) from return msg
  D UPD3611(IBEOB,IBTDA,0)
  ;
 UPDQ I IBEOB,$O(^TMP("IBCERR-EOB",$J,0)) D ERRUPD(IBEOB,"IBCERR-EOB")
- ;
  K ^TMP($J),^TMP("IBCERR-EOB",$J)
  D CLEAN^DILF
  Q +IBEOB
@@ -46,60 +43,34 @@ UPDQ I IBEOB,$O(^TMP("IBCERR-EOB",$J,0)) D ERRUPD(IBEOB,"IBCERR-EOB")
  ;
 835(IB0,IBEGBL,IBEOB) ; Store header
  ;
- Q $$HDR^IBCEOB1(IB0,IBEGBL,IBEOB,.HIPAA)
+ Q $$HDR^IBCEOB1(IB0,IBEGBL,IBEOB)
  ;
 5(IB0,IBEGBL,IBEOB) ; Record '05'
  ;
- N IBOK,DA,DR,DIE,X,Y
+ N IBOK,IBBULL,DA,DR,DIE,X,Y
  K IBZDATA
  S DR=";",IBOK=1
  S DIE="^IBM(361.1,",DA=IBEOB
  ;
- I $P(IB0,U,9) S DR=DR_"1.1///"_$$DATE^IBCEU($P(IB0,U,9))_";"         ; statement start date
- I $P(IB0,U,10) S DR=DR_"1.11///"_$$DATE^IBCEU($P(IB0,U,10))_";"      ; statement end date
- I $P(IB0,U,11) S DR=DR_"1.12///"_$$DATE^IBCEU($P(IB0,U,11))_";"      ; claim received date
+ S IBBULL=""
+ I $$UPDNM^IBCEOB00(IBEOB,IB0,.IBBULL,.DR)!$$UPDID^IBCEOB00(IBEOB,IB0,.IBBULL,.DR) D  ; New insured's name and/or HIC # found
+ . D CHGBULL^IBCEOB3(IBEOB,IBBULL) ;Send a bulletin reporting change
+ ;
+ I $P(IB0,U,9) S DR=DR_"1.1///"_$$DATE^IBCEU($P(IB0,U,9))_";"
+ I $P(IB0,U,10) S DR=DR_"1.11///"_$$DATE^IBCEU($P(IB0,U,10))_";"
  S DR=$P(DR,";",2,$L(DR,";")-1)
  I DR'="" D ^DIE S IBOK=$D(Y)=0
  I 'IBOK S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Bad record 5 data"
  Q IBOK
  ;
-6(IB0,IBEGBL,IBEOB) ; Record '06' - corrected patient name and/or ID#
- ; This data is not going to be filed into file 361.1 so the value of this function will always be a 1 so as to
- ; not interrupt the filing process of the EOB/MRA data into file 361.1.
- ;
- ; perform overall integrity checks on the incoming 06 record.  If anything is out of place, don't update anything
- ; and report the problem and get out.
- NEW CLM,SITE,IBM,IBIFN,IBIFN1,DFN,SEQ,DIE,DA,DR
- S DIE=361.1,DA=IBEOB,DR="61.01////^S X=IB0" D ^DIE    ; archive the raw 06 record data
- S CLM=$P(IB0,U,2),SITE=+CLM,CLM=$P(CLM,"-",2) I CLM="" D MSG(IBEOB,"The claim# in piece 2 is invalid.") G Q6
- S IBM=$G(^IBM(361.1,IBEOB,0))
- I $P(IBM,U,4)'=1 D MSG(IBEOB,"This is a non-Medicare EOB.") G Q6
- S IBIFN=+$P(IBM,U,1)                    ; claim# from MRA
- S IBIFN1=+$O(^DGCR(399,"B",CLM,""))     ; claim# from 06 record
- I IBIFN'=IBIFN1 D MSG(IBEOB,"Claim mismatch error."_IBIFN_","_IBIFN1_","_CLM_".") G Q6
- I $P($$SITE^VASITE,U,3)'=SITE D MSG(IBEOB,"Invalid station# mismatch."_$P($$SITE^VASITE,U,3)_","_SITE_".") G Q6
- S SEQ=$$COBN^IBCEF(IBIFN)               ; current payer sequence# on claim
- I '$$WNRBILL^IBEFUNC(IBIFN,SEQ) D MSG(IBEOB,"The current payer on this claim is not MEDICARE (WNR).") G Q6
- S DFN=+$P($G(^DGCR(399,IBIFN,0)),U,2)   ; patient ien
- I 'DFN D MSG(IBEOB,"The patient DFN cannot be determined.") G Q6
- ;
- D UPD^IBCEOB01(IB0,IBEOB,IBIFN,DFN,SEQ)     ; update patient insurance policy data
- ;
-Q6 ; exit point for $$6 function
- Q 1
- ;
 10(IB0,IBEGBL,IBEOB) ; Record '10'
  ;
- N DA,DR,DIE,X,Y,VAL,IBOK,IB361
+ N DA,DR,DIE,X,Y,VAL,IBOK
  S DIE="^IBM(361.1,",DA=IBEOB
- ; put denied non-MRA claims on the worklist IB*2.0*432
- ;S IB361=$G(^IBM(361.1,DA,0))
- ;I $P(IB361,U,4)=0,$P(IB0,U,4)="Y" D PUTONWL^IBCAPP($P(IB361,U),"IB804:EOB Claim Status must be PROCESSED")
  S DR=".13////"_$S($P(IB0,U,3)="Y":1,$P(IB0,U,4)="Y":2,$P(IB0,U,5)="Y":3,$P(IB0,U,6)="Y":4,1:5)_";.21////"_$P(IB0,U,7)
  S DR=DR_";2.04////"_$$DOLLAR($P(IB0,U,10))_";1.01////"_$$DOLLAR($P(IB0,U,11))_$S($P(IB0,U,12)'="":";.14///"_$P(IB0,U,12),1:"")
  S DR=DR_$S($P(IB0,U,13)'="":";.1///"_$P(IB0,U,13),1:"")_";.11///"_($P(IB0,U,14)/10000)_";.12///"_($P(IB0,U,15)/100)
  I $P(IB0,U,8)'="" S DR=DR_";.08////"_$P(IB0,U,8)_$S($P(IB0,U,9)'="":";.09///"_$P(IB0,U,9),1:"")
- I HIPAA,$P(IB0,U,16) S DR=DR_";1.13///"_$$DATE^IBCEU($P(IB0,U,16))_";"      ; coverage exp. date
  ;
  D ^DIE
  S IBOK=($D(Y)=0)
@@ -110,62 +81,72 @@ Q6 ; exit point for $$6 function
  ;
 Q10 Q IBOK
  ;
-12(IB0,IBEGL,IBEOB) ; Record '12'
- ;
- N DA,DR,DIE,X,Y,VAL,IBOK
- I HIPAA'=5010 S IBOK=1 G Q12
- S DIE="^IBM(361.1,",DA=IBEOB,DR=";"
- I $P(IB0,U,3)'="" S DR=DR_"1.14////"_$P(IB0,U,3)_";"
- I $P(IB0,U,4)'="" S DR=DR_"1.15////"_$P(IB0,U,4)_";"
- I $P(IB0,U,5)'="" S DR=DR_"1.16////"_$P(IB0,U,5)_";"
- S DR=$P(DR,";",2,$L(DR,";")-1)
- ;
- D ^DIE
- S IBOK=($D(Y)=0)
- I 'IBOK S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Bad record 12 data"
- ;
-Q12 Q IBOK
- ;
-13(IB0,IBEGL,IBEOB) ; Record '13'
- ;
- N DA,DR,DIE,X,Y,VAL,IBOK,NAME
- I HIPAA'=5010 S IBOK=1 G Q13
- S DIE="^IBM(361.1,",DA=IBEOB
- S NAME=$P(IB0,U,3) I NAME="" S IBOK=1 G Q13
- I $P(IB0,U,4)'="" S NAME=NAME_","_$P(IB0,U,4)
- I $P(IB0,U,5)'="" S NAME=NAME_","_$P(IB0,U,5)
- S DR="1.17////"_NAME ; Other Subscriber Name
- ;
- D ^DIE
- S IBOK=($D(Y)=0)
- I 'IBOK S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Bad record 13 data"
- ;
-Q13 Q IBOK
- ;
 15(IB0,IBEGBL,IBEOB) ; Record '15'
- ; Moved due to space constraints
-Q15 Q $$15^IBCEOB00(IB0,IBEGBL,IBEOB)
+ ;
+ N A,IBOK
+ ;
+ S A="3;1.03;1;0;0^4;1.04;1;0;0^5;1.05;1;0;0^6;1.07;1;0;0^7;1.08;1;0;0^8;1.09;1;0;0^9;1.02;1;0;0^10;2.05;1;0;0"
+ ;
+ S IBOK=$$STORE^IBCEOB1(A,IB0,IBEOB)
+ I 'IBOK S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Bad record 15 data" G Q15
+ ;
+ ; For Medicare MRA's only:
+ ; If the Covered Amount is present (15 record, piece 3), then file
+ ; a claim level adjustment with Group code=OA, Reason code=AB3.
+ ;
+ I $P($G(^IBM(361.1,IBEOB,0)),U,4)=1,+$P(IB0,U,3) D
+ . N IB20
+ . S IB20=20_U_$P(IB0,U,2)_U_"OA"_U_"AB3"_U_$P(IB0,U,3)_U_"0000000000"
+ . S IB20=IB20_U_"Covered Amount"
+ . S IBOK=$$20(IB20,IBEGBL,IBEOB)
+ . I 'IBOK S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Could not file the OA-AB3 claim level adjustment for the Covered Amount"
+ . K ^TMP($J,20)
+ . Q
+ ;
+Q15 Q IBOK
  ;
 17(IB0,IBEGBL,IBEOB) ; Record '17'
- N A,DATA,IBOK
- ;Old Format
- S DATA=IB0
- ;New Format - store incoming data in first available field
- I HIPAA>0 D
- .N CNT
- .S CNT=4,DATA=$P(DATA,U,1,3) ;Claim Contact Name
- .I $P(IB0,U,4)'="" S $P(DATA,U,CNT)=$P(IB0,U,4),$P(DATA,U,CNT+1)="TE",CNT=CNT+2 ;Tel
- .I $P(IB0,U,5)'="" S $P(DATA,U,CNT)=$P(IB0,U,5),$P(DATA,U,CNT+1)="FX",CNT=CNT+2 ;Fax
- .I $P(IB0,U,6)'="" S $P(DATA,U,CNT)=$P(IB0,U,6),$P(DATA,U,CNT+1)="EM" ;email
- ;
+ N A,IBOK
  S A="3;25.01;0;1;0^4;25.02;0;1;0^5;25.03;0;1;0^6;25.04;0;1;0^7;25.05;0;1;0^8;25.06;0;1;0^9;25.07;0;1;0"
- S IBOK=$$STORE^IBCEOB1(A,DATA,IBEOB)
+ S IBOK=$$STORE^IBCEOB1(A,IB0,IBEOB)
  I 'IBOK S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Bad record 17 data"
 Q17 Q IBOK
  ;
 20(IB0,IBEGBL,IBEOB) ; Record '20'
- ; Moved due to space constraints
-Q20 Q $$20^IBCEOB00(IB0,IBEGBL,IBEOB)
+ ;
+ N A,LEVEL,IBGRP,IBDA,IBOK
+ ;
+ S IBGRP=$P(IB0,U,3)
+ I IBGRP'="" S ^TMP($J,20)=IBGRP
+ I IBGRP="" S IBGRP=$G(^TMP($J,20))
+ I IBGRP="" S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Missing claim level adjustment group code" G Q20
+ ;
+ S IBDA(1)=$O(^IBM(361.1,IBEOB,10,"B",IBGRP,0))
+ ;
+ I 'IBDA(1) D  ;Needs a new entry at group level
+ . N X,Y,DA,DD,DO,DIC,DLAYGO
+ . S DIC="^IBM(361.1,"_IBEOB_",10,",DIC(0)="L",DLAYGO=361.11,DA(1)=IBEOB
+ . S DIC("P")=$$GETSPEC^IBEFUNC(361.1,10)
+ . S X=IBGRP
+ . D FILE^DICN K DIC,DO,DD,DLAYGO
+ . I Y<0 K IBDA S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Adjustment group code could not be added" Q
+ . S IBDA(1)=+Y
+ ;
+ I $G(IBDA(1)) D  ;Add a new entry at the reason code level
+ . S DIC="^IBM(361.1,"_IBEOB_",10,"_IBDA(1)_",1,",DIC(0)="L",DLAYGO=361.111,DA(2)=IBEOB,DA(1)=IBDA(1)
+ . S DIC("P")=$$GETSPEC^IBEFUNC(361.11,1)
+ . S X=$P(IB0,U,4)
+ . D FILE^DICN K DIC,DO,DD,DLAYGO
+ . I Y<0 K IBDA S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Adjustment reason code could not be added" Q
+ . S IBDA=+Y
+ ;
+ I $G(IBDA) D
+ . S LEVEL=10,LEVEL("DIE")="^IBM(361.1,"_IBEOB_",10,"_IBDA(1)_",1,"
+ . S LEVEL(0)=IBDA,LEVEL(1)=IBDA(1),LEVEL(2)=IBEOB
+ . S A="5;.02;1;0;0^6;.03;0;1;1^7;.04;0;1;0"
+ . S IBOK=$$STORE^IBCEOB1(A,IB0,IBEOB,.LEVEL)
+ . I 'IBOK S ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)="Bad adjustment reason code ("_$P(IB0,U,4)_") data" Q
+Q20 Q $G(IBOK)
  ;
 30(IB0,IBEGBL,IBEOB) ; Record '30'
  ;
@@ -205,27 +186,6 @@ Q42 Q $G(IBOK)
  D 45^IBCEOB0(IB0,IBEOB,.IBOK)
  Q $G(IBOK)
  ;
- ;
-46(IB0,IBEGBL,IBEOB) ; Record '46'
- ;
- N IBOK
- I HIPAA'=5010 S IBOK=1 G Q46
- D 46^IBCEOB0(IB0,IBEOB,.IBOK)
-Q46 Q $G(IBOK)
- ;
-MSG(IBEOB,MSG) ; procedure to file message into field 6.03
- ; Results of processing of the "06" record type
- N DIE,DA,DR,Z
- S DIE=361.1,DA=+$G(IBEOB)
- I $G(MSG)="" G MSGX
- S Z=$P($G(^IBM(361.1,DA,6)),U,3)    ; already existing message
- I Z'="" S MSG=Z_"  "_MSG            ; append new message to existing message
- S MSG=$E(MSG,1,190)
- S DR="6.03///^S X=MSG"
- D ^DIE
-MSGX ;
- Q
- ;
 DOLLAR(X) ; Convert value in X to dollar format XXX.XX
  Q $S(+X:$J(X/100,$L(+X),2),1:0)
  ;
@@ -237,16 +197,15 @@ ADD3611(IBMNUM,IBTBILL,IBBATCH,X,IBAR,IBFILE) ; Add stub record to file 361.1
  ; IBAR = 1 only if called from AR
  ; IBFILE = array reference of raw EOB data
  ;
- N DIC,DA,DR,DO,DD,DLAYGO,Y,REVSTAT,BS,MMI
+ N DIC,DA,DR,DO,DD,DLAYGO,Y,REVSTAT,BS
  F  L +^IBM(361.1,0):10 Q:$T
  ;
  ; default proper review status
  S BS=$P($G(^DGCR(399,X,0)),U,13)   ; bill status
  S REVSTAT=$S(BS=7:9,BS=3:3,BS=4:3,1:0)
- S MMI=$$NET^XMRENT(IBMNUM)         ; MailMan header info
  S DIC(0)="L",DIC="^IBM(361.1,",DLAYGO=361.1
  S DIC("DR")=".16////"_REVSTAT_";.17////0"_";100.02////"_IBMNUM_$S('$G(IBAR):";.19////"_+IBTBILL_";100.01////"_IBBATCH,1:"")
- S DIC("DR")=DIC("DR")_";100.05////"_$$CHKSUM^IBCEMU1(IBFILE)_";62.01////^S X=MMI"
+ S DIC("DR")=DIC("DR")_";100.05////"_$$CHKSUM^IBCEMU1(IBFILE)
  D FILE^DICN
  L -^IBM(361.1,0)
  Q +Y
@@ -255,29 +214,15 @@ UPD3611(IBEOB,IBTDA,IBAR) ; From flat file 835 format, add EOB record
  ; IBEOB = the ien of the entry in file 361.1 being updated
  ; IBTDA = the ien in the source file
  ; IBAR = 1 if being called from AR
- N HIPAA,IBA1,IBFILE,IBEGBL,Z,IBREC,Q
+ N IBA1,IBFILE,IBEGBL,Z,IBREC,Q
  S IBFILE=$S('$G(IBAR):"^IBA(364.2,"_IBTDA_",2)",1:"^TMP("_$J_",""RCDP-EOB"","_IBTDA_")")
  S IBEGBL=$S('$G(IBAR):"IBCERR-EOB",1:"RCDPERR-EOB")
- S HIPAA=0
- I $G(IBAR),'$$HDR^IBCEOB1($G(^TMP($J,"RCDPEOB","HDR")),IBEGBL,IBEOB,.HIPAA) Q
+ I $G(IBAR),'$$HDR^IBCEOB1($G(^TMP($J,"RCDPEOB","HDR")),IBEGBL,IBEOB) Q
  S IBA1=0
  F  S IBA1=$O(@IBFILE@(IBA1)) Q:'IBA1  S IB0=$S('$G(IBAR):$P($G(^(IBA1,0)),"##RAW DATA: ",2),1:$G(@IBFILE@(IBA1,0))) I IB0'="" D
  . S IBREC=+IB0
  . I IBREC'=37 K ^TMP($J,37)
  . I IBREC S IB="S IBOK=$$"_IBREC_"(IB0,IBEGBL,IBEOB)",Q=IBREC_"^IBCEOB" I $T(@Q)'="" X IB S:'IBOK ^TMP(IBEGBL,$J,+$O(^TMP(IBEGBL,$J,""),-1)+1)=$S('$G(IBAR):"  ##RAW DATA: ",1:"")_IB0
- ; If a DENIED non MRA EOB with no filing errors is updated, put on the CBW worklist if the 
- ; claim isn't already COLLECTED/CLOSED and there is a subsequent payer (incl. Tricare & ChampVA)
- I IBEOB,'$O(^TMP(IBEGBL,$J,0)) D
- .N IB361,IBIFN,IBX,IBTXT,IBPYMT
- .; must be non-MRA EOB and DENIED
- .S IB361=$G(^IBM(361.1,IBEOB,0)),IBIFN=$P(IB361,U) Q:$P(IB361,U,4)'=0
- .Q:$P(IB361,U,13)'=2
- .Q:$P($$ARSTATA^IBJTU4(IBIFN),U)="COLLECTED/CLOSED"
- .; payment on this bill from A/R IA#380 OR payer paid amount from EOB
- .S IBPYMT=$$TPR^PRCAFN(IBIFN) S:IBPYMT="" IBPYMT=+$G(^IBM(361.1,IBEOB,1))
- .; check for subsequent payer
- .S IBX=$$EOB^IBCNSBL2($G(IBIFN),+$G(^DGCR(399,IBIFN,"U1")),$G(IBPYMT),.IBTXT) Q:'$D(IBTXT)
- .D PUTONWL^IBCAPP($P(IB361,U),"IB804:EOB Claim Status must be PROCESSED")
  ;
  Q
  ;

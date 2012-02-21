@@ -1,69 +1,60 @@
 IBCEP7 ;ALB/TMP - Functions for fac level PROVIDER ID MAINT ;11-07-00
- ;;2.0;INTEGRATED BILLING;**137,232,320,348,349**;21-MAR-94;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**137,232**;21-MAR-94
+ ;
+EN ; -- main entry IBCE PRVFAC MAINT
+ N DIC,X,Y,DIR,DUOUT,DTOUT
+ D FULL^VALM1
+ K ^TMP("IBCE_PRVFAC_MAINT_INS",$J)
+ S DIR(0)="SA^F:FACILITY SECONDARY BILLING IDS;P:PROVIDER IDS",DIR("A")="Select: (F)ACILITY SECONDARY BILLING IDS OR (P)ROVIDER IDS?: "
+ S DIR("?",1)="FACILITY SECONDARY BILLING IDs are those ids an insurance co. gives the site to",DIR("?",2)=$J("",21)_"identify who is billing them (who they should pay)."
+ S DIR("?",3)=" ",DIR("?",4)="PROVIDER IDS are those ids the insurance co. assigns to identify who",DIR("?")=$J("",13)_"actually performed the services they are being billed for."
+ S DIR("B")="FACILITY" W ! D ^DIR K DIR
+ Q:$D(DUOUT)!$D(DTOUT)
+ S ^TMP("IBCE_PRVFAC_MAINT_INS",$J)=Y_"^^2"
+ I Y="F" D  Q:'$P(^TMP("IBCE_PRVFAC_MAINT_INS",$J),U,2)
+ . S DIC="^DIC(36,",DIC(0)="AEMQ" D ^DIC
+ . I Y>0 S $P(^TMP("IBCE_PRVFAC_MAINT_INS",$J),U,2)=+Y
+ D EN^VALM("IBCE PRVFAC MAINT")
+ Q
  ;
 HDR ; -- hdr code
- I '$D(^TMP("IBCE_PRVFAC_MAINT",$J)) D INIT
- N IBINS,PCF,PCDISP,IBPARAM,IBEFTFL
  K VALMHDR
- S IBPARAM=$G(^TMP("IBCE_PRVFAC_MAINT_INS",$J))
- S IBEFTFL=$P(IBPARAM,U)  ; Electronic Form type flag
- S IBINS=+$P(IBPARAM,U,2)  ; Insurance co
- S PCF=$P($G(^DIC(36,+IBINS,3)),U,13),PCDISP=$S(PCF="P":"(Parent)",1:"")
- S VALMHDR(1)="Insurance Co: "_$P($G(^DIC(36,+IBINS,0)),U)_PCDISP
- S VALMHDR(1)=VALMHDR(1)_$S(IBEFTFL="E":"   Billing Provider Secondary IDs",IBEFTFL="A":"   Additional Billing Provider Sec. IDs",IBEFTFL="LF":"   VA-Lab/Facility Secondary IDs",1:"")
- I IBEFTFL="LF" S VALMHDR(2)="VA-Lab/Facility Primary ID: Federal Tax ID"
+ I $P($G(^TMP("IBCE_PRVFAC_MAINT_INS",$J)),U)="F" D
+ . S VALMHDR(1)="INSURANCE CO: "_$P($G(^DIC(36,+$P($G(^TMP("IBCE_PRVFAC_MAINT_INS",$J)),U,2),0)),U)
+ . S VALMHDR(1)=VALMHDR(1)_"   BILLING FACILITY "_$P("PRIMARY ID^SECONDARY IDs",U,+$P(^TMP("IBCE_PRVFAC_MAINT_INS",$J),U,3))
  Q
  ;
 INIT ; Initialize
- N IBCT,IBD,Z,Z0,Z00,Z1,IBS,IBX,IBDIV,IBEFTFL,IBINS,IBPARAM,IBLCT,IBCU
+ N IBCT,IBD,Z,Z0,Z00,Z1,IBS,IBX,IBDIV
  K ^TMP("IBCE_PRVFAC_MAINT",$J)
  S (IBLCT,IBCT)=0
- S IBPARAM=$G(^TMP("IBCE_PRVFAC_MAINT_INS",$J))
- S IBEFTFL=$P(IBPARAM,U)  ; Electronic Form type flag
- S IBINS=+$P(IBPARAM,U,2)  ; Insurance co
+ I $P($G(^TMP("IBCE_PRVFAC_MAINT_INS",$J)),U)'="F" D
+ . S Z=0 F  S Z=$O(^IBE(355.97,Z)) Q:'Z  S Z0=$G(^(Z,0)) I '$P($G(^(1)),U,9) I '$P(Z0,U,2)!($P(Z0,U,2)=2) S IBS(0,+$P(Z0,U,2),$P(Z0,U))=Z
  ;
- I IBEFTFL="A" D
- . K VALM("PROTOCOL")
- . S Y=$$FIND1^DIC(101,,,"IBCE PRVFAC ADDIDS MAINT")
- . I Y S VALM("PROTOCOL")=+Y_";ORD(101,"
+ I $P($G(^TMP("IBCE_PRVFAC_MAINT_INS",$J)),U)="F" D
+ . N IBINS,IBPARAM
+ . S IBPARAM=$G(^TMP("IBCE_PRVFAC_MAINT_INS",$J))
+ . S IBINS=+$P(IBPARAM,U,2)
+ . S Z=0 F  S Z=$O(^IBA(355.92,"B",IBINS,Z)) Q:'Z  D
+ .. S Z0=$G(^IBA(355.92,Z,0))
+ .. Q:'$P(Z0,U,6)!($P(Z0,U,7)="")!$S($P(IBPARAM,U,3)=1:'$P($G(^IBE(355.97,+$P(Z0,U,6),1)),U,9),1:$P($G(^IBE(355.97,+$P(Z0,U,6),1)),U,9))
+ .. S Z1=$G(^IBE(355.97,+$P(Z0,U,6),0))
+ .. S IBS(+$P(Z0,U,5),+$P(Z1,U,2)_";"_Z,$P(Z1,U))=+$P(Z0,U,6)_U_$P(Z0,U,7)_U_Z
  ;
- I IBEFTFL="LF" D
- . S VALM("TITLE")="VA-Lab/Facility IDs"
- . K VALM("PROTOCOL")
- . S Y=$$FIND1^DIC(101,,,"IBCE PRVFAC VALF MAINT")
- . I Y S VALM("PROTOCOL")=+Y_";ORD(101,"
- ;
- ; Compile the appropriate list of IDs
- S Z=0 F  S Z=$O(^IBA(355.92,"B",IBINS,Z)) Q:'Z  D
- . S Z0=$G(^IBA(355.92,Z,0))
- . Q:'$P(Z0,U,6)!($P(Z0,U,7)="")  ; Quit if no provider id or id type
- . Q:'($P(Z0,U,8)=IBEFTFL)
- . ;Q:$S($P(IBPARAM,U,3)=1:'$P($G(^IBE(355.97,+$P(Z0,U,6),1)),U,9),1:$P($G(^IBE(355.97,+$P(Z0,U,6),1)),U,9))
- . S Z1=$G(^IBE(355.97,+$P(Z0,U,6),0))
- . S IBS(+$P(Z0,U,5),+$P(Z0,U,3),+$P(Z1,U,2)_";"_Z,$P(Z1,U))=+$P(Z0,U,6)_U_$P(Z0,U,7)_U_Z
- ;
- S IBD="" F  S IBD=$O(IBS(IBD)) Q:IBD=""  D
- . D:IBCT SET1(.IBLCT," ",IBCT+1)
- . D SET1(.IBLCT,"Division: "_$$DIV(IBD),IBCT+1)
- . S IBCU="" F  S IBCU=$O(IBS(IBD,IBCU)) Q:IBCU=""  D
- .. I IBCU D SET1(.IBLCT,"  Care Unit: "_$$EXTERNAL^DILFD(355.92,.03,"",IBCU),IBCT+1)
- .. S Z="" F  S Z=$O(IBS(IBD,IBCU,Z),-1) Q:Z=""  D
- ... S Z0="" F  S Z0=$O(IBS(IBD,IBCU,Z,Z0)) Q:Z0=""  S IBX=IBS(IBD,IBCU,Z,Z0) D
- .... S IBCT=IBCT+1
- .... I $P(Z,";",2) D  Q
- ..... S Z00=$G(^IBA(355.92,+$P(Z,";",2),0))
- ..... S Z1=$E(IBCT_$J("",3),1,3)_"  "_$E(Z0_$J("",25),1,25)_"   "_$E($S($P(IBX,U,2)'="":$P(IBX,U,2),1:$$IDNUM^IBCEP7A(+IBX))_$J("",15),1,15)_"  "_$P("BOTH^UB04^1500^RX",U,$P(Z00,U,4)+1)
- ..... D SET1(.IBLCT,Z1,IBCT)
- ..... S ^TMP("IBCE_PRVFAC_MAINT",$J,"ZIDX",IBCT)=+$P(Z,";",2)
- ;
+ S IBD="" F  S IBD=$O(IBS(IBD)) Q:IBD=""  D:IBCT SET1(.IBLCT," ",IBCT+1) D SET1(.IBLCT,"DIVISION: "_$$DIV(IBD),IBCT+1) S Z="" F  S Z=$O(IBS(IBD,Z),-1) Q:Z=""  S Z0="" F  S Z0=$O(IBS(IBD,Z,Z0)) Q:Z0=""  S IBX=IBS(IBD,Z,Z0) D
+ . S IBCT=IBCT+1
+ . I $P(Z,";",2) D  Q
+ .. S Z00=$G(^IBA(355.92,+$P(Z,";",2),0))
+ .. S Z1=$E(IBCT_$J("",3),1,3)_"  "_$E(Z0_$J("",25),1,25)_"   "_$E($S($P(IBX,U,2)'="":$P(IBX,U,2),1:$$IDNUM^IBCEP7A(+IBX))_$J("",15),1,15)_"  "_$P("BOTH^UB92^HCFA^RX",U,$P(Z00,U,4)+1)
+ .. D SET1(.IBLCT,Z1,IBCT)
+ .. S ^TMP("IBCE_PRVFAC_MAINT",$J,"ZIDX",IBCT)=+$P(Z,";",2)
+ . I '$P(Z,";",2) D
+ .. S Z1=$E(IBCT_$J("",3),1,3)_"  "_$E(Z0_$J("",25),1,25)_"   "_$E($S($P(IBX,U,2)'="":$P(IBX,U,2),1:$$IDNUM^IBCEP7A(+IBX))_$J("",15),1,15)_$S(Z=2:"  (Facility Level Only)",1:"")
+ .. D SET1(.IBLCT,Z1,IBCT)
+ .. S ^TMP("IBCE_PRVFAC_MAINT",$J,"ZIDX",IBCT)=+IBX
  I 'IBLCT D
  . D SET1(1," ")
- . N TEXT
- . I IBEFTFL="E" S TEXT="No Billing Provider Secondary IDs found"
- . I IBEFTFL="A" S TEXT="No Billing Provider Additional IDs found"
- . I IBEFTFL="LF" S TEXT="No VA Lab/Facility IDs found"
- . D SET1(2,TEXT)
+ . D SET1(2,"No Facility Provider IDs found")
  . S IBLCT=2
  S VALMBG=1,VALMCNT=IBLCT
  Q
@@ -73,22 +64,28 @@ SET1(IBLCT,TEXT,IBCT) ;
  Q
  ;
 DIV(IBD) ; Returns 'ALL/DEFAULT' or div NAME whose ien=IBD
- N MAIN
- I IBD Q $$EXTERNAL^DILFD(355.92,.05,"",IBD)
- S MAIN=$$MAIN^IBCEP2B()
- S MAIN=$$EXTERNAL^DILFD(355.92,.05,"",MAIN)
- S MAIN=MAIN_"/Default for All Divisions"
- Q MAIN
+ Q $S(IBD:$$EXTERNAL^DILFD(355.92,.05,"",IBD),1:"ALL/DEFAULT")
  ;
 EDIT1 ;
- N IBFUNC,IBINS,IBDA,Z,DIR,X,Y,DTOUT,DUOUT,DP,IBPARAM,IBEFTFL
+ N IBFUNC,IBINS,IBDA,Z,DIR,X,Y,DTOUT,DUOUT,DP
  D FULL^VALM1
- S IBPARAM=$G(^TMP("IBCE_PRVFAC_MAINT_INS",$J))
- S IBEFTFL=$P(IBPARAM,U)  ; Electronic Form type flag
- S IBINS=+$P(IBPARAM,U,2)  ; Insurance co
- S IBFUNC="E"
- D SEL
- I $G(IBDA) S Z=$$EDITFAC(IBDA,IBFUNC,IBEFTFL) I Z D INIT
+ I $P($G(^TMP("IBCE_PRVFAC_MAINT_INS",$J)),U)'="F" D  G EDIT1Q
+ . D SEL
+ . I $G(IBDA) S Z=$$EDITFAC(IBDA,"") I Z D INIT
+ ;
+ S IBINS=+$P($G(^TMP("IBCE_PRVFAC_MAINT_INS",$J)),U,2)
+ S DIR("A")="DO YOU WANT TO (A)DD, (E)DIT, or (D)ELETE AN ID?: "
+ S DIR(0)="SA^A:ADD;E:EDIT;D:DELETE",DIR("B")=$S(+$O(^TMP("IBCE_PRVFAC_MAINT",$J,"ZIDX",0)):"EDIT",1:"ADD")
+ D ^DIR K DIR
+ I $D(DTOUT)!$D(DUOUT) G EDIT1Q
+ ;
+ S IBFUNC=Y
+ I IBFUNC="E"!(IBFUNC="D") D
+ . D SEL
+ . I $G(IBDA) S Z=$$EDITFAC(IBDA,IBFUNC) I Z D INIT
+ ;
+ I IBFUNC="A" D 
+ . S Z=$$ADDFAC^IBCEP7A(IBINS) I Z D INIT
  ;
 EDIT1Q S VALMBCK="R"
  Q
@@ -97,11 +94,6 @@ EXPND ;
 HELP ;
  Q
 EXIT ;
- N IBPARAM,IBEFTFL
- S IBPARAM=$G(^TMP("IBCE_PRVFAC_MAINT_INS",$J))
- S IBEFTFL=$P(IBPARAM,U)  ; Electronic Form type flag
- I IBEFTFL="A" D COPYPROV^IBCEP5A(0)
- ;
  S (IBLCT,IBCT)=0
  K ^TMP("IBCE_PRVFAC_MAINT",$J),^TMP("IBCE_PRVFAC_MAINT_INS",$J)
  D CLEAN^VALM10
@@ -111,48 +103,48 @@ SEL ;
  K IBDA
  D FULL^VALM1,EN^VALM2($G(XQORNOD(0)),"OS")
  S Z=+$O(VALMY(0)) Q:'Z
+ S IBDA=$G(^TMP("IBCE_PRVFAC_MAINT",$J,"ZIDX",Z))
+ I $P($G(^TMP("IBCE_PRVFAC_MAINT_INS",$J)),U)'="F",$P($G(^IBE(355.97,+IBDA,0)),U,5) D NOEDIT(IBDA) K IBDA Q
  ; fac/ins co default
  S IBDA=$G(^TMP("IBCE_PRVFAC_MAINT",$J,"ZIDX",Z))
  Q
  ;
-EDITFAC(IBDA,IBFUNC,IBEFTFL) ; edits ins co facility id (355.92), entry IBDA
- N IBRBLD,Z,Z0,DIK,DIE,DP,DA,DR,DIR,X,Y,IBDA0,IBDIV,IBITYP,IBFORM,IBCAREUN,NEXTONE
+EDITFAC(IBDA,IBFUNC) ; Edits fac def entry in file 355.97 for Prov type IBDA
+ ;  OR edits ins co facility id (355.92), entry IBDA
+ N IBRBLD,Z,Z0,DIK,DIE,DP,DA,DR,DIR,X,Y,IBDA0,IBDIV,IBITYP,IBFORM
  S IBRBLD=0 S:$G(IBDA) IBDA0=$G(^IBA(355.92,+IBDA,0))
- ; "E"diting 355.92 entry
+ I IBFUNC="" D
+ . S Z=$$IDNUM^IBCEP7A(IBDA)
+ . S DIR(0)="FAO^1:15"
+ . S DIR("A")=$P($G(^IBE(355.97,IBDA,0)),U)_": "_$S(Z'="":Z_"// ",1:"")_" "
+ . S DIR("?")="^N IBHELP,Z D HELP^DIE(355.97,,.04,""A"",""IBHELP"") S Z=0 F  S Z=$O(IBHELP(""DIHELP"",Z)) Q:'Z  W !,IBHELP(""DIHELP"",Z)"
+ . W ! D ^DIR K DIR W !
+ . I Y'=""!(X="@") D
+ .. N IBOUT
+ .. S:X="@" Y=X,IBOUT=0
+ .. I Y="@" D
+ ... N Y
+ ... S DIR(0)="YA",DIR("B")="NO",DIR("A")="Are you sure you want to delete this id?: " W ! D ^DIR K DIR W !
+ ... I Y'=1!$D(DUOUT)!$D(DTOUT) S IBOUT=1 Q
+ ... S IBRBLD=1
+ .. I '$G(IBOUT) S DIE="^IBE(355.97,",DA=IBDA,DR=".04///"_$S(Y'="@":"/",1:"")_Y D ^DIE I '$D(Y) S IBRBLD=1
+ ;
  I IBFUNC="E" D
  . S Z0=$TR(IBDA0,U)
- . Q:'$$FACFLDS^IBCEP7C(IBDA,IBINS,.IBITYP,.IBFORM,.IBDIV,"E",.IBCAREUN,IBEFTFL)
- . S DIE="^IBA(355.92,",DA=IBDA
- . S DR=".03////"_$S($G(IBCAREUN)]""&($G(IBCAREUN)'="*N/A*"):IBCAREUN,1:"")_";.04////"_IBFORM_$S(IBDIV:";.05////"_IBDIV,1:"")_";.06////"_IBITYP_";"
- . S DR=DR_".07"_$S(IBEFTFL="E"!(IBEFTFL="A"):"Billing Provider Secondary ID",1:"VA Lab or Facility Secondary ID")
- . I IBEFTFL="A" D
- .. S NEXTONE=$$NEXTONE()
- .. S ^TMP("IB_EDITED_IDS",$J,NEXTONE)=IBDA_U_"MOD"_U_355.92
- .. S ^TMP("IB_EDITED_IDS",$J,NEXTONE,"OLD0")=^IBA(355.92,IBDA,0)
- . D ^DIE
- . I IBEFTFL="A" S ^TMP("IB_EDITED_IDS",$J,NEXTONE,0)=^IBA(355.92,IBDA,0)
+ . Q:'$$FACFLDS(IBDA,IBINS,.IBITYP,.IBFORM,.IBDIV,"E")
+ . S DIE="^IBA(355.92,",DR=".04////"_IBFORM_$S(IBDIV:";.05////"_IBDIV,1:"")_";.06////"_IBITYP_";.07R",DA=IBDA D ^DIE
  . I $TR($G(^IBA(355.92,IBDA,0)),U)'=Z0 S IBRBLD=1
- ;
- ; "D"eleting 355.92 entry
+ . ;
  I IBFUNC="D" D
- . W !!," Insurance Co: ",$P($G(^DIC(36,+IBDA0,0)),U)
- . W !,"     Division: ",$$DIV($P(IBDA0,U,5))
- . W:$P(IBDA0,U,3)]"" !,"    Care Unit: ",$$EXTERNAL^DILFD(355.92,.03,"",$P(IBDA0,U,3))
- . W !," ID Qualifier: ",$$EXTERNAL^DILFD(355.92,.06,"",$P(IBDA0,U,6))
- . W !,"    Form Type: ",$$EXTERNAL^DILFD(355.92,.04,"",$P(IBDA0,U,4))
- . W !,"           ID: ",$P(IBDA0,U,7),!
+ . W !!,"INSURANCE CO: ",$P($G(^DIC(36,+IBDA0,0)),U)
+ . W !,"    DIVISION: ",$$DIV($P(IBDA0,U,5))
+ . W !,"     ID TYPE: ",$$EXTERNAL^DILFD(355.92,.06,"",$P(IBDA0,U,6))
+ . W !,"   FORM TYPE: ",$$EXTERNAL^DILFD(355.92,.04,"",$P(IBDA0,U,4))
+ . W !,"          ID: ",$P(IBDA0,U,7),!
  . S DIR(0)="YA",DIR("A")="ARE YOU SURE YOU WANT TO DELETE THIS ID RECORD?: ",DIR("B")="NO" D ^DIR K DIR
  . S DIR("A")="NOTHING DELETED - PRESS RETURN TO CONTINUE: "
- . I Y=1 D
- .. S DIK="^IBA(355.92,",DA=IBDA
- .. D ^DIK
- .. I IBEFTFL="A" D
- ... N NEXTONE
- ... S NEXTONE=$$NEXTONE()
- ... S ^TMP("IB_EDITED_IDS",$J,NEXTONE)=IBDA_U_"DEL"_U_355.92
- ... S ^TMP("IB_EDITED_IDS",$J,NEXTONE,0)=IBDA0
- .. S DIR("A")="ID DELETED - PRESS RETURN TO CONTINUE: ",IBRBLD=1
- .. S DIR(0)="EA" W ! D ^DIR K DIR
+ . I Y=1 S DIK="^IBA(355.92,",DA=IBDA D ^DIK S DIR("A")="ID DELETED - PRESS RETURN TO CONTINUE: ",IBRBLD=1
+ . S DIR(0)="EA" W ! D ^DIR K DIR
  ;
  Q IBRBLD
  ;
@@ -162,34 +154,56 @@ FACID(Y) ;
  I Z1[Z!(Z2[Z) Q 1
  Q 0
  ;
-ADD1 ;
- N IBFUNC,IBINS,IBDA,Z,DIR,X,Y,DTOUT,DUOUT,DP,IBPARAM,IBEFTFL,IBINS
- D FULL^VALM1
- ;
+FACFLDS(IBDA,IBINS,IBITYP,IBFORM,IBDIV,IBFUNC) ; Chk for dups on fac id fld combos
+ N IB,IB,IBOK,DIC,DIR,X,Y,DTOUT,DUOUT,Z,Z0,DIE,DA,IBMAIN,IBQUIT,IBPARAM
  S IBPARAM=$G(^TMP("IBCE_PRVFAC_MAINT_INS",$J))
- S IBEFTFL=$P(IBPARAM,U)  ; Electronic Form type flag
- S IBINS=+$P(IBPARAM,U,2)  ; Insurance co        ;
+ S (IBQUIT,IBOK)=0,DA=$G(IBDA),IBMAIN=$$MAIN^IBCEP2B()
+ S DIR("A")="DIVISION: ",DIR(0)="355.92,.05AO",DIR("B")=$$EXTERNAL^DILFD(355.92,.05,"",IBMAIN) W ! D ^DIR K DIR
+ G:$D(DTOUT)!$D(DUOUT) FLDSQ
+ S IBDIV=+$S(Y>0:+Y,1:0)
+ I IBDIV=IBMAIN S IBDIV=0
+ I $P(IBPARAM,U,3)'=1 D
+ . S DIR("?")="CANNOT BE STATE LIC # or BILLING FACILITY PRIMARY"
+ . S DIR("A")="TYPE OF ID: ",DIR(0)="355.92,.06A^^K:'$$FACID^IBCEP7(+Y)!$P($G(^IBE(355.97,+Y,1)),U,9)!($P($G(^(0)),U,3)=""0B"") X" W ! D ^DIR K DIR
+ . I $D(DTOUT)!$D(DUOUT) S IBQUIT=1
+ E  D
+ . S Y=$$BF^IBCU()
+ . W !,"TYPE OF ID: ",$P($G(^IBE(355.97,+Y,0)),U)
+ G:IBQUIT FLDSQ
+ S IBITYP=$P(Y,U)
+ S DIR("A")="FORM TYPE APPLIED TO: ",DIR(0)=$S($P(IBPARAM,U,3)'=1:"355.92,.04A",1:"SA^1:UB92;2:HCFA 1500")
+ S:$P(IBPARAM,U,3)=1&$G(IBDA) DIR("B")=$P("UB92^HCFA 1500",U,+$P($G(^IBA(355.92,IBDA,0)),U,4))
+ I $P($G(^IBE(355.97,+IBITYP,0)),U,3)="1B"!($P($G(^IBE(355.97,+IBITYP,0)),U,3)="1A") D
+ . S $P(DIR(0),U,3)="I +Y'=3 K:+Y'="_$S($P(^IBE(355.97,+IBITYP,0),U,3)="1A":1,1:2)_" X"
+ . S DIR("?")="FOR AN ID TYPE OF "_$$EXTERNAL^DILFD(355.9,.04,"",IBITYP)_", ONLY "_$S($P(^IBE(355.97,+IBITYP,0),U,3)="1A":"UB92",1:"HCFA")_" OR Rx IS VALID"
+ D ^DIR K DIR
+ G:$D(DTOUT)!$D(DUOUT) FLDSQ
+ S IBFORM=$P(Y,U)
+ S Z=0 F  S Z=$O(^IBA(355.92,"B",IBINS,Z)) Q:'Z  S Z0=$G(^IBA(355.92,Z,0)) I $P(Z0,U,6)=IBITYP S:$S(IBFUNC'="E":1,1:Z'=IBDA) IB($P(Z0,U,4),+$P(Z0,U,5))=Z
+ S IBOK=1
+ I IBFUNC="E" S Z0=$G(^IBA(355.92,IBDA,0)) I IBFORM=$P(Z0,U,4),IBDIV=$P(Z0,U,5),IBITYP=$P(Z0,U,6) G FLDSQ
+ I $G(IB(IBFORM,IBDIV)) S IBOK="0^DUPLICATE"
+ I IBOK,IBFORM=0,$S($D(IB(1,IBDIV))!$D(IB(2,IBDIV)):1,1:0) S IBOK="0^FORM^SPECIFIC"
+ I IBOK,IBFORM'=0,IBFORM'=3,$S($D(IB(0,IBDIV)):1,1:0) S IBOK="0^FORM^BOTH"
  ;
- S Z=$$ADDFAC^IBCEP7A(IBINS,IBEFTFL) I Z D INIT
+ I 'IBOK D
+ . I $P(IBOK,U,2)="DUPLICATE" D  Q
+ .. S DIR("A",1)="THIS ID COMBINATION ALREADY EXISTS"_$S(IBFUNC="A":" - TRY EDITING IT INSTEAD",1:""),DIR("A",2)=" "
+ . ;
+ . I $P(IBOK,U,2)="BOTH" D  Q
+ .. S DIR("A",1)="AN ID COMBINATION FOR BOTH FORM TYPES ALREADY EXISTS.  DELETE THIS ONE",DIR("A",2)="BEFORE DEFINING ANY FORM SPECIFIC IDs"_$S(IBDIV:" FOR THIS DIVISION"),DIR("A",4)=" "
+ . ;
+ . I $P(IBOK,U,2)="FORM" D  Q
+ .. I $P(IBOK,U,3)="BOTH" S DIR("A",1)="THIS ID ALREADY EXISTS FOR BOTH FORM TYPES - DELETE IT TO ENTER THIS ID FOR",DIR("A",2)=" A SPECIFIC FORM TYPE",DIR("A",3)=" " Q
+ .. S DIR("A",1)="THIS ID ALREADY EXISTS FOR A SPECIFIC FORM TYPE - DELETE SPECIFIC FORM TYPE",DIR("A",2)=" ID(s) BEFORE ENTERING ONE FOR BOTH FORM TYPES",DIR("A",3)=" "
+ . ;
  ;
-ADD1Q S VALMBCK="R"
+ I 'IBOK S DIR(0)="EA",DIR("A")="PRESS RETURN TO CONTINUE: " W ! D ^DIR K DIR
+ ;
+FLDSQ Q +IBOK
+ ;
+NOEDIT(IBDA) ; Display no edit msg for entries in file 355.97
+ N DIR,X,Y
+ S DIR(0)="EA",DIR("A",1)="The PROVIDER ID TYPE ("_$P(^IBE(355.97,+IBDA,0),U)_") cannot be edited",DIR("A")="PRESS ENTER TO CONTINUE" W ! D ^DIR W ! K DIR
  Q
  ;
-DEL1 ;
- N IBFUNC,IBINS,IBDA,Z,DIR,X,Y,DTOUT,DUOUT,DP,IBPARAM,IBEFTDL,IBINS
- D FULL^VALM1
- ;       
- S IBPARAM=$G(^TMP("IBCE_PRVFAC_MAINT_INS",$J))
- S IBEFTFL=$P(IBPARAM,U)  ; Electronic Form type flag
- S IBINS=+$P(IBPARAM,U,2)  ; Insurance co
- ;
- S IBFUNC="D"
- D SEL
- I $G(IBDA) S Z=$$EDITFAC(IBDA,IBFUNC,IBEFTFL) I Z D INIT
- ;
-DEL1Q S VALMBCK="R"
- Q
- ;
- ; Get the next number so that the edits can be replicated in order for other providers/insurance companies
-NEXTONE() ;
- Q $O(^TMP("IB_EDITED_IDS",$J,""),-1)+1

@@ -1,5 +1,5 @@
-XWBPRS ;ISF/STAFF - VISTA BROKER MSG PARSER ; 3/28/2006
- ;;1.1;RPC BROKER;**35,43,46**;Mar 28, 1997
+XWBPRS ;ISF/STAFF - VISTA BROKER MSG PARSER ;12/08/2004  13:52
+ ;;1.1;RPC BROKER;**35,43**;Mar 28, 1997
  ;XWB holds info from the message used by the RPC
 CALLP(XWBP,XWBDEBUG) ;make API call using Protocol string
  N ERR,S,XWBARY K XWB
@@ -141,11 +141,11 @@ SREAD() ;Read a S_PACK
  S L=$$BREAD^XWBRW(1),L=$A(L)
  S V7=$$BREAD^XWBRW(L)
  Q V7
- ;
 LREAD(ROOT) ;Read a L_PACK
- N L,V7,I ;p45 Remove limit on length of string.
- S I=1,@ROOT@(I)=""
- S L=$$BREAD^XWBRW(XWBENVL),L=+L
+ N L,TL,V7,I,MAX
+ S I=1,MAX=256,@ROOT@(I)=""
+ S L=$$BREAD^XWBRW(XWBENVL),(TL,L)=+L
+ I L>MAX F  S V7=$$BREAD^XWBRW(MAX),L=L-$L(V7),@ROOT@(I)=V7,I=I+1 Q:(L'>MAX)
  I L>0 S V7=$$BREAD^XWBRW(L),@ROOT@(I)=V7,I=I+1
  Q
  ;
@@ -195,7 +195,7 @@ CAPI(XWBY,PAR) ;make API call
  N XWBCALL,T,DX,DY
  S XWBCALL=XWB(2,"RTAG")_"^"_XWB(2,"RNAM")_"(.XWBY"_$S($L(PAR):","_PAR,1:"")_")",XWBCALL2=""
  K PAR
- O XWBNULL U XWBNULL ;p43 Make sure its open
+ O XWBNULL U XWBNULL ;Make sure its open
  ;
  I $G(XWBDEBUG)>2 D LOG^XWBDLOG("Call: "_$E(XWBCALL,1,247))
  ;start RUM for RPC

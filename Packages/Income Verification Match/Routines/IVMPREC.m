@@ -1,5 +1,5 @@
-IVMPREC ;ALB/MLI/ESD,BAJ - PROCESS INCOMING HL7 (QRY) MESSAGES ; 8/17/06 2:37pm
- ;;2.0;INCOME VERIFICATION MATCH;**1,9,11,15,18,24,34,105**;JUL 8,1996;Build 2
+IVMPREC ;ALB/MLI/ESD - PROCESS INCOMING HL7 (QRY) MESSAGES ; 8/30/01 4:11pm
+ ;;2.0;INCOME VERIFICATION MATCH;**1,9,11,15,18,24,34**;JUL 8,1996
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; This routine will process (QRY) HL7 messages received from HEC
@@ -26,9 +26,6 @@ QRY ; - Receive Query Message requesting further information
  D INIT^HLFNC2(HLEID,.HL)
  S HLEIDS=$O(^ORD(101,HLEID,775,"B",0))
  ;
- ; IVM*2.0*105 BAJ 11/02/2005 Temp global for Consistency Checks
- K ^TMP($J,"CC")
- ;
  F IVMDA=0:0 S IVMDA=$O(^TMP($J,IVMRTN,IVMDA)) Q:'IVMDA  S IVMSEG=$G(^(IVMDA,0)) I $E(IVMSEG,1,3)="QRD"!($E(IVMSEG,1,3)="MSH") D
  .I $E(IVMSEG,1,3)="MSH" S IVMMSHID=$P(IVMSEG,HLFS,10),MSGID=$P(IVMSEG,HLFS,10),HLMID=MSGID Q
  .K HLERR S IVMFLAG=1
@@ -49,8 +46,7 @@ QRY ; - Receive Query Message requesting further information
  ...S DR=".02///NOW;.04////^S X=IVMMSHID;10////^S X=IVMSEG1" D ^DIE
  ..;
  ..; Send AE if veteran has a Pseudo SSN and eligibility is not verified
- ..; Removed with IVM*2*105
- ..; I '$$SNDPSSN^IVMPTRN7(DFN) S HLERR="Pseudo SSN must be verified" D ACK Q
+ ..I '$$SNDPSSN^IVMPTRN7(DFN) S HLERR="Pseudo SSN must be verified" D ACK Q
  ..;
  ..; - prepare (ACK) message
  ..D:'$D(HLERR) MSGHDR   ;header (MSH)
@@ -62,11 +58,6 @@ QRY ; - Receive Query Message requesting further information
  ..; - build 'FULL' transmission (note: without MSH segment)
  ..S IVMMTDT=$E(IVMIY,1,3)+1_"1231.9999"
  ..D FULL^IVMPTRN7(DFN,IVMMTDT,.EVENTS,.IVMCT,.IVMGTOT,,1,,.IVMQUERY)
- ;
- ; IVM*2.0*105 BAJ 11/02/2005
- ; send AE if inconsistencies found.
- I ^TMP($J,"CC",0) S HLERR="Message not sent.  Inconsistencies in Record" D ACK
- K ^TMP($J,"CC")
  ;
  F Z="LTD","OVIS" I $G(IVMQUERY(Z)) D CLOSE^SDQ(IVMQUERY(Z)) K IVMQUERY(Z)
  I 'IVMFLAG S HLERR="Invalid Message Format" D ACK

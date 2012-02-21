@@ -1,8 +1,9 @@
 FHOMRC1 ;Hines OIFO/RTK RECURRING MEALS CANCEL MEAL  ;2/10/03  15:05
- ;;5.5;DIETETICS;**2,8**;Jan 28, 2005;Build 28
+ ;;5.5;DIETETICS;**2**;Jan 28, 2005
  ;
 CRM ; Cancel entire recurring meal
- D GETRM Q:FHFIND=0  Q:$G(NUM)<1
+ D GETRM I FHFIND=0 Q
+ I $G(NUM)<1 Q
 CRM1 W ! K DIR S DIR("A")="Cancel which order (or ALL)?",DIR(0)="FO^1:80"
  D ^DIR
  Q:$D(DIRUT)  S FHNUM=Y D RANGE^FHOMUTL I FHCLST="" D CRM1 Q
@@ -18,7 +19,7 @@ CANRM ;
  S FHACT="C",FHOPTY="R" D SETAET^FHOMRO2
  Q
 CA ; Cancel Additional Order
- D GETRM Q:FHFIND=0  Q:$G(NUM)<1
+ D GETRM I FHFIND=0 Q
 CA1 W ! K DIR S DIR("A")="Cancel which Additional Order (or ALL)?"
  S DIR(0)="FO^1:80" D ^DIR
  Q:$D(DIRUT)  S FHNUM=Y D RANGE^FHOMUTL I FHCLST="" D CA1 Q
@@ -35,7 +36,7 @@ CANAO ;
  S FHACT="C",FHOPTY="A" D SETAET^FHOMRO2 S FHORN=""
  Q
 CE ; Cancel Early/Late Tray
- D GETRM Q:FHFIND=0  Q:$G(NUM)<1
+ D GETRM I FHFIND=0 Q
 CE1 W ! K DIR S DIR("A")="Cancel which Early/Late Tray (or ALL)?"
  S DIR(0)="FO^1:80" D ^DIR
  Q:$D(DIRUT)  S FHNUM=Y D RANGE^FHOMUTL I FHCLST="" D CE1 Q
@@ -52,7 +53,7 @@ CANEL ;
  S FHACT="C",FHOPTY="E" D SETAET^FHOMRO2 S FHORN=""
  Q
 CT ; Cancel Tubefeeding
- D GETRM Q:FHFIND=0  Q:$G(NUM)<1
+ D GETRM I FHFIND=0 Q
 CT1 W ! K DIR S DIR("A")="Cancel which Tubefeeding (or ALL)?"
  S DIR(0)="FO^1:80" D ^DIR
  Q:$D(DIRUT)  S FHNUM=Y D RANGE^FHOMUTL I FHCLST="" D CT1 Q
@@ -70,7 +71,7 @@ CANTF ;
  Q
 GETRM ; Select patient and get recurring meals
  S FHORN="",FHPSDT="N" D GETOPT^FHOMUTL I FHFIND=0 Q
- K NUM D DISP^FHOMRR1 I $G(NUM)="" Q
+ D DISP^FHOMRR1
  K FHPSDT Q
 END ;
  K A,FHFIND,FHCLST,FHC,FHCDT,FHPSDT,NUM

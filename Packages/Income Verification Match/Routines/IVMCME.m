@@ -1,5 +1,5 @@
-IVMCME ;ALB/SEK,BRM,TDM - DCD INCOME TEST EDIT CHECK DRIVER ; 3/22/06 4:12pm
- ;;2.0;INCOME VERIFICATION MATCH;**17,49,58,115**;21-OCT-94;Build 28
+IVMCME ;ALB/SEK,BRM,TDM - DCD INCOME TEST EDIT CHECK DRIVER ; 8/2/02 10:22am
+ ;;2.0;INCOME VERIFICATION MATCH;**17,49,58**;21-OCT-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; This routine will perform edit checks to validate income tests
@@ -22,21 +22,14 @@ IVMCME ;ALB/SEK,BRM,TDM - DCD INCOME TEST EDIT CHECK DRIVER ; 3/22/06 4:12pm
  ;
 EN() ; Entry point to begin edit checks.
  ;
- N ARRAY,DEP,ERROR,I,IEN,SPOUSE,STRING,TYPE,X,Y
+ N ARRAY,DEP,ERROR,I,IEN,SPOUSE,STRING,TYPE,X
  S ERROR=""
  ;
  I '$G(IVMTYPE) S ERROR="Income Test Type not Specified" G ENQ
  ;
  ; - build strings for the veteran
  S SPOUSE=0,DEP=1
- ;S ARRAY("PID")=$$CLEAR($G(^TMP($J,"IVMCM","PIDV")))
- S X=0 F  S X=$O(^TMP($J,"IVMCM","PIDV",X)) Q:X=""  D
- .I $D(^TMP($J,"IVMCM","PIDV",X))=1 D
- ..S ARRAY("PID",X)=$$CLEAR(^TMP($J,"IVMCM","PIDV",X))
- .I $D(^TMP($J,"IVMCM","PIDV",X))=10 D
- ..S Y=0 F  S Y=$O(^TMP($J,"IVMCM","PIDV",X,Y)) Q:Y=""  D
- ...S ARRAY("PID",X,Y)=$$CLEAR(^TMP($J,"IVMCM","PIDV",X,Y))
- ;
+ S ARRAY("PID")=$$CLEAR($G(^TMP($J,"IVMCM","PIDV")))
  S ARRAY("ZIC")=$$CLEAR($G(^TMP($J,"IVMCM","ZICV"))),$P(ARRAY("ZIC"),HLFS,21)=$$TOTAL(ARRAY("ZIC"))
  S ARRAY("ZIR")=$$CLEAR($G(^TMP($J,"IVMCM","ZIRV")))
  ;

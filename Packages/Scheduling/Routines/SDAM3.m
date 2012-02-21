@@ -1,5 +1,5 @@
-SDAM3 ;MJK/ALB - Appt Mgt (Clinic) ; 4/21/05 12:23pm
- ;;5.3;Scheduling;**63,189,380,478,492**;Aug 13, 1993;Build 1
+SDAM3 ;MJK/ALB - Appt Mgt (Clinic) ; 12/1/91
+ ;;5.3;Scheduling;**63,189,380**;Aug 13, 1993
  ;
 INIT ; -- get init clinic appt data
  ;  input:        SDCLN := ifn of pat
@@ -16,15 +16,8 @@ BLD ; -- scan apts
  N VA,SDAMDD,SDNAME,SDMAX,SDLARGE,DFN,SDCL,BL,XC,XW,AC,AW,TC,TW,NC,NW,SC,SW,SDT,SDDA ; done for speed see INIT^SDAM10
  D INIT^SDAM10
  F SDT=SDBEG:0 S SDT=$O(^SC(SDCLN,"S",SDT)) Q:'SDT!($P(SDT,".",1)>SDEND)  D
- .F SDDA=0:0 S SDDA=$O(^SC(SDCLN,"S",SDT,1,SDDA)) Q:'SDDA  S CNSTLNK=$P($G(^SC(SDCLN,"S",SDT,1,SDDA,"CONS")),U),CSTAT="" S:CNSTLNK'="" CSTAT=$P($G(^GMR(123,CNSTLNK,0)),U,12) D  ;SD/478
- ..I $D(^SC(SDCLN,"S",SDT,1,SDDA,0)) S DFN=+^(0) D             ;SD/492
- ...N NDX,DA,FND                                               ;SD/492
- ...S (FND,NDX)=""                                             ;SD/492
- ...F  S NDX=$O(^TMP("SDAMIDX",$J,NDX)) Q:NDX=""  D  Q:FND     ;SD/492
- ....S DA=^TMP("SDAMIDX",$J,NDX)                               ;SD/492
- ....I $P(DA,U,2)=DFN,$P(DA,U,3)=SDT,$P(DA,U,4)=SDCLN S FND=1  ;SD/492
- ...Q:FND                                                      ;SD/492
- ...D PID^VADPT I $D(^DPT(DFN,"S",SDT,0)),$$VALID^SDAM2(DFN,SDCLN,SDT,SDDA) S SDATA=^DPT(DFN,"S",SDT,0),SDCL=SDCLN,SDNAME=VA("BID")_" "_$P($G(^DPT(DFN,0)),U) D:SDCLN=+SDATA BLD1^SDAM1  ;SD/478,492
+ .F SDDA=0:0 S SDDA=$O(^SC(SDCLN,"S",SDT,1,SDDA)) Q:'SDDA  D
+ ..I $D(^(SDDA,0)) S DFN=+^(0) D PID^VADPT I $D(^DPT(DFN,"S",SDT,0)),$$VALID^SDAM2(DFN,SDCLN,SDT,SDDA) S SDATA=^DPT(DFN,"S",SDT,0),SDCL=SDCLN,SDNAME=VA("BID")_" "_$P($G(^DPT(DFN,0)),U) D:SDCLN=+SDATA BLD1^SDAM1
  D NUL^SDAM10,LARGE^SDAM10:$D(SDLARGE)
  S $P(^TMP("SDAM",$J,0),U,4)=VALMCNT
  Q

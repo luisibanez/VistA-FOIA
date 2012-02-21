@@ -1,14 +1,11 @@
 IBECEA1 ;ALB/RLW-Cancel/Edit/Add... Action Entry Points ; 12-JUN-92
- ;;2.0;INTEGRATED BILLING;**15,27,45,176,312**;21-MAR-94
+ ;;2.0;INTEGRATED BILLING;**15,27,45,176**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 PASS ; 'Pass a Charge' Entry Action (added by Jim Moore 4/30/92)
  N C,IBII,IBNOS,IBND,IBMSG,IBY,IBLINE,IBSTAT,IBAFY,IBATYP,IBHLDR
  N IBARTYP,IBN,IBSEQNO,IBSERV,IBTOTL,IBTRAN,IBIL,IBNOS2,Y,IBXA
- ;
  S VALMBCK="R" D EN^VALM2($G(XQORNOD(0)))
- I $D(VALMY) I '$$PFSSWARN^IBBSHDWN() S VALMBCK="R" Q
- ;
  S IBII="" F  S IBII=$O(VALMY(IBII)) Q:'IBII  D  L -^IB(IBNOS2) D MSG
  .S IBY=1,IBLINE=^TMP("IBACM",$J,IBII,0)
  .S (IBNOS,IBNOS2)=+$P(^TMP("IBACMIDX",$J,IBII),"^",4)
@@ -22,6 +19,7 @@ PASS ; 'Pass a Charge' Entry Action (added by Jim Moore 4/30/92)
  .S IBSEQNO=$P($G(^IBE(350.1,+$P(IBND,"^",3),0)),"^",5) I 'IBSEQNO S IBMSG="was not passed (Bulletin will be generated)",IBY="-1^IB023" Q
  .I $P($G(^IBE(350.1,+$P(IBND,"^",3),0)),"^",11)=6 S IBMSG="was not passed - CHAMPVA charges must be cancelled and rebilled" Q
  .S IBHLDR=(IBSTAT=21)
+ .;
  .; - pass charge to AR and update list
  .D ^IBR S IBY=$G(Y)
  .S IBND=$G(^IB(IBNOS2,0))
@@ -51,7 +49,6 @@ MSG ; Display results message.
  ;
  ;
 ADD ; 'Add a Charge' Entry Action
- I '$$PFSSWARN^IBBSHDWN() S VALMBCK="R" Q                   ;IB*2.0*312
  G ^IBECEA3
  ;
 UPD ; 'Edit a Charge' Entry Action
@@ -59,8 +56,6 @@ UPD ; 'Edit a Charge' Entry Action
  ;
 CAN ; 'Cancel a Charge' Entry Action
  D EN^VALM2(IBNOD(0)) I '$O(VALMY(0)) S VALMBCK="" G CANQ
- I $G(IBAUPD) I '$$PFSSWARN^IBBSHDWN() S VALMBCK="R" Q       ;IB*2.0*312
- ;
  S (IBNBR,IBCOMMIT)=0,VALMBCK="R"
  F  S IBNBR=$O(VALMY(IBNBR)) Q:'IBNBR  D ^@$S($G(IBAUPD):"IBECEA2",1:"IBECEA4")
  I IBCOMMIT S IBBG=VALMBG W !,"Rebuilding list of charges..." D ARRAY^IBECEA0 S VALMBG=IBBG

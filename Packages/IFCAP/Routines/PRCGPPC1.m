@@ -1,6 +1,6 @@
 PRCGPPC1 ;WIRMFO@ALTOONA/CTB/WIRMFO/RHD - ARCHIVING & PURGING ENTRY POINTS ;12/10/97  10:55 AM
-V ;;5.1;IFCAP;**95**;Oct 20, 2000
- ;Per VHA Directive 2004-038, this routine should not be modified.
+V ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;MUST BE CALLED FROM SPECIFIC ENTRY POINT
 P4429(PO) ;given the external PO number, delete all entries in 442.9
  ;PO1 - full external PO number with a period and partial number
@@ -33,7 +33,7 @@ DL424(PRC442) N PRC424,DA,DIK
 DL424D1 ;
  N PRC424D1,DA,DIK
  S PRC424D1=0
- F  S PRC424D1=$O(^PRC(424.1,"C",PRC424,PRC424D1)) Q:PRC424D1'?1.N  D
+ S PRC424D1=$O(^PRC(424.1,"C",PRC424,PRC424D1)) Q:PRC424D1'?1.N  D
  .S DA=PRC424D1,DIK="^PRC(424.1," D ^DIK
  .Q
  Q

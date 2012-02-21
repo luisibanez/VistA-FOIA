@@ -1,5 +1,5 @@
-RORTSK10 ;HCIOFO/SG - REPORT RETRIEVING UTILITIES ; 11/14/06 1:11pm
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORTSK10 ;HCIOFO/SG - REPORT RETRIEVING UTILITIES ; 10/21/05 10:13am
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  Q
  ;
@@ -150,8 +150,7 @@ XMLREPI(PARENT,PELC) ;
  . . F  S I=$O(@RORSRC@(RORIEN,2,I))  Q:I'>0  D
  . . . S TMP=$P(@RORSRC@(RORIEN,2,I,0),U)
  . . . S BUF=BUF_" "_$P(^ROR(799.31,TMP,0),U)
- . . . S TMP=$G(@RORSRC@(RORIEN,2,I,1))
- . . . S BUF=BUF_"="""_$$XMLENC^RORUTL03(TMP)_""""
+ . . . S BUF=BUF_"="""_$G(@RORSRC@(RORIEN,2,I,1))_""""
  . . ;--- Append the SORT attribute(s) to a table
  . . D:$D(RORSORT(ELC))
  . . . S TMP=+$P(RORSORT(ELC),U)  Q:TMP'>0
@@ -163,8 +162,7 @@ XMLREPI(PARENT,PELC) ;
  . . . ;--- <ELEMENT...>VALUE</ELEMENT>
  . . . S TMP=$G(@RORSRC@(RORIEN,1))
  . . . I TMP'=""  D:MODE'>2  Q
- . . . . S BUF=BUF_">"_$$XMLENC^RORUTL03(TMP)_"</"_ELEMENT_">"
- . . . . S RC=$$XMLSTR(BUF,2)
+ . . . . S RC=$$XMLSTR(BUF_">"_TMP_"</"_ELEMENT_">",2)
  . . . ;--- <ELEMENT.../>
  . . . S I=$O(@RORSRC@(RORIEN,3,0))
  . . . I I'>0  S:MODE'>2 RC=$$XMLSTR(BUF_"/>",2)  Q

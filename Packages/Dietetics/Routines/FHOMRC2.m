@@ -1,5 +1,5 @@
 FHOMRC2 ;Hines OIFO/RTK BACKDOOR CANCEL OUTPATIENT MEALS  ;4/27/05  10:05
- ;;5.5;DIETETICS;**2,5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;**2**;Jan 28, 2005
  ;
 CNRM100 ;Backdoor message to update file #100 with RM cancel order
  S FHORN=$P($G(^FHPT(FHDFN,"OP",FHRNUM,0)),U,12)
@@ -28,7 +28,7 @@ CNSMEL S FHORN=$P($G(^FHPT(FHDFN,"SM",FHDA,1)),U,4) I FHORN="" Q
  S FILL="G;"_FHDA D CAN Q
 CAN ;
  Q:'$$PATCH^XPDUTL("OR*3.0*215")  ;must have CPRSv26 for O.M. backdoor
- Q:'DFN  D MSHCA^FHOMUTL,EVSEND^FHWOR
+ D MSHCA^FHOMUTL,EVSEND^FHWOR
  Q
 CANOCC ; If cancelling occurences of RM (not ALL) then send "XX" message
  ; instead of "OC" which will cancel the entire order in CPRS.

@@ -1,5 +1,5 @@
 PXRMVPTR ; SLC/PKR - Routines for dealing with variable pointers. ; 02/06/2001
- ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;==================================================
 BLDALIST(FILE,FIELD,LIST) ;Build a list of variable pointer information
@@ -19,7 +19,6 @@ BLDALIST(FILE,FIELD,LIST) ;Build a list of variable pointer information
 BLDNLIST(FILE,FIELD,LIST) ;Build a list of variable pointer information
  ;indexed by the file number.
  N FN,IND,ROOT,TEMP
- ;DBIA #2991
  S IND=0
  F  S IND=$O(^DD(FILE,FIELD,"V",IND)) Q:+IND=0  D
  . S TEMP=^DD(FILE,FIELD,"V",IND,0)

@@ -1,5 +1,5 @@
-XQALSURO ;ISC-SF.SEA/JLI - SURROGATES FOR ALERTS ;3/17/08  15:20
- ;;8.0;KERNEL;**114,125,173,285,366,443**;Jul 10, 1995;Build 4
+XQALSURO ;ISC-SF.SEA/JLI - SURROGATES FOR ALERTS ;9/6/05  15:13
+ ;;8.0;KERNEL;**114,125,173,285,366**;Jul 10, 1995
  ;;
  Q
 OTHRSURO ; OPT:- XQALERT SURROGATE SET/REMOVE -- OTHERS SPECIFY SURROGATE FOR SELECTED USER
@@ -15,23 +15,18 @@ SURROGAT ; USER SPECIFICATION OF SURROGATE
  I '$D(XQAUSER) N XQAUSER S XQAUSER=DUZ
  D SURRO1^XQALSUR1(XQAUSER)
  Q
+ ; P366 - optional start and end dates added to permit identification of cyclical surrogates in specific times
 CYCLIC(XQALSURO,XQAUSER,XQASTRT,XQAEND) ; code added to prevent cyclical surrogates
- I '$$ACTIVE^XUSER(XQALSURO) Q "You cannot have an INACTIVE USER ("_XQALSURO_") as a surrogate!" ;P443
- I XQALSURO=XQAUSER Q "You cannot specify yourself as your own surrogate!" ; moved in P443
  I $G(XQASTRT)>0 Q $$DCYCLIC^XQALSUR1(XQALSURO,XQAUSER,XQASTRT,$G(XQAEND))
  N XQALSTRT
+ I XQALSURO=XQAUSER Q "You cannot specify yourself as your own surrogate!"
  S XQALSTRT=$$CURRSURO(XQALSURO) I XQALSTRT>0 D
- . I XQALSTRT=XQAUSER S XQALSURO="YOU are designated as the surrogate for this user ("_XQALSURO_") - can't do it!" Q
+ . I XQALSTRT=XQAUSER S XQALSURO="YOU are designated as the surrogate for this user - can't do it!" Q
  . F  S XQALSTRT=$$CURRSURO(XQALSTRT) Q:XQALSTRT'>0  I XQALSTRT=XQAUSER S XQALSURO="This forms a circle which leads back to you - can't do it!" Q
  . Q
  Q XQALSURO
  ;
-SETSURO(XQAUSER,XQALSURO,XQALSTRT,XQALEND) ; Use SETSURO1 instead
- N XQALVAL ; P443
- S XQALVAL=$$SETSURO1(XQAUSER,XQALSURO,$G(XQALSTRT),$G(XQALEND)) ; P443
- Q
- ;
-SETSUROX(XQAUSER,XQALSURO,XQALSTRT,XQALEND) ; SETSURO CODE MOVED TO HERE TO PERMIT AN ERROR TO BE GENERATED AT THE OLD ENTRY POINT
+SETSURO(XQAUSER,XQALSURO,XQALSTRT,XQALEND) ; SR
  N XQALFM,XQALIEN,XQAIENS
  I $G(XQAUSER)'>0 Q
  I $G(XQALSURO)'>0 Q
@@ -59,8 +54,7 @@ SETSUROX(XQAUSER,XQALSURO,XQALSTRT,XQALEND) ; SETSURO CODE MOVED TO HERE TO PERM
  E  S XQAMESG(3,0)="until "_$$FMTE^XLFDT(XQALEND)
  S XMSUB="Surrogate Recipient for "_$$GET1^DIQ(200,XQAIENS,.01,"E")
  S XMTEXT="XQAMESG("
- ; ZEXCEPT: XTMUNIT   - Defined if unit tests are being run
- D:'$D(XTMUNIT) SENDMESG
+ D:'$D(XQATEST) SENDMESG
  Q
  ;
 ACTIVATE(XQAUSER,XQALIEN) ; activates a surrogate
@@ -79,7 +73,7 @@ SETSURO1(XQAUSER,XQALSURO,XQALSTRT,XQALEND) ; SR. This should be used instead of
  I $G(XQALSTRT)'>0 S XQALSTRT=$$NOW^XLFDT()
  N XQAVAL
  S XQAVAL=$$CYCLIC(XQALSURO,XQAUSER,XQALSTRT,$G(XQALEND)) I XQAVAL'>0 Q XQAVAL ; Can't use as surrogate
- D SETSUROX(XQAUSER,XQALSURO,XQALSTRT,$G(XQALEND)) ; P443
+ D SETSURO(XQAUSER,XQALSURO,XQALSTRT,$G(XQALEND))
  Q XQALSURO
  ;
 CHKREMV ;
@@ -107,7 +101,9 @@ CURRSURO(XQAUSER,XQASTRT,XQAEND) ;SR. - returns current surrogate for user or -1
  I $G(XQASTRT)>0 Q $$DATESURO^XQALSUR1(XQAUSER,XQASTRT,$G(XQAEND)) ; P366 - check for current in specified date/times
  ;
  ; P366 - find the latest start time which is now or past or the first one in the future
- S XQANOW=$$NOW^XLFDT() D
+ S XQANOW=$$NOW^XLFDT()
+ ;I $P($G(^XTV(8992,XQAUSER,0)),U,2)'>0 D
+ D
  . S XQAIVAL=0,XQASTR1=0
  . F XQASTRT=0:0 S XQASTRT=$O(^XTV(8992,XQAUSER,2,"B",XQASTRT)) Q:XQASTRT'>0  Q:XQASTRT'<XQANOW  S XQASTR1=XQASTRT F XQAI=0:0 S XQAI=$O(^XTV(8992,XQAUSER,2,"B",XQASTRT,XQAI)) Q:XQAI'>0  D
  . . S XQAEND=$P(^XTV(8992,XQAUSER,2,XQAI,0),U,3) I (XQAEND="")!(XQAEND>XQANOW) S XQAIVAL=XQAI
@@ -123,28 +119,10 @@ CURRSURO(XQAUSER,XQASTRT,XQAEND) ;SR. - returns current surrogate for user or -1
  ; now check for a CURRENT surrogate, already started and not expired or cyclic
  I $P(X,U,2)>0,+$P(X,U,3)'>XQANOW D  I $P($G(^XTV(8992,XQAUSER,0)),U,2)>0 Q +$P(^XTV(8992,XQAUSER,0),U,2)
  . N DATE ;   Get Current date/time to check date/times if present
- . ; FOLLOWING LINES MODIFIED IN P443 TO ELIMINATE A STACK ERROR WHEN SURROGATE WAS CIRCULAR
- . ;  Current Date/time past End date for surrogate
- . S DATE=$P(X,U,4) I (DATE>0&(DATE<XQANOW)) D REMVSURO(XQAUSER) Q
- . N XQASURO,XQASURO1 S XQASURO1=+$P(^XTV(8992,XQAUSER,0),U,2)
- . ; REMOVE IF SURROGATE IS USER
- . I XQASURO1=XQAUSER D REMVSURO(XQAUSER) Q
- . N XQALLIST S XQALLIST(XQAUSER)=""
- . ; REMOVE IF CYCLES BACK TO USER - thought about removing inactive, but best to let those be handled by groups for unprocessed alerts
- . F  S XQASURO=$P($G(^XTV(8992,XQASURO1,0)),U,2) Q:XQASURO'>0  Q:'$$ISACTIVE(XQASURO)  S XQASURO1=XQASURO D
- . . I $D(XQALLIST(XQASURO)) D REMVSURO(XQASURO) S XQASURO1=XQAUSER K XQALLIST S XQALLIST(XQAUSER)="" Q
- . . S XQALLIST(XQASURO1)=""
- . . Q
- . ; END OF P443 MODIFICATION
+ . ;  Current Date/time past End date for surrogate or cyclic relationship remove checks for new surrogate
+ . S DATE=$P(X,U,4) I (DATE>0&(DATE<XQANOW))!('$$CYCLIC($P(X,U,2),XQAUSER)) D REMVSURO(XQAUSER)
  . Q
  Q -1
- ;
-ISACTIVE(XQAUSER) ; checks for whether a surrogate relationship is active or not (returns 0 or 1)
- N DATA
- S DATA=$G(^XTV(8992,XQAUSER,0)) Q:$P(DATA,U,2)="" 0  ; NO SURROGATE SPECIFIED
- I $P(DATA,U,3)>0,$P(DATA,U,3)>$$NOW^XLFDT() Q 0  ; START DATE/TIME NOT YET
- I $P(DATA,U,4)>0,$P(DATA,U,4)<$$NOW^XLFDT() Q 0  ; PAST END DATE/TIME
- Q 1
  ;
 ACTVSURO(XQAUSER) ;SR. - returns the actual surrogate at this time
  N CURRSURO,NEXTSURO,SURODATA,NOW

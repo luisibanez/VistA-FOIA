@@ -1,6 +1,5 @@
-PRSDPROC ;SC/GWB-PAID DOWNLOAD PRS GLOBAL PROCESSOR ;5/6/93  13:12
- ;;4.0;PAID;**109**;Sep 21, 1995;Build 5
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRSDPROC ;HISC/GWB-PAID DOWNLOAD PRS GLOBAL PROCESSOR ;5/6/93  13:12
+ ;;4.0;PAID;;Sep 21, 1995
  I '$D(^XTMP("PRS","TMP")) W !!,"There is no unprocessed PAID download data." R !!,"Press return to continue ",A:DTIME K A Q
 TASK S ANS=""
  S %=0 W !!,"Do you want to task this job" D YN^DICN
@@ -8,11 +7,11 @@ TASK S ANS=""
  I %=0 W !,?4,*7,"ANSWER 'YES' OR 'NO':" G TASK
  I %=1 S ZTRTN="PROC^PRSDPROC",ZTIO="",ZTDESC="PAID DOWNLOAD PROCESSOR" D ^%ZTLOAD Q
  S:%=2 ANS="N"
-PROC S DATE="",SUB="TMP" D NOW^%DTC S TIME=%
+PROC S DATE="",SUB="TMP"
  F L1=1:1 S DATE=$O(^XTMP("PRS",SUB,DATE)) Q:DATE=""  S TYPE="" F L2=1:1 S TYPE=$O(^XTMP("PRS",SUB,DATE,TYPE)) Q:TYPE=""  S STA="" F L3=1:1 S STA=$O(^XTMP("PRS",SUB,DATE,TYPE,STA)) Q:STA=""  S ECNT=0 D MSG,START^PRSDSERV,^PRSDSTAT
 EXIT D EXIT^PRSDSERV
  I $D(ZTQUEUED) S ZTREQ="@"
- K ANS,L1,L2,L3,TIME
+ K ANS,L1,L2,L3
  Q
 ERR I '$D(^XTMP("PRS","ERR")) W !!,"There are no unprocessed PAID download errors." R !!,"Press return to continue ",A:DTIME K A Q
  S DATE="",SUB="ERR"

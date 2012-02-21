@@ -1,6 +1,6 @@
 RTQ2 ;MJK,JSM/TROY ISC;Scheduling Link; ; 5/21/87  3:09 PM ;
- ;;2.0;Record Tracking;**13,15,21,45**;10/22/91;Build 7
-BLD I $D(SDPL) S RTINP=+$P(^RTV(195.9,RTB,0),"^",3)
+ ;;v 2.0;Record Tracking;**13,15,21**;10/22/91 
+BLD I SDPL S RTINP=+$P(^RTV(195.9,RTB,0),"^",3)
  E  S RTINP=0
  F RTBLD=0:0 S RTBLD=$O(^RTV(195.9,RTB,"RECS",RTBLD)) Q:'RTBLD  S X=$G(^(RTBLD,0)) I X]"" D
  . I $D(RTINP(RTINP)) Q  ; don't create for inpts

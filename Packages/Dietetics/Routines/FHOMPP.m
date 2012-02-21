@@ -1,5 +1,5 @@
-FHOMPP ; OIFO/RTK - Patient Profile for Outpatients ;7/2/2007
- ;;5.5;DIETETICS;**9**;Jan 28, 2005;Build 7
+FHOMPP ; OIFO/RTK - Patient Profile for Outpatients ;6/23/03  1:04
+ ;;5.5;DIETETICS;;Jan 28, 2005
  D DEV Q
 DEV ;get device and set up queue
  W ! K %ZIS,IOP S %ZIS="Q" D ^%ZIS Q:POP
@@ -48,7 +48,7 @@ END ;
 CPRS ; Call from FHWOR71 to get outpatient profile for CPRS
  ; Data is returned in ^TMP($J,"FHPROF",DFN,FHX)
  S FHZ115="P"_DFN D CHECK^FHOMDPA I FHDFN="" Q "-1^Invalid outpatient"
- K ^TMP($J,"FHPROF"),^TMP($J,"L"),^TMP($J,"D") S (FHX,N)=0 D PATNAME^FHOMUTL
+ K ^TMP($J,"FHPROF",DFN) S (FHX,N)=0 D PATNAME^FHOMUTL
  S FHB="" F I=1:1:80 S FHB=FHB_" "
  S ^TMP($J,"FHPROF",DFN,FHX)="OUTPATIENT NAME: "_FHPTNM_"   "_FHSSN
  S FHJ=66 D PAD^FHOMPP1 S ^TMP($J,"FHPROF",DFN,FHX)=^TMP($J,"FHPROF",DFN,FHX)_PAD_FHSEX_" Age "_FHAGE
@@ -66,10 +66,10 @@ CPRS ; Call from FHWOR71 to get outpatient profile for CPRS
  S N=1 D NEWL S ^TMP($J,"FHPROF",DFN,FHX)="Food Preferences Currently on file: "
  I $D(^TMP($J,"L")) S N=1 D NEWL S ^TMP($J,"FHPROF",DFN,FHX)="Likes"
  S FHM="" F  S FHM=$O(^TMP($J,"L",FHM)) Q:FHM=""  D
- .F FHP=0:0 S FHP=$O(^TMP($J,"L",FHM,FHP)) Q:FHP'>0  S N=0 D NEWL S ^TMP($J,"FHPROF",DFN,FHX)=^TMP($J,"L",FHM,FHP)
+ .F FHP=0:0 S FHP=$O(^TMP($J,"L",FHM,FHP)) Q:FHP'>0  S N=0 D NEWL S ^TMP($J,"FHPROF",DFN,FHX)=^TMP($J,"L",FHM,FHP) Q
  I $D(^TMP($J,"D")) S N=1 D NEWL S ^TMP($J,"FHPROF",DFN,FHX)="Dislikes"
  S FHM="" F  S FHM=$O(^TMP($J,"D",FHM)) Q:FHM=""  D
- .F FHP=0:0 S FHP=$O(^TMP($J,"D",FHM,FHP)) Q:FHP'>0  S N=0 D NEWL S ^TMP($J,"FHPROF",DFN,FHX)=^TMP($J,"D",FHM,FHP)
+ .F FHP=0:0 S FHP=$O(^TMP($J,"D",FHM,FHP)) Q:FHP'>0  S N=0 D NEWL S ^TMP($J,"FHPROF",DFN,FHX)=^TMP($J,"D",FHM,FHP) Q
  ;
  S N=1 D NEWL S ^TMP($J,"FHPROF",DFN,FHX)="Recurring Meals on File: "
  S STDT=DT D ^FHOMPP1

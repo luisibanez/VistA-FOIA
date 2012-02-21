@@ -1,5 +1,5 @@
 LRAPMRL1 ;DALOI/WTY/KLL- AP MODIFY RELEASED REPORT CONT'D;12/04/01
- ;;5.2;LAB SERVICE;**259,317,397**;Sep 27, 1994;Build 1
+ ;;5.2;LAB SERVICE;**259**;Sep 27, 1994
  ;
  Q
 RELCHK ;Perform series of checks
@@ -21,31 +21,6 @@ RELCHK ;Perform series of checks
  .S LRMSG=LRMSG_"option."
  .D EN^DDIOL(LRMSG,"","!!") K LRMSG
  .S LRQUIT=1
- ;Has a supplemental rept been entered, but not yet released? Don't
- ;  allow modifications until supplemental rept. is released.
- N LRSR,LRSR1,LRSR2
- S LRSR=0,LRSR1=1
- I LRREL(1),'LRAU D 
- .Q:'+$P($G(^LR(LRDFN,LRSS,LRI,1.2,0)),U,4)
- .F  S LRSR=$O(^LR(LRDFN,LRSS,LRI,1.2,LRSR)) Q:LRSR'>0!('LRSR1)  D
- ..S LRSR1=+$P(^LR(LRDFN,LRSS,LRI,1.2,LRSR,0),U,2)
- ..I 'LRSR1 D
- ...S Y=+$P(^LR(LRDFN,LRSS,LRI,1.2,LRSR,0),U)
- ...D DD^%DT S LRSR2=Y
- I LRREL(1),LRAU D
- .S RPCOMDT=$$GET1^DIQ(63,LRDFN,13,"I")
- .Q:'RPCOMDT
- .Q:'+$P($G(^LR(LRDFN,84,0)),U,4)
- .F  S LRSR=$O(^LR(LRDFN,84,LRSR)) Q:LRSR'>0!('LRSR1)  D
- ..S LRSR1=+$P(^LR(LRDFN,84,LRSR,0),U,2)
- ..I 'LRSR1 D
- ...S Y=+$P(^LR(LRDFN,84,LRSR,0),U)
- ...D DD^%DT S LRSR2=Y
- I 'LRSR1 D
- .S LRQUIT=1
- .W $C(7),!,"Supplementary report "_LRSR2_" has not been released.  "
- .W !,"Cannot modify the report."
- .S Y=0
  Q
 RELEASE ;Unrelease report
  N LRNTIME
@@ -80,7 +55,7 @@ QUEUPD ;Update the final report print queue
  .S LRFDA(69.23,LRIENS,1)=LRI
  .S LRFDA(69.23,LRIENS,2)=LRH(0)
  .S LRORIEN(1)=LRAN
- .D UPDATE^DIE("","LRFDA","LRORIEN") K LRORIEN
+ .D UPDATE^DIE("","LRFDA","LRORIEN")
  .L -^LRO(69.2,LRAA,2)
  Q
 EDIT ;

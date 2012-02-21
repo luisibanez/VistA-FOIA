@@ -1,6 +1,5 @@
-PRS8PP ;HISC/MRL,WIRMFO/MGD-DECOMP, PREMIUM PAYS ;05/10/07
- ;;4.0;PAID;**22,40,75,92,96,112,117**;Sep 21, 1995;Build 32
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+PRS8PP ;HISC/MRL,WIRMFO/MGD-DECOMP, PREMIUM PAYS ;02/27/04
+ ;;4.0;PAID;**22,40,75,92,96**;Sep 21, 1995
  ;
  ;This routine is the entry point for determining certain premium
  ;pays for an employee.  Included are overtime (OT), 
@@ -31,7 +30,7 @@ ND ; --- compute ND
  ; Process wagegrade
  I TYP["W" D  Q
  . ; process WG scheduled time
- . I "J23LSARMXYUVFGDZq"[VAL!(VAL="O"&($E(DAY(DAY,"HOL"),M)=2)) D
+ . I "J23LSARMXYUVFGD"[VAL!(VAL="O"&($E(DAY(DAY,"HOL"),M)=2)) D
  . . N DAT,DAYN,FND,M1,NODE,SC,TS
  . . ; find tour segment that contains the time and get it's special code
  . . S FND=0,SC="" ; FND true if found in schedule, SC = special code 
@@ -78,7 +77,7 @@ ND ; --- compute ND
  ; check if time segment could be eligible for ND
  I $$NOTND(TYP,DAY,M) Q
  ;
- S AV="J1234ALSRMUEOosecbVXYFGDZq"
+ S AV="J1234ALSRMUEOosecbVXYFGD"
  ;
  ; Grant ND for time before 6a/after 6p or anytime when nurse/hybrid
  ; works tour coverage
@@ -97,29 +96,16 @@ ND ; --- compute ND
  . . S M1=$S(DAYN=DAY:M,1:M+96)
  . . S DAT=$G(^TMP($J,"PRS8",DAYN,2)) D  Q:FND
  . . . ; loop thru tour segments in exceptions
- . . . F TS=1:1:7 Q:$P(DAT,U,(TS-1)*4+1)=""  D  Q:FND
+ . . . F TS=1:1:7 Q:$P(DAT,U,(TS-1)*3+1)=""  D  Q:FND
  . . . . ; check if time contained in exception segment
- . . . . I M1'<$P(DAT,U,(TS-1)*4+1),M1'>$P(DAT,U,(TS-1)*4+2) D
- . . . . . S TOT=$P(DAT,U,(TS-1)*4+3)
- . . . . . ; On-Call and Recess are the only types of exceptions
- . . . . . ; where OT, CT and RG can be posted for the same 15 minute
- . . . . . ; segment of time, so don't stop searching if you find these.
- . . . . . I TOT="ON"!(TOT="RS") S TOT="" Q
- . . . . . S FND=1,SC=$P(DAT,U,(TS-1)*4+4)
- . . . . . Q
- . Q:TOT="OT"&("^11^12^17^"'[(U_SC_U))  ; Pre-Scheduled & Tour Coverage & OT/CT With Premiums
- . Q:TOT="CT"&("^12^17^"'[(U_SC_U))     ; Tour Coverage & OT/CT With Premiums
- . ; Code 17 - OT/CT with premiums only get ND for 6p-6a
- . Q:TOT="OT"!(TOT="CT")!(TOT="RG")&(SC=17)&((M'<25)&(M'>72))
- . Q:TOT="RG"&(SC'=7)&(SC'=17)          ; Shift Coverage & OT/CT With Premiums
- . S X=10
- . ; for 36/40 AWS, premium time resulting from their tour 
- . ; will be mapped to Night Differential-AWS (ND/NU) and
- . ; Paid at the AAC with the 1872 divisor for the hourly rate (36*52)
- . I +NAWS=36,("OEc"'[VAL!(TOT="HW")) S X=51
- . D SET
+ . . . . I M1'<$P(DAT,U,(TS-1)*3+1),M1'>$P(DAT,U,(TS-1)*3+2) D
+ . . . . . S FND=1,TOT=$P(DAT,U,(TS-1)*3+3),SC=$P(DAT,U,(TS-1)*3+4)
+ . Q:TOT="OT"&("^11^12^"'[(U_SC_U))  ; Pre-Scheduled & Tour Coverage
+ . Q:TOT="CT"&(SC'=12)               ; Tour Coverage
+ . Q:TOT="RG"&(SC'=7)                ; Shift Coverage
+ . S X=10 D SET
  . ; keep leave count since it may need to be backed out by PRS8MSC0
- . I "LSRUFGDZq"[VAL S WKL(WK)=WKL(WK)+1
+ . I "LSRUFGD"[VAL S WKL(WK)=WKL(WK)+1
  ;
  ; Nurse can get ND for 6a-6p time when part of tour with 4+ hrs in 6p-6a
  ; check is made when M=24 (just before 6am) or M=73 (just after 6pm).
@@ -156,15 +142,7 @@ ND ; --- compute ND
  . . I $E(DAY(DAY,"P"),M)'=$E(DAY(DAY,"P"),J) S Q=1 Q
  . . ; grant ND (unless meal-time, etc.), keep count of leave since it
  . . ;   may need to be backed out by PRS8MSC0
- . . I AV[$E(D,J) D
- . . . S X=10
- . . . ; For 36/46 AWS nurses ND for Holiday Worked (HA/HL) and normal
- . . . ; tour time will be reported as Night Differential-AWS (ND/NU)
- . . . I +NAWS=36 D
- . . . . I $E(DAY(DAY,"HOL"),J)=2 S X=51 Q  ; Holiday Worked
- . . . . I "OEc"'[VAL S X=51 ; Tour time
- . . . D SET
- . . . S:"LSRUFGDZq"[$E(D,J) WKL(WK)=WKL(WK)+1
+ . . I AV[$E(D,J) S X=10 D SET S:"LSRUFGD"[$E(D,J) WKL(WK)=WKL(WK)+1
  ;
  Q
  ;
@@ -194,7 +172,7 @@ NOTND(PRSTY,PRSDY,PRSTM) ; Not Eligible Night Differential
  I "Ecb"[VAL!(VAL="O"&'$E(DAY(PRSDY,"HOL"),PRSTM)),PRSTY["N"!(PRSTY["H")!(HYBRID)!("^S^T^U^V^"[(U_PMP_U)),$E(DAY(PRSDY,"P"),PRSTM)'="N" Q 1
  ;
  ; Baylor gets no ND for work time on regularly scheduled day
- I TYP["B","^1^7^8^14^"[("^"_DAY_"^"),"1234ALSRMUNVXYFGDZq"[VAL Q 1
+ I TYP["B","^1^7^8^14^"[("^"_DAY_"^"),"1234ALSRMUNVXYFGD"[VAL Q 1
  ;
  ; GS Employees do not get ND for OT that is not Pre-Scheduled
  I "Ecb"[VAL!(VAL="O"&'$E(DAY(PRSDY,"HOL"),PRSTM)),PRSTY'["N",PRSTY'["H",'HYBRID,("^S^T^U^V^"'[(U_PMP_U)),$E(DAY(PRSDY,"P"),PRSTM)'="n" Q 1

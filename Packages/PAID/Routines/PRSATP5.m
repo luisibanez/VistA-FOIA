@@ -1,5 +1,5 @@
-PRSATP5 ;HISC/MGD-Timekeeper Post Absence ;04/18/06
- ;;4.0;PAID;**102,108**;Sep 21, 1995
+PRSATP5 ;HISC/MGD-Timekeeper Post Absence ;12/13/05
+ ;;4.0;PAID;**102**;Sep 21, 1995
  ;
 CNV96(TDATA,NSEG,ARRAY,ZERO,DADRFM) ;
  ; Convert the external representation of the start/stop time to
@@ -133,7 +133,9 @@ GETPPP(PPIP,DFN,WDAY,BACK,QUIT) ;
  ;     QUIT - Will be set to 1 if there is no timecard for
  ;            the employee in the prior pay period
  ;
- S PPIP=$O(^PRST(458,PPIP),-1) ; Get Prior PP
+ S PPIP=$G(^PRST(458,PPIP,0)) ; Get external name of current PP
+ S PPIP=$O(^PRST(458,"B",PPIP),-1) ; Get external name of prev PP
+ S PPIP=$O(^PRST(458,"B",PPIP,0)) ; Get IEN of previous PP
  I 'PPIP S QUIT=1 Q  ; No prior pay period on file
  ; Check for employee timecard in this PP
  I '$D(^PRST(458,PPIP,"E",DFN,0)) S QUIT=1 Q

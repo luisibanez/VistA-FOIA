@@ -1,5 +1,5 @@
-XQSMD31 ;SEA/MJM - Secure Menu Delegation (Cont.) ;01/19/2006
- ;;8.0;KERNEL;**372**;Jul 10, 1995;Build 3
+XQSMD31 ;SEA/MJM - Secure Menu Delegation (Cont.) ;06/01/95  12:03
+ ;;8.0;KERNEL;;Jul 10, 1995
  ;Continued from XQSMD3
 DOIT ;Set up the parameters for a calls to %XY^%RCR and XQSMD2
  S %X=XQPERX
@@ -23,7 +23,7 @@ DELM ;Taskman entry for deleting option sets from multiple users.
  Q
  ;
 ZTSK ;Taskman entry for adding and deleting delegated options (XQSMD2)
- S XQLEV=XQLEV+1,DR="19////"_DUZ_";19.2///"_XQLEV,DIE=200,XQM=0
+ S XQLEV=XQLEV+1,DR="19///"_DUZ_";19.2///"_XQLEV,DIE=200,XQM=0
  F XQJ=1:1 S XQM=$O(XQHOLD(XQM)) Q:XQM=""  S DA=XQM D:$D(^VA(200,DA,19))[0!($O(^(19.5,0))="") ^DIE D @$S(XQDOP:"REM",1:"ADD")
  D GIVOPT ; Give USER MENU OPTION as a secondary option if the user doesn't already have it.
  K DIE,DR,DA,XQLEV,XQM,XQDOP,XQJ,XQK,XQN,XQPRO,XQUF,XQHOLD,ZTSK

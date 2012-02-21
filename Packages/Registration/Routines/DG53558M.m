@@ -1,5 +1,5 @@
 DG53558M ;ALB/GN - DG*5.3*558 CLEANUP UTILITES ; 7/16/04 11:14am
- ;;5.3;Registration;**558,579,688**;Aug 13, 1993;Build 29
+ ;;5.3;Registration;**558,579**;Aug 13, 1993
  ;
  ;DG*53.*579 - add line for records modified vs. deleted ones
  ; Misc cleanup utilities
@@ -111,7 +111,7 @@ SUMRY(LIN) ;build summary lines for mail message
  Q
  ;
 SNDDET ;build and send detail messages limit under 2000 lines each
- N BAD,DATE,GL,MAXLIN,MORE,NAME,SSN,MTVER
+ N BAD,DATE,GL,MAXLIN,MORE,NAME,SSN
  S MAXLIN=1995,MORE=0
  D HDNG(.HTEXT,.MSGNO,.LIN)
  ;
@@ -120,15 +120,14 @@ SNDDET ;build and send detail messages limit under 2000 lines each
  . S MORE=1                             ;at least 1 more line to send
  . S DFN=$QS(GL,2)
  . S ICDT=$QS(GL,3)
- . S MTVER=$QS(GL,4)
- . S MTIEN=$QS(GL,5)
- . S BAD=$QS(GL,6)
+ . S MTIEN=$QS(GL,4)
+ . S BAD=$QS(GL,5)
  . S SSN=$P($G(^DPT(DFN,0)),"^",9),NAME=$P($G(^DPT(DFN,0)),"^")
  . S DATE=$$FMTE^XLFDT(ICDT)
  . S TYPNAM=$G(@GL)
  . S TEXT=$S(TYPNAM["PRIMARY":"* Prim> ",1:"  Dupe> ")
  . S:BAD="BAD" TEXT="  Null> "
- . S TEXT=TEXT_"ssn: "_SSN_" "_$J(TYPNAM,22)_"  date: "_DATE_"  ien: "_MTIEN_" ver: "_+MTVER
+ . S TEXT=TEXT_"ssn: "_SSN_" "_$J(TYPNAM,22)_"  date: "_DATE_"  ien: "_MTIEN
  . D BLDLINE(TEXT,.LIN)
  . ;max lines reached, print a msg
  . I LIN>MAXLIN D MAILIT(HTEXT),HDNG(.HTEXT,.MSGNO,.LIN) S MORE=0

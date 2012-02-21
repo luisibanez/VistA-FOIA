@@ -1,12 +1,6 @@
-ACKQAG05        ;DALC/PJU - UTILITY FOR TRANSMISSION ;02/09/07
- ;;3.0;QUASAR AUDIOMETRIC MODULE;**3,12,13**;11/01/02;Build 24
+ACKQAG05        ;DDC/PJU - UTILITY FOR TRANSMISSION ;09/15/05
+ ;;3.0;QUASAR AUDIOMETRIC MODULE;**3,12**;11/01/02
     ;;ALSO CALLED FROM ACKQAG03
- ; IA# 10103 [Supported] call to FMTE^XLFDT - change date
- ; IA# 10066 [Supported] call to XMZ^XMA2 - new message stub
- ; IA# 2701  [Supported] call to GETICN^MPIF001 - get ICN
- ; IA# 10070 [Supported] call to EN1^XMD - add message text & send
- ; IA# 2732  [Supported] call to CHKLINES^XMXSEC1 - check message length
- ; IA# 2240  [Supported] call to ENCRYP^XUSRB1 - encrypt SSN
 ACKEXIST()      ;returns 1 if 509850.9 exists, else 0
  N ACKQANS
  I $D(^ACK(509850.9)),$O(^ACK(509850.9,0)) S ACKQANS=1
@@ -84,7 +78,7 @@ STARTD(RESULT,DFN,IEN,ACKQSTNU,ACKQUSNM,ACKQUSSR) ;
  S XMY(DUZ)="",XMDUZ="AUDIOGRAM PKG"
  D XMZ^XMA2 ;returns XMZ
  K ACKQARR
- S ACKQARR(1)="Deletion Message to DALC for "_DFNNAME_" is MSG number:"_ACKQMSG
+ S ACKQARR(1)="Deletion Message to DDC for "_DFNNAME_" is MSG number:"_ACKQMSG
  S ACKQARR(2)="Sent on: "_$$FMTE^XLFDT(DT)
  S ACKQARR(3)="AUDIOMETRIC EXAM file entry number: "_ACKQRMI
  S XMTEXT="ACKQARR(",XMSUB="AUDIOGRAM DELETION"

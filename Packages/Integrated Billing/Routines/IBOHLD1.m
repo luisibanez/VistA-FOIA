@@ -1,6 +1,5 @@
 IBOHLD1 ;ALB/CJM -  REPORT OF CHARGES ON HOLD W/INS INFO ;MARCH 3 1992
- ;;2.0;INTEGRATED BILLING;**70,95,133,356,347**;21-MAR-94;Build 24
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**70,95,133**;21-MAR-94
  ;
  ; modified HELD CHARGES REPORT - includes INS info
  ;
@@ -30,14 +29,7 @@ DEVICE ;
  W !!,*7,"*** Margin width of this output is 132 ***"
  W !,"*** This output should be queued ***"
  S %ZIS="QM" D ^%ZIS I POP S IBQUIT=1 Q
- I $D(IO("Q")) D  Q
- . S ZTRTN="QUEUED^IBOHLD1"
- . S ZTIO=ION_";"_IOST_";"_IOM_";"_IOSL
- . S ZTDESC="HELD CHARGES RPT W/INS"
- . S ZTSAVE("IB*")=""
- . D ^%ZTLOAD
- . W !,$S($D(ZTSK):"REQUEST QUEUED TASK="_ZTSK,1:"REQUEST CANCELLED")
- . D HOME^%ZIS K ZTSK S IBQUIT=1
+ I $D(IO("Q")) S ZTRTN="QUEUED^IBOHLD1",ZTIO=ION,ZTDESC="HELD CHARGES RPT W/INS",ZTSAVE("IB*")="" D ^%ZTLOAD W !,$S($D(ZTSK):"REQUEST QUEUED TASK="_ZTSK,1:"REQUEST CANCELLED") D HOME^%ZIS K ZTSK S IBQUIT=1 Q
  U IO
  Q
  ; indexes records that should be included in report
@@ -108,8 +100,8 @@ RX ; rx refill bills
  ;
  S IBRXN=$P($P(IBND,"^",4),":",2),IBRX=$P($P(IBND,"^",8),"-"),IBRF=$P($P(IBND,"^",4),":",3)
  ;
- I +IBRF>0 S IBRDT=$$SUBFILE^IBRXUTL(+IBRXN,IBRF,52,.01)
- I +IBRF=0 S IBRDT=$$FILE^IBRXUTL(+IBRXN,22)
+ I +IBRF>0 S IENS=+IBRF_","_+IBRXN_",",IBRDT=$$GET1^DIQ(52.1,IENS,.01,"I")
+ I +IBRF=0 S IENS=+IBRXN_",",IBRDT=$$GET1^DIQ(52,IENS,22,"I")
  ;
  Q:(IBRX="")!('IBRDT)
  N X,IBBILL,IBBILL0,IBFILL,IBFILL0,IBOK S IBBILL=0

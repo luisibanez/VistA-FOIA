@@ -1,5 +1,5 @@
-PXRMGECR ;SLC/JVS GEC-Reports ;7/14/05  10:44
- ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
+PXRMGECR ;SLC/JVS GEC-Reports ;08/11/2003  20:58
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  Q
 LOC ;Referrals by Location
  N CAT,HF,DATE,DFN,Y,HFN,DFNXX
@@ -11,19 +11,19 @@ LOC ;Referrals by Location
  W !,"Complete GEC Referrals by Location"
  W !,"From: "_$$FMTE^XLFDT(BDT,"5ZM")_" To: "_$$FMTE^XLFDT(EDT,"5ZM")
  I FOR W !,"Location"
- I FOR W !,?5,"Patient",?50,"Finish Date"
+ I FOR W !,?5,"Patient",?35,"Finish Date"
  I 'FOR W !,"Location^Location Count^Patient^SSN^Finish Date"
  W !,"=============================================================================="
  W ! D PB Q:Y=0
  S LOCN="" F  S LOCN=$O(^TMP("PXRMGEC",$J,"TMPLOC",LOCN)) Q:LOCN=""!(Y=0)  D
  .Q:LOCNP'=1&(LOCN'=LOCNP)
  .I FOR W ! D PB Q:Y=0
- .I FOR W !,IOUON,LOCN,IOUOFF,?30,"Total # Patients Evaluated= ",$G(^TMP("PXRMGEC",$J,"REFLOCC",LOCN)) D PB Q:Y=0
+ .I FOR W !,IOUON,LOCN,IOUOFF,?30,"Total= ",$G(^TMP("PXRMGEC",$J,"REFLOCC",LOCN)) D PB Q:Y=0
  .I FOR W ! D PB Q:Y=0
  .S DFNXX="" F  S DFNXX=$O(^TMP("PXRMGEC",$J,"TMPLOC",LOCN,DFNXX)) Q:DFNXX=""!(Y=0)  D
  ..S VDT=0 F  S VDT=$O(^TMP("PXRMGEC",$J,"TMPLOC",LOCN,DFNXX,VDT)) Q:VDT=""!(Y=0)  D
- ...I VDT["0000" I FOR W !,?5,DFNXX,?50,"Incomplete"
- ...E  I FOR W !,?5,$P(DFNXX," ",1,$L(DFNXX," ")-1),"  ("_$P(DFNXX," ",$L(DFNXX," "))_")",?50,$P($$FMTE^XLFDT(VDT,"5ZM"),"@",1)
+ ...I VDT["0000" I FOR W !,?5,DFNXX,?35,"Incomplete"
+ ...E  I FOR W !,?5,$P(DFNXX," ",1,$L(DFNXX," ")-1),"  ("_$P(DFNXX," ",$L(DFNXX," "))_")",?35,$P($$FMTE^XLFDT(VDT,"5ZM"),"@",1)
  ...I FOR D PB Q:Y=0
  ...I 'FOR W !,LOCN,"^",$G(^TMP("PXRMGEC",$J,"REFLOCC",LOCN)),"^",$P(DFNXX," ",1,$L(DFNXX," ")-1),"^",$P(DFNXX," ",$L(DFNXX," ")),"^",$P($$FMTE^XLFDT(VDT,"5ZM"),"@",1)
  K ^TMP("PXRMGEC",$J)
@@ -47,7 +47,7 @@ DR ;Referrals by Date Range
  W ! D PB Q:Y=0
  S DFN="" F  S DFN=$O(^TMP("PXRMGEC",$J,"HS1",DFN)) Q:DFN=""!(Y=0)  D
  .I FOR W ! D PB Q:Y=0
- .I FOR W !,IOUON,$P(DFN," ",1,$L(DFN," ")-1)," ("_$P(DFN," ",$L(DFN," "))_")"," ",IOUOFF
+ .I FOR W !,IOUON,$P(DFN," ",1,$L(DFN," ")-1)," ("_$P(DFN," ",$L(DFN," "))_")",IOUOFF
  .I FOR W ?44,$G(^TMP("PXRMGEC",$J,"REFDFNN",$P(DFN," ",1,($L(DFN," ")-1))))," Referral(s)" D PB Q:Y=0
  .I FOR W ! D PB Q:Y=0
  .S CNTREF="" F  S CNTREF=$O(^TMP("PXRMGEC",$J,"HS1",DFN,CNTREF)) Q:CNTREF=""!(Y=0)  D
@@ -64,7 +64,7 @@ DR ;Referrals by Date Range
  Q
  ;_____
 HS1 ;By Patient
- N CAT,HF,DATE,DFN,Y,HFN,CNTREF,X,REFNUM,CNT,STATUS,NAME,DIV
+ N CAT,HF,DATE,DFN,Y,HFN,CNTREF,X,REFNUM
  D E^PXRMGECV("HS1",1,BDT,EDT,"F",DFNONLY)
  I FORMAT="D" S FOR=0
  I FORMAT="F" S FOR=1
@@ -77,20 +77,10 @@ HS1 ;By Patient
  I FOR W !,"    Health Factor",?44,"Value",?55,"Date of Evaluation"
  I 'FOR W !,"Patient^Category^Health Factor^Value^Date of Evaluation"
  W !,"=============================================================================="
- S CNT=0
  S Y=1
  S DFN="" F  S DFN=$O(^TMP("PXRMGEC",$J,"HS1",DFN)) Q:DFN=""!(Y=0)  D
- .N NAME,DFNN,STATUS,DIV
  .I FOR W ! D PB Q:Y=0
- .S NAME=$P(DFN," ",1,$L(DFN," ")-1)
- .S DFNN=$O(^DPT("B",NAME,0)) D
- ..Q:DFNN=""
- ..S STATUS=$S($D(^DPT(DFNN,.1)):"INPATIENT",1:"OUTPATIENT")
- ..S DIV=$$GET1^DIQ(2,DFNN,.19) I DIV="" S DIV="Unknown"
- .S CNT=CNT+1
- .I STATUS["IN" I FOR W !,CNT,") ",STATUS,", DIVISION:",DIV D PB Q:Y=0
- .I STATUS["OU" I FOR W !,CNT,") ",STATUS D PB Q:Y=0
- .I FOR W !,CNT,") ",IOUON,$P(DFN," ",1,$L(DFN," ")-1)," (",$P(DFN," ",$L(DFN," "))_")",IOUOFF,?48,"Total # Complete referrals: ",$G(^TMP("PXRMGEC",$J,"REFDFNN",$P(DFN," ",1,$L(DFN," ")-1))) D PB Q:Y=0
+ .I FOR W !,IOUON,$P(DFN," ",1,$L(DFN," ")-1)," (",$P(DFN," ",$L(DFN," "))_")",IOUOFF,?45,"Total # Complete referrals: ",$G(^TMP("PXRMGEC",$J,"REFDFNN",$P(DFN," ",1,$L(DFN," ")-1))) D PB Q:Y=0
  .S CNTREF="",REFNUM=0 F  S CNTREF=$O(^TMP("PXRMGEC",$J,"HS1",DFN,CNTREF)) Q:CNTREF=""!(Y=0)  D
  ..I FOR W ! D PB Q:Y=0
  ..S REFNUM=REFNUM+1
@@ -114,7 +104,6 @@ HFCD ;Health Factor Category Detailed
  N CAT,HF,DATE,DFN,DFN1,FOR,HFDA,COMMENT
  I FORMAT="D" S FOR=0
  I FORMAT="F" S FOR=1
- K ^TMP("PXRMGEC",$J,"HFCD")
  D E^PXRMGECV("HFCD",1,BDT,EDT,"F",DFNONLY)
  W @IOF
  W "=============================================================================="
@@ -175,7 +164,7 @@ HFNAME(DA,NAME) ;Decide to split name into columns
  ;=====
 PB ;PAGE BREAK
  S Y=""
- I $Y=(IOSL-2)!($Y=(IOSL-3)) D
+ I $Y=(IOSL-2) D
  .K DIR
  .S DIR(0)="E"
  .D ^DIR

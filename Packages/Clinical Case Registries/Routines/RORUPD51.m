@@ -1,5 +1,5 @@
-RORUPD51 ;HCIOFO/SG - UPDATE PATIENT'S DEMOGRAPHIC DATA (1) ; 7/6/06 11:15am
- ;;1.5;CLINICAL CASE REGISTRIES;**1**;Feb 17, 2006;Build 24
+RORUPD51 ;HCIOFO/SG - UPDATE PATIENT'S DEMOGRAPHIC DATA (1) ; 1/24/06 11:44am
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  Q
  ;
@@ -24,7 +24,7 @@ MARKREGS(PTIEN,DOD) ;
  . S IENS=RORBUF("DILIST",2,RI)_","
  . K RORFDA,RORSRC
  . ;--- Try to lock the record; if this fails, continue anyway
- . L +^RORDATA(798,+IENS):3
+ . L +^RORDATA(798,+IENS):1
  . ;--- Load the field values
  . D GETS^DIQ(798,IENS,"4;8","EI","RORSRC","RORMSG")
  . I $G(DIERR)  D  S ECNT=ECNT+1  Q
@@ -165,7 +165,7 @@ UPDPTDEM(PTIEN) ;
  N CF,DOD,IENS,RC,RORMSG,RORPAT
  S IENS=PTIEN_",",CF=0
  ;--- Try to lock the record of the ROR PATIENT file
- L +^RORDATA(798.4,PTIEN):3
+ L +^RORDATA(798.4,PTIEN):1
  E  Q $$ERROR^RORERR(-11,,,PTIEN,"file #798.4")
  D
  . ;--- Compare demographic data

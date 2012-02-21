@@ -1,6 +1,5 @@
 MAGJUPD1 ;WOIFO/JHC VistARad Update Exam Status ; 29 Jul 2003  10:02 AM
- ;;3.0;IMAGING;**16,22,18,76,101**;Nov 06, 2009;Build 50
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.0;IMAGING;**16,22**;Jul 29, 2003
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -20,35 +19,34 @@ MAGJUPD1 ;WOIFO/JHC VistARad Update Exam Status ; 29 Jul 2003  10:02 AM
  ; Subroutines for RPC's to update Exam Status to "Interpreted", and
  ;   for "Closing" a case that is open on the DX Workstation
  ;
-ERR N ERR S ERR=$$EC^%ZOSV S @MAGGRY@(0)="0^Server Program Error: "_ERR
+ERR N ERR S ERR=$$EC^%ZOSV S MAGGRY(0)="0^Server Program Error: "_ERR
  D @^%ZOSF("ERRTN")
  Q:$Q 1  Q
- ;
-STATUS(MAGGRY,PARAMS,DATA) ; rpc: MAGJ RADSTATUSUPDATE
- ; Update Exam Status to "Interpreted" and/or Close the exam
- ; Only updates the Status if the current value is "Examined"
+STATUS(MAGGRY,DATA) ; Update Exam Status for case to "Interpreted" (or
+ ;   equivalent value); optionally update the Diagnostic Code, if passed;
+ ;   also, Close the case
+ ; Note: this subroutine will only update the Exam Status if the current
+ ;       Status value is "Examined"
  ; This routine defines variables needed for calling the Radiology
- ; package routine UP1^RAUTL1, for filing Status updates
+ ; package routine UP1^RAUTL1, for filing Exam Status updates
+ ; Adapted from the following program:
+ ;MAGKEXC ;WASH ISC/SRR - EXAMINATION COMPLETE ;11/4/93  08:07 [ 11/06/93 7:42 AM]
  ;
- ; PARAMS = UPDFLAG ^ RADFN ^ RADTI ^ RACNI ^ RARPT ^ UPDPSKEY
+ ; DATA = UPDFLAG ^ RADFN ^ RADTI ^ RACNI ^ RARPT ^ DXCODE
  ;   UPDFLAG = 1/0 -- 1 to perform update; else no update made
  ;   RARPT = ptr to Rad Exam Report file
  ;   RADFN,RADTI,RACNI = pointers to Rad Patient File for the exam
- ;   UPDPSKEY = 1/0 -- 1 to update Presentation State &/or Key Image data
- ;                   = 2 -- update PS data with NO lock in place--Resident workflow, or Sec Key Override
- ;   DATA = optional array containing prezentation state data; see SAVKPS^MAGJUPD2 for description
+ ;   DXCODE = Diagnostic Code 
  ;   MAGGRY = return results in @MAGGRY
  ;
+ ;
  N $ETRAP,$ESTACK S $ETRAP="D ERR^MAGJUPD1"
- N RARPT,RADFN,RADTI,RACNI,RAEXT,RACNE,RADTE,RAINT,RAMDV,DIQUIET
- N RAONLINE,ZTQUEUED,RAOR,RASN,RASTI,RAPRTSET,LOGDATA,RSL,TIMESTMP
- N UPDPSKEY,MAGRET,MAGLST,REPLY,UPDFLAG,RADATA,RIST,MAGPSET,RACNILST,ACNLST
- S MAGLST="MAGJUPDATE"
- K MAGGRY S MAGGRY=$NA(^TMP($J,MAGLST)) K @MAGGRY  ; assign MAGGRY value
  S DIQUIET=1 D DT^DICRW
- S TIMESTMP=$$NOW^XLFDT()
- S UPDFLAG=$P(PARAMS,U),RADFN=$P(PARAMS,U,2),RADTI=$P(PARAMS,U,3),RACNI=$P(PARAMS,U,4),RARPT=$P(PARAMS,U,5),UPDPSKEY=+$P(PARAMS,U,6)
- S REPLY="0^4~Closing case with"_$S(UPDFLAG:"",1:" NO")_" Status Update"
+ N RARPT,RADFN,RADTI,RACNI,RAEXT,RACNE,RADTE,RAINT,RAMDV
+ N RAONLINE,ZTQUEUED,RAOR,RASN,RASTI,RAPRTSET,LOCKDATA
+ N DXCODE,MAGRET,REPLY,UPDFLAG,RADATA,RIST,MAGPSET,RACNILST,ACNLST
+ S UPDFLAG=$P(DATA,U),RADFN=$P(DATA,U,2),RADTI=$P(DATA,U,3),RACNI=$P(DATA,U,4),RARPT=$P(DATA,U,5),DXCODE=$P(DATA,U,6)
+ S REPLY="0^4~Closing case with"_$S(UPDFLAG:"",1:" NO")_" Update"
  S RAPRTSET=0
  I RADFN,RADTI,RACNI
  E  S REPLY="0^4~Request Contains Invalid Case Pointer ("_RARPT_")" G STATUSZ
@@ -61,15 +59,10 @@ STATUS(MAGGRY,PARAMS,DATA) ; rpc: MAGJ RADSTATUSUPDATE
  S RADATA=$G(^TMP($J,"MAGRAEX",1,1))
  S RAEXT=$P(RADATA,U,12),RACNE=$P(RAEXT,"-",2),RADTE=$P(RADATA,U,7)
  S RAINT=RADTI_"-"_RACNI
- I UPDPSKEY=2 D  G STATUSZ ; P101 update annotations only, if authorized (Resident workflow, or Sec Key Override)
- . I +MAGJOB("USER",1),'UPDFLAG,($D(DATA)>9) S REPLY="0^1~Case #"_RAEXT_" Closed; No Status Update; annotation updates performed."
- . E  S UPDPSKEY=0,REPLY="0^4~Invalid request to update annotations for Case #"_RAEXT_"."
- D CLOSE(.RSL,RADFN_U_RADTI_U_RACNI_U_U_1,.LOGDATA) ; unlock the case
- ; proceed only if case was locked by this user
- ;   if it was not Locked, then do NOT update PS, Key Images
- I 'RSL S REPLY=RSL,UPDPSKEY=0 G STATUSZ
+ D CLOSE(.X,RADFN_U_RADTI_U_RACNI_U_U_1,.LOCKDATA) ; unlock the case
+ I 'X S REPLY=X G STATUSZ  ; proceed only if case was locked by this user
  I 'UPDFLAG S REPLY="0^1~Case #"_RAEXT_" Closed; No Status Update performed" G STATUSZ
- S RIST=$P(RSL,U,2) ; CLOSE reports back the type of radiologist
+ S RIST=$P(X,U,2) ; CLOSE reports back the type of radiologist
  ; now we know this user had locked the case, & wants to do Status update
  D EN2^RAUTL20(.MAGPSET)  ; get info re rad PrintSet
  ;
@@ -81,7 +74,7 @@ STATUS(MAGGRY,PARAMS,DATA) ; rpc: MAGJ RADSTATUSUPDATE
  ; Else, update not allowed, so give warning msg
  ; Note that when the Exam was OPENed, it must have had status "Examined"
  I '$D(^RA(72,"AVC","E",$P(RADATA,U,11))) D  G STATUSX:(+$P(REPLY,U,2)=1),STATUSZ  ; Current Status MUST be "Examined" Category
- . I $P(RADATA,U,15)>2 D  ; assume update has otherwise been done, eg voice dictation or manual entry in Vista
+ . I $P(RADATA,U,15)>2 D  ; assume update has otherwise been done
  .. S RACNILST=RACNI,RASTI=$P(RADATA,U,11) ; need for code at tag statusx
  .. I RAPRTSET S REPLY="0^1~Printset Exams with Case #"_RAEXT_" have been updated"
  .. E  S REPLY="0^1~No Update done for Case #"_RAEXT_"--current status is "_$P(RADATA,U,14)
@@ -93,7 +86,7 @@ STATUS(MAGGRY,PARAMS,DATA) ; rpc: MAGJ RADSTATUSUPDATE
  ;
  ; Update interpreting radiologist field in Rad file
  I RIST D  I RACNILST="" G STATUSZ
- . N SAVRACNI,RTN S RACNILST=""
+ . N SAVRACNI S RACNILST=""
 PRTSET . ;  if exam is part of Rad Print-Set, then update all exams of printset
  . I RAPRTSET D
  .. S ACNLST="",SAVRACNI=RACNI,X=0
@@ -113,38 +106,35 @@ PRTSET . ;  if exam is part of Rad Print-Set, then update all exams of printset
  ;
 STATUSX ; Newly Interpreted exam:
  ; Log the Interpreted event
- D LOG^MAGJUTL3("VR-INT",LOGDATA)
+ D LOG^MAGJUTL3("VR-INT",RADFN,$P(LOCKDATA,U,5),$P(LOCKDATA,U,6),$P(LOCKDATA,U,7))
  ; Update Recent Exams List
  G STATUSZ:'$P(^MAG(2006.69,1,0),U,8)  ; no bkgnd compile enabled
- L +^XTMP("MAGJ2","RECENT"):5
+ L +^XTMP("MAGJ2","RECENT"):10
  E  G STATUSZ
  N INDX F I=1:1:$L(RACNILST,U) S RACNI=$P(RACNILST,U,I) I RACNI D
  . S INDX=+$G(^XTMP("MAGJ2","RECENT",0))+1,$P(^(0),U)=INDX,^(INDX)=RADFN_U_RADTI_U_RACNI_U_RASTI
  L -^XTMP("MAGJ2","RECENT")
 STATUSZ ;
- ; store PS, Key Image data
- I UPDPSKEY,($D(DATA)>9) D
- . D SAVKPS^MAGJUPD2(RARPT,UPDPSKEY,.DATA,.X)
- . S REPLY=REPLY_$P(X,"~",2,99)
- S @MAGGRY@(0)=REPLY
+ S MAGGRY(0)=REPLY
  K ^TMP($J,"MAGRAEX"),^("RAE1")
  Q
  ;
-CLOSE(RSL,PARAMS,LOGDATA) ; Close/unlock a case
- ; Input: PARAMS = DFN ^ DTI ^ CNI ^ RPT ^ UPDFLAG
+CLOSE(MAGGRY,DATA,LOCKDATA) ; Close/unlock a case
+ ; DATA    = DFN ^ DTI ^ CNI ^ RPT ^ UPDFLAG
  ;
- ;  DFN,DTI,CNI,RPT = pointers to Rad File for the exam
- ;   UPDFLAG = 1/0 -- 1 indicates CLOSE was called from subroutine
+ ;       RPT = ptr to Rad Exam Report file
+ ;      DFN,DTI,CNI = pointers to Rad Patient File for the exam
+ ;   UPDFLAG = 1/0 -- 1 to indicate CLOSE was called from subroutine
  ;                    STATUS, above (which has already called GETEXAM)
- ;    RSL = return result of the Close
+ ;    MAGGRY = return results of the Close in @MAGGRY
  ; This subroutine may be called directly (to close a case without
  ; doing a status update), or is called from tag STATUS, above, when
  ; also doing a status update
  ;
  N $ETRAP,$ESTACK S $ETRAP="D ERR^MAGJUPD1"
- N RPT,DFN,DTI,CNI,MAGRET,REPLY,RARPT,UPDFLAG,RIST,DAYCASE,NLOCKS,MYLOCK
- S DFN=$P(PARAMS,U),DTI=$P(PARAMS,U,2),CNI=$P(PARAMS,U,3),RPT=$P(PARAMS,U,4),UPDFLAG=$P(PARAMS,U,5)
- S LOGDATA=""
+ N RPT,DFN,DTI,CNI,MAGRET,REPLY,RARPT,UPDFLAG,RIST,DAYCASE,NLOCKS
+ S DFN=$P(DATA,U),DTI=$P(DATA,U,2),CNI=$P(DATA,U,3),RPT=$P(DATA,U,4),UPDFLAG=$P(DATA,U,5)
+ S LOCKDATA=""
  I $P($G(^MAG(2006.69,1,0)),U,4)
  E  S REPLY=$S(UPDFLAG:"0^3~Updates not allowed at this site--no action taken",1:"") G CLOSEZ   ;   Status Update NOT Enabled
  S RIST=+MAGJOB("USER",1) I RIST
@@ -159,16 +149,17 @@ CLOSE(RSL,PARAMS,LOGDATA) ; Close/unlock a case
  S RARPT=$P(RADATA,U,10),DAYCASE=$P(RADATA,U,12)
  I RARPT,DAYCASE
  E  S REPLY="0^4~Current Case not accessible to close--no action taken" G CLOSEZ
- ;
- D LOCKACT^MAGJEX1A(RARPT,DAYCASE,101,,.MYLOCK)
- S LOGDATA=$P(MYLOCK(1),"|",2)
- I 'MYLOCK(1) S X=$P(MYLOCK(1),U,4) D  S LOGDATA="" G CLOSEZ
- . I UPDFLAG S REPLY="0^1~Case #"_DAYCASE_$S(X]"":" locked by "_X,1:" not locked by "_$P(MAGJOB("USER",1),U,2))_"--No Status update performed"
+ S LOCKDATA=$G(^XTMP("MAGJ","LOCK",RARPT))
+ I DUZ'=+LOCKDATA S X=+LOCKDATA D  S LOCKDATA="" G CLOSEZ
+ . I UPDFLAG S REPLY="0^3~Case #"_DAYCASE_$S(X:" locked by "_$$USERINF^MAGJUTL3(X,.01),1:" not locked by "_$P(MAGJOB("USER",1),U,2))_"--No Status update performed"
  . E  S REPLY="0^1~ "  ; case wasn't opened by this R'ist; nothing to do
- ;
- I UPDFLAG S REPLY=1_U_RIST
- E  S REPLY="0^1~Case #"_DAYCASE_$S(+MYLOCK(1):" unlocked",+MYLOCK(2):" reserve cancelled",1:" closed")_"--No Status Update performed."
-CLOSEZ S RSL=REPLY
+ S NLOCKS=+$G(^XTMP("MAGJ","LOCK",RARPT,DAYCASE))
+ I NLOCKS D  ; w/ incremental lock, is possible to have >1 lock applied
+ . K ^XTMP("MAGJ","LOCK",RARPT,DAYCASE)
+ . I $D(^XTMP("MAGJ","LOCK",RARPT))=1 K ^XTMP("MAGJ","LOCK",RARPT)
+ . F I=1:1:NLOCKS L -^XTMP("MAGJ","LOCK",RARPT)
+ I UPDFLAG,NLOCKS S REPLY=1_U_RIST
+ E  S REPLY="0^1~Case #"_DAYCASE_" Unlocked--No Status Update performed."
+CLOSEZ S MAGGRY=REPLY
  Q
- ;
 END Q  ;

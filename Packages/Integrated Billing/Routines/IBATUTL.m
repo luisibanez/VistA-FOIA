@@ -1,6 +1,6 @@
 IBATUTL ;LL/ELZ - TRANSFER PRICING UTILITES ; 3-SEP-1998
- ;;2.0;INTEGRATED BILLING;**115,266,347,389**;21-MAR-94;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**115,266**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 SL() ; -- called to select a patient or enrolled facility
  N X,Y,DTOUT,DUOUT,DIRUT,DIROUT,DIR
@@ -132,14 +132,12 @@ COPAY(DFN,IBFROM,IBBDT,IBEDT) ; -- returns copay amount if any
  ; ibbdt & ibedt are date ranges (n/a for rx)
  N IBAMT,Y,Y1,IBDA,IBX S IBAMT=0
  I IBFROM["PSRX(" D  Q IBAMT
- . I $P(IBFROM,";",3)>0 D  Q
- .. ; refills
- .. S IBFROM=$$SUBFILE^IBRXUTL(+IBFROM,$P(IBFROM,";",3),52,9) I 'IBFROM Q
+ . I $P(IBFROM,";",3)=0 D  Q  ; initial fill
+ .. S IBFROM=$P($G(^PSRX(+IBFROM,"IB")),"^",2) I 'IBFROM Q  ;dbia #2920
  .. S IBAMT=$P($G(^IB(IBFROM,0)),"^",7)
- . E  D  Q
- .. ; initial fill 
- .. S IBFROM=$$FILE^IBRXUTL(+IBFROM,106) I 'IBFROM Q
- .. S IBAMT=$P($G(^IB(IBFROM,0)),"^",7)
+ . ; refills
+ . S IBFROM=+$G(^PSRX(+IBFROM,1,$P(IBFROM,";",3),"IB")) I 'IBFROM Q  ;dbia #2920
+ . S IBAMT=$P($G(^IB(IBFROM,0)),"^",7)
  ; now on to scheduling and admissions
  S Y="" F  S Y=$O(^IB("AFDT",DFN,Y)) Q:'Y  I -Y'>IBEDT S Y1=0 F  S Y1=$O(^IB("AFDT",DFN,Y,Y1)) Q:'Y1  D
  . S IBDA=0 F  S IBDA=$O(^IB("AF",Y1,IBDA)) Q:'IBDA  D
@@ -159,14 +157,6 @@ FINDT(X) ; -- looks up transactions for source in X
  F  S Y=$O(^IBAT(351.61,"AD",X,Y)) Q:Y<1!(Z)  D
  . I $G(^IBAT(351.61,Y,0)),$P(^(0),"^",5)'="X" S Z=Y
  Q Z
- ;
-PIN(P660,P6611) ; return Prosthetics Item Description (#661.1,.02)
- ; input:  P660 - pointer to Patient Item (#660) or P6611 - pointer to HCPCS (#661.1)
- ; return: pointer to HCPCS (#661.1) ^ Short Description (#661.1,.01) ^ HCPCS (#661.1,.01)
- N IBX,IBY S IBY=""
- I +$G(P660) S P6611=+$P($G(^RMPR(660,+P660,1)),U,4)
- I +$G(P6611) S IBX=$G(^RMPR(661.1,+P6611,0)) I IBX'="" S IBY=P6611_U_$P(IBX,U,2)_U_$P(IBX,U,1)
- Q IBY
  ;
 EX(FILE,FIELD,VALUE) ; -- return external value
  N Y,C S Y=$G(VALUE)

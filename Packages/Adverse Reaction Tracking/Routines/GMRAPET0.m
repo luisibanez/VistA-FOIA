@@ -1,5 +1,5 @@
-GMRAPET0 ;HIRMFO/RM-VERIFIED ALLERGY TASKS ;11/17/06  10:27
- ;;4.0;Adverse Reaction Tracking;**6,17,21,20,38**;Mar 29, 1996;Build 2
+GMRAPET0 ;HIRMFO/RM-VERIFIED ALLERGY TASKS ;12/21/04  12:43
+ ;;4.0;Adverse Reaction Tracking;**6,17,21**;Mar 29, 1996
 EN1(GMRADFN,GMRAPA,GMRACT,GMRAOUT) ;
  ; ENTRY TO PERFORM ALL OF THE TASKS NECESSARY FOR
  ;                 A PROGRESS NOTE TO BE ENTERED BY ART
@@ -44,7 +44,7 @@ EN1(GMRADFN,GMRAPA,GMRACT,GMRAOUT) ;
  S GMRALOC=""
  D VAD^GMRAUTL1(GMRADFN,"",.GMRALOC,"","","")
  I GMRALOC'="" S GMRAHLOC=+$G(^DIC(42,GMRALOC,44))
- ;E  I '$G(GMRAXBOS) D ASK ;20
+ E  I '$G(GMRAXBOS) D ASK S:Y<1 GMRAOUT=1
  ; Call to Progress Notes
  ; vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
  ;S:'GMRAOUT GMRAPN=+$$PN^GMRPART(GMRADFN,GMRADUZ,GMRADT,GMRACW,GMRAHLOC)
@@ -57,15 +57,14 @@ EN1(GMRADFN,GMRAPA,GMRACT,GMRAOUT) ;
  D EXIT
  Q
 EXIT ; Clean up of variables
- K ^TMP("TIUP",$J),GMRALOC,GMRAHLOC,GMRADUZ ;38 Removed variable GMRAPN from list of variables to kill
+ K ^TMP("TIUP",$J),GMRAPN,GMRALOC,GMRAHLOC,GMRADUZ
  Q
 ASK ; Simple file manager query for a location in file 44
  N DIC
  S X=""
- S DIC=44,DIC(0)="AEQ",DIC("A")="Select a Hospital Location: ",DIC("S")="I ""CMW""[$P(^(0),U,3)" ;20
- W !,"A progress note is being created because you "_$S(GMRACT="V":"verified",GMRACT="E":"inactivated",GMRACT="S":"activated",1:"entered a medwatch form for"),!,$P($G(^GMR(120.8,GMRAPA,0)),U,2),"." ;20
- W !,"Enter a hospital location to be associated with this note." ;20
+ S DIC=44,DIC(0)="AEQ",DIC("A")="Select a Hospital Location for this patient: ",DIC("S")="I ""CMW""[$P(^(0),U,3)"
  D ^DIC
+ I Y'>0 S GMRAOUT=1 Q
  I $D(DTOUT)!($D(DUOUT)) S GMRAOUT=1 Q
  S GMRAHLOC=+Y
  Q
@@ -105,10 +104,9 @@ E ; Reaction Entered in Error
  S GMRAPA(0)=$G(^GMR(120.8,GMRAPA,0))
  S GMRAER=$G(^GMR(120.8,GMRAPA,"ER")) I GMRAER="" S GMRAOUT=1 Q
  S GMRADT=$P(GMRAER,U,2),GMRADUZ=$P(GMRAER,U,3)
- S ^TMP("TIUP",$J,1,0)="The "_$S($P(GMRAPA(0),"^",14)="P":"adverse reaction ",1:"allergy ")_"to "_$P(GMRAPA(0),"^",2)_" was removed on "_$$FMTE^XLFDT($P(GMRADT,"."),2)_"." ;20
- S ^TMP("TIUP",$J,2,0)="This reaction was either an erroneous entry or was found" ;20
- S ^TMP("TIUP",$J,3,0)="to no longer be a true "_$S($P(GMRAPA(0),"^",14)="P":"adverse reaction",1:"allergy")_"." ;20
- S GMRAI=3 D ADDCOM("E",.GMRAI) ;21,20
+ S ^TMP("TIUP",$J,1,0)="This patient has had an "_$S($P(GMRAPA(0),"^",14)="P":"adverse reaction reported for ",1:"allergy to ")_$P(GMRAPA(0),"^",2)
+ S ^TMP("TIUP",$J,2,0)="entered in error on "_$$FMTE^XLFDT(GMRADT,1)_"."
+ S GMRAI=2 D ADDCOM("E",.GMRAI) ;21
  S ^TMP("TIUP",$J,0)=U_U_GMRAI_U_GMRAI_U_GMRADT_"^^^" ;21
  Q
  ;

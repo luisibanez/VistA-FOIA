@@ -1,5 +1,5 @@
-PXRMETCO ; SLC/PJH - QUERI Extract Compliance Report ;06/09/2009
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
+PXRMETCO ; SLC/PJH - QUERI Extract Compliance Report ;01/19/2005
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;
 ADHOC(IEN,PXRMSTRT,PXRMSTOP) ;Ad Hoc Conformance Report
@@ -32,7 +32,7 @@ REPORT ;Initialise
  ;Bookmark - Needs inventive patient list names
  S LIST=NAME_" REPORT "_DATES
  ;Process (single) Denominator rule into patient list
- N INDP,INTP,SEQ,SUB,SUFFIX
+ N SEQ,SUB,SUFFIX
  S SEQ=""
  F  S SEQ=$O(^PXRM(810.2,IEN,10,"B",SEQ)) Q:'SEQ  D
  .S SUB=$O(^PXRM(810.2,IEN,10,"B",SEQ,"")) Q:'SUB
@@ -40,11 +40,9 @@ REPORT ;Initialise
  .S PXRMRULE=$P(DATA,U,2) Q:'PXRMRULE
  .S SUFFIX=$P(DATA,U,3)
  .I SUFFIX="" S SUFFIX="DENOMINATOR "_SEQ
- .S INDP=+$P(DATA,U,4)
- .S INTP=+$P(DATA,U,5)
  .;Create new patient list
- .S PXRMLIST=$$CRLST^PXRMRUL1(LIST_" "_SUFFIX) Q:'PXRMLIST
- .D START^PXRMRULE(PXRMRULE,PXRMLIST,PXRMNODE,PXRMSTRT,PXRMSTOP,IEN,INDP,INTP)
+ .S PXRMLIST=$$CRLST^PXRMRULE(LIST_" "_SUFFIX) Q:'PXRMLIST
+ .D START^PXRMRULE(PXRMRULE,PXRMLIST,PXRMNODE,PXRMSTRT,PXRMSTOP,IEN,"","")
  .;Clear ^TMP lists created for rule
  .D CLEAR^PXRMRULE(PXRMRULE,PXRMNODE)
  .;Process reminders
@@ -52,7 +50,7 @@ REPORT ;Initialise
  ;
  ;Bookmark - Report stuff goes here
  ;Update totals section
- N APPL,CNT,DUE,DATA,ETYP,EVAL
+ N APPL,DUE,DATA,ETYP,EVAL
  N FAPPL,FCNT,FDATA,FDUE,FEVAL,FGNAM,FIND,FNAPPL,FNDUE,FSEQ
  N NAPPL,NDUE,PXRMLIST,RCNT,RIEN,RSEQ,SEQ
  S SEQ=0,CNT=1
@@ -83,7 +81,6 @@ REPORT ;Initialise
  ;
  ;Determine whether the report should be queued.
 JOB ;
- N DBDUZ,PXRMQUE
  N %ZIS,ZTDESC,ZTSAVE,ZTRTN,ZTSK
  S DBDUZ=DUZ
  D SAVE^PXRMXQUE
@@ -120,8 +117,7 @@ QUE ;BOOKMARK - NOT USED
  S MINDT=$$NOW^XLFDT
  W !,"Queue the Clinical Reminders MST synchronization."
  S DIR("A",1)="Enter the date and time you want the job to start."
- S DIR("A",2)="It must be after "_$$FMTE^XLFDT(MINDT,"5Z")
- S DIR("A")="Start the task at: "
+ S DIR("A")="It must be after "_$$FMTE^XLFDT(MINDT,"5Z")_" "
  S DIR(0)="DAU"_U_MINDT_"::RSX"
  D ^DIR
  I $D(DTOUT)!$D(DUOUT) Q

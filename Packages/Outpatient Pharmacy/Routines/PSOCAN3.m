@@ -1,5 +1,5 @@
-PSOCAN3 ;BIR/RTR/SAB - auto dc rxs due to death ;2/05/97 2:59pm
- ;;7.0;OUTPATIENT PHARMACY;**15,24,27,32,36,94,88,117,131,146,139,132,223,235,148,249,225,324,251,375**;DEC 1997;Build 17
+PSOCAN3 ;BIR/RTR/SAB - auto dc rxs due to death ;2/5/97
+ ;;7.0;OUTPATIENT PHARMACY;**15,24,27,32,36,94,88,117,131,146,139,132,223,235,148**;DEC 1997
  ;External reference to File #55 supported by DBIA 2228
  ;External references to L, UL, PSOL, and PSOUL^PSSLOCK supported by DBIA 2789
  Q
@@ -65,30 +65,27 @@ CAN1 Q:$G(DODR)
  I $G(REA)="C" S DA=$O(^PS(52.5,"B",RXDA,0)) I DA S DIK="^PS(52.5," D ^DIK K DIK
  I 'PSCANVAR S:$D(SPCANC) ACOM=$S(REA="C":"Discontinued",1:"Reinstated")_" during Rx cancel.  "
 ADD S DA=RXDA,RXREF=0,PSODFN=+$P(^PSRX(DA,0),"^",2) S:$G(PSOOPT)=3 REA="L"
- D:'$G(PSCANVAR) AREC^PSOCAN1 S:REA="L" REA="C"
- S:REA'="C" $P(^PSRX(DA,"STA"),"^")=0,$P(^(7),"^")=""
+ D:'$G(PSCANVAR) AREC^PSOCAN1 S:REA="L" REA="C" S:REA'="C" $P(^PSRX(DA,"STA"),"^")=0
  N PSOTPCNZ S PSOTPCNZ=0 I $P(^PSRX(DA,"STA"),"^")'=12 S PSOTPCNZ=1
  S:REA="C"&($P(^PSRX(DA,"STA"),"^")<12)!($P(^("STA"),"^")=16) $P(^PSRX(DA,"STA"),"^")=12 I $P($G(^PSRX(DA,"STA")),"^")=12,$G(PSOTPCNZ) D CAN^PSOTPCAN(DA)
  K PSOTPCNZ
  I REA="R" D
  .I $P(^PSRX(DA,3),"^",8) S $P(^PSRX(DA,3),"^",2)=$P(^PSRX(DA,3),"^",8),$P(^(3),"^",8)=""
- .S $P(^PSRX(DA,3),"^")=$S($P(^PSRX(DA,3),"^",10):$P(^(3),"^",10),$G(PSOCANHD):PSOCANHD,$P(^(3),"^",5):$P(^(3),"^",5),1:$P(^(3),"^")),$P(^(3),"^",5)="",$P(^(3),"^",10)=""
+ .I $P(^PSRX(DA,3),"^",5) S $P(^PSRX(DA,3),"^")=$P(^PSRX(DA,3),"^",5),$P(^(3),"^",5)=""
  I REA="C" D
- .S $P(^PSRX(DA,3),"^",10)=$P(^PSRX(DA,3),"^")
- .S:'$P(^PSRX(DA,3),"^",5) $P(^PSRX(DA,3),"^",5)=DT
+ .S:'$P(^PSRX(DA,3),"^",5) $P(^PSRX(DA,3),"^",5)=$S($P($G(^PSRX(DA,3)),"^"):$P(^(3),"^"),1:DT)
  .I $O(^PS(52.41,"ARF",DA,0)),'$O(^PS(52.41,"APSOD",PSODFN,0)) S HLDDA=DA,DA=$O(^PS(52.41,"ARF",DA,0)),DIK="^PS(52.41," D ^DIK S DA=HLDDA K HLDDA
  .;check for label/release/pending release
  .I $G(PSOOPT)'=3 D FILX
  S PSONOOR=$S($D(PSONOOR):PSONOOR,1:"D"),STAT=$S(REA="C":"OD",1:"SC"),PHARMST=$S(REA="C":"",1:"CM")
  S COM=$S(REA="C":$S($G(PSOOPT)=3&('$G(DUP)):"Renewed",1:"Discontinued")_" by Pharmacy",1:"Reinstated by Pharmacy")
- D EN^PSOHLSN1(DA,STAT,PHARMST,$S(COM["Discontinued"&($D(INCOM)):INCOM,1:COM),$S($G(PSOOPT)=3&('$G(DUP)):"",1:PSONOOR)) K COM,STAT,PHARMST,PSCANVAR
+ D EN^PSOHLSN1(DA,STAT,PHARMST,COM,$S($G(PSOOPT)=3&('$G(DUP)):"",1:PSONOOR)) K COM,STAT,PHARMST,PSCANVAR
  I REA="C" D
  .I $G(^PS(52.4,DA,0))]"" S PSCDA=DA,DIK="^PS(52.4," D ^DIK S DA=PSCDA K DIK,PSCDA
  I $G(PSOMGDFN)'="" S PSODFN=PSOMGDFN K PSOMGDFN
- S PSVC=$P(^PSRX(DA,0),"^",16)
- Q:(REA="C")!($P(^PSRX(DA,2),"^",10)]"")
- Q:$D(^XUSEC("PSORPH",DUZ))!('$P(PSOPAR,"^",2))
- S PSRXIN=DA,DIC="^PS(52.4,",DLAYGO=52.4,(X,DINUM)=PSRXIN,DIC(0)="ML"
+ Q:(REA="C")!('$P($G(PSOPAR),"^",2))!($P(^PSRX(DA,2),"^",10)]"")
+ Q:$D(^XUSEC("PSORPH",DUZ))  S PSVC=$P(^PSRX(DA,0),"^",16) F JJ=0:0 S JJ=$O(^PS(55,PSODFN,"P",JJ)) Q:'JJ  I $D(^(JJ,0)),+^(0)=DA Q
+ Q:'JJ  S PSRXIN=DA,DIC="^PS(52.4,",DLAYGO=52.4,(X,DINUM)=PSRXIN,DIC(0)="ML"
  S DIC("DR")="1////"_$G(PSODFN)_";2////"_DUZ_";4////"_DT
  K DD,DO D FILE^DICN K DD,DO,DIC,DLAYGO,DINUM
  K DA,DIK S DA=PSRXIN K PSRXIN S $P(^PSRX(DA,"STA"),"^")=1 D NVER^PSOCAN2
@@ -104,11 +101,11 @@ OERR I '$D(^XUSEC("PSORPH",DUZ)),'$P($G(PSOPAR),"^",2) S VALMSG="Invalid Action 
  I $P($G(^PSRX($P(PSOLST(ORN),"^",2),"STA")),"^")=12 S PSOCANRZ=1
  D HLDHDR^PSOLMUTL S X=$P(^PSRX($P(PSOLST(ORN),"^",2),0),"^"),PS=$S($P(^PSRX($P(PSOLST(ORN),"^",2),"STA"),"^")=12:"Reinstate: ",1:"Discontinue: ")
  S POERR=1,DFNHLD=PSODFN,DA=$P(PSOLST(ORN),"^",2)
- I $P(^PSRX(DA,3),"^",5) S PSOCANHD=$P(^PSRX(DA,3),"^",5)
  D LMNO D:$P($G(^PSRX($P(PSOLST(ORN),"^",2),"STA")),"^")=12 RMP
  D PSOUL^PSSLOCK($P(PSOLST(ORN),"^",2))
  K POERR,PSCAN,PSI,PSL S PSODFN=DFNHLD K DFNHLD D ULP
  D KCAN
+ Q
  Q
 ULP D UL^PSSLOCK(+$G(PSODFN))
  Q
@@ -119,14 +116,26 @@ LMNO ; Calls LMNO^PSOCAN
  Q
  ;
 KCAN ;
- K PSOCANRA,PSOCANRC,PSOCANRD,PSOCANRN,PSOCANRP,PSOCANRZ,PSOMSG,PSOCANHD
+ K PSOCANRA,PSOCANRC,PSOCANRD,PSOCANRN,PSOCANRP,PSOCANRZ,PSOMSG
  Q
  ;
 KCAN1 ;
  K PSOCANRC,PSOCANRD,PSOCANRN,PSOCANRP,PSOCANRZ
  Q
  ;
-RMP D RMP^PSOCAN3N
+RMP ;remove Rx if found in array PSORX("PSOL") (Label Queue)
+ Q:'$D(PSORX("PSOL"))  S:'$G(DA) DA=$P(PSOLST(ORN),"^",2)
+ N I,J,FND,ST1,ST2,ST3 S I=0
+ F  S I=$O(PSORX("PSOL",I)) Q:'I  D
+ . S ST1=PSORX("PSOL",I) Q:ST1'[(DA_",")
+ . S ST3="",FND=0
+ . F J=1:1 S ST2=$P(ST1,",",J) Q:'ST2  D
+ . . I ST2=DA S FND=1 Q
+ . . S ST3=ST3_$S('ST3:"",1:",")_ST2
+ . I FND D
+ . . S:ST3]"" PSORX("PSOL",I)=ST3_","
+ . . K:ST3="" PSORX("PSOL",I)
+ . . D:$D(BBRX(I)) RMB^PSOCAN2(I)
  Q
  ;
 FIL Q:'$G(PSORX)
@@ -149,6 +158,5 @@ FILQ K PSOFC,PSOFCSUS
  Q
  ;
 SETC ;Called from Date of Death
- S $P(^PSRX(PSORX,"STA"),"^")=12,$P(^PSRX(PSORX,3),"^",5)=DT,$P(^PSRX(PSORX,3),"^",10)=$P(^PSRX(PSORX,3),"^") D CAN^PSOTPCAN(PSORX)
- D CHKCMOP^PSOUTL(PSORX,"D")
+ S $P(^PSRX(PSORX,"STA"),"^")=12,$P(^PSRX(PSORX,3),"^",5)=$S($P($G(^PSRX(PSORX,3)),"^"):$P(^(3),"^"),1:DT) D CAN^PSOTPCAN(PSORX)
  Q

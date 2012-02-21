@@ -1,6 +1,6 @@
 IBCRBC ;ALB/ARH - RATES: BILL CALCULATION OF CHARGES ; 22-MAY-1996
- ;;2.0;INTEGRATED BILLING;**52,80,106,51,137,245,370**;21-MAR-94;Build 5
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,80,106,51,137,245**;21-MAR-94
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; Variable DGPTUPDT may be defined on entry/exit for inpt bills so the PTF will only be updated once per session
  ; Charges may be filed on the bill and if IBRSARR is passed but does not exist it may be updated
@@ -41,6 +41,10 @@ BILL(IBIFN,IBRSARR) ; given a bill number calculate and store all charges
  .. I IBBEVNT["PROCEDURE" D CPT^IBCRBC1(IBIFN,IBRS,IBCS)
  ;
  I '$D(^TMP($J,"IBCRCC")) G END
+ ;
+ D MULTCPT^IBCRBCA1 ; adjust charges for Multiple Surgical Procedure Discount
+ D PSB^IBCRBCA2 ;     adjust charges for Primary/Secondary Bundling
+ D MODADJ^IBCRBCA3 ;  adjust charges for Modifier Adjustment
  ;
  D SORTCI^IBCRBC3 I '$D(^TMP($J,"IBCRCS")) G END
  ;
@@ -135,7 +139,6 @@ BILLITEM(IBIFN,IBITMARR) ; add selected unassociated item charges to the bill
  ;                        20 procedure provider
  ;                        21 procedures associated clinic
  ;                        22 procedures Outpatient Encounter, pointer to #409.68
- ;                        23 list of all the procedures modifiers, separated by ','
  ;
  ;  ^TMP($J,"IBCRCC",X,"CC",x) = comments explaining charge adjustements
  ;

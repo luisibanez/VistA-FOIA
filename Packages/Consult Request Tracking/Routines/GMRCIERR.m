@@ -1,6 +1,5 @@
 GMRCIERR ;SLC/JFR - process IFC message error alert ;07/08/03 11:16
- ;;3.0;CONSULT/REQUEST TRACKING;**22,28,30,35,58**;DEC 27, 1997;Build 4
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,28,30,35**;DEC 27, 1997
  Q
 EN(GMRCLOG,GMRCDA,GMRCACT,GMRCRPT) ;start here
  ;Build ^TMP array for processing alert
@@ -157,26 +156,22 @@ PTERRMSG(GMRCPID,GMRCSTA,GMRCDOM,GMRCOBR) ;send IFC pt err to mail group
  S GMRCMSG(13,0)="            Sex: "_$P(GMRCPID,"|",8)
  S GMRCMSG(14,0)="     Remote ICN: "_GMRCICN
  S GMRCMSG(15,0)=" "
- ;
- S XMSUB="Incoming IFC patient error, "_GMRCNAM
- S XMDUZ="Consult/Request Tracking Package"
- D XMZ^XMA2
  I $L($G(GMRCOBR)) D
  . N GMRCITM
  . S GMRCITM=$P(GMRCOBR,"|",4)
- . I $P(GMRCITM,U,2)["SUICIDE HOTLINE" D
- .. N DIE,DA,DR
- .. S DIE=3.9,DA=XMZ,DR="1.7////P" D ^DIE K DIE,DA,DR
  . I GMRCITM["VA1235" S GMRCITM="Ordered service: "_$P(GMRCITM,U,2)
  . I GMRCITM["VA1233" S GMRCITM="  Ordered proc.: "_$P(GMRCITM,U,2)
  . S GMRCMSG(16,0)=GMRCITM
  S GMRCMSG(17,0)=" "
  S GMRCMSG(18,0)="   The error is: Unknown Patient (201)"
+ ;
  D  ; set XMY to local group or remote group
  . I $D(GMRCDOM) S XMY("G.IFC CLIN ERRORS@"_GMRCDOM)="" Q
  . S XMY("G.IFC PATIENT ERROR MESSAGES")=""
+ S XMSUB="Incoming IFC patient error, "_GMRCNAM
+ S XMDUZ="Consult/Request Tracking Package"
  S XMTEXT="GMRCMSG("
- D EN1^XMD
+ D ^XMD
  Q
  ;
 PTMPIER(GMRCDFN) ;send IFC local MPI error to MAS mail group

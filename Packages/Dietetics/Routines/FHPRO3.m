@@ -1,7 +1,6 @@
 FHPRO3 ; HISC/REL/RVD - Recipe Calculations ;4/14/95  08:05
- ;;5.5;DIETETICS;**3,5**;Jan 28, 2005;Build 53
+ ;;5.5;DIETETICS;**3**;Jan 28, 2005
  ;RVD 5/20/05 - as part of AFP project.
- ;patch #5 -added a screen for cancelled quest meals.
  K ^TMP($J,"FH","T"),P,T
  I '$G(FHAFLG) K ^TMP($J,"AFP","T")
  ;S K3=$F("BNE",MEAL)-1,FHX1=$P(FHDA,"^",K3+1) Q:'FHX1
@@ -116,7 +115,6 @@ GUEST ;process GUEST meal
  ..S FHNODE=$G(^FHPT(FHJ,"GM",FHI,0))
  ..S FHMEAL=$P(FHNODE,U,3)
  ..Q:FHMEAL'=MEAL
- ..Q:$P(FHNODE,U,9)="C"
  ..S FHLPT=$P(FHNODE,U,5)
  ..S FHDIET=$P(FHNODE,U,6)
  ..S:'$G(FHDIET) FHDIET=$P($G(^FH(119.9,1,0)),U,2)

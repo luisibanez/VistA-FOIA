@@ -1,5 +1,5 @@
 IBCIUT4 ;DSI/SLM - MISC UTILITIES ;29-JAN-2001
- ;;2.0;INTEGRATED BILLING;**161,226,348**;21-MAR-94;Build 5
+ ;;2.0;INTEGRATED BILLING;**161,226**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  Q
@@ -88,7 +88,7 @@ SNTMSG ;determine what user was doing for message
  I IBCISNT=4 S IBCISMG="to Cancel the Claim."
  I IBCISNT=5 S IBCISMG="to Override the Errors."
  I IBCISNT=6 S IBCISMG="to Send an Authorized Claim from the Multiple Send Option."
- I IBCISNT=7 S IBCISMG="to delete the lines on this bill which is no longer a CMS-1500."
+ I IBCISNT=7 S IBCISMG="to delete the lines on this bill which is no longer a HCFA 1500."
  Q
  ;
  ;TCK CALL check text for ClaimsManager delimiters and strip if found

@@ -1,28 +1,17 @@
-RORX013A ;HCIOFO/SG - DIAGNOSIS CODES (QUERY & SORT) ;6/21/06 2:24pm
- ;;1.5;CLINICAL CASE REGISTRIES;**1,13**;Feb 17, 2006;Build 27
+RORX013A ;HCIOFO/SG - DIAGNOSIS CODES (QUERY & SORT) ; 1/9/06 6:19am
+ ;;1.5;CLINICAL CASE REGISTRIES;;Feb 17, 2006
  ;
  ; This routine uses the following IAs:
  ;
- ; #928          ACTIVE^GMPLUTL (controlled)
+ ; #928          ACTIVE^GMPLUTL
  ; #1554         POV^PXAPIIB (controlled)
- ; #1905         SELECTED^VSIT (controlled)
- ; #2977         GETFLDS^GMPLEDT3 (controlled)
+ ; #1900-F       SELECTED^VSIT (controlled)
+ ; #2977         GETFLDS^GMPLEDT3
  ; #3157         RPC^DGPTFAPI (supported)
- ; #3545         Access to the "AAD" cross-reference and the field 80 (private)
- ; #92           ^DGPT(IEN,0)  (controlled)
+ ; #3545         Access to the "AAD" cross-reference and the field 80
  ; #3990         $$CODEN^ICDCODE and $$ICDDX^ICDCODE (supported)
+ ; #10082        Read access to the file #80 (supported)
  ;
- ;******************************************************************************
- ;******************************************************************************
- ;                 --- ROUTINE MODIFICATION LOG ---
- ;        
- ;PKG/PATCH    DATE        DEVELOPER    MODIFICATION
- ;-----------  ----------  -----------  ----------------------------------------
- ;ROR*1.5*13   DEC  2010   A SAUNDERS   User can select specific patients,
- ;                                      clinics, or divisions for the report.
- ;                                      
- ;******************************************************************************
- ;******************************************************************************
  Q
  ;
  ;**** STORES THE ICD-9 CODE
@@ -41,12 +30,12 @@ ICD9SET(PATIEN,SOURCE,ICD9IEN,DATE,ICD9) ;
  S ICD9IEN=+$G(ICD9IEN)
  I ICD9IEN'>0  Q:$G(ICD9)=""  D  Q:ICD9IEN'>0
  . S ICD9IEN=+$$CODEN^ICDCODE(ICD9,80)
- ;---
- Q:$$ICDGRCHK^RORXU008(.RORPTGRP,ICD9IEN,RORICDL)
+ I '$$PARAM^RORTSK01("ICD9LST","ALL")  D  Q:'TMP
+ . S TMP=$D(RORTSK("PARAMS","ICD9LST","C",ICD9IEN))
  ;---
  S TMP=+$G(@RORTMP@("PAT",PATIEN,ICD9IEN))
  S:'TMP!(DATE<TMP) @RORTMP@("PAT",PATIEN,ICD9IEN)=DATE_U_SOURCE
- S ^(SOURCE)=$G(@RORTMP@("PAT",PATIEN,ICD9IEN,SOURCE))+1 ;naked reference: ^TMP($J,"RORTMP-n") from RORX013
+ S ^(SOURCE)=$G(@RORTMP@("PAT",PATIEN,ICD9IEN,SOURCE))+1
  Q
  ;
  ;***** SEARCHES FOR INPATIENT DIAGNOSES
@@ -154,11 +143,7 @@ QUERY(FLAGS) ;
  N ROREDT1       ; Day after the end date
  N RORLAST4      ; Last 4 digits of the current patient's SSN
  N RORPNAME      ; Name of the current patient
- N RORPTGRP      ; Temporary list of ICD-9 groups
  N RORPTN        ; Number of patients in the registry
- N RORCDLIST     ; Flag to indicate whether a clinic or division list exists
- N RORCDSTDT     ; Start date for clinic/division utilization search
- N RORCDENDT     ; End date for clinic/division utilization search
  ;
  N CNT,ECNT,IEN,IENS,PATIEN,RC,TMP,VA,VADM,XREFNODE
  S XREFNODE=$NA(^RORDATA(798,"AC",+RORREG))
@@ -166,26 +151,17 @@ QUERY(FLAGS) ;
  S ROREDT1=$$FMADD^XLFDT(ROREDT\1,1)
  S (CNT,ECNT,RC)=0
  ;
- ;=== Set up Clinic/Division list parameters
- S RORCDLIST=$$CDPARMS^RORXU001(.RORTSK,.RORCDSTDT,.RORCDENDT)
- ;
  ;--- Browse through the registry records
  S IEN=0
  F  S IEN=$O(@XREFNODE@(IEN))  Q:IEN'>0  D  Q:RC<0
  . S TMP=$S(RORPTN>0:CNT/RORPTN,1:"")
  . S RC=$$LOOP^RORTSK01(TMP)  Q:RC<0
  . S IENS=IEN_",",CNT=CNT+1
- . ;--- Get patient DFN
- . S PATIEN=$$PTIEN^RORUTL01(IEN)  Q:PATIEN'>0
- . ;check for patient list and quit if not on list
- . I $D(RORTSK("PARAMS","PATIENTS","C")),'$D(RORTSK("PARAMS","PATIENTS","C",PATIEN)) Q
  . ;--- Check if the patient should be skipped
  . Q:$$SKIP^RORXU005(IEN,FLAGS,RORSDT,ROREDT)
  . ;
- . ;--- Check for Clinic or Division list and quit if not in list
- . I RORCDLIST,'$$CDUTIL^RORXU001(.RORTSK,PATIEN,RORCDSTDT,RORCDENDT) Q
- . ;
- . M RORPTGRP=RORIGRP("C")
+ . ;--- Get the patient IEN (DFN)
+ . S PATIEN=$$PTIEN^RORUTL01(IEN)  Q:PATIEN'>0
  . ;
  . ;--- Inpatient codes
  . S RC=$$INPAT(PATIEN)
@@ -201,9 +177,6 @@ QUERY(FLAGS) ;
  . ;
  . ;--- Skip the patient if no data has been found
  . Q:$D(@RORTMP@("PAT",PATIEN))<10
- . ;--- No ICD-9 from some groups
- . I $D(RORPTGRP)>1  K @RORTMP@("PAT",PATIEN)  Q
- . ;
  . ;--- Get the patient's data
  . D VADEM^RORUTL05(PATIEN,1)
  . S RORPNAME=VADM(1),RORDOD=$P(VADM(6),U),RORLAST4=VA("BID")
@@ -245,7 +218,7 @@ TOTALS(PATIEN) ;
  N CNT,ICD9,ICDIEN,PNODE,RC,TMP
  S PNODE=$NA(@RORTMP@("PAT",PATIEN))
  S @PNODE=RORLAST4_U_RORPNAME_U_RORDOD
- S ^("PAT")=$G(@RORTMP@("PAT"))+1 ;naked reference: ^TMP($J,"RORTMP-n") from RORX013
+ S ^("PAT")=$G(@RORTMP@("PAT"))+1
  ;
  S ICDIEN=0
  F  S ICDIEN=$O(@PNODE@(ICDIEN))  Q:ICDIEN'>0  D
@@ -261,6 +234,6 @@ TOTALS(PATIEN) ;
  . S CNT=0
  . F TMP="I","O","PB"  S CNT=CNT+$G(@PNODE@(ICDIEN,TMP))
  . S @PNODE@(ICDIEN,"C")=CNT
- . S ^("C")=$G(@RORTMP@("ICD",ICDIEN,"C"))+CNT ;naked reference: ^TMP($J,"RORTMP-n") from RORX013
- . S ^("P")=$G(@RORTMP@("ICD",ICDIEN,"P"))+1 ;naked reference: ^TMP($J,"RORTMP-n") from RORX013
+ . S ^("C")=$G(@RORTMP@("ICD",ICDIEN,"C"))+CNT
+ . S ^("P")=$G(@RORTMP@("ICD",ICDIEN,"P"))+1
  Q 0

@@ -1,5 +1,5 @@
-ORWPCE2 ; ISL/JM/RV - wrap calls to PCE ;04/06/2006
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,109,116,173,195,243**;Dec 17, 1997;Build 242
+ORWPCE2 ; ISL/JM - wrap calls to PCE ;9/25/2001
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,109,116,173,195**;Dec 17, 1997
 GETSET(ORWLST,ORWFILE,ORWFIELD,ORWNULL) ;gets set of codes 
  ; ORWLST(n)=code^text for code
  N ORWPCE,ORWPCEL,ORWPCEC,ORWPCELO,ORWPCEHI,ORWPCECD,ORWPCET
@@ -14,20 +14,14 @@ GETSET(ORWLST,ORWFILE,ORWFIELD,ORWNULL) ;gets set of codes
  S:$G(ORWNULL) ORWLST(0)="@^(None selected)"
  Q
  ;
-IMMTYPE(ORWLST,ORDT) ;get the list of active immunizations
+IMMTYPE(ORWLST) ;get the list of active immunizations
  N IEN,CNT,BINDEX S (IEN,CNT,BINDEX)=0
- S:'$G(ORDT) ORDT=DT
- F  S BINDEX=$O(^AUTTIMM("B",BINDEX)) Q:BINDEX']""  F  S IEN=$O(^(BINDEX,IEN)) Q:'+IEN  D
- . I $D(^AUTTIMM(IEN,0))#2,+$P(^(0),"^",7)=0 S CNT=CNT+1,ORWLST(CNT)=IEN_"^"_$P(^(0),"^")
- . ;I $D(^AUTTIMM(IEN,0))#2,+$$SCREEN^XTID(9999999.14,,IEN,ORDT)=0 S CNT=CNT+1,ORWLST(CNT)=IEN_"^"_$P(^(0),"^")
+ F  S BINDEX=$O(^AUTTIMM("B",BINDEX)) Q:BINDEX']""  F  S IEN=$O(^(BINDEX,IEN)) Q:'+IEN  I $D(^AUTTIMM(IEN,0))#2,+$P(^(0),"^",7)=0 S CNT=CNT+1,ORWLST(CNT)=IEN_"^"_$P(^(0),"^")
  Q
  ;
-SKTYPE(ORWLST,ORDT) ;get the list of active skin test 
+SKTYPE(ORWLST) ;get the list of active skin test
  N IEN,CNT,BINDEX S (IEN,CNT,BINDEX)=0
- S:'$G(ORDT) ORDT=DT
- F  S BINDEX=$O(^AUTTSK("B",BINDEX)) Q:BINDEX']""  F  S IEN=$O(^(BINDEX,IEN)) Q:'+IEN  D
- . I $D(^AUTTSK(IEN,0))#2,+$P(^(0),"^",3)=0 S CNT=CNT+1,ORWLST(CNT)=IEN_"^"_$P(^(0),"^")
- . ;I $D(^AUTTSK(IEN,0))#2,+$$SCREEN^XTID(9999999.28,,IEN,ORDT)=0 S CNT=CNT+1,ORWLST(CNT)=IEN_"^"_$P(^(0),"^")
+ F  S BINDEX=$O(^AUTTSK("B",BINDEX)) Q:BINDEX']""  F  S IEN=$O(^(BINDEX,IEN)) Q:'+IEN  I $D(^AUTTSK(IEN,0))#2,+$P(^(0),"^",3)=0 S CNT=CNT+1,ORWLST(CNT)=IEN_"^"_$P(^(0),"^")
  Q
  ;
 EDTTYPE(ORWLST) ;get the list of active education topics

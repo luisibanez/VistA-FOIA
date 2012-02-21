@@ -1,5 +1,5 @@
-SROAPR2 ;BIR/MAM - PAGE 2 PREOP SCREEN ;01/19/06
- ;;3.0; Surgery ;**38,100,125,142,153**;24 Jun 93;Build 11
+SROAPR2 ;BIR/MAM - PAGE 2 PREOP SCREEN ;06/13/05
+ ;;3.0; Surgery ;**38,100,125,142**;24 Jun 93
  K SRA,SRAO
 START Q:SRSOUT  D:SRACLR RET S SRACLR=0 K SRA,SRAO D ^SROAPS2
 ASK W !!,"Select Preoperative Information to Edit: " R X:DTIME I '$T!("^"[X) D CONCC^SROAPRE S SRSOUT=1 Q
@@ -21,7 +21,7 @@ ASK W !!,"Select Preoperative Information to Edit: " R X:DTIME I '$T!("^"[X) D C
  S SRSOUT=1 Q
 HELP W @IOF,!!!!,"Enter the number, number/letter combination, or range of numbers you want to",!,"edit.  Examples of proper responses are listed below."
  W !!,"1. Enter 'A' to update all information.",!!,"2. Enter 'N' to set all fields on this page to NO."
- W !!,"3. Enter a number (1-3) to update the information in that group.  (For",!,"   example, enter '2' to update all Central Nervous System information)"
+ W !!,"3. Enter a number (1-3) to update the information in that group.  (For",!,"   example, enter '1' to update all Central Nervous System information)"
  W !!,"4. Enter a number/letter combination to update a specific occurrence. (To ",!,"   update Impaired Sensorium, enter '2A')"
  W !!,"5. Enter a range of numbers (2-3) separated by a ':' to enter all",!,"   Central Nervous System and Nutritional/Immune/Other information."
  W !!,"Press <RET> to continue, or '^' to quit  " R X:DTIME I '$T!(X["^") S SRSOUT=1

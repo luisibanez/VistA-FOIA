@@ -1,18 +1,11 @@
 DVBCREQ1 ;ALB/GTS-557/THM-NEW 2507 REQUEST PRINTING ; 5/25/91  11:36 AM
- ;;2.7;AMIE;**19,29,126**;Apr 10, 1995;Build 8
+ ;;2.7;AMIE;**19,29**;Apr 10, 1995
  ;
 START S PGHD="COMPENSATION AND PENSION EXAM REQUEST",ROHD="Requested by "_RONAME,PG=0
  D HDR
  D SSNOUT^DVBCUTIL ;** Set the value of DVBCSSNO
  W !?2,"Name: ",PNAM,?56,"SSN: ",DVBCSSNO,!?51,"C-Number: ",CNUM,!?56,"DOB: " S Y=DOB X ^DD("DD") W Y,!?2,"Address: ",ADR1,! W:ADR2]"" ?11,ADR2,! W:ADR3]"" ?11,ADR3,!!
- W ?2,"City,State,Zip+4: ",?48,"Res Phone: ",HOMPHON,!?5,CITY,"  ",STATE,"  ",ZIP,?48,"Bus Phone: ",BUSPHON,!   ;I IOST?1"C-".E D CRTBOT G:$D(GETOUT) EXIT  ;DVBA/126 comment off this code
- I $D(^DPT(DFN,.121)) I $D(DTT) D    ;DVBA/126
- .Q:$P(DTT,U,9)=""!($P(DTT,U,9)="N")
- .I $P(DTT,U,7)'="" Q:$P(DTT,U,7)>DT
- .I $P(DTT,U,8)'="" Q:$P(DTT,U,8)<DT
- .W !?2,"Temporary Address: ",TAD1,! W:TAD2]"" ?21,TAD2,! W:TAD3]"" ?21,TAD3,!
- .W ?2,"City,State,Zip+4: ",?48,"Temporary Phone: ",!?5,TCITY,"  ",TST,"  ",TZIP,?51,TPHONE,!
- I IOST?1"C-".E D CRTBOT G:$D(GETOUT) EXIT  ;DVBA/126
+ W !?2,"City,State,Zip+4: ",?48,"Res Phone: ",HOMPHON,!?5,CITY,"  ",STATE,"  ",ZIP,?48,"Bus Phone: ",BUSPHON,! I IOST?1"C-".E D CRTBOT G:$D(GETOUT) EXIT
  W !,"Entered active service: " S Y=EOD X ^DD("DD") S:Y="" Y="Not specified" W Y,?40,"Last rating exam date: ",LREXMDT,! S Y=RAD X ^DD("DD") S:Y="" Y="Not specified" W "Released active service: " W Y,!
  F LINE=1:1:80 W "="
  S TVAR(1,0)="0,0,0,2:1,0^** Priority of exam: "_PRIO
@@ -36,7 +29,7 @@ START S PGHD="COMPENSATION AND PENSION EXAM REQUEST",ROHD="Requested by "_RONAME
  F LINE=0:0 S LINE=$O(^DVB(396.3,DA(1),2,LINE)) Q:(LINE="")!($D(GETOUT))  S X=^(LINE,0),DIWL=1,DIWF="NW" D ^DIWP I $Y>(IOSL-7),$O(^DVB(396.3,DA(1),2,LINE))]"" D BOT D:'$D(GETOUT) HDR,RMRK
  D:('$D(GETOUT)) ^DIWW
  ; **  Exit TAG **
-EXIT D:('$D(GETOUT)) BOT K GETOUT,LPCNT,DVBCDX,DVBCSC,DVBCSSNO,DTT,TAD1,TAD2,TAD3,TCITY,TST,TZIP,TPHONE Q
+EXIT D:('$D(GETOUT)) BOT K GETOUT,LPCNT,DVBCDX,DVBCSC,DVBCSSNO Q
  ;
 HDR S PG=PG+1 I '$D(ONE)!(($D(ONE))&(PG>1))!(IOST?1"C-".E) W @IOF
  W !,"Date: ",DVBCDT(0),?(80-$L(PGHD)\2),PGHD,?71,"Page: ",PG,! S PRTDIV=$S($D(^DG(40.8,XDIV,0)):$P(^(0),U,1),1:"Unknown division") S PRTDIV="For "_PRTDIV_" Medical Center Division at "_$$SITE^DVBCUTL4

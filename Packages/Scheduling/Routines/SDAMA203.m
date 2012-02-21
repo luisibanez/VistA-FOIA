@@ -1,5 +1,5 @@
 SDAMA203 ;BPIOFO/ACS-Scheduling API for IMO ;15 April 2003
- ;;5.3;Scheduling;**285,406**;13 Aug 1993
+ ;;5.3;Scheduling;**285**;13 Aug 1993
  ;
  ;Scheduling API to return encounter or appointment date/time for
  ;a patient that can receive inpatient medication from an
@@ -11,7 +11,6 @@ SDAMA203 ;BPIOFO/ACS-Scheduling API for IMO ;15 April 2003
  ;  DATE      PATCH       DESCRIPTION                 DEVELOPER
  ;--------  ----------    ----------------------------------------------
  ;04/15/03  SD*5.3*285    ROUTINE WRITTEN             A SAUNDERS
- ;10/12/06  SD*5.3*406    FIXED ERROR CODE -3         A SAUNDERS
  ;
  ;**********************************************************************
  ;
@@ -175,7 +174,7 @@ SDAPPT(SDPATDFN,SDCLIEN,SDAPPTDT,SDBACK,SDFROM) ;
  I SDRESULT=-1 D
  . S SDBACK=0
  . ; if database unavailable, set database-specific flag
- . I $D(^TMP($J,"SDAMA201","GETAPPT","ERROR",101)) S SDBACK=-3
+ . I $G(^TMP($J,"SDAMA201","GETAPPT","ERROR",101)) S SDBACK=-3
  . ; delete error array returned from Scheduling API
  . K ^TMP($J,"SDAMA201","GETAPPT")
  Q

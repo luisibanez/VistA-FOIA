@@ -1,5 +1,5 @@
-DGPFRAL1 ;ALB/RBS - PRF ACTION NOT LINKED REPORT CONT. ; 10/12/05 2:48pm
- ;;5.3;Registration;**554,650**;Aug 13, 1993;Build 3
+DGPFRAL1 ;ALB/RBS - PRF ACTION NOT LINKED REPORT CONT. ; 10/12/05 1:24pm
+ ;;5.3;Registration;**554**;Aug 13, 1993
  ;
  ;This routine will be used to display or print all of the patient
  ;assignment history records that are not linked to a progress note.
@@ -72,7 +72,7 @@ LOOP(DGSORT,DGLIST) ;use sort var's for record searching to build list
  . . K DGPFA
  . . Q:'$$GETASGN^DGPFAA(DGIEN,.DGPFA)
  . . ; check if calling site is owner site
- . . Q:'$$ISDIV^DGPFUT($P(DGPFA("OWNER"),U))
+ . . Q:$P($$SITE^VASITE(),U)'=$P($G(DGPFA("OWNER")),U)
  . . ;
  . . ;filter patient when last action is ENTERED IN ERROR
  . . Q:$$ENTINERR(DGIEN)

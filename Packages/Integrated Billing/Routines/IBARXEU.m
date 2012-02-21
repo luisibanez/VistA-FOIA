@@ -1,5 +1,5 @@
 IBARXEU ;AAS/ALB - RX EXEMPTION UTILITY ROUTINE ;2-NOV-92
- ;;2.0;INTEGRATED BILLING;**20,222,293**;21-MAR-94;Build 1
+ ;;2.0;INTEGRATED BILLING;**20,222**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
@@ -89,7 +89,7 @@ DISP(DFN,IBDT,NO,NULL) ; -- formats text to display
  I X<0&(NULL) G DISPQ
  W !,"Medication Copayment Exemption Status: ",$P(X,U,2) G:NO<2 DISPQ
  W !,$P(X,U,4) G:NO<3 DISPQ
- I $P(X,U,5) W !,"Last Rx Copay Exemption date: " S Y=$P(X,U,5) D DT^DIQ
+ I $P(X,U,5) W !,"Last test date: " S Y=$P(X,U,5) D DT^DIQ
 DISPQ Q
  ;
 STDATE() ; -- legislative start date for income exemption

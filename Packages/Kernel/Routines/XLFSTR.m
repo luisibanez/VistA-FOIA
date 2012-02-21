@@ -1,5 +1,5 @@
-XLFSTR ;ISC-SF/STAFF - String Functions ;12/19/06  09:45
- ;;8.0;KERNEL;**112,120,400,437**;Jul 10, 1995;Build 2
+XLFSTR ;ISC-SF/STAFF - String Functions ;12/28/2005
+ ;;8.0;KERNEL;**112,120,400**;Jul 10, 1995;Build 1
  ;
 UP(X) Q $TR(X,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
  ;
@@ -11,17 +11,6 @@ REPEAT(X,Y) ;
  N % Q:'$D(X) "" I $L(X)*$G(Y)>245 Q ""
  S %="",$P(%,X,$G(Y)+1)=""
  Q %
- ;
-SPLIT(%SRC,%DLM,%VLIST) ;split a string by delimiter vars in list
- ;returns number of vars in list
- ;usage - s %=$$split(src,dlm,"d1,d2,d3,..")
- N I,V,DV
- S DV=$$DVARS(%VLIST),%DLM=$G(%DLM,",")
- F I=1:1:$L(%VLIST,DV) S V=$P(%VLIST,DV,I) S:V'="" @V=$P(%SRC,%DLM,I)
- Q I
- ;
-DVARS(LIST) ;return a delimiter for a list of variables
- Q $S(%VLIST[$C(9):$C(9),%VLIST[";":";",1:",")
  ;
 INVERT(X) ;
  N %,%1 S %="" F %1=$L(X):-1:1 S %=%_$E(X,%1)
@@ -61,7 +50,7 @@ CJ(%,%1,%2) ;Center Justify
  S %3=%3\2,%4=$J("",%3+1) I $G(%2)]"" S %4=$TR(%4," ",%2)
  Q $E(%4,1,%3)_%_$E(%4,1,%1-%3-$L(%))
  ;
-QUOTE(%) ;Add quotes to value for concatenation
+QUOTE(%) ;Add quotes to value for concatenation 
  S %(%)=0,%=$Q(%)
  Q $P($E(%,1,$L(%)-1),"(",2,999)
  ;
@@ -70,7 +59,6 @@ TRIM(%X,%F,%V) ;Trim spaces\char from front(left)/back(right) of string
  S %F=$$UP($G(%F,"LR")),%L=1,%R=$L(%X),%V=$G(%V," ")
  I %F["R" F %R=$L(%X):-1:1 Q:$E(%X,%R)'=%V
  I %F["L" F %L=1:1:$L(%X) Q:$E(%X,%L)'=%V
- I (%L>%R)!(%X=%V) Q ""
  Q $E(%X,%L,%R)
  ;
 SENTENCE(%X) ;
@@ -100,12 +88,12 @@ TITLE(%X) ;
  ; W $$TITLE^XLFSTR("THIS IS CAPITALIZED. (this isn't.)")
  ; produces
  ; This Is Capitalized. This Isn't.
- ;
+ ; 
  ; %S = string during conversion
  ; %P = state flag
  ; %I = iteration index
  ; %C = current character
- ;
+ ; 
  N %I,%C,%S,%P
  S %S=$$LOW(%X),%P=1
  F %I=1:1:$L(%S) D

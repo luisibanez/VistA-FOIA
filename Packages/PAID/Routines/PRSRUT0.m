@@ -1,6 +1,5 @@
 PRSRUT0 ;HISC/JH,JAH-UTILITY ROUTINE FOR PAID ADDIM. REPORTS ;6/24/94
- ;;4.0;PAID;**2,17,114**;Sep 21, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.0;PAID;**2,17**;Sep 21, 1995
 QUE ;QUEUE FOR PAID REPORTS
  S IOP="Q",%ZIS="Q" D ^%ZIS K %ZIS K:POP IO("Q") I POP S ZTSTOP=1 Q
  I $D(IO("Q")) K IO("Q"),IO("C") S ZTIO=ION_";"_IOST_";"_IOM_";"_IOSL,ZTSAVE("IOM")="" D ^%ZTLOAD S:'$D(ZTSK) (ZTSTOP,POP)=1
@@ -36,10 +35,10 @@ TLESEL ;user select T&L units
  S USR="",TLE="" D DUZ^PRSRUTL Q:SSN=""
 TL ; Select T&L from those allowed
  S:SSN'="" USR=$O(^PRSPC("SSN",SSN,0))
- K DIC
+ K DIC I PRSTLV>5 G SEL
  ;
  ;Z1 for T&L unit file x-ref lookup: T=TimeKeeper, S=Supervisor
- S Z1=$S(PRSTLV=2:"T",PRSTLV="3":"S",PRSTLV=7:"S",1:"*")
+ S Z1=$S(PRSTLV=2:"T",PRSTLV="3":"S",1:"*")
  I PRSR=1 S TLI=$O(^PRST(455.5,"A"_Z1,DUZ,0)) I TLI<1 W !!,*7,"No T&L Units have been assigned to you!" Q
  Q:PRSR=3
 SEL W ! S DIC="^PRST(455.5,"
@@ -63,7 +62,7 @@ VALSEL ; Validate input in form 001 or 211,234,333 or 221,2233,345-367,400
 CHKSEL ; Check selection array eliminating T&L units not assigned, if not Fiscal.
  S TLE=D-1 S I=0 F II=1:1 S I=$O(TLE(I)) Q:I'>0  D
  .  I $L(TLE(I))<1!'($O(^PRST(455.5,"B",TLE(I),0))) D KILL Q
- .  S F=$O(^PRST(455.5,"B",TLE(I),0)) I PRSR=1,'$D(^PRST(455.5,F,Z1,DUZ,0)) D KILL
+ .  S F=$O(^PRST(455.5,"B",TLE(I),0)) I PRSR=1&('$D(^PRST(455.5,F,Z1,DUZ,0))) D KILL
  .  E  S $P(TLE(I),U,2)=$P(^PRST(455.5,F,0),U,2) D GET
  .  Q
  S:D=1 TLE=D Q
