@@ -40,7 +40,7 @@ for routinename in listofOtherroutines:
     print routinename+" goes to "+destinationpath
     sourcefile = sourceOtherDirectory+routinename
     destinationfile = sourceFOIADirectory+destinationpath
-    subprocess.call(["ls",sourcefile,destinationfile])
+    subprocess.call(["cp",sourcefile,destinationfile])
   else:
     if routinename[0] == '_':
       routinename2 = routinename[1:]
@@ -49,7 +49,7 @@ for routinename in listofOtherroutines:
         print routinename+" goes to "+destinationpath
         sourcefile = sourceOtherDirectory+routinename
         destinationfile = sourceFOIADirectory+destinationpath
-        subprocess.call(["ls",sourcefile,destinationfile])
+        subprocess.call(["cp",sourcefile,destinationfile])
       else:
         print routinename+" is not in the dictionary"
 
