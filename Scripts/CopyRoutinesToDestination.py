@@ -3,7 +3,7 @@ import string
 import subprocess
 
 sourceFOIADirectory  = '/home/ibanez/src/OSEHR/VistA-FOIA/Packages/'
-sourceOtherDirectory = 'home/ibanez/src/OSEHR/CodeConvergence/vxVista/ExportedRoutines/vxVistaRoutines/'
+sourceOtherDirectory = '/home/ibanez/src/OSEHR/CodeConvergence/vxVista/ExportedRoutines/vxVistaRoutines/'
 
 listofFOIAroutinesfile  = open('Vista_FOIA_Routines_List.txt','r')
 listofOtherroutinesfile = open('vxVistA_Routines_List.txt','r')
