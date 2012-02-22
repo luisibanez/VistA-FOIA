@@ -1,5 +1,5 @@
-PXRMMST ; SLC/PKR - Routines for dealing with MST. ;12/23/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,17**;Feb 04, 2005;Build 102
+PXRMMST ; SLC/PKR - Routines for dealing with MST. ;03/29/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;Use of DGMSTAPI supported by DBIA #2716.
  ;====================================================
 GSYINFO(TYPE) ;Return the Clinical Reminders MST synchronization date
@@ -181,11 +181,11 @@ UPDATE(DFN,VISIT,SOURCE,STCODE,TYPE) ;Make an update to the MST History file.
  .. S NAME=$P(@TEMP,U,1)
  .. S ^TMP("PXRMXMZ",$J,14,0)="Data type = "_FN
  .. S ^TMP("PXRMXMZ",$J,15,0)="Name = "_NAME
- .. D SEND^PXRMMSG("PXRMXMZ",XMSUB)
+ .. D SEND^PXRMMSG(XMSUB)
  Q UPDSTAT
  ;
  ;====================================================
-UPDPAT(EVENT,DFN,VISIT,VFL) ;Update the MST history file for a single patient
+UPDPAT(DFN,VISIT,VFL) ;Update the MST history file for a single patient
  ;using term mappings. Called from DATACHG^PXRMPINF which is invoked
  ;by the protocol PXK VISIT DATA EVENT.
  N AFTER,BEFORE,DGBL,SP,STCODE,SIEN,SOURCE
@@ -199,17 +199,17 @@ UPDPAT(EVENT,DFN,VISIT,VFL) ;Update the MST history file for a single patient
  .. S DGBL=$P(VFL(VF),U,1)
  .. I '$D(^PXRMD(811.5,TERMIEN,20,"E",DGBL)) Q
  .. S SIEN=""
- .. F  S SIEN=$O(^XTMP(EVENT,VISIT,VF,SIEN)) Q:SIEN=""  D
- ... S AFTER=$G(^XTMP(EVENT,VISIT,VF,SIEN,0,"AFTER"))
- ... S BEFORE=$G(^XTMP(EVENT,VISIT,VF,SIEN,0,"BEFORE"))
+ .. F  S SIEN=$O(^TMP("PXKCO",$J,VISIT,VF,SIEN)) Q:SIEN=""  D
+ ... S AFTER=$G(^TMP("PXKCO",$J,VISIT,VF,SIEN,0,"AFTER"))
+ ... S BEFORE=$G(^TMP("PXKCO",$J,VISIT,VF,SIEN,0,"BEFORE"))
  ... I AFTER=BEFORE Q
  ... S SP=$P(AFTER,U,1)
  ... I SP="" Q
  ... I '$D(^PXRMD(811.5,TERMIEN,20,"E",DGBL,SP)) Q
  ... S SOURCE=SIEN_";^"_$P(VFL(VF),U,2)
  ...;The status code depends on the term name.
- ... S STCODE=$$STCODE^PXRMMST(TERM)
- ... S TEMP=$$UPDATE^PXRMMST(DFN,VISIT,SOURCE,STCODE,"PROTOCOL")
+ ... S STCODE=$$STCODE(TERM)
+ ... S TEMP=$$UPDATE(DFN,VISIT,SOURCE,STCODE,"PROTOCOL")
  Q
  ;
  ;====================================================

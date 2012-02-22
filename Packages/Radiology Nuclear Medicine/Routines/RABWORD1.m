@@ -1,8 +1,7 @@
 RABWORD1 ;HOIFO/MM-Radiology Billing Awareness ;10/26/04 1:36pm
- ;;5.0;Radiology/Nuclear Medicine;**41,57,70,97**;Mar 16, 1998;Build 6
+ ;;5.0;Radiology/Nuclear Medicine;**41,57,70**;Mar 16, 1998;Build 7
  ;
  ; This routine invokes IA #10082
- ; ICDDX^ICDCODE        IA # 3990
  Q
  ;
 BADISP(RABWDX) ; Display ICD DX & SC/EI/MST/HNC answers from the Order.
@@ -53,7 +52,7 @@ SENDCPRS(RAO) ; Send Billing Aware Ordering ICD Dx data to CPRS.
  F  S RA1=$O(^RAO(75.1,RAO,"BAS",RA1)) Q:+RA1<1  S RA2=^(RA1,0) D SEND1
  Q
  ;
-SEND1 S RAICD1=$P(^ICD9(+RA2,0),U,1),RAICD3=$P($$ICDDX^ICDCODE(+RA2),U,4)
+SEND1 S RAICD1=$P(^ICD9(+RA2,0),U,1),RAICD3=$P(^ICD9(+RA2,0),U,3)
  S RACNT=RACNT+1
  S RABWDX1(RACNT)="DG1"_RAHLFS_RACNT_RAHLFS_RAHLFS_+RA2_RAECH(1)_RAICD3_RAECH(1)_"80"_RAECH(1)_RAICD1_RAECH(1)_RAICD3_RAECH(1)_"ICD9"
  S RACNT1=RACNT

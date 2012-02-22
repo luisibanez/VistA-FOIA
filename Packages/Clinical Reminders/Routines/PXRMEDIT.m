@@ -1,5 +1,5 @@
-PXRMEDIT ; SLC/PKR - Clinical Reminder edit driver. ;04/24/2009
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
+PXRMEDIT ; SLC/PKR - Clinical Reminder edit driver. ;06/04/2007
+ ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
  ;
 EDIT(ROOT,IENN) ;Call the appropriate edit routine.
  ;Reminder location list
@@ -16,6 +16,6 @@ EDIT(ROOT,IENN) ;Call the appropriate edit routine.
  .;Build list of finding types for finding edit
  . N DEF,DEF1,DEF2 D DEF^PXRMRUTL("811.902",.DEF,.DEF1,.DEF2)
  .;Edit reminder
- . D ALL^PXRMREDT(ROOT,IENN,.DEF1)
+ . D ALL^PXRMREDT(ROOT,IENN) Q
  Q
  ;

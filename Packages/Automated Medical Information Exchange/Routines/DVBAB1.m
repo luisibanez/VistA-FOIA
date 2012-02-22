@@ -1,5 +1,5 @@
-DVBAB1 ;ALB/SPH - CAPRI UTILITIES ; 10/08/2009
- ;;2.7;AMIE;**35,37,50,42,53,57,73,104,109,137,146,143**;Apr 10, 1995;Build 4
+DVBAB1 ;ALB/SPH - CAPRI UTILITIES ; 01/01/00
+ ;;2.7;AMIE;**35,37,50,42,53,57,73,104,109,137**;Apr 10, 1995;Build 38
  ;
 VERSION(ZMSG,DVBGUIV) ;
  ; 
@@ -10,23 +10,22 @@ VERSION(ZMSG,DVBGUIV) ;
  ;  2nd piece can be YESOLD or NOOLD
  ;    YESOLD --> Allow old GUI to run with new KID
  ;     NOOLD --> Do not allow old GUI to run with newer version
- ;
- ;  Ex: "CAPRI GUI V2.7*123*0*A^NOOLD"
  ; 
- ; Sets variables DVBABVR* so that the error trap will display what
+ ; Sets variables DVBABV* so that the error trap will display what
  ; version of the client software the user was utilizing if CAPRI bombs.
  ;
- N DVBVERS
- N DVBOLD
+ ;REMOVE THIS LINE OF CODE WHEN CUTTING BUILD FOR PATCH 137
+ ;RESOTRE IT AFTER BUILD IS CUT TO ALLOW OLD VERSIONS IN DEVFEX TEMPORARILY  
+ ;S ZMSG="CAPRI GUI V2.7*71*0*A^NOOLD"
  ;
- ;obtain version parameters and build version string result
- S DVBVERS=$$GET^XPAR("PKG","DVBAB CAPRI MINIMUM VERSION",1,"Q")
- S DVBOLD=$$GET^XPAR("PKG","DVBAB CAPRI ALLOW OLD VERSION",1,"Q")
- S ZMSG=DVBVERS_"^"_$S(DVBOLD=1:"YESOLD",1:"NOOLD")
+ ;ACTIVATE THIS LINE OF CODE WHEN CUTTING BUILD FOR PATCH 137
+ ;S ZMSG="CAPRI GUI V2.7*123*1*A^NOOLD"
  ;
- ;set DVBABVR* vars for error trap
+ S ZMSG="CAPRI GUI V2.7*123*0*A^NOOLD"
+ ;
  S DVBABVR1="CAPRI Server Version: "_ZMSG
- S DVBABVR2="CAPRI GUI Version: "_$S($G(DVBGUIV)]"":DVBGUIV,1:"UNKNOWN")
+ I '$D(DVBGUIV) S DVBGUIV="CAPRI GUI Version: UNKNOWN - Version is prior to DVBA*2.7*123"
+ S DVBABVR2="CAPRI GUI Version: "_DVBGUIV
  S DVBABVR3=$P(^VA(200,DUZ,0),"^",1)
  Q 
  ;
@@ -166,31 +165,26 @@ INCEXAM(ZMSG) ;Increased exam # in file  and passes back the # to user
  Q
  ;
 MSG(ERR,DUZ,XMSUB,XMTEXT,MGN) ;Generate mail message;KLB
- ; --rpc: DVBAB SEND MSG
- ;
- ; This remote procedure is used to generate bulletins for specific CAPRI actions, such as cancellation of 2507 exams.
- ;
- ;  Supported References:                                               
- ;     DBIA #10111: Allows FM read access of ^XMB(3.8,D0,0) using DIC.
+ S ERR=""
  K ^TMP($J,"AMIE")
- S XMB=""
  I '$D(DUZ) S ERR="MISSING DUZ" Q
  I '$D(XMSUB) S ERR="MISSING SUBJECT" Q
  I '$D(XMTEXT) S ERR="MISSING TEXT" Q
  I '$D(MGN) S ERR="MISSING MAIL GROUP NAME" Q
  S XMDUZ=DUZ,J=0
- F  S J=$O(XMTEXT(J)) Q:'J  S ^TMP($J,"AMIE",J)=$G(XMTEXT(J))
+ F  S J=$O(XWBS1(J)) Q:'J  S ^TMP($J,"AMIE",J)=$G(XWBS1(J))
  S XMTEXT="^TMP($J,""AMIE"","
  S DIC="^XMB(3.8,",DIC(0)="QM",X=MGN D ^DIC
+ S MG=+Y
  I +Y<0 S ERR="INVALID MAIL GROUP NAME" Q
  I '$$GOTLOCAL^XMXAPIG(MGN) S ERR="NO ACTIVE LOCAL MEMBERS IN MAIL GROUP" K ^TMP("XMERR",$J) Q
- I MGN="DVBA C NEW C&P VETERAN" S XMB="DVBA CAPRI NEW C&P VETERAN"
- I MGN="DVBA C 2507 CANCELLATION" S XMB="DVBA CAPRI 2507 CANCELLATION"
- I XMB="" S ERR="UNABLE TO SET BULLETIN" Q
- D ^XMB
- ;XMB = -1 if bulletin not found in file (#3.6)
- S ERR=$S(XMB=-1:"BULLETIN NOT FOUND",1:"MESSAGE SENT")
- K XMSUB,XMTEXT,MGN,DIC,DIC(0),J,Y,XMDUZ,XMB
+ S ZZ=0,ZZ1=0
+ F  S ZZ=$O(^XMB(3.8,MG,1,"B",ZZ)) Q:'ZZ  D
+ .F  S ZZ1=$O(^XMB(3.8,MG,1,"B",ZZ,ZZ1)) Q:'ZZ1  S XMY(ZZ)=""
+ D ^XMD
+ I $D(XMMG) S ERR=XMMG
+ E  S ERR="MESSAGE SENT"
+ K XMSUB,XMTEXT,MGN,DIC,DIC(0),ZZ,XMY,XWBS1,J,ZZ1,MG,^TMP($J,"AMIE"),XMMG,Y,XMDUZ
  Q
 FINDEXAM(ZMSG,ZIEN) ;Returns list of exams in 396.4 that are linked to ZIEN in 396.3
  N DVBABCNT,DVBABIEN

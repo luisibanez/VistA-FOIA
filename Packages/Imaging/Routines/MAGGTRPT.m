@@ -1,6 +1,5 @@
-MAGGTRPT ;WOIFO/RED/GEK/SG - Display Associated Report ; 3/9/09 12:52pm
- ;;3.0;IMAGING;**8,48,93**;Dec 02, 2009;Build 163
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGGTRPT ;WOIFO/RED/GEK - Display Associated Report ; [ 11/08/2001 17:18 ]
+ ;;3.0;IMAGING;**8,48**;Jan 11, 2005
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -43,10 +42,7 @@ BRK(MAGRPTY,MAGGIEN,NOCHK) ;RPC [MAGGRPT]  Call to return Image report
  ;
  ;
  I 'MAGO S @MAGRPTY@(0)="INVALID Image pointer: '"_MAGGIEN_"'" Q
- I $$ISDEL^MAGGI11(MAGO)  D  Q
- . S X=$$NODE^MAGGI11(MAGO)  S:X'="" X=$G(@X@(2))
- . S @MAGRPTY@(0)="0^Image : """_$P(X,U,4)_""" has been deleted."
- . Q
+ I $D(^MAG(2005.1,MAGO)) S @MAGRPTY@(0)="0^Image : """_$P($G(^MAG(2005.1,MAGO,2)),U,4)_""" has been deleted." Q
  S MAGDESC="",MAGDFN=$P(^MAG(2005,MAGO,0),U,7)
  ; IN check we get Desc for Report Window header,
  ;    and Define Group IEN  - MAGGRPO if it exists.
@@ -90,7 +86,7 @@ BUILD ;
  ;
  ; TIU documents;
  I MAGTMPRT=8925 D  Q
- . N I,MAGY
+ . N MAGY
  . D TGET^TIUSRVR1(.MAGY,$P(MAGTMPR,"^",7))
  . S I="" F  S I=$O(@MAGY@(I)) Q:'I  W !,@MAGY@(I)
  . D ENTRY^MAGLOG("TIURPT",DUZ,MAGO,"MAGRPT",MAGDFN,0)

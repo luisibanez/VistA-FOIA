@@ -1,5 +1,5 @@
-PXRMFF0 ;SLC/PKR - Clinical Reminders function finding routines. ;08/28/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMFF0 ;SLC/PKR - Clinical Reminders function finding routines. ;09/11/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
  ;============================================
 COUNT(LIST,FIEVAL,COUNT) ;
@@ -62,9 +62,12 @@ MAXDATE(LIST,FIEVAL,MAXDATE) ;Given a list of findings return the maximum
  ;============================================
 MINDATE(LIST,FIEVAL,MINDATE) ;Given a list of findings return the minimum
  ;date. This will be the oldest non-null or zero date.
- N IND,ODL
- F IND=1:1:LIST(0) S ODL(+$G(FIEVAL(LIST(IND),"DATE")))=""
- S MINDATE=+$O(ODL(0))
+ N DATE,IND
+ S MINDATE=9991231
+ F IND=1:1:LIST(0) D
+ . S DATE=$G(FIEVAL(LIST(IND),"DATE"))
+ . I DATE<MINDATE S MINDATE=DATE
+ I MINDATE=9991231 S MINDATE=0
  Q
  ;
  ;============================================

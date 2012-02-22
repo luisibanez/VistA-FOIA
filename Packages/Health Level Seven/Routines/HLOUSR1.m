@@ -1,5 +1,5 @@
-HLOUSR1 ;ALB/CJM/OAK/PIJ -ListManager Screen for viewing messages;12 JUN 1997 10:00 am ;03/21/2010
- ;;1.6;HEALTH LEVEL SEVEN;**126,134,137,138,143,147**;Oct 13, 1995;Build 15
+HLOUSR1 ;ALB/CJM/OAK/PIJ -ListManager Screen for viewing messages;12 JUN 1997 10:00 am ;08/11/2008
+ ;;1.6;HEALTH LEVEL SEVEN;**126,134,137,138**;Oct 13, 1995;Build 34
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
 EN ;
@@ -163,10 +163,7 @@ SHOWMSG(MSGIEN,SUBIEN) ;
  ;; END 138
  ;
  ;** display its application acknowledgment **
- ;**P143 START CJM
- ;I MSG("ACK BY")]"",$$FINDMSG^HLOMSG1(MSG("ACK BY"),.TEMP)=1 S MSGIEN=TEMP(1) D
- I $G(MSG("ACK BY IEN")) S MSGIEN=MSG("ACK BY IEN") D
- .;**P143 END CJM
+ I MSG("ACK BY")]"",$$FINDMSG^HLOMSG1(MSG("ACK BY"),.TEMP)=1 S MSGIEN=TEMP(1) D
  .N MSG,STATUS
  .Q:'$$GETMSG^HLOMSG(+MSGIEN,.MSG)
  .I $P(MSGIEN,"^",2) S STATUS=MSG("STATUS") D GETMSGB^HLOMSG1(.MSG,SUBIEN,.MSG) I MSG("STATUS")="" S MSG("STATUS")=STATUS
@@ -176,10 +173,7 @@ SHOWMSG(MSGIEN,SUBIEN) ;
  .D SHOWBODY(.MSG,$P(MSGIEN,"^",2))
  ;
  ;** display the original message **
- ;**P143 START CJM
- ;I MSG("ACK TO")]"",$$FINDMSG^HLOMSG1(MSG("ACK TO"),.TEMP)=1 S MSGIEN=TEMP(1) D
- I $G(MSG("ACK TO IEN")) S MSGIEN=MSG("ACK TO IEN") D
- .;**P143 END CJM
+ I MSG("ACK TO")]"",$$FINDMSG^HLOMSG1(MSG("ACK TO"),.TEMP)=1 S MSGIEN=TEMP(1) D
  .N MSG
  .Q:'$$GETMSG^HLOMSG(+MSGIEN,.MSG)
  .I $P(MSGIEN,"^",2) S STATUS=MSG("STATUS") D GETMSGB^HLOMSG1(.MSG,SUBIEN,.MSG) I MSG("STATUS")="" S MSG("STATUS")=STATUS
@@ -277,20 +271,14 @@ SCRLMODE ;scroll mode
 HLP ;
  Q
  ;
-IFOPEN(LINK,TIME) ;
+IFOPEN(LINK) ;
  ;returns 1 if the link can be opened, otherwise 0
  ;
  ;Inputs:
  ;  LINK - name of the link (required), optionally post-fixed with ":"_<port #>, will default to that defined for link
- ;  TIME (optional) defaults to 15 seconds
  ;
  N LINKNAME,LINKARY,POP,IO,IOF,IOST,OPEN,PORT
  S OPEN=0
- ;
- ;**P147 CJM adds TIME as an optional input parameter
- I '$G(TIME) S TIME=15
- ;**P147 CJM END
- ;
  S LINKNAME=$P(LINK,":")
  S PORT=$P(LINK,":",2)
  Q:LINKNAME="" 0
@@ -304,7 +292,7 @@ IFOPEN(LINK,TIME) ;
  .S DATA(.08)=LINKARY("DOMAIN")
  .Q:$$UPD^HLOASUB1(870,LINKARY("IEN"),.DATA)
  D:$G(LINKARY("IP"))'=""
- .D CALL^%ZISTCP(LINKARY("IP"),LINKARY("PORT"),TIME)
+ .D CALL^%ZISTCP(LINKARY("IP"),LINKARY("PORT"),15)
  .S OPEN='POP
  I 'OPEN,LINKARY("DOMAIN")'="",$G(^HLTMP("DNS LAST",LINKARY("IEN")))<$$DT^XLFDT D
  .N IP
@@ -314,7 +302,7 @@ IFOPEN(LINK,TIME) ;
  ..N DATA
  ..S DATA(400.01)=IP,LINKARY("IP")=IP
  ..Q:$$UPD^HLOASUB1(870,LINKARY("IEN"),.DATA)
- ..D CALL^%ZISTCP(LINKARY("IP"),LINKARY("PORT"),TIME)
+ ..D CALL^%ZISTCP(LINKARY("IP"),LINKARY("PORT"),15)
  ..S OPEN='POP
  C:OPEN IO
  ;D CLOSE^%ZISTCP

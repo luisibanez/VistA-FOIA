@@ -1,5 +1,5 @@
-HLOUSR3 ;ALB/CJM/RBN -ListManager Screen for viewing messages(continued);12 JUN 1997 10:00 am ;01/07/2010
- ;;1.6;HEALTH LEVEL SEVEN;**126,134,138,139,147**;Oct 13, 1995;Build 15
+HLOUSR3 ;ALB/CJM/RBN -ListManager Screen for viewing messages(continued);12 JUN 1997 10:00 am ;07/21/2008
+ ;;1.6;HEALTH LEVEL SEVEN;**126,134,138**;Oct 13, 1995;Build 34
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ;
@@ -73,9 +73,7 @@ ASK(PARMS) ; Ask for parameter values.
  Q:PARMS("EVENT")=-1 0
  S PARMS("DIR")=$$ASKDIR()
  Q:PARMS("DIR")=-1 0
- ;** P139 START CJM
- S PARMS("DIR")=$S(PARMS("DIR")="I":"IN",PARMS("DIR")="i":"IN",1:"OUT")
- ;** P139 END CJM
+ S PARMS("DIR")=$S(PARMS("DIR")="I":"IN",1:"OUT")
  S PARMS("MAX")=$$ASKMAX()
  Q:'(PARMS("MAX")>-1) 0
  Q 1
@@ -166,7 +164,7 @@ RESEND ; If outbound message has been sent, resends it.
  D OWNSKEY^XUSRB(.CONF,"HLOMGR",DUZ)
  I CONF(0)'=1 D  Q
  . W !,"**** You are not authorized to use this option ****" D PAUSE^VALM1 Q
- ;Q:$$VERIFY^HLOQUE1()=-1
+ Q:$$VERIFY^HLOQUE1()=-1
  N MSG,DIR,ERROR,FLG,OLDIEN,SYS
  S OLDIEN=MSGIEN
  I $G(OPT1DIS) D  K OPT1DIS Q
@@ -176,7 +174,6 @@ RESEND ; If outbound message has been sent, resends it.
  Q:'$$GETMSG^HLOMSG(+MSGIEN,.MSG)
  I MSG("DIRECTION")'="OUT" W !,"Message is not an outbound message" D PAUSE^VALM1 Q
  I MSG("STATUS")="",'MSG("DT/TM") W !,"Message has not been sent!" D PAUSE^VALM1 Q
- Q:'$$ASKYESNO^HLOUSR2("Are you SURE you want to resend MsgID: "_MSG("ID"),"NO")
  S MSGIEN=$$RESEND^HLOAPI3(+MSGIEN,.ERROR)
  I $G(ERROR) W ERROR D PAUSE^VALM1 Q
  W !,"The message has been copied to MsgID ",MSGIEN," which will be displayed next"
@@ -194,7 +191,7 @@ REPROC ; If inbound message has been processed, reprocesses it.
  D OWNSKEY^XUSRB(.CONF,"HLOMGR",DUZ)
  I CONF(0)'=1 D  Q
  . W !,"**** You are not authorized to use this option ****" D PAUSE^VALM1 Q
- ;Q:$$VERIFY^HLOQUE1()=-1
+ Q:$$VERIFY^HLOQUE1()=-1
  N MSG,DIR,ERROR,SYSPARM
  I $G(OPT2DIS) D  K OPT2DIS Q
  . W !,"Sorry that option is not available for this message." D PAUSE^VALM1 Q
@@ -203,7 +200,6 @@ REPROC ; If inbound message has been processed, reprocesses it.
  Q:'$$GETMSG^HLOMSG(+MSGIEN,.MSG)
  I MSG("DIRECTION")'="IN" W !,"Message is not an inbound message" D PAUSE^VALM1 Q
  I MSG("STATUS")="",'MSG("STATUS","APP HANDOFF") W !,"Message has not been processed" D PAUSE^VALM1 Q
- Q:'$$ASKYESNO^HLOUSR2("Are you SURE you want to reprocess MsgID: "_MSG("ID"),"NO")
  I '$$PROCNOW^HLOAPI3(+MSGIEN,"",.ERROR) W ERROR D PAUSE^VALM1 Q
  W !,"Done!  The message has been reprocessed by the application."
  S DIR(0)="D^"_DT_":"_$$FMADD^XLFDT(DT,+45)_":E"
@@ -225,4 +221,3 @@ MSGPREP ; Enable or disable menu options
  S VALMBCK="R"
  Q
  ;;**End Patch HL*1.6*138 **
- ;

@@ -1,5 +1,5 @@
-PXRMEUT1 ; SLC/PKR - General extract utilities ;07/14/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMEUT1 ; SLC/PKR - General extract utilities ;05/08/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;=================================================
 CLDATES ;Cleanup entries in ^TMP("PXRMDDOC",$J) before making date checks.
  ;For drug findings consolidate PS(55, PS(55NVA, and PSRX( back to
@@ -80,16 +80,14 @@ DOCDATES(RULESET,LBBDT,LBEDT,NL,OUTPUT) ;
  ;=================================================
 FMULPRT(FARR,PXRMFVPL,NL,OUTPUT) ;Print the finding multiple
  ;information.
- N BDT,EDT,DERROR,FNAME,FTYPE,IND,LC,NOCC,NOUT
- N TBDT,TEDT,TEMP,TEXTIN,TEXTOUT,VPTR
+ ;Q
+ N BDT,EDT,DERROR,FNAME,FTYPE,IND,NOCC,TBDT,TEDT,TEMP,VPTR
  S IND=0
  F  S IND=+$O(FARR(20,IND)) Q:IND=0  D
  . S VPTR=$P(FARR(20,IND,0),U,1)
  . S FNAME=$$ENTRYNAM^PXRMPTD2(VPTR)
  . S FTYPE=$$FTYPE^PXRMPTD2(VPTR,1)
- . S TEXTIN="FINDING "_IND_"-"_FTYPE_"."_FNAME
- . D FORMATS^PXRMTEXT(3,78,TEXTIN,.NOUT,.TEXTOUT)
- . F LC=1:1:NOUT S NL=NL+1,OUTPUT(NL)=TEXTOUT(LC)
+ . S NL=NL+1,OUTPUT(NL)="  FINDING "_IND_"-"_FTYPE_"."_FNAME
  .;Set the finding parameters.
  . D SSPAR^PXRMUTIL(FARR(20,IND,0),.NOCC,.BDT,.EDT)
  . S NL=NL+1,OUTPUT(NL)="   Beginning Date/Time: "_$$FMTE^XLFDT(BDT,"5Z")

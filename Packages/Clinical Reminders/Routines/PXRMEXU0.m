@@ -1,26 +1,25 @@
-PXRMEXU0 ; SLC/PKR - Reminder exchange general utilities, #0.;07/20/2009
- ;;2.0;CLINICAL REMINDERS;**4,12**;Feb 04, 2005;Build 73
+PXRMEXU0 ; SLC/PKR - Reminder exchange general utilities, #0.;06/23/2005
+ ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
  ;=========================================================
 LOC(FDA) ;Process the FDA for location lists.
  ;Direct reads of ^DIC(40.7) covered by DBIA #537.
- N AMIS,IEN,IENS,SFN,STOP,TEMP,TEXT
+ N AMIS,IEN,IENS,STOP,TEMP,TEXT
  ;Stop Codes may not have a unique name, use the AMIS Reporting Stop
  ;code to determine which one to use.
- F SFN=810.9001,810.90011 D
- . S IENS=""
- . F  S IENS=$O(FDA(SFN,IENS)) Q:IENS=""  D
- .. S STOP=FDA(SFN,IENS,.01)
- .. S AMIS=FDA(SFN,IENS,.02)
- .. S IEN=$O(^DIC(40.7,"C",AMIS,""))
- .. S TEMP=$P(^DIC(40.7,IEN,0),U,1)
- .. I TEMP'=STOP D  Q
- ... S TEXT(1)="Name associated with AMIS stop code does not match the one in the"
- ... S TEXT(2)="packed reminder:"
- ... S TEXT(3)=" AMIS="_AMIS
- ... S TEXT(4)=" Site Name="_TEMP
- ... S TEXT(5)=" Name in packed reminder="_STOP
- ... D EN^DDIOL(.TEXT)
- .. S FDA(SFN,IENS,.01)="`"_IEN
+ S IENS=""
+ F  S IENS=$O(FDA(810.9001,IENS)) Q:IENS=""  D
+ . S STOP=FDA(810.9001,IENS,.01)
+ . S AMIS=FDA(810.9001,IENS,.02)
+ . S IEN=$O(^DIC(40.7,"C",AMIS,""))
+ . S TEMP=$P(^DIC(40.7,IEN,0),U,1)
+ . I TEMP'=STOP D  Q
+ .. S TEXT(1)="Name associated with AMIS stop code does not match the one in the"
+ .. S TEXT(2)="packed reminder:"
+ .. S TEXT(3)=" AMIS="_AMIS
+ .. S TEXT(4)=" Site Name="_TEMP
+ .. S TEXT(5)=" Name in packed reminder="_STOP
+ .. D EN^DDIOL(.TEXT)
+ . S FDA(810.9001,IENS,.01)="`"_IEN
  Q
  ;
  ;=========================================================

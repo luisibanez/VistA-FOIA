@@ -1,5 +1,5 @@
-HLOPRSR2 ;ALB/CJM - Visual Parser 12 JUN 1997 10:00 am ;08/17/2009
- ;;1.6;HEALTH LEVEL SEVEN;**138,139,146**;Oct 13, 1995;Build 16
+HLOPRSR2 ;ALB/CJM - Visual Parser 12 JUN 1997 10:00 am ;01/17/2008
+ ;;1.6;HEALTH LEVEL SEVEN;**138**;Oct 13, 1995;Build 34
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ;
@@ -47,8 +47,7 @@ RIGHT ;
  ..S QUIT=1
  ..S POS("NEXT DELIMITER")=$$LINE_"^0" ;signals end of segment
  .;
- .S:$L(VALUE)<512 VALUE=VALUE_CHAR
- S VALUE("END")=$$LINE_"^"_$$X
+ .S VALUE=VALUE_CHAR,VALUE("END")=$$LINE_"^"_$$X
  ;
 GORIGHT ;
  ;keep the current field in the scrolling region
@@ -108,7 +107,7 @@ LEFT ;
  ...I CHAR=COMP,$$COMP("+"),$$SUB(1) Q
  ...I CHAR=SUB,$$SUB("+") Q
  ..E  D
- ...S:$L(VALUE)<512 VALUE=VALUE_CHAR
+ ...S VALUE=VALUE_CHAR
  ...I $L(VALUE)=1 S VALUE("START")=$$LINE_"^"_$$X
  ...S VALUE("END")=$$LINE_"^"_$$X
  ;
@@ -133,7 +132,7 @@ LEFT ;
  ..I VALUE="" D UP Q
  ..S POS("CURRENT DELIMITER")=$$LINE_"^0" ;signals end of segment
  .;
- .S:$L(VALUE)<512 VALUE=CHAR_VALUE
+ .S VALUE=CHAR_VALUE
  .I $L(VALUE)=1 S VALUE("END")=$$LINE_"^"_$$X
  .S VALUE("START")=$$LINE_"^"_$$X
  ;
@@ -290,15 +289,11 @@ GETCHAR(INC) ;returns a message character, can go forward or backward but will n
  ;  "+" - the next character. May change $$X and $$LINE
  ;  "-" - the prior character. May change $$X and $$LINE
  ;
- N END,TMP
+ N END
  S END=0
- S TMP("LINE")=$$LINE
- S TMP("X")=$$X
  I $E($G(INC))="+" D
  .I '($$X<80) D  ;get char from next line
- ..;** P139 START CJM
- ..I ('$$SEGSTART($$SEG+1))!(($$LINE+1)<$$SEGSTART($$SEG+1)),$$LINE(,1),$$X(1)
- ..;** P139 END
+ ..I ($$LINE+1)<$$SEGSTART($$SEG+1),$$LINE(,1),$$X(1)
  .E  D
  ..I $$X=$$X(,1) S END=1
  E  I $E($G(INC))="-" D
@@ -309,15 +304,6 @@ GETCHAR(INC) ;returns a message character, can go forward or backward but will n
  ...S END=1
  .E  D
  ..I $$X=$$X(,-1) S END=1
- ;** P146 START CJM
- ;
- ;This line was added in patch 139.  It is incorrect!
- ;I TMP("LINE")=$$LINE,TMP("X")=$$X S END=1
- ;
- ;This is the corrected line.
- I $L($G(INC)),TMP("LINE")=$$LINE,TMP("X")=$$X S END=1
- ;**P146 END
- ;
  Q:END ""
  Q $E($G(@MSG@($$LINE)),$$X)
  ;

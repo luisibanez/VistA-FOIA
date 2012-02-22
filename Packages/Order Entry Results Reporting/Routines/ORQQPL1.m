@@ -1,5 +1,5 @@
-ORQQPL1 ; ALB/PDR/REV - PROBLEM LIST FOR CPRS GUI ;11/19/09  10:06
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,148,173,203,206,249,243,280**;Dec 17, 1997;Build 85
+ORQQPL1 ; ALB/PDR/REV - PROBLEM LIST FOR CPRS GUI ; 02/12/08
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,148,173,203,206,249,243**;Dec 17, 1997;Build 242
  ;
  ;------------------------- GET PROBLEM FROM LEXICON -------------------
  ;
@@ -54,16 +54,18 @@ LEXSRCH(LIST,FROM,N,VIEW,ORDATE) ; Get candidate Problems from LEX file
  K ^TMP("LEXSCH",$J)
  Q
  ;
-ICDREC(COD) ;
+ICDREC(COD) ; 
  N CODIEN
  I COD="" Q ""
  S COD=$P($P(COD,U),"/")
- S CODIEN=$$CODEN^ICDCODE(COD,80) ;ICR #3990
+ S CODIEN=+$O(^ICD9("AB",COD_" ",0))
+ S:CODIEN'>0 CODIEN=+$O(^ICD9("AB",COD_"0 ",0))
  Q CODIEN
+ ;Q $O(^ICD9("BA",COD,""))
  ;
-CPTREC(COD) ;
+CPTREC(COD) ; 
  I COD="" Q ""
- Q $$CODEN^ICPTCOD(COD) ;ICR #1995
+ Q $O(^ICPT("BA",COD,""))
  ;
 EDLOAD(RETURN,DA,GMPROV,GMPVAMC) ; LOAD  EDIT ARRAYS
  ; DA=problem IFN
@@ -78,9 +80,13 @@ EDLOAD(RETURN,DA,GMPROV,GMPVAMC) ; LOAD  EDIT ARRAYS
 LOADFLDS(RETURN,NAM,TYP,I) ; LOAD FIELDS FOR TYPE OF ARRAY
  N S,V,CVP,PN,PID
  S S="",V=$C(254)
- F  S S=$O(@NAM@(S)) Q:S=10  D
+ ;DSS/CDP - Begin Mod - Changed loop going through @MAM@ from quitting if S=10 to S="" 
+ ;F  S S=$O(@NAM@(S)) Q:S=10  D
+ F  S S=$O(@NAM@(S)) Q:S=""  D
+ . Q:S=10  ;LM - GMPFLD(10,0) is valued, but not GMPFLD(10)
  . S RETURN(I)=TYP_V_S_V_@NAM@(S)
  . S I=I+1
+ ;DDS/CDP - Mod End
  S S=""
  F  S S=$O(@NAM@(10,S)) Q:S=""  D
  . S CVP=@NAM@(10,S)
@@ -116,7 +122,7 @@ EDSAVE(RETURN,GMPIFN,GMPROV,GMPVAMC,UT,EDARRAY) ; SAVE EDITED RES
  ;
 UPDATE(ORRETURN,UPDARRAY) ; UPDATE A PROBLEM RECORD
  ; Does essentially same job as EDSAVE above, however does not handle edits to comments
- ; or addition of multiple comments.
+ ; or addition of multiple comments. 
  ; Use initially just for status updates.
  ;
  N S,GMPL,GMPORIG ; last 2 vars created in nested call
@@ -155,7 +161,7 @@ ADDSAVE(RETURN,GMPDFN,GMPROV,GMPVAMC,ADDARRAY) ; SAVE NEW RECORD
 INITUSER(RETURN,ORDUZ) ; INITIALIZE FOR NEW USER
  ; taken from INIT^GMPLMGR
  ; leave GMPLUSER on symbol table - is evaluated in EDITSAVE
- ;
+ ; 
  N X,PV,CTXT,GMPLPROV
  S GMPLUSER=$$CLINUSER(DUZ)
  S CTXT=$$GET^XPAR("ALL","ORCH CONTEXT PROBLEMS",1)
@@ -229,7 +235,7 @@ PROVSRCH(LST,FLAG,N,FROM,PART) ; Get candidate Rroviders from person file
  Q
  ;
 CLINSRCH(Y,X) ; Get LIST OF CLINICS
- ; Note: This comes from CLIN^ORQPTQ2, where it was commented out in place of
+ ; Note: This comes from CLIN^ORQPTQ2, where it was commented out in place of 
  ; a call to ^XPAR. I would have just used CLIN^ORQPTQ2, but it didn't work - at
  ; least on SLC OEX directory.
  ; X has no purpose other than to satisfy apparent rpc and tcallv requirement for args

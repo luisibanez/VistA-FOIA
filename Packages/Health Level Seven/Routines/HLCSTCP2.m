@@ -1,5 +1,5 @@
-HLCSTCP2 ;SFIRMFO/RSD - BI-DIRECTIONAL TCP ;12/01/2010
- ;;1.6;HEALTH LEVEL SEVEN;**19,43,49,57,63,64,66,67,76,77,87,109,133,122,140,142,145,153**;Oct 13,1995;Build 11
+HLCSTCP2 ;SFIRMFO/RSD - BI-DIRECTIONAL TCP ;04/16/2008  16:20
+ ;;1.6;HEALTH LEVEL SEVEN;**19,43,49,57,63,64,66,67,76,77,87,109,133,122,140**;Oct 13,1995;Build 5
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;Sender 
  ;Request connection, send outbound message(s) delimited by MLLP
@@ -55,14 +55,6 @@ QUE ; -- Check "OUT" queue for processing IF there is a message do it
  . D LLCNT^HLCSTCP(HLDP,3,1)
  . S HLMSG=0
  ;
- ; patch HL*1.6*142 start
- ; to prevent data contention of end-user from competing with the link
- ; processes sending data to backup workstations (for BCBU application)
- I ($P(^HLMA(HLMSG,0),4)="D"),'$P($G(^HL(772,HLI,"P")),"^",2) D
- . N COUNT
- . F COUNT=1:1:15 Q:$P($G(^HL(772,HLI,"P")),"^",2)  H COUNT
- ; patch HL*1.6*142 end
- ;
  ;update msg status to 'being transmitted'; if cancelled decrement link and quit
  I '$$CHKMSG(1.5) D LLCNT^HLCSTCP(HLDP,3,1) S HLMSG=0 Q
  ;number of retransmissions for message
@@ -89,13 +81,7 @@ QUE ; -- Check "OUT" queue for processing IF there is a message do it
  I '$$OPEN Q
  D MON^HLCSTCP("Send")
  ; -- data passed in global array, success=1
- ; patch HL*1.6*142
- ; time: starts to send this message
- S $P(^HLMA(HLMSG,"S"),"^",2)=$$NOW^XLFDT
  I $$WRITE(HLMSG)<0 Q
- ; patch HL*1.6*142
- ; time: this message has been sent
- S $P(^HLMA(HLMSG,"S"),"^",3)=$$NOW^XLFDT
  S (HLTCP,HLTCPI)=HLMSG,HLRETRY=HLRETRY+1,HLRETRM=HLRETRM+1
  ;update status to awaiting response, decrement link if cancelled
  I '$$CHKMSG(1.7) D LLCNT^HLCSTCP(HLDP,3,1) S HLMSG=0 Q
@@ -139,15 +125,12 @@ QUE ; -- Check "OUT" queue for processing IF there is a message do it
  ...D LLCNT^HLCSTCP(HLDP,4,1)
  ...S HLREREAD="0^No Response"
  ...;check if the port needs to be closed and re-opened before the next re-transmission attempt
- ...I $G(HLDRETR("CLOSE")) D CLOSE^%ZISTCP K HLPORT
+ ...I $G(HLDRETRY("CLOSE")) D CLOSE^%ZISTCP K HLPORT
  .. ;X 0=re-read msg, 1=commit ack, 3=app ack success, 4=error
  .. S X=$$RSP^HLTP31(HLRESP,.HLN)
  .. ;X=0, re-read msg. Incorrect ack (bad MSH,MSA,msg id,or sending app)
  .. Q:'X 
  .. ;commit ack - done
- .. ; patch HL*1.6*142
- .. ; time: this message has received commit ACK
- .. S $P(^HLMA(HLMSG,"S"),"^",4)=$$NOW^XLFDT
  .. I X=1 D  S HLREREAD="0^Commit Ack" Q
  ... ;don't need app. ack, set status to complete
  ... I "NE"[HLN("APAT") D  Q
@@ -173,15 +156,9 @@ DCSEND ;direct connect
  N HLTMBUF
  ;override ack timeout
  I $G(HLP("ACKTIME")) N HLDBACK S HLDBACK=HLP("ACKTIME")
- ; patch HL*1.6*142
- ; time: starts to send this message
- S $P(^HLMA(HLMSG,"S"),"^",2)=$$NOW^XLFDT
  I $$WRITE(HLMSG)<0 D:$G(HLERROR)]""  Q  ;HL*1.6*77
  .  D STATUS^HLTF0(HLMSG,4,$P(HLERROR,"^"),$P(HLERROR,"^",2),1) ;HL*1.6*77
  .  D LLCNT^HLCSTCP(HLDP,3,1)
- ; patch HL*1.6*142
- ; time: this message has been sent
- S $P(^HLMA(HLMSG,"S"),"^",3)=$$NOW^XLFDT
  D LLCNT^HLCSTCP(HLDP,4)
  ;do structure is to stack error
  D
@@ -189,9 +166,6 @@ DCSEND ;direct connect
  . ;HLRESP=ien 773^ien 772 for response message
  . S HLRESP=$$READ^HLCSTCP1()
  ;
- ; patch HL*1.6*142
- ; time: this message has received app ACK
- S $P(^HLMA(HLMSG,"S"),"^",4)=$$NOW^XLFDT
  D DONE(3):$G(HLRESP),DONE(4,108,$S($G(HLERROR)]"":$P(HLERROR,"^",2),1:"No response")):'$G(HLRESP)
  I $G(HLERROR)']"" D
  .D MON^HLCSTCP("Idle")
@@ -226,9 +200,7 @@ CHKMSG(HLI) ;check status of message and update if not cancelled
  ;
  ;get status, quit if msg was cancelled
  ;
- ; patch HL*1.6*145
- ; S X=+^HLMA(HLMSG,"P") Q:X=3 0
- S X=+^HLMA(HLMSG,"P")
+ S X=+^HLMA(HLMSG,"P") Q:X=3 0
  ;
  ;update status if it is different
  I $G(HLI),HLI'=X D STATUS^HLTF0(HLMSG,HLI)
@@ -266,20 +238,15 @@ WRITE(HLDA) ; write message in HL7 format
  .. ; I X]"" W X,!
  .. N LENGTH
  .. S LENGTH=$L(X)
- .. ; patch HL*1.6*142 start
- .. ; buffer should be limited to 510
- .. ; I LENGTH>512 D
- .. I LENGTH>510 D
+ .. ; buffer should be limited to 512
+ .. I LENGTH>512 D
  ... N X1
- ... ; F  Q:LENGTH<512  D
- ... F  Q:LENGTH<511  D
- .... ; S X1=$E(X,1,512),X=$E(X,513,999999)
- .... S X1=$E(X,1,510),X=$E(X,511,999999)
+ ... F  Q:LENGTH<512  D
+ .... S X1=$E(X,1,512),X=$E(X,513,999999)
  .... S LENGTH=$L(X)
  .... ; patch HL*1.6*140
  .... ; W X1,@IOF
  .... W X1,@HLTCPLNK("IOF")
- .. ; patch HL*1.6*142 end
  .. ;
  .. ; @HLTCPLNK("IOF") (! or #) for flush character
  .. I X]"" W X,@HLTCPLNK("IOF") S CRCOUNT=0

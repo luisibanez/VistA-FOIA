@@ -1,5 +1,5 @@
 MAGJUPD1 ;WOIFO/JHC VistARad Update Exam Status ; 29 Jul 2003  10:02 AM
- ;;3.0;IMAGING;**16,22,18,76,101**;Nov 06, 2009;Build 50
+ ;;3.0;IMAGING;**16,22,18,76**;Jun 22, 2007;Build 19
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -35,8 +35,6 @@ STATUS(MAGGRY,PARAMS,DATA) ; rpc: MAGJ RADSTATUSUPDATE
  ;   RARPT = ptr to Rad Exam Report file
  ;   RADFN,RADTI,RACNI = pointers to Rad Patient File for the exam
  ;   UPDPSKEY = 1/0 -- 1 to update Presentation State &/or Key Image data
- ;                   = 2 -- update PS data with NO lock in place--Resident workflow, or Sec Key Override
- ;   DATA = optional array containing prezentation state data; see SAVKPS^MAGJUPD2 for description
  ;   MAGGRY = return results in @MAGGRY
  ;
  N $ETRAP,$ESTACK S $ETRAP="D ERR^MAGJUPD1"
@@ -61,9 +59,6 @@ STATUS(MAGGRY,PARAMS,DATA) ; rpc: MAGJ RADSTATUSUPDATE
  S RADATA=$G(^TMP($J,"MAGRAEX",1,1))
  S RAEXT=$P(RADATA,U,12),RACNE=$P(RAEXT,"-",2),RADTE=$P(RADATA,U,7)
  S RAINT=RADTI_"-"_RACNI
- I UPDPSKEY=2 D  G STATUSZ ; P101 update annotations only, if authorized (Resident workflow, or Sec Key Override)
- . I +MAGJOB("USER",1),'UPDFLAG,($D(DATA)>9) S REPLY="0^1~Case #"_RAEXT_" Closed; No Status Update; annotation updates performed."
- . E  S UPDPSKEY=0,REPLY="0^4~Invalid request to update annotations for Case #"_RAEXT_"."
  D CLOSE(.RSL,RADFN_U_RADTI_U_RACNI_U_U_1,.LOGDATA) ; unlock the case
  ; proceed only if case was locked by this user
  ;   if it was not Locked, then do NOT update PS, Key Images

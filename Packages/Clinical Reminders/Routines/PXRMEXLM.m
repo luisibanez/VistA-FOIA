@@ -1,10 +1,24 @@
-PXRMEXLM ; SLC/PKR/PJH - Clinical Reminder Exchange List Manager routines. ;12/02/2009
- ;;2.0;CLINICAL REMINDERS;**6,12,17**;Feb 04, 2005;Build 102
+PXRMEXLM ; SLC/PKR/PJH - Clinical Reminder Exchange List Manager routines. ;10/11/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
  ;=====================================================
 CRE ;Create a packed reminder and store it in the repository.
- D FULL^VALM1
- D CRE^PXRMEXPD
+ N RTP,SUCCESS,TMPIND
+ K VALMHDR
+ S RTP=$$GETREM^PXRMEXPU("pack")
+ I +RTP'>0 D  Q
+ . S VALMHDR(1)="No reminder selected!"
+ . S VALMBCK="R"
+ S TMPIND="PXRMEXPR"
+ D PACK^PXRMEXPR(RTP,TMPIND)
+ D STOREPR^PXRMEXU2(.SUCCESS,RTP,TMPIND,"REMINDER")
+ I SUCCESS D
+ . S VALMHDR(1)="Packed reminder for "_$P(RTP,U,2)
+ . S VALMHDR(2)="was saved in Exchange File."
+ . D BLDLIST^PXRMEXLC(1)
+ E  D
+ . S VALMHDR(1)="Creation of packed reminder for "_$P(RTP,U,2)
+ . S VALMHDR(2)="failed; it was not saved!"
  S VALMBCK="R"
  Q
  ;
@@ -27,18 +41,32 @@ DEFINQ ;Reminder definition inquiry.
  ;
  ;=====================================================
 ENTRY ;Entry code
- D INITMPG^PXRMEXLM
  D BLDLIST^PXRMEXLC(0)
  D XQORM
  Q
  ;
  ;=====================================================
 EXIT ;Exit code
- D INITMPG^PXRMEXLM
+ K ^TMP("PXRMEXDH",$J)
+ K ^TMP("PXRMEXHF",$J)
+ K ^TMP("PXRMEXFND",$J)
+ K ^TMP("PXRMEXIA",$J)
+ K ^TMP("PXRMEXIAD",$J)
+ K ^TMP("PXRMEXID",$J)
+ K ^TMP("PXRMEXIH",$J)
+ K ^TMP("PXRMEXLC",$J)
+ K ^TMP("PXRMEXLD",$J)
+ K ^TMP("PXRMEXLHF",$J)
+ K ^TMP("PXRMEXLMM",$J)
+ K ^TMP("PXRMEXLR",$J)
+ K ^TMP("PXRMEXMH",$J)
+ K ^TMP("PXRMEXMM",$J)
+ K ^TMP("PXRMEXRI",$J)
+ K ^TMP("PXRMEXTMP",$J)
+ K ^TMP("PXRMEXTXT",$J)
  D CLEAN^VALM10
  D FULL^VALM1
  S VALMBCK="Q"
- K PXRMIGDS,PXRMINST
  Q
  ;
  ;=====================================================
@@ -61,37 +89,11 @@ INIT ;Init
  Q
  ;
  ;=====================================================
-INITMPG ;Initialized all the ^TMP globals.
- K ^TMP("PXRMEXDH",$J)
- K ^TMP("PXRMEXDGH",$J)
- K ^TMP("PXRMEXHF",$J)
- K ^TMP("PXRMEXFND",$J)
- K ^TMP("PXRMEXIA",$J)
- K ^TMP("PXRMEXIAD",$J)
- K ^TMP("PXRMEXID",$J)
- K ^TMP("PXRMEXIH",$J)
- K ^TMP("PXRMEXLC",$J)
- K ^TMP("PXRMEXLD",$J)
- K ^TMP("PXRMEXLHF",$J)
- K ^TMP("PXRMEXLMM",$J)
- K ^TMP("PXRMEXLR",$J)
- K ^TMP("PXRMEXMH",$J)
- K ^TMP("PXRMEXMM",$J)
- K ^TMP("PXRMEXRI",$J)
- K ^TMP("PXRMEXTMP",$J)
- K ^TMP("PXRMEXTXT",$J)
- K ^TMP($J,"HS TYPE")
- K ^TMP($J,"HS OBJECT")
- K ^TMP($J,"TIU OBJECT")
- K ^TMP($J,"ORDER DIALOG")
- Q
- ;
- ;=====================================================
 LDHF ;Load a host file into the repository.
  N IND,FILE,PATH,RBL,SUCCESS,TEMP
  ;Select the host file to load.
  D CLEAR^VALM1
- S TEMP=$$GETEHF^PXRMEXHF("PRD")
+ S TEMP=$$GETEHF^PXRMEXHF
  I TEMP="" S VALMBCK="R" Q
  S PATH=$P(TEMP,U,1)
  S FILE=$P(TEMP,U,2)
@@ -238,4 +240,3 @@ XSEL ;PXRM EXCH SELECT COMPONENT validation
  ;
  S VALMBCK="R"
  Q
- ;

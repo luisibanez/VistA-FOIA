@@ -1,34 +1,34 @@
 IBNCPUT1 ;BHAM ISC/SS - IB NCPDP UTILITIES ;22-MAR-2006
- ;;2.0;INTEGRATED BILLING;**342,363,384**;21-MAR-94;Build 74
+ ;;2.0;INTEGRATED BILLING;**342,363**;21-MAR-94;Build 35
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ;Utilities for NPCDP
  ;/**
- ;Creates a new entry in the file or subfile with .01 field
- ;IBFILE - file/subfile #
+ ;Creates a new entry (or node for multiple with .01 field)
+ ;
+ ;IBFILE - subfile# (9002313.59111) for comment
  ;IBIEN - ien of the parent file entry in which the new subfile entry will be inserted
  ;IBVAL01 - .01 value for the new entry
  ;NEWRECNO -(optional) specify IEN if you want specific value
- ; Note: if "" then the system will assign the entry number itself.
+ ; Note: "" then the system will assign the entry number itself.
  ;IBFLGS - FLAGS parameter for UPDATE^DIE
- ;
  ;Examples
  ;top level:
- ; INSITEM(366.14,"",IBDATE,"")
- ; INSITEM(366.14,"",IBDATE,45)
+ ; D INSITEM(366.14,"",IBDATE,"")
+ ; D INSITEM(366.14,"",IBDATE,45)
  ; 
  ;1st level multiple:
  ; subfile number = #366.141
  ; parent file #366.14 entry number = 345
- ; INSITEM(366.141,345,"SUBMIT","")
+ ; D INSITEM(366.141,345,"SUBMIT","")
  ; to create mupltiple entry with particular entry number = 23
- ; INSITEM(366.141,345,"SUBMIT",23)
+ ; D INSITEM(366.141,345,"SUBMIT",23)
  ;
  ;2nd level multiple
  ;parent file #366.14 entry number = 234
  ;parent multiple entry number = 55
  ;create mupltiple entry INSURANCE
- ; INSITEM(366.1412,"55,234","INS","")
+ ; D INSITEM(366.1412,"55,234","INS","")
  ; results in :
  ; ^IBCNR(366.14,234,1,55,5,0)=^366.1412PA^1^1
  ; ^IBCNR(366.14,234,1,55,5,1,0)=INS

@@ -66,6 +66,9 @@ PROGMODE() ;Check if in PROG mode
  Q $ZJOB#2
  ;
 PRGMODE ;
+ ;DSS/SGM - BEGIN MODS
+ G VFD
+ ;DSS/SGM - END MODS
  N X,XMB,XQZ,XUCI,XUSLNT,XUVOL,Y,ZTPAC
  W ! S ZTPAC=$S('$D(^VA(200,+DUZ,.1)):"",1:$P(^(.1),U,5)),XUVOL=^%ZOSF("VOL")
  S X="" X ^%ZOSF("EOFF") R:ZTPAC]"" !,"PAC: ",X:60 D LC^XUS X ^%ZOSF("EON") I X'=ZTPAC W "??"_$C(7) Q
@@ -116,7 +119,10 @@ OPNERR S $EC="",Y=-1 Q
  ;
 GETENV ;Get environment  (UCI^VOL^NODE^BOX:VOLUME)
  N %,%1 S %=$$VERSION,%1=$ZU(86),%1=$S(%<3.1:$P(%1,"*",3),1:$P(%1,"*",2))
- D UCI S Y=$P(Y,",")_"^"_^%ZOSF("VOL")_"^"_$ZU(110)_"^"_^%ZOSF("VOL")_":"_%1
+ ;DSS/LM - Begin mods - Add NODE to second ":"-piece of fourth "^"-piece
+ ;         New format is VOL:BOX~NODE
+ D UCI S Y=$P(Y,",")_"^"_^%ZOSF("VOL")_"^"_$ZU(110)_"^"_^%ZOSF("VOL")_":"_%1_"~"_$ZU(110)
+ ;DSS/LM - End mods
  Q
 VERSION(X) ;return Cache version, X=1 - return full name
  Q $S($G(X):$P($ZV,")")_")",1:$P($P($ZV,") ",2),"("))
@@ -165,6 +171,28 @@ SETTRM(X) ;Turn on specified terminators.
 T0 ; start RT clock, obsolete
  ;S XRT0=$H
  Q
+ ;
+ ;DSS/SGM - Begin Mods to always ask for PAC (PRGMODE cloned)
+VFD ;
+ W ! S ZTPAC=$S('$D(^VA(200,+DUZ,.1)):"",1:$P(^(.1),U,5)),XUVOL=^%ZOSF("VOL")
+ K VFDFROM
+ N VFD S VFD=0,X="",VFD(0)=""
+ I $T(GET1^VFDCXPR)'="" D
+ .S Y=$$GET1^VFDCXPR(,"SYS~VFD XUS PAC",1) S:+Y'=-1 VFD(0)=Y
+ .Q
+ I $S(VFD(0)'="":1,1:ZTPAC]"") D  Q:VFD
+ .X ^%ZOSF("EOFF") R !,"PAC: ",X:60 X ^%ZOSF("EON")
+ .S:X?.E1L.E X=$$UP^XLFSTR(X)
+ .I VFD(0)'="",VFD(0)=$$EN^XUSHSH(X) Q
+ .I VFD(0)="",X=ZTPAC Q
+ .W "??"_$C(7) S VFD=1
+ .Q
+ S XMB="XUPROGMODE",XMB(1)=DUZ,XMB(2)=$I D ^XMB:$L($T(^XMB))
+ D BYE^XUSCLEAN K ZTPAC,X,XMB
+ D UCI S XUCI=Y,XQZ="PRGM^ZUA[MGR]",XUSLNT=1 D DO^%XUCI D ^%PMODE
+ U $I:(:"+B+C+R") S $ZT=""
+VFD1 I $ES>1 K DUZ("VFDFR")
+ Q
 T1 ; store RT datum, obsolete
  ;S ^%ZRTL(3,XRTL,+$H,XRTN,$P($H,",",2))=XRT0 K XRT0
- Q
+Q

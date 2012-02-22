@@ -1,5 +1,5 @@
-PXRMMSER ; SLC/PKR - Computed findings for military service information. ;04/24/2009
- ;;2.0;CLINICAL REMINDERS;**11,12**;Feb 04, 2005;Build 73
+PXRMMSER ; SLC/PKR - Computed findings for military service information. ;09/25/2008
+ ;;2.0;CLINICAL REMINDERS;**11**;Feb 04, 2005;Build 39
  ;
  ;======================================================
 AORANGE(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,DATA,TEXT) ;This computed
@@ -216,6 +216,7 @@ SBRANCH(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,DATA,TEXT) ;This computed
  S SVC(8,6)=$P(TEMP,U,3)
  S NFOUND=0
  S IND=$S(NGET<0:9,1:5)
+ ;S LE=$S(NGET<0:5,1:9)
  S SDIR=$S(NGET>0:1,1:-1)
  S NGET=$S(NGET<0:-NGET,1:NGET)
  I NGET>3 S NGET=3

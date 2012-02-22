@@ -1,5 +1,5 @@
-PSODRDUP ;BIR/SAB - Dup drug class checker ;4/30/09 12:32pm
- ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,39,56,130,132,192,207,222,243,305,324**;DEC 1997;Build 6
+PSODRDUP ;BIR/SAB - Dup drug class checker ;11/1/04 3:38pm
+ ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,39,56,130,132,192,207,222,243**;DEC 1997;Build 22
  ;
  ;External references PSOL and PSOUL^PSSLOCK supported by DBIA 2789
  S $P(PSONULN,"-",79)="-",(STA,DNM)="" K CLS
@@ -21,7 +21,11 @@ DUP S:$P(PSOSD(STA,DNM),"^",2)<10!($P(PSOSD(STA,DNM),"^",2)=16) DUP=1 W !,PSONUL
 DATA S DUPRX0=^PSRX(RXREC,0),RFLS=$P(DUPRX0,"^",9),ISSD=$P(^PSRX(RXREC,0),"^",13),RX0=DUPRX0,RX2=^PSRX(RXREC,2),$P(RX0,"^",15)=+$G(^PSRX(RXREC,"STA"))
  S RXRECLOC=$G(RXREC)
  W !!,$J("Status: ",24) S J=RXREC D STAT^PSOFUNC W ST K RX0,RX2 W ?40,$J("Issued: ",24),$E(ISSD,4,5)_"/"_$E(ISSD,6,7)_"/"_$E(ISSD,2,3)
- S DA=RXREC D PRSTAT(DA)
+ S DA=RXREC D ^PSOCMOPA I $G(PSOCMOP)]"" D  K CMOP,PSOTRANS,PSOREL
+ .S PSOTRANS=$E($P(PSOCMOP,"^",2),4,5)_"/"_$E($P(PSOCMOP,"^",2),6,7)_"/"_$E($P(PSOCMOP,"^",2),2,3)
+ .S PSOREL=$S(CMOP("L")=0:$P($G(^PSRX(DA,2)),"^",13),1:$P(^PSRX(DA,1,CMOP("L"),0),"^",18))
+ .S PSOREL=$E(PSOREL,4,5)_"/"_$E(PSOREL,6,7)_"/"_$E(PSOREL,2,3)_"@"_$E($P(PSOREL,".",2),1,4)
+ .W !,$J("CMOP Status: ",24)_$S($P(PSOCMOP,"^")=0!($P(PSOCMOP,"^")=2):"Transmitted to on "_PSOTRANS,$P(PSOCMOP,"^")=1:"Released by CMOP on "_PSOREL,1:"Not Dispensed")
  K FSIG,BSIG I $P($G(^PSRX(RXREC,"SIG")),"^",2) D FSIG^PSOUTLA("R",RXREC,54) F PSREV=1:1 Q:'$D(FSIG(PSREV))  S BSIG(PSREV)=FSIG(PSREV)
  K FSIG,PSREV I '$P($G(^PSRX(RXREC,"SIG")),"^",2) D EN2^PSOUTLA1(RXREC,54)
  W !,$J("SIG: ",24) W $G(BSIG(1))
@@ -61,23 +65,3 @@ ULRX ;
  D PSOUL^PSSLOCK(RXRECLOC)
  Q
  ;
-PRSTAT(DA) ;Displays the prescription's status
- N PSOTRANS,PSOREL,CMOP,RXPSTA,PSOX,RFLZRO,PSOLRD,PSORTS
- S RXPSTA="Processing Status: ",PSOLRD=$P($G(^PSRX(RXREC,2)),"^",13)
- D ^PSOCMOPA I $G(PSOCMOP)]"" D  K CMOP,PSOTRANS,PSOREL
- .S PSOTRANS=$E($P(PSOCMOP,"^",2),4,5)_"/"_$E($P(PSOCMOP,"^",2),6,7)_"/"_$E($P(PSOCMOP,"^",2),2,3)
- .S PSOREL=$S(CMOP("L")=0:$P($G(^PSRX(DA,2)),"^",13),1:$P(^PSRX(DA,1,CMOP("L"),0),"^",18))
- .S PSOREL=$E(PSOREL,4,5)_"/"_$E(PSOREL,6,7)_"/"_$E(PSOREL,2,3)_"@"_$E($P(PSOREL,".",2),1,4)
- .I '$D(IOINORM)!('$D(IOINHI)) S X="IORVOFF;IORVON;IOINHI;IOINORM" D ENDR^%ZISS
- .W !
- .I $P($G(^PSRX(RXREC,"STA")),"^")=0 D
- ..W:$$TRANCMOP^PSOUTL(RXREC) ?5,IORVON_IOINHI
- .W ?5,RXPSTA_$S($P(PSOCMOP,"^")=0!($P(PSOCMOP,"^")=2):"Transmitted to CMOP on "_PSOTRANS,$P(PSOCMOP,"^")=1:"Released by CMOP on "_PSOREL,1:"Not Dispensed"),IOINORM_IORVOFF
- I $G(PSOCMOP)']"" D
- .F PSOX=0:0 S PSOX=$O(^PSRX(RXREC,1,PSOX)) Q:'PSOX  D
- ..S RFLZRO=$G(^PSRX(RXREC,1,PSOX,0))
- ..S:$P(RFLZRO,"^",18)'="" PSOLRD=$P(RFLZRO,"^",18) I $P(RFLZRO,"^",16) S PSOLRD=PSOLRD_"^R",PSORTS=$P(RFLZRO,"^",16)
- .I '$O(^PSRX(RXREC,1,0)),$P(^PSRX(RXREC,2),"^",15) S PSOLRD=PSOLRD_"^R",PSORTS=$P(^PSRX(RXREC,2),"^",15)
- .W !,$J(RXPSTA,24) I +$G(PSORTS) W "Returned to stock on "_$$FMTE^XLFDT(PSORTS,2) Q
- .W $S(PSOLRD="":"Not released locally",1:"Released locally on "_$$FMTE^XLFDT($P(PSOLRD,"^"),2)_" "_$P(PSOLRD,"^",2))_$S($P(^PSRX(RXREC,0),"^",11)="W":" (Window)",1:" (Mail)")
- Q

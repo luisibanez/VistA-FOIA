@@ -12,6 +12,9 @@ FIND ;Cross reference patient lookup
  S:DPTREFS="" DPTREFS=$S(DPTX?1N.N:$S($L(DPTX)<5:"CN,RM,BS,SSN",1:"CN,RM,SSN"),DPTX?1N.E:"CN,RM",1:"B,NOP,CN,RM") S:$D(DPTIX) DPTREFS=DPTIX_","_DPTREFS
  ;Use cross reference passed to LIST^DPTLK1 by Person Service Lookup (DPTPSREF) if defined.
  I $G(DPTPSREF)'="" S DPTREFS=DPTPSREF
+ ;DSS/SGM - BEGIN MODS - add Alternate ID VFD index to list of indexes
+ S DPTREFS=DPTREFS_",VFD"
+ ;DSS/SGM - END MODS
  S DPTBEG=1,(DPTDFN,DPTNUM,DPTOUT)=0
  F DPTLP=1:1 S DPTREF=$P(DPTREFS,",",DPTLP) Q:DPTREF=""!(DPTDFN)  D  Q:DPTDFN!DPTOUT
  .S DPTVAL=DPTX

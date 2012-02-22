@@ -1,5 +1,5 @@
-PXRMTIU ;SLC/RMS,PKR - Clinical Reminder TIU routines. ; 07/21/2008
- ;;2.0;CLINICAL REMINDERS;**4,12**;Feb 04, 2005;Build 73
+PXRMTIU ;SLC/RMS,PKR - Clinical Reminder TIU routines. ; 05/16/2006
+ ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
  ;==========================================================
 NOTE(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,DATA,TEXT) ;Computed finding
  ;for note title.
@@ -16,19 +16,12 @@ NOTE(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,DATA,TEXT) ;Computed finding
  S SDIR=$S(NGET>0:1,1:-1)
  S INVDATE=$S(SDIR=+1:BDT-.000001,1:EDTT)
  S NGETABS=$S(NGET<0:-NGET,1:NGET)
- ;See if the note is passed as a title or an IEN.
+ ;Find the ien for the title.
  S (DONE,TIEN)=0
- I $E(TITLE,1)="`" D
- . S TIEN=$P(TITLE,"`",2)
- .;DBIA #2321
+ ;DBIA #2321
+ F  Q:DONE  S TIEN=$O(^TIU(8925.1,"B",TITLE,TIEN)) Q:TIEN=""  D
  . S TYPE=$P(^TIU(8925.1,TIEN,0),U,4)
- . I TYPE="DOC" S DONE=1,TITLE=$P(^TIU(8925.1,TIEN,0),U,1)
- E  D
- .;Find the ien for the title.
- .;DBIA #2321
- . F  Q:DONE  S TIEN=$O(^TIU(8925.1,"B",TITLE,TIEN)) Q:TIEN=""  D
- .. S TYPE=$P(^TIU(8925.1,TIEN,0),U,4)
- .. I TYPE="DOC" S DONE=1
+ . I TYPE="DOC" S DONE=1
  I 'DONE Q
  ;DBIA #2937
  F  S INVDATE=$O(^TIU(8925,"APT",DFN,TIEN,STATUS,INVDATE),SDIR)  Q:$S(INVDATE=0:1,NFOUND=NGETABS:1,INVDATE<BDT:1,INVDATE>EDTT:1,1:0)  D

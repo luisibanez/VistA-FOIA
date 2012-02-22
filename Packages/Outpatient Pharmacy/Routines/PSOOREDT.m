@@ -1,5 +1,5 @@
-PSOOREDT ;BIR/SAB - edit orders from backdoor ; 7/23/09 9:06am
- ;;7.0;OUTPATIENT PHARMACY;**4,20,27,37,57,46,78,102,104,119,143,148,260,281,304,289,298**;DEC 1997;Build 3
+PSOOREDT ;BIR/SAB - edit orders from backdoor ; 5/8/08 3:27pm
+ ;;7.0;OUTPATIENT PHARMACY;**4,20,27,37,57,46,78,102,104,119,143,148,260,281,304**;DEC 1997;Build 4
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to PSSLOCK supported by DBIA 2789
  ;External reference to ^VA(200 supported by DBIA 10060
@@ -39,14 +39,11 @@ EX2 S VALMBCK=$S($G(PSORX("FN")):"Q",$G(ZONE):"Q",1:"R") K PSORXED,FST,FLD,IEN,F
  ;
 EDT ; Rx Edit (Backdoor)
  K NCPDPFLG
+ I '$D(PSODRUG) NEW PSOY S PSOY=$P(RX0,U,6),PSOY(0)=^PSDRUG(PSOY,0) D SET^PSODRG
  S I=0 F  S I=$O(^PSRX($P(PSOLST(ORN),"^",2),1,I)) Q:'I  S PSORXED("RX1")=^PSRX($P(PSOLST(ORN),"^",2),1,I,0)
- ;*298 Track PI and Oth Lang PI
- S (RX0,PSORXED("RX0"))=^PSRX($P(PSOLST(ORN),"^",2),0),PSORXED("RX2")=$G(^(2)),PSORXED("RX3")=$G(^(3)),PSOSIG=$P(^("SIG"),"^"),PSOPINS=$G(^("INS")),PSOOINS=$G(^("INSS"))
- I '$D(PSODRUG) NEW PSOY S PSOY=$P(RX0,U,6),PSOY(0)=^PSDRUG(PSOY,0) D SET^PSODRG ; *298 moved this line from EDT+2  RX0 was not defined yet
+ S (RX0,PSORXED("RX0"))=^PSRX($P(PSOLST(ORN),"^",2),0),PSORXED("RX2")=$G(^(2)),PSORXED("RX3")=$G(^(3)),PSOSIG=$P(^("SIG"),"^")
  F FLD=1:1:$L(FST,",") Q:$P(FST,",",FLD)']""!($G(PSORXED("DFLG")))!($G(PSORX("DFLG")))  S FLN=+$P(FST,",",FLD) D
  .S PSORXED("DFLG")=0,(DA,PSORXED("IRXN"),PSORENW("OIRXN"))=$P(PSOLST(ORN),"^",2),RX0=^PSRX(PSORXED("IRXN"),0) S:$G(PSOSIG)="" PSOSIG=$P(^("SIG"),"^")
- .;*298 Track PI and Oth Lang PI
- .S:$G(PSOPINS)="" PSOPINS=$G(^PSRX(DA,"INS")) S:$G(PSOOINS)="" PSOOINS=$G(^PSRX(DA,"INSS"))
  .I '$G(PSOSIGFL) D
  ..S PSOI=+^PSRX(DA,"OR1"),PSODAYS=$P(RX0,"^",8),PSORXST=+$P($G(^PS(53,$P(RX0,"^",3),0)),"^",7)
  ..I 'PSOI S PSOI=+^PSDRUG($P(RX0,"^",6),2),$P(^PSRX(DA,"OR1"),"^")=PSOI
@@ -55,7 +52,7 @@ EDT ; Rx Edit (Backdoor)
  .S PSORX("PROVIDER")=$P(RX0,"^",4),PSORX("PROVIDER NAME")=$P(^VA(200,$P(RX0,"^",4),0),"^"),PSOTRN=$G(^PSRX(DA,"TN"))
  .D:'$G(CHK) POP^PSOSIGNO(DA),CHK Q:$G(PSORXED("DFLG"))
  .S FDR="39.2^"_$S($P(PSOPAR,"^",3):"6",1:"")_";6.5^113^114^3^1^22R^24^8^7^9^4^11;"_$S($P(RX0,"^",11)="W"&($P(PSOPAR,"^",12)):"35;",1:"")_"^10.6^5^20^23^12^PSOCOU^RF^81"
- .I $G(ST)=11!($G(ST)=12)!($G(ST)=14)!($G(ST)=15) D NDCDAWDE^PSOORED7(ST,FLN,$G(RXN)) Q
+ .I $G(ST)=11!($G(ST)=12) D NDCDAWDE^PSOORED7(ST,FLN,$G(RXN)) Q
  .I FLN=20,'$G(REF) S VALMSG="There is no Refill Data to be edited." Q
  .S DR=$P(FDR,"^",FLN) I DR="RF" D REF^PSOORED2 Q
  .I DR="PSOCOU" D PSOCOU^PSOORED6 Q
@@ -102,6 +99,7 @@ CHK S CHK=1 I $G(^PSDRUG($P(PSORXED("RX0"),"^",6),"I"))]"",^("I")<DT S VALMSG="T
  ..W $C(7) S DIR("A",1)="",DIR("A",2)="RX# "_$P(^PSRX(PSPRXN,0),"^")_" is from another division.",DIR("A")="Continue: (Y/N)",DIR(0)="Y",DIR("?",1)="'Y' FOR YES",DIR("?")="'N' FOR NO"
  ..S DIR("B")="N" D ^DIR I 'Y!($D(DIRUT)) S PSORXED("DFLG")=1 W !
  ;
+ I $P(^PSRX(PSORXED("IRXN"),"STA"),"^")=14!($P(^("STA"),"^")=15) S PSORXED("DFLG")=1 S VALMSG="Discontinued prescriptions cannot be edited." Q
  I $P(^PSRX(PSORXED("IRXN"),"STA"),"^")=16 S PSORXED("DFLG")=1 S VALMSG="Prescriptions on Provider Hold cannot be edited." Q
 CHKX K PSPOP,DIR,DTOUT,DUOUT,Y,X Q
  Q

@@ -1,5 +1,5 @@
 PSOPMP1 ;BIRM/MFR - Patient Medication Profile - Listmanager ;04/28/05
- ;;7.0;OUTPATIENT PHARMACY;**260,285,281,303,289,276,382**;DEC 1997;Build 9
+ ;;7.0;OUTPATIENT PHARMACY;**260,285,281,303**;DEC 1997;Build 19
  ;Reference to ^PSDRUG("AQ" supported by IA 3165
  ;Reference to EN1^GMRADPT supported by IA 10099
  ;Reference to ^PSXOPUTL supported by IA 2200
@@ -22,8 +22,8 @@ VIDEO() ; - Changes the Video Attributes for the list
  ;
 RV ;reverse video for flagged pending orders
  N PSLIST S PSLIST=0 F PSLIST=1:1:VALMCNT D
- .Q:'$D(^TMP("PSOPMP0",$J,PSLIST,"RV"))
  .I $D(^TMP("PSOPMP0",$J,PSLIST,"RV")) D CNTRL^VALM10(PSLIST,1,3,IORVON,IORVOFF,0) Q
+ .I '$D(^TMP("PSOPMP0",$J,PSLIST,"RV")) D CNTRL^VALM10(PSLIST,1,3,IOINORM,IOINORM,0)
  Q
  ;
 SETHDR() ; - Displays the Header Line
@@ -102,7 +102,7 @@ STSINFO(RX) ; Returns the Rx Status MNEMONIC^NAME
  Q "99^UNKNOWN^??"
  ; 
 ISSDT(IEN,TYPE) ; Returns the Rx ISSUE DATE formatted MM-DD-YY
- ;Input: RX   - Prescription IEN (#52)
+ ;Input: RX   - PrescrXiption IEN (#52)
  ;       TYPE - "R":Regular Rx, "P":Pending order
  N ISSDT
  I TYPE="R" S ISSDT=$$GET1^DIQ(52,IEN,1,"I")
@@ -125,8 +125,8 @@ LSTFD(RX) ; Returns the Rx LAST FILL DATE formatted MM-DD-YY[R], where [R] = Ret
  ;
 REFREM(RX) ; - Returns the number of refills remaining
  N REFREM,RFL
- S REFREM=+$$GET1^DIQ(52,RX,9),RFL=0
- F  S RFL=$O(^PSRX(RX,1,RFL)) Q:'RFL  S REFREM=REFREM-1
+ S REFREM=+$$GET1^DIQ(52,RX,9)
+ F RFL=0:1 S RFL=$O(^PSRX(RX,1,RFL)) Q:'RFL  S REFREM=REFREM-1
  Q $S(REFREM<0:0,1:REFREM)
  ;
  ;
@@ -139,7 +139,7 @@ DAT(FMDT,SEP,Y4) ; - Formats FM dates to MM/DD/YY (SEP: Separator:"/","-",etc...
  Q ($E(FMDT,4,5)_SEP_$E(FMDT,6,7)_SEP_$S($G(Y4):$E(FMDT,1,3)+1700,1:$E(FMDT,2,3)))
  ;
 COPAY(RX) ; Returns "$" is Rx has a copay and "" if not
- Q $S($G(^PSRX(RX,"IB")):"$",1:"")  ;*276
+ Q $S($D(^PSRX(RX,"IB")):"$",1:"")
  ;
 CMOP(DRUG,RX) ; Returns the CMOP indicator (">", "T", etc)
  N CMOP,X,DA,PSXZ

@@ -1,5 +1,5 @@
-PXRMPDRS ;SLC/PKR - Patient List Demographic Report data selection. ;10/02/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12,17**;Feb 04, 2005;Build 102
+PXRMPDRS ;SLC/PKR - Patient List Demographic Report data selection. ;03/22/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
 ADDSEL(DATA,SUB) ;Let the user select the address information they want.
  N ADDLIST,LIST
@@ -7,7 +7,6 @@ ADDSEL(DATA,SUB) ;Let the user select the address information they want.
  S DATA(SUB,1,2)="STREET ADDRESS #2"_U_1,DATA(SUB,1,3)="STREET ADDRESS #3"_U_1
  S DATA(SUB,1,4)="CITY"_U_1,DATA(SUB,1,5)="STATE"_U_2,DATA(SUB,1,6)="ZIP"_U_1
  S DATA(SUB,1,7)="COUNTY"_U_2
- S DATA(SUB,1,23)="ADD TYPE"_U_1
  S ADDLIST("A",2)=" 2 - PHONE NUMBER",DATA(SUB,2,8)="PHONE NUMBER"_U_1
  S ADDLIST("A")="Enter your selection(s)"
  S ADDLIST("?")="^D HELP^PXRMPDRS"
@@ -16,13 +15,12 @@ ADDSEL(DATA,SUB) ;Let the user select the address information they want.
  I $D(DTOUT)!$D(DUOUT) Q
  S DATA(SUB)=LIST
  S DATA(SUB,"LEN")=$L(LIST,",")-1
- I DATA(SUB)["1," D GCATYPE(.DATA,SUB)
  Q
  ;
 APPERR ;
  N ECODE
  I $D(ZTQUEUED) D  Q
- . N MGIEN,MGROUP,NL,TIME,TO
+ . N NL,TIME
  . S TIME=$$NOW^XLFDT
  . S TIME=$$FMTE^XLFDT(TIME)
  . K ^TMP("PXRMXMZ",$J)
@@ -33,12 +31,7 @@ APPERR ;
  . S ECODE=0,NL=4
  . F  S ECODE=$O(^TMP($J,"SDAMA301",ECODE)) Q:ECODE=""  D
  .. S NL=NL+1,^TMP("PXRMXMZ",$J,NL,0)=" "_^TMP($J,"SDAMA301",ECODE)
- . S TO(DBDUZ)=""
- . S MGIEN=$G(^PXRM(800,1,"MGFE"))
- . I MGIEN'="" D
- .. S MGROUP="G."_$$GET1^DIQ(3.8,MGIEN,.01)
- .. S TO(MGROUP)=""
- . D SEND^PXRMMSG("PXRMXMZ","Scheduling database error(s)",.TO)
+ . D SEND^PXRMMSG("Scheduling database error(s)",1)
  . S ZTSTOP=1
  ;
  I '$D(ZTQUEUED) D  Q
@@ -147,22 +140,6 @@ ELIGSEL(DATA,SUB) ;Let the user select the eligibility data they want.
  S DATA(SUB,"LEN")=$L(LIST,",")-1
  Q
  ;
-GCATYPE(DATA,SUB) ;Get the type of confidential addresses to use.
- N CATLIST,IND,JND,LIST,MSG
- D HELP^DIE(2.141,"",.01,"S","MSG")
- W !!,"If the patient has an active confidential address, which of the following"
- W !,"confidential address categories are appropriate to use?",!
- S CATLIST("A")="If no selection is made the default is 2 and 4, enter your selection(s)"
- S JND=0
- F IND=2:1:MSG("DIHELP") D
- . S JND=JND+1
- . S CATLIST("A",JND)="  "_MSG("DIHELP",IND)
- S LIST=$$SEL^PXRMPDRS(.CATLIST,JND)
- I LIST="" S LIST="2,4,"
- S DATA(SUB,22,"LEN")=$L(LIST,",")-1
- S DATA(SUB,22,"LIST")=LIST
- Q
- ;
 HELP ; -- help code.
  W !!,"You can choose any combination of numbers i.e., 1-4 or 1,3-5"
  W !!,"See the Clinical Reminders Managers manual for detailed explanations of each"
@@ -182,7 +159,7 @@ INPSEL(DATA,SUB) ;Let the user select the inpatient information they want.
  S INPLIST("A")="Enter your selection(s)"
  S INPLIST("?")="^D HELP^PXRMPDRS"
  W !!,"Select from the following inpatient items:"
- S LIST=$$SEL^PXRMPDRS(.INPLIST,4)
+ S LIST=$$SEL^PXRMPDRS(.INPLIST,5)
  I $D(DTOUT)!$D(DUOUT) Q
  S DATA(SUB)=LIST
  S DATA(SUB,"LEN")=$L(LIST,",")-1

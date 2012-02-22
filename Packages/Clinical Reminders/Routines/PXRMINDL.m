@@ -1,5 +1,5 @@
-PXRMINDL ; SLC/PKR - List building routines. ;01/27/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMINDL ; SLC/PKR - List building routines. ;07/26/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;================================================
 EVALPL(FINDPA,ENODE,TERMARR,PLIST) ;General patient list term evaluator.
  ;Return the list in ^TMP($J,PLIST)
@@ -31,10 +31,9 @@ FPLIST(FILENUM,SNODE,ITEM,NOCC,BDT,EDT,PLIST) ;Find patient list data for
  . S NFOUND=0
  . S DATE=DS
  . F  S DATE=+$O(^PXRMINDX(FILENUM,SNODE,ITEM,DFN,DATE),-1) Q:(DATE=0)!(DATE<BDT)!(NFOUND=NOCC)  D
- .. S DAS=""
- .. F  S DAS=$O(^PXRMINDX(FILENUM,SNODE,ITEM,DFN,DATE,DAS),-1) Q:DAS=""  D
- ... S NFOUND=NFOUND+1
- ... S ^TMP($J,PLIST,DFN,NFOUND)=DAS_U_DATE
+ .. S NFOUND=NFOUND+1
+ .. S DAS=$O(^PXRMINDX(FILENUM,SNODE,ITEM,DFN,DATE,""))
+ .. S ^TMP($J,PLIST,DFN,NFOUND)=DAS_U_DATE
  Q
  ;
  ;================================================
@@ -101,7 +100,6 @@ GPLIST(FILENUM,SNODE,ITEM,PFINDPA,PLIST) ;Add to the patient list
  . F  S IND=$O(GPLIST(IND)) Q:(IND="")!(NFOUND=NOCC)  D
  .. S TEMP=GPLIST(IND)
  .. S DAS=$P(TEMP,U,1)
- .. S DATE=$P(TEMP,U,2)
  ..;If this a Lab finding attach the item to the DAS.
  .. I PFINDPA(0)["LAB(60" S DAS=ITEM_"~"_DAS
  ..;If this is a Mental Health finding attach the scale to DAS.
@@ -109,7 +107,6 @@ GPLIST(FILENUM,SNODE,ITEM,PFINDPA,PLIST) ;Add to the patient list
  .. D GETDATA^PXRMDATA(FILENUM,DAS,.FIEVD)
  .. S VALUE=$G(FIEVD("VALUE"))
  .. I INVFD D GETDATA^PXRMVSIT(FIEVD("VISIT"),.FIEVD,0)
- .. S FIEVD("DATE")=DATE
  ..;If there is a status list make sure the finding has a status on
  ..;the list.
  .. S STATOK=$S($D(STATUSA):$$STATUSOK^PXRMINDX(.STATUSA,.FIEVD),1:1)

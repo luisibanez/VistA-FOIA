@@ -1,5 +1,5 @@
-PXRMUTIL ; SLC/PKR/PJH - Utility routines for use by PXRM. ;01/11/2010
- ;;2.0;CLINICAL REMINDERS;**4,6,11,12,17**;Feb 04, 2005;Build 102
+PXRMUTIL ; SLC/PKR/PJH - Utility routines for use by PXRM. ;07/08/2008
+ ;;2.0;CLINICAL REMINDERS;**4,6,11**;Feb 04, 2005;Build 39
  ;
  ;=================================
 ATTVALUE(STRING,ATTR,SEP,AVSEP) ;STRING contains a list of attribute value
@@ -44,9 +44,8 @@ ACOPY(REF,OUTPUT) ;Copy all the descendants of the array reference into a linear
  ;=================================
 AWRITE(REF) ;Write all the descendants of the array reference.
  ;REF is the starting array reference, for example A or ^TMP("PXRM",$J).
- N DONE,IND,LEN,LN,PROOT,ROOT,START,TEMP,TEXT
+ N DONE,IND,LEN,PROOT,ROOT,START,TEMP
  I REF="" Q
- S LN=0
  S PROOT=$P(REF,")",1)
  ;Build the root so we can tell when we are done.
  S TEMP=$NA(@REF)
@@ -58,10 +57,9 @@ AWRITE(REF) ;Write all the descendants of the array reference.
  . S START=$F(REF,ROOT)
  . S LEN=$L(REF)
  . S IND=$E(REF,START,LEN)
- . S LN=LN+1,TEXT(LN)=PROOT_IND_"="_@REF
+ . W !,PROOT_IND,"=",@REF
  . S REF=$Q(@REF)
  . I REF'[ROOT S DONE=1
- D MES^XPDUTL(.TEXT)
  Q
  ;
  ;=================================
@@ -195,18 +193,6 @@ PROTOCOL(ACT) ;Disable/enable protocols.
  Q
  ;
  ;=================================
-RENAME(FILENUM,OLDNAME,NEWNAME) ;Rename entry OLDNAME to NEWNAME in
- ;file number FILENUM.
- N DA,DIE,DR,NIEN
- S DA=$$FIND1^DIC(FILENUM,"","BX",OLDNAME)
- I DA=0 Q
- S NIEN=$$FIND1^DIC(FILENUM,"","BX",NEWNAME) I NIEN>0 Q
- S DIE=FILENUM
- S DR=".01///^S X=NEWNAME"
- D ^DIE
- Q
- ;
- ;=================================
 RMEHIST(FILENUM,IEN) ;Remove the edit history for a reminder file.
  I (FILENUM<800)!(FILENUM>811.9)!(FILENUM=811.8) Q
  N DA,DIK,GLOBAL,ROOT
@@ -250,13 +236,6 @@ SEHIST(FILENUM,ROOT,IEN) ;Set the edit date and edit by and prompt the
  D UPDATE^DIE("E","FDA","FDAIEN","MSG")
  I $D(MSG) D AWRITE^PXRMUTIL("MSG")
  K ^TMP("PXRMWP",$J)
- Q
- ;
- ;=================================
-SETPVER(VERSION) ;Set the package version
- N DA,DIE,DR
- S DIE="^PXRM(800,",DA=1,DR="5////"_VERSION
- D ^DIE
  Q
  ;
  ;=================================
@@ -306,25 +285,6 @@ STRREP(STRING,TS,RS) ;Replace every occurrence of the target string (TS)
  F IND=1:1:NPCS-1 S STR=STR_$P(STRING,TS,IND)_RS
  S STR=STR_$P(STRING,TS,NPCS)
  Q STR
- ;
- ;=================================
-UPEHIST(FILENUM,IEN,TEXT,MSG) ;Update the edit history.
- N FDA,GBL,IENS,IND,LN,NEXT,SUBFN,TARGET,WPTMP
- D FIELD^DID(FILENUM,"EDIT HISTORY","","SPECIFIER","TARGET")
- S SUBFN=+$G(TARGET("SPECIFIER"))
- I SUBFN=0 Q
- S GBL=$$GET1^DID(FILENUM,"","","GLOBAL NAME")_IEN_",110)"
- S NEXT=$O(@GBL@("B"),-1)+1
- S (IND,LN)=0
- F  S IND=$O(TEXT(IND)) Q:IND=""  D
- . S LN=LN+1
- . S WPTMP(1,2,LN)=TEXT(IND)
- S IENS="+"_NEXT_","_IEN_","
- S FDA(SUBFN,IENS,.01)=$$NOW^XLFDT
- S FDA(SUBFN,IENS,1)=$G(DUZ)
- S FDA(SUBFN,IENS,2)="WPTMP(1,2)"
- D UPDATE^DIE("","FDA","","MSG")
- Q
  ;
  ;=================================
 VEDIT(ROOT,IEN) ;This is used as a DIC("S") screen to select which entries

@@ -1,5 +1,5 @@
 PSOORED2 ;ISC-BHAM/SAB-edit orders from backdoor con't ;03/06/95 10:24
- ;;7.0;OUTPATIENT PHARMACY;**2,51,46,78,102,114,117,133,159,148,247,260,281,289,276,358,251**;DEC 1997;Build 202
+ ;;7.0;OUTPATIENT PHARMACY;**2,51,46,78,102,114,117,133,159,148,247,260,281**;DEC 1997;Build 41
  ;Reference to $$DIVNCPDP^BPSBUTL supported by IA 4719
  ;Reference to $$ECMEON^BPSUTIL supported by IA 4410
  ;called from psooredt. cmop edit checks.
@@ -51,18 +51,8 @@ RFX N RFL,NDC,DAW,FLDS,QUIT,CHGNDC,CHANGED
  W ! S DA=Y,DIE="^PSRX("_DA(1)_",1,",DR=$S('CMRL:".01;1.1",1:"1.2:5;8")
  D GETS^DIQ(52.1,DA_","_DA(1)_",",".01;1;1.1;8;11;81","I","FLDS")
  S:$D(^PSRX(DA(1),1,DA,0)) PSORXED("RX1")=^PSRX(DA(1),1,DA,0),(RFED,RFL)=DA
- I $G(ST)=11!($G(ST)=12)!($G(ST)=14)!($G(ST)=15),$$STATUS^PSOBPSUT(PSORXED("IRXN"),RFL)'="" S QUIT=0 D RFE Q  ;short circuit for DC'd/Expired ECME RXs
- N PSORFILL S PSORFILL=DA   ;*276
- D ^DIE S QUIT=$D(Y)
- ;*276
- I '$D(^PSRX(PSORXED("IRXN"),1,PSORFILL)),'$G(PSOSFN) D
- .N DA,NOW,IR,FDA
- .S DA=$G(PSORXED("IRXN")) Q:'DA
- .S (FDA,IR)=0 F  S FDA=$O(^PSRX(DA,"A",FDA)) Q:'FDA  S IR=FDA
- .S IR=IR+1,^PSRX(DA,"A",0)="^52.3DA^"_IR_"^"_IR
- .D NOW^%DTC S NOW=%
- .S ^PSRX(DA,"A",IR,0)=NOW_"^D^"_DUZ_"^"_$S(PSORFILL>0&(PSORFILL<6):PSORFILL,1:PSORFILL+1)_"^Refill deleted during Rx edit"
- K FEV,RFN,RFM,X,Y,DR
+ I $G(ST)=11!($G(ST)=12),$$STATUS^PSOBPSUT(PSORXED("IRXN"),RFL)'="" S QUIT=0 D RFE Q  ;short circuit for DC'd/Expired ECME RXs
+ D ^DIE S QUIT=$D(Y) K FEV,RFN,RFM,X,Y,DR
  I '$G(DA) D REVERSE^PSOBPSU1(PSORXED("IRXN"),RFL,"DE",5) K CMRL,RFED D:$D(PSORX("PSOL"))&($G(DI)=.01) RFD Q
  I 'CMRL,'QUIT S DR="1;1.2:5;8" D ^DIE S QUIT=$D(Y)
 RFE I '$D(^PSRX(PSORXED("IRXN"),1,RFL)) Q
@@ -82,8 +72,6 @@ RFE I '$D(^PSRX(PSORXED("IRXN"),1,RFL)) Q
  . . N RX S RX=PSORXED("IRXN")
  . . I '$P(CHANGED,"^",2),$$STATUS^PSOBPSUT(RX,RFL)="" Q
  . . D ECMESND^PSOBPSU1(RX,RFL,,"ED",$$GETNDC^PSONDCUT(RX,RFL),,$S($P(CHANGED,"^",2):"REFILL DIVISION CHANGED",1:"REFILL EDITED"),,+$G(CHGNDC))
- . . ; Quit if there is an unresolved Tricare non-billable reject code, PSO*7*358
- . . I $$PSOET^PSOREJP3(RX,RFL) S X="Q" Q
  . . ;- Checking/Handling DUR/79 Rejects
  . . I $$FIND^PSOREJUT(RX,RFL) S X=$$HDLG^PSOREJU1(RX,RFL,"79,88","ED","IOQ","Q")
  K DIE,CMRL,DA,DR
@@ -114,10 +102,8 @@ RFD ;check for deleted refill
  K PSOZ1("PSOL")
  Q
 EDTDOSE ;edit med instructions fields
- S PSOEDDOS=1 ; identifies origin of call to PSOORED3 for dosing
  I '$O(^PSRX(PSORXED("IRXN"),6,0)) D DOSE^PSOORED5 Q
  D ^PSOORED3
- K PSOEDDOS
  Q
 UPD ;updates dosing array
  S HENT=ENT

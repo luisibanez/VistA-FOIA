@@ -1,18 +1,14 @@
-RARTE7 ;HISC/SM continuation - Delete a Report, Outside Rpt misc;10/10/08 16:05
- ;;5.0;Radiology/Nuclear Medicine;**56,95,97,103**;Mar 16, 1998;Build 2
+RARTE7 ;HISC/SM continuation - Delete a Report, Outside Rpt misc;1/31/08 10:44
+ ;;5.0;Radiology/Nuclear Medicine;**56**;Mar 16, 1998;Build 3
  ;Supported IA #2053 NOW^XLFDT, FILE^DIE, UPDATE^DIE
  ;Supported IA #2052 GET1^DID
  ;Supported IA #2055 ROOT^DILFD
- ;
- ;04/06/2010 BP/KAM RA*5*103 Remedy Ticket 324541 Outside Reports does
- ;                           not generate Imaging Results CPRS Alert
  Q
 MARKDEL ; set field 5 to "X" to mark rpt as deleted
  ; also update activity log, send report deletion bulletin, store then delete
  ; associated DX, Staff, Resident data
  N DA,DIK,RA1,RA2,RAA,RAFDA,RAIEN2,RAIENDX,RAIENL,RACLOAK
  N RAMEMARR,RAMSG,RAOUT,RAPRTSET,RASAVE,RAX,RA7003
- N RAF1,RAF2,RAF3,RAIENS
  ;
  ;PART 1 - mark report as deleted
  ;
@@ -108,13 +104,13 @@ SET7401(X) ; use this for DX, Staff, Resident secondaries
  ; RAF2 = subfile number from file 70's secondaries
  ; RAF3 = subfile number pointed to from file 70's secondaries
  ;
- S RAF1=$S(X=5:74.16,X=7:74.18,X=9:74.19,1:"") Q:RAF1=""
  S RAF2=$S(X=5:70.14,X=7:70.11,X=9:70.09,1:"") Q:RAF2=""
  S RAIENS=1_","_RACNI_","_RADTI_","_RADFN_","
  S RAROOT=$$ROOT^DILFD(RAF2,RAIENS,1) ; closed root, file 70's secondaries
  M RAA=@RAROOT
  Q:$O(RAA(0))'>0  ; no secondaries
  ;
+ S RAF1=$S(X=5:74.16,X=7:74.18,X=9:74.19,1:"") Q:RAF1=""
  S RAF3=$$GET1^DID(RAF2,.01,"","POINTER")
  ; extract file number from RAF3
  S RAF3=$TR(RAF3,$TR(RAF3,"0123456789."))
@@ -145,7 +141,6 @@ ANYDX(ARRAY) ; called from RARTE5
 ALERT ; for Outside Report, ck if new/changed diags require alert
  ; this is called from RARTE5 each time an outside report is edited
  Q:'$D(RADFN)!('$D(RADTI))!('$D(RACNI))
- N RASAVE,RAY3,X
  ; set RASAVE() for OENOTE^RAUTL00
  S RASAVE("RADFN")=RADFN,RASAVE("RADTI")=RADTI,RASAVE("RACNI")=RACNI
  ;
@@ -154,18 +149,13 @@ ALERT ; for Outside Report, ck if new/changed diags require alert
  S I=0
  ; loop RAA2 
  F  S I=$O(RAA2(I)) Q:'I  K:RAA2(I,0)=$G(RAA1(I,0)) RAA2(I,0)
- ;04/06/2010 BP/KAM RA*5*103 Rem Tkt 324541 Commented out next line
- ;Q:'$O(RAA2(0))
- K RAAB
+ Q:'$O(RAA2(0))
+ S RAAB=0
  S I=0 F  S I=$O(RAA2(I)) Q:'I  D
  .I $D(^RA(78.3,+RAA2(I,0),0)),($P(^(0),U,4)="y") S RAAB=1
  .Q
- ; invoke notification for either condition:
- ; (1) new EF report is made --> non-critical imaging alert
- ; (2) old/new EF report w abnormal DX --> abnormal alert
- ; either of the above alert may be from an amended report or not
- I $G(RAAB)!RAFIRST D
- .S RAY3=$G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0))
- .S X=RAY3 ; X is input to OENOTE
- .D OENOTE^RAUTL00
+ Q:'RAAB
+ S RAY3=$G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0))
+ S X=RAY3 ; X is input to OENOTE
+ D OENOTE^RAUTL00
  Q

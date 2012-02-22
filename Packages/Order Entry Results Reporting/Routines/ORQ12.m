@@ -25,7 +25,9 @@ TEXT(ORTX,ORIFN,WIDTH) ; -- Returns text of order ORIFN in ORTX(#)
  ;D:$O(^OR(100,ORIFN,1,0)) CNV^ORY92(ORIFN) ;convert text otf
  S OR0=$G(^OR(100,ORIFN,0)),OR3=$G(^(3)),OR6=$G(^(6)),ORX=$G(^(8,ORACT,0))
  S ORTX=1,ORTX(1)=""
- I $P($G(OR0),U,11)'="",($P(^ORD(100.98,$P(OR0,U,11),0),U)="NON-VA MEDICATIONS") S X="Non-VA" D ADD
+ ;DSS/LM - Begin modification - Replace "Non-VA" with "OTC/Else" in next
+ I $P($G(OR0),U,11)'="",($P(^ORD(100.98,$P(OR0,U,11),0),U)="NON-VA MEDICATIONS") S X="OTC/Else" D ADD
+ ;DSS/LM - End modification
  G:$G(ORIGVIEW)>1 T1
  S:$P(OR0,U,14)=$O(^DIC(9.4,"C","OR",0)) ORTX(1)=">>" ;generic
  S X=$$ACTION($P(ORX,U,2)) D:$L(X) ADD

@@ -1,5 +1,5 @@
-PXRMEXCS ; SLC/PKR - Routines to compute checksums. ;07/20/2009
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
+PXRMEXCS ; SLC/PKR - Routines to compute checksums. ;07/27/2007
+ ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
  ;====================================================
 CHECKSUM(ATTR,START,END) ;Get the the checksum for a packed reminder
  ;component and load it into the attribute array.
@@ -39,11 +39,12 @@ DIQOUTCS(DIQOUT) ;Return checksum for a processed DIQOUT array.
  ;
  ;====================================================
 FILE(FILENUM,IEN) ;Return checksum for entry IEN in file FILENUM.
- ;Make sure the entry exists.
- I +$$FIND1^DIC(FILENUM,,"A","`"_IEN)=0 Q 0
  N CS,DIQOUT,IENROOT,MSG
  D GETS^DIQ(FILENUM,IEN,"**","N","DIQOUT","MSG")
- D CLDIQOUT^PXRMEXPD(FILENUM,IEN,"**",.IENROOT,.DIQOUT)
+ ;Remove edit history from all reminder files.
+ D RMEH^PXRMEXPU(FILENUM,.DIQOUT,1)
+ ;Convert the iens to the FDA adding form.
+ D CONTOFDA^PXRMEXPU(.DIQOUT,.IENROOT)
  S CS=$$DIQOUTCS(.DIQOUT)
  Q CS
  ;

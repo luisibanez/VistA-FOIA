@@ -1,5 +1,9 @@
-DPTLK3 ;ALB/RMO - MAS Patient Look-up Check for Duplicates ; 22 JUN 87 1:00 pm
+DPTLK3 ;ALB/RMO - MAS Patient Look-up Check for Duplicates ; 1/28/08 11:06am
  ;;5.3;Patient File;**73,197,633**;Aug 13, 1993
+ ;
+ ;DSS/LM - Begin mods - For option VFDV SPR DETAIL
+ I $T(ASKID^VFDREGNW)]"",'$D(DPTIDS(.09)) Q
+ ;DSS/LM - End mods
  I $D(DDS) D CLRMSG^DDS S DX=0,DY=DDSHBX+1 X DDXY
  I '$D(DPTX)!('$D(DPTIDS(.03)))!('$D(DPTIDS(.09))) W !?3,*7,"Unable to search for potential duplicates, Date of Birth and",!?3,"Social Security Number must be defined." S DPTDFN=-1 G Q
 EP2 ; -- Entry point 2

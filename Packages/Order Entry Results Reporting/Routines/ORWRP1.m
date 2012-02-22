@@ -1,5 +1,5 @@
 ORWRP1 ; ALB/MJK,dcm Report Calls ;9/18/96  15:02
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,109,160,262,212**;Dec 17, 1997;Build 24
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,109,160,262**;Dec 17, 1997;Build 3
  ;
 AHS(ROOT,ORDFN,ORHS,ALPHA,OMEGA,DTRANGE,REMOTE,ORMAX,ORFHIE) ; - get adhoc health summary report
  D START^ORWRP(80,"AHSB^ORWRP1(.ROOT,.ORDFN,.ORHS,.ALPHA,.OMEGA,.DTRANGE,.REMOTE,.ORMAX,.ORFHIE)")
@@ -42,7 +42,18 @@ HSGUI(DFN,GMTSTYP) ; - Call ENX^GMTSDVR to print HS Type for Patient
  D ENX^GMTSDVR(DFN,GMTSTYP)
  Q
 BLR(ROOT,ORDFN,ID,ALPHA,OMEGA,DTRANGE,REMOTE,ORMAX,ORFHIE) ; -- get 'enhanced' blood bank report
- D BB^ORWRP2
+ N DFN,ORY,ORSBHEAD
+ S DFN=ORDFN
+ I $L($T(EN^ORWLR1)),$L($T(CPRS^VBECA3B)) D  Q  ;Transition to VBEC's interface
+ . K ^TMP("ORLRC",$J)
+ . D EN^ORWLR1(DFN)
+ . I '$O(^TMP("ORLRC",$J,0)) S ^TMP("ORLRC",$J,1,0)="",^TMP("ORLRC",$J,2,0)="No Blood Bank report available..."
+ . S ROOT=$NA(^TMP("ORLRC",$J))
+ K ^TMP("LRC",$J)
+ S ORSBHEAD("BLOOD BANK")=""
+ D EN^LR7OSUM(.ORY,DFN,,,,,.ORSBHEAD)
+ I '$O(^TMP("LRC",$J,0)) S ^TMP("LRC",$J,1,0)="",^TMP("LRC",$J,2,0)="No Blood Bank report available..."
+ S ROOT=$NA(^TMP("LRC",$J))
  Q
 AP(ROOT,ORDFN,ID,ALPHA,OMEGA,DTRANGE,REMOTE,ORMAX,ORFHIE) ; -- get Anatomic path report
  N I,C,LINES,X
@@ -66,7 +77,7 @@ DIET(ROOT,DFN,ID,ALPHA,OMEGA,DTRANGE,REMOTE,ORMAX,ORFHIE) ; -- get dietetics pro
  S ROOT=$NA(^TMP("ORXPND",$J))
  Q
 LISTNUTR(ROOT,DFN) ; -- list nutritional assessments
- N OK,I,X,SITE
+ N OK,I,X
  K ^TMP($J,"FHADT")
  S OK=$$FHWORADT^FHWORA(DFN)
  S I=0,SITE=$$SITE^VASITE,SITE=$P(SITE,"^",2)_";"_$P(SITE,"^",3)

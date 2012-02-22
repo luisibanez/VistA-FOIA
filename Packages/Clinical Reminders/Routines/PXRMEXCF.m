@@ -1,5 +1,5 @@
-PXRMEXCF ; SLC/PKR - Reminder exchange routines for computed findings. ;10/17/2008
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
+PXRMEXCF ; SLC/PKR - Reminder exchange routines for computed findings. ;06/28/2007
+ ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
  ;==============================================
 EXISTS(ROUTINE) ;Return true if routine ROUTINE exists.
  I ROUTINE="" Q 0
@@ -23,7 +23,7 @@ GETRACT(ATTR,NEWNAME,NAMECHG,RTN,EXISTS) ;Get the action for a routine.
  . S TEXT(1)="Routine "_ROUTINE_" already exists "
  . I SAME D
  .. S TEXT(1)=TEXT(1)_"and the packed routine is identical, skipping."
- .. I $D(PXRMDEBG) W !,TEXT(1),! H 2
+ .. W !,TEXT(1),! H 2
  .. S ACTION="S"
  . I 'SAME D
  .. S TEXT(1)=TEXT(1)_"but the packed routine is different,"

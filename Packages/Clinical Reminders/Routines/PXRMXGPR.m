@@ -1,16 +1,7 @@
-PXRMXGPR ; SLC/PJH - Reminder Due print calls ;07/17/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMXGPR ; SLC/PJH - Reminder Due print calls ;11/16/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
  ;Called from PXRMXPR
- ;
-DOPER(TOTAL,APPL,DUE) ;
- N PERAPPL,PERDONE,PERDUE
- I APPL=0 Q "0^0^0"
- S PERAPPL=(APPL/TOTAL)*100 I $P(PERAPPL,".",2)>4 S PERAPPL=PERAPPL+1
- S PERDUE=(DUE/APPL)*100 I $P(PERDUE,".",2)>4 S PERDUE=PERDUE+1
- S PERDUE=$P(PERDUE,"."),PERAPPL=$P(PERAPPL,".")
- S PERDONE=$S(PERDUE=0:100,1:(100-PERDUE))
- Q PERAPPL_U_PERDUE_U_PERDONE
  ;
  ;Print Selection criteria
 HEAD(PSTART) ;
@@ -37,15 +28,11 @@ HEAD(PSTART) ;
  I "PTO"[PXRMSEL D
  .I SUB="TOTAL" W !,?PSTART,NAM Q
  .W !,?PSTART,"Reminders "_PXRMTX_" for ",NAM
+ I PXRMSEL="L" W !,?PSTART,"Reminders "_PXRMTX_" "_SD_" - ",NAM
  I PXRMSEL="L" D
- .N CNT,NOUT,TEXTIN,TEXTOUT
- .S TEXTIN(1)="Reminders "_PXRMTX_" "_SD_" - "_NAM
- .I "PF"[PXRMFD S TEXTIN(1)=TEXTIN(1)_" for "_BD_" to "_ED
- .I PXRMFD="A" S TEXTIN(1)=TEXTIN(1)_" admissions from "_BD_" to "_ED
- .I PXRMFD="C" S TEXTIN(1)=TEXTIN(1)_" for current inpatients"
- .D FORMAT^PXRMTEXT(PSTART,75,1,.TEXTIN,.NOUT,.TEXTOUT)
- .F CNT=1:1:NOUT W !,TEXTOUT(CNT)
- I PXRMSEL="R" W !,"Patient List: "_SUB
+ .I "PF"[PXRMFD W " for ",BD," to ",ED
+ .I PXRMFD="A" W " admissions from ",BD," to ",ED
+ .I PXRMFD="C" W " for current inpatients"
  I PXRMSEL'="L" W " for ",SD
  W:PXRMSEL="I" !
  ;
@@ -150,8 +137,6 @@ DISP(CNT,PLSTCRIT) ;
  .I $E(PXRMLCSC)="C" F  S IC=$O(PXRMCS(IC)) Q:IC=""  D
  ..S PLSTCRIT(CNT)=$$RJ^XLFSTR(" ",32)_$P(PXRMCS(IC),U,1)_" "_$P(PXRMCS(IC),U,3),CNT=CNT+1
  ..S PLSTCRIT(CNT)=U_3,CNT=CNT+1
- ..I PXRMCCS="I" S PLSTCRIT(CNT)=$$RJ^XLFSTR(" ",32)_"Report by Individual Clinic(s)",CNT=CNT+1
- ..I PXRMCCS="B" S PLSTCRIT(CNT)=$$RJ^XLFSTR(" ",32)_"Report by Clinic Stops and Individual Clinic(s)",CNT=CNT+1
  .I $E(PXRMLCSC)="G" F  S IC=$O(PXRMCGRP(IC)) Q:IC=""  D
  ..S PLSTCRIT(CNT)=$$RJ^XLFSTR(" ",32)_$P(PXRMCGRP(IC),U,2),CNT=CNT+1
  ..S PLSTCRIT(CNT)=U_3,CNT=CNT+1
@@ -209,19 +194,10 @@ PAGE I ($E(IOST,1,2)="C-")&(IO=IO(0))&(PAGE>0) D
  Q
  ;
  ;count of patients in sample
-TOTAL ;
- N LIT,PERAPPL,PERDONE,PERDUE,PERCENT
- ;determine percentages for detail reports
- I PXRMREP="D",PXRMPER="1" D
- .S PERCENT=$$DOPER(TOTAL,APPL,COUNT)
- .S PERAPPL=$P(PERCENT,U),PERDUE=$P(PERCENT,U,2),PERDONE=$P(PERCENT,U,3)
- ;delimited reports
+TOTAL N LIT
  I PXRMTABS="Y" D  Q
- .I PXRMREP="D" D  Q
- ..I PXRMPER="1" W !,"0"_SEP_"PATIENTS"_SEP_TOTAL_SEP_"APPLICABLE"_SEP_APPL_SEP_"%APPL"_SEP_PERAPPL_SEP_"%DUE"_SEP_PERDUE_SEP_"%DONE"_SEP_PERDONE Q
- ..W !,"0"_SEP_"PATIENTS"_SEP_TOTAL_SEP_"APPLICABLE"_SEP_APPL
+ .I PXRMREP="D" W !,"0"_SEP_"PATIENTS"_SEP_TOTAL_SEP_"APPLICABLE"_SEP_APPL Q
  .I PXRMREP="S" W !,"0"_SEP_"PATIENTS"_SEP_TOTAL_SEP_SEP_$TR(SUB,SEP,"_") Q
- ;
  I (PXRMRT="PXRMX")!(PXRMREP="S") W !
  ;S LIT=" patient."
  ;I TOTAL>1 S LIT=" patients."
@@ -230,10 +206,6 @@ TOTAL ;
  I PXRMREP="D" D
  .S LIT=$S(APPL=0:" patients.",APPL=1:" patient.",1:" patients.")
  .W !,"Applicable to "_APPL_LIT
- .I PXRMPER="1" D
- ..W !,"%Applicable "_PERAPPL
- ..W !,"%Due "_PERDUE
- ..W !,"%Done "_PERDONE
  Q
  ;
  ;Null report prints if no patients found

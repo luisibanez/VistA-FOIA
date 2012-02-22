@@ -1,5 +1,5 @@
 ORQ11 ;slc/dcm-Get patient orders in context ;3/31/04  09:57
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,27,48,72,78,99,94,148,141,177,186,190,195,215,243,295**;Dec 17, 1997;Build 63
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,27,48,72,78,99,94,148,141,177,186,190,195,215,243**;Dec 17, 1997;Build 242
 LOOP ; -- main loop through "ACT" x-ref
  I $G(XREF)="AW" D AW Q
  I $G(FLG)=27 D EXPD^ORQ12 Q
@@ -123,7 +123,7 @@ UVC1 ; 10 -- secondary pass for Unverified/Clerk
  ;
 INPT() ; -- Returns 1 or 0, if inpt order using X0=^OR(100,IFN,0)
  I ($P(X0,U,12)="I")!($$TYPE^OREVNTX($P(X0,U,17))="D") Q 1
- I $P($G(^SC(+$P(X0,U,10),0)),U,3)="W" Q 1 ;UNCOMMENTED IN *295
+ ;I $P($G(^SC(+$P(X0,U,10),0)),U,3)="W" Q 1
  Q 0
  ;
 SIG ; 11 -- Unsigned

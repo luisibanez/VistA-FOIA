@@ -1,31 +1,31 @@
 IBCNBMI ;ALB/ARH-Ins Buffer: move buffer data to insurance files ;09 Mar 2005  11:42 AM
- ;;2.0;INTEGRATED BILLING;**82,184,246,251,299,345,361,371,413,416,438**;21-MAR-94;Build 52
+ ;;2.0;INTEGRATED BILLING;**82,184,246,251,299,345,361,371**;21-MAR-94;Build 57
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
-INS(IBBUFDA,IBINSDA,TYPE,RESULT) ;  move buffer insurance company data (file 355.33) to existing Insurance Company (file 36)
+INS(IBBUFDA,IBINSDA,TYPE) ;  move buffer insurance company data (file 355.33) to existing Insurance Company (file 36)
  ;
  S IBBUFDA=IBBUFDA_",",IBINSDA=$G(IBINSDA)_","
- D SET("INS",IBBUFDA,IBINSDA,TYPE,.RESULT)
+ D SET("INS",IBBUFDA,IBINSDA,TYPE)
  Q
  ;
-GRP(IBBUFDA,IBGRPDA,TYPE,RESULT) ;  move buffer insurance group/plan data (file 355.33) to existing Group/Plan (file 355.33)
+GRP(IBBUFDA,IBGRPDA,TYPE) ;  move buffer insurance group/plan data (file 355.33) to existing Group/Plan (file 355.33)
  ;
  S IBBUFDA=IBBUFDA_",",IBGRPDA=$G(IBGRPDA)_","
- D SET("GRP",IBBUFDA,IBGRPDA,TYPE,.RESULT)
- D STUFF("GRP",IBGRPDA,.RESULT)
+ D SET("GRP",IBBUFDA,IBGRPDA,TYPE)
+ D STUFF("GRP",IBGRPDA)
  Q
  ;
-POLICY(IBBUFDA,IBPOLDA,TYPE,RESULT) ;  move buffer insurance policy data (file 355.33) to existing Patient Policy (file 2.312)
+POLICY(IBBUFDA,IBPOLDA,TYPE) ;  move buffer insurance policy data (file 355.33) to existing Patient Policy (file 2.312)
  ;
  N DFN S DFN=+$G(^IBA(355.33,+$G(IBBUFDA),60)) Q:'DFN
  ;
  S IBBUFDA=IBBUFDA_",",IBPOLDA=$G(IBPOLDA)_","_DFN_","
- D SET("POL",IBBUFDA,IBPOLDA,TYPE,.RESULT)
- D STUFF("POL",IBPOLDA,.RESULT)
- D POLOTH(IBBUFDA,IBPOLDA,.RESULT)
+ D SET("POL",IBBUFDA,IBPOLDA,TYPE)
+ D STUFF("POL",IBPOLDA)
+ D POLOTH(IBBUFDA,IBPOLDA)
  Q
  ;
-SET(SET,IBBUFDA,IBEXTDA,TYPE,RESULT) ; move buffer data to insurance files
+SET(SET,IBBUFDA,IBEXTDA,TYPE) ; move buffer data to insurance files
  ; Input:  IBBUFDA - ifn of Buffer File entry to move (#355.33)
  ;         IBEXTDA - ifn of insurance entry to update (#36,355.3,2)
  ;         TYPE    - 1 = Merge     (only buffer data moved to blank fields in ins file, no replace)
@@ -34,8 +34,7 @@ SET(SET,IBBUFDA,IBEXTDA,TYPE,RESULT) ; move buffer data to insurance files
  ;                   4 = Individually Accept (Skip Blanks) (user accepts
  ;  individual diffs b/w buffer data and existing file data (excl blanks)
  ;  to overwrite flds (or addr grp) in existing file)
- ; Output: RESULT - Passed array to return FM errror message if there are
- ;                  errors when filing the buffer data
+ ;
  ;
  N IBX,IBFLDS,EXTFILE,DRBUF,DREXT,BUFARR,EXTARR,IBBUFFLD,IBEXTFLD,IBBUFVAL,IBEXTVAL,IBCHNG,IBCHNGN,IBERR
  ;
@@ -46,12 +45,6 @@ SET(SET,IBBUFDA,IBEXTDA,TYPE,RESULT) ; move buffer data to insurance files
  D GETS^DIQ(EXTFILE,IBEXTDA,DREXT,"E","EXTARR")
  ;
  I +$G(TYPE) S IBBUFFLD=0 F  S IBBUFFLD=$O(BUFARR(355.33,IBBUFDA,IBBUFFLD)) Q:'IBBUFFLD  D
- . ;If not called by ACCEPAPI^IBCNICB API, don't update from these 
- . ;fields:
- . ;   Insurance Company Name - #20.01, Reimburse? - 20.05
- . ;   Is this a Group Policy - #40.01
- . I $G(IBSUPRES)'>0,"^20.01^20.05^40.01^"[("^"_IBBUFFLD_"^") Q
- . ;
  . S IBEXTFLD=$G(IBFLDS(IBBUFFLD)) Q:'IBEXTFLD
  . S IBBUFVAL=BUFARR(355.33,IBBUFDA,IBBUFFLD,"E")
  . S IBEXTVAL=$G(EXTARR(EXTFILE,IBEXTDA,IBEXTFLD,"E"))
@@ -62,25 +55,14 @@ SET(SET,IBBUFDA,IBEXTDA,TYPE,RESULT) ; move buffer data to insurance files
  . I TYPE=4,'$D(^TMP($J,"IB BUFFER SELECTED",IBBUFFLD)) Q
  . ;
  . S IBCHNG(EXTFILE,IBEXTDA,IBEXTFLD)=IBBUFVAL
- . ;For ACCEPAPI^IBCNICB do not delete the .01 field. This prevents a
- . ;Data Dictionary Deletion Write message
- . Q:IBEXTFLD=".01"
  . S IBCHNGN(EXTFILE,IBEXTDA,IBEXTFLD)=""
  ;
  I $D(IBCHNGN)>9 D FILE^DIE("E","IBCHNGN","IBERR")
- ;Removed delete errors and move FM errors to RESULT
- D:$D(IBERR)>0 REMOVDEL(.IBERR),EHANDLE(SET,.IBERR,.RESULT)
- K IBERR
  I $D(IBCHNG)>9 D FILE^DIE("E","IBCHNG","IBERR")
- ;Move FM errors to RESULT
- D:$D(IBERR)>0 EHANDLE(SET,.IBERR,.RESULT)
  Q
  ;
-STUFF(SET,IBEXTDA,RESULT) ; update fields in insurance files that 
- ;should be automatically set when an entry is edited
+STUFF(SET,IBEXTDA) ; update fields in insurance files that should be automatically set when an entry is edited
  ; Input:  IBEXTDA - ifn of insurance entry to update (#36,356,2)
- ; Output: RESULT - Passed array to return FM errror message if there are
- ;                  errors when filing the data buffer data
  ;
  N IBX,IBFLDS,EXTFILE,IBEXTFLD,IBEXTVAL,IBCHNG,IBCHNGN,IBERR
  ;
@@ -93,12 +75,7 @@ STUFF(SET,IBEXTDA,RESULT) ; update fields in insurance files that
  . S IBCHNGN(EXTFILE,IBEXTDA,IBEXTFLD)=""
  ;
  D FILE^DIE("E","IBCHNGN","IBERR")
- ;Move FM errors to RESULT
- D:$D(IBERR)>0 EHANDLE(SET,.IBERR,.RESULT)
- K IBERR
  D FILE^DIE("E","IBCHNG","IBERR")
- ;Move FM errors to RESULT
- D:$D(IBERR)>0 EHANDLE(SET,.IBERR,.RESULT)
  Q
  ;
 FIELDS(SET) ; return array of corresponding fields: IBFLDS(Buffer #)=Ins #
@@ -111,13 +88,11 @@ FIELDS(SET) ; return array of corresponding fields: IBFLDS(Buffer #)=Ins #
  Q
  ;
 INSDR ;
- ;;36^20.01:20.05;21.01:21.06^.01;.131;.132;.133;.111:.116;1
-INSFLD ; corresponding fields: Buffer File (355.33) & Insurance Company file (36)
- ;;20.01^.01^Insurance Company Name^  ; Name
+ ;;36^20.02:20.04;21.01:21.06^.131;.132;.133;.111:.116
+INSFLD ; corresponding fields:  Buffer File (355.33) and Insurance Company file (36)
  ;;20.02^.131^Phone Number^           ; MM Phone Number
  ;;20.03^.132^Billing Phone^          ; Billing Phone Number
  ;;20.04^.133^Pre-Cert Phone^         ; Pre-Certification Phone Number
- ;;20.05^1^Reimburse?^                ; Will Reimburse?
  ;;21.01^.111^Street [Line 1]^1       ; MM Street Address [Line 1]
  ;;21.02^.112^Street [Line 2]^1       ; MM Street Address [Line 2]
  ;;21.03^.113^Street [Line 3]^1       ; MM Street Address [Line 3]
@@ -126,9 +101,8 @@ INSFLD ; corresponding fields: Buffer File (355.33) & Insurance Company file (36
  ;;21.06^.116^Zip^1                   ; MM Zip Code
  ;
 GRPDR ;
- ;;355.3^40.01:40.09;40.1;40.11;^.02:.09;6.02;6.03;.12
+ ;;355.3^40.02:40.03;40.1;40.11;40.04:40.09;^.03:.04;6.02;6.03;.05:.09;.12
 GRPFLD ;corresponding fields:  Buffer File (355.33) and Insurance Group Plan file (355.3)
- ;;40.01^.02^Is This a Group Policy?^ ; Is this a Group Policy?
  ;;40.02^.03^Group Name^              ; Group Name
  ;;40.03^.04^Group Number^            ; Group Number
  ;;40.1^6.02^BIN^                     ; BIN ;;Daou/EEN
@@ -145,7 +119,7 @@ GRPA ; auto set fields
  ;;1.06^DUZ^                          ; Last edited By
  ;
 POLDR ;
- ;;2.312^60.02:62.08^8;3;1;6;16;17;3.01;3.05:3.1;3.13;3.14;4.01;4.02;.2;3.12;2.1;2.015;2.11;2.12;2.01:2.08;5.01
+ ;;2.312^60.02:62.01^8;3;1;6;16;17;3.01;3.05;4.01;4.02;.2;3.12;2.1;2.015;2.11;2.12;2.01:2.08;5.01
 POLFLD ; corresponding fields:  Buffer File (355.33) and Insurance Patient Policy file (2.312)
  ;;60.02^8^Effective Date^            ; Effective Date
  ;;60.03^3^Expiration Date^           ; Expiration Date
@@ -173,13 +147,6 @@ POLFLD ; corresponding fields:  Buffer File (355.33) and Insurance Patient Polic
  ;;61.11^2.07^Emp Zip Code^1          ; Employer Claims Zip Code
  ;;61.12^2.08^Emp Phone^              ; Employer Claims Phone
  ;;62.01^5.01^Patient Id^             ; Patient Id
- ;;62.02^3.06^Subscr Addr Ln 1^       ; Subscriber Address Line 1
- ;;62.03^3.07^Subscr Addr Ln 2^       ; Subscriber Address Line 2
- ;;62.04^3.08^Subscr City^            ; Subscriber City
- ;;62.05^3.09^Subscr State^           ; Subscriber State
- ;;62.06^3.1^Subscr Zip^              ; Subscriber Zip Code
- ;;62.07^3.13^Subscr Country^         ; Subscriber Country Code
- ;;62.08^3.14^Subscr Cntry Div^       ; Subscriber Country Subdivision Code
  ;
 POLA ; auto set fields
  ;;1.03^NOW^                          ; Date Last Verified (default is person that accepts entry)
@@ -188,8 +155,8 @@ POLA ; auto set fields
  ;;1.06^DUZ^                          ; Last Edited By
  ;
  ;
-POLOTH(IBBUFDA,IBPOLDA,RESULT) ; other special cases that can not be transferred using the generic code above, usually because of dependencies
- N IBERR,IB0 S IB0=$G(^IBA(355.33,+IBBUFDA,0))
+POLOTH(IBBUFDA,IBPOLDA) ; other special cases that can not be transferred using the generic code above, usually because of dependencies
+ N IB0 S IB0=$G(^IBA(355.33,+IBBUFDA,0))
  ;
  ;  --- if buffer entry was verified before the accept step, then add the correct verifier info to the policy
  I +$P(IB0,U,10) D
@@ -197,12 +164,7 @@ POLOTH(IBBUFDA,IBPOLDA,RESULT) ; other special cases that can not be transferred
  . S IBCHNG(2.312,IBPOLDA,1.04)=$P(IB0,U,11),IBCHNGN(2.312,IBPOLDA,1.04)=""
  ;
  I $D(IBCHNGN)>9 D FILE^DIE("I","IBCHNGN","IBERR")
- ;Move FM errors to RESULT
- D:$D(IBERR)>0 EHANDLE("POL",.IBERR,.RESULT)
- K IBERR
  I $D(IBCHNG)>9 D FILE^DIE("I","IBCHNG","IBERR")
- ;Move FM errors to RESULT
- D:$D(IBERR)>0 EHANDLE("POL",.IBERR,.RESULT)
  Q
  ;
 PAT(DFN,IBPOLDA) ; Force DOB, SSN & SEX from Patient file (#2) in to Insurance Patient Policy file (2.312)
@@ -216,46 +178,4 @@ PAT(DFN,IBPOLDA) ; Force DOB, SSN & SEX from Patient file (#2) in to Insurance P
  S DIE="^DPT("_DFN_",.312,",DA(1)=DFN,DA=IBPOLDA
  S DR="3.01///^S X=DOB;3.05///^S X=SSN;3.12///^S X=SEX"
  D ^DIE
- Q
- ;
-EHANDLE(SET,FMERR,RESULT) ;
- ;Fileman Error Processing tracking added for ACCEPAPI^IBCNICB API.
- ; INPUT: 
- ;   SET    - File where fileman error occurred
- ;       Value = "INS" --> File 36    --> RESULT(1)
- ;       Value = "GRP" --> File 355.3 --> RESULT(2)
- ;       Value = "POL" --> File 2.312 --> RESULT(3)
- ;   FMERR  - Array that is returned by FM with error messages
- ; OUTPUT:
- ;   RESULT - Passed array to return FM errror message if there are
- ;            errors when filing the data buffer data
- ;
- Q:$G(SET)']""!($D(FMERR)'>0)
- N SUB1,RNUM,ERRNUM,LINENUM
- ;Numeric 1st subscript of RESULT array based on file being updated
- ;File 36 = 1, 355.3 = 2, 2.312 = 3 
- S SUB1=$S(SET="INS":1,SET="GRP":2,SET="POL":3,1:"")
- ;Quit if SUB1 doesn't have a value.
- Q:SUB1']""
- S RNUM=$O(RESULT(SUB1,"ERR",9999999999),-1),ERRNUM=0
- F  S ERRNUM=$O(FMERR("DIERR",ERRNUM)) Q:+ERRNUM'>0  D
- . S LINENUM=0
- . F  S LINENUM=$O(FMERR("DIERR",ERRNUM,"TEXT",LINENUM)) Q:+LINENUM'>0  D
- . . S RNUM=RNUM+1
- . . S RESULT(SUB1,"ERR",RNUM)=FMERR("DIERR",ERRNUM,"TEXT",LINENUM)
- Q
- ;
-REMOVDEL(FMERR) ;
- ;Removed field delete errors. SET and STUFF API delete data first and
- ;then update with new data from Insurance Buffer file. Error Code 712
- ;"Deletion was attempted but not allowed" errors will be removed from
- ;the returned FM error array 
- ; INPUT/OUTPUT:
- ;   FMERR  - Array that is returned by FM with error messages
- ;
- Q:$D(FMERR)'>0
- N ERRNUM
- S ERRNUM=0
- F  S ERRNUM=$O(FMERR("DIERR",ERRNUM)) Q:+ERRNUM'>0  D
- . I FMERR("DIERR",ERRNUM)=712 K FMERR("DIERR",ERRNUM)
  Q

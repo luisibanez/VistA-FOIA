@@ -1,5 +1,5 @@
-PXRMBXTL ; SLC/PKR - Build expanded taxonomies. ;08/12/2009
- ;;2.0;CLINICAL REMINDERS;**12**;Feb 04, 2005;Build 73
+PXRMBXTL ; SLC/PKR - Build expanded taxonomies. ;08/10/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;====================================================
 CHECK(TAXIEN,KI) ;Check for expanded taxonomy, build it if it does not
@@ -17,26 +17,6 @@ DELEXTL(TAXIEN) ;Delete an expanded taxonomy.
  S DA=TAXIEN
  D ^DIK
  D ULOCKXTL(TAXIEN)
- Q
- ;
- ;====================================================
-EXPALLO ;Rebuild all taxonomy expansions, used by option
- I '$D(^XUSEC("PXRM MANAGER",DUZ)) D  Q
- . W !,"You must hold the PXRM MANAGER key to use this option."
- D EXPALL^PXRMBXTL
- Q
- ;
- ;====================================================
-EXPALL ;Rebuild all taxonomy expansions.
- N IEN,NAME
- D BMES^XPDUTL("Rebuilding all taxonomy expansions.")
- S IEN=0
- F  S IEN=+$O(^PXD(811.2,IEN)) Q:IEN=0  D
- . S NAME=$P(^PXD(811.2,IEN,0),U,1)
- . D MES^XPDUTL("Expanding "_NAME_"  (IEN="_IEN_")")
- . D DELEXTL^PXRMBXTL(IEN)
- . D EXPAND^PXRMBXTL(IEN,"")
- D BMES^XPDUTL("Done rebuilding taxonomy expansions.")
  Q
  ;
  ;====================================================
@@ -93,7 +73,6 @@ EXPAND(TAXIEN,KI) ;Build an expanded taxonomy. If KI is defined then
  D KPDS^PXRMPDS(X,X1,X2,TAXIEN)
  D SPDS^PXRMPDS(X,X1,X2,TAXIEN)
  ;
- D SZN
  D ULOCKXTL(TAXIEN)
  Q
  ;
@@ -141,8 +120,8 @@ ICPT(TAXIEN,LOW,HIGH,NICPT,NRCPT) ;Build the list of internal entries
  .. S ^PXD(811.3,TAXIEN,81,"ICPTP",IEN,NICPT,0)=""
  ..;Determine if this is a radiology procedure.
  ..;DBIA #586.
- .. S RADIEN=""
- .. F  S RADIEN=+$O(^RAMIS(71,"D",IEN,RADIEN)) Q:RADIEN=0  D
+ .. S RADIEN=+$O(^RAMIS(71,"D",IEN,""))
+ .. I RADIEN>0 D
  ... S NRCPT=NRCPT+1
  ... S ^PXD(811.3,TAXIEN,71,NRCPT,0)=IEN_U_RADIEN
  ... S ^PXD(811.3,TAXIEN,71,"RCPTP",RADIEN,NRCPT,0)=IEN
@@ -175,16 +154,6 @@ SELEXP ;Entry point for the option selected taxonomy expansion.
  S TAXIEN=+$$SELECT^PXRMINQ("^PXD(811.2,","Select a taxonomy to expand: ")
  I TAXIEN=-1 Q
  D EXPAND(TAXIEN,"")
- Q
- ;
- ;====================================================
-SZN ;Set 0 node.
- N IEN,TOTAL
- S (IEN,TOTAL)=0
- F  S IEN=+$O(^PXD(811.3,IEN)) Q:IEN=0  S TOTAL=TOTAL+1
- ;Third piece is last number entered, fourth piece is the number
- ;of entries.
- S $P(^PXD(811.3,0),U,3,4)="1^"_TOTAL
  Q
  ;
  ;====================================================

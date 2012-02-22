@@ -1,5 +1,5 @@
-MAGGTPT1 ;WOIFO/GEK/SG/NST - Delphi-Broker calls for patient lookup and information ; 05 Oct 2010 9:15 AM
- ;;3.0;IMAGING;**16,8,92,46,59,93,117**;Mar 19, 2002;Build 2238;Jul 15, 2011
+MAGGTPT1 ;WOIFO/GEK - Delphi-Broker calls for patient lookup and information ; [ 06/20/2001 08:57 ]
+ ;;3.0;IMAGING;**16,8,92,46,59**;Nov 27, 2007;Build 20
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -8,6 +8,7 @@ MAGGTPT1 ;WOIFO/GEK/SG/NST - Delphi-Broker calls for patient lookup and informat
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -21,21 +22,11 @@ FIND(MAGRY,ZY) ;RPC [MAGG PAT FIND]
  ; Call to Do a lookup using FIND^DIC
  ; MAGRY is the Array to return.
  ; ZY is parameter sent by calling app (Delphi)
- ;   NUM TO RETURN ^ TEXT TO MATCH ^ TYPE OF OUPUT FORMAT ^ SCREEN ($P 5-99)
- ; MAGRY(0)="0^Error message"
- ; or 
- ; MAGRY(0)=Found 100 entries matching "" there are more
- ;
- ; if $P(ZY,"^",4)'=2 then
- ; MAGRY(1..n)     = Patient Name _" " _ Date Of Birth _" "_ Male/Female _ " "_ Ward ^ DFN^ICN
- ; if $P(ZY,"^",4)=2 then
- ; MAGRY(1) = "Patient Name^DOB~S1^Sex^Ward"
- ;   MAGRY(2..n)  =   Patient Name^Date Of Birth^Male/Female^Ward | DFN^ICN
+ ;    FILE NUM ^ NUM TO RETURN ^ TEXT TO MATCH ^  ^ SCREEN ($P 5-99)
  N $ETRAP,$ESTACK S $ETRAP="D ERRA^MAGGTERR"
  ;
  N X,Y,I,Z,MAGDFN,WARD
  N FILE,IENS,FLDS,FLAGS,VAL,NUM,INDEX,SCR,IDENT,TROOT
- N RTYPE,SEX,ICN,PNAME
  S (FILE,IENS,FLDS,FLAGS,VAL,NUM,INDEX,SCR,IDENT,TROOT)=""
  ;
  S FILE=2 ; Patient File
@@ -44,11 +35,11 @@ FIND(MAGRY,ZY) ;RPC [MAGG PAT FIND]
  S VAL=$P(ZY,U,2) ; this is the starting value i.e. 'Smi'
  S SCR=$P(ZY,U,5,99)
  S FLDS=$P(ZY,U,3)
- S RTYPE=$P(ZY,U,4)
+ ; $P(ZU,U,4) isn't used.
  ;  If specific fields aren't requested, 
  ;     Get Identifiers, and ward as FLDS
  ;I '$L(FLDS) S FLDS=FLDS_";.1;.03;.09;.301;391"
- I '$L(FLDS) S FLDS=FLDS_";.1;.02;.301;391"
+ I '$L(FLDS) S FLDS=FLDS_";.1;.301;391"
  ;  we'll add ACN to the index to search, for ward
  ; for speed we'll decide which xref to use
  S INDEX=$S(VAL?9N:"SSN^ACN",VAL?1U1.N:"BS5^ACN",1:"B^ACN")
@@ -69,24 +60,18 @@ FIND(MAGRY,ZY) ;RPC [MAGG PAT FIND]
  ;  so we have some matches, (BUT we could still have an error)
  ;  so first list all matches, then the Errors, if any.
  S I="" F  S I=$O(^TMP("DILIST",$J,1,I)) Q:I=""  D
- . S PNAME=^TMP("DILIST",$J,1,I) ; Name
- . S MAGDFN=+^TMP("DILIST",$J,2,I) ; DFN
- . S SEX=^TMP("DILIST",$J,"ID",I,.02)
+ . S X=^TMP("DILIST",$J,1,I) ; Name
+ . S MAGDFN=^TMP("DILIST",$J,2,I) ; DFN
+ . ;
  . S WARD=^TMP("DILIST",$J,"ID",I,.1)
  . K ^TMP("DILIST",$J,"ID",I,.1)
- . S ICN=$$GETICN^MPIF001(MAGDFN)
- . S ICN=$S(ICN'<0:ICN,1:"")
- . I RTYPE=2 D
- . . S MAGRY(I+1)=PNAME_U_$$DOB^DPTLK1(MAGDFN)_U_SEX_U_WARD_"|"_MAGDFN_U_ICN
- . I RTYPE'=2 D
- . . S X=PNAME
- . . I $E(WARD,1,$L(VAL))=VAL S X=WARD_"   "_PNAME
- . . S X=X_"   "_$$DOB^DPTLK1(MAGDFN)_"   "_$$SSN^DPTLK1(MAGDFN)
- . . S Z=0
- . . ; We are displaying other identifiers with each patient.
- . . F  S Z=$O(^TMP("DILIST",$J,"ID",I,Z)) Q:Z=""  S X=X_"   "_^(Z)
- . . S MAGRY(I)=X_"^"_(+MAGDFN)_"^"_ICN  ;SG
- I RTYPE=2 S MAGRY(1)="Patient Name^DOB~S1^Sex^Ward"
+ . I $E(WARD,1,$L(VAL))=VAL S X=WARD_"   "_X
+ . ;
+ . S X=X_"   "_$$DOB^DPTLK1(MAGDFN)_"   "_$$SSN^DPTLK1(MAGDFN)
+ . S Z=0
+ . ; We are displaying other identifiers with each patient.
+ . F  S Z=$O(^TMP("DILIST",$J,"ID",I,Z)) Q:Z=""  S X=X_"   "_^(Z)
+ . S MAGRY(I)=X_"^"_+MAGDFN
  ;
  I $D(^TMP("DIERR",$J)) D FINDERR() Q
  I '$D(^TMP("DILIST",$J,0)) Q
@@ -105,7 +90,6 @@ INFO(MAGRY,DATA) ;RPC [MAGG PAT INFO]  Call to  Return patient info.
  ;       MAGDFN -- Patient DFN
  ;       NOLOG  -- 0/1; if 1, then do NOT update the Session log
  ;       ISICN  -- 0/1  if 1, then this is an ICN, if 0 (default) this is a DFN ; Patch 41
- ;       FLAGS  -- "D" Include Deleted images
  ;  MAGRY is a string, we return the following :
  ; //$P     1        2      3     4     5     6     7     8        9                     10
  ; //    status ^   DFN ^ name ^ sex ^ DOB ^ SSN ^ S/C ^ TYPE ^ Veteran(y/n)  ^ Patient Image Count
@@ -119,8 +103,8 @@ INFO(MAGRY,DATA) ;RPC [MAGG PAT INFO]  Call to  Return patient info.
  ; VAEL(4)=Patient's Veteran Y/N (#1901) (1=yes)
  ; VAEL(6)=Patient's Type (#391) (internal^external)
  ;
- N MAGDFN,DFN,X,NOLOG,VADM,VAEL,VAERR,ISICN,FLAGS
- S MAGDFN=$P(DATA,U),NOLOG=+$P(DATA,U,2),ISICN=+$P(DATA,U,3),FLAGS=$P(DATA,U,4)
+ N MAGDFN,DFN,X,NOLOG,VADM,VAEL,VAERR,ISICN
+ S MAGDFN=$P(DATA,U),NOLOG=+$P(DATA,U,2),ISICN=+$P(DATA,U,3)
  I ISICN D GETDFN^VAFCTFU1(.DFN,MAGDFN)
  E  S DFN=+MAGDFN
  D DEM^VADPT,ELIG^VADPT
@@ -133,7 +117,7 @@ INFO(MAGRY,DATA) ;RPC [MAGG PAT INFO]  Call to  Return patient info.
  ;          Fields:  Service Connected?,       Type,                   Veteran Y/N?     
  S $P(MAGRY,"^",7,9)=$S(+VAEL(3):"YES",1:"")_"^"_$P(VAEL(6),"^",2)_"^"_$S(+VAEL(4):"YES",1:"")
  ;          Fields:  Patient Image Count   
- S $P(MAGRY,"^",10)=$$IMGCT(DFN,FLAGS)_"^"
+ S $P(MAGRY,"^",10)=$$IMGCT(DFN)_"^"
  ;  Additions. for Patch 41
  ;          Fields :   Patient ICN
  S $P(MAGRY,"^",11)=$$GETICN^MPIF001(DFN)
@@ -151,29 +135,14 @@ INFO(MAGRY,DATA) ;RPC [MAGG PAT INFO]  Call to  Return patient info.
  ;  We'll track DFN:ICN
  E  D ACTION^MAGGTAU("PAT^"_DFN_$S(ISICN:"-"_MAGDFN,1:""))
  Q
-IMGCT(DFN,FLAGS) ; RETURN TOTAL NUMBER OF IMAGES FOR A PATIENT;
- ; FLAGS   D  Include deleted images (file #2005.1)
+IMGCT(DFN) ; RETURN TOTAL NUMBER OF IMAGES FOR A PATIENT;
  ;
- N MAG8BOTH,MAG8ROOT,MAG8XREF,CNT
- N MAG8DT,MAG8PRX,MAG8IEN
- ; 
- S CNT=0
- S MAG8BOTH=(FLAGS["D")
- S MAG8ROOT=$NA(^MAG(2005))
- I DFN>0  D
- . S MAG8XREF=$NA(@MAG8ROOT@("APDTPX",+DFN))
- . ;---
- . S (MAG8DT,MAG8PRX,MAG8IEN)=""
- . F  S MAG8DT=$$MAGORD^MAGGI13($NA(@MAG8XREF@(MAG8DT)),1,MAG8BOTH)  Q:MAG8DT=""  D
- . . F  S MAG8PRX=$$MAGORD^MAGGI13($NA(@MAG8XREF@(MAG8DT,MAG8PRX)),1,MAG8BOTH)  Q:MAG8PRX=""  D
- . . . F  S MAG8IEN=$$MAGORD^MAGGI13($NA(@MAG8XREF@(MAG8DT,MAG8PRX,MAG8IEN)),1,MAG8BOTH)  Q:MAG8IEN=""  D
- . . . . I $$ISDEL^MAGGI11(MAG8IEN) S:MAG8BOTH CNT=CNT+1 Q  ; Include deleted images
- . . . . S CNT=CNT+1
- . . . . Q
- . . . Q
- . . Q
- . Q
- Q CNT
+ N I,CT,RDT,PRX,IEN
+ S CT=0
+ S RDT="" F  S RDT=$O(^MAG(2005,"APDTPX",DFN,RDT)) Q:RDT=""  D
+ . S PRX="" F  S PRX=$O(^MAG(2005,"APDTPX",DFN,RDT,PRX)) Q:PRX=""  D
+ . . S IEN="" F  S IEN=$O(^MAG(2005,"APDTPX",DFN,RDT,PRX,IEN)) Q:IEN=""  S CT=CT+1
+ Q CT
 BS5CHK(MAGRY,MAGDFN) ;RPC [MAGG PAT BS5 CHECK]
  ; Call to check the BS5 cross ref 
  ; and see if any similar patients exist.

@@ -1,5 +1,5 @@
-HLOAPI2 ;ALB/CJM/OAK/RBN-HL7 - Developer API's for sending application acks ;05/12/2009
- ;;1.6;HEALTH LEVEL SEVEN;**126,131,133,134,137,138,146**;Oct 13, 1995;Build 16
+HLOAPI2 ;ALB/CJM/OAK/RBN-HL7 - Developer API's for sending application acks ;11/23/2007
+ ;;1.6;HEALTH LEVEL SEVEN;**126,131,133,134,137,138**;Oct 13, 1995;Build 34
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
 ACK(HLMSTATE,PARMS,ACK,ERROR) ;; Default behavior is to return a general
@@ -27,8 +27,6 @@ ACK(HLMSTATE,PARMS,ACK,ERROR) ;; Default behavior is to return a general
  ;;    "FIELD SEPARATOR" - field separator (optional, defaults to "|")
  ;;    "MESSAGE TYPE" - if not defined, ACK is used
  ;;    "MESSAGE STRUCTURE" (optional)
- ;;    "RETURN LINK NAME" (optional)
- ;;    "RETURN LINK IEN" (optional)
  ;;    "QUEUE" - (optional) An application can name its own private queue (a string under 20 characters,namespaced). The default is the name of the queue of the original message
  ;;    "SECURITY" (optional) security information to include in the header segment, SEQ 8 (optional)
  ;;    "VERSION" - the HL7 Version ID (optional, defaults to 2.4)
@@ -39,10 +37,10 @@ ACK(HLMSTATE,PARMS,ACK,ERROR) ;; Default behavior is to return a general
  ;;  ERROR (pass by reference) error msg
  ;;  
  N I,SEG,TOLINK,SUCCESS
- S SUCCESS=0,(TOLINK,ERROR)=""
+ S SUCCESS=0,ERROR=""
  ;
  D
- .N PORT S PORT=""
+ .N PORT
  .I $G(PARMS("ACK CODE"))'="AA",$G(PARMS("ACK CODE"))'="AE",$G(PARMS("ACK CODE"))'="AR" S ERROR="INVALID ACK CODE" Q
  .;
  .I '$G(HLMSTATE("IEN")) S ERROR="ORIGINAL MESSAGE TO ACKNOWLEDGE IS NOT IDENTIFIED" Q
@@ -55,15 +53,10 @@ ACK(HLMSTATE,PARMS,ACK,ERROR) ;; Default behavior is to return a general
  .I $$NEWMSG^HLOAPI(.PARMS,.ACK)  ;can't fail!
  .;
  .;if the return link can not be determined, the HL Logical Link file has a problem that must be fixed at the site
- .I $G(PARMS("RETURN LINK IEN")) D
- ..S TOLINK=$P($G(^HLCS(870,PARMS("RETURN LINK IEN"),0)),"^")
- ..S PORT=$$PORT2^HLOTLNK(TOLINK)
- .E  I $L($G(PARMS("RETURN LINK NAME"))) D
- ..S TOLINK=PARMS("RETURN LINK NAME")
- ..S PORT=$$PORT2^HLOTLNK(TOLINK)
- .E  D
- ..S TOLINK=$$ACKLINK(.HLMSTATE,.PORT)
- .I (TOLINK="")!('PORT) S ERROR="TRANSMISSION LINK FOR APPLICATION ACK CANNOT BE DETERMINED" Q
+ .S PORT=$P(HLMSTATE("HDR","SENDING FACILITY",2),":",2)
+ .S TOLINK=$$ACKLINK(.HLMSTATE)
+ .I TOLINK="" S ERROR="TRANSMISSION LINK FOR APPLICATION ACK CANNOT BE DETERMINED" Q
+ .I 'PORT S PORT=$$PORT2^HLOTLNK(TOLINK)
  .;
  .S ACK("HDR","APP ACK TYPE")="NE"
  .S ACK("HDR","ACCEPT ACK TYPE")=$G(PARMS("ACCEPT ACK TYPE"),"AL")
@@ -100,13 +93,11 @@ SENDACK(ACK,ERROR) ;;This is used to signal that an application acknowledgment i
  I $$SEND^HLOAPI1(.ACK,.ERROR) Q 1
  Q 0
  ;
-ACKLINK(HLMSTATE,PORT) ; Finds the link & port to return the application ack to.
+ACKLINK(HLMSTATE) ; Finds the link to return the application ack to.
  N LINK
  S LINK=$$RTRNLNK^HLOAPP($G(HLMSTATE("HDR","RECEIVING APPLICATION")))
- I LINK]"" S PORT=$$PORT2^HLOTLNK(LINK) Q LINK
+ Q:LINK]"" LINK
  S LINK=$$RTRNLNK^HLOTLNK($G(HLMSTATE("HDR","SENDING FACILITY",1)),$G(HLMSTATE("HDR","SENDING FACILITY",2)),$G(HLMSTATE("HDR","SENDING FACILITY",3)))
- S:$G(HLMSTATE("HDR","SENDING FACILITY",3))="DNS" PORT=$P(HLMSTATE("HDR","SENDING FACILITY",2),":",2)
- I LINK]"",'PORT S PORT=$$PORT2^HLOTLNK(LINK)
  Q LINK
  ;
 CHKPARMS(HLMSTATE,PARMS,ERROR) ;

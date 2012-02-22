@@ -1,5 +1,5 @@
-MAGGTID ;WOIFO/SRR/RED/SAF/GEK/SG - Deletion of Images and Pointers ; 3/19/09 8:27am
- ;;3.0;IMAGING;**8,59,93**;Dec 02, 2009;Build 163
+MAGGTID ;WOIFO/SRR/RED/SAF/GEK - Deletion of Images and Pointers ; [ 06/20/2001 08:56 ]
+ ;;3.0;IMAGING;**8,59**;Nov 27, 2007;Build 20
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -24,13 +24,13 @@ IMAGEDEL(MAGGRY,MAGIEN,MAGGRPDF,REASON) ;RPC [MAGG IMAGE DELETE]
  ; MAGGRPDF   group delete flag   1 = group delete allowed
  ; SYSDEL    Flag that forces delete, even if no KEY
  ; 
- N IEN,Y,RY
+ N Y,RY
  ; 1 in 3rd piece means : DELETE the Image File Also.
- S MAGGRPDF=+$G(MAGGRPDF),REASON=$G(REASON),IEN=+MAGIEN
- L +^MAG(2005,IEN):4
- E  S MAGGRY(0)="Image ID# "_IEN_" is Locked. Delete is Canceled" Q
+ S MAGGRPDF=+$G(MAGGRPDF),REASON=$G(REASON)
+ L +^MAG(2005,MAGIEN):4
+ E  S MAGGRY(0)="Image ID# "_MAGIEN_" is Locked. Delete is Canceled" Q
  D DELETE(.MAGGRY,MAGIEN,1,MAGGRPDF,REASON)
- L -^MAG(2005,IEN)
+ L -^MAG(2005,MAGIEN)
  Q
 DELETE(RY,MAGIEN,DF,GRPDF,REASON) ;RPC [MAGQ DIK] Entry point for silent call
  ;RY=Return Array RY(0)="1^SUCCESS" 
@@ -47,9 +47,10 @@ DELETE(RY,MAGIEN,DF,GRPDF,REASON) ;RPC [MAGQ DIK] Entry point for silent call
  S RY(0)="0^Image Delete Failed, reason unknown."
  S:'$D(MAGSYS) MAGSYS=^%ZOSF("VOL")
  N MAGERR,SYSDEL,Z
- S SYSDEL=+$P(MAGIEN,U,2),MAGIEN=+MAGIEN
+ S SYSDEL=+$P(MAGIEN,U,2)
  ; Check the business rules for deleting an image
  D DELETE^MAGSIMBR(.RY,MAGIEN,SYSDEL) I +RY(0)=0 Q
+ S MAGIEN=+MAGIEN
  ;  a couple tests of privilage and valid IEN
  I '$D(^MAG(2005,MAGIEN,0)) D  Q
  . S RY(0)="0^Image entry doesn't exist in image file"
@@ -143,26 +144,14 @@ SETDEL(MAGIEN,REASON) ; set deletion fields
  Q
  ;
 ARCHIVE(MAGARCIE) ;save image data before deletion
- N DA,DIK,MAGCNT,MAGLAST,SUB,TMP,%X,%Y
+ N MAGCNT,MAGLAST,%X,%Y
  S MAGCNT=$P(^MAG(2005.1,0),U,4)+1
  S %X="^MAG(2005,"_MAGARCIE_",",%Y="^MAG(2005.1,"_MAGARCIE_","
  D %XY^%RCR
- ;--- GEK 9/29/00 Fix the 3rd piece to be last IEN in file.
+ ; GEK 9/29/00 Fix the 3rd piece to be last ien in file.
  S MAGLAST=$O(^MAG(2005.1,"A"),-1)
  S $P(^MAG(2005.1,0),U,4)=MAGCNT
  I '($P(^MAG(2005.1,0),U,3)=MAGLAST) S $P(^MAG(2005.1,0),U,3)=MAGLAST
- ;
- ;--- Fix subfile numbers in the headers of the multiples (MAG*3*93).
- ;    IF DEFINITIONS OF MULTIPLES OF THE IMAGE AUDIT FILE (#2005.1)
- ;    CHANGE OR NEW MULTIPLES ARE ADDED, THE FOLLOWING CODE MUST BE
- ;--- CHECKED AND UPDATED IF NECESSARY!
- ;
- F SUB="1^2005.14P","4^2005.1106DA","5^2005.11PA","6^2005.1111A","99^2005.199D"  D
- . S TMP=$P(SUB,U)  Q:'($D(^MAG(2005.1,MAGARCIE,TMP,0))#2)
- . S $P(^MAG(2005.1,MAGARCIE,TMP,0),U,2)=$P(SUB,U,2)
- . Q
- ;
- ;--- Create cross-reference entries for the entry
  S DA=MAGARCIE
  S DIK="^MAG(2005.1," D IX1^DIK
  Q

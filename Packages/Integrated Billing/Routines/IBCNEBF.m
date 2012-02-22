@@ -1,5 +1,5 @@
 IBCNEBF ;DAOU/ALA - Create an Entry in the Buffer File ;20-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,361,371,416,438**;21-MAR-94;Build 52
+ ;;2.0;INTEGRATED BILLING;**184,271,361,371**;21-MAR-94;Build 57
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ;**Program Description**
@@ -13,7 +13,7 @@ PT(DFN,IRIEN,SYMBOL,OVRRIDE,ADD,IBERROR) ;  Get data
  ;  Input Parameters
  ;    DFN = Patient IEN
  ;    IRIEN = Patient Insurance Record IEN
- ;    SYMBOL = eIV Symbol IEN
+ ;    SYMBOL = IIV Symbol IEN
  ;    OVRRIDE = Override flag for ins. buffer record  (0 or 1)
  ;    ADD = If defined, then it will add a new Buffer entry
  ;    IBERROR = If defined, then it will be updated with error info.
@@ -22,23 +22,25 @@ PT(DFN,IRIEN,SYMBOL,OVRRIDE,ADD,IBERROR) ;  Get data
  I DFN=""!(IRIEN="") Q   ; * do not require SYMBOL or OVRRIDE
  ;
  ;
- N VBUF,IDATA0,IDATA3,IEN,INAME,PNAME,IIEN,GNUMB,GNAME,SUBID,PPHONE,PATID
- N BPHONE,EFFDT,EXPDT,WHO,REL,IDOB,ISSN,COB,TQIEN,RDATA,ISEX,NAME
- N MSG,XMSUB,MSGP,INSDATA,PCE,BFD,BFN,INSPCE,ESGHPARR
- N SUBADDR1,SUBADDR2,SUBCITY,SUBSTATE,SUBZIP,SUBCNTRY,SUBCNDIV
+ NEW VBUF,IEN,INAME,PNAME,IIEN,GNUMB,GNAME,SUBID,PPHONE,PATID
+ NEW BPHONE,EFFDT,EXPDT,WHO,REL,IDOB,ISSN,COB,TQIEN,RDATA,ISEX,NAME
+ NEW MSG,XMSUB,MSGP,INSDATA,PCE,BFD,BFN,INSPCE,ESGHPARR
  ;
- S IDATA0=$G(^DPT(DFN,.312,IRIEN,0)),IDATA3=$G(^DPT(DFN,.312,IRIEN,3))
- S IIEN=$P(IDATA0,U,1),INAME=$$GET1^DIQ(36,IIEN,.01,"E")
- S PPHONE=$P($G(^DIC(36,IIEN,.13)),U,3),BPHONE=$P($G(^DIC(36,IIEN,.13)),U,2)
- S NAME=$P(IDATA0,U,17),SUBID=$P(IDATA0,U,2)
+ S IIEN=$P($G(^DPT(DFN,.312,IRIEN,0)),U,1)
+ S INAME=$$GET1^DIQ(36,IIEN,.01,"E")
+ S PPHONE=$P($G(^DIC(36,IIEN,.13)),U,3)
+ S BPHONE=$P($G(^DIC(36,IIEN,.13)),U,2)
+ S NAME=$P($G(^DPT(DFN,.312,IRIEN,0)),U,17)
+ S SUBID=$P($G(^DPT(DFN,.312,IRIEN,0)),U,2)
  S PATID=$P($G(^DPT(DFN,.312,IRIEN,5)),U,1)
- S WHO=$P(IDATA0,U,6),COB=$P(IDATA0,U,20)
- S IDOB=$P(IDATA3,U,1),ISSN=$P(IDATA3,U,5),ISEX=$P(IDATA3,U,12)
- S EFFDT=$P(IDATA0,U,8),EXPDT=$P(IDATA0,U,4)
- S REL=$P($G(^DPT(DFN,.312,IRIEN,4)),U,3)
- S SUBADDR1=$P(IDATA3,U,6),SUBADDR2=$P(IDATA3,U,7)
- S SUBCITY=$P(IDATA3,U,8),SUBSTATE=$P(IDATA3,U,9),SUBZIP=$P(IDATA3,U,10)
- S SUBCNTRY=$P(IDATA3,U,13),SUBCNDIV=$P(IDATA3,U,14)
+ S WHO=$P($G(^DPT(DFN,.312,IRIEN,0)),U,6)
+ S COB=$P($G(^DPT(DFN,.312,IRIEN,0)),U,20)
+ S IDOB=$P($G(^DPT(DFN,.312,IRIEN,3)),U,1)
+ S ISSN=$P($G(^DPT(DFN,.312,IRIEN,3)),U,5)
+ S ISEX=$P($G(^DPT(DFN,.312,IRIEN,3)),U,12)
+ S EFFDT=$P(^DPT(DFN,.312,IRIEN,0),U,8)
+ S EXPDT=$P(^DPT(DFN,.312,IRIEN,0),U,4)
+ S REL=$P(^DPT(DFN,.312,IRIEN,0),U,16)
  ;
  S IENS=IRIEN_","_DFN_","
  S GNUMB=$$GET1^DIQ(2.312,IENS,21,"E")
@@ -63,10 +65,7 @@ RP(IEN,ADD,BUFF) ;  Get data from a specific response record
  ;
  S BUFF=$G(BUFF) ; Initialize optional parameter
  ;
- N BPHONE,COB,DFN,EFFDT,EXPDT,GNAME,GNUMB,IDOB,IIEN,INAME,IRIEN,ISEX,ISSN,K,NAME
- N PATID,PIEN,PNAME,PPHONE,RDATA,RDATA5,REL,RSTYPE,SUBID,TQIEN,WHO
- N SUBADDR1,SUBADDR2,SUBCITY,SUBSTATE,SUBZIP,SUBCNTRY,SUBCNDIV
- ;
+ NEW PIEN,RSTYPE
  S DFN=$P(^IBCN(365,IEN,0),U,2),TQIEN=$P(^IBCN(365,IEN,0),U,5)
  S PIEN=$P(^IBCN(365,IEN,0),U,3),RSTYPE=$P(^(0),U,10)
  I PIEN'="" S PNAME=$P(^IBE(365.12,PIEN,0),U,1)
@@ -75,7 +74,7 @@ RP(IEN,ADD,BUFF) ;  Get data from a specific response record
  . S IIEN=$P($G(^DPT(DFN,.312,IRIEN,0)),U,1)
  . I IIEN="" Q
  . S INAME=$P(^DIC(36,IIEN,0),U,1)
- S RDATA=$G(^IBCN(365,IEN,1)),RDATA5=$G(^IBCN(365,IEN,5))
+ S RDATA=$G(^IBCN(365,IEN,1))
  S NAME=$P(RDATA,U,1)
  S INAME=$S($G(INAME)'=""&(RSTYPE="O"):INAME,1:$G(PNAME))
  S IDOB=$P(RDATA,U,2)
@@ -87,18 +86,15 @@ RP(IEN,ADD,BUFF) ;  Get data from a specific response record
  S GNAME=$P(RDATA,U,6)
  S GNUMB=$P(RDATA,U,7)
  S WHO=$P(RDATA,U,8)
- S REL=$P($G(^IBCN(365,IEN,8)),U)
+ S REL=$P(RDATA,U,9)
  S EFFDT=$P(RDATA,U,11)
  S EXPDT=$P(RDATA,U,12)
- S SUBADDR1=$P(RDATA5,U),SUBADDR2=$P(RDATA5,U,2),SUBCITY=$P(RDATA5,U,3)
- S SUBSTATE=$P(RDATA5,U,4),SUBZIP=$P(RDATA5,U,5),SUBCNTRY=$P(RDATA5,U,6)
- S SUBCNDIV=$P(RDATA5,U,7)
  S PPHONE="",BPHONE=""
  ;
  D FIL
- K DFN,VBUF,IEN,IRIEN,INAME,PNAME,IIEN,K,GNUMB,GNAME,SUBID,PPHONE,PATID
+ K DFN,VBUF,IEN,IRIEN,INAME,PNAME,IIEN,GNUMB,GNAME,SUBID,PPHONE,PATID
  K BPHONE,EFFDT,EXPDT,WHO,REL,IDOB,ISSN,COB,TQIEN,RDATA,ISEX,NAME
- K ADD,%DT,D0,DG,DIC,DISYS,DIW,IENS,IBEISTC
+ K ADD,%DT,D0,DG,DIC,DISYS,DIW,IENS
  Q
  ;
 FIL ;  File Buffer Data
@@ -108,7 +104,7 @@ FIL ;  File Buffer Data
  ; Variable IDUZ is optionally set by the calling routine.  If it is
  ; not defined, it will be set to the specific, non-human user.
  ;
- I $G(IDUZ)="" S IDUZ=$$FIND1^DIC(200,"","X","INTERFACE,IB EIV")
+ I $G(IDUZ)="" S IDUZ=$$FIND1^DIC(200,"","X","INTERFACE,IB IIV")
  ;
  I $G(ADD) S VBUF(.02)=IDUZ  ; Entered By
  S VBUF(.12)=$G(SYMBOL)   ; Buffer Symbol
@@ -126,29 +122,11 @@ FIL ;  File Buffer Data
  . S VBUF(60.02)=EFFDT  ; Effective Date
  . S VBUF(60.03)=EXPDT  ; Expiration Date
  . S VBUF(60.05)=WHO  ; Whose Insurance
- . S VBUF(60.14)=REL  ;  Patient Relationship
+ . S VBUF(60.06)=REL  ;  Patient Relationship
  . S VBUF(60.08)=IDOB  ;  Insured's DOB
  . S VBUF(60.09)=ISSN  ;  Insured's SSN
  . S VBUF(60.12)=COB  ;  Coordination of Benefits
  . S VBUF(60.13)=ISEX  ;  Insured's Sex
- . S VBUF(62.02)=SUBADDR1 ; Subscriber address line 1
- . S VBUF(62.03)=SUBADDR2 ; Subscriber address line 2
- . S VBUF(62.04)=SUBCITY ; Subscriber address city
- . S VBUF(62.05)=SUBSTATE ; Subscriber address state
- . S VBUF(62.06)=SUBZIP ; Subscriber address zip code
- . S VBUF(62.07)=SUBCNTRY ; Subscriber address country code
- . S VBUF(62.08)=SUBCNDIV ; Subscriber address country subdivision code
- . ;
- . ; Define Service Type Codes (STC) to be sent with Insurance Inquiry
- . ; IBEISTC contains the STC defined by User using option EI, otherwise defaults sent
- . I $G(IBEISTC)'="",$G(IBEISTC)'="*" S VBUF(80.01)=IBEISTC F K=80.02:.01:80.2 S VBUF(K)=""
- . ; IBEISTC is '*' thus user selected DEFAULT and SITE SELECTED STCs to be sent
- . I $G(IBEISTC)="*" D
- .. ; Store 11 DEFAULT STCs
- .. F K=80.01:.01:80.11 S VBUF(K)=$P($G(^IBE(350.9,1,60)),U,K-80*100)
- .. ; Store up to 9 SITE SELECTED STCs, otherwise NULLs
- .. F K=80.12:.01:80.2 S VBUF(K)=$P($G(^IBE(350.9,1,61)),U,K-80*100-11)
- . K IBEISTC
  . ;
  . ; If the employer sponsored insurance array exists, then merge it in
  . I $D(ESGHPARR) M VBUF=ESGHPARR

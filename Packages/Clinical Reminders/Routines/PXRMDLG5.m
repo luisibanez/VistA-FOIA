@@ -1,5 +1,5 @@
-PXRMDLG5 ; SLC/PJH - Reminder Dialog Edit/Inquiry ;06/08/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMDLG5 ; SLC/PJH - Reminder Dialog Edit/Inquiry ;11/08/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
 ALT(DIEN,LEV,DSEQ,NODE,VIEW,NLINE,CNT,ALTLEN) ;
  ;Display branching logic text in dialog summary view
@@ -91,8 +91,17 @@ MH(IEN) ;Allow IEN=109 (HX2) as a place holder for 601 entries that do not
  N MAXNUM
  S MAXNUM=+$P($G(^PXRM(800,1,"MH")),U)
  I MAXNUM=0 S MAXNUM=25
- ;DBIA #5056
  Q $$ONECR^YTQPXRM5(IEN,MAXNUM)
+ ;
+MHLICR(IEN) ;Called by input template PXRM EDIT ELEMENT. Preserve Y so template
+ ;branching works.
+ N Y
+ ;DBIA #5042
+ I $$RL^YTQPXRM3(IEN)="Y" D
+ .W !,"This MH test requires a license."
+ .W !,"The question text will not appear in the progress note.",!
+ .H 1
+ Q
  ;
 MSEL(NUM) ;
  I NUM=4,'$$PATCH^XPDUTL("OR*3.0*243") D EN^DDIOL("THIS SELECTION IS NOT VALID, UNTIL CPRS 27 IS INSTALLED") Q 0
@@ -160,7 +169,7 @@ RSELEDIT(DA) ;
 RGLSCR(DA,X,IEN) ;Input transform/screen for RESULT GROUP LIST
  I $G(PXRMINST)=1 Q 1
  I $G(PXRMEXCH)=1 Q 1
- N HELP,MHTEST,NMATCH,TEXT,VALID,Y
+ N HELP,MHTEST,TEXT,VALID,Y
  S NMATCH=0
  S MHTEST=$O(^PXRMD(801.41,"B",X),-1)
  F  S MHTEST=$O(^PXRMD(801.41,"B",MHTEST)) Q:(NMATCH>1)!(MHTEST'[X)  S NMATCH=NMATCH+1
@@ -184,7 +193,7 @@ RGLSCR(DA,X,IEN) ;Input transform/screen for RESULT GROUP LIST
  . I HELP S TEXT(4)="An MH Scale must be defined."
  . S VALID=0
  ;Make sure it is not disabled.
- I +$P($G(^PXRMD(801.41,IEN,0)),U,3)>0 D
+ I $P($G(^PXRMD(801.41,IEN,0)),U,3)'="" D
  . S VALID=0
  . I HELP D
  .. N EM,TYPE
@@ -193,13 +202,6 @@ RGLSCR(DA,X,IEN) ;Input transform/screen for RESULT GROUP LIST
  .. S TEXT(5)="The "_TYPE_" is disabled."
  I HELP,'VALID D EN^DDIOL(.TEXT)
  Q VALID
- ;
-SETGBL(FILE) ;
- N GBL,LEN
- S LEN=$L(FILE)
- I $E(FILE,LEN)="," S GBL=U_$E(FILE,1,(LEN-1))_")"
- I $E(FILE,LEN)="(" S GBL=U_$E(FILE,1,(LEN-1))
- Q GBL
  ;
 TERMS(DA,X) ;
  N TERM
@@ -211,7 +213,7 @@ TERMS(DA,X) ;
  Q 1
  ;
 TEXT(NLINES,CNT,ATLEN,TEMP,NODE) ;
- N CNT1,NOUT,OUTPUT,WIDTH
+ N CNT1,NOUT,OUTPUT,WIDHT
  S WIDTH=IOM-(2+(CNT+ATLEN))
  S CNT1=1 D FORMATS^PXRMTEXT(1,WIDTH,TEMP,.NOUT,.OUTPUT)
  I NOUT>0 F CNT1=1:1:NOUT D

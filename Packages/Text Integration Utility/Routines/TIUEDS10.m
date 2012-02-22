@@ -1,4 +1,4 @@
-TIUEDS10 ; ;04/21/09
+TIUEDS10 ; ;04/17/09
  D DE G BEGIN
 DE S DIE="^TIU(8925,",DIC=DIE,DP=8925,DL=1,DIEL=0,DU="" K DG,DE,DB Q:$O(^TIU(8925,DA,""))=""
  I $D(^(12)) S %Z=^(12) S %=$P(%Z,U,4) S:%]"" DE(6)=% S %=$P(%Z,U,5) S:%]"" DE(12)=% S %=$P(%Z,U,8) S:%]"" DE(7)=% S %=$P(%Z,U,9) S:%]"" DE(1)=%,DE(4)=% S %=$P(%Z,U,12) S:%]"" DE(13)=%

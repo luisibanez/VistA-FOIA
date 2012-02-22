@@ -1,6 +1,6 @@
-PRCFFU8 ;WISC/SJG-OBLIGATION PROCESSING UTILITIES, CON'T ;5/17/09  23:39
- ;;5.1;IFCAP;**130**;Oct 20, 2000;Build 25
- ;Per VHA Directive 2004-038, this routine should not be modified.
+PRCFFU8 ;WISC/SJG-OBLIGATION PROCESSING UTILITIES, CON'T ;7/24/00  23:11
+V ;;5.1;IFCAP;;Oct 20, 2000
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; No Top Level Entry
  QUIT
@@ -75,7 +75,5 @@ SEG2(TYPE,IEN,SEG) ; Create MO2 segment for cancellation document
  I $P(TYPE,"^",2)="AR" S SEG="RC2",$P(SEG,U,7)=$P(TYPE,"^",1)_"^~"
  E  S SEG="MO2",$P(SEG,U,10)=$P(TYPE,"^",1)_"^~"
  S $P(SEG,"^",2,4)=FMSPODAT
- I $P(TYPE,"^",2)="SO",PRCFA("MP")=2 S $P(SEG,U,11)="C"
- S:$P(SEG,U,$L(SEG,U))'="~" SEG=SEG_"^~"
  K PRCTMP
  QUIT SEG

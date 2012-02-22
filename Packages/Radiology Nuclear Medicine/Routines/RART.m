@@ -1,6 +1,5 @@
 RART ;HISC/CAH,FPT,GJC AISC/MJK,TMP,RMO-Reporting Menu ;11/16/98  15:02
- ;;5.0;Radiology/Nuclear Medicine;**2,5,15,18,43,82,56,97**;Mar 16, 1998;Build 6
- ;Supported IA #1571 ^LEX(757.01
+ ;;5.0;Radiology/Nuclear Medicine;**2,5,15,18,43,82,56**;Mar 16, 1998;Build 3
  ;Private IA #4793 CREATE^WVRALINK
  ;Supoprted IA #3544 ^VA(200,"ARC"
  ;;last modification by SS for P18 June 15, 2000
@@ -74,21 +73,15 @@ OERR1 ; Jump to 'OERR1^RART1' This is necessary to support the reference to
  G OERR1^RART1 Q
  ;
 PRTDX ; print dx codes on report display (called from RART1)
- N RATMP
  K RAFLG D WAIT^RART1:($Y+6)>IOSL&('$D(RARTVERF))
  Q:X="^"!(X="T")!(X="P")
  S RADXCODE=$P(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0),U,13)
  W !?3,"Primary Diagnostic Code: ",!?2,$S($D(^RA(78.3,+RADXCODE,0)):$P(^(0),U,1),1:"") K RAFLG
- S RATMP=$$GET1^DIQ(757.01,$P($G(^RA(78.3,+RADXCODE,0)),U,6),.01)
- W:RATMP]"" " (",RATMP,")"
  D WAIT^RART1:($Y+6)>IOSL&('$D(RARTVERF)) Q:X="^"!(X="T")!(X="P")
  I '$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"DX",0)) W ! Q
  W !!?3,"Secondary Diagnostic Codes: "
  S RADXCODE=0
- F  S RADXCODE=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"DX","B",RADXCODE)) Q:RADXCODE'>0!('$D(^RA(78.3,+RADXCODE,0)))!($D(RAOOUT))  K RAFLG D WAIT^RART1:($Y+6)>IOSL&('$D(RARTVERF)) Q:X="^"!(X="T")!(X="P")  D
- . W !?2,$P(^RA(78.3,RADXCODE,0),U,1)
- . S RATMP=$$GET1^DIQ(757.01,$P($G(^RA(78.3,+RADXCODE,0)),U,6),.01)
- . W:RATMP]"" " (",RATMP,")"
+ F  S RADXCODE=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"DX","B",RADXCODE)) Q:RADXCODE'>0!('$D(^RA(78.3,+RADXCODE,0)))!($D(RAOOUT))  K RAFLG D WAIT^RART1:($Y+6)>IOSL&('$D(RARTVERF)) Q:X="^"!(X="T")!(X="P")  W !?2,$P(^RA(78.3,RADXCODE,0),U,1)
  W !
  Q
 EXIT ; Kill variables created when user prints 'Abnormal Rad/Nuc Med Report

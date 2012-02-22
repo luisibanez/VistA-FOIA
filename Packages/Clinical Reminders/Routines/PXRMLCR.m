@@ -1,5 +1,5 @@
-PXRMLCR ; SLC/PJH - Create Patient List from individual finding rule; 06/08/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMLCR ; SLC/PJH - Create Patient List from individual finding rule; 10/18/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ; 
  ; Called from PXRM PATIENT LIST CREATE protocol
  ;
@@ -17,7 +17,6 @@ START N BEG,DUOUT,DTOUT,END,LIT,PXRMDPAT,PXRMLIST,PXRMNODE,PXRMRULE,PXRMTPAT
 LIST D PLIST(.PXRMLIST,TEXT,"") I $D(DUOUT)!$D(DTOUT) D  Q
  . I $G(PXRMLIST)="" Q
  . I $P($G(^PXRMXP(810.5,PXRMLIST,0)),U,4)'="" Q
- . N DIK
  . S DA=PXRMLIST,DIK="^PXRMXP(810.5," D ^DIK
  ;
 SECURE ;option to secure the list
@@ -112,7 +111,7 @@ PL1 S DIC=810.5,DLAYGO=DIC,DIC(0)="QAEMZL"
  I ($P(Y,U,3)=1) S LIST=$P(Y,U) Q
  ;Check if OK to overwrite
  N OWRITE
- S OWRITE=$$ASKYN^PXRMEUT("N","Okay to overwrite "_$P(Y,U,2),"PXRMLCR",1)
+ S OWRITE=$$ASKYN^PXRMEUT("N","Okay to overwite "_$P(Y,U,2),"PXRMLCR",1)
  Q:$D(DTOUT)  G:$D(DUOUT)!('OWRITE) PL1
  S OWRITE=$$LDELOK^PXRMEUT($P(Y,U,1))
  I 'OWRITE D  G PL1

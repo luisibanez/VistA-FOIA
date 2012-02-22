@@ -1,13 +1,6 @@
 IBNCPDP2 ;OAK/ELZ - PROCESSING FOR ECME RESP ;11/15/07  09:43
- ;;2.0;INTEGRATED BILLING;**223,276,342,347,363,383,405,384,411,435**;21-MAR-94;Build 27
+ ;;2.0;INTEGRATED BILLING;**223,276,342,347,363,383,405**;21-MAR-94;Build 4
  ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;
- ; Reference to DEC^PRCASER1 supported by IA# 593
- ; Reference to REL^PRCASVC supported by IA# 385
- ; Reference to STATUS^PRCASVC1 supported by IA# 387
- ; Reference to ^PRCASVC6 supported by IA# 384
- ; Reference to $$RXSITE^PSOBPSUT supported by IA# 4701
- ; Reference to $$GETPHARM^BPSUTIL supported by IA# 4146
  ;
 ECME(DFN,IBD) ; function called by STORESP^IBNCPDP
  ; input - DFN - patient IEN for the prescription
@@ -15,35 +8,23 @@ ECME(DFN,IBD) ; function called by STORESP^IBNCPDP
  ;      The IBD array is passed to various subroutines depending
  ;      on the ePharmacy event as evaluated by IBD("STATUS")
  I $G(IBD("EPHARM"))="" S IBD("EPHARM")=$$EPHARM(+$G(IBD("PRESCRIPTION")),+$G(IBD("FILL NUMBER")))
- I IBD("STATUS")="PAID",$G(IBD("RXCOB"))=2 Q $$BILLSEC^IBNCPDP5(DFN,.IBD)
  I IBD("STATUS")="PAID" Q $$BILL(DFN,.IBD)
  I IBD("STATUS")="REVERSED" Q $$REVERSE^IBNCPDP3(DFN,.IBD)
  I IBD("STATUS")="CLOSED" Q $$CLOSE^IBNCPDP4(DFN,.IBD)
  I IBD("STATUS")="RELEASED" Q $$RELEASE^IBNCPDP4(DFN,.IBD)
  I IBD("STATUS")="SUBMITTED" Q $$SUBMIT^IBNCPDP4(DFN,.IBD)
  I IBD("STATUS")="REOPEN" Q $$REOPEN^IBNCPDP4(DFN,.IBD)
- I IBD("STATUS")="ELIG" Q $$ELIG^IBNCPDP3(DFN,.IBD)
  D LOG("UNKNOWN")
  Q "0^Cannot determine ECME event status"
  ;
-MATCH(BCID,IBS) ;  right bill, right COB payer
- N IBX,IBPS,IBFOUND,ECMELEN,BCID1
- S IBPS=$S(IBS=1:"P",IBS=2:"S",IBS=3:"T",1:"P")
- S IBFOUND=0
- ;
- ; need to check for ECME# lengths of both 7 digits and 12 digits to be sure
- F ECMELEN=12,7 D  Q:IBFOUND
- . I $L(+BCID)>ECMELEN Q     ; quit if too large
- . S BCID1=BCID
- . S $P(BCID1,";",1)=$$RJ^XLFSTR(+BCID,ECMELEN,0)
- . S IBX=0     ; quit when we have found a non-cancelled claim with a payer sequence match
- . F  S IBX=$O(^DGCR(399,"AG",BCID1,IBX)) Q:'IBX!IBFOUND  I '$P($G(^DGCR(399,IBX,"S")),U,16),(IBPS=$P($G(^DGCR(399,IBX,0)),U,21)) S IBFOUND=IBX Q
- . Q
- ;
- Q IBFOUND
+MATCH(BCID) ;
+ N IBX,IBHAVE
+ S IBX=0,IBHAVE=0 F  S IBX=$O(^DGCR(399,"AG",BCID,IBX)) Q:'IBX  S IBHAVE=1 I '$P($G(^DGCR(399,IBX,"S")),U,16) Q
+ I 'IBX,IBHAVE Q ""
+ Q +IBX
  ;
 BILL(DFN,IBD) ; create bills
- N IBDIV,IBAMT,IBY,IBSERV,IBFAC,IBSITE,IBDRX,IB,IBCDFN,IBINS,IBIDS,IBIFN,IBDFN,PRCASV,IBTRIC,IBLGL,IBLDT2
+ N IBDIV,IBAMT,IBY,IBSERV,IBFAC,IBSITE,IBDRX,IB,IBCDFN,IBINS,IBIDS,IBIFN,IBDFN,PRCASV,IBTRIC
  N PRCAERR,IBADT,IBRXN,IBFIL,IBTRKRN,DIE,DA,DR,IBRES,IBLOCK,IBLDT,IBNOW,IBDUZ,RCDUZ,IBPREV,IBQUERY,IBPAID,IBACT,%,DGRVRCAL
  ;
  S IBDUZ=.5 ;POSTMASTER
@@ -59,22 +40,22 @@ BILL(DFN,IBD) ; create bills
  S IBFIL=+$G(IBD("FILL NUMBER"),-1) I IBFIL<0 S IBY="0^No fill number" G BILLQ
  S IBDIV=+$G(IBD("DIVISION"))
  I '$L($G(IBD("CLAIMID"))) S IBY="-1^Missing ECME Number" G BILLQ
- S IBD("BCID")=$$BCID^IBNCPDP4(IBD("CLAIMID"),IBADT)
+ S IBD("BCID")=(+IBD("CLAIMID"))_";"_IBADT ; The BCID#
  L +^DGCR(399,"AG",IBD("BCID")):15 E  S IBY="0^Cannot lock ECME number." G BILLQ
  ;
  S IBTRIC=$$TRICARE^IBNCPDP6(IBRXN_";"_IBFIL)
  ; do patient copay first (only applicable if Tricare)
- I $G(IBD("COPAY")),IBTRIC D BILL^IBNCPDP6(IBRXN_";"_IBFIL,IBD("COPAY"),$G(IBD("RTYPE")))
+ I $G(IBD("COPAY")),IBTRIC D BILL^IBNCPDP6(IBRXN_";"_IBFIL,IBD("COPAY"))
  I IBTRIC,'$G(IBD("PAID")) S IBY="1^Nothing paid in Tricare claim." G BILLQ
  ;
- S IBLOCK=1,IBLDT2=""
- S IBLDT=$$FMADD^XLFDT(DT,1) F  S IBLGL=$O(^XTMP("IBNCPLDT"_IBLDT),-1),IBLDT=$E(IBLGL,9,15) Q:IBLDT<$$FMADD^XLFDT(DT,-3)!(IBLGL'["IBNCPLDT")  I $D(^XTMP(IBLGL,IBD("BCID"))) S IBLDT2=^(IBD("BCID")) Q  ;Last time called
+ S IBLOCK=1
+ S IBLDT=$G(^DGCR(399,"AG",IBD("BCID"))) ;Last time called
  D NOW^%DTC S IBNOW=%
  ; 2 calls in 45 sec
- I IBLDT2,$$FMDIFF^XLFDT(IBNOW,IBLDT2,2)<45 S IBY="0^Duplicate billing call" G BILLQ
+ I $P(IBLDT,"^",2)="B" I $$FMDIFF^XLFDT(IBNOW,+IBLDT,2)<45 S IBY="0^Duplicate billing call" G BILLQ
  ;
- I $$MATCH(IBD("BCID"),IBD("RXCOB")) D   ;cancel the previous bill
- . N IBARR M IBARR=IBD I $$REVERSE^IBNCPDP3(DFN,.IBARR)
+ I $$MATCH(IBD("BCID")) D   ;cancel the previous bill
+ . N IBARR M IBARR=IBD I $$REVERSE^IBNCPDP3(DFN,.IBARR,2)
  ;
  ; derive minimal variables
  I '$$CHECK^IBECEAU(0) S IBY="-1^IB SITE" G BILLQ
@@ -101,8 +82,6 @@ BILL(DFN,IBD) ; create bills
  ; .03 EVT DATE (FILL DATE)
  ; 151 BILL FROM
  ; 152 BILL TO
- ; 155 SENSITIVE DX
- ; 157 ROI OBTAINED
  ; 101 PRIMARY INS CARRIER
  K IB
  S (IB(.02),IBDFN)=DFN
@@ -125,18 +104,12 @@ BILL(DFN,IBD) ; create bills
  ; set 362.4 node to rx#^p50^days sup^fill date^qty^ndc
  S IB(362.4,IBRXN,IBFIL)=IBD("RX NO")_"^"_IBD("DRUG")_"^"_IBD("DAYS SUPPLY")_"^"_IBD("FILL DATE")_"^"_IBD("QTY")_"^"_IBD("NDC")
  ;
- ; drug DEA ROI check.
- N IBDEA
- D ZERO^IBRXUTL(IBD("DRUG")) S IBDEA=^TMP($J,"IBDRUG",IBD("DRUG"),3)
- I IBDEA["U" S IB(155)=1,IB(157)=1 ; set sensitive dx and ROI obtained
- K ^TMP($J,"IBDRUG")
- ;
  ; call the autobiller module to create the claim with a default
  ; diagnosis and procedure for prescriptions
  D EN^IBCD3(.IBQUERY)
  D CLOSE^IBSDU(.IBQUERY)
  ;
- S:'$D(^XTMP("IBNCPLDT"_DT)) ^XTMP("IBNCPLDT"_DT,0)=$$FMADD^XLFDT(DT,2)_U_DT S ^XTMP("IBNCPLDT"_DT,IBD("BCID"))=IBNOW
+ S ^DGCR(399,"AG",IBD("BCID"))=IBNOW_"^B"
  S DIE="^DGCR(399,",DA=IBIFN
  ; update the ECME fields
  S DR="460////^S X=IBD(""BCID"")" S:$L($G(IBD("AUTH #"))) DR=DR_";461////^S X=IBD(""AUTH #"")"
@@ -158,6 +131,7 @@ BILL(DFN,IBD) ; create bills
  ; update the authorize/print fields
  S DIE="^DGCR(399,",DA=IBIFN
  S DR="9////1;12////"_DT D ^DIE
+ K DA,DR,DIE
  ;
  ; pass the claim to AR
  D GVAR^IBCBB,ARRAY^IBCBB1 S PRCASV("APR")=IBDUZ D ^PRCASVC6
@@ -189,7 +163,6 @@ BILLQ S IBRES=$S(IBY<0:"0^"_$S($L($P(IBY,"^",2)):$P(IBY,"^",2),1:$P(IBY,"^",3)),
  Q IBRES
  ;
 SETCT ; update claims tracking saying bill has been billed
- N X,Y,D0,DA,DI,DICR,DIE,DIG,DIH,DIU,DIV,DIW,DQ,DR
  S IBTRKRN=+$O(^IBT(356,"ARXFL",IBRXN,IBFIL,0))
  I IBTRKRN S DIE="^IBT(356,",DA=IBTRKRN,DR=".11////^S X=IBIFN;.17///@" D ^DIE
  I IBTRKRN,(+$G(IBD("FILL DATE"))'=$P(^IBT(356,IBTRKRN,0),U,6)) S DIE="^IBT(356,",DA=IBTRKRN,DR=".06////"_IBD("FILL DATE") D ^DIE ; Check Fill Date

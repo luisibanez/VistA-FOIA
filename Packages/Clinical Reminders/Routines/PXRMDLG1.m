@@ -1,5 +1,5 @@
-PXRMDLG1 ; SLC/PJH - Reminder Dialog Edit/Inquiry (overflow) ;03/17/2009
- ;;2.0;CLINICAL REMINDERS;**12**;Feb 04, 2005;Build 73
+PXRMDLG1 ; SLC/PJH - Reminder Dialog Edit/Inquiry (overflow) ;07/29/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ;Get selectable codes for a taxonomy
  ;-----------------------------------
@@ -60,8 +60,7 @@ PROMPT(IEN,TAB,TEXT,DGRP) ;
  ..S DNAME=$J("",3)_DTITLE
  .I TAB=0,DTYP="F" S DNAME=$J("",3)_DNAME
  .S DNAME=$J("",15)_$G(TEXT)_DNAME
- .;S:DDIS]"" DNAME=DNAME_$J("",72-$L(DNAME))_DDIS
- .S:+DDIS>0 DNAME=DNAME_$J("",72-$L(DNAME))_" (Disabled)"
+ .S:DDIS]"" DNAME=DNAME_$J("",72-$L(DNAME))_DDIS
  .S VALMCNT=VALMCNT+1
  .S ^TMP("PXRMDLG",$J,VALMCNT,0)=DNAME
  .S TEXT=$J("",TAB)

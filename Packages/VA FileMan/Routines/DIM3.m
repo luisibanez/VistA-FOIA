@@ -13,7 +13,10 @@ DG ; DO and GET (D^DIM and G^DIM)
  . I %'?.E1"(".E1")" S %ERR=1 Q
  . S %C=$P(%,"("),%C1=$P(%C,"^",2,999),%I=$F(%,"(")-1
  . I %C=""!(%C?.E1"^") S %ERR=1 Q
- . I %C1]"",%C1'?1U.7AN,%C1'?1"%".7AN S %ERR=1 Q
+ . ; DSS/LM Begin mods - Allow routine length up to 16
+ . ;I %C1]"",%C1'?1U.7AN,%C1'?1"%".7AN S %ERR=1 Q
+ . I %C1]"",%C1'?1U.15AN,%C1'?1"%".15AN S %ERR=1 Q
+ . ; End mods
  . S %C=$P(%C,"^") I %C]"",%C'?1U.7AN,%C'?1"%".7AN,%C'?1.8N S %ERR=1 Q
  . Q:$E(%,%I,%I+1)="()"
  . S (%(-1,2),%(-1,3))=0,%N=1,%(0,0)="P^",(%(0,1),%(0,2),%(0,3))=0

@@ -1,5 +1,5 @@
-PXRMLLED ; SLC/PJH - Edit a location list. ;06/09/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,11,12**;Feb 04, 2005;Build 73
+PXRMLLED ; SLC/PJH - Edit a location list. ;08/27/2008
+ ;;2.0;CLINICAL REMINDERS;**4,6,11**;Feb 04, 2005;Build 39
  ;
  ;================================================================
  N CS1,CS2,DA,DIC,DLAYGO,DTOUT,DUOUT,FILEA,IENA,NUM,Y
@@ -28,7 +28,7 @@ END ;
  ;
  ;================================================================
 EDIT(ROOT,DA) ;
- N DIE,DR,DIDEL,RESULT,X,Y
+ N DIE,DR,DIDEL,X,Y
  S DIE=ROOT,DIDEL=810.9
 NAME S DR=".01"
  D ^DIE
@@ -73,17 +73,17 @@ HL S DR="44"
  Q
  ;
  ;================================================================
-KAMIS(X,DA,WHICH) ;Kill the AMIS Reporting Stop Code.
+KAMIS(X,DA) ;Kill the AMIS Reporting Stop Code.
  ;Do not execute as part of a verify fields.
  I $G(DIUTIL)="VERIFY FIELDS" Q
  ;Do not execute as part of exchange.
  I $G(PXRMEXCH) Q
- I WHICH="CREDIT STOP TO EXCLUDE" S $P(^PXRMD(810.9,DA(2),40.7,DA(1),1,DA,0),U,2)=""
+ I $D(DA(2)) S $P(^PXRMD(810.9,DA(2),40.7,DA(1),1,DA,0),U,2)=""
  E  S $P(^PXRMD(810.9,DA(1),40.7,DA,0),U,2)=""
  Q
  ;
  ;================================================================
-SAMIS(X,DA,WHICH) ;Set the AMIS Reporting Stop Code.
+SAMIS(X,DA) ;Set the AMIS Reporting Stop Code.
  ;Do not execute as part of a verify fields.
  I $G(DIUTIL)="VERIFY FIELDS" Q
  ;Do not execute as part of exchange.
@@ -91,7 +91,7 @@ SAMIS(X,DA,WHICH) ;Set the AMIS Reporting Stop Code.
  N AMIS
  ;DBIA #557
  S AMIS=$P(^DIC(40.7,X,0),U,2)
- I WHICH="CREDIT STOP TO EXCLUDE" S $P(^PXRMD(810.9,DA(2),40.7,DA(1),1,DA,0),U,2)=AMIS
+ I $D(DA(2)) S $P(^PXRMD(810.9,DA(2),40.7,DA(1),1,DA,0),U,2)=AMIS
  E  S $P(^PXRMD(810.9,DA(1),40.7,DA,0),U,2)=AMIS
  Q
  ;

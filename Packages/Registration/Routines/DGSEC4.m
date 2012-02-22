@@ -1,5 +1,5 @@
 DGSEC4 ;ALB/MM,JAP - Utilities for record access & sensitive record processing;10/6/99 ; 10/26/05 12:46pm
- ;;5.3;Registration;**249,281,391,471,684,699**;Aug 13, 1993
+ ;;5.3;Registration;**249,281,391,471,684,699**;Aug 13, 1993;Build 7
  ;
  ;Line tags OWNREC & SENS moved from DGSEC in DG*5.3*249 when DGSEC 
  ;reached the maximum routine size.
@@ -42,6 +42,9 @@ PTSEC(RESULT,DFN,DGMSG,DGOPT) ;RPC/API entry point for patient sensitive & recor
  ..S RESULT(1)=-1
  ..S RESULT(2)="Your user code is undefined.  This must be defined to access a restricted patient record."
  .D SETLOG1^DGSEC(DFN,DUZ,,$G(DGOPT))
+ ;DSS/LM - Begin modification
+ I $G(VFDAUDIT),RESULT(1)<3 S VFDDFN=DFN
+ ;DSS/LM - End modification
  Q
 NOTICE(RESULT,DFN,DGOPT,ACTION) ;RPC/API entry point for log entry and message generation
  ;Input parameters:  
@@ -154,6 +157,9 @@ SENS(DGSENS,DFN,DGDUZ,DDS,DGSENFLG) ;Determine if sensitive record
  .S DGSENS(1)=-1
  .S DGSENS(2)="DFN not defined."
  S DGSENS(1)=0
+ ;DSS - Begin modification
+AUDIT I DFN>0,$$GET^XPAR("ALL","VFD AUDIT PATIENT LOOKUPS")'=0 D ACCESSED^DIET(2,DFN) ;GFT
+ ;DSS - End modification
  I $D(DGSENFLG) Q
  ;Determine if patient is employee
  S DGEMPLEE=$$EMPL(DFN)

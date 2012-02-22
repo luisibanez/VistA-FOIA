@@ -65,7 +65,7 @@ QERR ;
  S ^TMP($J,"MAGQ",2)=EMSG
  S ^TMP($J,"MAGQ",3)=" for Image IEN: "_MAGIENJB
  S ^TMP($J,"MAGQ",4)="You need to run the Verifier for this Image IEN"
- S XMY("G.IMAGING DEVELOPMENT@FORUM.DOMAIN.EXT")=""
+ S XMY("G.IMAGING DEVELOPMENT@FORUM.VA.GOV")=""
  D ^XMD
  S XMDUZ=DUZ D KLQ^XMA1B
  K ^TMP($J,"MAGQ")

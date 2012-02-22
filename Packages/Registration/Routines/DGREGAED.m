@@ -1,5 +1,5 @@
-DGREGAED ;ALB/DW/PHH,BAJ,TDM - Address Edit API; 01/03/2006 ; 4/2/09 2:29pm
- ;;5.3;Registration;**522,560,658,730,688,808**;Aug 13, 1993;Build 4
+DGREGAED ;ALB/DW/PHH,BAJ - Address Edit API; 01/03/2006 ; 8/15/08 11:29am
+ ;;5.3;Registration;**522,560,658,730,688**;Aug 13, 1993;Build 29
  ;;
  ;; **688** Modifications for Country and Foreign address
  ;
@@ -17,7 +17,7 @@ EN(DFN,FLG,SRC) ;Entry point
  S FLG(1)=$G(FLG(1)),FLG(2)=$G(FLG(2))
  D GETOLD(.DGCMP,DFN)
  S CNTRY="",ICNTRY=$P($G(^DPT(DFN,.11)),"^",10) I ICNTRY="" S ICNTRY=1  ;default country is USA if NULL
- S OLDC=DGCMP("OLD",.1173),FORGN=$$FOREIGN^DGADDUTL(DFN,ICNTRY,2,.1173,.CNTRY) I FORGN=-1 Q
+ S OLDC=DGCMP("OLD",.1173),FORGN=$$FOREIGN^DGADDUTL(DFN,ICNTRY,2,.1173,.CNTRY)
  S FSTR=$$INPT1(DFN,FORGN,.PSTR)       ;set up field string of address prompts
  S DGINPUT=1 D INPUT(.DGINPUT,DFN,FSTR,CNTRY) I $G(DGINPUT)=-1 Q
  I $G(FLG(2))=1 D COMPARE(.DGINPUT,.DGCMP,.FLG)

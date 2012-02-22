@@ -1,4 +1,4 @@
-SDM1T ; GENERATED FROM 'SDM1' INPUT TEMPLATE(#486), FILE 2;07/14/09
+SDM1T ; GENERATED FROM 'SDM1' INPUT TEMPLATE(#486), FILE 2;06/28/03
  D DE G BEGIN
 DE S DIE="^DPT(",DIC=DIE,DP=2,DL=1,DIEL=0,DU="" K DG,DE,DB Q:$O(^DPT(DA,""))=""
  I $D(^(.11)) S %Z=^(.11) S %=$P(%Z,U,1) S:%]"" DE(1)=% S %=$P(%Z,U,2) S:%]"" DE(3)=% S %=$P(%Z,U,3) S:%]"" DE(5)=% S %=$P(%Z,U,4) S:%]"" DE(6)=%

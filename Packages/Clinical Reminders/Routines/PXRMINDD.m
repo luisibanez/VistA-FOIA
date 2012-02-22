@@ -1,5 +1,5 @@
-PXRMINDD ; SLC/PKR - Index string date checking routines. ;11/02/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,17**;Feb 04, 2005;Build 102
+PXRMINDD ; SLC/PKR - Index string date checking routines. ;03/06/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
  ;========================================================
 CNT5(FILENUM,NSD) ;Check for string dates for indexes where the date
@@ -140,7 +140,7 @@ CHECK ;Driver for making index date checks.
  ;========================================================
 MESSAGE(FILENUM,NSD,START,END) ;Build the MailMan message giving the
  ;list of entries with string dates.
- N FROM,IND,NAME,NL,TEXT,TO,XMSUB
+ N IND,NAME,NL,TEXT,XMSUB
  K ^TMP("PXRMXMZ",$J)
  S XMSUB="CR Index string date check for file #"_FILENUM
  S NAME=$$GET1^DID(FILENUM,"","","NAME")_", file #"_FILENUM
@@ -160,9 +160,7 @@ MESSAGE(FILENUM,NSD,START,END) ;Build the MailMan message giving the
  .. S NL=NL+1
  .. S ^TMP("PXRMXMZ",$J,NL,0)=" "_^TMP($J,"SDATE",IND)
  . S NL=NL+1,^TMP("PXRMXMZ",$J,NL,0)=" "
- S FROM=$$GET1^DIQ(200,DUZ,.01)
- S TO(DUZ)=""
- D SEND^PXRMMSG("PXRMXMZ",XMSUB,.TO,FROM)
+ D SEND^PXRMMSG(XMSUB)
  K ^TMP($J,"SDATE"),^TMP("PXRMXMZ",$J)
  Q
  ;

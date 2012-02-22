@@ -1,5 +1,5 @@
-ECXUTL6 ;ALB/JRC - Utilities for DSS Extracts ; 7/24/09 2:06pm
- ;;3.0;DSS EXTRACTS;**92,105,112,119,132**;Dec 22, 1997;Build 18
+ECXUTL6 ;ALB/JRC - Utilities for DSS Extracts ; 9/17/08 3:08pm
+ ;;3.0;DSS EXTRACTS;**92,105,112**;Dec 22, 1997;Build 26
  ;
 NUTKEY(P,D) ;Generate n&fs feeder key
  ;Required variables
@@ -37,14 +37,7 @@ NUTLOC(P,D,FPD,FDD,FPF,DLT,DFL) ;Define nutrition fields
  ;service point) or field 4 (cafeteria service point), which points to
  ;119.72 (production facility) field 2.
  I P="INP" D
- .N VAHOW
- .K ^UTILITY("VAIP",$J)
- .S DFN=$P($G(^FHPT(FHDFN,0)),U,3)
- .S VAIP("D")=$G(SDATE),VAHOW=2
- .D IN5^VADPT
- .S MASWARD=+^UTILITY("VAIP",$J,5)
- .S WARD=$O(^FH(119.6,"AW",+MASWARD,0))
- .S:+WARD'>0 WARD=""
+ .S WARD=$P($G(^FHPT(FHDFN,"A",+ECXADM,0)),U,8)
  .S TRSVP=$$GET1^DIQ(119.6,WARD,3,"I")
  .S CRSVP=$$GET1^DIQ(119.6,WARD,4,"I")
  .;Get divisions
@@ -139,22 +132,22 @@ NUTLOC(P,D,FPD,FDD,FPF,DLT,DFL) ;Define nutrition fields
  .S FPF=$E($$GET1^DIQ(728.46,FPF,.01,"E"),1,10)
  I (DLT["T")!(DLT["D") D
  .I P="INP" D
+ ..S MASWARD=$O(^FH(119.6,+WARD,"W","B",0))
  ..S DFL=$$GET1^DIQ(42,+MASWARD,44,"I")
  .I P="OP" D
  ..S DFL=$O(^FH(119.6,+OPLOC,"L","B",0))
  I (DLT=""),"SFTFSO"[D D
- .S DFL=$S(TRSVP:$$GET1^DIQ(119.6,+WARD,3,"E"),1:$$GET1^DIQ(119.6,+WARD,4,"E"))
+ .S DFL=$S(TRSVP:$$GET1^DIQ(119.6,WARD,3,"E"),1:$$GET1^DIQ(119.6,WARD,4,"E"))
  Q 1
  ;
 GETDIV ;Get divisions and food production facility
  ;Init variables
- N IEN,SIEN,SVP
+ N IEN,SIEN
  S (FDD,FPF,FPD)=""
- S SVP=$S(TRSVP:TRSVP,CRSVP:CRSVP,1:"")
- S IEN=$$GET1^DIQ(119.72,+SVP,2,"I")
+ S IEN=$$GET1^DIQ(119.72,+TRSVP,2,"I")
  Q:'IEN
  ;Get delivery division
- S SIEN=""_+SVP_";FH(119.72,"
+ S SIEN=""_+TRSVP_";FH(119.72,"
  S FDD=$O(^ECX(728.46,"B",SIEN,FDD))
  S FDD=""_$$GET1^DIQ(728.46,FDD,1,"I")_","_""
  S FDD=$$GET1^DIQ(4,FDD,99,"E")
@@ -232,7 +225,7 @@ LOINC(ARRAY) ;Get DSS lab test information out of DSS LOINC CODE (#727.29) file
  ;
  I '$D(ARRAY) Q
  K ^TMP($J,"ECXUTL6")
- N LOINCCK,LIEN,SPEC,EC0,WKLD,WKLD0,TA,LRASSV,LOINCPTR,LTEST,LLNC,LLNCP,SPECD
+ N LOINCCK,LIEN,SPEC,EC0,WKLD,WKLD0,TA,LRASSV
  S LOINCCK=""
  I $D(ARRAY("ALL")) D
  . F  S LOINCCK=$O(^ECX(727.29,"B",LOINCCK)) Q:'LOINCCK  D EXT
@@ -246,24 +239,29 @@ EXT I '$D(^ECX(727.29,"B",LOINCCK)) S ^TMP($J,"ECXUTL6",LOINCCK)=-1_"^no entry i
  S EC0=^ECX(727.29,LIEN,0)
  S ^TMP($J,"ECXUTL6",LOINCCK)=EC0_"^"
  S LOINCPTR=""
- ;**Lexicon LOINC Code - test whether LEX*2*75 installed.
- ;  Else, get directly from file #95.3
- S X="LEXLR" X ^%ZOSF("TEST") I '$T D
- . I LOINCCK=$$GET1^DIQ(95.3,$P(LOINCCK,"-"),.01) D
- . . S LOINCPTR=$$GET1^DIQ(95.3,$P(LOINCCK,"-"),.01,"I")
- S X="LEXLR" X ^%ZOSF("TEST") I $T D
- . S LOINCPTR=$$CHKCODE^LEXLR(LOINCCK) ;DBIA5547
- ;**
- I LOINCPTR D
+ I LOINCCK=$$GET1^DIQ(95.3,$P(LOINCCK,"-"),.01) D
+ . S LOINCPTR=$$GET1^DIQ(95.3,$P(LOINCCK,"-"),.01,"I")
  . S ^TMP($J,"ECXUTL6",LOINCCK)=^TMP($J,"ECXUTL6",LOINCCK)_LOINCPTR
+ I LOINCPTR D
+ . S WKLD=0 F  S WKLD=$O(^LAM("AH",LOINCPTR,WKLD)) Q:'WKLD  D
+ . . S LRASSV=""
+ . . F  S LRASSV=$O(^LAM(WKLD,7,"B",LRASSV)) Q:LRASSV=""  D
+ . . . I $E($P(LRASSV,";",2),1,7)'="LAB(60," Q
+ . . . S LTEST=$P(LRASSV,";")
+ . . . I LTEST,($P($G(^LAB(60,LTEST,64)),"^",2)=WKLD),($$GET1^DIQ(60,LTEST,3,"I")'="N") D
+ . . . . I $D(^LAM(WKLD,9)) D
+ . . . . . S LLNCP=$P(^LAM(WKLD,9),"^") S:LLNCP>0 LLNC=$$GET1^DIQ(95.3,$P(LLNCP,"-"),.01)
+ . . . . S ^TMP($J,"ECXUTL6",LOINCCK,WKLD,"ZZDEFAULT",LTEST)=$$GET1^DIQ(64,WKLD,.01)_"^"_"DEFAULT LOINC"_"^"_$$GET1^DIQ(60,LTEST,.01)_"^"_LLNC
  . S WKLD=0 F  S WKLD=$O(^LAM("AI",LOINCPTR,WKLD)) Q:'WKLD  D
  . . S SPEC=0 F  S SPEC=$O(^LAM("AI",LOINCPTR,WKLD,SPEC)) Q:'SPEC  D
  . . . S TA=0
  . . . F  S TA=$O(^LAM(WKLD,5,SPEC,1,TA)) Q:'TA  D
  . . . . S SPECD=^LAM(WKLD,5,SPEC,1,TA,0)
  . . . . S LTEST=$P(SPECD,"^",4)
+ . . . . N LLNCP
+ . . . . S LLNC="" S:$D(^LAM(WKLD,5,SPEC,1,TA,1)) LLNCP=$P(^LAM(WKLD,5,SPEC,1,TA,1),"^"),LLNC=$$GET1^DIQ(95.3,$P(LLNCP,"-"),.01)
  . . . . I LTEST,($P($G(^LAB(60,LTEST,64)),"^",2)=WKLD),($$GET1^DIQ(60,LTEST,3,"I")'="N") D
- . . . . . S ^TMP($J,"ECXUTL6",LOINCCK,WKLD,SPEC,LTEST)=$$GET1^DIQ(64,WKLD,.01)_"^"_$$GET1^DIQ(61,SPEC,.01)_"^"_$$GET1^DIQ(60,LTEST,.01)_"^"_LOINCCK
+ . . . . . S ^TMP($J,"ECXUTL6",LOINCCK,WKLD,SPEC,LTEST)=$$GET1^DIQ(64,WKLD,.01)_"^"_$$GET1^DIQ(61,SPEC,.01)_"^"_$$GET1^DIQ(60,LTEST,.01)_"^"_LLNC
  Q
  ;
 INPUTT ;

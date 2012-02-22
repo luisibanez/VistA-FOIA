@@ -1,5 +1,5 @@
-PXRMREDF ; SLC/PJH - Edit PXRM reminder findings. ;06/05/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMREDF ; SLC/PJH - Edit PXRM reminder findings. ;01/09/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
  ; Called by PXRMREDT which newes and initialized DEF, DEF1, DEF2.
  ;
@@ -8,23 +8,19 @@ SET S:'$D(^PXD(811.9,DA,20,0)) ^PXD(811.9,DA,20,0)="^811.902V" Q
  ;
  ;--------------------
 DSPALL(TYPE,NODE,DA,LIST) ;
- I '$D(LIST) D  Q
- . I TYPE="D" W !!,"Reminder has no findings!",!
- . I TYPE="T" W !!,"Reminder Term has no findings!",!
- N FINUM,FMTSTR,FNAME,FTYPE,IND,NL,OUTPUT,TEXTSTR
- W !!,"Choose from:",!
- S FMTSTR="2L1^60L1^9L1^3R"
- S FTYPE=""
- F  S FTYPE=$O(LIST(FTYPE)) Q:FTYPE=""  D
- . S FNAME=0
- . F  S FNAME=$O(LIST(FTYPE,FNAME)) Q:FNAME=""  D
- .. S FINUM=0
- .. F  S FINUM=$O(LIST(FTYPE,FNAME,FINUM)) Q:FINUM=""  D
- ... S TEXTSTR=FTYPE_U_FNAME_U_"Finding #"_U_FINUM
- ... D COLFMT^PXRMTEXT(FMTSTR,TEXTSTR," ",.NL,.OUTPUT)
- ... F IND=1:1:NL W !,OUTPUT(IND)
+ N FIRST,SUB,SUB1,SUB2
+ S FIRST=1,SUB="",SUB1="",SUB2=""
+ F  S SUB=$O(LIST(SUB)) Q:SUB=""  D
+ .S SUB1=0
+ .F  S SUB1=$O(LIST(SUB,SUB1)) Q:SUB1=""  D
+ ..S SUB2=0 F  S SUB2=$O(LIST(SUB,SUB1,SUB2)) Q:SUB2=""  D
+ ...I FIRST S FIRST=0 W !!,"Choose from:",!
+ ...W SUB
+ ...W ?5,SUB1,?65,"Finding #: "_SUB2,!
+ I FIRST,TYPE="D" W !!,"Reminder has no findings",!
+ I FIRST,TYPE="T" W !!,"Reminder Term has no findings",!
  ;Update
- D LIST^PXRMREDT(NODE,DA,.DEF1,.LIST)
+ D LIST^PXRMREDT(NODE,DA,.LIST)
  Q
  ;
  ;Edit individual FINDING entry
@@ -38,8 +34,7 @@ FEDIT(IEN) ;
  E  S DIC(0)="QEAL"
  S DIC("A")="Select FINDING: "
  S DIC("P")="811.902V"
- D ^DIC
- I Y=-1 S DTOUT=1 Q
+ D ^DIC I Y=-1 S DTOUT=1 Q
  S DIE=DIC K DIC
  S DIE("NO^")="OUTOK"
  S DA=+Y,GLOB=$P($P(Y,U,2),";",2) Q:GLOB=""
@@ -159,9 +154,9 @@ FIND(LIST) ;
  .W !!,"Reminder Definition Findings"
  .D DSPALL("D",NODE,DA,.LIST)
  .;Edit findings
- .D FEDIT(DA) I $D(DUOUT)!$D(DTOUT) D LIST^PXRMREDT(NODE,DA,.DEF1,.LIST) Q
+ .D FEDIT(DA) I $D(DUOUT)!$D(DTOUT) D LIST^PXRMREDT(NODE,DA,.LIST) Q
  .;Update list with finding changes
- .D LIST^PXRMREDT(NODE,DA,.DEF1,.LIST)
+ .D LIST^PXRMREDT(NODE,DA,.LIST)
  Q
  ;
  ;General help text routine
@@ -197,8 +192,7 @@ HELP(CALL) ;
  ;Display TERM findings
  ;--------------------
 TDSP(DA) ;
- N FIRST,SUB,SUB1,TLST
- S FIRST=1,SUB="",SUB1=""
+ N FIRST,SUB,TLST S FIRST=1,SUB="",SUB1=""
  ;Build list of term findings
  D TLST(.TLST,DA)
  ;Display list

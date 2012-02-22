@@ -1,5 +1,5 @@
-PXRMPTL ; SLC/DLT,PKR,PJH - Print Clinical Reminders logic; 01/07/2008
- ;;2.0;CLINICAL REMINDERS;**4,12**;Feb 04, 2005;Build 73
+PXRMPTL ; SLC/DLT,PKR,PJH - Print Clinical Reminders logic; 06/23/2006
+ ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
  ;
  ;====================================================
 BLDFLST(RITEM,FL) ;Build the list of findings defined for this reminder.
@@ -139,7 +139,7 @@ DISLOGF(RITEM,FINDING,FL,PARRAY) ;Expand FUNCTION FINDING logic and
  ;
  ;Establish the list of separators that can be used in the logic
  ;string and take it apart.
- S SEP="'!&=><,()+-"
+ S SEP="'!&=><,()"
  S NLOGLIN=$$STRARR(FUNSTR,SEP,.LARRAY)
  ;Replace argument numbers with the finding.
  S FARG=0

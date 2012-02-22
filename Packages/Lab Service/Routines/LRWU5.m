@@ -27,7 +27,10 @@ TEST ;
 CHECK ;
  X $P(^DD(0,.01,0),U,5) I '$D(X) W $C(7)," ??",!,"ANSWER MUST BE 2-30 CHARACTERS AND NOT CONTAIN '='" S LROK=0 Q
  S LRNAME=X,DIC="^DD(63.04,",DIC(0)="XM" D ^DIC I Y>0 W $C(7),!,"This data name already exists" S LROK=0 Q
- S DA=$S($P($G(^XMB(1,1,"XUS")),U,17):$P(^("XUS"),U,17),1:0)*1000 D:'DA SITE Q:'LROK  F I=0:0 S DA=DA+1 Q:'$D(^DD(63.04,DA))
+ ;DSS/PDW modification to use actual station number not Institution IEN seeding Dataname IEN
+ ; REFERENCE to XUAF4 DBIA 2171
+ S DA=$P($G(^XMB(1,1,"XUS")),U,17),DA=+$P($$NS^XUAF4(DA),U,2),DA=$S(DA:DA,1:0)*1000 D:'DA SITE Q:'LROK  F I=0:0 S DA=DA+1 Q:'$D(^DD(63.04,DA))
+ ;DSS/PDW end modification to use actual station number not Institution IEN seeding Dataname IEN
  F I=0:0 W !,"ARE YOU ADDING ",LRNAME," (SUBFIELD # ",DA,") AS A NEW DATA NAME" S %=2 D YN^DICN Q:%  W " Answer 'Y'es or 'N'o."
  I %'=1 S LROK=0 Q
  Q

@@ -1,5 +1,5 @@
-PXRMEXIH ; SLC/PKR - Routines for installation history. ;06/08/2009
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
+PXRMEXIH ; SLC/PKR - Routines for installation history. ;08/08/2007
+ ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
  ;======================================================
 BLDLIST ;Build a list of install histories in ^TMP("PXRMEXIH",$J).
  N DATE,FMTSTR,IHIEN,IND,INDONE,JND,NAME,NL,NLINE,NSEL,OUTPUT
@@ -26,7 +26,6 @@ BLDLIST ;Build a list of install histories in ^TMP("PXRMEXIH",$J).
  . S ^TMP("PXRMEXIH",$J,NLINE,0)="      none"
  . S NLINE=NLINE+1
  . S ^TMP("PXRMEXIH",$J,NLINE,0)=" "
- . S VALMCNT=1
  ;Build the "dummy" lines so EN^VALM2 will work.
  F IND=1:1:NLINE S ^TMP("PXRMEXIH",$J,"IDX",IND,1)=""
  S DATE=""
@@ -79,7 +78,7 @@ DELHIST ;Get a list of repository installation entries and delete them.
 DETAILS ;Output the details of an installation.
  N VALMBG,VALMCNT,VALMLST,VALMY
  S VALMBG=1,VALMLST=+$O(^TMP("PXRMEXIH",$J,"IDX",""),-1)
- S VALMCNT=+$G(^TMP("PXRMEXIH",$J,"VALMCNT"))
+ S VALMCNT=^TMP("PXRMEXIH",$J,"VALMCNT")
  ;Get the list to display.
  D EN^VALM2(XQORNOD(0))
  ;If there is no list quit.
@@ -101,7 +100,7 @@ DDISP(ARRAY) ;Display details list
  S DP=$$FMTE^XLFDT($P(TEMP,U,3),"5Z")
  ;CAPTION is used in ENTRY action of LM template
  S CAPTION="Entry: "_ENTRY_"  Date Packed: "_DP
- S (IND,NLINE)=0
+ S (IND,NLINE,NUM)=0
  F  S IND=$O(ARRAY(IND)) Q:IND=""  D
  . S TEMP=^TMP("PXRMEXIH",$J,"SEL",IND)
  . S RIEN=$P(TEMP,U,1)

@@ -1,5 +1,5 @@
 IBCRHBS7 ;ALB/ARH - RATES: UPLOAD (RC 2+) CALCULATIONS SITE ; 10-OCT-03
- ;;2.0;INTEGRATED BILLING;**245,427**;21-MAR-94;Build 7
+ ;;2.0;INTEGRATED BILLING;**245**;21-MAR-94
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 A(SITE,IBXRF1) ; use Inpatient Facility National Rates to calculate Site Specific Rates
@@ -151,7 +151,6 @@ MODIFN(MOD,EFFDT) ; return internal form of modifier
  N IBY,IBX S (IBX,IBY)="" S EFFDT=$$DATE($G(EFFDT)) I 'EFFDT S EFFDT=DT
  I $G(MOD)'="" S IBY=$$MOD^ICPTMOD(MOD,"E",EFFDT)
  I IBY<0,$G(MOD)="RR" S IBY=$$MODP^ICPTMOD("K0455","RR","E",EFFDT)
- I IBY<0,$G(MOD)="KF" S IBY=$$MODP^ICPTMOD("E0785","KF","E",EFFDT)
  I IBY>0 S IBX=+IBY
  Q IBX
  ;

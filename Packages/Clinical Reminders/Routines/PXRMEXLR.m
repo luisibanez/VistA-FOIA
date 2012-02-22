@@ -1,5 +1,5 @@
-PXRMEXLR ; SLC/PKR/PJH - List Manager routines for existing repository entries. ;12/02/2009
- ;;2.0;CLINICAL REMINDERS;**6,17**;Feb 04, 2005;Build 102
+PXRMEXLR ; SLC/PKR/PJH - List Manager routines for existing repository entries. ;07/30/2007
+ ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
  ;==================================================
 CHF ;Create a host file containing repository entries.
  N IND,FILE,LENH2,PATH,SUCCESS,TEMP,VALMY
@@ -9,7 +9,7 @@ CHF ;Create a host file containing repository entries.
  I '$D(VALMY) Q
  ;Get the host file to use.
  D CLEAR^VALM1
- S TEMP=$$GETHFN^PXRMEXHF("PRD")
+ S TEMP=$$GETHFS^PXRMEXHF
  I TEMP=0 S VALMBCK="R" Q
  S PATH=$P(TEMP,U,1)
  S FILE=$P(TEMP,U,2)

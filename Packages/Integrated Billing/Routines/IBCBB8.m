@@ -1,5 +1,5 @@
 IBCBB8 ;ALB/BGA - CON'T MEDICARE EDIT CHECKS ;08/12/98
- ;;2.0;INTEGRATED BILLING;**51,137,210,349,373**;21-MAR-94;Build 6
+ ;;2.0;INTEGRATED BILLING;**51,137,210,349**;21-MAR-94;Build 46
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; UB-04 CLAIM CERTIFICATE ID NUMBER
@@ -44,6 +44,7 @@ VALID(IBIFN) ; Verify HIC # is valid
  I $G(IBXDATA)="" S VAL=0 G VALQ
  ;
  S IBXDATA=$TR(IBXDATA,"-")
+ I $L(IBXDATA)<9 S VAL=0 G VALQ
  ; HIC # must pass standard MEDICARE edits
  I '$$VALHIC^IBCNSMM(IBXDATA) S VAL=0
  ;

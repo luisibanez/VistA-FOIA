@@ -1,6 +1,6 @@
-MAGGSIUI ;WOIFO/GEK/NST - Utilities for Image Import API ; 20 Jan 2010 10:10 AM
- ;;3.0;IMAGING;**7,8,48,20,85,59,108**;Mar 19, 2002;Build 1738;May 20, 2010
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGGSIUI ;WOIFO/GEK - Utilities for Image Import API
+ ;;3.0;IMAGING;**7,8,48,20,85,59**;Nov 27, 2007;Build 20
+ ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +8,7 @@ MAGGSIUI ;WOIFO/GEK/NST - Utilities for Image Import API ; 20 Jan 2010 10:10 AM
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -33,7 +34,6 @@ IMPORT(MAGRY,IMAGES,MAGIX) ;
  ; "IDFN","PXPKG","PXIEN","PXDT","TRKID","ACQD","ACQS","ACQL","STSCB","ITYPE",
  ;        "CMTH","CDUZ","USERNAME","PASSWORD","GDESC","DFLG","TRTYPE","DOCCTG","DOCDT",
  ;        "IXTYPE","IXSPEC","IXPROC","IXORIGIN    ;Patch 8: Added Index fields
- ;        "PXSGNTYP","PXNEW","PXTIUTTL","PXTIUTXTxxxxx"  ; Patch 108
  ;
  ;Index fields Package, Class ("IXPKG" and "IXCLS") aren't accepted
  ;    they are computed values.
@@ -48,12 +48,11 @@ IMPORT(MAGRY,IMAGES,MAGIX) ;
  N IDFN,PXPKG,PXIEN,PXDT,TRKID,ACQD,ACQS,ACQN,ACQL,STSCB,ITYPE,CMTH,CDUZ,USERNAME,PASSWORD
  N GDESC,DFLG,TRTYPE,DOCCTG,DOCDT,IXPKG,IXCLS,IXTYPE,IXSPEC,IXPROC,IXORIGIN,MAX,SITEPLC
  N ERR,MAGTM,QTIME,MAGIXZ
- N PXNEW,PXTIUTTL,PXSGNTYP  ; Patch 108
  S CT=0,ERR=0
  M MAGIXZ=MAGIX
  ;  DON'T CONVERT ACQS(really a ACQN) to a REAL ACQS, leave it ACQS to be converted by MAGGSIV
  ; 
- F PRM="IDFN","PXSGNTYP","PXPKG","PXIEN","PXDT","PXNEW","PXTIUTTL","TRKID","ACQD","ACQS","ACQN","ACQL","STSCB","ITYPE","CMTH","CDUZ","USERNAME","PASSWORD","GDESC","DFLG","TRTYPE","DOCCTG","DOCDT","IXTYPE","IXSPEC","IXPROC","IXORIGIN" D
+ F PRM="IDFN","PXPKG","PXIEN","PXDT","TRKID","ACQD","ACQS","ACQN","ACQL","STSCB","ITYPE","CMTH","CDUZ","USERNAME","PASSWORD","GDESC","DFLG","TRTYPE","DOCCTG","DOCDT","IXTYPE","IXSPEC","IXPROC","IXORIGIN" D
  . S @PRM=$G(MAGIX(PRM)) K MAGIX(PRM) ; P8T14 added K.. and next line to account for field numbers later.
  . Q
  S PRM="" F  S PRM=$O(MAGIX(PRM)) Q:PRM=""  D SA(PRM,$G(MAGIX(PRM)))
@@ -83,14 +82,6 @@ IMPORT(MAGRY,IMAGES,MAGIX) ;
  . Q
  ;
  ; Set the input data array
- ;
- ; Patch 108
- D SA("PXSGNTYP",PXSGNTYP)        ; Signature Type - 0 unsigned/ 1 administrative closed/ 2 signed
- D SA("PXTIUTTL",PXTIUTTL)  ; TIU Title in case a new TIU stub needs to be created
- D SA("PXNEW",PXNEW)        ; Flag to create a new package ( e.g. a new TUI stub)
- ; PXIEN has to be set to zero because of Delphi function TMagImport.FileSpecialtyPointers
- ; In this way we don't need to recompile BP
- S:PXNEW="1" PXIEN=0
  D SA(5,IDFN)    ;PATIENT
  D SA(16,PXPKG)   ;PARENT DATA FILE
  D SA(17,PXIEN) ;PARENT GLOBAL ROOT
@@ -147,15 +138,12 @@ SI(FLD,ARR) ;Set the images into the data array
  ; 'CT' is a global variable.
  S MAGRY(0)="1^Valid Image file Extensions."
  N I,MAGEXT,MAGFN
- N RES
  S I="" F  S I=$O(ARR(I)) Q:I=""  D  Q:'MAGRY(0)
  . S CT=CT+1
  . I ($L($P(ARR(I),U),".")<2) S MAGRY(0)="0^Invalid file name: "_ARR(I) Q
  . S MAGFN=$P(ARR(I),"^")
  . S MAGEXT=$$UP^XLFSTR($P(MAGFN,".",$L(MAGFN,".")))
- . K RES
- . D INFO^MAGGSFT(.RES,MAGEXT)
- . I 'RES(0) S MAGRY(0)=RES(0) Q
+ . I '$D(^MAG(2005.021,"B",MAGEXT)) S MAGRY(0)="0^Unsupported File Type:'."_MAGEXT Q
  . S MAGA(CT)="IMAGE"_U_ARR(I)
  Q
 GETARR(ARR,QNUM) ;RPC [MAG4 DATA FROM IMPORT QUEUE]
@@ -205,18 +193,4 @@ ERR ; ERROR TRAP FOR Import API
  S MAGRY(0)="0^ETRAP: "_ERR
  D @^%ZOSF("ERRTN")
  I $G(APISESS) D ERRTRK
- Q
- ; Patch 108
-GETIAPID(OUT,TRKID) ; Returns Import API data in OUT array from file (#2006.82) by tracking ID 
- ; OUT(FIELD)=VALUE
- N I,X,Y,SNUM
- S SNUM=$O(^MAG(2006.82,"E",TRKID,""),-1)  ; Get the last recording for this TRKID
- I 'SNUM Q  ; no data found
- S I=1
- F  S I=$O(^MAG(2006.82,SNUM,"ACT",I)) Q:I'?1N.N  D
- . I $G(^MAG(2006.82,SNUM,"ACT",I,0))'="Data:" Q
- . S X=$G(^MAG(2006.82,SNUM,"ACT",I,1))
- . S Y=$TR($P(X,":"),"()","")
- . S:Y'="" OUT(Y)=$P(X,": ",2,999)
- . Q
  Q

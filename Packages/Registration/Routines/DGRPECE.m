@@ -1,5 +1,5 @@
 DGRPECE ;ALB/MRY,ERC,BAJ - REGISTRATION CATASTROPHIC EDITS ; 10/4/06 3:27pm
- ;;5.3;Registration;**638,682,700,720,653,688,750,831**;Aug 13, 1993;Build 10
+ ;;5.3;Registration;**638,682,700,720,653,688**;Aug 13, 1993;Build 29
  ;
 CEDITS(DFN) ;catastrophic edits  - buffer values, save after check
  ;Input;
@@ -18,7 +18,7 @@ CEDITS(DFN) ;catastrophic edits  - buffer values, save after check
  ;                  (after snapshot).
  ;         SAVE   - holds only edited changes for filing into file #2.
  ;
- N DA,DIR,DIRUT,Y,BUFFER,BEFORE,SAVE,DG20IEN,XUNOTRIG
+ N DA,DIR,DIRUT,Y,BUFFER,BEFORE,SAVE,DG20IEN
  D BEFORE(DFN,.BEFORE,.BUFFER) ;retrieve before patient values
  ;buffer - get name
  K DG20NAME
@@ -110,7 +110,6 @@ SAVE(DFN) ;store accepted/edited values into patient file
  .S FDATA(20,+DG20IEN_",",2)=BUFFER("GIVEN")
  .S FDATA(20,+DG20IEN_",",3)=BUFFER("MIDDLE")
  .S FDATA(20,+DG20IEN_",",5)=BUFFER("SUFFIX")
- .S XUNOTRIG=1
  .D FILE^DIE("","FDATA","DIERR")
  .K FDATA,DIERR
  I $D(BUFFER("PREFIX")) S FDATA(20,+DG20IEN_",",4)=BUFFER("PREFIX")
@@ -173,28 +172,15 @@ AFTER(BEF,BUF,SAV) ;prevent catastrophic edit checks
  I $D(BUF("SSN")),BUF("SSN")'="",BUF("SSN")'=BEF("SSN") D
  . S SAV("SSN")=BUF("SSN"),DGCNT=DGCNT+1
  I $D(BUF("SSNREAS")),BUF("SSNREAS")'="",BUF("SSNREAS")'=BEF("SSNREAS") D
- . S SAV("SSNREAS")=BUF("SSNREAS")
+ . S SAV("SSNREAS")=BUF("SSNREAS"),DGCNT=DGCNT+1
  I $D(BUF("MBI")),BUF("MBI")'=BEF("MBI") D
  . S SAV("MBI")=BUF("MBI")
  I DGCNT=0,$D(SAV("NAME")) Q 1 ;minor name change (i.e. middle name or suffix)
  I DGCNT=0,$D(SAV("PREFIX"))!($D(SAV("DEGREE"))) Q 1 ; prefix or degree change
  I DGCNT=0,$D(SAV("MBI")) Q 1 ; multiple birth indicator change
  I DGCNT=0 Q 0 ;no changes
- ;DG*750 check audit file for previous changes made during the current day
- I DGCNT=1 D DGAUD^DGRPAUD(DFN,.DGCNT)
- ;Use temp file created in DGRPAUD to get information for other changes
- ;that were made during the day to print on the alert.
- N DGAUDIEN,DGFLD,DGTYP
- S DGAUDIEN=0
- F   S DGAUDIEN=$O(^TMP("DGRPAUD",$J,DFN,DGAUDIEN)) Q:'DGAUDIEN  D
- .S DGFLD=$P(^TMP("DGRPAUD",$J,DFN,DGAUDIEN),U,2),DGTYP=$P(^TMP("DGRPAUD",$J,DFN,DGAUDIEN),U,5)
- .I DGFLD=.01 S BEF("NAME")=DGTYP
- .I DGFLD=.09 S BEF("SSN")=DGTYP
- .I DGFLD=.02 S BEF("SEX")=DGTYP
- .I DGFLD=.03 S BEF("DOB")=DGTYP
  I DGCNT<2 Q 1 ;make one change w/o CE message
  I DGCNT>1 Q 2 ;more than 1 change, send CE message
- K ^TMP("DGRPAUD")
  ;
 WARNING() ;CE warning message
  ;Output     0  = exit without saving changes

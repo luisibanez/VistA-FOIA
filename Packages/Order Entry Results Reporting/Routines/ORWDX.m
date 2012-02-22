@@ -1,7 +1,6 @@
-ORWDX ; SLC/KCM/REV/JLI - Order dialog utilities ;09/08/2008 [2/11/09 8:00am]
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,125,131,132,141,164,178,187,190,195,215,246,243,283,296,280**;Dec 17, 1997;Build 85
+ORWDX ; SLC/KCM/REV/JLI - Order dialog utilities ;11/28/2006
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,125,131,132,141,164,178,187,190,195,215,246,243**;Dec 17, 1997;Build 242
  ;Per VHA Directive 2004-038, this routine should not be modified.
- ;Reference to DIC(9.4 supported by IA #2058
  ;
 ORDITM(Y,FROM,DIR,XREF) ; Subset of orderable items
  ; Y(n)=IEN^.01 Name^.01 Name  -or-  IEN^Synonym <.01 Name>^.01 Name
@@ -13,8 +12,9 @@ ORDITM(Y,FROM,DIR,XREF) ; Subset of orderable items
  . . S X=^ORD(101.43,XREF,FROM,IEN)
  . . I +$P(X,U,3),$P(X,U,3)<CURTM Q
  . . Q:$P(X,U,5)  S I=I+1
- . . I 'X S Y(I)=IEN_U_$P(X,U,2)_U_$P(X,U,2)
- . . E  S Y(I)=IEN_U_$P(X,U,2)_$C(9)_"<"_$P(X,U,4)_">"_U_$P(X,U,4)
+ . . I XREF="S.IVA RX"!(XREF="S.IVB RX") S DEFROUTE=$P($G(^ORD(101.43,IEN,"PS")),U,8)
+ . . I 'X S Y(I)=IEN_U_$P(X,U,2)_U_$P(X,U,2)_U_DEFROUTE
+ . . E  S Y(I)=IEN_U_$P(X,U,2)_$C(9)_"<"_$P(X,U,4)_">"_U_$P(X,U,4)_U_DEFROUTE
  Q
 ODITMBC(Y,XREF,ODLST) ;
  N CNT,NM,XRF
@@ -107,25 +107,21 @@ SAVE(REC,ORVP,ORNP,ORL,DLG,ORDG,ORIT,ORIFN,ORDIALOG,ORDEA,ORAPPT,ORSRC,OREVTDF) 
  . S REC="" S ORIFN=+ORIFN_";"_ORDA D GETBYIFN^ORWORR(.REC,ORIFN)
  Q
 SENDED(ORWLST,ORIENS,TS,LOC) ; Release EDOs to svc
- N OK,ORVP,ORWERR,ORSIGST,ORDA,ORNATURE,ORIX,X,PTEVT,ORIFN,J,EVENT,LOCK,OR3
+ N OK,ORVP,ORWERR,ORSIGST,ORDA,ORNATURE,ORIX,X,PTEVT,ORIFN,J,EVENT,LOCK
  S ORWERR="",ORIX=0,LOC=LOC_";SC("
- F  S ORIX=$O(ORIENS(ORIX)) Q:'ORIX  D  Q:ORWERR]""
- . S (ORIFN,ORWLST(ORIX))=ORIENS(ORIX)
- . S PTEVT=$P(^OR(100,+ORIFN,0),U,17)
- . I PTEVT D
- .. I $D(EVENT(PTEVT)) S LOCK=1 Q
- .. S LOCK=$$LCKEVT^ORX2(PTEVT) S:LOCK EVENT(PTEVT)=""
- . I 'LOCK S ORWERR="1^delayed event is locked - another user is processing orders for this event" S ORWLST(ORIX)=ORWLST(ORIX)_"^E^"_ORWERR Q
+ F  S ORIX=$O(ORIENS(ORIX)) Q:'ORIX  D
+ . S ORIFN=ORIENS(ORIX)
+ . S PTEVT=$P(^OR(100,+ORIFN,0),U,17) I PTEVT S LOCK=$$LCKEVT^ORX2(PTEVT) S:LOCK EVENT(PTEVT)="" I 'LOCK S ORWERR="1^delayed event is locked - another user is processing orders for this event" ;195
  . S ORDA=$P(ORIFN,";",2) S:'ORDA ORDA=1
  . S ORVP=$P($G(^OR(100,+ORIFN,0)),U,2)
  . I $D(^OR(100,+ORIFN,8,ORDA,0)) D
- .. S ORSIGST=$P($G(^(0)),U,4),ORNATURE=$P($G(^(0)),U,12) ;naked references refer to OR(100,+ORIFN,8,ORDA on line above
+ .. S ORSIGST=$P($G(^(0)),U,4)
+ .. S ORNATURE=$P($G(^(0)),U,12)
+ . S:$G(LOC) $P(^OR(100,+ORIFN,0),U,10)=LOC ;set location
+ . S:$G(TS) $P(^OR(100,+ORIFN,0),U,13)=TS ;set specialty
  . S OK=$$LOCK1^ORX2(ORIFN) I 'OK S ORWERR="1^"_$P(OK,U,2)
- . I OK,$G(LOCK) D
- .. S OR3=$G(^OR(100,+ORIFN,3)) I $P(OR3,"^",3)'=10!($P(OR3,"^",9)]"") D UNLK1^ORX2(ORIENS(ORIX)) Q  ;order already released or has a parent
- .. S:$G(LOC) $P(^OR(100,+ORIFN,0),U,10)=LOC ;set location
- .. S:$G(TS) $P(^OR(100,+ORIFN,0),U,13)=TS ;set specialty 
- .. D EN2^ORCSEND(ORIENS(ORIX),ORSIGST,ORNATURE,.ORWERR),UNLK1^ORX2(ORIENS(ORIX)) ;add ,LOCK to if statement for 195
+ . I OK,$G(LOCK) D EN2^ORCSEND(ORIENS(ORIX),ORSIGST,ORNATURE,.ORWERR),UNLK1^ORX2(ORIENS(ORIX)) ;add ,LOCK to if statement for 195
+ . S ORWLST(ORIX)=ORIENS(ORIX)
  . I $L(ORWERR) S ORWLST(ORIX)=ORWLST(ORIX)_"^E^"_ORWERR Q
  . E  D
  .. S PTEVT=$P($G(^OR(100,+ORIENS(ORIX),0)),U,17)
@@ -160,24 +156,21 @@ SEND1 N ORVP,ORWI,ORWERR,ORWREL,ORWSIG,ORWNATR,ORDERID,ORBEF,ORLR,ORLAB,X,I
  . I ORWSIG'=2 S X=X_"S"
  . S $P(ORWLST(ORWI),U,2)=X
  I $G(ORLAB) D BTS^ORMBLD(ORVP)
- I $D(ORWLST)>9 D
- . N I,A
- . S I=0 F  S I=$O(ORWLST(I)) Q:I=""  S A=$G(ORWLST(I)) I A["Invalid Procedure, Inactive, no Imaging Type" D SM^ORWDX2(A)
-  Q
+ Q
 DLGID(VAL,ORIFN) ; return dlg IEN for order
  S VAL=$P(^OR(100,+ORIFN,0),U,5)
  S VAL=$S($P(VAL,";",2)="ORD(101.41,":+VAL,1:0)
  Q
-FORMID(VAL,ORIFN) ; Base dlg FormID for an order
+FORMID(VAL,ORIFN)  ; Base dlg FormID for an order
  N DLG
  S VAL=0,DLG=$P(^OR(100,+ORIFN,0),U,5)
  Q:$P(DLG,";",2)'="ORD(101.41,"
  D FORMID^ORWDXM(.VAL,+DLG)
  Q
-AGAIN(VAL,DLG) ; return true to keep dlg for another order
+AGAIN(VAL,DLG)  ; return true to keep dlg for another order
  S VAL=''$P($G(^ORD(101.41,DLG,0)),U,9)
  Q
-DGRP(VAL,DLG) ; Display grp pointer for a dlg
+DGRP(VAL,DLG)   ; Display grp pointer for a dlg
  S DLG=$S($E(DLG)="`":+$P(DLG,"`",2),1:$O(^ORD(101.41,"AB",DLG,0))) ;kcm
  S VAL=$P($G(^ORD(101.41,DLG,0)),U,5)
  Q
@@ -204,7 +197,4 @@ LOCKORD(OK,ORIFN) ; Attempt to lock order
  Q
 UNLKORD(OK,ORIFN) ; Unlock order
  D UNLK1^ORX2(ORIFN) S OK=1
- Q
-UNLKOTH(OK,ORIFN) ; Unlock pt not by this session
- K ^XTMP("ORPTLK-"_ORIFN) S OK=1
  Q

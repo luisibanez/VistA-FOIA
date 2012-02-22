@@ -1,5 +1,5 @@
-PSJORRN ;BIR/MV-RETURN INPATIENT ACTIVE MEDS (CONDENSED) NEW SORT ; 2/28/11 3:21pm
- ;;5.0; INPATIENT MEDICATIONS ;**134,213,225**;16 DEC 97;Build 16
+PSJORRN ;BIR/MV-RETURN INPATIENT ACTIVE MEDS (CONDENSED) NEW SORT ;28 Jan 99 / 12:56 PM
+ ;;5.0; INPATIENT MEDICATIONS ;**134**;16 DEC 97;Build 124
  ;
  ;Reference to ^PS(52.6 is supported by DBIA 1231.
  ;Reference to ^PS(52.7 is supported by DBIA 2173.
@@ -10,17 +10,15 @@ PSJORRN ;BIR/MV-RETURN INPATIENT ACTIVE MEDS (CONDENSED) NEW SORT ; 2/28/11 3:21
 OCL(DFN,BDT,EDT,TFN) ; return condensed list of inpat meds
  ; MVIEW=2   -  This is the new sort with GUI 27
  ; Execute this section if MVIEW=2
- N ADM,CNT,DN,DO,F,FON,INFUS,INST,MR,ND,ND0,ND2,ND6,ON,PON,PST,SCH,SIO,STAT,TYPE,UNITS,WBDT,X,Y,PSJCLIN,A,TFN2,%
+ N ADM,CNT,DN,DO,F,FON,INFUS,INST,MR,ND,ND0,ND2,ND6,ON,PON,PST,SCH,SIO,STAT,TYPE,UNITS,WBDT,X,Y,PSJCLIN,A,TFN2
  S TFN2=0
  ; PON=placer order number (oerr), FON=filler order number
- ; *225 Add time or base on now
- D NOW^%DTC S:BDT="" BDT=% S:BDT'["." BDT=BDT_".000001"
+ S:BDT="" BDT=DT S WBDT=BDT_".000001"
  S:EDT="" EDT=9999999
  S:EDT'["." EDT=EDT_".999999"
- ;*225 Correct Display Calcualtion
- S F="^PS(55,DFN,5,",WBDT=BDT F  S WBDT=$O(^PS(55,DFN,5,"AUS",WBDT)) Q:'WBDT  F ON=0:0 S ON=$O(^PS(55,DFN,5,"AUS",WBDT,ON)) Q:'ON  D UDTMP
+ S F="^PS(55,DFN,5," F  S WBDT=$O(^PS(55,DFN,5,"AUS",WBDT)) Q:'WBDT  F ON=0:0 S ON=$O(^PS(55,DFN,5,"AUS",WBDT,ON)) Q:'ON  D UDTMP
  S F="^PS(53.1," F PST="P","N" S ON=0 F  S ON=$O(^PS(53.1,"AS",PST,DFN,ON)) Q:'ON  S X=$P($G(^PS(53.1,+ON,0)),U,4) D @$S(X="U":"UDTMP",1:"IVTMP")
- S F="^PS(55,"_DFN_",""IV"",",WBDT=BDT F  S WBDT=$O(^PS(55,DFN,"IV","AIS",WBDT)) Q:'WBDT  S ON=0 F  S ON=$O(^PS(55,DFN,"IV","AIS",WBDT,ON)) Q:'ON  D IVTMP
+ S F="^PS(55,"_DFN_",""IV"",",WBDT=BDT-1 F  S WBDT=$O(^PS(55,DFN,"IV","AIS",WBDT)) Q:'WBDT  S ON=0 F  S ON=$O(^PS(55,DFN,"IV","AIS",WBDT,ON)) Q:'ON  D IVTMP
  S X1="" F  S X1=$O(^TMP("PSJTMP",$J,X1)) Q:X1=""  S X2="" F  S X2=$O(^TMP("PSJTMP",$J,X1,X2)) Q:X2=""  D
  .S X3="" F  S X3=$O(^TMP("PSJTMP",$J,X1,X2,X3)) Q:X3=""  S X4="" F  S X4=$O(^TMP("PSJTMP",$J,X1,X2,X3,X4)) Q:X4=""  D
  ..S X5="" F  S X5=$O(^TMP("PSJTMP",$J,X1,X2,X3,X4,X5)) Q:X5=""  S TFN=$G(TFN)+1 D
@@ -43,8 +41,7 @@ UDTMP ;*** Set ^TMP for Unit dose orders.
  S ND6=$P($G(@(F_ON_",6)")),"^"),INST=$G(@(F_+ON_",.3)"))
  S FON=+ON_$S(F["53.1":"P",1:"U"),DO=$P($G(@(F_ON_",.2)")),"^",2)
  D DRGDISP^PSJLMUT1(DFN,FON,40,0,.DN,1)
- ;*225 Don't allow 0 Units
- S UNITS="" I '$O(@(F_+ON_",1,1)")) S UNITS=$P($G(@(F_+ON_",1,1,0)")),U,2) S:(FON["U")&(+UNITS=0) UNITS=1
+ S UNITS="" I '$O(@(F_+ON_",1,1)")) S UNITS=$P($G(@(F_+ON_",1,1,0)")),U,2) S:(FON["U")&(UNITS="") UNITS=1
  S:+$P(ND0,U,3) MR=$$MR^PSJORRE1(+$P(ND0,U,3))
  N NOTGIVEN S NOTGIVEN=$S(FON["U":$P($G(^PS(55,DFN,5,+ON,0)),"^",22),1:"")
  ;******** GUI 27 new sort for Meds Tab
@@ -84,8 +81,7 @@ IVTMP ;*** Set ^TMP for IV orders.
  S GP=$S((",A,R,H,RE,")[(","_PSJST_","):1,(",P,N,")[(","_PSJST_","):2,PSJST="E":3,(",D,DE,DR,")[(","_PSJST_","):4,1:0)
  S PSJST2=$S(PSJST="A":1,PSJST="R":2,PSJST="H":3,PSJST="S":4,PSJST="P":5,PSJST="O":6,PSJST="N":7,PSJST="I":8,PSJST="P":9,GP=4&($G(PRIO)="D"):10,PSJST="E":11,PSJST="D":12,PSJST="DE":13,PSJST="RE":14,PSJST="R":15,1:0)
  S LOC=$P(NDDSS,"^") S LOC=$S($P(NDDSS,"^",2):LOC,1:"~") I LOC S LOC=$P($G(^SC(LOC,0)),"^")
- I PSJOI'="" S PSJOINM=$P($G(^PS(50.7,+PSJOI,0)),"^")
- I PSJOI="" S PSJOINM="Orderable Item Not Found"
+ S PSJOINM=$P(^PS(50.7,+PSJOI,0),"^")
  ;********
  S CNT=0,PSJOINM=$S(PSJOINM]"":PSJOINM,1:"UNKNOWN")
  F X=0:0 S X=$O(@(F_ON_",""AD"","_X_")")) Q:'X  S ND=$G(@(F_ON_",""AD"","_X_",0)")),DN=$P($G(^PS(52.6,+ND,0)),U),Y=DN_U_$P(ND,U,2) S:$P(ND,U,3) Y=Y_U_$P(ND,U,3) S CNT=CNT+1,^TMP("PSJTMP",$J,GP,PSJST,LOC,PSJOINM,TFN2,"A",CNT,0)=Y

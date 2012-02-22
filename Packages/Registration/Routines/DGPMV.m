@@ -14,7 +14,15 @@ PAT K ORACTION,ORMENU
  D LO^DGUTL I '$D(IOF) S IOP=$S($D(ION):ION,1:"HOME") D ^%ZIS K IOP
 PAT1 W ! I DGPMT=5 S DGPMN=0 D SPCLU^DGPMV0 G OREN:'DGER,Q
  S DIC="^DPT(",DIC(0)="AEQMZ",DIC("A")=$S('$D(DGPMPC):$P("Admit^Transfer^Discharge^Check-in^Check-out^Specialty Change for","^",DGPMT),1:"Provider Change for")_" PATIENT: "
- S:DGPMT=1 DIC(0)=DIC(0)_"L",DLAYGO=2 S:"^1^4^"'[("^"_DGPMT_"^") DIC("S")="I $D(^DGPM($S(DGPMT'=5:""APTT1"",1:""APTT4""),+Y))" D ^DIC K DIC,DLAYGO G Q:Y'>0 S DFN=+Y,DGPMN=$P(Y,"^",3)
+ ;DSS/LM - Begin modification - Require pre-registration for new patients
+ ;         Split next into separate lines
+ ;S:DGPMT=1 DIC(0)=DIC(0)_"L",DLAYGO=2 S:"^1^4^"'[("^"_DGPMT_"^") DIC("S")="I $D(^DGPM($S(DGPMT'=5:""APTT1"",1:""APTT4""),+Y))" D ^DIC K DIC,DLAYGO G Q:Y'>0 S DFN=+Y,DGPMN=$P(Y,"^",3)
+ S:DGPMT=1&0 DIC(0)=DIC(0)_"L",DLAYGO=2 ; Disable LAYGO
+ S:"^1^4^"'[("^"_DGPMT_"^") DIC("S")="I $D(^DGPM($S(DGPMT'=5:""APTT1"",1:""APTT4""),+Y))"
+ I '$D(VFDONCE) D VFDHELP(DGPMT) N VFDONCE S VFDONCE=""
+ D ^DIC K DIC,DLAYGO
+ G Q:Y'>0 S DFN=+Y,DGPMN=$P(Y,"^",3)
+ ;DSS/LM - End modification
 OREN S DGUSEOR=$$USINGOR()
  I DGUSEOR Q:'$D(ORVP)  S DFN=+ORVP,DGPMN="",Y(0)=$G(^DPT(DFN,0))
  I $$LODGER(DFN)&(DGPMT=1) D  Q
@@ -88,3 +96,12 @@ LODGER(DFN) ; Determine lodger status
  N DGPMDCD,DGPMVI,I,X
  D LODGER^DGPMV10
  Q DGPMVI(2)=4
+VFDHELP(DGPMT) ;[Private] DSS/LM - Display before the patient selection prompt
+ ;
+ D:$G(DGPMT)=1  ;Display the following text in the 'Admit' context                        
+ .W !!,"The 'Admit a Patient' option does not support adding a new patient."
+ .W !,"To admit a new patient, first use the 'Register a Patient' option to"
+ .W !,"add the patient to the database.  Once the new patient record has"
+ .W !,"been created, return to this option to admit the patient.",! 
+ .Q
+ Q

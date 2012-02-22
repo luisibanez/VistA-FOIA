@@ -1,5 +1,5 @@
-PXRMPDR ;SLC/AGP,PKR - Patient List Demographic report main routine ;09/02/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMPDR ;SLC/AGP,PKR - Patient List Demographic report main routine ;11/16/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
 EN(PLIEN) ; -- main entry point for PXRM PATIENT LIST DEMOGRAPHIC
  N ARRAY,DC,DDATA,DELIM,DTOUT,DUOUT
@@ -90,27 +90,14 @@ GETPDATA(DELIM,DC,PLIEN,DDATA) ;
  .. I TDATA="" S TDATA="NONE"
  .. S ^TMP("PXRMPLD",$J,DFN,"PFAC")=TDATA
  . I GETADD D
- .. N ADDTYPE,LND,MND,OFFSET,VAPA
+ .. N VAPA
  .. D ADD^VADPT
- .. S ADDTYPE=$S(((DT'<VAPA(9))&(DT'>VAPA(10))):"T",1:"R")
- ..;If the confidential address is active make sure the categories
- ..;match those that were selected. VHA Directive 2003-025 states
- ..;the confidential address must be used if it is active.
- .. I VAPA(12),DDATA("ADD")["1," D
- ... F LND=1:1:DDATA("ADD",22,"LEN") D
- .... S MND=$P(DDATA("ADD",22,"LIST"),",",LND)
- ....;If this category = VAPA(22,MND), was selected use it.
- .... I $D(VAPA(22,MND)) S ADDTYPE="C"
- .. S OFFSET=$S(ADDTYPE="C":12,1:0)
- .. S (VAPA(23),VAPA(23+OFFSET))=ADDTYPE
  .. F IND=1:1:DDATA("ADD","LEN") D
  ... S JND=$P(DDATA("ADD"),",",IND)
- ...;The offset is only used for addresses.
- ... I JND=2 S OFFSET=0
  ... S KND=0
- ... F  S KND=+$O(DDATA("ADD",JND,KND)) Q:KND=0  D
+ ... F  S KND=$O(DDATA("ADD",JND,KND)) Q:KND=""  D
  .... S PIECE=$P(DDATA("ADD",JND,KND),U,2)
- .... S TDATA=$P(VAPA(KND+OFFSET),U,PIECE)
+ .... S TDATA=$P(VAPA(KND),U,PIECE)
  .... S $P(PDATA,U,KND)=TDATA
  .. I PDATA'="" S ^TMP("PXRMPLD",$J,DFN,"ADD")=PDATA,PDATA=""
  . I GETINP D
@@ -155,9 +142,9 @@ GETPDATA(DELIM,DC,PLIEN,DDATA) ;
  ... S ^TMP("PXRMPLD",$J,DFN,"FIND",JND)=DATA
  ;Get appointment data for all patients on the list.
  I GETAPP D
- . N APPLIST,ARRAY,COUNT,DONE
- . S ARRAY(1)=DT,ARRAY(3)="I;R",ARRAY(4)="^TMP($J,""PXRMPL"""
- . S ARRAY("FLDS")=""
+ . N ARRAY,COUNT
+ . S ARRAY(1)=DT,ARRAY(3)="I;R"
+ . S ARRAY(4)="^TMP($J,""PXRMPL""",ARRAY("FLDS")=""
  . F IND=1:1:DDATA("APP","LEN") D
  .. S JND=$P(DDATA("APP"),",",IND)
  .. S KND=0
@@ -172,26 +159,19 @@ GETPDATA(DELIM,DC,PLIEN,DDATA) ;
  .. D APPERR^PXRMPDRS
  .. S DDATA("APP","ERROR")=""
  .. K ^TMP($J,"PXRMPL"),^TMP($J,"SDAMA301")
- .;Data is ^TMP($J,"SDAMA301",DFN,CLINIC,DATE)=DATE^CLINIC
- .;Resort by DATE then CLINIC.
- . S DFN=""
- . F  S DFN=$O(^TMP($J,"SDAMA301",DFN)) Q:DFN=""  D
- .. K APPLIST
- .. S JND=0
- .. F  S JND=$O(^TMP($J,"SDAMA301",DFN,JND)) Q:JND=""  D
- ... S DATE=0
- ... F  S DATE=$O(^TMP($J,"SDAMA301",DFN,JND,DATE)) Q:DATE=""  S APPLIST(DATE,JND)=""
- .. S (DATE,DONE,KND)=0
- .. F  S DATE=$O(APPLIST(DATE)) Q:(DONE)!(DATE="")  D
- ... S JND=0
- ... F  S JND=$O(APPLIST(DATE,JND)) Q:(DONE)!(JND="")  D
- .... S KND=KND+1
- .... I KND=DDATA("APP","MAX") S DONE=1
- .... S TDATA=^TMP($J,"SDAMA301",DFN,JND,DATE)
- .... S PDATA=$$FMTE^XLFDT($P(TDATA,U,1))
- .... S TDATA=$P(TDATA,U,2),TDATA=$P(TDATA,";",2)
- .... S PDATA=PDATA_U_TDATA
- .... S ^TMP("PXRMPLD",$J,DFN,"APP",KND)=PDATA
+ . F IND=1:1:COUNT D
+ .. S DFN=""
+ .. F  S DFN=$O(^TMP($J,"SDAMA301",DFN)) Q:DFN=""  D
+ ... S (JND,KND)=0
+ ... F  S JND=$O(^TMP($J,"SDAMA301",DFN,JND)) Q:JND=""  D
+ .... S DATE=0
+ .... F  S DATE=$O(^TMP($J,"SDAMA301",DFN,JND,DATE)) Q:DATE=""  D
+ ..... S KND=KND+1
+ ..... S TDATA=^TMP($J,"SDAMA301",DFN,JND,DATE)
+ ..... S PDATA=$$FMTE^XLFDT($P(TDATA,U,1))
+ ..... S TDATA=$P(TDATA,U,2),TDATA=$P(TDATA,";",2)
+ ..... S PDATA=PDATA_U_TDATA
+ ..... S ^TMP("PXRMPLD",$J,DFN,"APP",KND)=PDATA
  . K ^TMP($J,"PXRMPL"),^TMP($J,"SDAMA301")
  I DELIM=1 D DELIMPR^PXRMPDRP(DC,PLIEN,.DDATA)
  I DELIM=0 D REGPR^PXRMPDRP(PLIEN,.DDATA)
@@ -200,5 +180,16 @@ GETPDATA(DELIM,DC,PLIEN,DDATA) ;
 LENGTH(STR,STR1) ;
  I ($L(STR)+$L(STR1))>245 W !,STR S STR=STR1
  E  S STR=STR_U_STR1,STR1=""
+ Q
+ ;
+PAGE ;
+ I ($E(IOST,1,2)="C-")&(IO=IO(0)) D
+ .S DIR(0)="E"
+ .W !
+ .D ^DIR K DIR
+ I $D(DUOUT)!($D(DTOUT))!($D(DIROUT)) S DONE=1 Q
+ W:$D(IOF) @IOF
+ S PAGE=PAGE+1
+ I ($E(IOST,1,2)="C-")&(IO=IO(0)) W @IOF
  Q
  ;

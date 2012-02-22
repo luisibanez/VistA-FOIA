@@ -1,5 +1,5 @@
-HLOSRVR ;ALB/CJM/OAK/PIJ- Server for receiving messages - 10/4/94 1pm ;04/08/2010
- ;;1.6;HEALTH LEVEL SEVEN;**126,130,131,134,137,138,139,143,147**;Oct 13, 1995;Build 15
+HLOSRVR ;ALB/CJM/OAK/PIJ- Server for receiving messages - 10/4/94 1pm ;05/14/2008
+ ;;1.6;HEALTH LEVEL SEVEN;**126,130,131,134,137,138**;Oct 13, 1995;Build 34
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
 GETWORK(WORK) ;
@@ -10,8 +10,6 @@ GETWORK(WORK) ;
  ;
 DOWORKS(WORK) ;
  ;DO WORK rtn for a single server (non-concurrent)
- N $ETRAP,$ESTACK
- S $ETRAP="G ERROR^HLOSRVR3"
  D SERVER(WORK("LINK"))
  Q
 DOWORKM(WORK) ;
@@ -47,32 +45,21 @@ SERVER(LINKNAME,LOGICAL) ; LINKNAME identifies the logical link, which describes
  ;;End HL*1.6*138 PIJ
  N HLCSTATE,INQUE
  S INQUE=0
- ;
-ZB1 ;
- ;
  Q:'$$CONNECT(.HLCSTATE,LINKNAME,.LOGICAL)
- ;
  K LINKNAME
  F  Q:'HLCSTATE("CONNECTED")  D  Q:$$CHKSTOP^HLOPROC
  .N HLMSTATE,SENT
+ .;
  .;read msg and parse the hdr
  .;HLMSTATE("MSA",1) is set with type of ack to return
- .;
  .I $$READMSG^HLOSRVR1(.HLCSTATE,.HLMSTATE) D
+ ..;
+ ..;send an ack if required and save the MSA segment
  ..I (HLMSTATE("MSA",1)]"") S SENT=$$WRITEACK(.HLCSTATE,.HLMSTATE) D:HLMSTATE("IEN") SAVEACK(.HLMSTATE,SENT)
- ..;
- ..;** P143 START CJM **
- ..I HLMSTATE("ID")'="" L -HLO("MSGID",HLMSTATE("ID"))
- ..;** P143 END CJM **
- ..;
  ..D:HLMSTATE("IEN") UPDATE(.HLMSTATE,.HLCSTATE)
  ..D:HLCSTATE("COUNTS")>4 SAVECNTS^HLOSTAT(.HLCSTATE)
  ..I $G(HLMSTATE("ACK TO","IEN")),$L($G(HLMSTATE("ACK TO","SEQUENCE QUEUE"))) D ADVANCE^HLOQUE(HLMSTATE("ACK TO","SEQUENCE QUEUE"),+HLMSTATE("ACK TO","IEN"))
- .E  D
- ..;** P143 START CJM **
- ..I $G(HLMSTATE("ID"))'="" L -HLO("MSGID",HLMSTATE("ID"))
- ..;** P143 END CJM **
- ..D INQUE() H:HLCSTATE("CONNECTED") 1
+ .E  D INQUE() H:HLCSTATE("CONNECTED") 1
  ;
 END D CLOSE^HLOT(.HLCSTATE)
  D INQUE()
@@ -85,7 +72,6 @@ CONNECT(HLCSTATE,LINKNAME,LOGICAL) ;
  N LINK,NODE
  S HLCSTATE("CONNECTED")=0
  Q:'$$GETLINK^HLOTLNK(LINKNAME,.LINK) 0
-ZB999 ; 
  Q:+LINK("SERVER")'=1 0
  S HLCSTATE("SERVER")=LINK("SERVER")
  M HLCSTATE("LINK")=LINK
@@ -98,7 +84,6 @@ ZB999 ;
  S HLCSTATE("BUFFER","SEGMENT COUNT")=0 ;count of segments in buffer
  ;
  S HLCSTATE("COUNTS")=0
- S HLCSTATE("MESSAGE STARTED")=0 ;start of message flag
  S HLCSTATE("MESSAGE ENDED")=0 ;end of message flag
  S NODE=^%ZOSF("OS")
  S HLCSTATE("SYSTEM","OS")=$S(NODE["DSM":"DSM",NODE["OpenM":"CACHE",NODE["G.TM":"G.TM",1:"")
@@ -115,16 +100,8 @@ ZB999 ;
  Q HLCSTATE("CONNECTED")
  ;
 INQUE(MSGIEN,PARMS) ;
- ;
- ;** do not implement the Pass Immediate parameter **
- ;INQUE(MSGIEN,PARMS,IMMEDIATE);
- ;
- ;puts received messages on the incoming queue and sets the B x-ref
+ ;puts received messages on the incoming queue and sets the B x-refs
  I $G(MSGIEN) S INQUE=INQUE+1 M INQUE(MSGIEN)=PARMS
- ;
- ;** do not implement the Pass Immediate parameter **
- ;I ('$G(MSGIEN))!(INQUE>20)!($G(IMMEDIATE)) S MSGIEN=0 D
- ;
  I ('$G(MSGIEN))!(INQUE>20) S MSGIEN=0 D
  .F  S MSGIEN=$O(INQUE(MSGIEN)) Q:'MSGIEN  D
  ..S ^HLB("B",INQUE(MSGIEN,"MSGID"),MSGIEN)=""
@@ -192,10 +169,6 @@ UPDATE(HLMSTATE,HLCSTATE) ;
  S PARMS("BODY")=HLMSTATE("BODY")
  S PARMS("DT/TM")=HLMSTATE("DT/TM")
  S PARMS("MSGID")=HLMSTATE("ID")
- ;
- ;** do not implement the Pass Immediate parameter **
- ;D INQUE(HLMSTATE("IEN"),.PARMS,$G(HLMSTATE("STATUS","PASS IMMEDIATE")))
- ;
  D INQUE(HLMSTATE("IEN"),.PARMS)
  Q
  ;
@@ -213,7 +186,7 @@ WRITEACK(HLCSTATE,HLMSTATE) ;
  ;  Function returns 1 if successful, 0 otherwise
  ;  HLMSTATE("MSA","MESSAGE CONTROL ID") - the msg id of the ack
  ;  HLMSTATE(,"MSA","DT/TM OF MESSAGE") - from the ack header
- ; 
+ ;
  N HDR,SUB,FS,CS,MSA,ACKID,TIME
  ;Hard-code the delimiters, the standard requires that the receiving system accept the delimiters listed in the header
  S FS="|"

@@ -1,5 +1,5 @@
-PXRMRAD ; SLC/PKR - Handle radiology findings. ;08/04/2008
- ;;2.0;CLINICAL REMINDERS;**4,12**;Feb 04, 2005;Build 73
+PXRMRAD ; SLC/PKR - Handle radiology findings. ;10/21/2005
+ ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
  ;
  ;=================================================
 EVALFI(DFN,DEFARR,ENODE,FIEVAL) ;Evaluate radiology findings.
@@ -63,7 +63,6 @@ OUTPUT(INDENT,IFIEVAL,NLINES,TEXT) ;Produce the clinical
  F  S IND=+$O(IFIEVAL(IND)) Q:IND=0  D
  . S TEMP=$$EDATE^PXRMDATE(IFIEVAL(IND,"DATE"))
  . S TEMP=TEMP_" Status: "_IFIEVAL(IND,"STATUS")
- . S TEMP=TEMP_"; Report Status: "_IFIEVAL(IND,"RPT STATUS")
  . D FORMATS^PXRMTEXT(INDENT+2,PXRMRM,TEMP,.NOUT,.TEXTOUT)
  . F JND=1:1:NOUT S NLINES=NLINES+1,TEXT(NLINES)=TEXTOUT(JND)
  S NLINES=NLINES+1,TEXT(NLINES)=""

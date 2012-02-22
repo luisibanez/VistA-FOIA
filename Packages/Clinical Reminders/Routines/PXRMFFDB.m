@@ -1,5 +1,5 @@
-PXRMFFDB ;SLC/PKR - Function finding data structure builder. ;01/13/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMFFDB ;SLC/PKR - Function finding data structure builder. ;10/31/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
  ;===========================================
 BASE2(NUM) ;Convert a base 10 integer to base 2.
@@ -123,14 +123,13 @@ ISGRV(VAR) ;Return true if VAR is a global reminder variable.
  ;
  ;=============================================================
 ISSTR(STRING) ;Return true if STRING really is a string and it is not
- ;executable MUMPS code.
+ ;executable Mumps code.
  N VALID,X
  S VALID=0
  ;Valid strings are "text" or because of $P ,"text" or ",U".
  I $E(STRING,1)="""",$E(STRING,$L(STRING))="""" S VALID=1
  I 'VALID,$E(STRING,1)=",",$E(STRING,2)="""",$E(STRING,$L(STRING))="""" S VALID=1
- ;I 'VALID,STRING=",U" S VALID=1
- I 'VALID,STRING?1",U,".N S VALID=1
+ I 'VALID,STRING=",U" S VALID=1
  I 'VALID Q VALID
  S X=STRING
  D ^DIM
@@ -198,7 +197,7 @@ VFSTRING(FFSTRING,DA) ;Make sure a function finding string is valid.
  I '$D(DA) Q 1
  N DAI,DATE,FUNIEN,IND,LIST,MFUN,OPER,PFSTACK,TEMP,TEXT,VALID
  S DAI=DA(1)
- S OPER="!&-+<>=']["
+ S OPER="!&-+<>='"
  ;Define the allowed M functions.
  S MFUN("$P")=""
  D POSTFIX^PXRMSTAC(FFSTRING,OPER,.PFSTACK)

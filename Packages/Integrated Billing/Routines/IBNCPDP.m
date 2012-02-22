@@ -1,5 +1,5 @@
 IBNCPDP ;OAK/ELZ - APIS FOR NCPCP/ECME ;1/9/08  17:27
- ;;2.0;INTEGRATED BILLING;**223,276,363,383,384,411,435**;21-MAR-94;Build 27
+ ;;2.0;INTEGRATED BILLING;**223,276,363,383**;21-MAR-94;Build 11
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ;
@@ -14,7 +14,7 @@ RX(DFN,IBD) ; pharmacy package call, passing in IBD by ref
  ;    ("RELEASE DATE")= Date of the Rx release in FileMan format
  ;    ("NDC")         = NDC number for drug
  ;    ("DEA")         = DEA special handling info
- ;    ("COST")        = cost of medication being dispensed
+ ;    ("COST")        = cost of medication being dispenced
  ;    ("AO")          = Agent Orange (0,1 OR Null)
  ;    ("EC")          = Environmental Contaminant (0,1 OR Null)
  ;    ("HNC")         = Head/neck cancer (0,1 OR Null)
@@ -22,7 +22,7 @@ RX(DFN,IBD) ; pharmacy package call, passing in IBD by ref
  ;    ("MST")         = Military sexual trauma (0,1 OR Null)
  ;    ("SC")          = Service connected (0,1 OR Null)
  ;    ("CV")          = Combat Veteran (0,1 OR Null)
- ;    ("QTY")         = Quantity of med dispensed
+ ;    ("QTY")         = Quantity of med
  ;    ("EPHARM")      = #9002313.56 ien (E-PHARMACY division)
  ;
  ;
@@ -31,8 +31,7 @@ RX(DFN,IBD) ; pharmacy package call, passing in IBD by ref
  ;                  cardholder id^patient relationship code^
  ;                  cardholder first name^cardholder last name^
  ;                  home plan state ^Payer Sheet B2 ^Payer Sheet B3
- ;                  Software/Vendor Cert ID ^ Ins Name^Payer Sheet E1
- ;
+ ;                  Software/Vendor Cert ID ^ Ins Name
  ;    ("INS",n,2) = dispensing fee^basis of cost determination^
  ;                  awp or tort rate or cost^gross amount due^
  ;                  administrative fee
@@ -44,9 +43,7 @@ RX(DFN,IBD) ; pharmacy package call, passing in IBD by ref
  ;
  ;    ("INS",n,3) = group name^ins co ph 3^plan ID^
  ;                  insurance type (V=vet, T=tricare)^
- ;                  insurance company (#36) ien^COB field (.2) in 2.312 subfile^
- ;                  2.312 subfile ien (pt. insurance policy ien)^
- ;                  maximum NCPDP transactions (366.03,10.1)
+ ;                  insurance company (#36) ien
  ;
  N IBRES,IBNB
  S IBRES=$$RX^IBNCPDP1(DFN,.IBD)
@@ -77,7 +74,7 @@ STORESP(DFN,IBD) ; this is an API for pharmacy/ecme to use to relay
  ;    ("RX NO")        = RX number from file 52
  ;    ("DRUG")         = IEN of file #50 DRUG
  ;    ("DAYS SUPPLY")  = Days Supply
- ;    ("QTY")          = Quantity Dispensed (should be from the Rx fill or refill 52/52.1)
+ ;    ("QTY")          = Quantity
  ;    ("NDC")          = NDC
  ;    ("CLOSE REASON") = Optional, Pointer to the IB file #356.8
  ;                      "CLAIMS TRACKING NON-BILLABLE REASONS"
@@ -95,18 +92,10 @@ STORESP(DFN,IBD) ; this is an API for pharmacy/ecme to use to relay
  ;    ("AUTH #")       = ECME approval/authorization number
  ;    ("CLAIMID")      = Reference Number to ECME
  ;    ("EPHARM")       = Optional, #9002313.56 ien (E-PHARMACY division)
- ;    ("RTYPE")        = Optional, rate type specified by user during
- ;                       manual ePharmacy processing
- ;    ("PRIMARY BILL") = Optional, if this is to be a secondary bill,
- ;                       this is the primary bill the secondary relates
- ;    ("PRIOR PAYMENT")= Optional, on secondary bills this is the offset
- ;                       to be applied from the primary payment.
- ;    ("RXCOB")        = Optional, COB indicator (secondary = 2)
  ;
  ;
  ; Return is the bill number for success or 1 if not billable.
  ; "0^reason" indicates not success
- ;
  ;
  Q $$ECME^IBNCPDP2(DFN,.IBD)
  ;
@@ -124,16 +113,3 @@ UPAWP(IBNDC,IBAWP,IBADT) ; used to update AWPs.  This is an API that
  Q $$UPAWP^IBNCPDP3(IBNDC,IBAWP,$G(IBADT,DT))
  ;
  ;
-DEA(IBDEA,IBRMARK) ; used to check the DEA special handling.
- ; pass in IBDEA (dea code to check out)
- ;      optional pass in IBRMARK by reference (reason not billable)
- ; return:  1 or 0^why not billable
- ;
- ;  -- check for compound,  NOT BILLABLE
- N IBRES
- I $G(IBDEA)="" S IBRES="0^Null DEA Special Handling field" G DEAQ
- I IBDEA["M"!(IBDEA["0") S IBRMARK="DRUG NOT BILLABLE",IBRES="0^COMPOUND DRUG" G DEAQ
- ; -- check drug (not investigational, supply, over the counter, or nutritional supplement drug
- ;  "E" means always ecme billable
- I (IBDEA["I"!(IBDEA["S")!(IBDEA["9"))!(IBDEA["N"),IBDEA'["E" S IBRMARK="DRUG NOT BILLABLE",IBRES="0^"_IBRMARK
-DEAQ Q $G(IBRES,1)

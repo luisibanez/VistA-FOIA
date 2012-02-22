@@ -1,5 +1,5 @@
-PXRMLOCF ; SLC/PKR - Handle location findings. ;05/18/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,11,12**;Feb 04, 2005;Build 73
+PXRMLOCF ; SLC/PKR - Handle location findings. ;08/27/2008
+ ;;2.0;CLINICAL REMINDERS;**4,6,11**;Feb 04, 2005;Build 39
  ;This routine is for location list patient findings.
  ;=================================================
 ALL(FILENUM,DFN,PFINDPA,FIEVAL) ;Get all Visits with a location
@@ -117,7 +117,7 @@ FIEVAL(FILENUM,SNODE,DFN,ITEM,PFINDPA,FIEVAL) ;
  .. I $G(PXRMDEBG) M FIEVAL(NP,"CSUB")=FIEVD
  ;
  ;Save the finding result.
- D SFRES^PXRMUTIL(-NOCC,NP,.FIEVAL)
+ D SFRES^PXRMUTIL(NOCC,NP,.FIEVAL)
  S FIEVAL("FILE NUMBER")=FILENUM
  Q
  ;
@@ -169,12 +169,12 @@ FPDAT(DFN,HLOCL,NOCC,SDIR,BDT,EDT,NFOUND,FLIST) ;Find patient data for
  ;=================================================
 LOCLIST(ITEM,SUB) ;Build a list of unique locations based on stop code
  ;and/or hospital location. Reads of ^SC covered by DBIA #4482.
- N CSTOP,EXCL,EXCLNCS,EXCLP,IND,JND,HLOC,STOP
+ N CSTOP,EXCL,EXCLNCS,EXCLP,IND,JND,HLOC,SC
  K ^TMP($J,SUB)
  ;Process stop codes. EXCL is the list of credit stops to exclude.
  S IND=0
  F  S IND=+$O(^PXRMD(810.9,ITEM,40.7,IND)) Q:IND=0  D
- . S STOP=$P(^PXRMD(810.9,ITEM,40.7,IND,0),U,1)
+ . S SC=$P(^PXRMD(810.9,ITEM,40.7,IND,0),U,1)
  . K EXCL
  .;Check for individual credit stops to exclude entries.
  . S JND=0
@@ -191,7 +191,7 @@ LOCLIST(ITEM,SUB) ;Build a list of unique locations based on stop code
  .;See if locations with no credit stop should be excluded.
  . S EXCLNCS=+$G(^PXRMD(810.9,ITEM,40.7,IND,3))
  . S HLOC=""
- . F  S HLOC=$O(^SC("AST",STOP,HLOC)) Q:HLOC=""  D
+ . F  S HLOC=$O(^SC("AST",SC,HLOC)) Q:HLOC=""  D
  .. ;See if there are any to exclude.
  .. S CSTOP=$P(^SC(HLOC,0),U,18)
  .. I CSTOP'="",$D(EXCL(CSTOP)) Q

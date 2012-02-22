@@ -1,7 +1,6 @@
-BPSOSU1 ;BHAM ISC/FCS/DRS/FLS/DLF - copied for ECME ;03/07/08  10:34
- ;;1.0;E CLAIMS MGMT ENGINE;**1,7**;JUN 2004;Build 46
- ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;
+BPSOSU1 ;BHAM ISC/FCS/DRS/FLS/DLF - copied for ECME ;06/01/2004
+ ;;1.0;E CLAIMS MGMT ENGINE;**1**;JUN 2004
+ ;----------------------------------------------------------------------
  ;----------------------------------------------------------------------
  ;Standard Date Functions
  ;----------------------------------------------------------------------
@@ -24,7 +23,7 @@ BPSOSU1 ;BHAM ISC/FCS/DRS/FLS/DLF - copied for ECME ;03/07/08  10:34
  ;    <date>  = Internal FM Date
  ;----------------------------------------------------------------------
  ; IHS/SD/lwj 8/5/02  NCPDP 5.1 changes
- ;  Subroutine FM3EXT cloned from FM2EXT - routine used to transfer
+ ;  Subroutine FM3EXT cloned from FM2EXT - routine used to transfer 
  ;  the dates.  Now that NCPDP 5.1 stores the field ID with all the
  ;  fields, we needed currently just want to skip transforming the
  ;  date for 5.1 type claims

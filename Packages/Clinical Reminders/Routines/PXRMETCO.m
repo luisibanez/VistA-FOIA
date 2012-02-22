@@ -1,5 +1,5 @@
-PXRMETCO ; SLC/PJH - QUERI Extract Compliance Report ;06/09/2009
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
+PXRMETCO ; SLC/PJH - QUERI Extract Compliance Report ;03/27/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
  ;
 ADHOC(IEN,PXRMSTRT,PXRMSTOP) ;Ad Hoc Conformance Report
@@ -52,7 +52,7 @@ REPORT ;Initialise
  ;
  ;Bookmark - Report stuff goes here
  ;Update totals section
- N APPL,CNT,DUE,DATA,ETYP,EVAL
+ N APPL,DUE,DATA,ETYP,EVAL
  N FAPPL,FCNT,FDATA,FDUE,FEVAL,FGNAM,FIND,FNAPPL,FNDUE,FSEQ
  N NAPPL,NDUE,PXRMLIST,RCNT,RIEN,RSEQ,SEQ
  S SEQ=0,CNT=1
@@ -83,7 +83,6 @@ REPORT ;Initialise
  ;
  ;Determine whether the report should be queued.
 JOB ;
- N DBDUZ,PXRMQUE
  N %ZIS,ZTDESC,ZTSAVE,ZTRTN,ZTSK
  S DBDUZ=DUZ
  D SAVE^PXRMXQUE

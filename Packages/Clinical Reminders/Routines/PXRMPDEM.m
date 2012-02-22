@@ -1,5 +1,5 @@
-PXRMPDEM ; SLC/PKR - Computed findings for patient demographics. ;01/06/2010
- ;;2.0;CLINICAL REMINDERS;**5,4,11,12,17**;Feb 04, 2005;Build 102
+PXRMPDEM ; SLC/PKR - Computed findings for patient demographics. ;05/06/2008
+ ;;2.0;CLINICAL REMINDERS;**5,4,11**;Feb 04, 2005;Build 39
  ;
  ;======================================================
 AGE(DFN,TEST,DATE,VALUE,TEXT) ;Computed finding for returning a patient's
@@ -20,22 +20,6 @@ AGE(DFN,TEST,DATE,VALUE,TEXT) ;Computed finding for returning a patient's
  Q
  ;
  ;======================================================
-DFA(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,VALUE,TEXT) ;This computed finding
- ;returns the date the patient turns a specified age. Based on
- ;work by AJM: 9/16/08.
- ;DBIA #10035 DATE OF BIRTH is a required field.
- I TEST="" S NFOUND=0,DATE(1)=$$NOW^PXRMDATE,TEST(1)=0 Q
- S TEST=$P(TEST,".",1)
- N DOB,YOB
- S NFOUND=1
- S DOB=$S($D(PXRMDOB):PXRMDOB,1:$P(^DPT(DFN,0),U,3))
- S YOB=$E(DOB,1,3)
- S (DATE(1),VALUE(1,"VALUE"))=YOB+TEST_$E(DOB,4,7)
- S TEST(1)=1
- S TEXT(1)="Patient "_$S(DATE(1)>$$NOW^PXRMDATE:"will be ",1:"was ")_+TEST_" years old on "_$$FMTE^XLFDT(DATE(1),"5Z")
- Q
- ;
- ;======================================================
 DOB(DFN,TEST,DATE,VALUE,TEXT) ;Computed finding for a patient's
  ;date of birth.
  I $D(PXRMPDEM) S VALUE=PXRMPDEM("DOB")
@@ -53,24 +37,6 @@ DOD(DFN,TEST,DATE,VALUE,TEXT)   ;Computed finding for a patient's
  I '$D(PXRMPDEM) S VALUE=+$P($G(^DPT(DFN,.35)),U,1)
  S TEST=$S(VALUE=0:0,VALUE>$$NOW^PXRMDATE:0,1:1)
  I TEST S DATE=VALUE,TEXT=$$EDATE^PXRMDATE(VALUE)
- Q
- ;
- ;======================================================
-EMPLOYE(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,VALUE,TEXT) ;This computed finding
- ;will return true if the patient is an employee.
- ;DBIA #10035, #10060
- N IEN,PAID,SSN
- S NFOUND=1,DATE(1)=$$NOW^PXRMDATE,TEST(1)=0
- S SSN=$P($G(^DPT(DFN,0)),U,9)
- I SSN="" Q
- ;Use SSN to make the link.
- S IEN=+$O(^VA(200,"SSN",SSN,""))
- I IEN=0 Q
- S PAID=+$P($G(^VA(200,IEN,450)),U,1)
- I PAID=0 Q
- ;Check for a termination date.
- I +$P(^VA(200,IEN,0),U,11)<BDT Q
- S TEST(1)=1,TEXT(1)="Patient is an employee."
  Q
  ;
  ;======================================================
@@ -125,25 +91,6 @@ HDISCH(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,DATA,TEXT) ;Computed finding for
  Q
  ;
  ;======================================================
-INP(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,VALUE,TEXT) ;Computed finding for
- ;determining if a patient is an inpatient on the evaluation date.
- N VAIN,VAINDT
- S NFOUND=1
- S (DATE(1),VAINDT)=$$NOW^PXRMDATE
- D INP^VADPT
- I VAIN(1)="" S TEST(1)=0 D KVA^VADPT Q
- S TEST(1)=1
- S VALUE(1,"PRIMARY PROVIDER")=$P(VAIN(2),U,2)
- S VALUE(1,"TREATING SPECIALTY")=$P(VAIN(3),U,2)
- S VALUE(1,"WARD LOCATION")=$P(VAIN(4),U,2)
- S VALUE(1,"ADMISSION DATE/TIME")=$P(VAIN(7),U,1)
- S VALUE(1,"ADMISSION TYPE")=$P(VAIN(8),U,2)
- S VALUE(1,"ATTENDING PHYSICIAN")=$P(VAIN(11),U,2)
- S TEXT(1)="Patient is an inpatient; admission date/time: "_$$FMTE^XLFDT(VALUE(1,"ADMISSION DATE/TIME"),"5Z")
- D KVA^VADPT
- Q
- ;
- ;======================================================
 NEWRACE(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,VALUE,TEXT) ;Computed finding
  ;for returning a patient's multi-valued race.
  N CNT,CNT1,IND,VADM
@@ -186,55 +133,5 @@ SEX(DFN,TEST,DATE,VALUE,TEXT) ;Computed finding for returning a patient's
  I $D(PXRMPDEM) S VALUE=PXRMPDEM("SEX") Q
  ;DBIA #10035 SEX is a required field.
  I '$D(PXRMPDEM) S VALUE=$P(^DPT(DFN,0),U,2)
- Q
- ;
- ;======================================================
-WASINP(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,VALUE,TEXT) ;Computed finding for
- ;determining if a patient was an inpatient in the period defined
- ;by BDT and EDT.
- ;Access to DGPM covered by DBIA #1378
- N ADATE,ADM,ADML,DDATE,IEN,INDT,FDATE,LOS,NOCC,SDIR,TEMP
- S FDATE=$S(TEST="DISCH":"DISCH",1:"ADM")
- S SDIR=$S(NGET<0:1,1:-1)
- S NOCC=$S(NGET<0:-NGET,1:NGET)
- S NFOUND=0
- ;Use the "ATID3" index to build a last of past admissions and
- ;discharges.
- S INDT=""
- F  S INDT=$O(^DGPM("ATID3",DFN,INDT)) Q:INDT=""  D
- . S IEN=$O(^DGPM("ATID3",DFN,INDT,""))
- . S TEMP=^DGPM(IEN,0)
- . S DDATE=$P(TEMP,U,1)
- . S ADM=$P(TEMP,U,14)
- . S ADATE=$P(^DGPM(ADM,0),U,1)
- . I $$OVERLAP^PXRMINDX(ADATE,DDATE,BDT,EDT)'="O" Q
- . S ADML(ADATE)=DDATE
- ;Check for the last admission and add it if it is not on the list.
- S INDT=$O(^DGPM("ATID1",DFN,""))
- I INDT'="" D
- . S IEN=$O(^DGPM("ATID1",DFN,INDT,""))
- . S TEMP=^DGPM(IEN,0)
- . S ADATE=$P(TEMP,U,1)
- . I $D(ADML(ADATE)) Q
- . S IEN=$P(TEMP,U,17)
- .;Since this is the last admission there may not be a discharge.
- . S DDATE=$S(IEN="":$$NOW^PXRMDATE,1:$P(^DGPM(IEN,0),U,1))
- . I $$OVERLAP^PXRMINDX(ADATE,DDATE,BDT,EDT)="O" S ADML(ADATE)=DDATE
- ;Sort the list.
- S ADATE=""
- F  S ADATE=$O(ADML(ADATE),SDIR) Q:(NFOUND=NOCC)!(ADATE="")  D
- . S NFOUND=NFOUND+1
- . S TEST(NFOUND)=1
- . S DDATE=ADML(ADATE)
- . I DDATE="" S DDATE=PXRMDATE
- . S DATE(NFOUND)=$S(FDATE="DISCH":DDATE,1:ADATE)
- . S LOS=$$FMDIFF^XLFDT(DDATE,ADATE)
- . S TEMP="Inpatient from: "_$$FMTE^XLFDT(ADATE,"5Z")_" to "
- . S TEMP=TEMP_$S(DDATE=PXRMDATE:"now",1:$$FMTE^XLFDT(DDATE,"5Z"))
- . S TEMP=TEMP_"; Length of stay "_LOS_" days."
- . S TEXT(NFOUND)=TEMP
- . S VALUE(NFOUND,"ADMISSION DATE")=ADATE
- . S VALUE(NFOUND,"DISCHARGE DATE")=DDATE
- . S VALUE(NFOUND,"LENGTH OF STAY")=LOS
  Q
  ;

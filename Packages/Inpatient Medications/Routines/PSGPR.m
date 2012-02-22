@@ -12,6 +12,10 @@ PSGPR ;BIR/CML3-PATIENT PROFILE ;19 SEP 96 / 3:59 PM
  ..D:(PSJSEL("SELECT")="P") P^PSJPDIR D:(PSJSEL("SELECT")="W") W^PSJPDIR D:(PSJSEL("SELECT")="G") G^PSJPDIR
  ..; PSJ*5*169  Check PSJSTOP before continuing.
  ..Q:$G(PSJSTOP)=1
+ ..;DSS/SGM - BEGIN MODS - quit if no ward selected
+ ..I PSGSS="W",$G(PSJSEL("W"))<1 Q
+ ..I PSGSS="G",'$D(PSJSEL("WG")) Q
+ ..;DSS/SGM - END MODS
  ..I PSJSEL("SELECT")'="P",PSJSEL("SELECT")'="L" D RBPPN^PSJPDIR
  ..Q:$G(PSJSTOP)=1
  ..Q:(((PSGSS="W")!(PSGSS="G"))&($G(Y)<0))  Q:((PSGSS="P")&'$D(PSJSEL("P")))

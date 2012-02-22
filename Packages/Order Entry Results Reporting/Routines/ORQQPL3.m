@@ -1,5 +1,5 @@
-ORQQPL3 ; ALB/PDR/REV - Problem List RPCs ;11/19/09  10:15
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,148,173,243,280**;Dec 17, 1997;Build 85
+ORQQPL3 ; ALB/PDR/REV ; Problem List RPC's ; 8-OCT-1998 09:08:49.29
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,148,173,243**;Dec 17, 1997;Build 242
  ;
  ;---------------- LIST PATIENT PROBLEMS ------------------------
  ;
@@ -25,12 +25,17 @@ LIST(GMPL,GMPDFN,GMPSTAT)       ; -- Returns list of problems for patient GMPDFN
  ;    in GMPL(#)=ifn^status^description^ICD^onset^last modified^SC^SpExp^Condition^Loc^
  ;                          loc.type^prov^service
  ;     & GMPL(0)=number of problems returned
- ; This is virtually same as LIST^GMPLUTL2 except that it appends the
+ ; This is virtually same as LIST^GMPLUTL2 except that it appends the 
  ; condition - T)ranscribed or P)ermanent,location,loc type,provider, service.
+ ;
+ ;DSS/CDP - Begin Mod 
+ ;            - New GMP21600 in line LIST+14
+ ;            - Set GMP21600 to $P($G(^AUPNPROB(IFN,21600)),U,1) in line LIST+31
+ ;            - Insert line "S LIN=LIN_U_GMP21600" at LIST+66
  ;
  N I,IFN,CNT,GMPL0,GMPL1,SP,ST,NUM,ONSET,ICD,LASTMOD,PRIO,DTREC
  N SC,ORLIST,ORVIEW,GMPARAM,ORTOTAL,LIN,LOC,LT,PROV,SERV,HASCMT
- N SCCOND,AO,IR,ENV,HNC,MST,CV,SHD,ORICD186,INACT
+ N SCCOND,AO,IR,ENV,HNC,MST,CV,SHD,ORICD186,INACT,GMP21600
  Q:$G(GMPDFN)'>0
  S CNT=0,SP=""
  S GMPARAM("QUIET")=1
@@ -47,6 +52,7 @@ LIST(GMPL,GMPDFN,GMPSTAT)       ; -- Returns list of problems for patient GMPDFN
  . S INACT=""
  . S GMPL0=$G(^AUPNPROB(IFN,0))
  . S GMPL1=$G(^AUPNPROB(IFN,1))
+ . S GMP21600=$P($G(^AUPNPROB(IFN,21600)),U,1)
  . S HASCMT=($D(^AUPNPROB(IFN,11,0))>0)
  . S CNT=CNT+1
  . I +ORICD186 D
@@ -81,7 +87,9 @@ LIST(GMPL,GMPDFN,GMPSTAT)       ; -- Returns list of problems for patient GMPDFN
  . S LIN=IFN_U_ST_U_$$PROBTEXT^GMPLX(IFN)_U_ICD_U_ONSET
  . S LIN=LIN_U_LASTMOD_U_SC_U_SP_U_$P(GMPL1,U,2)
  . S LIN=LIN_U_LOC_U_LT_U_PROV_U_SERV_U_PRIO_U_HASCMT_U_DTREC_U_SCCOND_U_INACT
+ . S LIN=LIN_U_GMP21600
  . S GMPL(CNT)=LIN
+ ;DSS/CDP - End Mod 
  S GMPL(0)=CNT
  Q
  ;
@@ -206,12 +214,13 @@ PROB(TMP,GROUP) ; Get user problem list for given group
 ICDCODE(COD)    ; RETURN INTERNAL ICD FOR EXTERNAL CODE  (obsolete after CSV patches released - RV)
  N CODIEN
  I COD="" Q ""
- S CODIEN=$$CODEN^ICDCODE($P(COD,U),80) ;ICR #3990
+ S CODIEN=+$O(^ICD9("AB",$P(COD,U)_" ",0))
+ S:CODIEN'>0 CODIEN=+$O(^ICD9("AB",$P(COD,U)_"0 ",0))
  Q CODIEN
  ;
  ;------------------ Filter Providers ---------------------
  ;
-GETRPRV(RETURN,INP) ; GET LIST OF RESPONSIBLE PROVIDERS FROM PRBLM LIST
+GETRPRV(RETURN,INP) ; GET LIST OF RESPONSIBLE PROVIDERS FROM PRBLM LIST 
  ; RETURN - aa list of responsible providers from which to select for filtering
  ; INP - array of problem list providers to select from
  ;

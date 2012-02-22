@@ -1,5 +1,5 @@
 XWBDLOG ;ISF/RWF - Debug Logging for Broker ;12/08/2004  08:54
- ;;1.1;RPC BROKER;**35**;Mar 28, 1997
+ ;;1.1;RPC BROKER;**35**;Mar 28, 1997;Build 7
  Q
  ;
  ;Setup the log, Clear the log location.
@@ -13,7 +13,11 @@ LOGSTART(RTN) ;Clear the debug log
 LOG(MSG) ;Record Debug Info
  Q:'$G(XWBDEBUG)
  N CNT
- S CNT=1+$G(^XTMP("XWBLOG"_$J,.1)),^(.1)=CNT,^(CNT)=$E($H_"^"_MSG,1,255)
+ ;DSS/LM - Begin modification
+ ;S CNT=1+$G(^XTMP("XWBLOG"_$J,.1)),^(.1)=CNT,^(CNT)=$E($H_"^"_MSG,1,255)
+ S:'($G(VFDAUDIT)=1) CNT=1+$G(^XTMP("XWBLOG"_$J,.1)),^(.1)=CNT,^(CNT)=$E($H_"^"_MSG,1,255)
+ I $D(VFDAUDIT),'VFDAUDIT D RPCLOG^VFDXWB
+ ;DSS/LM - End modification
  Q
  ;
  ;

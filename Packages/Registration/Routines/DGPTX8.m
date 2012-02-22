@@ -1,4 +1,4 @@
-DGPTX8 ; GENERATED FROM 'DG801' INPUT TEMPLATE(#1664), FILE 46.1;04/23/09
+DGPTX8 ; GENERATED FROM 'DG801' INPUT TEMPLATE(#1664), FILE 46.1;05/01/09
  D DE G BEGIN
 DE S DIE="^DGICD9(46.1,",DIC=DIE,DP=46.1,DL=1,DIEL=0,DU="" K DG,DE,DB Q:$O(^DGICD9(46.1,DA,""))=""
  I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,2) S:%]"" DE(3)=%,DE(6)=% S %=$P(%Z,U,3) S:%]"" DE(15)=%,DE(18)=% S %=$P(%Z,U,4) S:%]"" DE(21)=%,DE(24)=% S %=$P(%Z,U,5) S:%]"" DE(27)=%,DE(30)=% S %=$P(%Z,U,8) S:%]"" DE(9)=%,DE(12)=%

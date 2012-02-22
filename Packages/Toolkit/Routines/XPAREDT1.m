@@ -11,7 +11,11 @@ BLDLST ; ...continued from BLDLST^XPAREDIT(LST,PAR)
  N IEN,SEQ,FN,X K LST ; make sure LST is empty initially
  S SEQ=0,LST=0
  F  S SEQ=$O(^XTV(8989.51,+PAR,30,"B",SEQ)) Q:'SEQ  S IEN=$O(^(SEQ,0)) D
- . S FN=$P(^XTV(8989.51,+PAR,30,IEN,0),"^",2) I FN=9.4,(DUZ(0)'["@") Q
+ . ;DSS/SGM - BEGIN MODS - comment-out security check for "@"
+ . ; IA# 10076 allows for read of XUSEC security key global
+ . S FN=$P(^XTV(8989.51,+PAR,30,IEN,0),"^",2) ;I FN=9.4,(DUZ(0)'["@") Q
+ . I FN=9.4,'$D(^XUSEC("VFD XPAR PACKAGE EDIT",DUZ)) Q
+ . ;DSS/SGM - END MODS
  . S X=^XTV(8989.518,FN,0),X=FN_U_$P(X,U,3)_U_U_$P(X,U,2)
  . S LST=LST+1,LST(SEQ)=X
  . S LST("M",$$UPPER($P(X,U,2)))=SEQ

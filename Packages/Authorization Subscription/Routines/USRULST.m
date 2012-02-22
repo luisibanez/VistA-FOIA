@@ -1,5 +1,5 @@
-USRULST ; SLC/JER - List Class Membership by user       ;3/23/10
- ;;1.0;AUTHORIZATION/SUBSCRIPTION;**2,3,4,9,10,16,17,21,22,28,33**;Jun 20, 1997;Build 7
+USRULST ; SLC/JER - List Class Membership by user       ;9/6/01  14:47
+ ;;1.0;AUTHORIZATION/SUBSCRIPTION;**2,3,4,9,10,16,17,21,22,28**;Jun 20, 1997
  ; 30 Jun 00 MA - Added MAIN2 to prevent stack overflow
  ; 20 Sep 00 MA - Removed MAIN2 and added GETUSER and chg protocol to
  ; avoid looping through MAIN when doing a "CHANGE VIEW".
@@ -12,7 +12,6 @@ MAIN ; Control Branching
  D ^DIC Q:+Y'>0
  S USRDUZ=+Y
  D EN^VALM(USRLTMPL)
- K USRLTMPL
  Q
 GETUSER() ; Get a new user
  N DIC,X,Y
@@ -28,10 +27,9 @@ BUILD(USRDUZ) ; Build List
  ; DBIA 872 ^ORD(101)
  N USRCNT,USRNAME,USRPICK
  S (USRCNT,VALMCNT)=0
- S USRPICK=+$O(^ORD(101,"B","USR ACTION SELECT LIST ELEMENT",0)) ;ICR 87
+ S USRPICK=+$O(^ORD(101,"B","USR ACTION SELECT LIST ELEMENT",0))
  K ^TMP("USRUSER",$J),^TMP("USRUSERIDX",$J),^TMP("USRU",$J)
- ;D WHATIS^USRLM(USRDUZ,"^TMP(""USRU"",$J)")
- D WHATIS^USRLM(USRDUZ,"^TMP(""USRU"",$J)",1) ; Use .01 class name 
+ D WHATIS^USRLM(USRDUZ,"^TMP(""USRU"",$J)")
  S USRNAME=""
  F  S USRNAME=$O(^TMP("USRU",$J,USRNAME),-1) Q:USRNAME=""  Q:USRNAME=0  D
  . N USRDA,USREFF,USREXP,USRMEM,USRREC,USRCLNM

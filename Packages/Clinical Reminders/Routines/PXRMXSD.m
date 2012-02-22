@@ -1,5 +1,5 @@
-PXRMXSD ; SLC/PJH - Reminder Reports DIR Prompts; 06/05/2009
- ;;2.0;CLINICAL REMINDERS;**4,12**;Feb 04, 2005;Build 73
+PXRMXSD ; SLC/PJH - Reminder Reports DIR Prompts; 08/14/2006
+ ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
  ;
 BED(YESNO) ;Option to sort by inpatient location and bed
  N DIR,X,Y
@@ -139,25 +139,6 @@ SELECT(TYPE) ;Patient Sample Selection
  I $D(DIROUT) S DTOUT=1
  I $D(DTOUT)!($D(DUOUT)) Q
  S TYPE=Y
- Q
- ;
-SEPCS(PXRMCCS) ;Allow users to determine the output of the Clinic Stops report
- N DIR,TEXT,X,Y
- K DIROUT,DIRUT,DTOUT,DUOUT
- S PXRMCCS=""
- I PXRMREP="S",PXRMTOT="T" Q
- ;PXRMLCSC only defined if report is by Clinic Stops.
- I $P($G(PXRMLCSC),U)'="CS" Q
- S TEXT="C:Report by Clinic Stops Only;"
- I PXRMREP="S" S TEXT=TEXT_"B:Report by Clinic Stops and Individual Clinic(s);"
- S TEXT=TEXT_"I:Report by Individual Clinic(s)"
- S DIR(0)="S"_U_TEXT
- S DIR("A")="Clinic Stops output"
- S DIR("B")="C"
- D ^DIR
- I $D(DIROUT) S DTOUT=1
- I $D(DTOUT)!($D(DUOUT)) Q
- S PXRMCCS=Y
  Q
  ;
 SRT(YESNO) ;Option to sort by next appointment date on detail report

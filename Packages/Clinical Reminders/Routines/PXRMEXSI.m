@@ -1,42 +1,20 @@
-PXRMEXSI ; SLC/PKR/PJH - Silent Exchange entry install. ;11/02/2009
- ;;2.0;CLINICAL REMINDERS;**6,12,17**;Feb 04, 2005;Build 102
+PXRMEXSI ; SLC/PKR/PJH - Silent repository entry install. ;09/28/2007
+ ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
  ;
- ;=======================================
-DELEXE(ENTRY,ROUTINE) ;If the Exchange File entry already exists delete it.
- N EXARRAY,IC,IND,LIST,LUVALUE,NUM
- D LDARRAY^PXRMEXSI("L",ENTRY,ROUTINE,.EXARRAY)
- S IC=0
- F  S IC=$O(EXARRAY(IC)) Q:'IC  D
- . S LUVALUE(1)=EXARRAY(IC,1)
- . D FIND^DIC(811.8,"","","U",.LUVALUE,"","","","","LIST")
- . I '$D(LIST) Q
- . S NUM=$P(LIST("DILIST",0),U,1)
- . I NUM'=0 D
- .. F IND=1:1:NUM D
- ... N DA,DIK
- ... S DIK="^PXD(811.8,"
- ... S DA=LIST("DILIST",2,IND)
- ... D ^DIK
+ ;===================================================
+INITMPG ;Initialize ^TMP arrays.
+ K ^TMP("PXRMEXFND",$J)
+ K ^TMP("PXRMEXIA",$J)
+ K ^TMP("PXRMEXIAD",$J)
+ K ^TMP("PXRMEXLC",$J)
+ K ^TMP("PXRMEXLD",$J)
+ K ^TMP("PXRMEXTMP",$J)
  Q
  ;
- ;=======================================
-EXFINC(Y,ENTRY,ROUTINE) ;Return a 1 if the Exchange file entry is in the list
- ;to include in the build. This is used in the build to determine which
- ;entries to include.
- N EXARRAY,FOUND,IEN,IC,LUVALUE
- D LDARRAY^PXRMEXSI("I",ENTRY,ROUTINE,.EXARRAY)
- S FOUND=0
- S IC=0
- F  S IC=+$O(EXARRAY(IC)) Q:(IC=0)!(FOUND)  D
- . M LUVALUE=EXARRAY(IC)
- . S IEN=+$$FIND1^DIC(811.8,"","KU",.LUVALUE)
- . I IEN=Y S FOUND=1 Q
- Q FOUND
- ;
- ;=======================================
+ ;===================================================
 INSCOM(PXRMRIEN,ACTION,IND,TEMP,REMNAME,HISTSUB) ;Install component IND
  ;of PXRMRIEN.
- N ATTR,CSUM,END,EXISTS,FILENUM,IND120,JND120,NAME
+ N ATTR,END,EXISTS,FILENUM,IND120,JND120,NAME
  N PT01,RTN,SAME,START,TEXT
  S FILENUM=$P(TEMP,U,1),EXISTS=$P(TEMP,U,4)
  S IND120=$P(TEMP,U,2),JND120=$P(TEMP,U,3)
@@ -77,16 +55,14 @@ INSCOM(PXRMRIEN,ACTION,IND,TEMP,REMNAME,HISTSUB) ;Install component IND
  E  D FILE^PXRMEXIC(PXRMRIEN,EXISTS,IND120,JND120,ACTION,.ATTR,.PXRMNMCH)
  Q
  ;
- ;=======================================
-INSDLG(PXRMRIEN,IND120,JND120,ACTION) ;Install dialog components directly
+ ;===================================================
+INSDLG(PXRMRIEN,ACTION) ;Install dialog components directly
  ;from the "SEL" array.
  N IND,FILENUM,ITEMP,NAME,REMNAME,TEMP
  ;Build the selection array in ^TMP("PXRMEXLD",$J,"SEL"). For dialogs
  ;the selection array is: 
  ;file no.^FDA start^FDA end^EXISTS^IND120^JND120^NAME
- S FILENUM=801.41
- D DBUILD^PXRMEXLB(PXRMRIEN,IND120,JND120)
- D BLDDISP^PXRMEXDB(0)
+ D BLDDISP^PXRMEXD1(0)
  ;Work through the selection array installing the dialog parts
  ;in reverse order.
  S IND=""
@@ -95,26 +71,27 @@ INSDLG(PXRMRIEN,IND120,JND120,ACTION) ;Install dialog components directly
  . S FILENUM=$P(TEMP,U,1),NAME=$P(TEMP,U,7)
  .;Dialog elements may be used more than once in a dialog so make sure
  .;the element has not already been installed.
- . S ITEMP=$P(TEMP,U,1)_U_$P(TEMP,U,4,5)_U_$$EXISTS^PXRMEXIU(FILENUM,NAME)
+ . S ITEMP=$P(TEMP,U,1)_U_$P(TEMP,U,5,6)_U_$$EXISTS^PXRMEXIU(FILENUM,NAME)
  . D INSCOM(PXRMRIEN,ACTION,IND,ITEMP,.REMNAME,"PXRMEXIAD")
  Q
  ;
- ;=======================================
+ ;===================================================
 INSTALL(PXRMRIEN,ACTION,NOR) ;Install all components in a repository entry.
  ;If NOR is true do not install routines.
- N CLOK,DNAME,FILENUM,IND,PXRMDONE,PXRMNMCH,REMNAME,TEMP
+ N DNAME,FILENUM,IND,PXRMDONE,PXRMNMCH,REMNAME,TEMP
  S PXRMDONE=0
  S NOR=$G(NOR)
  ;Initialize ^TMP globals.
- D INITMPG^PXRMEXLM
+ D INITMPG
  ;Build the component list.
  K ^PXD(811.8,PXRMRIEN,100,"B")
  K ^PXD(811.8,PXRMRIEN,120)
- D CLIST^PXRMEXCO(PXRMRIEN,.CLOK)
- I 'CLOK Q
+ D CLIST^PXRMEXU1(.PXRMRIEN)
+ I PXRMRIEN=-1 Q
  ;Build the selectable list.
  D CDISP^PXRMEXLC(PXRMRIEN)
- ;Set the install type.
+ ;Set the install date and time and type.
+ S ^TMP("PXRMEXIA",$J,"DT")=$$NOW^XLFDT
  S ^TMP("PXRMEXIA",$J,"TYPE")="SILENT"
  ;Initialize the name change storage.
  K PXRMNMCH
@@ -125,15 +102,12 @@ INSTALL(PXRMRIEN,ACTION,NOR) ;Install all components in a repository entry.
  .;If NOR is true do not install routines.
  . I FILENUM=0,NOR Q
  . ;Install dialog components
- . I FILENUM=801.41 D  Q
- .. N IND120,JND120,PXRMDONE
- .. S IND120=$P(TEMP,U,2),JND120=$P(TEMP,U,3),PXRMDONE=0
- .. D INSDLG(PXRMRIEN,IND120,JND120,ACTION)
+ . I FILENUM=801.41 N PXRMDONE S PXRMDONE=0 D INSDLG(PXRMRIEN,ACTION) Q
  . ;Install component
  . E  D INSCOM(PXRMRIEN,ACTION,IND,TEMP,.REMNAME,"PXRMEXIA")
  ;
  ;Get the dialog name
- S DNAME=$G(^TMP("PXRMEXTMP",$J,"PXRMDNAME"))
+ S DNAME=$G(^TMP("PXRMEXTMP",$J,"PXRMDNAM"))
  ;Link the dialog if it exists
  I DNAME'="" D
  . N DIEN,RIEN
@@ -157,44 +131,8 @@ INSTALL(PXRMRIEN,ACTION,NOR) ;Install all components in a repository entry.
  . K ^TMP("PXRMXMZ",$J)
  . M ^TMP("PXRMXMZ",$J)=^TMP("PXRMEXNI",$J)
  . S XMSUB="COMPONENTS SKIPPED DURING SILENT MODE INSTALL"
- . D SEND^PXRMMSG("PXRMXMZ",XMSUB)
+ . D SEND^PXRMMSG(XMSUB)
  ;Cleanup TMP globals.
- D INITMPG^PXRMEXLM
- Q
- ;
- ;=======================================
-LDARRAY(MODE,ENTRY,ROUTINE,ARRAY) ;Load ARRAY with 
- ;MODE is a string that may contain any of the following:
- ; A = include action, stored in the third column of the ARRAY entry.
- ; I = include in build, used for the data screen in the KIDS build.
- ; If MODE contains I then the date and time are stored in the second
- ; column of the ARRAY entry.
- ; L = load action, store the name in the first column of the ARRAY
- ; entry. This is the default and both A and I imply L.
- ;ENTRY is the entry point in ROUTINE which is called to populate
- ;ARRAY.
- N RTN
- S RTN=ENTRY_"^"_ROUTINE_"(MODE,.ARRAY)"
- D @RTN
- Q
- ;
- ;=======================================
-SMEXINS(ENTRY,ROUTINE) ;Silent mode install.
- N ACTION,EXARRAY,FMTSTR,IC,IEN,LUVALUE,NOUT,NTI,PXRMINST,TEXT,TEXTOUT
- S PXRMINST=1
- D LDARRAY^PXRMEXSI("IA",ENTRY,ROUTINE,.EXARRAY)
- S NTI=$O(EXARRAY(""),-1),NTI=$L(NTI)+1
- S FMTSTR=NTI_"R1^"_(77-NTI)_"L"
- S IC=0
- F  S IC=$O(EXARRAY(IC)) Q:'IC  D
- . S LUVALUE(1)=EXARRAY(IC,1),LUVALUE(2)=EXARRAY(IC,2)
- . S IEN=+$$FIND1^DIC(811.8,"","KU",.LUVALUE)
- . I IEN=0 Q
- . S TEXT=IC_".^Installing Reminder Exchange entry "_LUVALUE(1)
- . K TEXTOUT
- . D COLFMT^PXRMTEXT(FMTSTR,TEXT," ",.NOUT,.TEXTOUT)
- . D MES^XPDUTL(.TEXTOUT)
- . S ACTION=EXARRAY(IC,3)
- . D INSTALL^PXRMEXSI(IEN,ACTION,1)
+ D INITMPG
  Q
  ;

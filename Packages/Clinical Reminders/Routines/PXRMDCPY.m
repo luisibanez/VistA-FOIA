@@ -1,5 +1,5 @@
-PXRMDCPY ; SLC/PJH - Copy dialog files. ;06/12/2009
- ;;2.0;CLINICAL REMINDERS;**4,12**;Feb 04, 2005;Build 73
+PXRMDCPY ; SLC/PJH - Copy dialog files. ;07/09/2002
+ ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
  ;
  ;Called by label from PXRMDEDT
  ;
@@ -83,7 +83,7 @@ COPY(IENO,IENN,RDIEN) ;
  .D ^DIR Q:$D(DTOUT)!$D(DUOUT)
  .I Y["""" D EN^DDIOL(" name cannot contain quotes!") Q
  .I $E(Y,1,4)="PXRM" D EN^DDIOL(" name cannot begin with PXRM!") Q
- .I '$$VNAME^PXRMINTR(Y) Q
+ .I '$$VNAME^PXRMINTR(Y,801.41) Q
  .I $$UNIQNAME(Y,ROOT) S NAME=Y Q
  .D EN^DDIOL(" is not a unique name!")
  ;

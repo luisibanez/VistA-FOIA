@@ -1,5 +1,5 @@
-PXRMEXMM ; SLC/PKR - Routines to select and deal with MailMan messages ;01/18/2008
- ;;2.0;CLINICAL REMINDERS;**12**;Feb 04, 2005;Build 73
+PXRMEXMM ; SLC/PKR - Routines to select and deal with MailMan messages ;12/22/2004
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;=============================================================
 CMM(SUCCESS,LIST) ;Create a MailMan message containing the repository
  ;entries in LIST.
@@ -129,6 +129,7 @@ LMM(SUCCESS,XMZ) ;Load repository entries from a MailMan message.
  ... S FDA(811.8,"+1,",.01)=RNAME
  ... S FDA(811.8,"+1,",.02)=SOURCE
  ... S FDA(811.8,"+1,",.03)=DATEP
+ ... S FDA(811.8,"+1,",115)=$S($G(EXTYPE)="":"REMINDER",1:EXTYPE)
  ... D UPDATE^PXRMEXPU(.US,.FDA,.IENROOT)
  ... S SUCCESS(NENTRY)=US
  ...;Create the description and save the data.

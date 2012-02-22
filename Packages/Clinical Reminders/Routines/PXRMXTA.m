@@ -1,21 +1,16 @@
-PXRMXTA ; SLC/PJH - Reminder Reports Template Edit ;07/30/2009
- ;;2.0;CLINICAL REMINDERS;**4,12**;Feb 04, 2005;Build 73
+PXRMXTA ; SLC/PJH - Reminder Reports Template Edit ;06/20/2006
+ ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
  ; 
  ; Called from PXRMYD,PXRMXD
  ;
  ;Edit selected template or run report
  ;-------------------------------------
-CANEDIT(TIEN) ;
- I $P($G(^PXRMPT(810.1,TIEN,0)),U,11)=DUZ Q 1
- I $D(^XUSEC("PXRM MANAGER",DUZ)) Q 1
- Q 0
- ;
 START(ROUTINE) ;
- N DA,PXRMASK,PXRMEDIT,PXRMCOPY,MSG,DIC,NLOC
+ N PXRMASK,PXRMEDIT,PXRMCOPY,MSG,DIC,NLOC
  N PXRMTREM,PXRMTCAT
  S PXRMASK="N",PXRMCOPY="N",PXRMEDIT="N"
  ;Option to edit/copy template
-USE I 'PXRMUSER,$$CANEDIT($P(PXRMTMP,U)) D ASK(.PXRMASK) Q:$D(DUOUT)!$D(DTOUT)
+USE I 'PXRMUSER D ASK(.PXRMASK) Q:$D(DUOUT)!$D(DTOUT)
  ;Option to edit template
  I PXRMASK="Y" D  Q:$D(DUOUT)!$D(DTOUT)
  .;Template edit and redisplay
@@ -105,8 +100,6 @@ TOT I PXRMREP="S" D  Q:$D(DTOUT)  I $D(DUOUT) G EFF
  .N LIT1,LIT2,LIT3
  .D LIT^PXRMXD,TOTALS^PXRMXSD(.PXRMTOT,LIT1,LIT2,LIT3)
  ;
-SEPCS ;Allow users to determine the output of the Clinic Stops report
- D SEPCS^PXRMXSD(.PXRMCCS) G:$D(DTOUT) EXIT I $D(DUOUT) G:PXRMREP="D" SSN G TOT
  ;Option to print delimiter separated output
 TABS D  G:$D(DTOUT) EXIT I $D(DUOUT) G:PXRMREP="D" SSN G TOT
  .D TABS^PXRMXSD(.PXRMTABS)

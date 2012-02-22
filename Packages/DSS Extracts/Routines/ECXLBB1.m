@@ -1,5 +1,5 @@
 ECXLBB1 ;ALB/JRC - DSS VBECS EXTRACT ; 7/24/08 12:01pm
- ;;3.0;DSS EXTRACTS;**105,102,120,127**;Dec 22, 1997;Build 36
+ ;;3.0;DSS EXTRACTS;**105,102**;Dec 22, 1997;Build 17
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
  ; access to the VBECS EXTRACT file (#6002.03) is supported by
  ; controlled subscription to IA #4953  (global root ^VBECS(6002.03)
@@ -12,7 +12,7 @@ START ; Entry point from tasked job
  ; begin package specific extract
  N ECTRSP,ECADMT,ECTODT,ECENCTR,ECPAT,ECLRDFN,ECXPHY,ECXPHYPC
  N ECD,ECXDFN,ECARRY,EC66,ECERR,ECTRFDT,ECTRFTM,ECX,ECINOUT,ECXINST
- N ECPHYNPI,ECREQNPI,ECXPATCAT
+ N ECPHYNPI,ECREQNPI
  ;variables ECFILE,EC23,ECXYM,ECINST,ECSD,ECSD1,ECED passed in 
  ; by taskmanager 
  ; ECED defined in ^ECXTRAC - end date of the extract
@@ -23,7 +23,6 @@ START ; Entry point from tasked job
  I $D(ZTQUEUED),$$S^%ZTLOAD S QFLG=1 Q  ;quit if tasked and user sends stop request  (QFLG assigned in ECXTRAC)
  ;
 AUDRPT ; entry point for pre-extract audit report
- N RECORD
  S RECORD=0,ECD=ECSD-.1,ECTODT=ECED+.9
  F  S ECD=$O(^VBEC(6002.03,"C",ECD)) Q:'ECD!(ECD>ECTODT)  S RECORD=0 F  S RECORD=$O(^VBEC(6002.03,"C",ECD,RECORD)) Q:RECORD'>0  S EC0=^VBEC(6002.03,RECORD,0) D
  .; ECARRY(1)=TRANSFUSION DATE AND TIME, ECARRY(3)=COMPONENT 
@@ -57,7 +56,6 @@ AUDRPT ; entry point for pre-extract audit report
  ;
 GETDATA ; gather rest of extract data that will be recorded in an 
  ; entry in file 727.829
- N ECXSTR
  S ECTRFDT=$$ECXDOB^ECXUTL(ECARRY(1)),ECTRFTM=$$ECXTIME^ECXUTL(ECARRY(1))
  S ECX=$$INP^ECXUTL2(ECXDFN,ECARRY(1)),ECINOUT=$P(ECX,U),ECTRSP=$P(ECX,U,3),ECADMT=$P(ECX,U,4)
  ;
@@ -69,19 +67,13 @@ GETDATA ; gather rest of extract data that will be recorded in an
  ;get emergency response indicator (FEMA)
  S ECXERI=$G(ECPAT("ERI"))
  ;
- ; ******* - PATCH 127, ADD PATCAT CODE ********
- S ECXPATCAT=$$PATCAT^ECXUTL(ECXDFN)
  S ECXSTR=$G(EC23)_"^"_ECINST_"^"_ECXDFN_"^"_ECPAT("SSN")_"^"_ECPAT("NAME")_"^"_ECINOUT_"^"_ECENCTR_"^"_ECTRFDT_"^"_ECTRFTM_"^"_ECARRY(3)_"^"_ECARRY(4)_"^"_ECARRY(5)_"^"_ECARRY(7)_"^"_ECARRY(6)_"^"_ECARRY(8)_"^BB"_ECARRY(13)_"^^"
  I $G(ECXLOGIC)>2005 S ECXSTR=ECXSTR_U_ECXPHY_U_ECXPHYPC
  I $G(ECXLOGIC)>2006 D
  .S ECXSTR=ECXSTR_U_ECXERI_U_ECARRY(11)_U_ECARRY(12)_U_ECARRY(9)_U_ECARRY(10)_U_ECARRY(13)_U
  I '$D(ECXRPT) D FILE(ECXSTR) Q
  S ^TMP("ECXLBB",$J,ECXDFN,ECD)=ECXSTR  ;temporary global array
- I $D(ECXCRPT) D
- . N ECCOUNT S ECCOUNT=0
- . F  S ECCOUNT=ECCOUNT+1 Q:'$D(^TMP("ECXLBBC",$J,$S($G(ECXCFLG)=1:ECARRY(4),1:"ZZNOZZ"),ECXDFN,ECTRFDT_"."_ECTRFTM_"."_ECCOUNT,"S"))
- . S ^TMP("ECXLBBC",$J,$S($G(ECXCFLG)=1:ECARRY(4),1:"ZZNOZZ"),ECXDFN,ECTRFDT_"."_ECTRFTM_"."_ECCOUNT,"S")=ECXSTR
- ;   used in ECXPLBB/ECXLBBC (pre-extract audit report)
+ ;   used in ECXPLBB (pre-extract audit report)
  Q
  ;
 PAT(ECXDFN) ;get/set patient data
@@ -118,7 +110,6 @@ FILE(ECODE) ;
  I ECXLOGIC>2007 D
  .S ECODE=ECODE_ECPHYNPI_U
  .S ECODE1=$G(ECREQNPI)
- .I ECXLOGIC>2010 S ECODE1=ECODE1_U_ECXPATCAT
  S ^ECX(ECFILE,EC7,0)=ECODE,^ECX(ECFILE,EC7,1)=$G(ECODE1),ECRN=ECRN+1
  S DA=EC7,DIK="^ECX("_ECFILE_"," D IX1^DIK K DIK,DA
  Q

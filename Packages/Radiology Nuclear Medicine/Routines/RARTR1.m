@@ -1,25 +1,14 @@
 RARTR1 ;HISC/FPT,GJC-Queue/print Radiology Reports (cont.) ;1/8/97  08:08
- ;;5.0;Radiology/Nuclear Medicine;**8,18,56,97**;Mar 16, 1998;Build 6
- ;Supported IA #1571 ^LEX(757.01
+ ;;5.0;Radiology/Nuclear Medicine;**8,18,56**;Mar 16, 1998;Build 3
  ;Supported IA #10104 REPEAT^XLFSTR
  ;Supported IA #10060 and #2056 $$GET1^DIQ for file 200
  ;last modification by SS for P18 JUNE 29,00
 PRTDX ; print dx codes on report
- N RATMP,RATMP1
  I '$D(RAUTOE) D HANG^RARTR2:($Y+RAFOOT+4)>IOSL Q:$D(RAOOUT)  D HD^RARTR:($Y+RAFOOT+4)>IOSL
  S RADXCODE=$P(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0),U,13)
- I '$D(RAUTOE) D
- . W !?RATAB,"Primary Diagnostic Code: ",!?RATAB+4
- . W $S($D(^RA(78.3,+RADXCODE,0)):$P(^(0),U,1),1:"")
- . S RATMP=$$GET1^DIQ(757.01,$P($G(^RA(78.3,+RADXCODE,0)),U,6),.01)
- . W:RATMP]"" " (",RATMP,")"
- . Q
+ I '$D(RAUTOE) W !?RATAB,"Primary Diagnostic Code: ",!?RATAB+4,$S($D(^RA(78.3,+RADXCODE,0)):$P(^(0),U,1),1:"")
  I $D(RAUTOE) D
- . S RATMP1="    Primary Diagnostic Code: "
- . S RATMP1=RATMP1_$S($D(^RA(78.3,+RADXCODE,0)):$P(^(0),U,1),1:"")
- . S RATMP=$$GET1^DIQ(757.01,$P($G(^RA(78.3,+RADXCODE,0)),U,6),.01)
- . I RATMP]"" S RATMP1=RATMP1_" ("_RATMP_")"
- . S ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))=RATMP1
+ . S ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))="    Primary Diagnostic Code: "_$S($D(^RA(78.3,+RADXCODE,0)):$P(^(0),U,1),1:"")
  . Q
  I '$D(RAUTOE) D HANG^RARTR2:($Y+RAFOOT+4)>IOSL Q:$D(RAOOUT)  D HD^RARTR:($Y+RAFOOT+4)>IOSL
  I '$D(RAUTOE),('$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"DX",0))) W ! Q
@@ -27,11 +16,7 @@ PRTDX ; print dx codes on report
  . W !!?RATAB,"Secondary Diagnostic Codes: "
  . S RADXCODE=0
  . F  S RADXCODE=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"DX","B",RADXCODE)) Q:RADXCODE'>0!('$D(^RA(78.3,+RADXCODE,0)))!($D(RAOOUT))  D
- .. D HANG^RARTR2:($Y+RAFOOT+4)>IOSL Q:$D(RAOOUT)
- .. D HD^RARTR:($Y+RAFOOT+4)>IOSL
- .. W !?RATAB+4,$P(^RA(78.3,RADXCODE,0),U,1)
- .. S RATMP=$$GET1^DIQ(757.01,$P($G(^RA(78.3,+RADXCODE,0)),U,6),.01)
- .. W:RATMP]"" " (",RATMP,")"
+ .. D HANG^RARTR2:($Y+RAFOOT+4)>IOSL Q:$D(RAOOUT)  D HD^RARTR:($Y+RAFOOT+4)>IOSL W !?RATAB+4,$P(^RA(78.3,RADXCODE,0),U,1)
  .. Q
  . K RADXCODE W !
  . Q
@@ -43,10 +28,7 @@ PRTDX ; print dx codes on report
  . S RADXCODE=0
  . F  S RADXCODE=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"DX","B",RADXCODE)) Q:RADXCODE'>0  D
  .. Q:'$D(^RA(78.3,+$G(RADXCODE),0))#2
- .. S RATMP=$$GET1^DIQ(757.01,$P($G(^RA(78.3,+RADXCODE,0)),U,6),.01)
- .. S RATMP1="      "_$P(^RA(78.3,+$G(RADXCODE),0),U)
- .. S RATMP1=RATMP1_$S(RATMP="":"",1:" ("_RATMP_")")
- .. S ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))=RATMP1
+ .. S ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))="      "_$P(^RA(78.3,+$G(RADXCODE),0),U)
  .. Q
  . S ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))=""
  . Q

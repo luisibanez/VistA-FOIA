@@ -1,8 +1,8 @@
-PXRMXD ; SLC/PJH - Reminder Due reports DRIVER ;07/30/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMXD ; SLC/PJH - Reminder Due reports DRIVER ;11/27/2006
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
 START ; Arrays and strings
- N PX,PXRMDEV,PXRMHFIO,PXRMIOP,PXRMXST,PXRMOPT,PXRMQUE,PXRMXTMP,PXRMSEL
+ N PXRMIOD,PXRMXST,PXRMOPT,PXRMQUE,PXRMXTMP,PXRMSEL
  N PXRMFAC,PXRMFACN,PXRMSCAT,PXRMSRT,PXRMTYP
  N REMINDER,PXRMINP,PXRMFCMB,PXRMLCMB,PXRMTCMB,PXRMTOT
  ; Addenda
@@ -16,10 +16,9 @@ START ; Arrays and strings
  N PXRMRT,PXRMSSN,PXRMTABC,PXRMTABS,PXRMTMP,TITLE,VALUE
  N DBDOWN,DBDUZ,DBERR,PXRMLIST,PXRMLIS1,Y
  N PLISTPUG
- N PXRMTPAT,PXRMDPAT,PXRMPML,PXRMPER,PXRMCCS,PXRMXCCS,PXRMOWN
+ N PXRMTPAT,PXRMDPAT,PXRMPML
  ;
  S PXRMRT="PXRMX",PXRMTYP="X",PXRMFCMB="N",PXRMLCMB="N",PXRMTCMB="N"
- S PXRMCCS=""
  ;
  I '$D(PXRMUSER) N PXRMUSER S PXRMUSER=0
  ;
@@ -27,9 +26,7 @@ START ; Arrays and strings
  H 1
  S PXRMXST=$$NOW^XLFDT
  S PXRMXTMP=PXRMRT_PXRMXST
- S PXRMXCCS=PXRMRT_"SEPCLINIC"_PXRMXST
  S ^XTMP(PXRMXTMP,0)=$$FMADD^XLFDT(DT,7)_U_DT_U_"PXRM Reminder Due Report"
- S ^XTMP(PXRMXCCS,0)=$$FMADD^XLFDT(DT,7)_U_DT_U_"PXRM Reminder Due Report Seperate Clinic Stop"
  ;
  ;Check for existing report templates
 REP ;
@@ -74,8 +71,7 @@ OPT ;Variable prompts
  S PXRMINP=$$INP
  ;
  ; Primary Provider or All (PCMM Provider only)
-PRIME ;
- I PXRMSEL="P" D  G:$D(DTOUT) EXIT G:$D(DUOUT) OPT
+PRIME I PXRMSEL="P" D  G:$D(DTOUT) EXIT G:$D(DUOUT) OPT
  .D PRIME^PXRMXSD(.PXRMPRIM)
  ;
 DR ; Get the date range.
@@ -156,25 +152,13 @@ TOT I PXRMREP="S" D  G:$D(DTOUT) EXIT I $D(DUOUT) G TYP
  .N LIT1,LIT2,LIT3
  .D LIT,TOTALS^PXRMXSD(.PXRMTOT,LIT1,LIT2,LIT3)
  ;
-SEPCS ;Allow users to determine the output of the Clinic Stops report
- D SEPCS^PXRMXSD(.PXRMCCS) G:$D(DTOUT) EXIT I $D(DUOUT) G:PXRMREP="D" SSN G TOT
- ;
-MLOC ;Print Locations empty location at the end of the report
+MLOC     ;Print Locations empty location at the end of the report
  W !
  S DIR(0)="Y",DIR("B")="YES",DIR("A")="Print locations with no patients"
  D ^DIR
  I Y="^^" G EXIT
- I Y=U G:$P(PXRMLCSC,U)="CS" SEPCS G:PXRMREP="D" SSN G TOT
+ I Y=U G:PXRMREP="D" SSN G TOT
  S PXRMPML=Y
- ;
-DPER ;Print percentage with the report outut
- W !
- S DIR(0)="Y",DIR("B")="NO"
- S DIR("A")="Print percentages with the report output"
- D ^DIR
- I Y="^^" G EXIT
- I Y=U G MLOC
- S PXRMPER=Y
  ;
  ;Reminder Category/Individual Reminder Selection
 RCAT ;

@@ -1,5 +1,5 @@
-MPIFQ0 ;ALB/RJS-QUERY HANDLER TOP LEVEL ; 5/14/08 6:20pm
- ;;1.0; MASTER PATIENT INDEX VISTA ;**1,3,8,14,13,16,17,21,20,24,26,28,31,33,35,38,43,52**;30 Apr 99;Build 7
+MPIFQ0 ;ALB/RJS-QUERY HANDLER TOP LEVEL ;JUL 11, 1997
+ ;;1.0; MASTER PATIENT INDEX VISTA ;**1,3,8,14,13,16,17,21,20,24,26,28,31,33,35,38,43**;30 Apr 99
  ;
  ; Integration Agreements utilized:
  ;  EXC, START and STOP^RGHLLOG - #2796
@@ -25,6 +25,9 @@ CIRNEXC ; Exception Entry Point
  ;MPIQRYNM="VTQ_PID_ICN_NO_LOAD" **43 CHANGING QUERY NAME
  G JUMP
 VTQ G:$G(DFN)']"" END
+ ;DSS/LM - Begin Mod - Disable Connect to MPI
+ G EXIT
+ ;DSS/LM - Mod End
  N LOCDATA ;Data Returned from GETDATA in ICN array
  D GETDATA("^DPT(",DFN,"LOCDATA",".01;.02;.03;.09;.301;391;1901")
  S LOCDATA(2,DFN,991.01)=$P($$MPINODE^MPIFAPI(DFN),"^"),TSSN=LOCDATA(2,DFN,.09)
@@ -69,7 +72,9 @@ DECIDE ;If no data in ^TMP that means the patient was not found in the MPI w/VTQ
  .I '$D(MPIFS) W:'$D(MPIFRPC) !!,"Exact match for Patient was not found in the MPI..."
  .D A28^MPIFQ3(DFN) S MPIFRTN="DID A28"
  .;**43 log potential match exception if exist
- .;**52 removed all references to logging of Potential Matches because that will be done via a remote RPC in the Probabilistic Search flow on the MPI
+ .I MPIPOT=1 D
+ ..D START^RGHLLOG(0),EXC^RGHLLOG(218,"Potential match(es) found, please review via MPI/PD Exception Handler",DFN),STOP^RGHLLOG(0)
+ ..K MPIPOT
  ;If INDEX=1 it means we got 1 match check SSN see if definitely same pt
  I (INDEX=1) D  G EXIT
  .;**43 Removed &(TSSN=SSN) from line above as there will only be an exact match returned now
@@ -78,12 +83,8 @@ DECIDE ;If no data in ^TMP that means the patient was not found in the MPI w/VTQ
  .D START^RGHLLOG(0)
  .S TICN=$$GETDFN^MPIF001(+ICN)
  .I TICN>0,DFN'=TICN D
- ..; call the new DUPLICATE RECORD MERGE ADD API (see section 3.2.1.2)
- ..N XDRSLT,XDRLST,XDRFL
- ..S XDRFL=2,XDRLST(1)=TICN_"^"_DFN
- ..D ADD^XDRDADDS(.XDRSLT,XDRFL,.XDRLST) S TWODFN=1
- ..;D TWODFNS^MPIF002(TICN,DFN,ICN) S TWODFN=1
- ..;I '$D(MPIFS) W:'$D(MPIFRPC) !!,"Exception logged, another patient has the ICN returned already, requesting new ICN for this patient..."
+ ..D TWODFNS^MPIF002(TICN,DFN,ICN) S TWODFN=1
+ ..I '$D(MPIFS) W:'$D(MPIFRPC) !!,"Exception logged, another patient has the ICN returned already, requesting new ICN for this patient..."
  ..D A28^MPIFQ3(DFN),STOP^RGHLLOG(0) S MPIFRTN="Did A28" Q
  .;I TICN>0&(DFN'=TICN)
  .; CHECK IF NAME IS SAME - IF NOT POTENTIAL MATCH EXCEPTION
@@ -101,7 +102,7 @@ DECIDE ;If no data in ^TMP that means the patient was not found in the MPI w/VTQ
  .;I '$D(EXC) S EXC=214,TEXT="Name fields don't match between site and MPI for DFN "_DFN
  .;I $D(MPIFINT) D START^MPIFQ1(INDEX) Q
  .;I '$D(MPIFINT) D LOC2^MPIFQ3(DFN) Q
- .I '$D(MPIFS)&('$D(TWODFN)) W:'$D(MPIFRPC) !!,"Found Patient "_$G(LOCDATA(2,DFN,.01))_" on MPI",!,"  Updating ICN to "_+ICN_"  - just a minute..."
+ .I '$D(MPIFS)&('$D(TWODFN)) W:'$D(MPIFRPC) !!,"Found Patient "_$G(LOCDATA(2,DFN,.01))_" on MPI",!,"  Updating ICN to "_+ICN_" and CMOR to "_$P($$NS^XUAF4(IEN),"^")_" ("_CMOR_")  - just a minute..."
  .D STOP^RGHLLOG(0),UPDATE(DFN,ICN,CMOR) S MPIFRTN="GOT 1 HIT FROM MPI"
  ;I '$D(MPIFINT) D  G EXIT
  ;. came in via PIMS options to d/c with MPI

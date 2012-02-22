@@ -1,7 +1,9 @@
-PXRMXEVL ; SLC/AGP - Reports Reminder Evaluation routine;02/12/2009
- ;;2.0;CLINICAL REMINDERS;**4,12**;Feb 04, 2005;Build 73
+PXRMXEVL ; SLC/AGP - Reports Reminder Evaluation routine;12/9/2005
+ ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
  ;
  ; Called by label from PXRMXSE1
+ ;
+ ; 
  ;
  ;Detailed report
 EVAL(SUB,REMINDER) ;
@@ -12,7 +14,7 @@ EVAL(SUB,REMINDER) ;
  .I $P($G(^PXD(811.9,ITEM,0)),U,6)=1 Q
  .D DEF^PXRMLDR(ITEM,.DEFARR)
  .S DFN=0 F  S DFN=$O(^TMP($J,SUB,DFN)) Q:DFN'>0!(ZTSTOP=1)  D
- ..D NOTIFY^PXRMXBSY("Evaluating Reminders",.BUSY)
+ ..I '(PXRMQUE!$D(IO("S"))!(PXRMTABS="Y")) D SPIN^PXRMXBSY("Evaluating Reminders",.BUSY)
  ..;Check if due and/or applicable (active reminder for live patient)
  ..K FIEV
  ..S PXRMDATE=PXRMSDT D EVAL^PXRM(DFN,.DEFARR,1,1,.FIEV,PXRMDATE)

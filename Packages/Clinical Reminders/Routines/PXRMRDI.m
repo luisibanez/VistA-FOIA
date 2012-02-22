@@ -1,8 +1,8 @@
-PXRMRDI ; SLC/PKR - Routines to support RDI list building. ;11/02/2009
- ;;2.0;CLINICAL REMINDERS;**4,17**;Feb 04, 2005;Build 102
+PXRMRDI ; SLC/PKR - Routines to support RDI list building. ;07/27/2006
+ ;;2.0;CLINICAL REMINDERS;**4**;Feb 04, 2005;Build 21
  ;=========================================================
 APPERR(TYPE) ;Handle errors getting appointment data.
- N ECODE,MGIEN,MGROUP,NL,TIME,TO,USER
+ N ECODE,NL,TIME,USER
  S USER=$S($D(ZTQUEUED):DBDUZ,1:DUZ)
  S TIME=$$NOW^XLFDT
  S TIME=$$FMTE^XLFDT(TIME)
@@ -13,12 +13,7 @@ APPERR(TYPE) ;Handle errors getting appointment data.
  S ECODE=0,NL=3
  F  S ECODE=$O(^TMP($J,"SDAMA301",ECODE)) Q:ECODE=""  D
  . S NL=NL+1,^TMP("PXRMXMZ",$J,NL,0)=" "_^TMP($J,"SDAMA301",ECODE)
- S TO(USER)=""
- S MGIEN=$G(^PXRM(800,1,"MGFE"))
- I MGIEN'="" D
- . S MGROUP="G."_$$GET1^DIQ(3.8,MGIEN,.01)
- . S TO(MGROUP)=""
- D SEND^PXRMMSG("PXRMXMZ","Scheduling database error(s)",.TO)
+ D SEND^PXRMMSG("Scheduling database error(s)",1)
  K ^TMP($J,"SDAMA301")
  Q
  ;

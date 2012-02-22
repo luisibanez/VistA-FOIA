@@ -1,7 +1,46 @@
-PXRMXQUE ; SLC/PJH - Reminder reports general queuing routine.;02/10/2010
- ;;2.0;CLINICAL REMINDERS;**4,6,12,17**;Feb 04, 2005;Build 102
+PXRMXQUE ; SLC/PJH - Reminder reports general queuing routine.;03/23/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
- ;===============================
+ ;Determine whether the report should be queued.
+JOB ;
+ N %ZIS S %ZIS="Q"
+ W !
+ D ^%ZIS
+ I POP G EXIT^PXRMXD
+ S PXRMIOD=ION_";"_IOST_";"_IOM_";"_IOSL
+ S PXRMQUE=$G(IO("Q"))
+ ;
+ I PXRMQUE D  Q
+ . ;Queue the report.
+ . N DESC,PXRMIOV,ROUTINE,TASK,ZTDTH
+ . S DESC="Reminder Due Report - sort"
+ . S PXRMIOV=""
+ . S ROUTINE="^PXRMXSE1"
+ . M ^TMP("PXRM-MESS",$J)=^TMP("XM-MESS",$J)
+ . S TASK=$$QUE^PXRMXQUE(DESC,PXRMIOV,ROUTINE,"SAVE^PXRMXQUE") Q:TASK=""
+ . S ^XTMP(PXRMXTMP,"SORTZTSK")=TASK
+ . M ^TMP("XM-MESS",$J)=^TMP("PXRM-MESS",$J)
+ . K ^TMP("PXRM-MESS",$J)
+ .;
+ . S DESC="Reminder Due Report - print"
+ . S PXRMIOV=PXRMIOD
+ . S ROUTINE="^PXRMXPR"
+ . S ZTDTH="@"
+ . S ^XTMP(PXRMXTMP,"PRZTSK")=$$QUE^PXRMXQUE(DESC,PXRMIOV,ROUTINE,"SAVE^PXRMXQUE")
+ I 'PXRMQUE D ^PXRMXSE1
+ Q
+ ;
+QUE(DESC,PXRMIOV,ROUTINE,SAVE) ;Queue a task.
+ N ZTDESC,ZTIO,ZTRTN,ZTSAVE
+ D @SAVE
+ S ZTDESC=DESC
+ S ZTIO=PXRMIOV
+ S ZTRTN=ROUTINE
+ D ^%ZTLOAD
+ I $D(ZTSK)=0 W !!,DESC," cancelled"
+ E  W !!,DESC," has been queued, task number ",ZTSK
+ Q $G(ZTSK)
+ ;
 DEVICE(RTN,DESC,SAVE,%ZIS,RETZTSK) ;
  ;Pass RETZTSK as number such as 1 if you want to get ZTSK.
  N ZTSK
@@ -10,40 +49,33 @@ DEVICE(RTN,DESC,SAVE,%ZIS,RETZTSK) ;
  I $D(ZTSK) W !!,DESC," has been queued, task number "_ZTSK H 2
  Q $G(ZTSK)
  ;
- ;===============================
-JOB ;Get the output device.
- N POP,%ZIS
- S %ZIS="NQ"
- W !
- D ^%ZIS
- I POP G EXIT^PXRMXD
- I IOT="HFS" S PXRMHFIO=IO
- S PXRMQUE=$G(IO("Q"))
- S PXRMIOP=ION_";"_$G(IOST)_";"_$G(IO("DOC"))_";"_$G(IOM)_";"_$G(IOSL)
- ;
- I PXRMQUE D  Q
- .;Queue the report.
- . N DESC,ROUTINE,TASK
- . S DESC="Reminder Due Report"
- . S ROUTINE="START^PXRMXSE1"
- . S TASK=$$QUE^PXRMXQUE(DESC,ROUTINE,"","SAVE^PXRMXQUE")
- . Q:TASK=""
- . W !,"Report queued, task number is ",TASK
- I 'PXRMQUE D ^PXRMXSE1
+ ;=======================================================================
+REQUE(DESC,ROUTINE,TASK) ;Reque a task.
+ N ZTDTH,ZTRTN,ZTIO,ZTDESC,ZTSK
+ S ZTDESC=DESC
+ S ZTRTN=ROUTINE
+ S ZTSK=TASK
+ S ZTDTH=$$NOW^XLFDT
+ D REQ^%ZTLOAD
+ I ZTSK(0)=1 Q
+ ;There was a problem, send an error message.
+ K ZTSK S ZTSK=TASK
+ D ISQED^%ZTLOAD
+ N LC,SUB
+ K ^TMP("PXRMXMZ",$J)
+ S ^TMP("PXRMXMZ",$J,1,0)="Could not start the print task, task information:"
+ S ^TMP("PXRMXMZ",$J,2,0)=" Task number "_TASK
+ S LC=2,SUB=""
+ F  S SUB=$O(ZTSK(SUB)) Q:SUB=""  D
+ . S LC=LC+1
+ . S ^TMP("PXRMXMZ",$J,LC,0)=" ZTSK("_SUB_")="_ZTSK(SUB)
+ S LC=LC+1,^TMP("PXRMXMZ",$J,LC,0)=" Print start time="_ZTDTH
+ S LC=LC+1,^TMP("PXRMXMZ",$J,LC,0)=" Submit time="_$P(PXRMXTMP,"PXRMX",2)
+ S LC=LC+1,^TMP("PXRMXMZ",$J,LC,0)="PXRMXTMP="_$G(PXRMXTMP)
+ D SEND^PXRMMSG("REMINDER REPORT ERROR",DUZ)
  Q
  ;
- ;===============================
-QUE(ZTDESC,ZTRTN,ZTDTH,SAVERTN) ;Queue a task.
- N ZTSK
- ;If ZTIO is not explicitly set to null then %ZTLOAD will open
- ;the device.
- S ZTIO=""
- D @SAVERTN
- D ^%ZTLOAD
- I $D(ZTSK)=0 W !!,DESC," cancelled"
- Q ZTSK
- ;
- ;===============================
+ ;=======================================================================
 SAVE ;Save the variables for queing.
  S ZTSAVE("PXRMBDT")="",ZTSAVE("PXRMEDT")="",ZTSAVE("PXRMSDT")=""
  S ZTSAVE("PXRMCS(")="",ZTSAVE("NCS")=""
@@ -53,10 +85,8 @@ SAVE ;Save the variables for queing.
  S ZTSAVE("PXRMFCMB")=""
  S ZTSAVE("PXRMFUT")="",ZTSAVE("PXRMDLOC")=""
  S ZTSAVE("PXRMFD")=""
- S ZTSAVE("PXRMHFIO")=""
  S ZTSAVE("PXRMINP")=""
- S ZTSAVE("PXRMIO")=""
- S ZTSAVE("PXRMIOP")=""
+ S ZTSAVE("PXRMIOD")=""
  S ZTSAVE("PXRMLCHL(")="",ZTSAVE("NHL")=""
  S ZTSAVE("PXRMLCMB")=""
  S ZTSAVE("PXRMLCSC")=""
@@ -108,9 +138,4 @@ SAVE ;Save the variables for queing.
  S ZTSAVE("PXRMDPAT")=""
  I +$G(PXRMIDOD)>0 S ZTSAVE("PXRMIDOD")=""
  S ZTSAVE("PXRMPML")=""
- S ZTSAVE("PXRMPER")=""
- S ZTSAVE("PXRMCCS")=""
- S ZTSAVE("PXRMXCCS")=""
- I $D(^TMP("XM-MESS",$J)) S ZTSAVE("^TMP(""XM-MESS"",$J,")=""
  Q
- ;

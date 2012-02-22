@@ -1,5 +1,5 @@
-PXRMCOPY ; SLC/PKR,PJH - Copy various reminder files. ;06/12/2009
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
+PXRMCOPY ; SLC/PKR,PJH - Copy various reminder files. ;09/13/2007
+ ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
  ;
  ;=====================================================
 COPY(PROMPT,ROOT,WHAT) ;Copy an entry of ROOT into a new entry.
@@ -34,7 +34,7 @@ GETNAM D ^DIR
  S NAME=Y
  ;
  ;Make sure the new name is valid.
- I '$$VNAME^PXRMINTR(NAME) G GETNAM
+ I '$$VNAME^PXRMINTR(NAME,FILE) G GETNAM
  ;
  ;Change to the new name.
  S IENS=IENN_","
@@ -109,7 +109,7 @@ GETFOIEN(ROOT) ;Return the first open IEN in ROOT. This should be called
  ;after a call to SETSTART.
  N ENTRY,NIEN,OIEN
  S ENTRY=ROOT_0_")"
- S OIEN=+$P(@ENTRY,U,3)
+ S OIEN=$P(@ENTRY,U,3)
  S ENTRY=ROOT_OIEN_")"
  F  S NIEN=$O(@ENTRY) Q:+(NIEN-OIEN)>1  Q:+NIEN'>0  S OIEN=NIEN,ENTRY=ROOT_NIEN_")"
  Q OIEN+1

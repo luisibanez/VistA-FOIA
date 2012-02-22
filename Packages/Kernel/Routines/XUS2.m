@@ -3,6 +3,9 @@ XUS2 ;SF/RWF - TO CHECK OR RETURN USER ATTRIBUTES ;11/29/2006
  Q
  ;
 ACCED ; ACCESS CODE EDIT from DD
+ ;DSS/LM - Begin Mod
+ D X^VFDXTX("ACCESS CODE EDIT") Q
+ ;DSS/LM - Mod End
  I "Nn"[$E(X,1) S X="" Q
  I "Yy"'[$E(X,1) K X Q
  N DIR,DIR0,XUAUTO,XUK
@@ -59,11 +62,17 @@ NEWCODE D REASK I XUK W !,"OK, remember this code for next time!"
  G OUT
  ;
 CVC ;From XUS1
+ ;DSS/LM - Begin Mod
+ D X^VFDXTX("CHANGE VERIFY CODE") Q
+ ;DSS/LM - Mod End
  N DA,X
  S DA=DUZ,X="Y"
  W !,"You must change your VERIFY CODE at this time."
  ;Fall into next code
 VERED ; VERIFY CODE EDIT From DD
+ ;DSS/LM - Begin Mod
+ D X^VFDXTX("VERIFY CODE EDIT") Q
+ ;DSS/LM - Mod End
  N DIR,DIR0,XUAUTO
  I "Nn"[$E(X,1) S X="" Q
  I "Yy"'[$E(X,1) K X Q
@@ -158,6 +167,9 @@ CHK1 W "Please enter your CURRENT verify code: " D GET Q:$D(DIRUT) 0
  Q 0
  ;
 BRCVC(XV1,XV2) ;Broker change VC, return 0 if good, '1^msg' if bad.
+ ;DSS/LM - Begin Mod
+ N VFDXRSLT D X^VFDXTX("BROKER CHANGE VERIFY CODE") Q $G(VFDXRSLT)
+ ;DSS/LM - Mod End
  N XUU,XUH
  Q:$G(DUZ)'>0 "1^Bad DUZ" S DA=DUZ,XUH=$$EN^XUSHSH(XV2)
  I $P($G(^VA(200,DUZ,.1)),"^",2)'=$$EN^XUSHSH(XV1) Q "1^Sorry that isn't the correct current code"
@@ -166,6 +178,9 @@ BRCVC(XV1,XV2) ;Broker change VC, return 0 if good, '1^msg' if bad.
  Q 0
  ;
 AVHLPTXT(%) ;
+ ;DSS/LM - Begin Mod
+ N VFDXHELP D X^VFDXTX("AV HELP TEXT") Q $G(VFDXHELP)
+ ;DSS/LM - Mod End
  Q "Enter "_$S($G(%):"6-20",1:"8-20")_" characters mixed alphanumeric and punctuation (except '^', ';', ':')."
  ;
  ;Left over code, Don't think it is called anymore.

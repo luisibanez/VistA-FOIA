@@ -1,5 +1,5 @@
-PXRMEXPU ; SLC/PKR - Utilities for packing and unpacking repository entries. ;10/21/2008
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
+PXRMEXPU ; SLC/PKR - Utilities for packing and unpacking repository entries. ;09/10/2007
+ ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
  ;==================================================
 BTTABLE(DIQOUT,IENROOT,TTABLE) ;Build the DIQOUT to FDA iens translation table.
  N FILENUM,IENS,IENT,IND,UP
@@ -42,8 +42,8 @@ CLDIQOUT(DIQOUT) ;Clean up DIQOUT remove null entries and change .01's
  ...;the resolved form.
  ... I '$D(TYPE(FILENUM,FIELD)) S TYPE(FILENUM,FIELD)=$$GET1^DID(FILENUM,FIELD,"","TYPE")
  ... S PTRTO=$S(TYPE(FILENUM,FIELD)="POINTER":$$GET1^DID(FILENUM,FIELD,"","POINTER"),1:"")
- ... ;Check if this pointer is ok to transport.
- ... I '$$PTROK(PTRTO) K DIQOUT(FILENUM,IENS,FIELD) Q
+ ... ;Remove pointers to file 200.
+ ... I PTRTO="VA(200," S DIQOUT(FILENUM,IENS,FIELD)="" Q
  ...;If the field's type is COMPUTED then don't transport it.
  ... I TYPE(FILENUM,FIELD)="COMPUTED" K DIQOUT(FILENUM,IENS,FIELD) Q
  ... I TYPE(FILENUM,FIELD)="VARIABLE-POINTER" D
@@ -75,7 +75,7 @@ CONTOFDA(DIQOUT,IENROOT) ;Convert the iens from the form
  ;Clean up DIQOUT remove null entries and change .01's to the resolved
  ;form.
  D CLDIQOUT(.DIQOUT)
- ;Convert the iens to the adding FDA form.
+ ;Convert the iens to the adding FDA form .
  D BTTABLE(.DIQOUT,.IENROOT,.TTABLE)
  S FILENUM=""
  F  S FILENUM=$O(DIQOUT(FILENUM)) Q:FILENUM=""  D
@@ -89,12 +89,70 @@ CONTOFDA(DIQOUT,IENROOT) ;Convert the iens from the form
  Q
  ;
  ;==================================================
-PTROK(PTR) ;Return true if items associated with this pointer are
- ;ok to transport. Note the form of the pointer is that returned
- ;by GET1^DID(FILENUM,FIELD,"","POINTER").
- I PTR="USR(8930," Q 0
- I PTR="VA(200," Q 0
- Q 1
+GDIQF(LIST,NUM,TMPIND,SERROR) ;Save file entries into ^TMP(TMPIND,$J).
+ N CSUM,DIQOUT,IENROOT,IND,FIELD,FILENAME,IENS,MSG,PT01,TEMP
+ S ^TMP(TMPIND,$J,"NUMF")=NUM
+ F IND=1:1:NUM D
+ . S TEMP=LIST(IND)
+ . S FILENAME=$P(TEMP,U,1)
+ . S FILENUM=$P(TEMP,U,2)
+ . S IEN=$P(TEMP,U,3)
+ . K DIQOUT,IENROOT
+ .;If the file entry is ok to install then get the entire entry,
+ .;otherwise just get the .01.
+ . I $$FOKTI^PXRMEXFI(FILENUM) S FIELD="**"
+ . E  S FIELD=.01
+ . D GETS^DIQ(FILENUM,IEN,FIELD,"N","DIQOUT","MSG")
+ . I $D(MSG) D  Q
+ .. S SERROR=1,IND=NUM
+ .. N ETEXT
+ .. S ETEXT="GETS^DIQ failed for "_FILENAME_", ien="_IEN_";"
+ .. W !,ETEXT
+ .. W !,"it returned the following error:"
+ .. D AWRITE^PXRMUTIL("MSG")
+ .. H 2
+ .. K MSG
+ .;Remove edit history from all reminder files.
+ . D RMEH(FILENUM,.DIQOUT)
+ .;Convert the iens to the FDA adding form.
+ . D CONTOFDA(.DIQOUT,.IENROOT)
+ . S CSUM=$$DIQOUTCS^PXRMEXCS(.DIQOUT)
+ . S ^TMP("PXRMEXCS",$J,IND,FILENAME)=CSUM
+ .;Load the converted DIQOUT into TMP.
+ . M ^TMP(TMPIND,$J,IND,FILENAME)=DIQOUT
+ . M ^TMP(TMPIND,$J,IND,FILENAME_"_IENROOT")=IENROOT
+ Q
+ ;
+ ;==================================================
+GETREM(ACTION) ;Get the reminder to save.
+ N DIC,DUOUT,X,Y
+ S DIC="^PXD(811.9,"
+ S DIC(0)="AEMQ"
+ S DIC("A")="Select Reminder Definition to "_ACTION_": "
+ D ^DIC
+ Q Y
+ ;
+ ;==================================================
+GRTN(LIST,NUM,TMPIND,SERROR) ;Save routines into ^TMP(TMPIND,$J).
+ N DIF,IEN,IND,RA,TEMP,X,XCNP
+ S ^TMP(TMPIND,$J,"NUMR")=NUM
+ S X=""
+ F IND=1:1:NUM D
+ .;Make sure the routine exists.
+ . S X=LIST(IND)
+ . X ^%ZOSF("TEST")
+ . I $T D
+ .. K RA
+ .. S DIF="RA("
+ .. S XCNP=0
+ .. X ^%ZOSF("LOAD")
+ .. S ^TMP("PXRMEXCS",$J,"ROUTINE",X)=$$ROUTINE^PXRMEXCS(.RA)
+ .. M ^TMP(TMPIND,$J,"ROUTINE",X)=RA
+ . E  D
+ .. S SERROR=1
+ .. W !,"Warning could not find routine ",X
+ .. H 2
+ Q
  ;
  ;==================================================
 RMEH(FILENUM,DIQOUT,NOSTUB) ;Clear the edit history from all reminder files.

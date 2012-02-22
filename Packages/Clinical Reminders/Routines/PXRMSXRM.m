@@ -1,5 +1,5 @@
-PXRMSXRM ; SLC/PKR - Main driver for building indexes. ;11/02/2009
- ;;2.0;CLINICAL REMINDERS;**6,17**;Feb 04, 2005;Build 102
+PXRMSXRM ; SLC/PKR - Main driver for building indexes. ;11/23/2007
+ ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
  ;
  ;==========================================
 ADDERROR(GLOBAL,IDEN,NERROR) ;Add to the error list.
@@ -21,7 +21,7 @@ ASKTASK() ;See if this should be tasked.
  ;==========================================
 COMMSG(GLOBAL,START,END,NE,NERROR) ;Send a MailMan message providing
  ;notification that the indexing completed.
- N FROM,MGIEN,MGROUP,TO,XMSUB
+ N XMSUB
  K ^TMP("PXRMXMZ",$J)
  S XMSUB="Index for global "_GLOBAL_" sucessfully built"
  S ^TMP("PXRMXMZ",$J,1,0)="Build of Clinical Reminders index for global "_GLOBAL_" completed."
@@ -30,13 +30,7 @@ COMMSG(GLOBAL,START,END,NE,NERROR) ;Send a MailMan message providing
  S ^TMP("PXRMXMZ",$J,4,0)=$$ETIME(START,END)
  S ^TMP("PXRMXMZ",$J,5,0)=NERROR_" errors were encountered."
  I NERROR>0 S ^TMP("PXRMXMZ",$J,6,0)="Another MailMan message will contain the error information."
- S FROM=$$GET1^DIQ(200,DUZ,.01)
- S TO(DUZ)=""
- S MGIEN=$G(^PXRM(800,1,"MGFE"))
- I MGIEN'="" D
- . S MGROUP="G."_$$GET1^DIQ(3.8,MGIEN,.01)
- . S TO(MGROUP)=""
- D SEND^PXRMMSG("PXRMXMZ",XMSUB,.TO,FROM)
+ D SEND^PXRMMSG(XMSUB)
  Q
  ;
  ;==========================================
@@ -49,7 +43,7 @@ DETIME(START,END) ;Write out the elapsed time.
  ;
  ;==========================================
 ERRMSG(NERROR,GLOBAL) ;If there were errors send an error message.
- N END,FROM,IND,MAXERR,MGIEN,MGROUP,NE,TO,XMSUB
+ N END,IND,MAXERR,NE,XMSUB
  I NERROR=0 Q
  ;Return the last MAXERR errors
  S MAXERR=+$G(^PXRM(800,1,"MIERR"))
@@ -61,13 +55,7 @@ ERRMSG(NERROR,GLOBAL) ;If there were errors send an error message.
  I END=MAXERR S ^TMP("PXRMXMZ",$J,MAXERR+1,0)="GLOBAL: "_GLOBAL_"- Maximum number of errors reached, will not report any more."
  K ^TMP("PXRMERROR",$J)
  S XMSUB="CLINICAL REMINDER INDEX BUILD ERROR(S) FOR GLOBAL "_GLOBAL
- S FROM=$$GET1^DIQ(200,DUZ,.01)
- S TO(DUZ)=""
- S MGIEN=$G(^PXRM(800,1,"MGFE"))
- I MGIEN'="" D
- . S MGROUP="G."_$$GET1^DIQ(3.8,MGIEN,.01)
- . S TO(MGROUP)=""
- D SEND^PXRMMSG("PXRMXMZ",XMSUB,.TO,FROM)
+ D SEND^PXRMMSG(XMSUB)
  Q
  ;
  ;==========================================

@@ -1,9 +1,9 @@
-ECMXP ; GENERATED FROM 'EC CREATE PATIENT ENTRY' INPUT TEMPLATE(#1503), FILE 721;08/18/09
+ECMXP ; GENERATED FROM 'EC CREATE PATIENT ENTRY' INPUT TEMPLATE(#1503), FILE 721;06/14/06
  D DE G BEGIN
 DE S DIE="^ECH(",DIC=DIE,DP=721,DL=1,DIEL=0,DU="" K DG,DE,DB Q:$O(^ECH(DA,""))=""
  I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,2) S:%]"" DE(1)=% S %=$P(%Z,U,3) S:%]"" DE(2)=% S %=$P(%Z,U,4) S:%]"" DE(3)=% S %=$P(%Z,U,5) S:%]"" DE(4)=% S %=$P(%Z,U,6) S:%]"" DE(5)=% S %=$P(%Z,U,7) S:%]"" DE(6)=% S %=$P(%Z,U,8) S:%]"" DE(7)=%
- I  S %=$P(%Z,U,9) S:%]"" DE(8)=% S %=$P(%Z,U,10) S:%]"" DE(9)=% S %=$P(%Z,U,11) S:%]"" DE(10)=% S %=$P(%Z,U,12) S:%]"" DE(11)=% S %=$P(%Z,U,13) S:%]"" DE(12)=% S %=$P(%Z,U,15) S:%]"" DE(13)=% S %=$P(%Z,U,17) S:%]"" DE(14)=%
- I $D(^("P")) S %Z=^("P") S %=$P(%Z,U,1) S:%]"" DE(15)=% S %=$P(%Z,U,2) S:%]"" DE(16)=%
+ I  S %=$P(%Z,U,9) S:%]"" DE(8)=% S %=$P(%Z,U,10) S:%]"" DE(9)=% S %=$P(%Z,U,12) S:%]"" DE(10)=% S %=$P(%Z,U,13) S:%]"" DE(11)=%
+ I $D(^("P")) S %Z=^("P") S %=$P(%Z,U,1) S:%]"" DE(12)=% S %=$P(%Z,U,2) S:%]"" DE(13)=% S %=$P(%Z,U,3) S:%]"" DE(14)=% S %=$P(%Z,U,4) S:%]"" DE(15)=%
  K %Z Q
  ;
 W W !?DL+DL-2,DLB_": "
@@ -166,53 +166,46 @@ X8 Q
  S X=Y,DB(DQ)=1,DE(DW,"4/")="" G:X="" N^DIE17:DV,A I $D(DE(DQ)),DV["I"!(DV["#") D E^DIE0 G A:'$D(X)
  G RD:X="@",Z
 X9 Q
-10 S DW="0;11",DV="RP200'",DU="",DLB="*PROVIDER",DIFLD=10
- S DU="VA(200,"
- S X=$P($G(ECU(1)),"^")
- S Y=X
- S X=Y,DB(DQ)=1,DE(DW,"4/")="" G:X="" N^DIE17:DV,A I $D(DE(DQ)),DV["I"!(DV["#") D E^DIE0 G A:'$D(X)
- G RD:X="@",Z
-X10 Q
-11 S DW="0;12",DV="RP723'",DU="",DLB="ORDERING SECTION",DIFLD=11
+10 S DW="0;12",DV="RP723'",DU="",DLB="ORDERING SECTION",DIFLD=11
  S DU="ECC(723,"
  S X=$G(ECPTR("ORDSEC"))
  S Y=X
  S X=Y,DB(DQ)=1,DE(DW,"4/")="" G:X="" N^DIE17:DV,A I $D(DE(DQ)),DV["I"!(DV["#") D E^DIE0 G A:'$D(X)
  G RD:X="@",Z
-X11 Q
-12 S DW="0;13",DV="RP200'",DU="",DLB="ENTERED/EDITED BY",DIFLD=13
+X10 Q
+11 S DW="0;13",DV="RP200'",DU="",DLB="ENTERED/EDITED BY",DIFLD=13
  S DU="VA(200,"
  S X=$G(DUZ)
  S Y=X
  S X=Y,DB(DQ)=1,DE(DW,"4/")="" G:X="" N^DIE17:DV,A I $D(DE(DQ)),DV["I"!(DV["#") D E^DIE0 G A:'$D(X)
  G RD:X="@",Z
-X12 Q
-13 S DW="0;15",DV="P200'",DU="",DLB="*PROVIDER #2",DIFLD=15
- S DU="VA(200,"
- S X=$P($G(ECU(2)),"^")
- S Y=X
- S X=Y,DB(DQ)=1,DE(DW,"4/")="" G:X="" N^DIE17:DV,A I $D(DE(DQ)),DV["I"!(DV["#") D E^DIE0 G A:'$D(X)
- G RD:X="@",Z
-X13 Q
-14 S DW="0;17",DV="P200'",DU="",DLB="*PROVIDER #3",DIFLD=17
- S DU="VA(200,"
- S X=$P($G(ECU(3)),"^")
- S Y=X
- S X=Y,DB(DQ)=1,DE(DW,"4/")="" G:X="" N^DIE17:DV,A I $D(DE(DQ)),DV["I"!(DV["#") D E^DIE0 G A:'$D(X)
- G RD:X="@",Z
-X14 Q
-15 S DW="P;1",DV="P81'",DU="",DLB="PCE CPT CODE",DIFLD=19
+X11 Q
+12 S DW="P;1",DV="P81'",DU="",DLB="PCE CPT CODE",DIFLD=19
  S DU="ICPT("
  S X=$G(ECPRR("PCEPR"))
  S Y=X
  S X=Y,DB(DQ)=1,DE(DW,"4/")="" G:X="" N^DIE17:DV,A I $D(DE(DQ)),DV["I"!(DV["#") D E^DIE0 G A:'$D(X)
  G RD:X="@",Z
-X15 Q
-16 S DW="P;2",DV="R*P80'X",DU="",DLB="PRIMARY ICD-9 CODE",DIFLD=20
+X12 Q
+13 S DW="P;2",DV="R*P80'X",DU="",DLB="PRIMARY ICD-9 CODE",DIFLD=20
  S DU="ICD9("
  S X=$G(ECPTR("DX"))
  S Y=X
  S X=Y,DB(DQ)=1,DE(DW,"4/")="" G:X="" N^DIE17:DV,A I $D(DE(DQ)),DV["I"!(DV["#") D E^DIE0 G A:'$D(X)
  G RD:X="@",Z
-X16 Q
-17 D:$D(DG)>9 F^DIE17 G ^ECMXP1
+X13 Q
+14 S DW="P;3",DV="S",DU="",DLB="AGENT ORANGE",DIFLD=21
+ S DU="Y:YES;N:NO;U:UNKNOWN;"
+ S X=$G(ECPTR("AO"))
+ S Y=X
+ S X=Y,DB(DQ)=1,DE(DW,"4/")="" G:X="" N^DIE17:DV,A I $D(DE(DQ)),DV["I"!(DV["#") D E^DIE0 G A:'$D(X)
+ G RD:X="@",Z
+X14 Q
+15 S DW="P;4",DV="S",DU="",DLB="RADIATION EXPOSURE",DIFLD=22
+ S DU="Y:YES;N:NO;U:UNKNOWN;"
+ S X=$G(ECPTR("IR"))
+ S Y=X
+ S X=Y,DB(DQ)=1,DE(DW,"4/")="" G:X="" N^DIE17:DV,A I $D(DE(DQ)),DV["I"!(DV["#") D E^DIE0 G A:'$D(X)
+ G RD:X="@",Z
+X15 Q
+16 D:$D(DG)>9 F^DIE17 G ^ECMXP1

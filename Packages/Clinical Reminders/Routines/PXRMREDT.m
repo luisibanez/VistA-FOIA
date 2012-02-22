@@ -1,5 +1,5 @@
-PXRMREDT ; SLC/PKR,PJH - Edit PXRM reminder definition. ;03/20/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMREDT ; SLC/PKR,PJH - Edit PXRM reminder definition. ;10/04/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
  ;=======================================================
 EEDIT ;Entry point for PXRM DEFINITION EDIT option.
@@ -21,7 +21,7 @@ GETNAME ;Get the name of the reminder definition to edit.
  I ($D(DTOUT))!($D(DUOUT)) Q
  I Y=-1 G END
  S DA=$P(Y,U,1)
- D ALL(DIC,DA,.DEF1)
+ D ALL(DIC,DA)
  G GETNAME
 END ;
  Q
@@ -29,7 +29,7 @@ END ;
  ;=======================================================
  ;Select section of reminder to edit, also called at ALL by PXRMEDIT.
  ;----------------------------------
-ALL(DIC,DA,DEF1) ;
+ALL(DIC,DA) ;
  ;Get list of findings/terms for reminder
  N BLDLOGIC,CS1,CS2,LIST,NODE,OPTION,TYPE
  S BLDLOGIC=0
@@ -37,7 +37,7 @@ ALL(DIC,DA,DEF1) ;
  S CS1=$$FILE^PXRMEXCS(811.9,DA)
  ;Build finding list
  S NODE="^PXD(811.9)"
- D LIST(NODE,DA,.DEF1,.LIST)
+ D LIST(NODE,DA,.LIST)
  ;If this is a new reminder enter all fields
  I $P(Y,U,3)=1 D EDIT(DIC,DA) Q 
  ;National reminder allows editing of term findings only 
@@ -239,7 +239,7 @@ WEB W !!,"Web Addresses for Reminder Information"
  ;
  ;Get full list of findings
  ;-------------------------
-LIST(GBL,DA,DEF1,ARRAY) ;
+LIST(GBL,DA,ARRAY) ;
  N CNT,DATA,GLOB,IEN,NAME,NODE,SUB,TYPE
  ;Clear passed arrays
  K ARRAY
@@ -258,6 +258,7 @@ LIST(GBL,DA,DEF1,ARRAY) ;
  .I $P($G(@(U_GLOB_IEN_",0)")),U)="" D
  ..W !,"**WARNING** Finding #"_SUB_" does not exist, select finding `"_SUB_" to edit it." Q
  .E  S NAME=$P($G(@(U_GLOB_IEN_",0)")),U) S ARRAY(TYPE,NAME,SUB)=IEN
+ .;E  S NAME=$P($G(@(U_GLOB_IEN_",0)")),U) S ARRAY(TYPE,NAME,SUB)=$G(SUB)
  Q
  ;
  ;Choose which part of Reminder to edit

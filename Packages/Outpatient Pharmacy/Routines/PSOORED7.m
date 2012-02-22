@@ -1,5 +1,5 @@
 PSOORED7 ;ISC-BHAM/MFR-edit orders from backdoor con't ;03/06/95 10:24
- ;;7.0;OUTPATIENT PHARMACY;**148,247,281,289,358**;DEC 1997;Build 35
+ ;;7.0;OUTPATIENT PHARMACY;**148,247,281**;DEC 1997;Build 41
  ;called from psooredt. cmop edit checks.
  ;Reference to file #50 supported by IA 221
  ;Reference to $$ECMEON^BPSUTIL supported by IA 4410
@@ -57,8 +57,6 @@ RESUB ; Resubmits 3rd party claim in case of an edit (Original)
  . I $$SUBMIT^PSOBPSUT(RX,0,1,1) D
  . . I '$P(CHANGED,"^",2),$$STATUS^PSOBPSUT(RX,0)="" Q
  . . D ECMESND^PSOBPSU1(RX,0,,"ED",$$GETNDC^PSONDCUT(RX,0),,$S($P(CHANGED,"^",2):"RX DIVISION CHANGED",1:"RX EDITED"),,+$G(CHGNDC))
- . . ; Quit if there is an unresolved Tricare non-billable reject code, PSO*7*358
- . . I $$PSOET^PSOREJP3(RX,0) S X="Q" Q
  . . ;- Checking/Handling DUR/79 Rejects
  . . I $$FIND^PSOREJUT(RX,0) S X=$$HDLG^PSOREJU1(RX,0,"79,88","ED","IOQ","Q")
  Q
@@ -81,7 +79,7 @@ NDCDAWDE(ST,FLN,RXN) ; allow edit of NDC & DAW for DC'd/expired ECME RXs
  ;; output: VALMSG for inappropriate field selection or use
  ;;         PSODRUG & RSORXED arrays updated if edited
  Q:$G(ST)=""!($G(FLN)="")!($G(RXN)="")
- I '((ST=11)!(ST=12)!(ST=14)!(ST=15)) S VALMSG=("Invalid selection!") Q
+ I '((ST=11)!(ST=12)) S VALMSG=("Invalid selection!") Q
  I '((FLN=2)!(FLN=20)!(FLN=21)) S VALMSG=("Invalid selection!") Q
  I $$STATUS^PSOBPSUT(RXN,$$LSTRFL^PSOBPSU1(RXN))="" S VALMSG=("Invalid selection!") Q
  ;

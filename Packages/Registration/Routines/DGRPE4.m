@@ -25,7 +25,12 @@ DGRPE4 ;ALB/GTS - REGISTRATIONS EDITS ; 5/25/05 08:53am
  . . K DR,DA,Y,DIE
  . . N DGEMPST
  . . S DGEMPST=(+$P($G(^DPT(DFN,.311)),"^",15))
- . . I (DGEMPST]"")!(DGEMPST'=3)!(DGEMPST'=9) DO
+ . . ;DSS/SGM (transcribed by Lloyd) - Prevent undefined in ^DIE
+ . . ;I (DGEMPST]"")!(DGEMPST'=3)!(DGEMPST'=9) DO
+ . . ;LM - DGEMPST = +... cannot be empty. Change to >0
+ . . ;I (DGEMPST]"")&(DGEMPST'=3)&(DGEMPST'=9) DO
+ . . I (DGEMPST>0)&(DGEMPST'=3)&(DGEMPST'=9) DO
+ . . . ;DSS/SGM End mod
  . . . S (DA,Y)=DFN,DIE="^DPT(",DR="",DGDRS="DR",DGCT=0
  . . . S J1="C401"
  . . . S DGDRD=$P($T(@J1),";;",2)
@@ -50,8 +55,12 @@ DGRPE4 ;ALB/GTS - REGISTRATIONS EDITS ; 5/25/05 08:53am
  . . D ^DIE
  . . K DR,DA,Y,DIE
  . . N DGEMPST
- . . S DGEMPST=(+$P($G(^DPT(DFN,.311)),"^",15))
- . . I (DGEMPST]"")!(DGEMPST'=3)!(DGEMPST'=9) DO
+ . . ;DSS/SGM (transcribed by Lloyd) - Prevent undefined in ^DIE
+ . . ;S DGEMPST=(+$P($G(^DPT(DFN,.311)),"^",15))
+ . . ;I (DGEMPST]"")!(DGEMPST'=3)!(DGEMPST'=9) DO
+ . . S DGEMPST=(+$P($G(^DPT(DFN,.25)),"^",15))
+ . . I (DGEMPST]"")&(DGEMPST'=3)&(DGEMPST'=9) DO
+ . . . ;DSS/SGM End mod
  . . . S (DA,Y)=DFN,DIE="^DPT(",DR="",DGDRS="DR",DGCT=0
  . . . S J1="C402"
  . . . S DGDRD=$P($T(@J1),";;",2)

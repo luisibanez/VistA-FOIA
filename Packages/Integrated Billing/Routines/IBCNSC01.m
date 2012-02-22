@@ -1,5 +1,5 @@
 IBCNSC01 ;ALB/NLR - INSURANCE COMPANY EDIT ;6/1/05 10:06am
- ;;2.0;INTEGRATED BILLING;**52,137,191,184,232,320,349,371,399,416,432**;21-MAR-94;Build 192
+ ;;2.0;INTEGRATED BILLING;**52,137,191,184,232,320,349,371**;21-MAR-94;Build 57
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
 PARAM ; -- Insurance company parameters region
@@ -13,19 +13,19 @@ PARAM ; -- Insurance company parameters region
  D SET^IBCNSP(START+1,OFFSET+1,"Signature Required?: "_$S(+IBCNS03:"YES",1:"NO"))
  D SET^IBCNSP(START+2,OFFSET+10,"Reimburse?: "_$E($$EXPAND^IBTRE(36,1,$P(IBCNS0,"^",2)),1,21))
  D SET^IBCNSP(START+3,OFFSET+3,"Mult. Bedsections: "_$S(+IBCNS06:"YES",IBCNS06=0:"NO",1:""))
- D SET^IBCNSP(START+4,OFFSET+6,"One Opt. Visit: "_$S(+IBCNS08:"YES",1:"NO"))
- D SET^IBCNSP(START+5,OFFSET+4,"Diff. Rev. Codes: "_$P(IBCNS0,"^",7))
+ D SET^IBCNSP(START+4,OFFSET+4,"Diff. Rev. Codes: "_$P(IBCNS0,"^",7))
+ D SET^IBCNSP(START+5,OFFSET+6,"One Opt. Visit: "_$S(+IBCNS08:"YES",1:"NO"))
  D SET^IBCNSP(START+6,OFFSET+1,"Amb. Sur. Rev. Code: "_$P(IBCNS0,"^",9))
  D SET^IBCNSP(START+7,OFFSET+1,"Rx Refill Rev. Code: "_$P(IBCNS0,"^",15))
- D SET^IBCNSP(START+8,OFFSET+3,"Filing Time Frame: "_$P(IBCNS0,"^",12)_$S(+$P(IBCNS0,"^",18):" ("_$$FTFN^IBCNSU31(,+IBCNS)_")",1:""))
  ;
  S OFFSET=45
- D SET^IBCNSP(START+1,OFFSET+4,"Type Of Coverage: "_$$EXPAND^IBTRE(36,.13,+$P(IBCNS0,U,13)))
- D SET^IBCNSP(START+2,OFFSET+7,"Billing Phone: "_$P(IBCNS13,"^",2))
- D SET^IBCNSP(START+3,OFFSET+2,"Verification Phone: "_$P(IBCNS13,"^",4))
- D SET^IBCNSP(START+4,OFFSET+2,"Precert Comp. Name: "_$P($G(^DIC(36,+$P(IBCNS13,"^",9),0)),"^",1))
- D SET^IBCNSP(START+5,OFFSET+7,"Precert Phone: "_$$PHONE(IBCNS13))
- I +IBCNS3=2 D SET^IBCNSP(START+6,OFFSET,"Max # Test Bills/Day: "_$P(IBCNS3,U,6))
+ D SET^IBCNSP(START+1,OFFSET+3,"Filing Time Frame: "_$P(IBCNS0,"^",12))
+ D SET^IBCNSP(START+2,OFFSET+4,"Type Of Coverage: "_$$EXPAND^IBTRE(36,.13,+$P(IBCNS0,U,13)))
+ D SET^IBCNSP(START+3,OFFSET+7,"Billing Phone: "_$P(IBCNS13,"^",2))
+ D SET^IBCNSP(START+4,OFFSET+2,"Verification Phone: "_$P(IBCNS13,"^",4))
+ D SET^IBCNSP(START+5,OFFSET+2,"Precert Comp. Name: "_$P($G(^DIC(36,+$P(IBCNS13,"^",9),0)),"^",1))
+ D SET^IBCNSP(START+6,OFFSET+7,"Precert Phone: "_$$PHONE(IBCNS13))
+ I +IBCNS3=2 D SET^IBCNSP(START+7,OFFSET,"Max # Test Bills/Day: "_$P(IBCNS3,U,6))
  ;
  S START=11,OFFSET=2
  D SET^IBCNSP(START,OFFSET+28," EDI Parameters ",IORVON,IORVOFF)
@@ -44,9 +44,6 @@ PARAM ; -- Insurance company parameters region
  D SET^IBCNSP(START+4,OFFSET+5," Prof Payer Sec ID: "_$$GET1^DIQ(36,+IBCNS,6.06))
  D SET^IBCNSP(START+5,OFFSET," Prof Payer Sec ID Qual: "_$$GET1^DIQ(36,+IBCNS,6.07))
  D SET^IBCNSP(START+6,OFFSET+5," Prof Payer Sec ID: "_$$GET1^DIQ(36,+IBCNS,6.08))
- ;IB*2.0*432/TAZ Added fields 6.09 and 6.1
- D SET^IBCNSP(START+7,OFFSET-3," Prnt Sec/Tert Auto Claims: "_$$GET1^DIQ(36,+IBCNS,6.09))
- D SET^IBCNSP(START+8,OFFSET-5," Prnt Med Sec Claims w/o MRA: "_$$GET1^DIQ(36,+IBCNS,6.1))
  Q
  ;
 PHONE(IBCNS13) ; -- Compute precert company phone
@@ -84,7 +81,6 @@ MAIN ; -- Insurance company main address
 PAYER ; This procedure builds the display for the payer associated with
  ; this insurance company.
  ; ESG - 7/29/02 - IIV project
- ;     -  9/9/09 - eIV updated
  ;
  NEW PAYERIEN,PAYR,APPDATA,APP,DATA,APPNAME,A1,A2,A3,A4,A5,A6,A7,A8
  NEW START,TITLE,OFFSET,IBLINE
@@ -96,15 +92,14 @@ PAYER ; This procedure builds the display for the payer associated with
  .. S DATA=$G(^IBE(365.12,PAYERIEN,1,APP,0))
  .. S APPNAME=$$EXTERNAL^DILFD(365.121,.01,"",$P(DATA,U,1))
  .. I APPNAME="" Q
- .. I APPNAME="IIV" S APPNAME="eIV"   ; IB*2*416 - change external display to be eIV
  .. I $D(APPDATA(APPNAME)) Q
  .. S (A1,A2,A3,A4,A5,A6,A7)="NO",A8=""
  .. I $P(DATA,U,2) S A1="YES"      ; national active
  .. I $P(DATA,U,3) S A2="YES"      ; local active
  .. I $P(DATA,U,7) S A3="YES"      ; auto-accept
- .. I $P(DATA,U,8) S A4="YES"      ; ident inquiries require subscr ID (*416 field not used)
- .. I $P(DATA,U,9) S A5="YES"      ; use SSN for subscriber ID (*416 field not used)
- .. I $P(DATA,U,10) S A6="YES"     ; transmit SSN (*416 field not used)
+ .. I $P(DATA,U,8) S A4="YES"      ; ident inquiries require subscr ID
+ .. I $P(DATA,U,9) S A5="YES"      ; use SSN for subscriber ID
+ .. I $P(DATA,U,10) S A6="YES"     ; transmit SSN
  .. I $P(DATA,U,11) S A7="YES"     ; deactivated?
  .. ; A8 = deactivation date
  .. I $P(DATA,U,12) S A8=$P($$FMTE^XLFDT($P(DATA,U,12),"5Z"),"@",1)
@@ -115,7 +110,7 @@ PAYER ; This procedure builds the display for the payer associated with
  ;
  S START=$O(^TMP("IBCNSC",$J,""),-1)+1
  S IB1ST("PAYER")=START
- S TITLE=" Payer Information:  e-IV, e-Pharmacy "
+ S TITLE=" Payer Information/Electronic Insurance Verification "
  S OFFSET=(40-($L(TITLE)/2))\1+1
  D SET^IBCNSP(START,OFFSET,TITLE,IORVON,IORVOFF)
  D SET^IBCNSP(START+1,9,"Payer Name: "_$P(PAYR,U,1))
@@ -139,19 +134,25 @@ PAYER ; This procedure builds the display for the payer associated with
  . ;
  . S IBLINE=IBLINE+1
  . D SET^IBCNSP(IBLINE,2,"Payer Application: "_APPNAME)
- . D SET^IBCNSP(IBLINE,51,"FSC Auto-Update: "_$P(APPDATA(APPNAME),U,3))
+ . D SET^IBCNSP(IBLINE,50,"Auto-Accept Info: "_$P(APPDATA(APPNAME),U,3))
  . ;
  . S IBLINE=IBLINE+1
  . D SET^IBCNSP(IBLINE,4,"National Active: "_$P(APPDATA(APPNAME),U,1))
- . D SET^IBCNSP(IBLINE,55,"Deactivated: "_$P(APPDATA(APPNAME),U,7))
+ . D SET^IBCNSP(IBLINE,47,"Ident Req Subscr ID: "_$P(APPDATA(APPNAME),U,4))
  . ;
  . S IBLINE=IBLINE+1
  . D SET^IBCNSP(IBLINE,7,"Local Active: "_$P(APPDATA(APPNAME),U,2))
+ . D SET^IBCNSP(IBLINE,51,"SSN = Subscr ID: "_$P(APPDATA(APPNAME),U,5))
+ . ;
+ . S IBLINE=IBLINE+1
+ . D SET^IBCNSP(IBLINE,8,"Deactivated: "_$P(APPDATA(APPNAME),U,7))
+ . D SET^IBCNSP(IBLINE,54,"Transmit SSN: "_$P(APPDATA(APPNAME),U,6))
  . ;
  . ; If no deactivated date, then exit
  . I $P(APPDATA(APPNAME),U,8)="" Q
  . ;
- . D SET^IBCNSP(IBLINE,50,"Date Deactivated: "_$P(APPDATA(APPNAME),U,8))
+ . S IBLINE=IBLINE+1
+ . D SET^IBCNSP(IBLINE,13,"D-Date: "_$P(APPDATA(APPNAME),U,8))
  . ;
  . Q
 PAYERX ;

@@ -1,5 +1,5 @@
 PSOPMP0 ;BIRM/MFR - Patient Medication Profile - Listmanager ;10/28/06
- ;;7.0;OUTPATIENT PHARMACY;**260,281,303,289,382**;DEC 1997;Build 9
+ ;;7.0;OUTPATIENT PHARMACY;**260,281,303**;DEC 1997;Build 19
  ;Reference to EN1^GMRADPT supported by IA #10099
  ;Reference to EN6^GMRVUTL supported by IA #1120
  ;Reference to ^PS(55 supported by DBIA 2228
@@ -13,13 +13,16 @@ EN ;Menu option entry point
  ;
  ;Patient selection
  W !! S DIC=2,DIC(0)="QEAM" D ^DIC G EXIT:Y<0  S DFN=+Y
+ ;
  S PSODFN=DFN D CHKADDR^PSOBAI(DFN,1,1)  ;bad address flag/update
+ ;
  D LST(PSOSITE,DFN)
  Q
  ;
 LST(SITE,PSODFN) ;ListManager entry point
  ; Loading Division/User preferences
  D LOAD^PSOPMPPF(SITE,DUZ)
+ ;
  W !,"Please wait..."
  D EN^VALM("PSO PMP MAIN")
  D FULL^VALM1
@@ -27,6 +30,7 @@ LST(SITE,PSODFN) ;ListManager entry point
  ;
 HDR      ;Header
  N LINE,POS,LINE1,LINE2,LINE3,LINE4,WT,WTDT,HT,HTDT,VADM,DFN,PNAME,DOB,SEX,X,GMRAL,ADVREA
+ ;
  K VADM S DFN=PSODFN D DEM^VADPT
  S PNAME=VADM(1)
  S DOB=$S(+VADM(3):$P(VADM(3),"^",2)_" ("_$G(VADM(4))_")",1:"UNKNOWN")
@@ -40,11 +44,13 @@ HDR      ;Header
  S LINE4="  SEX: "_SEX,$E(LINE4,43)="EXP/CANCEL CUTOFF: "_PSOEXDCE_" DAYS"
  ;
  K VALMHDR S VALMHDR(1)=LINE1,VALMHDR(2)=LINE2,VALMHDR(3)=LINE3,VALMHDR(4)=LINE4
+ ;
  D SETHDR^PSOPMP1()
  Q
  ;
 INIT ;Populates the Body section for ListMan
- K ^TMP("PSOPMP0",$J),^TMP("PSOPMPSR",$J)
+ K ^TMP("PSOPMP0",$J)
+ ;
  D SETSORT(PSOSRTBY),SETLINE
  S VALMSG="Select the entry # to view or ?? for more actions"
  Q
@@ -59,6 +65,7 @@ SETLINE ;Sets the line to be displayed in ListMan
  ;Resetting list to NORMAL video attributes
  F I=1:1:$G(LASTLINE) D RESTORE^VALM10(I)
  K GRPLN,HIGHLN
+ ;
  ;Building the list (line by line)
  S (GROUP,STS,SUB)="",LINE=0 K ^TMP("PSOPMP0",$J)
  F  S GROUP=$O(^TMP("PSOPMPSR",$J,GROUP)) Q:GROUP=""  D
@@ -88,6 +95,7 @@ SETLINE ;Sets the line to be displayed in ListMan
  I LINE>$G(LASTLINE) D
  . F I=($G(LASTLINE)+1):1:LINE D SAVE^VALM10(I)
  . S LASTLINE=LINE
+ ;
  D VIDEO^PSOPMP1()
  S VALMCNT=+$G(LINE) D RV^PSOPMP1
  Q
@@ -118,7 +126,7 @@ SETSORT(FIELD) ;Sets the data sorted by the FIELD specified
  . S SORT=$S(FIELD="RX":RXNUM_" ",FIELD="DR":DRNAME_RXNUM,FIELD="ID":+ISSDT_RXNUM_" ",FIELD="LF":+LSTFD_RXNUM_" ")
  . S STS="<NULL>" I $G(PSOSTSGP) S STS=$P(STATUS,"^")_"^"_$P(STATUS,"^",2)
  . S GROUP=$P(PSORDSEQ("R"),"^")_"R^"_$P(PSORDSEQ("R"),"^",2)
- . I $$FIND^PSOREJUT(RX,,,"79,88") S GROUP=$P(PSORDSEQ("T"),"^")_"T^"_$P(PSORDSEQ("T"),"^",2),STS="<NULL>"
+ . I $$FIND^PSOREJUT(RX) S GROUP=$P(PSORDSEQ("T"),"^")_"T^"_$P(PSORDSEQ("T"),"^",2),STS="<NULL>"
  . S ^TMP("PSOPMPSR",$J,GROUP,STS,SORT)=Z
  . S GRPCNT(GROUP)=$G(GRPCNT(GROUP))+1,GRPCNT(GROUP,STS)=$G(GRPCNT(GROUP,STS))+1
  ;
@@ -148,6 +156,7 @@ SETSORT(FIELD) ;Sets the data sorted by the FIELD specified
  . S SORT=$S(FIELD="RX":DRNAME_ORD,FIELD="DR":DRNAME_ORD,FIELD="ID":+ISSDT_ORD,FIELD="LF":+ISSDT_ORD)
  . S ^TMP("PSOPMPSR",$J,GROUP,"<NULL>",SORT)=Z
  . S GRPCNT(GROUP)=$G(GRPCNT(GROUP))+1
+ ;
  S:$G(GRPCNT(GROUP)) ^TMP("PSOPMPSR",$J,GROUP)=$G(GRPCNT(GROUP))
  ;
  ;Loading Non-VA Med orders (file #55, sub-file #55.05)
@@ -207,31 +216,29 @@ CV ;Change View
  Q
  ;
 SEL ;Process selection of one entry
- N PSOSEL,TYPE,XQORM,ORD,TITLE,PSOLIS,XX
- S PSOLIS=$P(XQORNOD(0),"=",2) I 'PSOLIS S VALMSG="Invalid selection!",VALMBCK="R" Q
- F XX=1:1:$L(PSOLIS,",") Q:$P(PSOLIS,",",XX)']""  D
- .S PSOSEL=+$P(PSOLIS,",",XX) I 'PSOSEL S VALMSG="Invalid selection!",VALMBCK="R" Q
- .S TYPE=$O(^TMP("PSOPMP0",$J,PSOSEL,0)) I TYPE="" S VALMSG="Invalid selection!",VALMBCK="R" Q
- .S ORD=$G(^TMP("PSOPMP0",$J,PSOSEL,TYPE))
- .I 'ORD S VALMSG="Invalid selection!",VALMBCK="R" Q
- .S TITLE=VALM("TITLE")
- .;
- .;Regular prescription
- .I TYPE="RX" D  S VALMBCK="R" D REF
- .. N PSOVDA,PSOSAVE,DA,PS
- .. S (PSOVDA,DA)=ORD,PS="REJECTMP"
- .. N LINE,TITLE,PSODFN D DP^PSORXVW
- .;
- .;Pending Order
- .I TYPE="PEN" D  S VALMBCK="R" D REF
- .. N PSOACTOV,OR0
- .. S OR0=^PS(52.41,ORD,0),PSOACTOV=""
- .. N LINE,TITLE D PENHDR^PSOPMP1(PSODFN),DSPL^PSOORFI1
- .;
- .;Pending Order
- .I TYPE="NVA" D
- .. N LINE,TITLE D EN^PSONVAVW(PSODFN,ORD)
- .;
+ N PSOSEL,TYPE,XQORM,ORD,TITLE
+ S PSOSEL=+$P($P(Y(1),"^",4),"=",2) I 'PSOSEL S VALMSG="Invalid selection!",VALMBCK="R" Q
+ S TYPE=$O(^TMP("PSOPMP0",$J,PSOSEL,0)) I TYPE="" S VALMSG="Invalid selection!",VALMBCK="R" Q
+ S ORD=$G(^TMP("PSOPMP0",$J,PSOSEL,TYPE))
+ I 'ORD S VALMSG="Invalid selection!",VALMBCK="R" Q
+ S TITLE=VALM("TITLE")
+ ;
+ ;Regular prescription
+ I TYPE="RX" D  S VALMBCK="R" D REF
+ . N PSOVDA,PSOSAVE,DA,PS
+ . S (PSOVDA,DA)=ORD,PS="REJECTMP"
+ . N LINE,TITLE,PSODFN D DP^PSORXVW
+ ;
+ ;Pending Order
+ I TYPE="PEN" D  S VALMBCK="R" D REF
+ . N PSOACTOV,OR0
+ . S OR0=^PS(52.41,ORD,0),PSOACTOV=""
+ . N LINE,TITLE D PENHDR^PSOPMP1(PSODFN),DSPL^PSOORFI1
+ ;
+ ;Pending Order
+ I TYPE="NVA" D
+ . N LINE,TITLE D EN^PSONVAVW(PSODFN,ORD)
+ ;
  S VALMBCK="R",VALM("TITLE")=TITLE
  Q
  ;

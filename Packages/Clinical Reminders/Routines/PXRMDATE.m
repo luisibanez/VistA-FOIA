@@ -1,5 +1,5 @@
-PXRMDATE ; SLC/PKR - Clinical Reminders date utilities. ;10/30/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12,17**;Feb 04, 2005;Build 102
+PXRMDATE ; SLC/PKR - Clinical Reminders date utilities. ;01/24/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
  ;==================================================
 CEFD(FDA) ;Called by the Exchange Utility only if the input packed
@@ -20,7 +20,7 @@ COMPARE(X) ;Compare beginning and ending dates, give a warning if
  ;definitions and terms.
  ;Do not execute as part of exchange.
  I $G(PXRMEXCH) Q
- N BDT,EDT,TEXT
+ N BDT,EDT
  S BDT=$S(X(1)'="":$$CTFMD^PXRMDATE(X(1)),1:0)
  S EDT=X(2)
  I EDT="" S EDT="T"
@@ -42,16 +42,6 @@ COTN(EFP) ;Convert an Effective Period to the new date/time format.
  . S NUM=+EFP
  . S EFP=$S(NUM=0:"T",1:"T-"_EFP)
  Q EFP
- ;
- ;==================================================
-CTD(MULT,NUM) ;Convert months or years to days.
- N DAYS,INTDAYS,FRAC
- S DAYS=MULT*NUM
- ;Round the number of days.
- S INTDAYS=+$P(DAYS,".",1)
- S FRAC=DAYS-INTDAYS
- S DAYS=$S(FRAC<0.5:INTDAYS,1:INTDAYS+1)
- Q DAYS
  ;
  ;==================================================
 CTFMD(DATE) ;Convert DATE which may be in any of the FileMan acceptable
@@ -141,7 +131,6 @@ DURATION(START,STOP) ;Return the number days between the Start Date and
  ;
  ;==================================================
 EDATE(DATE) ;Check for an historical (event) date, format as appropriate.
- I DATE=0 Q "00/00/0000"
  Q $$FMTE^XLFDT(DATE,"5DZ")
  ;
  ;==================================================
@@ -172,15 +161,15 @@ FULLDATE(DATE) ;See if DATE is a full date, i.e., it has a month and
 FRQINDAY(FREQ) ;Given a frequency in the form ND, NM, or NY where N is a
  ;number and D stands for days, M for months, and Y for years return
  ;the value in days.
- I FREQ="" Q 0
- N LEN,NUM,UNIT
+ I FREQ="" Q ""
+ N CODE,LEN,MULT,NUM
  S LEN=$L(FREQ)
- S NUM=+$E(FREQ,1,LEN-1)
- S UNIT=$E(FREQ,LEN)
- ;30.42 is average number of days in a month, 365.24 is average number
- ;of days in a year. Unknown unit return 0.
- S NUM=$S(UNIT="D":NUM,UNIT="M":$$CTD(30.42,NUM),UNIT="Y":$$CTD(365.24,NUM),1:0)
- Q NUM
+ S NUM=$E(FREQ,1,LEN-1)
+ S CODE=$E(FREQ,LEN,LEN)
+ S MULT=1.0
+ I CODE="M" S MULT=30.42
+ I CODE="Y" S MULT=365.25
+ Q +(MULT*NUM)
  ;
  ;==================================================
 ISVSYMD(DATE) ;Return true if DATE is a valid symbolic date.
@@ -204,10 +193,29 @@ NEWDATE(FMDATE,OFFSET) ;Given a date in VA Fileman format (FMDATE) and an
  S LEN=$L(OFFSET)
  S NUM=+$E(OFFSET,1,LEN-1)
  S UNIT=$E(OFFSET,LEN)
- ;30.42 is average number of days in a month, 365.24 is average number
- ;of days in a year. Unknown unit return 0.
- S NUM=$S(UNIT="D":NUM,UNIT="M":$$CTD(30.42,NUM),UNIT="Y":$$CTD(365.24,NUM),1:0)
- Q +$$FMADD^XLFDT(FMDATE,NUM)
+ I UNIT="D" G DAY
+ I UNIT="M" G MONTH
+ I UNIT="Y" G YEAR
+ ;Unknown unit just return the original date
+ Q FMDATE
+DAY ;
+ S NEWDATE=+$$FMADD^XLFDT(FMDATE,NUM)
+ Q NEWDATE
+MONTH ;
+ ;Convert the months to days and then add the days using the DAY code.
+ ;Multiply the number of months by the average number of days in a month.
+ N INT,FRAC
+ S NUM=30.42*NUM
+ ;Round the number of days, FMADD^XLFDT has problems with non-integer
+ ;days.
+ S INT=+$P(NUM,".",1)
+ S FRAC=NUM-INT
+ I FRAC<0.5 S NUM=INT
+ E  S NUM=INT+1
+ G DAY
+ Q
+YEAR ;
+ Q FMDATE+(10000*NUM)
  ;
  ;==================================================
 NOW() ;If the reminder global PXRMDATE is defined return it, otherwise

@@ -1,5 +1,5 @@
 DGRP1 ;ALB/MRL,ERC,BAJ - DEMOGRAPHIC DATA ; 8/15/08 11:30am
- ;;5.3;Registration;**109,161,506,244,546,570,629,638,649,700,653,688,750**;Aug 13, 1993;Build 6
+ ;;5.3;Registration;**109,161,506,244,546,570,629,638,649,700,653,688**;Aug 13, 1993;Build 29
  ;
 EN ;
  S (DGRPS,DGRPW)=1 D H^DGRPU F I=0,.11,.121,.122,.13,.15,.24,57,"SSN" S DGRP(I)=$S($D(^DPT(DFN,I)):^(I),1:"")
@@ -75,7 +75,7 @@ A2 .S DGA=$O(^DPT(DFN,.01,DGA))
  .Q
  ;Display name component, sex, multiple birth indicator and alias data
  F DGI=1:1:6 D
- .W !?5,$J($P(DGNC,U,DGI),6),": ",$E($G(DGCOMP(20,DGCOMP,DGI)),1,$S(DGI=1:28,1:27))
+ .W !?5,$J($P(DGNC,U,DGI),6),": ",$E($G(DGCOMP(20,DGCOMP,DGI)),1,$S(DGI=1:23,1:27))
  .; BAJ DG*5.3*700 retrofit 06/22/06
  .I DGI=1 S (Z,DGRPW)=1 W ?43,"Sex: " S X=$P(DGRP(0),"^",2),Z=$S(X="M":"MALE",X="F":"FEMALE",1:DGRPU),Z1=3 D WW1^DGRPV
  .I DGI=1 S (Z,DGRPW)=1 W ?56,"MBI: " S X=$P($G(^DPT(DFN,"MPIMB")),U),Z=$S(X="N":"NO",X="Y":"*MULTIPLE BIRTH*",1:DGRPU),Z1=16 D WW1^DGRPV

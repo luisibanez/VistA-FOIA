@@ -1,5 +1,5 @@
 ECRRPC ;ALB/JAM - Event Capture Report RPC Broker ;2 Sep 2008
- ;;2.0; EVENT CAPTURE ;**25,47,61,72,95,101,100,107**;8 May 96;Build 14
+ ;;2.0; EVENT CAPTURE ;**25,47,61,72,95**;8 May 96;Build 26
  ;
 RPTEN(RESULTS,ECARY) ;RPC Broker entry point for EC Reports
  ;All EC GUI reports will call this line tag
@@ -11,7 +11,6 @@ RPTEN(RESULTS,ECARY) ;RPC Broker entry point for EC Reports
  ;OUTPUTS  RESULTS - Array of help text in the HELP FRAM File (#9.2)
  ;
  N HLPDA,HND,ECSTR,ECFILER,ECERR,ECDIRY,ECUFILE,ECGUI
- N ECQTIME ;CMF should not need this!  %DT call below fails for future dates within this routine
  D SETENV^ECUMRPC
  S ECERR=0,ECGUI=1 D PARSE,CHKDT I ECERR Q
  K ^TMP("ECMSG",$J),^TMP($J,"ECRPT")
@@ -20,11 +19,8 @@ RPTEN(RESULTS,ECARY) ;RPC Broker entry point for EC Reports
  . I '$D(ECDEV) S ^TMP("ECMSG",$J,1)="0^Device undefined",ECERR=1
  S HND=$P($T(@ECHNDL),";;",2) I HND="" D  Q
  . S ^TMP("ECMSG",$J,1)="0^Line Tag undefined" D END
- S ^XTMP("ECRRPT","ECRRPC","ECQDTbefore")=$G(ECQDT)  ;;cmf diagnostic hack
- S:ECPTYP="P" ECQTIME=$TR($P(ECQDT,"@",2),":","")
  S ECQDT=$G(ECQDT,"NOW"),%DT="XT",X=ECQDT D ^%DT  ;Print time
  S ECQDT=$S(Y>0:Y,1:"NOW")
- S:ECPTYP="P"&(ECQDT="NOW") ECQDT=DT_"."_ECQTIME  ;Should not have to do this! %DT malfunctions inside this routine!!!
  D @$P(HND,";",2)
  I ECPTYP="D" D HFSCLOSE(ECFILER) ;S RESULTS=$NA(^TMP($J))
 END D KILLVAR
@@ -48,8 +44,7 @@ KILLVAR ;Kill variables
  K ECARY,POP,ECQDT
  Q
 HFSOPEN(HANDLE) ; 
- ;S ECDIRY=$$GET^XPAR("DIV","EC HFS SCRATCH")
- S ECDIRY=$$DEFDIR^%ZISH()
+ S ECDIRY=$$GET^XPAR("DIV","EC HFS SCRATCH")
  I ECDIRY="" S ECERR=1 D  Q
  .S ^TMP("ECMSG",$J,1)="0^A scratch directory for reports doesn't exist"
  S ECFILER="EC"_DUZ_".DAT",ECUFILE=ECFILER S ^TMP("JEN",$J,.1)=ECUFILE
@@ -66,7 +61,6 @@ HFSCLOSE(HANDLE) ;
  S X=$$FTG^%ZISH(ECDIRY,ECFILER,$NAME(^TMP($J,1)),2)
  S X=$$DEL^%ZISH(ECDIRY,$NA(ECDEL))
  Q
- ;added ECSTPCD for EC*2*107
 ECPAT ;;Patient Summary Report;ECPAT^ECRRPT
 ECRDSSA ;;DSS Unit Activity;ECRDSSA^ECRRPT
 ECRDSSU ;;DSS Unit Workload Summary;ECRDSSU^ECRRPT
@@ -82,5 +76,3 @@ ECSUM ;;Print Category and Procedure Summary (Report);ECSUM^ECRRPT1
 ECNTPCE ;;Records Failing Transmission to PCE Report;ECNTPCE^ECRRPT1
 ECSCPT ;;Event Code Screens with CPT Codes;ECSCPT^ECRRPT1
 ECINCPT ;;National/Local Procedure Codes with Inactive CPT;ECINCPT^ECRRPT1
-ECGTP ;;Generic Table Printer;ECGTP^ECRRPT1
-ECSTPCD ;;DSS Units with Associated Stop Code Error Report;ECSTPCD^ECRRPT1

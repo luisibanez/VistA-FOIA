@@ -1,5 +1,5 @@
-PXRMINDC ; SLC/PKR - Index counting routines. ;11/02/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,17**;Feb 04, 2005;Build 102
+PXRMINDC ; SLC/PKR - Index counting routines. ;03/06/2007
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ;
  ;========================================================
 CNT5(FILENUM,COUNT) ;Get date counts for indexes where the date
@@ -135,7 +135,7 @@ COUNT ;Driver for making index counts.
  ;========================================================
 MESSAGE(FILENUM,COUNT,TOTAL,START,END) ;Build the MailMan message giving the
  ;count breakdown.
- N COFF,FROM,ML,NAME,NL,PERC,TEXT,TO,YEAR,XMSUB
+ N COFF,ML,NAME,NL,PERC,TEXT,YEAR,XMSUB
  K ^TMP("PXRMXMZ",$J)
  S ML=$$MAX^XLFMTH($L(TOTAL)+2,8)
  S COFF=ML-5
@@ -161,9 +161,7 @@ MESSAGE(FILENUM,COUNT,TOTAL,START,END) ;Build the MailMan message giving the
  I TOTAL>0,'$D(^PXRMINDX(FILENUM,"DATE BUILT")) D
  . S TEXT="Warning, the index for file "_NAME_" may be incomplete or corrupted!"
  . S NL=NL+1,^TMP("PXRMXMZ",$J,NL,0)=TEXT
- S FROM=$$GET1^DIQ(200,DUZ,.01)
- S TO(DUZ)=""
- D SEND^PXRMMSG("PXRMXMZ",XMSUB,.TO,FROM)
+ D SEND^PXRMMSG(XMSUB)
  K ^TMP("PXRMXMZ",$J)
  Q
  ;

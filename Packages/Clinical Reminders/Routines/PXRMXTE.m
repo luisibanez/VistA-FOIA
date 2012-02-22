@@ -1,5 +1,5 @@
-PXRMXTE ; SLC/PJH - Reminder Reports Template Edit ;07/30/2009
- ;;2.0;CLINICAL REMINDERS;**4,6,12**;Feb 04, 2005;Build 73
+PXRMXTE ; SLC/PJH - Reminder Reports Template Edit ;11/27/2006
+ ;;2.0;CLINICAL REMINDERS;**4,6**;Feb 04, 2005;Build 123
  ; 
  ; Called from PXRMYD,PXRMXD
  ;
@@ -55,11 +55,10 @@ EDIT ;
  I PXRMSEL="P" S DR="4T~R;1.3"
  ;PCMM teams
  I PXRMSEL="T" S DR="3T~R;8T~R"
- D ^DIE
  ;Report type (detail or summary)
- S DR=DR=DR_";1.4"
- ;Print Locations without patients and print percentages
- S DR=DR_";1.7;1.8"
+ S DR=DR_";1.4"
+ ;Print Locations without patients
+ S DR=DR_";1.7"
  ;Reminder Categories
  I $D(^PXRMPT(810.1,DA,12,0))>0 D
  .N IEN,CNT,NODE
@@ -80,9 +79,6 @@ EDIT ;
  I $E(DR)=";" S DR=$P(DR,";",2,99)
  ;
  D ^DIE I $D(Y) S DUOUT=1 Q
- ;
- ;if manager all an owner to be assigned
- I $D(^XUSEC("PXRM MANAGER",DUZ)) S DR="15" D ^DIE
  ;
  ;If all reminders have been deleted from the template disallow save
  I +$P($G(^PXRMPT(810.1,DA,1,0)),U,4)=0 D

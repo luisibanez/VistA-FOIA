@@ -1,5 +1,5 @@
-PXRMDBL3 ; SLC/PJH - Reminder Dialog Generation. (overflow) ;06/08/2009
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
+PXRMDBL3 ; SLC/PJH - Reminder Dialog Generation. (overflow) ;11/08/2007
+ ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
  ;
  ; Called from PXRMDBL1
  ;
@@ -61,7 +61,7 @@ HIS(IENN) ;
  ;Mental Health
  ;-------------
 MHOK(IEN) ;
- N DSHORT,RNAME,TEST,YT S YT=""
+ N RNAME,TEST,YT S YT=""
  ;Convert ien to name
  ;DBIA #5044
  S YT("CODE")=$P($G(^YTT(601.71,IEN,0)),U)
@@ -133,7 +133,7 @@ UPDATE(INP,WPTXT,DTYPE) ;
  .;Reminder dialog associated reminder/DISABLE
  .I DTYPE="R" D
  ..S FDA(801.41,"?+1,",2)=REM
- ..I PXRMENAB'="Y" S FDA(801.41,"?+1,",3)=1
+ ..I PXRMENAB'="Y" S FDA(801.41,"?+1,",3)="DISABLED AT AUTO GENERATE"
  .;Dialog items point to prompts and actions, Sets point to dialog items
  .N ACNT,SUB
  .;S ACNT=0,SUB=2

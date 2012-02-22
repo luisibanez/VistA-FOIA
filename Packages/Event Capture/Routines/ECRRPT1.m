@@ -1,5 +1,5 @@
 ECRRPT1 ;ALB/JAM;Event Capture Report RPC Broker ;10 JUL 2008
- ;;2.0; EVENT CAPTURE ;**25,32,33,61,78,72,90,95,100,107**;8 May 96;Build 14
+ ;;2.0; EVENT CAPTURE ;**25,32,33,61,78,72,90,95**;8 May 96;Build 26
  ;
 ECRPRSN ;Procedure Reason Report for RPC Call
  ;     Variables passed in
@@ -15,8 +15,8 @@ ECRPRSN ;Procedure Reason Report for RPC Call
  N ECROU,ECSAVE,ECDESC,ECW,DIC,X,Y
  S ECV="ECL^ECD0^ECSD^ECED^ECRY0" D REQCHK^ECRRPT(ECV) I ECERR Q
  D  I '$D(ECLOC) S ^TMP("ECMSG",$J)="1^Invalid Location." Q
- . D LOCARRY^ECRUTL I ECL="ALL" Q
- . K ECLOC I $D(ECLOC1(ECL)) S ECLOC(1)=ECL_"^"_ECLOC1(ECL)
+ . I ECL="ALL" D LOCARRY^ECRUTL Q
+ . S DIC=4,DIC(0)="QNMZX",X=ECL D ^DIC Q:Y<0  S ECLOC(1)=+Y_"^"_$P(Y,U,2)
  D  I '$D(ECDSSU) S ^TMP("ECMSG",$J)="1^Invalid DSS Unit." Q
  . I ECD0="ALL" D  Q
  . . I '$D(ECDUZ) Q
@@ -134,8 +134,8 @@ ECSUM ;Print Category and Procedure Summary (Report) for RPC Call
  N ECSCN
  S (ECJLP,ECALL)=0,ECV="ECL^ECD^ECRTN" D REQCHK^ECRRPT(ECV) I ECERR Q
  D  I '$D(ECLOC) S ^TMP("ECMSG",$J)="1^Invalid Location." Q
- . D LOCARRY^ECRUTL I ECL="ALL" Q
- . K ECLOC I $D(ECLOC1(ECL)) S ECLOC(1)=ECL_"^"_ECLOC1(ECL)
+ . I ECL="ALL" D LOCARRY^ECRUTL Q
+ . S DIC=4,DIC(0)="QNZX",X=ECL D ^DIC Q:Y<0  S ECLOC(1)=+Y_U_$P(Y,U,2)
  S ECSCN=ECRTN D  I ECERR S ^TMP("ECMSG",$J)="1^Invalid DSS Unit." Q
  . I ECD="ALL" S ECALL=1 Q
  . K DIC S DIC=724,DIC(0)="QNMZX",X=ECD D ^DIC I Y<0 S ECERR=1 Q
@@ -222,32 +222,3 @@ ECINCPT ;National/Local Procedure Codes with Inactive CPT Reports for RPC Call
  . D QUEUE^ECRRPT
  U IO D START^ECINCPT
  Q
-ECGTP ;ECS Generic Table Printer
- ;     Variables passed in
- ;       ECOBHNDL   - Handle to generic table print obj
- ;
- ;     Variable return
- ;       ^TMP($J,"ECRPT",n)=report output or to print device.
- N ECV,ECROU,ECDESC
- S ECV="ECOBHNDL" D REQCHK^ECRRPT(ECV) I ECERR Q
- I ECPTYP="P" D  Q
- . S ECV="ECOBHNDL",ECROU="START^ECGTP"
- . S ECDESC="ECS Generic Table Printer"
- . D QUEUE^ECRRPT
- D START^ECGTP
- Q
-ECSTPCD ;DSS Units with Associated Stop Code Error REPORT
- ;  EC*2*107 - added to GUI reports
- ;     Variables passed in
- ;       NONE     - No input variables
- ;
- ;     Variable return
- ;       ^TMP($J,"ECRPT",n)=report output or to print device.
- N ECV,ECL,ECDESC,ECROU,DQTIME,ECPG
- S ECPG=1
- I ECPTYP="P" D  Q
- . S ECROU="STRTGUI^ECUNTRPT",ECV="ECL",ECL=""
- . S ECDESC="DSS Units with Associated Stop Code Error"
- . D QUEUE^ECRRPT
- U IO D STRTGUI^ECUNTRPT
- Q 

@@ -1,5 +1,5 @@
-TIUPXAP1 ; SLC/JER - Interface w/PCE/Visit Tracking ;28-OCT-2003 16:45:37 [8/18/04 11:24am]
- ;;1.0;TEXT INTEGRATION UTILITIES;**15,29,20,89,82,107,117,126,124,149,179,205**;Jun 20, 1997;Build 1
+TIUPXAP1 ; SLC/JER - Interface w/PCE/Visit Tracking ; 1/8/09 2:20pm
+ ;;1.0;TEXT INTEGRATION UTILITIES ;**15,29,20,89,82,107,117,126,124,149,179,205**;Jun 20, 1997;Build 1
 QUE ; Use a RESOURCE to post visit tracking information in background
  N ZTDTH,ZTIO,ZTSAVE,ZTSK,ZTRTN,ZTDESC
  ; if there is already a visit, and no workload data quit
@@ -7,6 +7,9 @@ QUE ; Use a RESOURCE to post visit tracking information in background
  . D DEFER($S(+$G(TIUDA):+$G(TIUDA),1:+$G(DA)))
  I +$G(TIU("VISIT")),($D(CPT)'>9) Q
  I +$P($G(^TIU(8925,$S(+$G(TIUDA):+$G(TIUDA),1:+$G(DA)),0)),U,3),($D(CPT)'>9) Q
+ ;DSS/LM - Begin Mod - Detect value of VFDV TIU-VISIT FOREGROUND parameter
+ I $$GET^XPAR("ALL","VFDV TIU-VISIT FOREGROUND") D ENQ Q
+ ;DSS/LM - Mod End
  S (ZTSAVE("TIU("),ZTSAVE("DFN"),ZTSAVE("TIUDA"),ZTSAVE("DA"))=""
  S (ZTSAVE("DUZ("),ZTSAVE("ICD("),ZTSAVE("CPT("),ZTSAVE("SC("))=""
  S (ZTSAVE("TIUPRLST("),ZTSAVE("XWBOS"))=""

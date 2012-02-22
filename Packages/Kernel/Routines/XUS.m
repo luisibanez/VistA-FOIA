@@ -1,5 +1,5 @@
-XUS ;SFISC/STAFF - SIGNON ;2/13/07  14:44
- ;;8.0;KERNEL;**16,26,49,59,149,180,265,337,419,434**;Jul 10, 1995;Build 6
+XUS ;SFISC/STAFF - SIGNON ; 8/25/09 9:41am
+ ;;8.0;KERNEL;**16,26,49,59,149,180,265,337,419,434**;Jul 10, 1995;Build 2
  ;Sign-on message numbers are 30810.51 to 30810.99
  S U="^" D INTRO^XUS1A()
  K  K ^XUTL("ZISPARAM",$I)
@@ -81,12 +81,18 @@ ACCEPT(TO) ;Read A/V and echo '*' char.
  Q A
  ;
 CHECKAV(X1) ;Check A/V code return DUZ or Zero. (Called from XUSRB)
+ ;DSS/SGM Begin mod
+ I $T(^VFDXUS2A)'="" Q $$CHECKAV^VFDXUS2A(.X1)
+ ;DSS/SGM End mod
  N %,%1,X,Y,IEN,DA,DIK
  S IEN=0
  ;Start CCOW
  I $E(X1,1,7)="~~TOK~~" D  Q:IEN>0 IEN
  . I $E(X1,8,9)="~1" S IEN=$$CHKASH^XUSRB4($E(X1,8,255))
  . I $E(X1,8,9)="~2" S IEN=$$CHKCCOW^XUSRB4($E(X1,8,255))
+ . ; DSS/LM - Begin Mod - License Sharing
+ . D X^VFDXTX("SHARE LICENSE SLOTS (USER)")
+ . ; DSS/LM - End Mod - License Sharing
  . Q
  ;End CCOW
  S X1=$$UP(X1) S:X1[":" XUTT=1,X1=$TR(X1,":")
@@ -94,9 +100,15 @@ CHECKAV(X1) ;Check A/V code return DUZ or Zero. (Called from XUSRB)
  Q:X'?1.20ANP 0
  S X=$$EN^XUSHSH(X) I '$D(^VA(200,"A",X)) D LBAV Q 0
  S %1="",IEN=$O(^VA(200,"A",X,0)),XUF(.3)=IEN D USER(IEN)
+ ;DSS/LM - Begin Mod - External authentication
+ D X^VFDXTX("AUTHENTICATE USER EXTERNALLY")
+ ;DSS/LM - End Mod - External authentication
  S X=$P(X1,";",2) S:XUF %1="Verify: "_X S X=$$EN^XUSHSH(X)
  I $P(XUSER(1),"^",2)'=X D LBAV Q 0
  I $G(XUFAC(1)) S DIK="^XUSEC(4,",DA=XUFAC(1) D ^DIK
+ ; DSS/LM - Begin Mod - License Sharing
+ D X^VFDXTX("SHARE LICENSE SLOTS (USER)")
+ ; DSS/LM - End Mod - License Sharing
  Q IEN
 LBAV ;Log Bad AV
  D:XUF FAC

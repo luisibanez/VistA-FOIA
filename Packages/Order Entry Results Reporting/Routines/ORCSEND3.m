@@ -1,22 +1,19 @@
-ORCSEND3 ;SLC/MKB,AGP-Release cont ;02/24/10  05:53
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**243,282,280**;Dec 17, 1997;Build 85
- ;
- ;Per VHA Directive 2004-038, this routine should not be modified.
- ;
- ;Reference to PSJORPOE supported by IA #3167
+ORCSEND3 ;SLC/MKB,AGP-Release cont ;05/20/2008
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**243**;Dec 17, 1997;Build 242
  ;
 CHILD(STRT) ; Create child order, send to package
- N ORAPPT,ORPTS,A
+ N ORAPPT
  K ORIFN D EN^ORCSAVE Q:'$G(ORIFN)  D STARTDT^ORCSAVE2(ORIFN)
  I $G(STRT) D DATES^ORCSAVE2(ORIFN,STRT)
  S ORCHLD=+$G(ORCHLD)+1,^OR(100,ORPARENT,2,ORIFN,0)=ORIFN,ORLAST=ORIFN
- S A=$G(^OR(100,ORPARENT,0)),ORAPPT=$P(A,U,18),ORPTS=$P(A,"^",13)
+ S ORAPPT=$P($G(^OR(100,ORPARENT,0)),U,18)
  S $P(^OR(100,ORIFN,0),U,18)=ORAPPT,$P(^(3),U,9)=ORPARENT
- I PKG="LR" I $P(^OR(100,ORIFN,0),U,13)="" S $P(^(0),"^",13)=ORPTS
- N X0 S X0=$G(^OR(100,ORPARENT,8,1,0))
- I $P(X0,U,4)'=2 D SIGN^ORCSAVE2(ORIFN,+$P(X0,U,5),ORNOW,$P(X0,U,4),1)
- D COPY^OROCAPI1(ORPARENT,ORIFN)
- I $G(ORENEW) S OLD=$O(ORENEW(0)) I OLD S $P(^OR(100,OLD,3),U,6)=ORIFN,$P(^OR(100,ORIFN,3),U,5)=OLD,$P(^(3),U,11)=2 K ORENEW(OLD)
+ I $G(PKG)="LR" S $P(^OR(100,ORIFN,8,1,0),U,4)=8 K ^OR(100,"AS",ORVP,9999999-ORLOG,ORIFN,1) ;signature tracked on parent order only, for Labs
+ I $G(PKG)?1"PS".E D
+ . N X0 S X0=$G(^OR(100,ORPARENT,8,1,0))
+ . I $P(X0,U,4)'=2 D SIGN^ORCSAVE2(ORIFN,+$P(X0,U,5),ORNOW,$P(X0,U,4),1)
+ . I $D(^OR(100,ORPARENT,9)) M ^OR(100,ORIFN,9)=^OR(100,ORPARENT,9)
+ . I $G(ORENEW) S OLD=$O(ORENEW(0)) I OLD S $P(^OR(100,OLD,3),U,6)=ORIFN,$P(^OR(100,ORIFN,3),U,5)=OLD,$P(^(3),U,11)=2 K ORENEW(OLD)
  D RELEASE^ORCSAVE2(ORIFN,1,ORNOW,DUZ,$G(NATURE)),NEW^ORMBLD(ORIFN)
  Q
  ;
@@ -104,7 +101,7 @@ PTR(X) ; Returns ptr of prompt X in Order Dialog file
 STRT ; Build ORSTRT(inst)=date.time array of start times by dose
  N OI,PSOI,XD,XH,XM,XS,ORWD,ORI,SCH,ORSD,X,ORD K ORSTRT
  S OI=$G(ORX($$PTR^ORCD("OR GTX ORDERABLE ITEM"),1))
- ;if OI is null assume Intermittent IV order this does not required a
+ ;if OI is null assume Intermittent IV order this does not required a 
  ;solution check for an additive only value
  I OI="" S OI=$G(ORX($$PTR^ORCD("OR GTX ADDITIVE"),1))
  S PSOI=+$P($G(^ORD(101.43,+OI,0)),U,2),(XD,XH,XM,XS)=0

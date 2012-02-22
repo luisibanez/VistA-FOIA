@@ -25,7 +25,8 @@ EN ; Save Changes made to Existing Problem
  I $P($G(GMPORIG(.12)),U)="I",$P(GMPFLD(.12),U)="A" D REACTV S AUDITED=1
  I +$G(GMPORIG(1.01))'=(+GMPFLD(1.01)) D REFORM S AUDITED=1
  S GMPFLD(.01)=+GMPFLD(.01) ;to remove text left by ?? lex (~)
- F FLD=.01,.05,.12,.13,1.01,1.05,1.06,1.07,1.08,1.09,1.1,1.11,1.12,1.13,1.14,1.15,1.16,1.17,1.18 D
+ ;DSS/CDP (transcribed by LM) - Add field# 21600.01 to next
+ F FLD=.01,.05,.12,.13,1.01,1.05,1.06,1.07,1.08,1.09,1.1,1.11,1.12,1.13,1.14,1.15,1.16,1.17,1.18,21600.01 D
  . Q:'$D(GMPFLD(FLD))  Q:$P($G(GMPORIG(FLD)),U)=$P($G(GMPFLD(FLD)),U)
  . S DR=DR_";"_FLD_"////"_$S($P(GMPFLD(FLD),U)'="":$P(GMPFLD(FLD),U),1:"@")
  . Q:AUDITED  S CHNGE=GMPIFN_U_FLD_U_NOW_U_DUZ_U_$P(GMPORIG(FLD),U)_U_$P(GMPFLD(FLD),U)_"^^"_+$G(GMPROV)
@@ -80,6 +81,8 @@ NEW ; Save Collected Values in new Problem Entry
  ;   Set Node 1
  S DATA=$P(GMPFLD(1.01),U) F I=1.02:.01:1.18 S DATA=DATA_U_$P($G(GMPFLD(+I)),U)
  S ^AUPNPROB(DA,1)=DATA
+ ;DSS/CDP (transcribed by LM) - Add field# 21600.01
+ S DATA=$P($G(GMPFLD(21600.01)),U) I DATA'="" S $P(^AUPNPROB(DA,21600),U)=DATA
  ;   Set X-Refs
  S DIK="^AUPNPROB(",(APCDLOOK,APCDALVR)=1 D IX1^DIK
  I $D(GMPFLD(10,"NEW"))>9 S GMPIFN=DA D NEWNOTE

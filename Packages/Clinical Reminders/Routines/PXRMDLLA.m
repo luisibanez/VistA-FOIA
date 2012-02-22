@@ -1,5 +1,5 @@
-PXRMDLLA ;SLC/PJH - REMINDER DIALOG LOADER ;04/13/2008
- ;;2.0;CLINICAL REMINDERS;**6,12**;Feb 04, 2005;Build 73
+PXRMDLLA ;SLC/PJH - REMINDER DIALOG LOADER ;11/08/2007
+ ;;2.0;CLINICAL REMINDERS;**6**;Feb 04, 2005;Build 123
  ;
 FREC(DFIEN,DFTYP) ;Build type 3 record
  N CSARRAY,CSCNT
@@ -146,9 +146,7 @@ PROTH(IEN) ; Additional prompts defined in 801.41
  .;Prompt ien
  .S DIEN=$P($G(^PXRMD(801.41,IEN,10,DSUB,0)),U,2) Q:'DIEN
  .;Ignore disabled components, and those that are not prompts
- .;Q:($P($G(^PXRMD(801.41,DIEN,0)),U,3)]"")!("PF"'[$P($G(^(0)),U,4))
- .I $$ISDISAB^PXRMDLL(DIEN)=1 Q
- .Q:"PF"'[$P($G(^(0)),U,4)
+ .Q:($P($G(^PXRMD(801.41,DIEN,0)),U,3)]"")!("PF"'[$P($G(^(0)),U,4))
  .;Set defaults to null
  .S DDEF="",DEXC="",DREQ="",DSNL=""
  .;Prompt name and GUI process (quit if null)

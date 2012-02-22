@@ -1,5 +1,5 @@
 IBCBB ;ALB/AAS - EDIT CHECK ROUTINE TO BE INVOKED BEFORE ALL BILL APPROVAL ACTIONS ;2-NOV-89
- ;;2.0;INTEGRATED BILLING;**80,51,137,288,327,361,371,377,400,432**;21-MAR-94;Build 192
+ ;;2.0;INTEGRATED BILLING;**80,51,137,288,327,361,371,377**;21-MAR-94;Build 23
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ;MAP TO DGCRBB
@@ -59,12 +59,6 @@ EN ;Entry to check for errors
  . I $$COB^IBCEF(IBIFN)="S",$$MCRWNR^IBEFUNC(+$$CURR^IBCEF2(IBIFN))=1,$D(^DGCR(399,IBIFN,"I3")) Q
  . I $S('IBNDMP:1,1:$P(IBNDMP,U,2)'=$$BPP^IBCNS2(IBIFN,1)) S IBER=IBER_"IB054;"
  I IBWHO="o",'$P(IBNDM,"^",11) S IBER=IBER_"IB053;"
- ;
- ; Billing Provider check - IB*2*400
- D BP^IBCBB0(IBIFN)
- ;
- ; Pay-to Provider check - IB*2*400
- D PAYTO^IBCBB0(IBIFN)
  ;
  ; All insurance subscribers must have a birth date on file
  ;  - 11/10/04 - IB*2.0*288
@@ -181,9 +175,6 @@ EN ;Entry to check for errors
  K ^UTILITY("VAPA",$J)
  ;
  D PAYERADD^IBCBB0(IBIFN)     ; check the payer addresses
- D ^IBCBB1
- Q
- ; The remaining code below is being removed with Patch IB*2.0*432.
  ;
  ; esg - 9/20/07 - IB patch 371 - prevent EDI transmission for 3 payer
  ;       claims for all but the first payer.  To be removed when Emdeon
@@ -201,6 +192,7 @@ EN ;Entry to check for errors
  . S IBER=IBER_"IB147;"
  . Q
  ;
+ D ^IBCBB1
  Q
  ;
 EDIT(IBIFN) ; Run edits from within the billing edit screens
