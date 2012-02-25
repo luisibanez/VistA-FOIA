@@ -1,5 +1,5 @@
-DGENEGT1 ;ALB/KCL,ISA/KWP,LBD,RGL,BRM - Enrollment Group Threshold API's ; 2/19/09 12:17pm
- ;;5.3;Registration;**232,417,454,491,513,451,564,672,717,688**;Aug 13, 1993;Build 29
+DGENEGT1 ;ALB/KCL,ISA/KWP,LBD,RGL,BRM,DLF,TDM - Enrollment Group Threshold API's ; 6/17/09 11:05am
+ ;;5.3;Registration;**232,417,454,491,513,451,564,672,717,688,803,754**;Aug 13, 1993;Build 46
  ;
  ;
 NOTIFY(DGEGT,OLDEGT) ;
@@ -175,7 +175,7 @@ OVRRIDE(DPTDFN,EGT) ;check for previous EGT override by HEC and new rules
  Q CE
  ;
 RULES(DPTDFN,EGTENR,EGT,DGPAT) ;check for new cont enrollment rules (DG*5.3*672)
- N RTN
+ N RTN,STAEXP
  ; If veteran ever had a verified enrollment with SC 10%+ and is now
  ; SC 0% non-compensable then cont. enroll
  I EGTENR("ELIG","VACKAMT")&(EGTENR("ELIG","SCPER")>9)&(DGPAT("SCPER")=0)&(DGPAT("VACKAMT")'>0) Q 1
@@ -183,13 +183,24 @@ RULES(DPTDFN,EGTENR,EGT,DGPAT) ;check for new cont enrollment rules (DG*5.3*672)
  ; eligibilities then cont. enroll:  AA, HB, VA Pension
  I EGTENR("ELIG","VACKAMT")&((EGTENR("ELIG","A&A")="Y")!(EGTENR("ELIG","HB")="Y")!(EGTENR("ELIG","VAPEN")="Y")) Q 1
  ; If AO Exposure Location = Korean DMZ prior to ESR implementation,
+ ; or AO Exposure Location = Vietnam prior to Special Treatment
+ ;    Authority (STA) termination
  ; then cont. enroll.
  ; **** NOTE: For patch DG*5.3*672 the ESR implementation date will
  ; be set to 12/29/2040.  This will be changed to the actual ESR
  ; implementation date in a later patch.
- ; DG*5.3*688 - Date changed to 10/1/2007
+ ; DG*5.3*688 - Date changed to 3/21/2009
  I DGPAT("AO")="Y" D  I $G(RTN) Q RTN
  .I $S($D(EGTENR("ELIG","AOEXPLOC")):EGTENR("ELIG","AOEXPLOC"),1:DGPAT("AOEXPLOC"))="K",EGTENR("EFFDATE"),EGTENR("EFFDATE")<3090321 S RTN=1
+ .I EGTENR("ELIG","AOEXPLOC")="V" D   ;Added with DG*5.3*754
+ ..S STAEXP=$$STAEXP^DGENELA4("AO") Q:STAEXP<1
+ ..I EGTENR("EFFDATE"),EGTENR("EFFDATE")<STAEXP S RTN=1
+ ; If SWAC/EC = YES prior to Special Treatment (STA) termination
+ ; then cont. enroll.
+ I DGPAT("EC")="Y" D  I $G(RTN) Q RTN   ;Added with DG*5.3*754
+ .Q:EGTENR("ELIG","EC")'="Y"
+ .S STAEXP=$$STAEXP^DGENELA4("EC") Q:STAEXP<1
+ .I EGTENR("EFFDATE"),EGTENR("EFFDATE")<STAEXP S RTN=1
  ; If combat vet end date is before application date, cont. enroll
  I $G(EGTENR("ELIG","CVELEDT"))'<ENRDT Q 1
  ; If veteran is enrolled due to MT status or Medicaid, cont. enroll
@@ -197,11 +208,11 @@ RULES(DPTDFN,EGTENR,EGT,DGPAT) ;check for new cont enrollment rules (DG*5.3*672)
  ; Medicaid and the primary MT of that income year was changed to a
  ; status that would not enroll (e.g. due to IVM converted test,
  ; Hardship removal, or Medicaid removal).
- I ((EGTENR("PRIORITY")=7)&("^2^16^"[(U_EGTENR("ELIG","MTSTA")_U)))!((EGTENR("PRIORITY")=5)&((EGTENR("ELIG","MTSTA")=4)!(EGTENR("ELIG","MEDICAID")=1))) S RTN=1 D  Q RTN
+ I ((EGTENR("PRIORITY")=7!EGTENR("PRIORITY")=8)&("^2^16^"[(U_EGTENR("ELIG","MTSTA")_U)))!((EGTENR("PRIORITY")=5)&((EGTENR("ELIG","MTSTA")=4)!(EGTENR("ELIG","MEDICAID")=1))) S RTN=1 D  Q RTN
  .N ENIEN,ENR,MTDT,MTIEN
  .S ENIEN=0 F  S ENIEN=$O(^DGEN(27.11,"C",+DPTDFN,ENIEN)) Q:'ENIEN  I $P($G(^DGEN(27.11,+ENIEN,0)),U,4)=2 D  Q
  ..I '$$GET^DGENA(ENIEN,.ENR) Q
- ..I ((ENR("PRIORITY")=7)&("^2^16^"[(U_ENR("ELIG","MTSTA")_U)))!((ENR("PRIORITY")=5)&(ENR("ELIG","VAPEN")'="Y")&((ENR("ELIG","MTSTA")=4)!(ENR("ELIG","MEDICAID")=1))) D
+ ..I ((ENR("PRIORITY")=7!ENR("PRIORITY")=8)&("^2^16^"[(U_ENR("ELIG","MTSTA")_U)))!((ENR("PRIORITY")=5)&(ENR("ELIG","VAPEN")'="Y")&((ENR("ELIG","MTSTA")=4)!(ENR("ELIG","MEDICAID")=1))) D
  ...S MTDT=$E(ENR("APP"),1,3)_"1231",MTIEN=$$LST^DGMTU(MTDT) Q:'MTIEN
  ...I $P($G(^DGMT(408.31,MTIEN,0)),U,3)=6 S RTN=-1
  Q 0

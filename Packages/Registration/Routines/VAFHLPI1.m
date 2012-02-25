@@ -1,6 +1,5 @@
 VAFHLPI1 ;BPFO/JRP - EXTENSION OF PID SEGMENT BUILDER VAFHLPID;5-DEC-2001 ; 21 Nov 2002  3:13 PM
- ;;5.3;Registration;**415**;Aug 13, 1993;Build 3
- ;WVEHR/JMC - 20 June 11 - Changed HL7 table references from nnnn to HL7nnnn
+ ;;5.3;Registration;**415**;Aug 13, 1993
  ;
  Q
  ;
@@ -98,12 +97,12 @@ SEQ10(HOW,HLQ)    ;Race
  .;First triplet
  .S VAFY(10,1,1)=HLQ
  .S VAFY(10,1,2)=$S(HOW["T":HLQ,1:"")
- .S VAFY(10,1,3)="HL70005"
+ .S VAFY(10,1,3)="0005"
  .;Second triplet
  .Q:HOW'["B"
  .S VAFY(10,1,4)=HLQ
  .S VAFY(10,1,5)=$S(HOW["T":HLQ,1:"")
- .S VAFY(10,1,6)="L"
+ .S VAFY(10,1,6)="CDC"
  ;Loop through all races (CNT is repetition location)
  S RACENUM=0
  F CNT=1:1 S RACENUM=+$O(VADM(12,RACENUM)) Q:'RACENUM  D
@@ -115,13 +114,13 @@ SEQ10(HOW,HLQ)    ;Race
  .;First triplet
  .S VAFY(10,CNT,1)=RACE
  .S VAFY(10,CNT,2)=$S(HOW["T":$P(VADM(12,RACENUM),"^",2),1:"")
- .S VAFY(10,CNT,3)="HL70005"
+ .S VAFY(10,CNT,3)="0005"
  .;Second triplet
  .Q:HOW'["B"
  .S X=$$PTR2CODE^DGUTL4(+VADM(12,RACENUM),1,3)
  .S VAFY(10,CNT,4)=$S(X="":HLQ,1:X)
  .S VAFY(10,CNT,5)=$S(HOW["T":$P(VADM(12,RACENUM),"^",2),1:"")
- .S VAFY(10,CNT,6)="L"
+ .S VAFY(10,CNT,6)="CDC"
  Q
  ;
 SEQ22(HOW,HLQ)    ;Ethnicity
@@ -145,12 +144,12 @@ SEQ22(HOW,HLQ)    ;Ethnicity
  .;First triplet
  .S VAFY(22,1,1)=HLQ
  .S VAFY(22,1,2)=$S(HOW["T":HLQ,1:"")
- .S VAFY(22,1,3)="HL70189"
+ .S VAFY(22,1,3)="0189"
  .;Second triplet
  .Q:HOW'["B"
  .S VAFY(22,1,4)=HLQ
  .S VAFY(22,1,5)=$S(HOW["T":HLQ,1:"")
- .S VAFY(22,1,6)="L"
+ .S VAFY(22,1,6)="CDC"
  ;Loop through all ethnicities (CNT is repetition location)
  S ETHNUM=0
  F CNT=1:1 S ETHNUM=+$O(VADM(11,ETHNUM)) Q:'ETHNUM  D
@@ -162,11 +161,11 @@ SEQ22(HOW,HLQ)    ;Ethnicity
  .;First triplet
  .S VAFY(22,CNT,1)=ETHNIC
  .S VAFY(22,CNT,2)=$S(HOW["T":$P(VADM(11,ETHNUM),"^",2),1:"")
- .S VAFY(22,CNT,3)="HL70189"
+ .S VAFY(22,CNT,3)="0189"
  .;Second triplet
  .Q:HOW'["B"
  .S X=$$PTR2CODE^DGUTL4(+VADM(11,ETHNUM),2,3)
  .S VAFY(22,CNT,4)=$S(X="":HLQ,1:X)
  .S VAFY(22,CNT,5)=$S(HOW["T":$P(VADM(11,ETHNUM),"^",2),1:"")
- .S VAFY(22,CNT,6)="L"
+ .S VAFY(22,CNT,6)="CDC"
  Q

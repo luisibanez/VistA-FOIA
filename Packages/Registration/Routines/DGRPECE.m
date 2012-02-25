@@ -1,24 +1,5 @@
-DGRPECE ;ALB/MRY,ERC,BAJ - REGISTRATION CATASTROPHIC EDITS ;9:51 AM  3 Jan 2010
- ;;5.3;Registration;**638,682,700,720,653,688,634**;Aug 13, 1993;Build 38;WorldVistA 30-June-08
- ;
- ;Modified from FOIA VISTA,
- ;Copyright 2008 WorldVistA.  Licensed under the terms of the GNU
- ;General Public License See attached copy of the License.
- ;
- ;This program is free software; you can redistribute it and/or modify
- ;it under the terms of the GNU General Public License as published by
- ;the Free Software Foundation; either version 2 of the License, or
- ;(at your option) any later version.
- ;
- ;This program is distributed in the hope that it will be useful,
- ;but WITHOUT ANY WARRANTY; without even the implied warranty of
- ;MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- ;GNU General Public License for more details.
- ;
- ;You should have received a copy of the GNU General Public License along
- ;with this program; if not, write to the Free Software Foundation, Inc.,
- ;51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- ;
+DGRPECE ;ALB/MRY,ERC,BAJ - REGISTRATION CATASTROPHIC EDITS ; 10/4/06 3:27pm
+ ;;5.3;Registration;**638,682,700,720,653,688,750,831**;Aug 13, 1993;Build 10
  ;
 CEDITS(DFN) ;catastrophic edits  - buffer values, save after check
  ;Input;
@@ -37,7 +18,7 @@ CEDITS(DFN) ;catastrophic edits  - buffer values, save after check
  ;                  (after snapshot).
  ;         SAVE   - holds only edited changes for filing into file #2.
  ;
- N DA,DIR,DIRUT,Y,BUFFER,BEFORE,SAVE,DG20IEN
+ N DA,DIR,DIRUT,Y,BUFFER,BEFORE,SAVE,DG20IEN,XUNOTRIG
  D BEFORE(DFN,.BEFORE,.BUFFER) ;retrieve before patient values
  ;buffer - get name
  K DG20NAME
@@ -61,11 +42,7 @@ CEDITS(DFN) ;catastrophic edits  - buffer values, save after check
  ;buffer - get ssn
  S DIR(0)="2,.09^^"
  S DA=DFN D ^DIR
- ;Begin WorldVistA Change ;DG*5.3*634
- ;I $D(DIRUT) D CECHECK Q
- I $D(DIRUT),DUZ("AG")="V" D CECHECK Q
- I $D(DTOUT)!$D(DUOUT) D CECHECK Q
- ;End WorldVistA Change
+ I $D(DIRUT) D CECHECK Q
  S BUFFER("SSN")=Y
  ;if SSN is pseudo, Pseudo SSN Reason is req. - DG*5.3*653, ERC
  I $G(BUFFER("SSN"))["P" D  I $D(DIRUT) D CECHECK Q
@@ -90,20 +67,12 @@ REAS . ;
 DOB ;buffer - get dob
  S DIR(0)="2,.03^^"
  S DA=DFN D ^DIR
- ;Begin WorldVistA Change ;DG*5.3*634
- ;I $D(DIRUT) D CECHECK Q
- I $D(DIRUT),DUZ("AG")="V" D CECHECK Q
- I $D(DTOUT)!$D(DUOUT) D CECHECK Q
- ;End WorldVistA Change
+ I $D(DIRUT) D CECHECK Q
  S BUFFER("DOB")=Y
 SEX ;buffer - get sex
  S DIR(0)="2,.02^^"
  S DA=DFN D ^DIR
- ;Begin WorldVistA Change ;DG*5.3*634
- ;I $D(DIRUT) D CECHECK Q
- I $D(DIRUT),DUZ("AG")="V" D CECHECK Q
- I $D(DTOUT)!$D(DUOUT) D CECHECK Q
- ;End WorldViatA Change
+ I $D(DIRUT) D CECHECK Q
  S BUFFER("SEX")=Y
 MBI ; buffer - get MBI (multiple birth indicator)
  S DIR(0)="2,994^^"
@@ -141,6 +110,7 @@ SAVE(DFN) ;store accepted/edited values into patient file
  .S FDATA(20,+DG20IEN_",",2)=BUFFER("GIVEN")
  .S FDATA(20,+DG20IEN_",",3)=BUFFER("MIDDLE")
  .S FDATA(20,+DG20IEN_",",5)=BUFFER("SUFFIX")
+ .S XUNOTRIG=1
  .D FILE^DIE("","FDATA","DIERR")
  .K FDATA,DIERR
  I $D(BUFFER("PREFIX")) S FDATA(20,+DG20IEN_",",4)=BUFFER("PREFIX")
@@ -203,15 +173,28 @@ AFTER(BEF,BUF,SAV) ;prevent catastrophic edit checks
  I $D(BUF("SSN")),BUF("SSN")'="",BUF("SSN")'=BEF("SSN") D
  . S SAV("SSN")=BUF("SSN"),DGCNT=DGCNT+1
  I $D(BUF("SSNREAS")),BUF("SSNREAS")'="",BUF("SSNREAS")'=BEF("SSNREAS") D
- . S SAV("SSNREAS")=BUF("SSNREAS"),DGCNT=DGCNT+1
+ . S SAV("SSNREAS")=BUF("SSNREAS")
  I $D(BUF("MBI")),BUF("MBI")'=BEF("MBI") D
  . S SAV("MBI")=BUF("MBI")
  I DGCNT=0,$D(SAV("NAME")) Q 1 ;minor name change (i.e. middle name or suffix)
  I DGCNT=0,$D(SAV("PREFIX"))!($D(SAV("DEGREE"))) Q 1 ; prefix or degree change
  I DGCNT=0,$D(SAV("MBI")) Q 1 ; multiple birth indicator change
  I DGCNT=0 Q 0 ;no changes
+ ;DG*750 check audit file for previous changes made during the current day
+ I DGCNT=1 D DGAUD^DGRPAUD(DFN,.DGCNT)
+ ;Use temp file created in DGRPAUD to get information for other changes
+ ;that were made during the day to print on the alert.
+ N DGAUDIEN,DGFLD,DGTYP
+ S DGAUDIEN=0
+ F   S DGAUDIEN=$O(^TMP("DGRPAUD",$J,DFN,DGAUDIEN)) Q:'DGAUDIEN  D
+ .S DGFLD=$P(^TMP("DGRPAUD",$J,DFN,DGAUDIEN),U,2),DGTYP=$P(^TMP("DGRPAUD",$J,DFN,DGAUDIEN),U,5)
+ .I DGFLD=.01 S BEF("NAME")=DGTYP
+ .I DGFLD=.09 S BEF("SSN")=DGTYP
+ .I DGFLD=.02 S BEF("SEX")=DGTYP
+ .I DGFLD=.03 S BEF("DOB")=DGTYP
  I DGCNT<2 Q 1 ;make one change w/o CE message
  I DGCNT>1 Q 2 ;more than 1 change, send CE message
+ K ^TMP("DGRPAUD")
  ;
 WARNING() ;CE warning message
  ;Output     0  = exit without saving changes

@@ -1,5 +1,5 @@
 VAFHLPR1 ;ALB/ESD - Create generic HL7 PR1 Segment ;4/4/00
- ;;5.3;Registration;**94,123,160,215,243,606**;Aug 13, 1993;Build 1
+ ;;5.3;Registration;**94,123,160,215,243,606**;Aug 13, 1993
  ;06/22/99 ACS - Added CPT modifier API calls and added CPT modifier to the
  ;PR1 segment (sequence 16)
  ;

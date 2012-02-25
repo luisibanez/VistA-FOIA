@@ -1,5 +1,5 @@
-DGRRLU6 ;alb/aas - DG Replacement and Rehosting RPC for VADPT ; Jan-7-2003  ; Compiled April 27, 2004 10:10:10
- ;;5.3;Registration;**538**;Aug 13, 1993
+DGRRLU6 ;alb/aas - DG Replacement and Rehosting RPC for VADPT ; Jan-7-2003  ; 9/2/08 2:11pm
+ ;;5.3;Registration;**538,786**;Aug 13, 1993;Build 21
  ;
  ; CALLED BY DGRRLU LINE:
  ; IF (SEARCH="NAME"),($G(PARAMS("VERSION 2"))'="") DO BYNAME^DGRRLU6 ; sgg 05/06/04
@@ -99,7 +99,7 @@ PTDATA(DFN,DGRRPCNT) ;
  ; get the PCP's IEN and convert to VPID (primary care physician)  sgg 06/17/04
  SET PATSPCP=$$NMPCPR^SCAPMCU2(DFN,DT,1)
  SET PCPIEN=$P(PATSPCP,"^",1)
- SET PCPNAME=$P(PATSPCP,"^",2)
+ SET PCPNAME=$$CHARCHK^DGRRUTL($P(PATSPCP,"^",2)) ;786
  SET PCPVPID=$$VPID^XUPS(+PCPIEN)
  ;
  SET LINE=LINE_" type='"_TYPE_"' primaryeligibility='"_PRIM_"' serviceconnected='"_SC_"' scpercent='"_SCPER_"'"

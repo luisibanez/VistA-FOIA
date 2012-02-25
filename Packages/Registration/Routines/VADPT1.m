@@ -1,24 +1,5 @@
-VADPT1 ;ALB/MRL/MJK,ERC - PATIENT VARIABLES ;9:06 AM  3 Jan 2010
- ;;5.3;Registration;**415,489,516,614,688,634**;Aug 13, 1993;Build 38;WorldVistA 30-June-08
- ;
- ;Modified from FOIA VISTA,
- ;Copyright 2008 WorldVistA.  Licensed under the terms of the GNU
- ;General Public License See attached copy of the License.
- ;
- ;This program is free software; you can redistribute it and/or modify
- ;it under the terms of the GNU General Public License as published by
- ;the Free Software Foundation; either version 2 of the License, or
- ;(at your option) any later version.
- ;
- ;This program is distributed in the hope that it will be useful,
- ;but WITHOUT ANY WARRANTY; without even the implied warranty of
- ;MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- ;GNU General Public License for more details.
- ;
- ;You should have received a copy of the GNU General Public License along
- ;with this program; if not, write to the Free Software Foundation, Inc.,
- ;51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- ;
+VADPT1 ;ALB/MRL/MJK,ERC,TDM - PATIENT VARIABLES ; 7/28/09 1:54pm
+ ;;5.3;Registration;**415,489,516,614,688,754**;Aug 13, 1993;Build 46
 1 ;Demographic [DEM]
  N W,Z,NODE
  ;
@@ -33,14 +14,6 @@ VADPT1 ;ALB/MRL/MJK,ERC - PATIENT VARIABLES ;9:06 AM  3 Jan 2010
  ;
  ; -- age [4 - AG]
  S W=$S('$D(^DPT(DFN,.35)):"",'^(.35):"",1:+^(.35)) S Y=$S('W:DT,1:W) S:Z]"" @VAV@($P(VAS,"^",4))=$E(Y,1,3)-$E(Z,1,3)-($E(Y,4,7)<$E(Z,4,7))
- ;Begin WorldVistA Change ;DG*5.3*634
- I @VAV@($P(VAS,"^",4))<2 D  ;IHS/ANMC/CLS 01/20/2005
- .N X,X1,X2,X3
- .S X1=$S('$G(^DPT(DFN,.35)):DT,1:+^(.35))
- .S X2=$P(VAX,"^",3) Q:'X1!('X2)
- .D ^%DTC S X3=X\365.25,X=$S(X3>2:X3,X<31:X_" DYS",1:X\30_" MOS")
- .S @VAV@($P(VAS,"^",4))=X Q
- ;End WorldVistA Change
  ;
  ; -- expired date [6 - EX]
  S (Y,Z)=W X:Y]"" ^DD("DD") S:Z]"" @VAV@($P(VAS,"^",6))=Z_"^"_Y
@@ -78,13 +51,6 @@ VADPT1 ;ALB/MRL/MJK,ERC - PATIENT VARIABLES ;9:06 AM  3 Jan 2010
  ...S @VAV@($P(VAS,"^",12),Y,1)=Z_"^"_$P($G(^DIC(10.3,Z,0)),"^",1)
  S @VAV@($P(VAS,"^",12))=Y-1
  Q
- ;Begin WorldVistA Change ;DG*5.3*634
-PAGE ;
- N X,X1,X2,Y,AUX
- S X1=$S('$D(^DPT(DFN,.35)):DT,1:+^(.35))
- S X2=$P(VAX,"^",3) D:X2 ^%DTC:X1 S AUX=X\365.25,X=$S(AUX>2:AUX_" YRS",X<31:X_" DYS",1:X\30_" MOS")
- S @VAV@($P(VAS,"^",4))=X Q
- ;End WorldVistA Change
  ;
 2 ;Other Patient Variables [OPD]
  N W,Z
@@ -108,6 +74,9 @@ PAGE ;
  ; -- employment status [7 - ES]
  S VAX=$S($D(^DPT(DFN,.311)):^(.311),1:""),W="EMPLOYED FULL TIME^EMPLOYED PART TIME^NOT EMPLOYED^SELF EMPLOYED^RETIRED^ACTIVE MILITARY DUTY^UNKNOWN"
  S Z=$P(VAX,"^",15),@VAV@($P(VAS,"^",7))=Z_$S(Z:"^"_$P(W,"^",Z),1:"")
+ ;
+ ; -- PHONE NUMBER [WORK] [8 - WP]
+ I $D(^DPT(DFN,.13)) S @VAV@($P(VAS,"^",8))=$P(^(.13),"^",2)
  Q
  ;
 3 ;Address [ADD]
@@ -161,6 +130,8 @@ CA ;Confidential Address
  I @VAV@($P(VAS,U,28))]"" D
  . I '$D(^HL(779.004,$P(VAX,U,16),0)) Q
  . S $P(@VAV@($P(VAS,U,28)),U,2)=$$CNTRYI^DGADDUTL($P(VAX,U,16))
+ ; -- CONFIDENTIAL PHONE NUMBER [29 - CPN]
+ I $D(^DPT(DFN,.13)) S @VAV@($P(VAS,"^",29))=$P(^(.13),"^",15)
 Q3 K VABEG,VAEND,VAZIP4 Q
  ;
 4 ;Other Address [OAD]

@@ -1,5 +1,5 @@
-DGRRLUA ;alb/aas - Person Service Lookup gather patient data;2/15/2005
- ;;5.3;Registration;**538**;Aug 13, 1993
+DGRRLUA ;alb/aas - Person Service Lookup gather patient data;2/15/2005 ; 9/2/08 12:09pm
+ ;;5.3;Registration;**538,786**;Aug 13, 1993;Build 21
  ;
  ;DGRRLUA created when DGRRLU exceeded maximum routine size
  ;
@@ -69,7 +69,7 @@ PTDATA(DFN,DGRRPCNT)    ;
  ; get the PCP's IEN and convert to VPID (primary care physician)  sgg 06/17/04
  SET PATSPCP=$$NMPCPR^SCAPMCU2(DFN,DT,1)
  SET PCPIEN=$P(PATSPCP,"^",1)
- SET PCPNAME=$P(PATSPCP,"^",2)
+ SET PCPNAME=$$CHARCHK^DGRRUTL($P(PATSPCP,"^",2))
  SET PCPVPID=$$VPID^XUPS(+PCPIEN)
  ;
  SET LINE=LINE_" type='"_TYPE_"' primaryeligibility='"_PRIM_"' serviceconnected='"_SC_"' scpercent='"_SCPER_"'"
