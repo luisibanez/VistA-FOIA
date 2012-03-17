@@ -50,8 +50,8 @@ for routinename in listofOtherroutines:
         sourcefile = sourceOtherDirectory+routinename
         destinationfile = sourceFOIADirectory+destinationpath
         subprocess.call(["cp",sourcefile,destinationfile])
-      else:
-        print routinename+" is not in the dictionary"
+    else:
+      print routinename+" is not in the dictionary"
 
 #
 # At this point all the routines that have found a matching
