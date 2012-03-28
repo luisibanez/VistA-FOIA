@@ -1,5 +1,5 @@
 PSOEXDT ;BHAM ISC/SAB - set exp. date and determine rx status ; 10/24/92 13:24
- ;;7.0;OUTPATIENT PHARMACY;**23,73,222**;DEC 1997;Build 12
+ ;;7.0;OUTPATIENT PHARMACY;**23,73**;DEC 1997
  ;
  ;External reference ^PS(55 supported by DBIA 2228
  ;External reference ^PSDRUG( supported by DBIA 221
@@ -9,7 +9,7 @@ PSOEXDT ;BHAM ISC/SAB - set exp. date and determine rx status ; 10/24/92 13:24
  ;
 A S CS=0,RFLS=$P(RX0,"^",9),DYS=$P(RX0,"^",8),X1=$P(RX0,"^",13),X2=DYS*(RFLS+1)\1,PSODEA=$P(^PSDRUG($P(RX0,"^",6),0),"^",3)
  F DEA=1:1 Q:$E(PSODEA,DEA)=""  I $E(+PSODEA,DEA)>1,$E(+PSODEA,DEA)<6 S $P(CS,"^")=1 S:$E(+PSODEA,DEA)=2 $P(CS,"^",2)=1
- S X2=$S($G(CLOZPAT)=2&(RFLS):28,$G(CLOZPAT)=1&(RFLS):14,DYS=X2:X2,CS:184,1:366) I X1']"" S X1=DT,X2=-1
+ S X2=$S($G(CLOZPAT)=1&(RFLS):14,DYS=X2:X2,CS:184,1:366) I X1']"" S X1=DT,X2=-1
  D C^%DTC S EX=$P(X,".") I +$G(PSORXED("RX1")),+$G(PSORXED("RX1"))>EX S EX=+$G(PSORXED("RX1"))
  ;K ^PSRX("AG",$P(^PSRX(J,2),"^",6),J)
  S $P(^PSRX(J,2),"^",6)=EX,RX2=^(2)

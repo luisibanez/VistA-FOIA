@@ -1,13 +1,14 @@
-ZU ;SF/RWF - For Open M for NT and Cache! ;03/21/2002  13:46
- ;;8.0;KERNEL;**34,94,118,162,170,225**;Jul 10, 1995
+ZU ;SF/RWF - For Open M for NT and Cache! ;03/21/2002  13:46 [ 07/29/2004  9:07 AM ]
+ ;;8.0;KERNEL;**34,94,118,162,170,225,1010**;Jul 10, 1995
  ;TIE ALL TERMINALS EXCEPT CONSOLE TO THIS ROUTINE!
+ ;IHS mods this routine
 EN N $ES,$ETRAP S $ETRAP="D ERR^ZU Q"
  D:+$G(^%ZTSCH("LOGRSRC")) LOGRSRC^%ZOSV("$LOGIN$")
  ;The next line keeps sign-on users from taking the last slot
  ;It can be commented out if not needed.
 JOBCHK I $$AVJ^%ZOSV()<3 W $C(7),!!,"** TROUBLE ** - ** CALL IRM NOW! **" G HALT
  ;Only call ShareLic for Telnet connections.
- I ($I["|TNT|")!($I["TNA") D SHARELIC^%ZOSV(0)
+ ;I ($I["|TNT|")!($I["TNA") D SHARELIC^%ZOSV(0)
  G ^XUS
  ;
  ;
@@ -19,7 +20,8 @@ ERR2 S $ET="UNWIND^ZU" L  ;Backup trap
  I $G(IO)]"",$D(IO(1,IO)),$E($G(IOST))="P" U IO W @$S($D(IOF):IOF,1:"#")
  I $G(IO(0))]"" U IO(0) W !!,"RECORDING THAT AN ERROR OCCURRED ---",!!?15,"Sorry 'bout that",!,*7,!?10,"$ZERROR=",$ZERROR
  X ^%ZOSF("PROGMODE") Q:Y  S $ZT="HALT^ZU"
- I $ZE'["<INRPT>" S XUERF="" G ^XUSCLEAN
+ ;I $ZE'["<INRPT>" S XUERF="" G ^XUSCLEAN
+ I $ZE'["<INTERRUPT>" S XUERF="" G ^XUSCLEAN
 CTRLC I $D(IO)=11 U IO(0) W !,"--Interrupt Acknowledged",!
  D KILL1^XUSCLEAN ;Clean up symbol table
  S $ECODE=",U55,"

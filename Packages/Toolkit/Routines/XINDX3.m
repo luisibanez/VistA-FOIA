@@ -1,6 +1,5 @@
-XINDX3 ;ISC/REL,GRK,RWF - PROCESS MERGE/SET/READ/KILL/NEW/OPEN COMMANDS ;06/24/08  15:44
- ;;7.3;TOOLKIT;**20,27,61,68,110,121,128**;Apr 25, 1995;Build 1
- ; Per VHA Directive 2004-038, this routine should not be modified.
+XINDX3 ;ISC/REL,GRK,RWF - PROCESS MERGE/SET/READ/KILL/NEW/OPEN COMMANDS ;10/23/2003  17:43
+ ;;7.3;TOOLKIT;**20,27,61,68**;Apr 25, 1995
 PEEK S Y=$G(LV(LV,LI+1)) Q
 PEEK2 S Y=$G(LV(LV,LI+2)) Q
 INC2 S LI=LI+1 ;Drop into INC
@@ -14,17 +13,15 @@ FIND F Y=LI:1:AC Q:L[$G(LV(LV,Y))
 ERR D E^XINDX1(43) S (S,S1,CH)="" Q
  Q
  Q
-S ;Set
- S STR=ARG,ARG="",RHS=0 D ^XINDX9
+S S ERR=10 G:ARG="" ^XINDX1 S STR=ARG,ARG="",RHS=0 D ^XINDX9
 S2 S GK="" D INC I S="" D:'RHS E^XINDX1(10) Q
- I CH=",","!""#&)*+-,./:;<=?\]_~"[$E(S1),RHS=1 D E^XINDX1(10) G S2 ;patch 121
  I CH="," S RHS=0 G S2
- I CH="=" S RHS=1 D:"!#&)*,/:;<=?\]_~"[$E(S1) E^XINDX1(10) G S2 ;patch 119
- I CH="$",'RHS D  D:% E^XINDX1(10) ;Can't be on RHS of set.
+ I CH="=" S RHS=1 D:","[S1 E^XINDX1(10) G S2
+ I CH="$",'RHS D  D:% E^XINDX1(10)
  . S %=1
  . I "$E$P$X$Y"[$E(S,1,2) S %=0 Q
  . I "$EC$ET$QS"[$E(S,1,3) S %=0 Q
- . I "$ZE$ZT"[$E(S,1,3) S %=0 Q  ;Pickup in XINDX9
+ . I "$ZE$ZT"[$E(S,1,3) D E^XINDX1(28) S %=0 Q  ;Should not be used
  . Q
  I CH="^" D FL G S2
  I CH="@" S Y=$$ASM(LV,LI,",") S:Y'["=" RHS=1 D INC,ARG^XINDX2 G S2
@@ -37,14 +34,14 @@ FL ;
  S:'RHS GK="*" D ARG^XINDX2
  Q
 VLNF(X) ;Drop into VLN
-VLN ;Valid Local Name > Variable
- S ERR=0
- Q:X?1(1U,1"%").15UN
- I X?1(1A,1"%").15AN D E^XINDX1(57) Q  ;Lowercase
- D E^XINDX1(11) ;Too long or other problem
+VLN S ERR=0
+ Q:X?1.8UN
+ Q:X?1"%".7UN
+ I X'?1.8AN,X'?1"%".7AN D E^XINDX1(11)
+ D E^XINDX1(57) ;Must contain lowercase
+ ;I X'?1.8UN,X'?1.8LN,X'?1"%".7UN,X'?1"%".7LN D E^XINDX1(ERR)
  Q
-VGN ;Valid Global Name
- S ERR=0 I X'?1(1U,1"%").7UN D E^XINDX1(12)
+VGN S ERR=0 I X'?1.8UN,X'?1"%".7UN D E^XINDX1(12)
  Q
 KL ;Process KILL
  S STR=ARG,ARG(1)=ARG,ARG="" D ^XINDX9
@@ -61,14 +58,8 @@ KL4 S NOA=S1 D DN,ARGS^XINDX2,UP,INC2 Q
 NE ;NEW
  S ERR=$S("("[$E(ARG):26,1:0) I ERR G ^XINDX1 ;look for null or (
  S STR=ARG D ^XINDX9
-N2 D INC Q:S=""  G N2:CH=","
- ;I CH?1P,("%@()"'[CH)&("$E"'[$E(S,1,2)) D E^XINDX1(11) G N2
- ;check for '@' and '$$' patch 128
- I CH?1P,(CH'=S) D  G:$G(ERTX)]"" N2
- . I "@("[CH,"$$E"'[$E(S,1,2),($P(S,CH,2)'?1A) D E^XINDX1(11) Q
- . I "$"[CH,(LV(LV,1)'="@") D E^XINDX1(11) Q
- S GK="~" D ARG^XINDX2
- G N2
+N2 D INC Q:S=""  G N2:CH="," I CH?1P,("%@()"'[CH)&("$E"'[$E(S,1,2)) D E^XINDX1(11) G N2
+ S GK="~" D ARG^XINDX2 G N2
  ;
 RD S STR=ARG D ^XINDX9 S ARG=""
 RD1 D INC Q:S=""

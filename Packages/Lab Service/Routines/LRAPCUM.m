@@ -1,5 +1,6 @@
-LRAPCUM ;AVAMC/REG/KLL - AP PATIENT CUM ;9/25/00
- ;;5.2;LAB SERVICE;**34,72,173,248,259**;Sep 27, 1994
+LRAPCUM ;AVAMC/REG/WTY - AP PATIENT CUM ;9/25/00 [ 04/11/2003  10:03 AM ]
+ ;;5.2T9;LR;**1002,1003,1018**;Nov 17, 2004
+ ;;5.2;LAB SERVICE;**34,72,173,248**;Sep 27, 1994
  ;
  ;Reference to ^%ZIS supported by IA #10086
  ;Reference to ^DIWP supported by IA #10011
@@ -26,6 +27,9 @@ F D E
 E K ^TMP($J) S DIWL=3,DIWR=IOM-3,DIWF="W" Q
 W S Y=+B D D^LRU S LRW(1)=Y,Y=$P(B,"^",10) D D^LRU S LRW(10)=Y,Y=$P(B,"^",3) D D^LRU S LRW(3)=Y,X=$P(B,"^",2) D:X D^LRUA S LRW(2)=X,LRW(11)=$P(B,"^",11)
  S X=$P(B,"^",4) D:X D^LRUA S LRW(4)=X,X=$P(B,"^",7) D:X D^LRUA S LRW(7)=X
+ ;----- BEGIN IHS MODIFICATIONS LR*5.2*1018
+ S LRW(14)=$S(LRSS="SP":$P(B,"^",14),1:"")  ;IHS/DIR TUC/AAB 5/4/98
+ ;----- END IHS MODIFICATIONS
  W !,"Date Spec taken: ",LRW(1),?38,"Pathologist:",LRW(2),!,"Date Spec rec'd: ",LRW(10),?38,$S(LRSS="SP":"Resident: ",1:"Tech: "),LRW(4)
  W !,$S($L(LRW(3)):"Date  completed: ",1:"REPORT INCOMPLETE"),LRW(3),?38,"Accession #: ",$P(B,"^",6),!,"Submitted by: ",$P(B,"^",5),?38,"Practitioner:",LRW(7),!,LR("%")
  I LRW(11)="" D A W !,$C(7),"Report not verified",! G MORE
@@ -34,6 +38,9 @@ W S Y=+B D D^LRU S LRW(1)=Y,Y=$P(B,"^",10) D D^LRU S LRW(10)=Y,Y=$P(B,"^",3) D D
  I $D(^LR(LRDFN,LRSS,LRI,.3)) W !,"Preoperative Diagnosis:" S LRV=.3 D F Q:LRA(2)?1P
  I $D(^LR(LRDFN,LRSS,LRI,.4)) W !,"Operative Findings:" S LRV=.4 D F Q:LRA(2)?1P
  I $D(^LR(LRDFN,LRSS,LRI,.5)) W !,"Postoperative Diagnosis:" S LRV=.5 D F Q:LRA(2)?1P
+ ;----- BEGIN IHS MODIFICATIONS LR*5.2*1018
+ I $G(LRW(14)) W !,"TC CODE: ",LRW(14),!  ;IHS/DIR TUC/AAB 5/4/98
+ ;----- END IHS MODIFICATIONS
  D SET^LRUA
  I $O(^LR(LRDFN,LRSS,LRI,1.3,0)) D:$Y>LRA(1)!'$Y MORE Q:LRA(2)?1P  W !,LR(69.2,.13) I $P($G(^LR(LRDFN,LRSS,LRI,6,0)),U,4) S LR(0)=6 D ^LRSPRPTM
  S LRV=1.3 D F Q:LRA(2)?1P
@@ -53,11 +60,7 @@ W S Y=+B D D^LRU S LRW(1)=Y,Y=$P(B,"^",10) D D^LRU S LRW(10)=Y,Y=$P(B,"^",3) D D
  ...D SUPA^LRSPRPT
  ...S LRA(2)=LR("Q")
  ..D:X U Q:LRA(2)?1P
- Q:LRA(2)?1P
- ;USER MUST POSSESS THE LRLAB KEY TO VIEW SNOMED CODES
- I $D(^LR(LRDFN,LRSS,LRI,2)) D
- .D B
- .I $D(^XUSEC("LRLAB",DUZ)) D ^LRAPCUM1
+ Q:LRA(2)?1P  I $D(^LR(LRDFN,LRSS,LRI,2)) D B,^LRAPCUM1 Q:LRA(2)?1P
  Q:LRA(2)?1P  D MORE Q
 MORE R !,"'^' TO STOP: ",LRA(2):DTIME I LRA(2)["?" W $C(7) G MORE
  I LRA(2)?1P S A=0 Q

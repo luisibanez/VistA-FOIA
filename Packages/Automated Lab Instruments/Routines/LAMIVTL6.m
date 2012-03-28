@@ -1,4 +1,5 @@
-LAMIVTL6 ;DAL/HOAK Vitek setup 031896
+LAMIVTL6 ; IHS/DIR/FJE - Vitek setup 031896 ;
+ ;;5.2;LA;;NOV 01, 1997
  ;;5.2;AUTOMATED LAB INSTRUMENTS;**12**;Sep 27,1994
 INIT ;
  ; This process works with LAB(61.38, in setting up the vitek

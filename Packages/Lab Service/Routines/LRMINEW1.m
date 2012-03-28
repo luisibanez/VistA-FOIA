@@ -1,9 +1,12 @@
-LRMINEW1 ;SLC/CJS/BA - NEW DATA TO BE REVIEWED/VERIFIED ;5/6/04  12:04
- ;;5.2;LAB SERVICE;**295**;Sep 27, 1994
+LRMINEW1 ; IHS/DIR/FJE - NEW DATA TO BE REVIEWED/VERIFIED 11/23/87 16:34 ;
+ ;;5.2;LR;**1013**;JUL 15, 2002
+ ;
+ ;;5.2;LAB SERVICE;;Sep 27, 1994
 VER W !!,"Indicate those you wish to exclude from verification."
  D CHECK
  I $O(LRAN(0))>0 W !,"Verifying all but the following:" F LRAN=0:0 S LRAN=$O(LRAN(LRAN)) Q:LRAN=""  W !,LRAN
- F I=0:0 W !,"Want the approved reports to be printed at the requesting locations" S %=2 D YN^DICN Q:%  W !,"Answer 'Y'es or 'N'o"
+ ;F I=0:0 W !,"Want the approved reports to be printed at the requesting locations" S %=2 D YN^DICN Q:%  W !,"Answer 'Y'es or 'N'o"
+ F I=0:0 W !,"Want the approved reports to be printed at the requesting locations" S %=1 D YN^DICN Q:%  W !,"Answer 'Y'es or 'N'o"  ;IHS/ANMC/CLS 08/18/96
  Q:%=-1  S LRMIQUE=$S(%=1:1,1:0)
  F I=0:0 W !!,"Are you ready to verify" S %=2 D YN^DICN Q:%  W !,"If you're not sure, it's not too late to quit."
  Q:%'=1
@@ -13,7 +16,6 @@ VER W !!,"Indicate those you wish to exclude from verification."
  Q
 STUFF Q:'$D(^LRO(68,LRAA,1,LRAD,1,LRAN,0))  Q:'$D(^(3))  S Y=^(0),LRDFN=+Y,LRLLOC=$P(Y,U,7),LRODT=$S($P(Y,U,4):$P(Y,U,4),1:$P(Y,U,3)),LRSN=$P(Y,U,5),LRIDT=9999999-^(3),LRDPF=$P(^LR(LRDFN,0),U,2),DFN=$P(^(0),U,3) D PT^LRX
  S $P(^LR(LRDFN,"MI",LRIDT,LRSB),U)=DT,$P(^(LRSB),U,$S(LRSB=11:5,1:3))=DUZ
- D UPDATE^LRPXRM(LRDFN,"MI",LRIDT)
  S LRCDT=9999999-LRIDT,Y=DT D VT^LRMIUT1
  K ^LRO(68,LRAA,1,LRAD,"AC",LRSB,LRAN)
  D:LRMIQUE TSKM^LRMIUT

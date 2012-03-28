@@ -1,5 +1,6 @@
-XPAREDT1 ; SLC/KCM - Supporting Calls - Entities; [3/31/03 7:19am] ;9/12/07  16:19
- ;;7.3;TOOLKIT;**26,109**;Apr 25, 1995;Build 5
+XPAREDT1 ;SLC/KCM - Supporting Calls - Entities;12:16 AM  13 May 1998 [ 04/02/2003   8:47 AM ]
+ ;;7.3;TOOLKIT;**1001**;APR 1, 2003
+ ;;7.3;TOOLKIT;**26**;Apr 25, 1995
  ;
 BLDLST ; ...continued from BLDLST^XPAREDIT(LST,PAR)
  ; Build list of entities allowed for this parameter
@@ -31,11 +32,13 @@ BLDLST ; ...continued from BLDLST^XPAREDIT(LST,PAR)
  . . S $P(LST(SEQ),U,6)=X
  . I FN=4 D  ; find division if this site not multi-divisional
  . . S X=$$KSP^XUPARAM("INST")
- . . I $P($G(^DIC(4,X,"DIV")),U,1)'="Y" D
+ . . I $$GET1^DIQ(4,X_",",5,"I")'="Y" D
  . . . S $P(LST(SEQ),U,5)=X_";DIC(4,"
- . . . S $P(LST(SEQ),U,6)=$P(^DIC(4,X,0),"^",1)
+ . . . S $P(LST(SEQ),U,6)=$$GET1^DIQ(4,X_",",.01)
  . I '$L($P(LST(SEQ),U,5)) D  ; otherwise...
- . . S $P(LST(SEQ),U,6)=$P($G(^DIC(FN,0)),"^",1)
+ . . N XPARY,XPARFN S XPARFN=FN N FN
+ . . D FILE^DID(XPARFN,"","NAME","XPARY")
+ . . S $P(LST(SEQ),U,6)=$G(XPARY("NAME"))
  Q
 GETCLS ; ...continued from GETCLS^XPAREDIT(X,PAR,LST)
  ; Choose the class of entity
@@ -60,7 +63,7 @@ GETCLS ; ...continued from GETCLS^XPAREDIT(X,PAR,LST)
  . . D LOOKUP^XPAREDIT(.TMP,+LST(LST("P",$P(X,".",1)))) ; silent lookup
  . . I $L(TMP) S X=TMP,DONE=1                        ; PRE.NAME -> VP
  . W " ??" D HLPCLS                                  ; invalid entry
- I +X,X'[";" D  ;Don't show for resoved pointer p109
+ I +X D
  . W "  ",$P(LST(X),U,2),"   ",$P(LST(X),U,6)  ; echo selection
  . I +LST(X)=9.4 D
  . . W !!,"Parameters set for 'Package' may be replaced if "

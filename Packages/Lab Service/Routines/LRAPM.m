@@ -1,5 +1,6 @@
-LRAPM ;AVAMC/REG/WTY - ANATOMIC PATH MODIFY MICRO/DX ;10/23/04  22:55
- ;;5.2;LAB SERVICE;**72,91,130,231,248,295**;Sep 27, 1994
+LRAPM ;AVAMC/REG/WTY - ANATOMIC PATH MODIFY MICRO/DX ;11/2/00 [ 04/11/2003  10:26 AM ]
+ ;;5.2T9;LR;**1002,1018**;Nov 17, 2004
+ ;;5.2;LAB SERVICE;**72,91,130,231,248**;Sep 27, 1994
  ;
  ;Reference to ^%DT supported by IA #10003
  ;Reference to %XY^%RCR supported by IA #10022
@@ -24,6 +25,9 @@ REST W "  for ",LRH(0) I '$D(^LRO(68,LRAA,1,LRAD,1,LRAN,0)) W $C(7),!!,"Accessio
  S X=^LRO(68,LRAA,1,LRAD,1,LRAN,0),LRLLOC=$P(X,"^",7),LRDFN=+X
  Q:'$D(^LR(LRDFN,0))  S X=^(0) D ^LRUP
  W !,LRP,"  ID: ",SSN
+ ;----- BEGIN IHS MODIFICATIONS LR*5.2*1018
+ W !,LRP,"  ID: ",HRCN  ;IHS/ANMC/CLS 08/18/96
+ ;----- END IHS MODIFICATIONS
  S LRI=$P(^LRO(68,LRAA,1,LRAD,1,LRAN,3),"^",5)
  W:$O(^LR(LRDFN,LRSS,LRI,.1,0)) !,"Specimen(s):" F X=0:0 S X=$O(^LR(LRDFN,LRSS,LRI,.1,X)) Q:'X  W !,$P($G(^(X,0)),U)
 DIE S X=^LR(LRDFN,LRSS,LRI,0)
@@ -66,7 +70,6 @@ A S:'$D(^LR(LRDFN,LRSS,LRI,LRE,0)) ^(0)=LRQ(LRB) S LRT(1)=^(0),(B,C)=0
  S X=^LR(LRDFN,LRSS,LRI,0),Y=$P(X,"^",15),$P(^(0),"^",11)="" S:'Y $P(^(0),"^",15)=$P(X,"^",11)
  I $G(SEX)["F","SPCY"[LRSS D DEL^LRWOMEN ;This sends notificatin to WHP
  ;that a previously verified report has been modified. ;cym 2/20/1999
- D UPDATE^LRPXRM(LRDFN,LRSS,LRI)
  I '$D(^LRO(69.2,LRAA,2,LRAN,0)) D
  .L +^LRO(69.2,LRAA,2):5 I '$T D  Q
  ..S MSG(1)="The final reports queue is in use by another person.  "

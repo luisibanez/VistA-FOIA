@@ -1,4 +1,5 @@
 LR7OSMZU ;slc/dcm - Silent Micro rpt cont. ;8/11/97
+ ;;5.2T9;LR;**1018**;Nov 17, 2004
  ;;5.2;LAB SERVICE;**121,244**;Sep 27, 1994
 FH ;from LR7OSMZ1, LR7OSMZ2, LR7OSMZ5
  Q

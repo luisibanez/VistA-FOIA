@@ -1,5 +1,5 @@
-LA7SM2 ;DALOI/JMC - Shipping Manifest Options ;5/5/97  14:39
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64**;Sep 27, 1994
+LA7SM2 ;VA/DALOI/JMC - Shipping Manifest Options ;JUL 06, 2010 3:14 PM
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,1027**;NOV 01, 1997
  ;
 REQINFO ; Enter required information prior to shipping.
  D INIT^LA7SM

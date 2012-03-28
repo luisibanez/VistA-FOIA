@@ -1,4 +1,5 @@
-LAMIVTL2 ;DAL/HOAK 3rd vitek literal verification routine
+LAMIVTL2 ; IHS/DIR/FJE - 3rd vitek literal verification routine ;
+ ;;5.2;LA;;NOV 01, 1997
  ;;5.2;AUTOMATED LAB INSTRUMENTS;**12**;Sep 27,1994
 INIT ;
 CONTROL ;

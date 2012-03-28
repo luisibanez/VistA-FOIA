@@ -1,9 +1,7 @@
-LRAPMV ;AVAMC/REG/CYM - MOVE AP ACCESSION ;4/1/98  11:53 ;
- ;;5.2;LAB SERVICE;**72,231,259**;Sep 27, 1994
+LRAPMV ;AVAMC/REG/CYM - MOVE AP ACCESSION ;4/1/98  11:53 ; [ 04/11/2003  10:28 AM ]
+ ;;5.2T9;LR;**1002,1018**;Nov 17, 2004
+ ;;5.2;LAB SERVICE;**72,231**;Sep 27, 1994
  W !!?17,"Move an accession from one patient to another"
- ;Add Quit to ensure this option does not execute
- W !!?18,"*** THIS OPTION IS NO LONGER AVAILABLE ***"
- Q
  S LRDICS="SPCYEM" D ^LRAP G:'$D(Y) END D XR^LRU
  W !!,"Accession Year: ",LRH(0)," " S %=1 D YN^LRU G:%<1 END I %=2 S %DT="AE",%DT(0)="-N",%DT("A")="Enter YEAR: " D ^%DT K %DT G:Y<1 END S LRAD=$E(Y,1,3)_"0000",LRH(0)=$E(Y,1,3)+1700
  I '$O(^LRO(68,LRAA,1,LRAD,1,0)) W $C(7),!!,"NO ",LRO(68)," ACCESSIONS IN FILE FOR ",LRH(0),!! Q
@@ -11,7 +9,10 @@ W K X,Y,LR("CK") R !!,"Move Accession Number: ",LRAN:DTIME G:LRAN=""!(LRAN[U) EN
  D REST G W
 REST W "  for ",LRH(0) I '$D(^LRO(68,LRAA,1,LRAD,1,LRAN,0)) W $C(7),!!,LRO(68)," Accession # ",LRAN," for ",LRH(0)," not in ACCESSION file",!! Q
  S X=^LRO(68,LRAA,1,LRAD,1,LRAN,0),LRDFN=+X Q:'$D(^LR(LRDFN,0))  S X=^(0) D ^LRUP
- W !,LRP,"  ID: ",SSN,!,"File: ",$P($G(^DIC(+P("F"),0)),U)
+ ;W !,LRP,"  ID: ",SSN,!,"File: ",$P($G(^DIC(+P("F"),0)),U)
+ ;----- BEGIN IHS MODIFICATIONS LR*5.2*1018
+ W !,LRP,"  ID: ",HRCN,!,"File: ",$P($G(^DIC(+P("F"),0)),U)  ;IHS/OIRM TUC/AAB 10/08/97
+ ;----- END IHS MODIFICATIONS
  S LRI=+$P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,3)),"^",5) I '$D(^LR(LRDFN,LRSS,LRI,0)) W $C(7),!,"Inverse date missing or incorrect in Accession Area file for",!,LRAA(1),"  Year: ",$E(LRAD,2,3),"  Accession: ",LRAN Q
  S DIE="^LR(LRDFN,LRSS,",DA=LRI D CK^LRU Q:$D(LR("CK"))  S LRO=LRDFN
  W !,"Move accession to " D ^LRDPA

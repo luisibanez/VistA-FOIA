@@ -1,0 +1,56 @@
+BGPMUUT7 ;IHS/MSC/MGH - Find if radiology procuedure is in taxonomy ;13-Apr-2011 16:27;DU
+ ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ Q
+FIND(DFN,TAX,BDATE,EDATE) ; EP
+ N BEGIN,START,END,FIRST,PT,ORDER,IEN,OI,TIEN
+ S ORDER=0
+ S BEGIN=BDATE+1
+ S START=9999999-BDATE,END=9999999-EDATE
+ S FIRST=END-1
+ S PT=DFN_";DPT("
+ F  S FIRST=$O(^OR(100,"AR",PT,FIRST)) Q:FIRST=""!(FIRST>START)!(+ORDER)  D
+ .S IEN="" F  S IEN=$O(^OR(100,"AR",PT,FIRST,IEN)) Q:IEN=""!(+ORDER)  D
+ ..S OI=0 S OI=$O(^OR(100,IEN,.1,OI)) Q:OI=""  D
+ ...S OIN=$G(^OR(100,IEN,.1,OI,0))
+ ...Q:'OIN
+ ...S CODE=$P($G(^ORD(101.43,OIN,0)),U,3)
+ ...S CODSYS=$P($G(^ORD(101.43,OIN,0)),U,4)
+ ...I CODSYS="CPT4" D
+ ....S TIEN="" S TIEN=$O(^ATXAX("B",TAX,TIEN)) I 'TIEN Q 0
+ ....S ORDER=$$ICD^ATXCHK(CODE,TIEN,1)
+ ....S ORDTE=$P($G(^OR(100,IEN,0)),U,7)
+ ....I ORDER=1 S ORDER=1_U_ORDTE
+ Q ORDER
+ ;
+DO ; EP
+ ;show display order of measures
+ ;use from command line
+ N DMUD,DMUL,DMUN,DMUS,MU,MUA,MULINE,MUN,MUQ
+ S MUQ=""
+ ;MUA = MUA(<measure set>,<display order>,<measure #>)=<measure title>
+ S MUN="" F  S MUN=$O(^BGPMUIND(90595.11,"B",MUN)) Q:MUN=""  D
+ .S MU=$O(^BGPMUIND(90595.11,"B",MUN,""))
+ .S MUA($$GET1^DIQ(90595.11,MU_",",.04),$$GET1^DIQ(90595.11,MU_",",.06),$$GET1^DIQ(90595.11,MU_",",.01))=$$GET1^DIQ(90595.11,MU_",",.03)
+ W #
+ W:$D(IOF) @IOF
+ S DMUS="" F  S DMUS=$O(MUA(DMUS)) Q:DMUS=""  D  Q:MUQ
+ .D HEADER
+ .S DMUD="" F  S DMUD=$O(MUA(DMUS,DMUD)) Q:DMUD=""  D  Q:MUQ
+ ..S DMUN="" F  S DMUN=$O(MUA(DMUS,DMUD,DMUN)) Q:DMUN=""  D  Q:MUQ
+ ...S DMUL=$L(MUA(DMUS,DMUD,DMUN))
+ ...I $Y>18 D NP Q:MUQ
+ ...W !,DMUD,?12,DMUN,?21,$E(MUA(DMUS,DMUD,DMUN),1,$S(DMUL>59:55,1:59))_$S(DMUL>59:" ...",1:"")
+ Q
+ ;
+NP ;
+ K DIR W ! S DIR(0)="EO" D ^DIR K DIR I Y=0!(Y="^")!($D(DTOUT)) S MUQ=1
+ ;W:$D(IOF) @IOF
+ W #
+ D HEADER
+ Q
+HEADER ;
+ W !!,DMUS
+ ;S MULINE="",$P(MULINE,"-",$L(DMUS))="-" W !,MULINE
+ W !,"Disp Order",?12,"Meas #",?21,"Measure Title"
+ S MULINE="",$P(MULINE,"-",79)="-" W !,MULINE
+ Q

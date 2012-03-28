@@ -1,8 +1,9 @@
-XDRDEDT ;SF-IRMFO/REM - EDIT STATUS FIELD IN FILE 15 ;10/10/08  13:38
- ;;7.3;TOOLKIT;**23,43,113**;Apr 25, 1995;Build 5
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+XDRDEDT ;SF-IRMFO/REM - EDIT STATUS FIELD IN FILE 15 ;09/22/99  11:12 [ 04/02/2003   8:47 AM ]
+ ;;7.3;TOOLKIT;**23,43,1001,1003**;Apr 03, 1995
+ ;IHS/OIT/LJF 07/14/2006 PATCH 1003 make it clear to users that name is being asked for under LOOKUP
+ ;            02/09/2007 PATCH 1003 clean up DIR variable
 EN ;;
- N XDRFIL,X,X1,X2,N1,N2,XDRDELET,XDROSTAT
+ N XDRFIL,X,X1,X2,N1,N2,XDRDELET
 EN2 K DIE,DIC
  S XDRFIL=$$FILE^XDRDPICK() Q:XDRFIL'>0  S XDRGLB=$G(^DIC(XDRFIL,0,"GL")) Q:XDRGLB=""
  F  D  Q:DA'>0
@@ -13,12 +14,14 @@ EN2 K DIE,DIC
  . E  S X1=+$P(^VA(15,DA,0),U,2),X2=+^(0)
  . S N1=$P(@(XDRGLB_X1_",0)"),U),N2=$P(@(XDRGLB_X2_",0)"),U)
  . S N1=$$PEELNAM(N1),N2=$$PEELNAM(N2)
- . W !!!,"  Duplicate Record File Entry ",DA," for the ",$P(^DIC(XDRFIL,0),U)," FILE"
- . ; XT*7.3*113 changed to call $$GET1^DIQ instead of EN^DIQ
- . S XDROSTAT=$$GET1^DIQ(15,DA_",",.03)
- . W !?10,X1,?20,N1,!?10,X2,?20,N2,!!?10,"Currently listed as ",XDROSTAT,!!
- . S DIR(0)="Y",DIR("A")="Do you really want to "_$S($D(XDRDELET):"DELETE THIS DUPLICATE RECORD ENTRY",1:"RESET to POTENTIAL DUPLICATE"),DIR("B")="NO"
- . D ^DIR Q:Y'>0
+ .W !!!,"  Duplicate Record File Entry ",DA," for the ",$P(^DIC(XDRFIL,0),U)," FILE"
+ . N XX D  W !?10,X1,?20,N1,!?10,X2,?20,N2,!!?10,"Currently listed as ",XX,!!
+ . . N DIC,DIQ,DR,XDRQ
+ . . S DIC="^VA(15,",DIQ="XDRQ",DIQ(0)="E",DR=.03
+ . . D EN^DIQ1
+ . . S XX=$G(XDRQ(15,DA,.03,"E"))
+ . . Q
+ . S DIR(0)="Y",DIR("A")="Do you really want to "_$S($D(XDRDELET):"DELETE THIS DUPLICATE RECORD ENTRY",1:"RESET to POTENTIAL DUPLICATE"),DIR("B")="NO" D ^DIR Q:Y'>0
  . D NAME(DA)
  . I $D(XDRDELET) D
  . . N DIK
@@ -29,16 +32,9 @@ EN2 K DIE,DIC
  . . K ^VA(15,DA,2)
  . . K ^VA(15,DA,3)
  . W !!,"   ",$S($D(XDRDELET):"Entry DELETED!",1:"Status RESET to POTENTIAL DUPLICATE RECORD."),!!,*7
- . ; If PATIENT and previous status was VERIFIED, NOT A DUPLICATE, inactivate entry
- . ; on the MPI DO NOT LINK file 985.28. - (new with XT*7.3*113)
- . I XDROSTAT'="VERIFIED, NOT A DUPLICATE" Q
- . Q:XDRFIL'=2
- . ; Quit if routine ^MPIFDNL is not loaded
- . S X="MPIFDNL" X ^%ZOSF("TEST") Q:'$T
- . S X=^VA(15,DA,0)
- . D CALLRPC^MPIFDNL(DUZ,DUZ(2),+X,+$P(X,U,2),1)
  . Q
  K DA,DR,DIC,DIE
+ K DIR   ;IHS/OIT/LJF 02/09/2007 PATCH 1003
  Q
 SCRN(DA,GLOBAL) ;Screen for verified dup. or verified not dup.
  I $P(^(0),U,5)>1 Q 0 ; But don't take merged or merge in progress!
@@ -74,7 +70,8 @@ LOOKUP(FILE) ; FIND PAIRS IN DUPLICATE RECORD FILE
  S XDRDIC=$G(^DIC(FILE,0,"GL")) I XDRDIC="" G NOFILE
  S XDRDIC=";"_$E(XDRDIC,2,99)
  ;
-LOOK1 K DIR S DIR("A")="Select "_FILENAM,DIR(0)="FO^2" D ^DIR K DIR ; GET PART OF A NAME
+LOOK1 ;K DIR S DIR("A")="Select "_FILENAM,DIR(0)="FO^2" D ^DIR K DIR ; GET PART OF A NAME
+ K DIR S DIR("A")="Select "_FILENAM_" NAME",DIR(0)="FO^2",DIR("?")="Enter the first few letters of the name" D ^DIR K DIR  ;IHS/OIT/LJF 07/14/2006 PATCH 1003
  I X="" Q -1
  I $D(DIRUT)!(Y="^") Q -1
  ;

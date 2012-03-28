@@ -1,5 +1,5 @@
-%ZOSV ;ISF/STAFF - View commands & special functions (GT.M). ;09/15/08  14:45
- ;;8.0;KERNEL;**275,425,499**;Jul 10, 1995;Build 14
+%ZOSV ;ISF/STAFF - View commands & special functions (GT.M). ;4/12/07  16:47
+ ;;8.0;KERNEL;**275,425**;Jul 10, 1995;Build 18
  ; for GT.M for VMS, version 4.3
  ;
 ACTJ() ; # active jobs
@@ -25,7 +25,6 @@ NOPASS ;
 GETPEER() ;Get the IP address of a connection peer
  N PEER
  S PEER=$ZTRNLNM("VISTA$IP")
- I $G(^XTV(8989.3,1,"PEER"))[PEER S PEER="" ;p499
  Q $S($L(PEER):PEER,$L($G(IO("GTM-IP"))):IO("GTM-IP"),1:"")
  ;
 PRGMODE ;

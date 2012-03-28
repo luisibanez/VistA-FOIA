@@ -1,10 +1,10 @@
-XINDX51 ;ISC/REL,GRK,RWF - PRINT ROUTINE ;06/24/08  16:06
- ;;7.3;TOOLKIT;**20,48,61,110**;Apr 25, 1995;Build 11
+XINDX51 ;ISC/REL,GRK,RWF - PRINT ROUTINE ;04/17/2002  12:42 [ 12/18/2003  4:57 PM ]
+ ;;7.3;TOOLKIT;**20,48,61,1002**;Apr 25, 1995
  ;Setup Local IO paramiters
-B S RTN="",INL(1)=IOM-2,INL(2)=IOSL-4,INL(3)=("C"=$E(IOST)),INL(4)=IOM-1,PG=0,INL(5)="Compiled list of Errors and Warnings "
+B S RTN="$",INL(1)=IOM-2,INL(2)=IOSL-4,INL(3)="C"[$E(IOST),INL(4)=IOM-1,PG=0,INL(5)="Compiled list of Errors and Warnings "
  K ER,HED D HD1 ;Do header
  ;Show Errors
- F  S RTN=$O(^UTILITY($J,1,RTN)) Q:RTN=""!$D(IND("QUIT"))  S X=^(RTN,0) I $D(^UTILITY($J,1,RTN,"E"))>9 S HED=$$BHDR(RTN,X) D HD,WERR(1)
+ F  S RTN=$O(^UTILITY($J,RTN)) Q:RTN=""!$D(IND("QUIT"))  I $D(^UTILITY($J,1,RTN,"E"))>9 S HED=RTN D HD,WERR(1)
  W:'$D(ER) !,"No errors or warnings to report",!
  ;Did they want more?
  G END:'INP(1)!$D(IND("QUIT")),CR:INP(6)
@@ -13,24 +13,18 @@ B S RTN="",INL(1)=IOM-2,INL(2)=IOSL-4,INL(3)=("C"=$E(IOST)),INL(4)=IOM-1,PG=0,IN
  W:INP(5)?1A "   --- with "_$S(INP(5)["R":"REGULAR",INP(5)["S":"STRUCTURED",INP(5)["B":"R/S",1:"")_" ROUTINE LISTING" W " ---"
  S RTN="$",INDB="R" ;Report on each routine
 BL F  S RTN=$O(^UTILITY($J,RTN)) Q:RTN=""!('INP(4)&(RTN?1"|"1.4L.NP))!$D(IND("QUIT"))  D B1,CHK
- ;Exit or do Cross-Refference
  G END:NRO<2,END:$D(IND("QUIT")),CR
  ;
-BHDR(R,X) ;Build hdr
- Q $E(R_"       ",1,8)_" * *  "_$P(X,"^",2)_" Lines,  "_(+X)_" Bytes, Checksum: "_$G(^UTILITY($J,1,R,"RSUM"))
  ;
-WERR(FL) ;Write error messages
+WERR(FL) ;Write error message
  N ER2
  F ER=1:1 Q:'$D(^UTILITY($J,1,RTN,"E",ER))!$D(IND("QUIT"))  S %=^(ER) D
  . I $Y'<INL(2) D HD K ER2
- . D:FL&(%>0)&($G(ER2)'=+%) WORL(^UTILITY($J,1,RTN,0,+%,0)) ;Write the routine line
- . W !?3,$P(%,$C(9),2) W:$X>16 ! W ?16,$P(%,$C(9),3) S ER2=+% ;Write the error p110
- . Q
+ . D:FL&(%>0)&($G(ER2)'=+%) WORL(^UTILITY($J,1,RTN,0,+%,0)) W !?3,$P(%,$C(9),2) S ER2=+%
  Q
  ;
 WR ;Write one routine
- S X=^UTILITY($J,1,RTN,0),INL(5)=$$BHDR(RTN,X)
- D HD1 W !,?14,$P(X,"^",3)_" bytes in comments" G:'INP(2) B2
+ S X=^UTILITY($J,1,RTN,0),INL(5)=$E(RTN_"       ",1,8)_" * *  "_$P(X,"^",2)_" Lines,  "_(+X)_" Bytes" D HD1 W !,?14,$P(X,"^",3)_" bytes in comments" G:'INP(2) B2
  F I=1:1 Q:'$D(^UTILITY($J,1,RTN,0,I))  S X=^(I,0) D
  . D:$Y'<INL(2) HD1 I $D(IND("QUIT")) S I=99999 Q
  . D WORL(X) ;Write routine line
@@ -40,7 +34,7 @@ WR ;Write one routine
 WORL(D) ;Write one routine line
  N J,L
  S L=$P(D," ",1),D=$P(D," ",2,999)
- F J=8,9:0 W !,L,?J," " W:$X>10 "--",!,?10 W $E(D,1,INL(4)-J) S D=$E(D,INL(4)-J+1,999),L="" Q:D=""
+ F J=6,7:0 W !,L,?J," " W:$X>8 "--",!,?7 W $E(D,1,INL(4)-J) S D=$E(D,INL(4)-J+1,999),L="" Q:D=""
  Q
  ;
 CHK I $D(ZTQUEUED),$$S^%ZTLOAD S IND("QUIT")=1,ZTSTOP=1

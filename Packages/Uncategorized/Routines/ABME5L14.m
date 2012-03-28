@@ -1,0 +1,50 @@
+ABME5L14 ; IHS/ASDST/DMJ - Header 
+ ;;2.6;IHS 3P BILLING SYSTEM;**6**;NOV 12, 2009
+ ;Header Segments
+ ;
+EP ;START HERE
+ N ABM
+ D GETPRV^ABMEEPRV             ; Build Claim Level Provider array
+ ;
+ ; Loop 2310A - Referring Physician Name
+ I $D(ABMP("PRV","F")) D
+ .S ABM("PRV")=$O(ABMP("PRV","F",0))
+ .D EP^ABME5NM1("DN")
+ .D WR^ABMUTL8("NM1")
+ .D EP^ABME5PRV("RF",ABM("PRV"))
+ .D WR^ABMUTL8("PRV")
+ .I ABMNPIU="N" D
+ ..Q:((ABMRCID="99999")!(ABMRCID="AHCCCS866004791"))  ;AZ Medicaid
+ ..D EP^ABME5REF("EI",9999999.06,DUZ(2))
+ ..D WR^ABMUTL8("REF")
+ .I ABMNPIU'="N" D
+ ..D EP^ABME5REF(ABMP("RTYPE"),200,ABM("PRV"))
+ ..D WR^ABMUTL8("REF")
+ ;
+ ; Loop 2310B - Rendering Physician Name
+ I $D(ABMP("PRV","R"))!($D(ABMP("PRV","A"))) D
+ .S ABM("PRV")=$S($D(ABMP("PRV","R")):$O(ABMP("PRV","R",0)),1:$O(ABMP("PRV","A",0)))
+ .D EP^ABME5NM1("82")
+ .D WR^ABMUTL8("NM1")
+ .D EP^ABME5PRV("PE",ABM("PRV"))
+ .D WR^ABMUTL8("PRV")
+ .I ABMNPIU="N" D
+ ..D EP^ABME5REF("EI",9999999.06,DUZ(2))
+ ..Q:((ABMRCID="99999")!(ABMRCID="AHCCCS866004791"))  ;AZ Medicaid
+ ..D WR^ABMUTL8("REF")
+ .I ABMNPIU'="N" D
+ ..D EP^ABME5REF(ABMP("RTYPE"),200,ABM("PRV"))
+ ..D WR^ABMUTL8("REF")
+ ;
+ ; Loop 2310C - Service Facility Name
+ I "21^22^31^35"[$$POS^ABMERUTL() D
+ .D EP^ABME5NM1("FA")
+ .D WR^ABMUTL8("NM1")
+ .I ABMNPIU'="N" D
+ ..I ABMP("ITYPE")="R" D
+ ...D EP^ABME5REF("1C",9999999.06,ABMP("LDFN"))
+ ...D WR^ABMUTL8("REF")
+ ..I ABMP("ITYPE")="D"!(ABMP("ITYPE")="K") D
+ ...D EP^ABME5REF("1D",9999999.06,ABMP("LDFN"))
+ ...D WR^ABMUTL8("REF")
+ Q

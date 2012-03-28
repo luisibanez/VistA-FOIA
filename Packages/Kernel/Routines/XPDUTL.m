@@ -1,18 +1,18 @@
-XPDUTL ;SFISC/RSD - KIDS utilities ;10/15/2008
- ;;8.0;KERNEL;**21,28,39,81,100,108,137,181,275,491,511**;Jul 10, 1995;Build 5
- ;Per VHA Directive 2004-038, this routine should not be modified.
+XPDUTL ;SFISC/RSD - KIDS utilities ;03/25/2003  15:00
+ ;;8.0;KERNEL;**21,28,39,81,100,108,137,181,275,1012,1016**;Jul 10, 1995;Build 5
+ ;;ROUTINE CONTAINS IHS MOD AT PATCH+1 - patch# 1012
  Q
 VERSION(X) ;Get current version from Package file, X=package name or
  ;package namespace
  N I
- S I=$$LKPKG(X) Q:'I ""
+ S I=$O(^DIC(9.4,"C",X,0)) S:I'>0 I=$O(^DIC(9.4,"B",X,0))
  Q $P($G(^DIC(9.4,+I,"VERSION")),"^")
  ;
 VER(X) ;returns version number from Build file, X=build name
  Q:X["*" $P(X,"*",2)
  Q $P(X," ",$L(X," "))
  ;
-STATUS(IEN) ;returns status from Install File, IEN=Install File IEN
+STATUS(IEN) ;returns build status from Build File, IEN=Build File IEN
  I '$D(^XPD(9.7,IEN,0)) Q -1
  Q $P(^XPD(9.7,IEN,0),U,9)
  ;
@@ -31,27 +31,14 @@ LAST(PKG,VER) ;returns last patch applied for a Package, PATCH^DATE
  Q PATCH_U_LATEST
  ;
 PATCH(X) ;return 1 if patch X was installed, X=aaaa*nn.nn*nnn
- Q:X'?1.4UN1"*"1.2N1"."1.2N.1(1"V",1"T").2N1"*"1.3N 0
+ Q:X'?1.4UN1"*"1.2N1"."1.2N.1(1"V",1"T").2N1"*"1.6N 0
  N %,I,J
- S I=$$LKPKG($P(X,"*")) Q:'I 0
+ S I=$O(^DIC(9.4,"C",$P(X,"*"),0)) Q:'I 0
  S J=$O(^DIC(9.4,I,22,"B",$P(X,"*",2),0)),X=$P(X,"*",3) Q:'J 0
  ;check if patch is just a number
  Q:$O(^DIC(9.4,I,22,J,"PAH","B",X,0)) 1
  S %=$O(^DIC(9.4,I,22,J,"PAH","B",X_" SEQ"))
  Q (X=+%)
- ;
-INSTALDT(INSTALL,RESULT) ;returns number of installs, 0 if not installed or doesn't exist
- ;input: INSTALL=required, Install name; RESULT=required, passed by reference
- ;output: RESULT=number in RESULT array; RESULT(FM date/time)=TEST# ^ SEQ#
- N CNT,DATE,IEN
- K RESULT
- S (IEN,CNT,RESULT)=0
- I $G(INSTALL)="" Q 0
- F  S IEN=$O(^XPD(9.7,"B",INSTALL,IEN)) Q:'IEN  D
- .S DATE=$P($G(^XPD(9.7,IEN,1)),U,3) Q:'DATE
- .S RESULT(DATE)=$G(^XPD(9.7,IEN,6)),CNT=CNT+1
- S RESULT=CNT
- Q CNT
  ;
 NEWCP(XPD,XPDC,XPDP) ;create new check point, returns 0=error or ien
  ;XPD=name, XPDC=call back, XPDP=parameters
@@ -174,15 +161,6 @@ BUILD(XPDN,XPD) ;check if a build exists, return 1 for success
  ;
 MAILGRP(X) ;Return mail group for package, X=package name or namespace
  N XD,DIC,DR,DA,DIQ
- S DA=$$LKPKG(X) Q:'DA ""
+ S DA=$O(^DIC(9.4,"C",X,0)) S:DA'>0 DA=$O(^DIC(9.4,"B",X,0)) Q:'DA ""
  S DIC="^DIC(9.4,",DR=1938,DIQ="XD" D EN^DIQ1
  Q $S($G(XD(9.4,DA,1938))="":"",1:"G."_XD(9.4,DA,1938))
- ;
-LKPKG(X) ;Return Package ien,  X=package name or namespace
- Q:$G(X)="" 0
- N DA
- I $L(X)<5 D  Q:DA +DA
- .S DA=$O(^DIC(9.4,"C",X,0))
- .S:'DA DA=$O(^DIC(9.4,"C2",X,0))
- I $L(X)>3 S DA=$O(^DIC(9.4,"B",X,0))
- Q +DA

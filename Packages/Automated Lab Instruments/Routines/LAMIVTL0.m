@@ -1,4 +1,6 @@
-LAMIVTL0 ;DAL/HOAK 1st routine for Vitek Literal Verification ;1/22/96  08:30 ;
+LAMIVTL0 ; IHS/DIR/AAB - 1st routine for Vitek Literal Verification 1/22/96 08:30 ; [ 07/02/1998 4:05 PM ]
+ ;;5.2;LA;**1001,1003**;SEP 01, 1998
+ ;
  ;;5.2;AUTOMATED LAB INSTRUMENTS;**12,37,42**;Sep 27,1994
 INIT ;
  S OK=1

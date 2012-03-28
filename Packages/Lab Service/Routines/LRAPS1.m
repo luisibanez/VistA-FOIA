@@ -1,5 +1,7 @@
-LRAPS1 ;AVAMC/REG/CYM/KLL - ANATOMIC PATH PRINT ;2/9/98  08:04 ;
- ;;5.2;LAB SERVICE;**72,173,201,259**;Sep 27, 1994
+LRAPS1 ; IHS/DIR/AAB - ANATOMIC PATH PRINT 2/9/98 08:04 ; [ 07/09/1998 9:10 AM ]
+ ;;5.2;LR;**1002,1003,1006**;SEP 01, 1998
+ ;
+ ;;5.2;LAB SERVICE;**72,173,201**;Sep 27, 1994
  S LRA("A")="Y"
 S ;from LRAPS
  F S="SP","CY","EM" D HDR1 Q:LRA("A")]""  F LRI=0:0 S LRI=$O(^LR(LRDFN,S,LRI)) Q:'LRI  D:$Y>(IOSL-3) M Q:LRA("A")]""  D EN
@@ -9,8 +11,6 @@ EN S X=^LR(LRDFN,S,LRI,0),LR("PATH")=$P(X,U,2),N=$P(X,"^",6),N(11)=$P(X,"^",11),
  S:N="" N="?" S:'H(2) H(2)="?" D:$Y>(IOSL-3) M
  Q:LRA("A")]""  W !?2,"Organ/tissue:",?17,"Date rec'd: ",LRH(3),?43,"Acc #:",N,?64,$E(LR("PATH"),1,12)
  I 'N(11) W !?5,"Report not verified." Q
- ;DON'T DISPLAY SNOMED CODES IF USER DOESN'T HAVE LRLAB KEY
- Q:'$D(^XUSEC("LRLAB",DUZ))
  F O=0:0 S O=$O(^LR(LRDFN,S,LRI,2,O)) Q:'O  D:$Y>(IOSL-3) HDR2 Q:LRA("A")]""  S X=^LR(LRDFN,S,LRI,2,O,0),W(3)=$P(X,"^",3),O(6)=$P(^LAB(61,+X,0),"^") W !?5,O(6) W:W(3) " ",W(3)," gm" D L
  I $D(LRQ(3)) F B=0:0 S B=$O(^LR(LRDFN,S,LRI,99,B)) Q:'B  W !?5,$E(^(B,0),1,74)
  Q
@@ -30,4 +30,5 @@ HDR3 D M Q:LRA("A")]""  D HDR21 W !?5,O(6) W:W(3) " ",W(3)," gm" Q
  ;
 M Q:$D(ORHFS)  ;Don't allow reads if coming from CPRS
  Q:LRA("A")]""  R !,"'^' TO STOP ",LRA("A"):DTIME S:'$T LRA("A")="^" Q:LRA("A")="^"  I LRA("A")]"" W $C(7) G M
- W @IOF,$E(LRP,1,30),?31,SSN,?50,"DOB: ",DOB,?68,"LOC: ",$E(LRLLOC,1,5) D HDR1 Q
+ ;W @IOF,$E(LRP,1,30),?31,SSN,?50,"DOB: ",DOB,?68,"LOC: ",$E(LRLLOC,1,5) D HDR1 Q
+ W @IOF,$E(LRP,1,30),?31,HRCN,?50,"DOB: ",DOB,?68,"LOC: ",$E(LRLLOC,1,5) D HDR1 Q  ;IHS/DIR TUC/AAB 5/4/98

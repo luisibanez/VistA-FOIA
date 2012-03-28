@@ -1,6 +1,5 @@
-XPDTC ;SFISC/RSD - Transport calls ;10/15/2008
- ;;8.0;KERNEL;**10,15,21,39,41,44,58,83,92,95,100,108,124,131,463,511,517**;Jul 10, 1995;Build 6
- ;Per VHA Directive 2004-038, this routine should not be modified.
+XPDTC ;SFISC/RSD - Transport calls ;6/27/07  15:00
+ ;;8.0;KERNEL;**10,15,21,39,41,44,58,83,92,95,100,108,124,131,463**;Jul 10, 1995;Build 4
  Q
  ;^XTMP("XPDT",XPDA,data type,file #,
  ;XPDA=ien of File 9.6, XPDNM=.01 field
@@ -69,12 +68,11 @@ QUES ;build from Install Questions multiple
  .S ^XTMP("XPDT",XPDA,"QUES",$P(X,";"),0)=$P(X,";",2),^("A")=$P(X,";",3),^("B")=$S($L($P(K,U,I)):$P(K,U,I),1:$P(X,";",4)),^("??")=$P(X,";",5) S:Y]"" ^("M")=Y
  Q
 INT ;build pre,post, & enviroment init routines
- N %,I,R,X,Z
+ N %,I,X
  F I="PRE","INI","INIT" I $G(^XPD(9.6,XPDA,I))]"" S X=^(I) D
- .;remove parameters and seperate routine name from tag^routine
- .S ^XTMP("XPDT",XPDA,I)=X,X=$P(X,"("),R=$P(X,U,$L(X,U)) Q:$D(^("RTN",R))
- .I '$$RTN^XPDV(X,.Z) W !,"Routine ",X,Z S XPDERR=1 Q
- .S %=$$LOAD^XPDTA(R,"0^")
+ .S ^XTMP("XPDT",XPDA,I)=X,X=$P($P(X,U,$L(X,U)),"(") Q:$D(^("RTN",X))  ;rwf
+ .I '$$RTN^XPDV(X) W !,"Routine ",X," **NOT FOUND**" S XPDERR=1 Q
+ .S %=$$LOAD^XPDTA(X,"0^")
  Q
 BLD ;build Build file, Package file and Order Parameter file
  N %,DIC,X,XPD,XPDI,XPDV,Y
@@ -105,18 +103,14 @@ BLD ;build Build file, Package file and Order Parameter file
  .F %=1,5,7,20,"DEV","VERSION" M ^XTMP("XPDT",XPDA,"PKG",XPDI,%)=^DIC(9.4,XPDI,%)
  .;XPDV=ien of Version Multiple
  .I $D(^DIC(9.4,XPDI,22,XPDV))'>9 W !!,"**Version multiple in Package file wasn't updated**",!! S XPDERR=1 Q
- .;get just the current version multiple and make it the first entry in version multiple
  .M ^XTMP("XPDT",XPDA,"PKG",XPDI,22,1)=^DIC(9.4,XPDI,22,XPDV)
- .;check if SEND PATCH HISTORY is NO, kill PAH
- .I $P(XPDT(XPDT),U,5) K ^XTMP("XPDT",XPDA,"PKG",XPDI,22,1,"PAH")
  ;this is a patch, %=version number, $P(XPD,U)=patch number
  E  D
  .S %=$P(XPD,U),$P(XPD,U)=$P(XPDNM,"*",3),XPDV=$$PKGPAT^XPDIP(XPDI,%,.XPD)
  .S ^XTMP("XPDT",XPDA,"PKG",XPDI,22,1,0)=^DIC(9.4,XPDI,22,+XPDV,0)
  .I $D(^DIC(9.4,XPDI,22,+XPDV,"PAH",+$P(XPDV,U,2)))'>9 W !!,"**Patch multiple in Package file wasn't updated**",!! S XPDERR=1 Q
  .M ^XTMP("XPDT",XPDA,"PKG",XPDI,22,1,"PAH",1)=^DIC(9.4,XPDI,22,+XPDV,"PAH",+$P(XPDV,U,2))
- .;if CURRENT VERSION was updated in $$PKGPAT, save to TG
- .I $P(XPDV,U,3) S ^XTMP("XPDT",XPDA,"PKG",XPDI,"VERSION")=$P(XPDV,U,3)
+ ;M ^XTMP("XPDT",XPDA,"PKG",XPDI)=^DIC(9.4,XPDI)
  ;save the version ien^patch ien on -1 node
  S ^XTMP("XPDT",XPDA,"PKG",XPDI,-1)="1^1"
  ;resolve Primary Help Frame (0;4)

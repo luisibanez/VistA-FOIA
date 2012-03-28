@@ -1,4 +1,5 @@
-LAMIVTLP ;DALISC/PAC - VITEK MICRO DATA LITERAL PARSER; 5-24-95;
+LAMIVTLP ;DALISC/PAC - VITEK MICRO DATA LITERAL PARSER; 5-24-95; [ 01/12/98  11:20 AM ]
+ ;;5.2;LA;**1001**;DEC 10, 1997
  ;;5.2;AUTOMATED LAB INSTRUMENTS;**12,35**;Sep 27, 1994
  ;Parses the literal data stream and calls LAMIVTLU
  ;to stuff data in the LAH for verification

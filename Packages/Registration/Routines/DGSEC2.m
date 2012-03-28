@@ -1,16 +1,27 @@
 DGSEC2 ;ALB/RMO - Display User Access to Patient Record ; 22 JUN 87 1:00 pm
  ;;5.3;Registration;**391**;Aug 13, 1993
+ ;IHS/ANMC/LJF  9/01/2000 added call to list template
+ ;              1/04/2002 removed screen on lookup
+ ;
  I '$D(^XUSEC("DG SECURITY OFFICER",DUZ)) W !!?3,*7,"You do not have the appropriate access privileges to display user access." Q
  S DIC("A")="Select PATIENT NAME: ",DIC="^DGSL(38.1,",DIC(0)="AEMQ"
- S DIC("S")="I (+$P(^(0),U,2))!(+$O(^(""D"",0)))",DGSENFLG=""
+ ;
+ ;IHS/ANMC/LJF 1/04/2002 removed screen
+ ;S DIC("S")="I (+$P(^(0),U,2))!(+$O(^(""D"",0)))",DGSENFLG=""
+ S DGSENFLG=""
+ ;IHS/ANMC/LJF 1/04/2002 end of mod
+ ;
  W ! D ^DIC K DIC("A"),DIC("S"),DGSENFLG
  G Q:Y<0 S DFN=+Y D DTRNG G Q:DGPOP
+ ;
 ASKUSR K DGUSR W !!,"Do you want to see when a select user accessed this record" S %=2 D YN^DICN G Q:%<0 S:%=2 DGUSR="ALL" I '% W !!,"Enter 'YES' to display a select user, or 'NO' to display all users." G ASKUSR
  I '$D(DGUSR) S DIC="^VA(200,",DIC(0)="AEMQ" W ! D ^DIC G Q:Y<0 S DGUSR=+Y
- S DGPGM="START^DGSEC2",DGVAR="DFN^DGBEGDT^DGENDDT^DGRNG1^DGRNG2^DGUSR" W ! D ZIS^DGUTQ G Q:POP
+ ;S DGPGM="START^DGSEC2",DGVAR="DFN^DGBEGDT^DGENDDT^DGRNG1^DGRNG2^DGUSR" W ! D ZIS^DGUTQ G Q:POP          ;IHS/ANMC/LJF 9/1/2000
+ S DGPGM="^BDGSEC2",DGVAR="DFN^DGBEGDT^DGENDDT^DGRNG1^DGRNG2^DGUSR" W ! D ZIS^DGUTQ G Q:POP D ^BDGSEC2 Q  ;IHS/ANMC/LJF 9/1/2000
  ;
 START U IO S DGX="",(DGCNT,DGPGE)=0 S:$D(^DPT(DFN,0)) DGNAM=$E($P(^(0),"^",1),1,30),DOB=$P(^(0),"^",3),SSN=$P(^(0),"^",9) D SELUSR:DGUSR,ALLUSR:DGUSR="ALL"
  ;
+ Q  ;IHS/ANMC/LJF 9/1/2000 Line Q called by BDGSEC2
 Q K DFN,DGBEGDT,DGCNT,DGDTE,DGENDDT,DGLNE,DGNAM,DGPGE,DGPOP,DGPGM,DGRNG1,DGRNG2,DGSL0,DGVAR,DGX,POP D CLOSE^DGUTQ
  Q
  ;
@@ -21,7 +32,8 @@ ALLUSR F DGUSR=0:0 S DGUSR=$O(^DGSL(38.1,"AU",DFN,DGUSR)) Q:'DGUSR!(DGX="^")  D 
  I 'DGCNT W @IOF,!!?5,"No user access logged for the patient record of ",DGNAM,!?5,$S(DGRNG1=DGRNG2:"on "_DGRNG1,1:"during "_DGRNG1_" and "_DGRNG2),"."
  Q
  ;
-CHKDTE F DGDTE=DGENDDT:0 S DGDTE=$O(^DGSL(38.1,"AU",DFN,DGUSR,DGDTE)) Q:'DGDTE!(DGBEGDT<DGDTE)  I $D(^DGSL(38.1,DFN,"D",DGDTE,0)) S DGSL0=^(0),DGCNT=DGCNT+1 D HD:'DGPGE!(($Y+4)>IOSL) Q:DGX="^"  D PRT
+CHKDTE ;F DGDTE=DGENDDT:0 S DGDTE=$O(^DGSL(38.1,"AU",DFN,DGUSR,DGDTE)) Q:'DGDTE!(DGBEGDT<DGDTE)  I $D(^DGSL(38.1,DFN,"D",DGDTE,0)) S DGSL0=^(0),DGCNT=DGCNT+1 D HD:'DGPGE!(($Y+4)>IOSL) Q:DGX="^"  D PRT
+ F DGDTE=DGENDDT:0 S DGDTE=$O(^DGSL(38.1,"AU",DFN,DGUSR,DGDTE)) Q:'DGDTE!(DGBEGDT<DGDTE)  I $D(^DGSL(38.1,DFN,"D",DGDTE,0)) S DGSL0=^(0),DGCNT=DGCNT+1 D PRT  ;IHS/ANMC/LJF 9/1/2000 HD called in BDGSEC2 instead
  Q
  ;
 PRT W !,$S($D(^VA(200,DGUSR,0)):$E($P(^(0),"^"),1,20),1:"Unknown") S Y=$P(DGSL0,"^") W ?23 D DT^DIQ

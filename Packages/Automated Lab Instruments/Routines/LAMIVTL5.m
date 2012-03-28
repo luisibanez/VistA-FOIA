@@ -1,4 +1,5 @@
-LAMIVTL5 ;DAL/HOAK Verify for Vitek literal isolate 0  ;7/8/96  07:30 ;
+LAMIVTL5 ;DAL/HOAK Verify for Vitek literal isolate 0  ;7/8/96  07:30 ; [ 01/12/98  11:20 AM ]
+ ;;5.2;LA;**1001**;DEC 10, 1997
  ;;5.2;AUTOMATED LAB INSTRUMENTS;**12,36**;Sep 27,1994
 INIT ;
  S OK=1

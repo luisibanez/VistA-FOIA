@@ -1,0 +1,262 @@
+BLRNLINK ; IHS/HQT/MJL - LAB HOOK FOR APCDALV (PCC) ; [ 01/24/2003  1:19 PM ]
+ ;;5.2;LR;**1011,1014,1015,1024**;May 02, 2008
+ ;
+ ;; This routine makes use of the PCC MASTER CONTROL FILE
+ ;; The flag field of this file for the lab package contains the
+ ;; following:  1st piece - 0 = outpatient facility only
+ ;;                         1 = outpatient/inpatient facility
+ ;;
+ ;; THE FOLLOWING ARE NOT USED IN BLR5.2
+ ;;             2nd piece - 0 = don't ask OP/IP prompt
+ ;;                         1 = ask OP/IP prompt
+ ;;             3rd piece - 0 = don't ask for ordering facility
+ ;;                         1 = ask for ordering facility
+ ;;             4th piece - 0 = don't pass clinic code
+ ;;                         1 = pass clinic code
+ ;; each piece is delimited by "~"
+ ;
+TSK ; entry point for background job
+ ;
+ ;D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("ENTER TSK^BLRNLINK")
+ Q:$P($G(^AUTTSITE(1,0)),U,8)'="Y"
+ S BLRQUIET=$G(BLRQUIET)
+START ;
+ ;D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("ENTER START^BLRNLINK")
+ S BLRQSITE=$P($G(^AUTTSITE(1,0)),U)
+ S APCDALVR("BLRLINK")=1
+ S BLRDH=$P($G(^BLRSITE(BLRQSITE,0)),U,6)
+ S BLR200CV=$P($P($G(^DD(9000010.09,1202,0)),U,2),"'")["P200"
+ S:BLRDH="" BLRDH=+$H,$P(^BLRSITE(BLRQSITE,0),U,6)=BLRDH
+ S BLRLTP=+$P($G(^BLRSITE(BLRQSITE,21,BLRDH,0)),U,3)
+ ;
+ F  S BLRXPCC=$G(^BLRSITE(BLRQSITE,0)) D:BLRXPCC="" ERRMST S BLRLOG=$P(BLRXPCC,U,2),BLRSTOP=$P(BLRXPCC,U,9),BLRXPCC=$P(BLRXPCC,U,3) Q:'BLRXPCC!BLRSTOP  D  Q:BLRHCNT
+ .S APCDALVR("BLRLINK")=1,BLRERR=0,BLRBUL=0,BLRPCC="",BLRLTA=+$P($G(^BLRSITE(BLRQSITE,21,BLRDH,0)),U,2) S:'BLRLTA BLRLTP=0
+ .I BLRLOG S BLRX=$G(^BLRSITE(BLRQSITE,20,BLRQDH,0)) I $P(BLRX,U,2)>$P(BLRX,U,3) S BLRHCNT=1 Q
+ .I BLRLTP=BLRLTA S BLRHCNT=BLRHCNT+1 Q:BLRDH=+$H  S BLRHCNT=0,BLRDH=BLRDH+1,$P(^BLRSITE(BLRQSITE,0),U,6)=BLRDH,BLRLTP=0 Q
+ .S BLRLTP=BLRLTP+1,BLRHCNT=0
+ .S BLRLOGDA=$G(^BLRSITE(BLRQSITE,21,BLRDH,BLRLTP))
+ .Q:BLRLOGDA=""   ;IF NO EVENT ENTRY THEN JUST PASS IT UP
+ .S BLRDUZ2=$P($G(^BLRTXLOG(BLRLOGDA,0)),U,9)
+ .S:BLRDUZ2="" BLRDUZ2=$G(DUZ(2))
+ .;
+ .D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("ENTER START^BLRNLINK")
+ .S (BLRORLDN,BLRORLDA)=""
+ .S BLRORLDZ=$P($G(^BLRTXLOG(BLRLOGDA,11)),U,6)
+ .S:$G(BLRORLDZ)'="" BLRORLDN=$P($G(^SC(BLRORLDZ,0)),U)    ;'NAME'
+ .S:$G(BLRORLDZ)'="" BLRORLDA=$P($G(^SC(BLRORLDZ,0)),U,2)  ;'ABBREVIATION'
+ .S:$G(BLRORLDZ)'="" BLRORLDZ=$P($G(^SC(BLRORLDZ,0)),U,4)  ;'INSTITUTION' 
+ .;
+ .;IF A MANUAL ACCESSION IS DONE 'BLRFILE' COULD BE THE FOLLOWING                
+ .;62.3      Lab Control Name 
+ .;67        Referral Patient 
+ .;67.1      Research 
+ .;67.2      Sterilizer 
+ .;67.3      Environmental 
+ .; 
+ .;IF BLRFILE IS NOT 2 (PATIENT) THEN DON'T SEND TO PCC 
+ .;AND DON'T SEND ERROR MESSAGES
+ .;
+ .;CHECK IF 'INSTITUTION' FIELD IS POPULATED IN THE 'HOSPITAL LOCATION'
+ .;CHECK FOR 'LAB LOG TO PCC' IS DONE IN BLRNFLTL IHS/ITSC/TPF 06/25/02
+ .;I $G(BLRORLDZ),$P($G(^BLRSITE(BLRORLDZ,0)),U,3) D PROC
+ .D PROC  ;IHS/ITSC/TPF 06/25/02
+ .I $G(BLRORLDZ)="",($G(BLRFILE)=2) S BLRBUL=1,BLRPCC="No INSTITUTION entry in the HOSPITAL LOCATION file: "_$G(BLRORLDN),BLRERR=1
+ .;
+ .;CHECK IF 'ABBREVIATION' FIELD IS POPULATED IN THE 'HOSPITAL LOCATION'
+ .;IF NOT SEND ERROR MESSAGE IHS/ITSC/TPF 06/25/02
+ .I $G(BLRORLDA)="",($G(BLRFILE)=2) S BLRBUL=1,BLRPCC="No ABBREVIATION entry in the HOSPITAL LOCATION file: "_$G(BLRORLDN),BLRERR=1
+ .D:BLRPCC'="" ERR
+ .D:BLRBUL BULTNS
+ .S $P(^BLRSITE(BLRQSITE,21,BLRDH,0),U,3)=BLRLTP
+ .D CLNUP
+ ;
+ D EOJ
+ Q
+ ;
+PROC ;
+ D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("ENTER PROC^BLRNLINK","APCDALVR")
+ D ^BLRLINK1 Q:BLRERR
+ D ^BLRLINK2 Q:BLRERR
+ D ^BLRLINK3
+ D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("EXIT PROC^BLRNLINK","APCDALVR")
+ Q
+ ;
+BULTNS ;
+ ; BLRBUL=1 SENDS BLRTXLOG BULLETIN
+ ; BLRBUL=2 SENDS BLRTXLOGERR BULLETIN   ;THIS BULLETIN DOESN'T EXIST
+ ; BLRBUL=3 SENDS BLRTXLOG AND BLRTXLOGERR BULLETIN
+ ;
+ ; I "13"[BLRBUL S XMB="BLRTXLOG" D BULTX Q:BLRBUL=1
+ ; S XMB="BLRTXLOGERR" D BULTX
+ ;----- BEGIN IHS/OIT/MKK MODIFICATIONS LR*5.2*1024
+ I "13"[BLRBUL D BULTX("BLRTXLOG")  Q:BLRBUL=1
+ D BULTX("BLRTXLOGERR")
+ ;----- END IHS/OIT/MKK MODIFICATIONS LR*5.2*1024
+ Q
+ ;
+ ;----- BEGIN IHS/OIT/MKK MODIFICATIONS LR*5.2*1024 -- Total rewrite
+ ;
+ ; Original code
+ ; BULTX ;BULLETIN SENT TO LAB  IF PCC ERROR IN FILING
+ ; S (Y,XMB(1),XMB(2),XMB(3),XMB(4),XMB(5),XMB(6),XMB(7),XMB(8))=""
+ ; D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("ENTER BULTX^BLRNLINK")
+ ; I $G(APCDALVR("APCDDATE")) S Y=$P($G(APCDALVR("APCDDATE")),".") X ^DD("DD") S XMB(3)=Y
+ ; I $G(XMB(3))="" S Y=$P($G(BLRDTC),".") X ^DD("DD") S XMB(3)=Y
+ ; I $G(APCDALVR("APCDPAT")) S XMB(1)=$P($G(^DPT(APCDALVR("APCDPAT"),0)),U),XMB(2)=APCDALVR("APCDPAT")
+ ; ;I $G(XMB(1))="" S XMB(1)=$P($G(^DPT($G(BLRDFN,"UNDEF"),0)),U)
+ ; I $G(XMB(1))="" S:$G(BLRDFN)'="" XMB(1)=$P($G(^DPT(BLRDFN,0)),U)  ;IHS/ITSC/TPF 9/25/02 **1014**
+ ; S XMB(2)=$G(BLRDFN)
+ ; I $G(BLRORD) S XMB(4)=BLRORD
+ ; I $G(XMB(4))="" S XMB(4)=$P($G(^BLRTXLOG($G(BLRLOGDA,"UNDEF"),11)),U,3)
+ ; S XMB(5)=$G(BLRACCN)
+ ; I $G(BLRTEST) S XMB(6)=$P($G(^LAB(60,BLRTEST,0)),U)
+ ; I $G(BLRLOGDA) S XMB(7)=BLRLOGDA
+ ; S XMB(8)=BLRPCC
+ ; S BLRDUZ=DUZ,DUZ=.5 D ^XMB S DUZ=BLRDUZ
+ ; K XMB
+ ; Q
+ ; 
+ ;BULTX ;BULLETIN SENT TO LAB IF PCC ERROR IN FILING
+ ;
+ ; ---------------- REWRITE BEGINS HERE -----------------
+BULTX(BULLETIN)     ; BULLETIN SENT TO LAB IF PCC ERROR IN FILING
+ K XMB                  ; Initialize array
+ S Y=""                 ; Initialize variable
+ ;
+ D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("ENTER BULTX^BLRLINK")
+ ;
+ ; If BLRTXLOG number exists, use ^BLRTXLOG database
+ I +$G(BLRLOGDA)>0 D BULTXSET
+ ;
+ ; If BLRTXLOG number DOES NOT exist, use variables
+ I +$G(BLRLOGDA)<1 D BLTXNSET
+ ;       
+ ; BLR Transaction Log Number
+ S XMB(7)=$G(BLRLOGDA)
+ ;
+ ; Error Message
+ S XMB(8)=BLRPCC
+ ;
+ ; Send the Bulletin
+ S XMB=BULLETIN                                  ; Bulletin to use
+ S BLRDUZ=DUZ,DUZ=.5 D ^XMB S DUZ=BLRDUZ
+ ;
+ D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("EXIT BULTX^BLRLINK","APCDALVR","XMB")
+ ;
+ ; Clean up
+ K XMB
+ ;
+ Q
+ ;
+ ; Set bulletin parameters from ^BLRTXLOG global
+BULTXSET ;
+ NEW PTPTR
+ S PTPTR=+$P($G(^BLRTXLOG(BLRLOGDA,0)),"^",4)    ; Patient Pointer
+ ;
+ S XMB(1)=$P($G(^DPT(PTPTR,0)),"^",1)            ; Patient Name
+ S XMB(2)=$G(^DPT(PTPTR,"LR"))                   ; LRDFN
+ ;
+ ; Date of Visit -- Collection Date
+ NEW COLLDT
+ S COLLDT=$P($G(^BLRTXLOG(BLRLOGDA,12)),"^",1)
+ ; Use Kernel Function call to reset to human readable format
+ S XMB(3)=$$FMTE^XLFDT(COLLDT,"1D")
+ ; 
+ ; Order Number
+ S XMB(4)=$P($G(^BLRTXLOG(BLRLOGDA,11)),"^",3)
+ ;
+ ; Accession Number
+ S XMB(5)=$P($G(^BLRTXLOG(BLRLOGDA,12)),"^",2)
+ ;
+ ; Lab Test
+ NEW LABTIEN
+ S LABTIEN=+$P($G(^BLRTXLOG(BLRLOGDA,0)),"^",6)
+ S XMB(6)=$P($G(^LAB(60,LABTIEN,0)),"^",1)
+ ;
+ Q
+ ;
+ ; Set bulletin parameters from variables
+BLTXNSET ;
+ NEW PTPTR
+ S PTPTR=+$G(APCDALVR("APCDPAT"))                ; Patient Pointer
+ ;
+ S XMB(1)=$P($G(^DPT(PTPTR,0)),"^",1)            ; Patient Name
+ S XMB(2)=$G(^DPT(PTPTR,"LR"))                   ; LRDFN
+ ;
+ ; Visit/Collection Date
+ ; Use Kernel Function call to reset to human readable format
+ S XMB(3)=$$FMTE^XLFDT($G(APCDALVR("APCDDATE")),"1D")
+ ;
+ ; Order Number
+ S XMB(4)=$G(BLRORD)
+ ;
+ ; Accession Number
+ S XMB(5)=$G(BLRACCN)
+ ;
+ ; Test Description
+ S XMB(6)=$P($G(^LAB(60,+$G(BLRTEST),0)),"^",1)
+ ;
+ Q
+ ;----- END IHS/OIT/MKK MODIFICATIONS LR*5.2*1024
+ ;
+ ;ERROR IF NO 'BLR MASTER CONTROL' FILE
+ERRMST ;
+ S BLRBUL=1,BLRPCC="No entry for site "_$P($G(^AUTTLOC(BLRQSITE,0)),U,2)_"(ien = "_$G(BLRQSITE)_") in 'BLR MASTER CONTROL' file.",BLRERR=1
+ D:BLRPCC'="" ERR
+ D:BLRBUL BULTNS
+ K BLRBUL,BLRPCC
+ Q
+ERR ; update transaction log with PCC error message value (if transaction is a modification then any previous value needs to be removed)
+ K DIE,DA,DR
+ S DIE="^BLRTXLOG(",DA=BLRLOGDA,DR="106///^S X=BLRPCC"
+ D ^DIE Q
+ S BLRBUL=2,BLRPCC="Update to IHS transaction log to the PCC error flag field not done..REFILE"
+ W:'BLRQUIET !,"Another user is editing this file entry....update to IHS transaction log to the PCC error flag field not done"
+ Q
+ ;
+SETNUL ; update transaction log with PCC error message value (if transaction is a modification then any previous value needs to be removed)
+ K DIE,DA,DR
+ S DIE="^BLRTXLOG(",DA=BLRLOGDA,DR="106////@"
+ D ^DIE Q
+ S BLRBUL=2,BLRPCC="PCC error flag field not nulled."
+ W:'BLRQUIET !,"PCC error flag field not nulled"
+ Q
+ ;
+CALLDIK ;EP - DELETE PCC VISIT AND UPDATE BLRTXLOG
+ D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("ENTER CALLDIK^BLRUTIL")
+ I '$L(BLRVIEN) S BLRPCC="Lab deleted test...PCC entries already deleted" D ERR^BLRLINK Q
+ N (BLRLOGDA,DA,DIK,DT,DUZ,U,DTIME,IO,IOSL,IOM,IOXY,IOST,XQDIC,XQPSM,XQY,XQYO,ZTQUEUED)
+ S BLRBUL=2,BLRPCC="Lab deleted test...PCC entries deleted"
+ D ^DIK,DTXVP
+ Q
+ ;
+DTXVP ; update transaction log to delete PCC file and v ien when lab deletes the test,
+ ; or if PCC entries are missing.
+ K DIE,DA,DR
+ S DIE="^BLRTXLOG(",DA=BLRLOGDA
+ S DR="104////@;105////@;106///^S X=BLRPCC"
+ D ^DIE Q
+ S BLRPCC=BLRPCC_"PCC error flag field not set.",BLRBUL=2
+ W:'BLRQUIET !,BLRPCC,!
+ Q
+ ;
+DEBUG ;
+ ; Used for debugging only -- called by ^BLRDBG
+ ;
+ S BLRERR=0,BLRPCC="",BLRQUIET=$G(BLRQUIET),BLR200CV=$P($P(^DD(9000010.09,1202,0),U,2),"'")["P200"
+ D PROC,ERR:BLRPCC'="",CLNUP,EOJ
+ Q
+ ;
+CLNUP ;
+ K APCDALVR,BLR,BLRABNL,BLRACC,BLRANT,BLRANTN,BLRBILL,BLRBUL,BLRBTN,BLRCD,BLRCDT,BLRCLIN,BLRCLNAM,BLRCOM,BLRCOST,BLRCPT,BLRCPTST,BLRDFN,BLRDUZ,BLREPNM,BLRERR,BLREPRV,BLRERR,BLRFILE,BLRVFN
+ K BLRIEN,BLRLINK,BLRLIT,BLRLOGDA,BLRMOD,BLRNAME,BLRNCOM,BLRNMSPC,BLRODT,BLROPNM,BLROPRV,BLRORD,BLRORDL,BLRORG,BLRORGN,BLRPAREN,BLRPATCD,BLRPCC,BLRPMSG,BLRPNAM,BLRPROG,BLRRES,BLRRFH,BLRVFILE,BLRVGL,BLRVFN
+ K BLRORLDZ,BLRORDL1,BLRCOMPD,BLRCOLSP  ;IHS/DIR TUC/AAB 04/08/98
+ K BLRRFL,BLRROOT,BLRSDI,BLRSITE,BLRSNAM,BLRSS,BLRSTAGE,BLRSTAT,BLRSTR,BLRTLAB,BLRTLOG,BLRTNAM,BLRTRAN,BLRTXT,BLRUNIT,BLRVADFN,BLRVAL,BLRVCAT,BLRVFLD,BLRVIEN,BLRVPRV,BLRVSIT,BLRVSUB,BLRXFLG
+ Q
+ ;
+EOJ ;
+ I $D(ZTQUEUED) S ZTREQ="@"
+ K APCDALVR,PCCVISIT,INDX,BLR200CV,BLRLOGDA,BLRORD,BLRI,BLRDFN,BLRVADFN,BLRRES,BLRUNIT,BLRACC,BLRSITE,BLRERR,BLRABNL,BLRVAL
+ K BLRTLAB,BLRSS,BLRDFN,AUPNTALK,BLRNMSPC,BLRCDT,BLRCD,BLRCLIN,BLRPATCD,BLRORDL,BLREPRV,BLROPRV,BLREPNM,BLROPNM,BLRSNAM,BLRODT
+ K BLRDUZ,BLRTNAME,BLRXFLG,BLRTRAN,BLRSDI,BLRMOD,BLRL,XMB,BLRPCC,BLRVIEN,BLRPAREN,BLRRFH,BLRRFL
+ Q

@@ -1,5 +1,5 @@
-%ZOSV ;SFISC/AC,PUG/TOAD,HOU/DHW - View commands & special functions. ;09/15/08  16:41
- ;;8.0;KERNEL;**275,425,499**;Jul 10, 1995;Build 14
+%ZOSV ;SFISC/AC,PUG/TOAD,HOU/DHW - View commands & special functions. ;4/12/07  16:48
+ ;;8.0;KERNEL;**275,425**;Jul 10, 1995;Build 18
  ;
 ACTJ() ; # active jobs
  I $G(^XUTL("XUSYS","CNT")) Q $G(^XUTL("XUSYS","CNT"))
@@ -21,7 +21,7 @@ AVJ() ; # available jobs, Limit is in the OS.
  Q J-$$ACTJ ;Use signon Max
  ;
 RTNDIR() ; primary routine source directory
- ;Assume /home/xxx/o(/home/xxx/r /home/xxx/w) /home/gtm()
+ ;Assume /home/xxx/o(/home/xxx/r /home/gtm)
  Q $P($S($ZRO["(":$P($P($ZRO,"(",2),")"),1:$ZRO)," ")_"/"
  ;
 TEMP() ; Return path to temp directory
@@ -34,11 +34,8 @@ NOPASS ;
  U $I:(ESCAPE:TERMINATOR="":NOPASTHRU) Q
  ;
 GETPEER() ;Get the IP address of a connection peer
- N PEER
- S PEER=$P($ZTRNLNM("SSH_CLIENT")," ") S:PEER="" PEER=$ZTRNLNM("REMOTEHOST")
- S PEER=$S($L(PEER):PEER,$L($G(IO("IP"))):IO("IP"),$L($G(IO("GTM-IP"))):IO("GTM-IP"),1:"")
- I $G(^XTV(8989.3,1,"PEER"))[PEER S PEER="" ;p499
- Q PEER
+ N % S %=$P($ZTRNLNM("SSH_CLIENT")," ") S:%="" %=$ZTRNLNM("REMOTEHOST")
+ Q $S($L(%):%,$L($G(IO("GTM-IP"))):IO("GTM-IP"),1:"")
  ;
 PRGMODE ;Drop into direct mode
  N X,XUCI,XUSLNT
@@ -190,10 +187,19 @@ DEVOK ;
  ;
 DEVOPN ;List of Devices opened.  Linux only
  ;Returns variable Y. Y=Devices owned separated by a comma
- N %I,%X,%Y
- ZSHOW "D":%Y
- S %I=0,Y="",%X=""
- F  S %I=$O(%Y("D",%I)) Q:'%I  S Y=Y_%X_$P(%Y("D",%I)," "),%X=","
+ ; ZSHOW "D":Y
+ N %FILE S %FILE=$$TEMP_"zosv_devopn_"_$J_".tmp"
+ ZSYSTEM "lsof -F n -p "_$J_" >"_%FILE
+ N %I,%X,%Y S %I=$I
+ O %FILE
+ U %FILE
+ F %Y=0:1 R %X:99 Q:%X=""  S %Y($S($E(%X)="p":"PID",$E(%X)="n":%Y,1:"?"))=$E(%X,2,$L(%X))
+ U %I
+ C %FILE:(DELETE)
+ I %Y("PID")'=$J S Y="" Q
+ I $D(%Y("?")) S Y="" Q
+ K %Y("PID"),%Y("?")
+ S (Y,%X)="" F  S %X=$O(%Y(%X)) Q:%X=""  S Y=Y_","_%Y(%X)
  Q
  ;
 RETURN(%COMMAND) ; ** Private Entry Point: execute a shell command & return the resulting value **
