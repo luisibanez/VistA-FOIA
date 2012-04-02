@@ -1,5 +1,5 @@
 BISITE2 ;IHS/CMI/MWR - EDIT SITE PARAMETERS; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EDIT SITE PARAMETERS.
  ;;  PATCH 1: Update text to relect DTap change in Option 1,
@@ -188,7 +188,8 @@ TEXT5 ;EP
  ;;Include ALL necessary slashes in the path name (everything except
  ;;the filename itself).
  ;;
- ;;Examples would be: C:\TEMP\ (on a PC)  or  /usr/mumps/ (in unix).
+ ;;Examples would be: C:\TEMP\ (on a Windows PC)
+ ;;               or  /usr/local/ (in unix/AIX)
  ;;
  ;;
  D PRINTX("TEXT5")
@@ -276,14 +277,14 @@ RULES ;EP
  N BIDFLT,BIPOP,DIR,DIRUT,X,Y
  ;
  ;---> For a new set of Immserve Rules, change here below and $$VALIDRUL^BIUTL2.
- S DIR(0)="NOA^1,2,3,4,5,6,11"
+ S DIR(0)="NOA^1,2,3,4,5,6,7,11"
  S DIR("?")="     Enter a number from the left column to choose one of the Options."
- S DIR("A")="     Select Forecasting Rules: "
+ S DIR("A")="     Select Forecasting Option: "
  S Y=$P($G(^BISITE(BISITE,0)),U,8)
  S:'Y Y=1 S DIR("B")=+Y
  D ^DIR
  ;---> For a new set of Immserve Rules, change here below and $$VALIDRUL^BIUTL2.
- I (Y>6)&(Y<11) D  G RULES
+ I (Y>7)&(Y<11) D  G RULES
  .W !!?8,Y," is not a valid Option.  Please choose again."
  .D DIRZ^BIUTL3(.BIPOP)
  ;
@@ -320,26 +321,26 @@ RULES ;EP
  ;
  ;----------
 TEXT8 ;EP
- ;;Versions 1, 3, 5 and 11 forecast the first vaccines series at 6 wks;
+ ;;Versions 1, 3, 5, 6, 7 and 11 forecast the first vaccines series at 6 wks;
  ;;the others beginning at 2 mths.  All versions forecast Rotavirus at
- ;;2 (6 wks), 4, and 6 mths, and Influenza between Sept 15 and March 15
+ ;;2 (6 wks), 4, and 6 mths, and Influenza between Aug 15 and March 14
  ;;for infants 6 months-18 years (or all ages).  Options 3,4 & 6 forecast
  ;;Hep A starting at 12 months, while options 1,2,5 and 11 forecast Hep A
  ;;at 15 months.  Option 11 does not forecast Hep A or Hep B in persons
  ;;over 18 years, regardless of prior doses. All options forecast Tdap, MCV4,
- ;;and HPV for adolescents per ACIP recs.
+ ;;and HPV for adolescents per ACIP recs (HPV doses 2 and 3 forecast only in
+ ;;males who receive dose 1).
  ;;
- ;;Please select an Option below by entering the its corresponding number:
- ;;
- ;;   Option    6 Mths         12 Mths                     15 Mths
- ;;   ------    ------  -----------------------------      ----------
- ;;    1) ...   IPV     Hib, MMR, Pn, Var ...........      DTaP, HepA
- ;;    2) ...   ....    Hib, IPV, MMR, Pn, Var ......      DTaP, HepA
- ;;    3) ...   IPV     DTaP, Hib, MMR, Pn, Var, HepA
- ;;    4) ...   ....    DTaP, Hib, IPV, MMR, Pn, Var, HepA
- ;;    5) ...   IPV     Hib, MMR, Var ...............      DTaP, Pn, HepA
- ;;    6) ...   IPV     Hib, MMR, Var, HepA..........      DTaP, Pn
- ;;   11) ...   IPV     Hib, MMR, Pn, Var ...........      DTaP, HepA
+ ;;   Option       6 Mths         12 Mths                     15 Mths
+ ;;   ------       ------  -----------------------------      ----------
+ ;;    1) ......   IPV     Hib, MMR, Pn, Var ...........      DTaP, HepA
+ ;;    2) ......   ....    Hib, IPV, MMR, Pn, Var ......      DTaP, HepA
+ ;;    3) ......   IPV     DTaP, Hib, MMR, Pn, Var, HepA
+ ;;    4) ......   ....    DTaP, Hib, IPV, MMR, Pn, Var, HepA
+ ;;    5) ......   IPV     Hib, MMR, Var ...............      DTaP, Pn, HepA
+ ;;    6) ......   IPV     Hib, MMR, Var, HepA..........      DTaP, Pn
+ ;;    7) Comvax   IPV     DTaP, HepB, Hib, MMR, Pn, Var      Hep A
+ ;;   11) ......   IPV     Hib, MMR, Pn, Var ...........      DTaP, HepA
  ;;
  D PRINTX("TEXT8",3)
  Q

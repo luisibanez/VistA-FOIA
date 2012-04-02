@@ -1,5 +1,5 @@
 BISITE1 ;IHS/CMI/MWR - EDIT SITE PARAMETERS; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  INIT FOR EDIT SITE PARAMETERS.
  ;
@@ -82,16 +82,19 @@ INIT ;EP
  D WRITE(.BILINE,X)
  K X
  ;
- ;---> Pneumo & Flu Site Parameters.
+ ;---> Pneumo, Flu, Zostervax Site Parameters. v8.5
  D
  .N Y,Z
  .S Y=$$PNMAGE^BIPATUP2(BISITE)
  .;S Y=$P(X,U),Z=$P(X,U,2)
  .;S X=Y_" years old, "_$S(Z:"every 6 years.",1:"one time only.")
- .S X="Pneumo: "_Y_" yrs  Flu: "
+ .S X="Pneumo: "_Y_"y  Flu: "
  .S Y=$$FLUALL^BIPATUP2(BISITE)
- .S X=X_$S(Y:"All ages (>6 mths)",1:"Ages 6m-18y, 50y+")
- S X="  11) Pneumo & Flu Parameters......: "_X
+ .S X=X_$S(Y:"All ages",1:"6m-18y,50y+")
+ .S X=X_"  Zoster: "
+ .S Y=$$ZOSTER^BIPATUP2(BISITE)
+ .S X=X_$S(Y:"Yes",1:"No")
+ S X="  11) Pneumo, Flu, Zoster Options..: "_X
  D WRITE(.BILINE,X)
  K X
  ;

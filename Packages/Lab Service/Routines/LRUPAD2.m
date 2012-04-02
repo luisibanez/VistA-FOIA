@@ -1,5 +1,5 @@
 LRUPAD2 ;AVAMC/REG/WTY - LAB ACCESSION LIST BY PATIENT ;9/25/00 [ 04/15/2003  9:38 AM ]
- ;;5.2;LR;**1002,1018,1020**;Sep 13, 2005
+ ;;5.2;LR;**1002,1018,1020,1030**;NOV 01, 1997
  ;;5.2;LAB SERVICE;**72,248**;Sep 27, 1994
  ;
  ;Reference to ^DIC( supported by IA #916
@@ -60,6 +60,8 @@ C W:E>0 ! W ?31,$J(N,5),?37,$J($P(LRX,"^"),5),?44,$P(LRX,"^",5)
  W ?52,$E($P(LRX,"^",2),1,5) D W:"MICHBL"[LRSS,O:"AUCYEMSP"[LRSS
  Q
 P S (B(5),C(1))=""
+ Q:'$D(^LRO(68,LRAA,1,I,1,N,0))   ; IHS/OIT/MKK - LR*5.2*1030 -- Skip malformed Accessions
+ ;
  S:$D(^LRO(68,LRAA,1,I,1,N,5,1,0)) X=^(0),B(5)=+X,C(1)=$P(X,"^",2)
  S:B(5) B(5)=$P(^LAB(61,B(5),0),"^")
  Q:'$D(^LRO(68,LRAA,1,I,1,N,3))  S X=^(3)

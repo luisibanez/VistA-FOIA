@@ -1,5 +1,5 @@
 ABMDEML ; IHS/ASDST/DMJ - Edit Utility - FOR MULTIPLES ;   
- ;;2.6;IHS Third Party Billing;**1,2,3,6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,2,3,6,8**;NOV 12, 2009
  ;
  ; IHS/ASDS/DMJ - 09/07/01 - V2.4 Patch 7 - NOIS HQW-0701-100066
  ;     Modifications made related to Medicare Part B.
@@ -136,7 +136,8 @@ MOD ;
  .S ABMZ("DR")=ABMZ("DR")_$P($$ONE^ABMFEAPI(ABMP("FEE"),ABMX("DIC"),ABMX("NEWY"),ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A
  D POSA^ABMDEMLC
  ;I ABMP("EXP")'=21,(ABMP("EXP")'=22),(ABMP("EXP")'=23) D TOSA^ABMDEMLC  ;don't do for 837 formats  ;abm*2.6*6 5010
- I ABMP("EXP")'=21,(ABMP("EXP")'=22),(ABMP("EXP")'=23),(ABMP("EXP")'=32) D TOSA^ABMDEMLC  ;don't do for 837 formats  ;abm*2.6*6 5010
+ ;I ABMP("EXP")'=21,(ABMP("EXP")'=22),(ABMP("EXP")'=23),(ABMP("EXP")'=32) D TOSA^ABMDEMLC  ;don't do for 837 formats  ;abm*2.6*6 5010  ;abm*2.6*8 5010
+ I ABMP("EXP")'=21,(ABMP("EXP")'=22),(ABMP("EXP")'=23),(ABMP("EXP")'=31),(ABMP("EXP")'=32),(ABMP("EXP")'=33) D TOSA^ABMDEMLC  ;don't do for 837 formats  ;abm*2.6*6 5010  ;abm*2.6*8 5010
  ;I $G(ABMX("Y"))>79999,$G(ABMX("Y"))<90000 D  ;lab charges only  ;abm*2.6*3 HEAT11696
  I ($G(ABMX("Y"))>79999&($G(ABMX("Y"))<90000))!($G(ABMZ("SUB"))=37&(ABMX("Y")=36415)) D  ;lab charges only  ;abm*2.6*3 HEAT11696
  .I $D(ABMX("MODS",90)) S ABMZ("DR")=ABMZ("DR")_";.14//"_$S($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),9)),U,23)'="":$P($G(^ABMRLABS($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),9)),U,23),0)),U,2),1:"")
@@ -147,7 +148,8 @@ MOD ;
  .Q:$P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),4,ABMIIEN,0)),U,2)'="Y"
  .S:(ABMP("EXP")=22) ABMZ("DR")=ABMZ("DR")_";W !,!,""Enter LABORATORY Results:"";.19;.21"
  .S:(ABMP("EXP")=32) ABMZ("DR")=ABMZ("DR")_";W !,!,""Enter LABORATORY Results:"";.19;.21;.22"  ;abm*2.6*6 5010
- .S:(ABMP("EXP")=21) ABMZ("DR")=ABMZ("DR")_";W !,!,""Value Code 48 or 49 should be present on Page 9C"",!"
+ .;S:(ABMP("EXP")=21) ABMZ("DR")=ABMZ("DR")_";W !,!,""Value Code 48 or 49 should be present on Page 9C"",!"  ;abm*2.6*8 5010
+ .S:((ABMP("EXP")=21)!(ABMP("EXP")=31)) ABMZ("DR")=ABMZ("DR")_";W !,!,""Value Code 48 or 49 should be present on Page 9C"",!"  ;abm*2.6*8 5010
  I $P($G(^ICPT(ABMX("Y"),0)),U,3),($P($G(^DIC(81.1,$P($G(^ICPT(ABMX("Y"),0)),U,3),0)),U)["IMMUNIZATION") S ABMZ("DR")=ABMZ("DR")_";15"  ;abm*2.6*6 5010
  ;
 DIAG ;CORRESPONDING DIAGNOSES

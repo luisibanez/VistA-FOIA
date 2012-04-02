@@ -1,6 +1,7 @@
 BSDH03 ; IHS/ANMC/LJF - INTRO TEXT FOR SUPERVISOR MENU ;
- ;;5.3;PIMS;**1003**;MAY 28, 2004
+ ;;5.3;PIMS;**1003,1013**;MAY 28, 2004
  ;IHS/ITSC/LJF 06/17/2005 PATCH 1003 fixed typo errors under CRA
+ ;ihs/cmi/maw 05/03/2011 PATCH 1013 added wait list to EEL
  ;
 CRA ;EP; intro text for Cancel/Restore Availability
  NEW BSDX
@@ -40,7 +41,8 @@ EEL ;EP; intro text for Enter/Edit Letters
  S BSDX(7)="  (N)o-Show - reminder to patient who did not show, to make"
  S BSDX(8)="                         another appointment."
  S BSDX(9)="  (P)re-Appointment - reminder to patient of upcoming appt."
- D DISPLAY(9)
+ S BSDX(10)="  (W)ait List - patient on wait list."
+ D DISPLAY(10)
  Q
  ;
 LAM ;EP; intro text to List Appt Made by Clinic

@@ -1,5 +1,5 @@
 BDGADS1 ; IHS/ANMC/LJF - A&D SUMMARY PRINT CONT. ; 
- ;;5.3;PIMS;**1003**;MAY 28, 2004
+ ;;5.3;PIMS;**1003,1013**;MAY 28, 2004
  ;IHS/ITSC/LJF 6/3/2005 PATCH 1003 added code for multiple admits or discharges
  ;
 PATDATA ;EP; build display lines for patient data
@@ -13,12 +13,12 @@ ADMITS ; build array of admits and discharges
  NEW SUB2,X,LINE
  I '$D(^TMP("BDGAD",$J,"ADMIT")),'$D(^TMP("BDGAD",$J,"DSCH")) Q
  ;    first for inpatients, then observations, then newborns
- F SUB2="I","O","N" D
+ F SUB2="I","O","N","D" D
  . ;
  . I '$D(^TMP("BDGAD",$J,"ADMIT",SUB2)),'$D(^TMP("BDGAD",$J,"DSCH",SUB2)) Q
  . ;
  . ; print heading
- . S X=$S(SUB2="I":"Inpatient",SUB2="O":"Observation",1:"Newborn")
+ . S X=$S(SUB2="I":"Inpatient",SUB2="O":"Observation",SUB2="D":"Day Surgery",1:"Newborn")
  . S LINE=$$PAD($$SP(5)_X_" Admissions",45)_X_" Discharges"
  . D SET(LINE,.VALMCNT)
  . S LINE=$$PAD($$REPEAT^XLFSTR("-",36),40)_$$REPEAT^XLFSTR("-",36)

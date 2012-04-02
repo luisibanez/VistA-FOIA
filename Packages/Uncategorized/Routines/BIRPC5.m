@@ -1,5 +1,5 @@
 BIRPC5 ;IHS/CMI/MWR - REMOTE PROCEDURE CALLS; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  RETURN IMMUNIZATION CONTRAINDICATIONS, CASE DATA, AND LAST LETTER.
  ;
@@ -8,6 +8,7 @@ BIRPC5 ;IHS/CMI/MWR - REMOTE PROCEDURE CALLS; MAY 10, 2010
 CONTRAS(BICONTR,BIDFN) ;PEP - Return Patient's Contraindications and their Reasons.
  ;---> Return Patient's Contraindications and their Reasons.
  ;---> Contraindications returned in one string, delimited by "^".
+ ;---> Each Contra has 3 "|" pieces: Vaccine Name|Reason|Date Entered.
  ;---> Parameters:
  ;     1 - BICONTR (ret) String of patient's Contraindications_||_Error.
  ;     2 - BIDFN   (req) DFN of patient.

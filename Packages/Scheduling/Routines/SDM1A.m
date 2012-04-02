@@ -1,5 +1,5 @@
 SDM1A ;SF/GFT,ALB/TMP - MAKE APPOINTMENT ; 07 Jun 2001  7:36 PM [ 03/08/2004  10:21 AM ]
- ;;5.3;Scheduling;**26,94,155,206,168,223,241,263,1005,1012**;Aug 13, 1993
+ ;;5.3;Scheduling;**26,94,155,206,168,223,241,263,1005,1012,1013**;Aug 13, 1993
  ;IHS/ANMC/LJF 07/06/2000 hard set of date appt made now includes time
  ;             12/13/2000 added clear display of appt just made
  ;             06/22/2001 added call to create xref on date appt made
@@ -32,7 +32,7 @@ S1 L ^SC(SC,"S",SD,1):5 G:'$T S1 F SDY=1:1 I '$D(^SC(SC,"S",SD,1,SDY)) S:'$D(^(0
  ;
  ;W !,"   ",+SL,"-MINUTE APPOINTMENT MADE" K SDINP   ;IHS/ANMC/LJF 12/13/2000
  D APPT^BSDU2(DFN,SC,SD,+SL) K SDINP                 ;IHS/ANMC/LJF 12/13/2000
- ;
+ D XREFC^BSDDAM(SC,SD,SDY) ;ihs/cmi/maw 07/19/2011 patch 1013 doesn't look like this is set if OTHER INFO set to NO
  ;confirm request type & follow-up indicator
  I $D(SDSRTY(0)) D CONF(.SDSRTY,.SDSRFU,DFN,SD,SC) W !
  I $P(SD,".")'>DT,$D(^DPT(DFN,.321)) D EN1^SDM3

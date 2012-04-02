@@ -1,5 +1,8 @@
 BLRPST ;IHS/HQT/MJL - Show processor status ;JUL 06, 2010 3:14 PM
- ;;5.2;IHS LABORATORY;**1011,1025,1027**;NOV 01, 1997
+ ;;5.2;IHS LABORATORY;**1011,1025,1027,1030**;NOV 01, 1997
+ ;
+EP ; EP
+ NEW DATETIME        ; IHS/OIT/MKK - LR*5.2*1030
  ;
  D INIT
  F  D DSP Q:BLRF
@@ -51,20 +54,43 @@ DSP ;
  ;
  D HDR
  W !!,"Last Entry Assigned"
- W ?23,$J($FN(BLRLEA,","),10)  ;'LAST EVENT ASSIGNED'
- W ?41,$J($FN(BLRLTA,","),10)  ;'LAST TRANSACTION SEQ ASSIGNED'
- W ?64,$J($FN(BLRLSQA,","),10) ;LAST TRANSACTION # ASSIGNED
+ ;W ?23,$J($FN(BLRLEA,","),10)  ;'LAST EVENT ASSIGNED'
+ ;W ?41,$J($FN(BLRLTA,","),10)  ;'LAST TRANSACTION SEQ ASSIGNED'
+ ;W ?64,$J($FN(BLRLSQA,","),10) ;LAST TRANSACTION # ASSIGNED
  ;
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
+ W ?22,$J($FN(BLRLEA,","),11)     ;'LAST EVENT ASSIGNED'
+ W ?35,$J($FN(BLRLTA,","),11)     ;'LAST TRANSACTION SEQ ASSIGNED'
+ W ?50,$J($FN(BLRLSQA,","),11)    ;LAST TRANSACTION # ASSIGNED
+ S DATETIME=$P($G(^BLRTXLOG(BLRLSQA,1)),"^",3)
+ W:$L(DATETIME) ?63,$TR($$FMTE^XLFDT(DATETIME,"5MZ"),"@"," ")
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030
+ ; 
  W !!,"Last Entry Processed"
- W ?23,$J($FN(BLRLEP,","),10)  ;'LAST EVENT PROCESSED'
- W ?41,$J($FN(BLRLTP,","),10)  ;'LAST TRANSACTION SEQ ASSIGNED'
- W ?64,$J($FN(BLRLSQP,","),10) ;LAST TRANSACTION SEQ ASSIGNED'
+ ;W ?23,$J($FN(BLRLEP,","),10)  ;'LAST EVENT PROCESSED'
+ ;W ?41,$J($FN(BLRLTP,","),10)  ;'LAST TRANSACTION SEQ ASSIGNED'
+ ;W ?64,$J($FN(BLRLSQP,","),10) ;LAST TRANSACTION SEQ ASSIGNED'
  ;
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
+ W ?22,$J($FN(BLRLEP,","),11)     ;'LAST EVENT PROCESSED'
+ W ?35,$J($FN(BLRLTP,","),11)     ;'LAST TRANSACTION SEQ ASSIGNED'
+ W ?50,$J($FN(BLRLSQP,","),11)    ;LAST TRANSACTION SEQ ASSIGNED'
+ S DATETIME=$P($G(^BLRTXLOG(BLRLSQP,1)),"^",3)
+ W:$L(DATETIME) ?63,$TR($$FMTE^XLFDT(DATETIME,"5MZ"),"@"," ")
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030
  ;
  D:BLRLEA-BLRLEP>1!(BLRLTA-BLRLTP>1)
- .W !!,"Now Processing Entry"
- .W:BLRLEA-BLRLEP>1 ?23,$J($FN(BLRLEP+1,","),10)  ;
- .W:BLRLTA-BLRLTP>1 ?41,$J($FN(BLRLTP+1,","),10),?64,$J($FN(BLRNSQP,","),10)
+ . W !!,"Now Processing Entry"
+ . ;W:BLRLEA-BLRLEP>1 ?23,$J($FN(BLRLEP+1,","),10)  ;
+ . ;W:BLRLTA-BLRLTP>1 ?41,$J($FN(BLRLTP+1,","),10),?64,$J($FN(BLRNSQP,","),10)
+ . ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
+ . W:BLRLEA-BLRLEP>1 ?22,$J($FN(BLRLEP+1,","),11)
+ . I BLRLTA-BLRLTP>1 D
+ .. W ?35,$J($FN(BLRLTP+1,","),11)
+ .. W ?50,$J($FN(BLRNSQP,","),10)
+ .. S DATETIME=$P($G(^BLRTXLOG(BLRLSQP,1)),"^",3)
+ .. W:$L(DATETIME) ?63,$TR($$FMTE^XLFDT(DATETIME,"5MZ"),"@"," ")
+ . ; ----- END IHS/OIT/MKK - LR*5.2*1030
  ;
  L +^BLRLOCK:0 I $T S BLRF=1
  ; I BLRF!'BLRLOG!'BLRPCC D
@@ -81,12 +107,12 @@ DSP ;
  ;..W "Update PCC"
  L -^BLRLOCK
  I $G(BLRNPMT) Q
- I BLRF R !!,"Press Enter to exit: ",BLR:DTIME,! Q
+ I BLRF R !!,"Press Enter to exit: ",BLR:DTIME,! W ! Q
  R !!,"Press Enter to continue: ",BLR:5,! S BLRF=$T S BLRCNT=$S(BLRF:0,1:BLRCNT+1),BLRF=$S(BLR="^":1,1:BLRCNT=(DTIME\5))
  D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("EXIT ^BLRTNB")
  Q
  ;
-INIT ;
+INIT ; EP
  S U="^",BLRF=0,BLRLN="",$P(BLRLN,"-",81)="",BLRCNT=0
  S BLRSITE=$P($G(^AUTTSITE(1,0)),U),(BLRLEDH,BLRLPDH)=""
  I '$D(IOF) S IOP="HOME" D ^%ZIS K IOP
@@ -104,25 +130,89 @@ HDR ;
  W $$CJ^XLFSTR($$UP^XLFSTR($$HTE^XLFDT($H)),IOM),!!
  W $$CJ^XLFSTR(BLRHDR,IOM)
  ; ----- END IHS/OIT/MKK - LR*5.2*1027
- W !!,?40,"Entry Position",?59,"IHS Lab Transaction"
- W !,?28,"Event",?43,"in Queue",?61,"Sequence Number",!,BLRLN
+ ; W !!,?40,"Entry Position",?59,"IHS Lab Transaction"
+ ; W !,?28,"Event",?43,"in Queue",?61,"Sequence Number",!,BLRLN
+ ; 
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
+ ; Add New column -- Date/Time of Transaction
+ ; Have to re-arrange all columns
+ W !!
+ W ?38,"Entry #"
+ W ?50,"==== IHS Lab Transaction ===="
+ W !
+ W ?28,"Event"
+ W ?38,"in Queue"
+ W ?51,"Sequence #"
+ W ?65,"Date"
+ W ?74,"Time"
+ W !,BLRLN
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030
+ ; 
  Q
  ;IF NUMBER OF BLR ERRORS IN ^%ZTER IS GREATER THAN
  ;THE NUMBER SET IN 'ERROR OVERFLOW LIMIT' IN BLR MASTER CONTROL FILE
  ;IF GREATER THAN DISPLAY ALRM ON SCREEN AND STOP THE BLR PROCESSOR
-ALERT ;
+ALERT ; EP
  S X="IORVON;IORVOFF;IOBON;IOBOFF"
  D ENDR^%ZISS
  W !,IORVON,"THERE IS SOMETHNG WRONG WITH THE PCC LINK!"
  W !,"TOO MANY ERRORS HAVE BEEN FOUND IN THE ERROR LOG!"
  W !,IOBON,"THE PCC LINK IS BEING TURNED OFF!!",IOBOFF
  W !,IORVON,"CALL YOUR SITE MANAGER IMMEDIATELY!",IORVOFF
+ ;
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
+ ; Send Alert to LMI Mail Group
+ D SNDALERT("Too many BLR Errors have been found.  PCC Link has been turned off.")
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030
+ ;
  Q
  ;
-KILL ;
+KILL ; EP
  K %,%DT,%H,%I,BLR,BLRCNT,BLRLEDH,BLRLPDH,BLREDH,BLRPDH,BLRDTM,BLRF,BLRHDR,BLRLN,BLRLSQA,BLRLSQP,BLRNSQP,BLRLEA,BLRLEP,BLRLTA,BLRLTP,BLRPCC,BLRED,BLRPD,BLRSITE,BLRSTOP,BLRX,X,Y
  Q
  ;
-ENT ;
+ENT ; EP
  D INIT,DSP,KILL
  Q
+ ;
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
+SNDALERT(ALERTMSG) ; EP - Send alert to LMI group AND User
+ ; Per Kernel Developer's Guide, NEW all Alert variables
+ NEW XQA,XQAARCH,XQACNDEL,XQADATA,XQAFLG,XQAGUID,XQAID,XQAMSG,XQAOPT
+ NEW XQAREVUE,XQAROU,XQASUPV,XQASURO,XQATEXT
+ ;
+ S XQAMSG=ALERTMSG
+ S XQA("G.LMI")=""
+ ;
+ ; If user not part of LMI Mail Group, send them alert also
+ S:$$NINLMI(DUZ) XQA(DUZ)=""
+ ;
+ S X=$$SETUP1^XQALERT
+ Q:X
+ ;
+ ; Alert not sent successfully.  Try to store it.
+ NEW SUBSCRPT
+ S SUBSCRPT="BLRPST Alert^"_+$H_"^"_$J
+ S ^XTEMP(SUBSCRPT,0)=$$FMADD^XLFDT($$DT^XLFDT,90)_"^"_$$DT^XLFDT_"^"_"PCC Linker shut down Alert."
+ S ^XTEMP(SUBSCRPT,1)="PCC Linker Alert was not sent."
+ S ^XTEMP(SUBSCRPT,2)="  Message that should have been sent follows:"
+ S ^XTEMP(SUBSCRPT,3)="     "_ALERTMSG
+ S ^XTEMP(SUBSCRPT,4)="  ALERT Error Message Follows:"
+ S ^XTEMP(SUBSCRPT,5)="     "_XQALERR
+ Q
+ ;
+NINLMI(CHKDUZ) ; EP -- Check to see if DUZ is NOT part of LMI Mail Group
+ NEW MGRPIEN,XMDUZ
+ ;
+ ; Get IEN of LMI MaiL Group
+ D CHKGROUP^XMBGRP("LMI",.MGRPIEN)  ; VA DBIA 1146
+ Q:+(MGRPIEN)<1 1                   ; If no Mail Group, return TRUE
+ ;
+ ; XMDUZ = DUZ of the user
+ ; Y     = IEN of the mail group
+ S XMDUZ=DUZ
+ S Y=MGRPIEN
+ D CHK^XMA21                        ; VA DBIA 10067
+ ;
+ Q $S($T=1:0,1:1)                   ; Reverse Logic
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030

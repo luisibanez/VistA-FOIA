@@ -1,5 +1,6 @@
-XPDT ;SFISC/RSD - Transport a package ;06/21/2006
- ;;8.0;KERNEL;**2,10,28,41,44,51,58,66,68,85,100,108,393**;Jul 10, 1995;Build 12
+XPDT ;SFISC/RSD - Transport a package ;10/15/2008
+ ;;8.0;KERNEL;**2,10,28,41,44,51,58,66,68,85,100,108,393,511,1017**;Jul 10, 1995;Build 3
+ ;Per VHA Directive 2004-038, this routine should not be modified.
 EN ;build XTMP("XPDT",ien, XPDA=ien,XPDNM=name
  ;XPDT(seq #)=ien^name^1=use current transport global on system
  ;XPDT("DA",ien)=seq #
@@ -32,6 +33,7 @@ EN ;build XTMP("XPDT",ien, XPDA=ien,XPDNM=name
  .I XPDT>1 S DIRUT=1 W !,"A Master Build must be the first/only package in a transport" Q
  .F  S X=$O(^XPD(9.6,XPDA,10,X)) Q:'X  S Z=$P($G(^(X,0)),U),Z1=$P($G(^(0)),U,2) D:Z]""
  ..N XPDA,X
+ ..S Z=$P(^XPD(9.6,Z,0),U,1)  ;XU*8.0*1017 - IHS/OIT/FBD - 5/16/2011 - ADDED LINE TO CORRECT MULTIPACKAGE MALFUNCTIONS
  ..W !?3,Z S XPDA=$O(^XPD(9.6,"B",Z,0))
  ..I 'XPDA W "  **Can't find definition in Build file**" Q
  ..I $D(XPDT("DA",XPDA)) W "  already listed" Q
@@ -42,7 +44,11 @@ EN ;build XTMP("XPDT",ien, XPDA=ien,XPDNM=name
  W !!,"ORDER   PACKAGE",!
  F XPDT=1:1:XPDT S Y=$P(XPDT(XPDT),U,2) W ?2,XPDT,?7,Y D  W !
  .W:$P(XPDT(XPDT),U,3) "     **will use current Transport Global**"
- S DIR(0)="Y",DIR("A")="OK to continue",DIR("B")="NO",XPDH=""
+ .;check if New Version and single package, has Package File Link, Package App. History
+ .Q:Y["*"!'$$PAH(+XPDT(XPDT))
+ .S DIR(0)="Y",DIR("A")="Send the PATCH APPLICATION HISTORY from the PACKAGE file",DIR("B")="YES"
+ .W !! D ^DIR I 'Y S $P(XPDT(XPDT),U,5)=1
+ S DIR(0)="Y",DIR("A")="OK to continue",DIR("B")="YES",XPDH=""
  W !! D ^DIR G:$D(DIRUT)!'Y QUIT K DIR
  I $G(XPDTP),XPDT>1 W !!,"You cannot send multiple Builds through PackMan."
  S DIR(0)="SAO^HF:Host File"_$S(XPDT=1:";PM:PackMan",1:"")
@@ -178,9 +184,17 @@ SUM(X,Z) ;X=string to write, Z 0=don't check size
  S XPDSIZA=XPDSIZA+$L(X)+2
  Q X
  ;
+PAH(XPDA) ;check for PATCH APPLICATION HISTORY in Package file
+ N Y,Z
+ S Y=^XPD(9.6,XPDA,0),Z=$$VER^XPDUTL($P(Y,U))
+ ;Single Package, Version multiple, PAH multiple
+ I $P(Y,U,3)=0,$D(^DIC(9.4,+$P(Y,U,2),22)),Z S Z=$O(^(22,"B",Z,0)) I Z,$O(^DIC(9.4,+$P(Y,U,2),22,Z,"PAH",0)) Q 1
+ Q 0
+ ;
 PRET ;Pre-Transport Routine
- N Y S Y=$G(^XPD(9.6,XPDA,"PRET")) Q:Y=""
- I '$$RTN^XPDV(Y) W !!,"Pre-Transportation Routine DOESN'T EXIST!!",*7 Q
+ N Y,Z
+ S Y=$G(^XPD(9.6,XPDA,"PRET")) Q:Y=""
+ I '$$RTN^XPDV(Y,.Z) W !!,"Pre-Transportation Routine ",Y,Z,*7 Q
  S Y=$S(Y["^":Y,1:"^"_Y) W !,"Running Pre-Transportation Routine ",Y
  D @Y Q
  ;

@@ -1,5 +1,5 @@
 ABMERGRV ; IHS/ASDST/DMJ - GET ANCILLARY SVCS REVENUE CODE INFO ;   
- ;;2.6;IHS Third Party Billing;**1**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,8**;NOV 12, 2009
  ;Original;DMJ;01/26/96 4:02 PM
  ; IHS/SD/SDR - v2.5 p8 - task 6
  ;    Added code for new ambulance multiple 47
@@ -14,7 +14,7 @@ ABMERGRV ; IHS/ASDST/DMJ - GET ANCILLARY SVCS REVENUE CODE INFO ;
  ; IHS/SD/SDR - v2.6 CSV
  ; IHS/SD/SDR - abm*2.6*1 - HEAT5691 - Correction for covered days
  ; IHS/SD/SDR - abm*2.6*1 - HEAT6395 - allow dental codes to print on UB
- ; IHS/SD/SDR - abm*2.6*1 - HEAT7884 - 
+ ; IHS/SD/SDR - abm*2.6*1 - HEAT7884 -
  ;
  ; *********************************************************************
  ;
@@ -87,6 +87,7 @@ P1 ;EP - SET UP ABMRV ARRAY
  .S ABMRV(+ABM(2),0,1)=+ABM(2)_"^^^^"_ABM(3)_"^"_($S(+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U)'=0:$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U),1:ABM(1)*ABM(3)))_"^^"_ABM(1)
  .;I +$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U)'=0 S $P(ABMRV(+ABM(2),0,1),U,6)=(+$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),2),U,8))
  .S $P(ABMRV(+ABM(2),0,1),U,10)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U)
+ .S $P(ABMRV(+ABM(2),0,1),U,38)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U,9)  ;abm*2.6*8 5010
  .S ABMP("CDAYS")=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U,3)  ;abm*2.6*1 HEAT5691
  .I +$G(ABMP("CDAYS"))>0 D
  ..S $P(ABMRV(+ABM(2),0,1),U,5)=$G(ABMP("CDAYS"))

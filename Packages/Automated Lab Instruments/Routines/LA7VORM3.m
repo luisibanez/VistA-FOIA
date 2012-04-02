@@ -1,5 +1,5 @@
 LA7VORM3 ;VA/DALOI/JMC - LAB ORM (Order) message builder cont'd ;JUL 06, 2010 3:14 PM
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,1027**;NOV 01, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,1027**;NOV 01, 1997;Build 9
  ;
  ;
 OBR ;Observation Request segment for Lab Order
@@ -15,14 +15,14 @@ OBR ;Observation Request segment for Lab Order
  ; Remote UID
  ;cmi/maw 5/11/10 changed back to original code to transform in Ensemble
  ;S OBR(2)=$$OBR2^LA7VOBR(LA7UID,LA7FS,LA7ECH)  ;cmi/maw 3/10/2010 orig
- S OBR(2)=$$OBR2^LA7VOBR($P(LA7UID,"~",2),LA7FS,LA7ECH)  ;cmi/maw 7/1/2010 for order number
+ S OBR(2)=$$OBR2^LA7VOBR(LA7UID,LA7FS,LA7ECH)  ;cmi/maw 7/1/2010 for order number
  ;S OBR(2)=$$ORC2^LA7VORC($P(LA76802(.1),"^"),LA7FS,LA7ECH)  ;cmi/maw 3/10/2010 order number
  ;
  ; Universal service ID - check for non-VA code system
  S LA7X=""
  I $P(LA762801(5),"^")]"" S LA7X=$P(LA762801(5),"^",1)_"^"_$P(LA762801(5),"^",2)_"^"_$P(LA762801(5),"^",5)
  S OBR(4)=$$OBR4^LA7VOBR(LA7NLT,LA760,LA7X,LA7FS,LA7ECH)
- I $P($G(LA7SCFG),U,2)="QUEST" D  ;cmi/maw 4/14/2010 for quest order number
+ I $$UP^XLFSTR($P($G(LA7SCFG),U,2))["QUEST" D  ;cmi/maw 4/14/2010 for quest order number
  . N LA7ORD,LA7ORDN
  . S LA7ORD=$P(OBR(4),HLCOMP)
  . S LA7ORDN=$P(OBR(4),HLCOMP,2)

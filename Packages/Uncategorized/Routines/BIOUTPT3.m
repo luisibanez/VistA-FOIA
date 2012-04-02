@@ -1,5 +1,5 @@
 BIOUTPT3 ;IHS/CMI/MWR - PROMPTS FOR REPORTS.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  PROMPTS FOR REPORT PARAMETERS.
  ;;  PATCH 1: Clarify Date Range on Imms Received with added prompt.  IMMRCV+20
@@ -58,6 +58,20 @@ LOTNUM(BILOT,BIRTN) ;EP
  N BIID S BIID="2;I $G(X) S:$D(^AUTTIMAN(X,0)) X=$P(^(0),U);17"
  N BICOL S BICOL="    #  Lot Number  Manufacturer"
  D SEL^BISELECT(9999999.41,"BILOT","Lot Number",,,,BIID,BICOL,.BIPOP)
+ ;
+ ;
+ D:('$D(BILOT("ALL")))
+ .D TITLE^BIUTL5("FULL OR LIMITED HISTORY")
+ .D TEXT7
+ .S B=$S($D(BI):"Yes",1:"No")
+ .D DIR^BIFMAN("YAO",.Y,,"     Limit histories to selected lot numbers? (Yes/No): ",B)
+ .I 'Y K BIMMLF Q
+ .N N S N=0
+ .F  S N=$O(BILOT(N)) Q:'N  D
+ ..N M S M=$$LOTTX^BIUTL6(N)
+ ..S:M BIMMLF(M)=""
+ ;
+ ;
  D @("RESET^"_BIRTN)
  Q
  ;
@@ -117,19 +131,21 @@ HELP1 ;EP
  ;
  ;
  ;----------
-IMMRCV(BIMMR,BIRDT,BIRTN) ;EP
+IMMRCV(BIMMR,BIRDT,BIIMMRF,BIRTN) ;EP
  ;---> Select Immunizations Received.
  ;---> Called by Protocol BI OUTPUT IMMUNIZATION RECEIVED.
  ;---> Parameters:
  ;     1 - BIMMR (ret) Local array of Vaccine IENs.
  ;     2 - BIRDT (ret) Date Range for Imms received: BeginDate_":"_EndDate
- ;     3 - BIRTN (req) Calling routine for reset.
+ ;     3 - BIMMR (ret) Local array of Vaccine IENs.
+ ;     4 - BIRTN (req) Calling routine for reset.
  ;
  I $G(BIRTN)="" D ERRCD^BIUTL2(621,,1) Q
  ;
  ;---> Select cases for one or more IMMUNIZATIONS RECEIVED (OR ALL).
  N BICOL S BICOL="    #  Vaccine Received   HL7 Code"
  D SEL^BISELECT(9999999.14,"BIMMR","Vaccine",,,2,"3;;24",BICOL,.BIPOP)
+ ;
  D:'$G(BIPOP)
  .N BIBEGDT,BIENDDT,BIBEGDF,BIENDDF,X
  .S X=$G(BIRDT) S BIBEGDF=$P(X,":"),BIENDDF=$P(X,":",2)
@@ -137,9 +153,6 @@ IMMRCV(BIMMR,BIRDT,BIRTN) ;EP
  .D TITLE^BIUTL5("SELECT IMMUNIZATION RECEIVED DATE RANGE")
  .D TEXT4
  .;
- .;********** PATCH 1, v8.3.1, DEC 30,2008, IHS/CMI/MWR
- .;---> Clarify Date Range on Imms Received with added prompt.
- .;---> Also, TEXT4 below edited and TEXT5 below added.
  .W !!,"   Do you wish to specify a date range for immunizations received?"
  .N DIR S DIR("?")="     Enter YES to specify a date range; NO to ignore dates."
  .S DIR(0)="Y",DIR("A")="   Enter Yes or No",DIR("B")="NO"
@@ -148,12 +161,21 @@ IMMRCV(BIMMR,BIRDT,BIRTN) ;EP
  .;
  .D TITLE^BIUTL5("SELECT IMMUNIZATION RECEIVED DATE RANGE")
  .D TEXT5
- .;**********
- .;
  .D ASKDATES^BIUTL3(.BIBEGDT,.BIENDDT,.BIPOP,BIBEGDF,BIENDDF)
  .Q:$G(BIPOP)
  .S:'BIBEGDT BIBEGDT=2000101 S:'BIENDDT BIENDDT=$G(DT)
  .S BIRDT=BIBEGDT_":"_BIENDDT
+ ;
+ D:('$D(BIMMR("ALL")))
+ .D TITLE^BIUTL5("FULL OR LIMITED HISTORY")
+ .D TEXT6
+ .S B=$S($D(BI):"Yes",1:"No")
+ .D DIR^BIFMAN("YAO",.Y,,"     Limit histories to selected vaccines? (Yes/No): ",B)
+ .I 'Y K BIMMRF Q
+ .N N S N=0
+ .F  S N=$O(BIMMR(N)) Q:'N  D
+ ..N M S M=$$CODE^BIUTL2(N)
+ ..S:M BIMMRF(M)=""
  ;
  D @("RESET^"_BIRTN)
  Q
@@ -161,7 +183,7 @@ IMMRCV(BIMMR,BIRDT,BIRTN) ;EP
  ;
  ;----------
 TEXT4 ;EP
- ;;You may limit this list to Patients who have received the vaccines
+ ;;You may limit this list to patients who have received the vaccines
  ;;you selected within a specific date range.  This date range will
  ;;apply to your list, whether you have chosen just one vaccine or
  ;;several vaccines or all vaccines.
@@ -188,6 +210,30 @@ TEXT5 ;EP
  ;;within the date range you select will be included in the list.
  ;;
  D PRINTX("TEXT5")
+ Q
+ ;
+ ;
+ ;----------
+TEXT6 ;EP
+ ;;You have limited your list to patients who have received one or more
+ ;;specific vaccines.
+ ;;
+ ;;If you print their immunization histories in a list, would you like
+ ;;to display only the history of the vaccines you selected?
+ ;;
+ D PRINTX("TEXT6")
+ Q
+ ;
+ ;
+ ;----------
+TEXT7 ;EP
+ ;;You have limited your list to patients who have received one or more
+ ;;specific lot numbers.
+ ;;
+ ;;If you print their immunization histories in a list, would you like
+ ;;to display only the history of the lot numbers you selected?
+ ;;
+ D PRINTX("TEXT7")
  Q
  ;
  ;
@@ -245,6 +291,41 @@ TEXT2 ;EP
  ;;Please select whether to include Historical Visits in this report.
  ;;
  D PRINTX("TEXT2")
+ Q
+ ;
+ ;
+DISBLOT(BIDLOT,BIRTN) ;EP
+ ;---> Select whether to display VAC Report by Lot Number.
+ ;---> Called by Protocol BI OUTPUT DISPLAY BY LOT NUMBER.
+ ;---> Parameters:
+ ;     1 - BIDLOT (req) Display by Lot Number (1=yes,0=no).
+ ;     2 - BIRTN  (req) Calling routine for reset.
+ ;
+ I $G(BIRTN)="" D ERRCD^BIUTL2(621,,1) Q
+ ;
+ D FULL^VALM1
+ D TITLE^BIUTL5("DISPLAY REPORT BY LOT NUMBERS"),TEXT3
+ N A,B,Y S:'$G(BIDLOT) BIDLOT=0
+ S A="     Display by Lot Numbers (Yes/No): "
+ S B=$S(BIDLOT:"YES",1:"NO")
+ D DIR^BIFMAN("YA",.Y,,A,B)
+ S BIDLOT=+Y
+ D @("RESET^"_BIRTN)
+ Q
+ ;
+ ;
+ ;----------
+TEXT3 ;EP
+ ;;Should the vaccines in this report to be displayed by lot number?
+ ;;
+ ;;By default, this report lists the statistics by age for each vaccine.
+ ;;However, you may elect to display the statistics for each separate
+ ;;lot number under each vaccine.  The totals for all lot numbers of
+ ;;each vaccine will also be displayed.
+ ;;
+ ;;Please select whether to display the report by Lot Numbers.
+ ;;
+ D PRINTX("TEXT3")
  Q
  ;
  ;

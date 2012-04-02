@@ -1,5 +1,5 @@
 BGPMUA01 ; IHS/MSC/MGH - MI measure NQF0421 ;22-Mar-2011 09:57;DU
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;Code to collect meaningful use report adult weight and followup 0421
 ENTRY ;EP
  N START,END,BGPDEN1,BGPDEN1A,BGPDEN2,BGPDEN2A,BGPNUM1,BGPNUM1A,BGPNUM2,BGPNUM2A
@@ -11,7 +11,7 @@ ENTRY ;EP
  ;No need to check further on children
  Q:BGPAGEE<19
  S DEN="",VIEN=0,EXC=0,VIEN=0
- S FIRST=END-1 F  S FIRST=$O(^AUPNVSIT("AA",DFN,FIRST)) Q:FIRST=""!($P(FIRST,".",1)>START)!(+VIEN)  D
+ S FIRST=END-0.1 F  S FIRST=$O(^AUPNVSIT("AA",DFN,FIRST)) Q:FIRST=""!($P(FIRST,".",1)>START)!(+VIEN)  D
  .S IEN=0 F  S IEN=$O(^AUPNVSIT("AA",DFN,FIRST,IEN)) Q:'+IEN!(+VIEN)  D
  ..;Check provider, Only visits for chosen provider
  ..Q:'$$PRV^BGPMUUT1(IEN,BGPPROV)
@@ -40,7 +40,8 @@ EXCLUDE(DFN,BGPBDATE,BGPEDATE,BGPAGEE) ;Find exclusions
  I BGPSEX="F"&(BGPAGEE<55) S PREG=$$LASTDX^BGPMUUT2(DFN,BGPSIX,BGPEDATE,"BGPMU PREGNANCY")
  I +PREG=1 S EXC=1_U_"Excluded"
  ;Quit if patient refused ht or wt in time frame
- S REF=$$REF(DFN,BGPSIX,BGPEDATE)
+ ;10/26/11 - no longer limiting to look back 6 months, ONLY in report period - per Dr. Advani
+ S REF=$$REF(DFN,BGPBDATE,BGPEDATE)
  I +REF=1 S EXC=1_U_"Excluded"
  Q EXC
 NUM(DFN,BGPBDATE,BGPEDATE) ;see it pt in numerator
@@ -163,6 +164,7 @@ BMI(P,BDATE,EDATE,AGE) ;EP
  Q BGPBMIH_U_WDATE
 REF(PAT,BDATE,EDATE) ;EP - get ht/wt refusal in time frame, same date for 18 and under
  N R S R=0
+ I $G(BDATE)="" S BDATE=$P(^DPT(PAT,0),U,3)  ;if no date then set to DOB
  S X=$$REFUSAL^BGP0UTL1(PAT,9999999.07,$O(^AUTTMSR("B","HT",0)),BDATE,EDATE) I X S R=1_U_"HT"_U_$P(X,U,2)
  S Y=$$REFUSAL^BGP0UTL1(PAT,9999999.07,$O(^AUTTMSR("B","WT",0)),BDATE,EDATE) I Y S R=1_U_"WT"_U_$P(X,U,2)
  I X="",Y="" Q 0

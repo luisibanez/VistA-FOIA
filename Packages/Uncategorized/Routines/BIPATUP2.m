@@ -1,5 +1,5 @@
 BIPATUP2 ;IHS/CMI/MWR - UPDATE PATIENT DATA 2; OCT 15, 2010
- ;;8.4;IMMUNIZATION;**2**;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  IHS FORECAST. UPDATE PATIENT DATA, IMM FORECAST IN ^BIPDUE(.
  ;;  PATCH 1, v8.4: Change Flu forecast dates to match Immserve dates:
@@ -50,7 +50,7 @@ IHSFLU(BIDFN,BIFLU,BIFFLU,BIRISKI,BINF,BIFDT,BIAGE,BIIMMFL,BIDUZ2) ;EP
  ;---> IHS Influenza Forecast.
  ;---> Parameters:
  ;     1 - BIDFN   (req) Patient IEN.
- ;     2 - BIFLU   (req) Influ and Pneumo History array: BIBLU(CVX,INVDATE).
+ ;     2 - BIFLU   (req) Influ and Pneumo History array: BIFLU(CVX,INVDATE).
  ;     3 - BIFFLU  (req) Value (0-4) for force Flu/Pneumo regardless of age.
  ;     4 - BIRISKI (req) 1=Patient has Risk of Influenza; otherwise 0.
  ;     5 - BINF    (opt) Array of Vaccine Grp IEN'S that should not be forecast.
@@ -69,27 +69,28 @@ IHSFLU(BIDFN,BIFLU,BIFFLU,BIRISKI,BINF,BIFDT,BIAGE,BIIMMFL,BIDUZ2) ;EP
  N BIYEAR,BIMTH,BIMDAY
  S BIYEAR=$E(BIFDT,1,3),BIMTH=$E(BIFDT,4,5),BIMDAY=+$E(BIFDT,4,7)
  ;
- ;---> Quit if the Forecast Date is not between Sept 15 and March 15.
+ ;---> Set Forecast year (yr due). If forecast date is not in Jan, Feb, or Mar,
+ ;---> then due date will be Mar 31 of the next year.
+ N BIFYEAR S BIFYEAR=BIYEAR S:BIMDAY>331 BIFYEAR=BIYEAR+1
  ;
- ;********** PATCH 1, v8.4, AUG 10,2010, IHS/CMI/MWR
- ;---> Change Flu forecast dates to match Immserve dates
- ;Q:((BIMDAY<915)&(BIMDAY>315))
- Q:((BIMDAY<815)&(BIMDAY>314))
- ;**********
+ ;---> Quit if the Forecast Date is not between Aug 1 and March 31.
+ Q:((BIMDAY<801)&(BIMDAY>331))
  ;
  ;---> Quit if this patient has a contraindication to Influenza.
  N BICONTR D CONTRA^BIUTL11(BIDFN,.BICONTR)
  Q:$D(BICONTR(88))
  ;
- ;---> Change: Quit if patient is <60 months (5 years).
+ ;---> Quit if patient is <60 months (5 years).
  ;---> Influenza forecasting for 6-60 done by Immserve.
- Q:BIAGE<60
+ ;Q:BIAGE<60
+ ;---> Post-Immserve forecasting: Quit if less than 6 months old.
+ Q:BIAGE<6
  ;
  ;---> Get value for forced Influenza regardless of age.
  S:(31'[BIFFLU) BIFFLU=0
  ;
  ;---> If not Flu for ALL patients (site parameter#27=1), then forecast
- ;---> Influenza age 5 to 18 yrs old, and over 50 yrs.
+ ;---> Influenza age 6 mths to 18 yrs old (quit on 19th bday), and over 50 yrs.
  ;---> Quit if not age appropriate and no risk and not forced for Influ.
  ;
  I '$$FLUALL($G(BIDUZ2)) Q:((BIAGE>227)&(BIAGE<600)&('BIRISKI)&('BIFFLU))
@@ -104,35 +105,50 @@ IHSFLU(BIDFN,BIFLU,BIFFLU,BIRISKI,BINF,BIFDT,BIAGE,BIIMMFL,BIDUZ2) ;EP
  ;---> Quit if patient received a flu shot today.
  Q:X=0
  ;
- ;---> Quit if patient had a Flu vac <6 months prior to Forecast date.
- ;Q:((X>0)&(X<182))
+ ;---> Quit if patient had a Flu vac <28 days prior to Forecast date.
+ Q:((X>0)&(X<28))
  ;
- ;---> Quit if patient received Flu this season.
- N BIBEGS D
- .;
- .;********** PATCH 2, v8.4, OCT 15,2010, IHS/CMI/MWR
- .;---> Adjust earliest day that a flu will count for this Flu season.
- .;I $E(BIFDT,4,7)<316 S BIBEGS=($E(BIFDT,1,3)-1)_"0801" Q
- .;S BIBEGS=$E(BIFDT,1,3)_"0801"
- .I $E(BIFDT,4,7)<316 S BIBEGS=($E(BIFDT,1,3)-1)_"0731" Q
- .S BIBEGS=$E(BIFDT,1,3)_"0731"
- Q:(BILF>BIBEGS)
- ;
+ ;---> NOT SURE ABOUT THIS.  CHECK, THINK ABOUT LATER.
  ;---> X must be either null (never had flu shot) or negative (had
  ;---> a shot recently, but AFTER the Forecast Date).
  ;
- ;---> If not Jan, Feb, or March, then due date=Mar 31 of the new year.
- S:BIMDAY>315 BIYEAR=BIYEAR+1
- ;---> Due by March 15.
- N BIDUEDT S BIDUEDT=BIYEAR_0315
- ;D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(88)_U_U_BIDUEDT)
+ N BIBEGS D
+ .;---> Set earliest day that a flu will count for this Flu season.
+ .I BIMDAY<316 S BIBEGS=($E(BIFDT,1,3)-1)_"0731" Q
+ .S BIBEGS=$E(BIFDT,1,3)_"0731"
  ;
- ;---> Per Ros, call for Flu-Split rather than Influenza, NOS.
- ;********** PATCH 2, v8.4, OCT 15,2010, IHS/CMI/MWR
- ;D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(15)_U_U_BIYEAR_0315)
- ;---> Per Ros, call for CVX 141 instead of CVX 15.
- D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(141)_U_U_BIYEAR_0315)
- ;**********
+ ;---> If patient's last flu shot was this season AND they are 9 yrs old or
+ ;---> or older, quit.
+ I ((BIAGE>107)&(BILF>BIBEGS)) Q
+ ;
+ ;---> If this patient has had NO flu shot this season, forecast flu and quit.
+ I BILF<(BIBEGS+1) D SETDUE(BIDFN_U_$$HL7TX^BIUTL2(141)_U_U_BIFYEAR_0331) Q
+ ;
+ ;---> So, this is a kid less than 9 yrs old who has had at least one flu shot
+ ;---> this season but not in less than 28 days.
+ ;
+ ;---> Rewrite Flu history array to make "readable."
+ N BIFLUR,M,N S N=0
+ F  S N=$O(BIFLU(88,N)) Q:'N  S BIFLUR(9999999-N)=""
+ ;
+ ;---> Quit if this kid already has 2 or more flu shots this season.
+ S M=0,N=BIYEAR_"0000"
+ F  S N=$O(BIFLUR(N)) Q:'N  S M=M+1
+ Q:(M>1)
+ ;
+ ;---> Okay, so this <9 yr old had one flu shot this season 28 days or more ago.
+ ;---> Quit if he had a flu shot last season 8/1/10 to 6/30/11.
+ ;---> Set Last year/season.
+ N BILYEAR S BILYEAR=$S((BIMDAY<316):BIYEAR-2,1:BIYEAR-1)
+ ;---> Set M=number of doses last season.
+ S M=0,N=BILYEAR_"0731"
+ F  S N=$O(BIFLUR(N)) Q:'N  Q:(N>((BILYEAR+1)_"0630"))  S M=M+1
+ ;---> Quit if this kid had 1 or more doses last season.
+ Q:M
+ ;
+ ;---> Kid is <9 yrs, no doses last year, <2 doses this year.
+ ;---> Set patient due for FLU-TIV.
+ D SETDUE(BIDFN_U_$$HL7TX^BIUTL2(141)_U_U_BIFYEAR_0331)
  ;
  Q
  ;
@@ -254,6 +270,17 @@ FLUALL(BISITE) ;EP - Return 1 to forecast Flu for ALL ages.
  ;
  Q:'$G(BISITE) 1
  N Y S Y=$P($G(^BISITE(BISITE,0)),U,27)
+ Q:(Y=0) 0
+ Q 1
+ ;
+ ;
+ ;----------
+ZOSTER(BISITE) ;EP - Return 1 if Zostervax should be forecast.
+ ;---> Parameters:
+ ;     1 - BISITE (req) User's DUZ(2)
+ ;
+ Q:'$G(BISITE) 1
+ N Y S Y=$P($G(^BISITE(BISITE,0)),U,29)
  Q:(Y=0) 0
  Q 1
  ;

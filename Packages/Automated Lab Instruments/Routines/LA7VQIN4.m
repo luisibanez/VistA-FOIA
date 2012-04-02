@@ -1,5 +1,5 @@
 LA7VQIN4 ;VA/DALOI/JMC - Process Incoming UI Msgs, continued ;JUL 06, 2010 3:14 PM
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,1027**;NOV 01, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,1027**;NOV 01, 1997;Build 9
  ;This routine is a continuation of LA7VIN1 and is only called from there.
  Q
  ;
@@ -130,6 +130,7 @@ OBR ; Process OBR segments
  I LA70070'="",LA7SPEC'="",LA70070'=LA7SPEC D
  . N LA7OBR
  . S LA7OBR(15)=LA7SPEC ; backward compatible with old code
+ . Q  ;ihs/cmi/maw 3/21/2011 for quest codes not matching HL7 codes
  . S LA7ERR=22,LA7QUIT=2
  . D CREATE^LA7LOG(LA7ERR)
  ;

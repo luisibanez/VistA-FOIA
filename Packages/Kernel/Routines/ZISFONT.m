@@ -1,18 +1,19 @@
-%ZISF ;SFISC/AC - HOST FILES FOR Cache on NT & VMS ;06/14/2005  15:44
- ;;8.0;KERNEL;**34,191,271,385,1010,1011,1016**;Jul 10, 1995;Build 5
+%ZISF ;SFISC/AC - HOST FILES FOR Cache on NT & VMS ;01/25/10  16:33
+ ;;8.0;KERNEL;**34,191,271,385,499,524,1011,1016,1017**;Jul 10, 1995;Build 3
  ;ROUTINE CONTAINS IHS MOD
 HFS ;Host File Server
  ;Calling parameters in %ZIS override Device file.
  Q:$D(IOP)&$D(%ZIS("HFSIO"))&$D(%ZIS("IOPAR"))
  N %
  ;Get file name
- I $D(%ZIS("HFSNAME")) S IO=%ZIS("HFSNAME"),%X=IO ;
+ I $D(%ZIS("HFSNAME")) S IO=%ZIS("HFSNAME"),%X=IO
  E  D ASKHFS ;Return name in %X
  ;Mode or actual parameters
 H S:$D(%ZIS("HFSMODE")) %ZISOPAR=$$MODE(%ZIS("HFSMODE"))
 H1 I $D(IO("Q"))!(%ZIS["Z") S IO("HFSIO")=""
+ S:$L(%X) %ZIS("afn")=1
  S IO=$S($L(%X):%X,1:IO),IO=$$CHKNM(IO) ;See that we have a directory
- ;IHS mod next line for double queueing, XU*8*1011
+ ;IHS mod next line for double queueing, XU*8*1011 - RE-ENTERED IN XU*8.0*1016, XU*8.0*1017
  ;S:$D(IO("HFSIO")) IO("HFSIO")=IO
  S IO("HFSIO")=IO
  ;end mod
@@ -35,8 +36,8 @@ CHECK(X) ;Check that we have valid option
  Q Y
  ;
 ASKHFS ;---Ask host file name here---
- I $D(%IS("B","HFS"))#2,%IS("B","HFS")]"" D
- .S IO=%IS("B","HFS") ;Set default host file name
+ I $D(%ZIS("B","HFS"))#2,%ZIS("B","HFS")]"" D
+ .S IO=%ZIS("B","HFS") ;Set default host file name
  S %X='$P($G(^%ZIS(1,%E,1)),"^",5)
  S:'%X %X=""
  I $D(IOP)!%X!$D(%ZIS("HFSNAME")) S %X="" Q
@@ -45,10 +46,12 @@ ASKAGN W !,"HOST FILE NAME: "_IO_"//" D SBR^%ZIS1
  S:$D(DTOUT)!$D(DUOUT) POP=1
  Q
 CHKNM(H)        ;Check the HFS name
- N N,%OS S N=H,%OS=$ZV
- I %OS["VMS",(H'[":")&(H'["[") S N=$$DEFDIR^%ZISH("")_H ;VMS - disk:[directory]file
- I %OS["NT",(H'["\")&(H'[":") S N=$$DEFDIR^%ZISH("")_H ;NT - C:\DIR\FILE
- I %OS["UNIX",(H'["/") S N=$$DEFDIR^%ZISH("")_H ;UNIX/Linux - ./file or /mnt/dir/file
+ N N,P,F,%OS S N=H,%OS=$$OS^%ZOSV
+ ;Find any path may have
+ S P=$TR($RE(H),"\:[]","////"),F=$RE($P(P,"/")),P=$P(H,F,1)
+ I %OS["VMS",((P'[":")&(P'["["))!(P["\") S N=$$DEFDIR^%ZISH("")_F ;VMS - disk:[directory]file
+ I %OS["NT",'(P?1A1":\".E)!($E(P)="\") S N=$$DEFDIR^%ZISH("")_F ;NT - C:\DIR\FILE
+ I %OS["UNIX",(P'["/") S N=$$DEFDIR^%ZISH("")_F ;UNIX/Linux - ./file or /mnt/dir/file
  Q N
  ;
 MODE(X) ;Return value for %ZISOPAR.

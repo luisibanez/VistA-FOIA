@@ -1,11 +1,12 @@
-PSGP ;BIR/CML3-PATIENT LOOK-UP ; 15 Apr 98 / 9:05 AM
- ;;5.0; INPATIENT MEDICATIONS ;**10,53**;16 DEC 97
+PSGP ;BIR/CML3-PATIENT LOOK-UP ;28-Mar-2011 18:50;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**10,53,1011**;16 DEC 97;Build 17
  ;
  ; Reference to ^PS(55 is supported by DBIA 2191.
  ; Reference to ^%ZIS is supported by DBIA 10086.
  ; Reference to ^%ZISC is supported by DBIA 10089.
  ; Reference to ^VADPT is supported by DBIA 10061.
  ;
+ ; Modified - IHS/MSC/PLS - 03/28/2011 - Line CHK+1
 ENDPT ; get any patient
  K DIC,PSGP,Y W !!,"Select "_$S($D(PSGDICA):PSGDICA_" ",1:"")_"PATIENT: " R X:DTIME S:X["^" PSJSTOP=1 I "^"[X S (Y,PSGP)=-1 G DONE
  D EN^PSJDPT
@@ -13,6 +14,7 @@ ENDPT ; get any patient
  K DIC
  ;
 CHK ;
+ D SETPTCX^APSPFUNC(+Y)  ;IHS/MSC/PLS - 03/28/11
  S (DFN,PSGP)=+Y,VA200=1 D INP^VADPT
  I VAIN(4) S PSJPCAF=1_"^"_VAIN(1),PSJPWD=+VAIN(4),PSJPWDN=$P(VAIN(4),"^",2),PSJPTS=+VAIN(3),PSJPTSP=+VAIN(2),PSJPRB=VAIN(5),PSJPAD=+VAIN(7),PSJPDX=VAIN(9),PSJPTD=$P($G(^PS(55,PSGP,5.1)),"^",4),PSJPDD="" G CNV
  S PSJPCAF="",VAIP("D")="L" D IN5^VADPT I 'VAIP(13,1) W $C(7),!!?3,"PATIENT HAS NEVER BEEN ADMITTED." G ENDPT
@@ -34,4 +36,4 @@ WP ; ward parameters
  ;
 DONE ;
  K DA,DIC,NB,ND,NS,PSGID,PSGOD,VA200,VADM,VAIN,VAIP,VAMT,X,Y(0),Y(0,0) Q
- ;        
+ ;

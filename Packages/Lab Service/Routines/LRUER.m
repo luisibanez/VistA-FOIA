@@ -1,8 +1,12 @@
 LRUER ; IHS/DIR/AAB - ERROR TRACKING 2/18/98 07:03 ; [ 05/15/2003  12:31 PM ]
- ;;5.2T9;LR;**1006,1018**;Nov 17, 2004
+ ;;5.2;LR;**1006,1018,1030**;NOV 01, 1997
  ;;5.2;LAB SERVICE;**201**;Sep 27, 1994
-ASK W !!?5,"Find accessions with comments containing",!?20,"1. reported incorrectly as",!?20,"2. specimen rejected",!?5,"Select 1 or 2: " R X:DTIME G:X=""!(X[U) END I +X'=X!(X<1)!(X>2) G ASK
- S LRC(2)="",LRC(1)=$S(X=1:"reported incorrectly as",X=2:"specimen rejected",1:"") W !!,"List accessions with deleted comments " S %=2 D YN^LRU G:%<1 END S:%=1 LRC(2)=1
+ASK ; W !!?5,"Find accessions with comments containing",!?20,"1. reported incorrectly as",!?20,"2. specimen rejected",!?5,"Select 1 or 2: " R X:DTIME G:X=""!(X[U) END I +X'=X!(X<1)!(X>2) G ASK
+ ; S LRC(2)="",LRC(1)=$S(X=1:"reported incorrectly as",X=2:"specimen rejected",1:"") W !!,"List accessions with deleted comments " S %=2 D YN^LRU G:%<1 END S:%=1 LRC(2)=1
+ ; ------ BEGIN IHS/OIT/MKK - LR*5.2*1030
+ W !!?5,"Find accessions with comments containing",!?20,"1. previously reported as",!?20,"2. specimen rejected",!?5,"Select 1 or 2: " R X:DTIME G:X=""!(X[U) END I +X'=X!(X<1)!(X>2) G ASK
+ S LRC(2)="",LRC(3)="DUMMYZZZZ",LRC(1)=$S(X=1:"previously reported as",X=2:"specimen rejected",1:"") S:X=1 LRC(3)="reported incorrectly as"  W !!,"List accessions with deleted comments " S %=2 D YN^LRU G:%<1 END S:%=1 LRC(2)=1
+ ; ------ END IHS/OIT/MKK - LR*5.2*1030
  D B^LRU G:Y<0 END S LRS=LRSDT-.01,LRE=LRLDT+.99,LRLDT=9999998-LRLDT,LRSDT=9999999-LRSDT
  W !!,"Do you want list of tests ordered for each accession with errors " S %=1 D YN^LRU G:%<1 END S LRF=$S(%=1:1,1:0)
  W !!,"New page for each accession area " S %=1 D YN^LRU G:%<1 END S LRL=$S(%=1:1,1:0)
@@ -12,7 +16,8 @@ QUE U IO K ^TMP($J),^TMP("LRDFN",$J) S LRQ(1)=^DD("SITE"),(LRQ,LR("Q"))=0 D L^LR
  F LRDFN=0:0 S LRDFN=$O(^TMP("LRDFN",$J,LRDFN)) Q:'LRDFN  S LRI=LRLDT F A=0:0 S LRI=$O(^LR(LRDFN,"CH",LRI)) Q:'LRI!(LRI>LRSDT)  D A
  K ^TMP("LRDFN",$J) D W,END^LRUTL,END Q
 A I LRC(2),$O(^LR(LRDFN,"CH",LRI,1,"AC",0)) D SET Q
- F B=0:0 S B=$O(^LR(LRDFN,"CH",LRI,1,B)) Q:'B  I ^(B,0)[LRC(1) D SET Q
+ ; F B=0:0 S B=$O(^LR(LRDFN,"CH",LRI,1,B)) Q:'B  I ^(B,0)[LRC(1) D SET Q
+ F B=0:0 S B=$O(^LR(LRDFN,"CH",LRI,1,B)) Q:'B  I $G(^LR(LRDFN,"CH",LRI,1,B,0))[LRC(1)!($G(^LR(LRDFN,"CH",LRI,1,B,0))[LRC(3)) D SET Q     ; IHS/OIT/MKK - LR*5.2*1030 - Get rid of Naked References
  Q
 SET S X=^LR(LRDFN,"CH",LRI,0),Y=$P(X,"^",6) S:Y="" Y="?? ?? ??" S ^TMP($J,$P(Y," "),$P(Y," ",2,3),+X,LRDFN,LRI)=$P(X,"^",5) Q
  ;----- BEGIN IHS MODIFCIATIONS LR*5.2*1018 IHS TESTING CHANGE

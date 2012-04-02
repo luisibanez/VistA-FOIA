@@ -1,5 +1,5 @@
 VASITE ;ALB/AAS - TIME SENSETIVE VA STATION NUMBER UTILITY ; [ 04/01/2004  5:17 PM ]
- ;;5.3;Registration;**134,1004,1009,1012**;Aug 13, 1993
+ ;;5.3;Registration;**134,1004,1009,1012,1013**;Aug 13, 1993
  ;IHS/ANMC/LJF  7/31/2001 used IHS location file info
  ;IHS/OIT/LJF  11/09/2005 PATCH 1004 added to patch for sites where good copy was overwritten
  ;cmi/anch/maw 04/07/2008 PATCH 1009 requirement 54 added fix for no DUZ(2) in SITE

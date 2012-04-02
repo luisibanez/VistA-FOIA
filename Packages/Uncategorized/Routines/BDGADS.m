@@ -1,5 +1,5 @@
 BDGADS ; IHS/ANMC/LJF - A&D SUMMARY PRINT ; 
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1013**;APR 26, 2002
  ;
  ; Assumes VA variables RD and GL and set
  ;
@@ -26,7 +26,8 @@ INIT ; -- init variables and list array
  K ^TMP("BDGADS",$J)
  S VALMCNT=0
  S PREV=$$FMADD^XLFDT(BDGT,-1)                     ;previous date
- S TOT=0 F I="O","I","N" S TOT(I)=""       ;initialize totals
+ ;S TOT=0 F I="O","I","N" S TOT(I)=""       ;initialize totals orig
+ S TOT=0 F I="O","I","N","D" S TOT(I)=""       ;initialize totals ihs/cmi/maw 09/13/2011 PATCH 1013
  ;
  D HDG     ;display column headings
  ;
@@ -34,6 +35,7 @@ INIT ; -- init variables and list array
  ;  loop in alphabetical order
  S SRVN=0 F  S SRVN=$O(^DIC(45.7,"B",SRVN)) Q:SRVN=""  D
  . Q:SRVN["[OBSERVATION"  Q:SRVN="NEWBORN"
+ . Q:SRVN="DAY SURGERY"  ;ihs/cmi/maw 09/13/2011 PATCH 1013
  . ;
  . S SRV=0 F  S SRV=$O(^DIC(45.7,"B",SRVN,SRV)) Q:'SRV  D
  .. Q:'$$ACTSRV^BDGPAR(SRV,BDGT)        ;quit if not active on run date
@@ -42,6 +44,15 @@ INIT ; -- init variables and list array
  ; next gather observation services
  S SRVN=0 F  S SRVN=$O(^DIC(45.7,"B",SRVN)) Q:SRVN=""  D
  . Q:SRVN'["[OBSERVATION"  Q:SRVN="NEWBORN"
+ . Q:SRVN="DAY SURGERY"  ;ihs/cmi/maw 09/13/2011 PATCH 1013
+ . ;
+ . S SRV=0 F  S SRV=$O(^DIC(45.7,"B",SRVN,SRV)) Q:'SRV  D
+ .. Q:'$$ACTSRV^BDGPAR(SRV,BDGT)        ;quit if not active on run date
+ .. D LINE
+ ;
+ ; next gather day surgery services
+ S SRVN=0 F  S SRVN=$O(^DIC(45.7,"B",SRVN)) Q:SRVN=""  D
+ . Q:SRVN'="DAY SURGERY"  ;ihs/cmi/maw 09/13/2011 PATCH 1013
  . ;
  . S SRV=0 F  S SRV=$O(^DIC(45.7,"B",SRVN,SRV)) Q:'SRV  D
  .. Q:'$$ACTSRV^BDGPAR(SRV,BDGT)        ;quit if not active on run date
@@ -71,6 +82,11 @@ TOTALS ; set up total display lines
  . F I=24:8 S X=X+1 Q:X=8  S LINE=$$PAD(LINE,I)_$J($P(TOT("O"),U,X),4)
  . D SET(LINE,.VALMCNT)
  ;
+ I TOT("D")]"" D                   ;if day surgery numbers exist
+ . S LINE="Day Surgery Totals:",X=0
+ . F I=24:8 S X=X+1 Q:X=8  S LINE=$$PAD(LINE,I)_$J($P(TOT("D"),U,X),4)
+ . D SET(LINE,.VALMCNT)
+ ;
  S LINE="Total:",X=0
  F I=24:8 S X=X+1 Q:X=8  S LINE=$$PAD(LINE,I)_$J($P(TOT,U,X),4)
  D SET(LINE,.VALMCNT)
@@ -87,7 +103,8 @@ LINE ; build display line
  S DATA=$G(^BDGCTX(SRV,1,BDGT,0))            ;data for run date
  S REMA=$P($G(^BDGCTX(SRV,1,PREV,0)),U,2)    ;prev day adults
  S REMP=$P($G(^BDGCTX(SRV,1,PREV,0)),U,12)   ;prev day peds
- S TYPE=$S(SRVN["OBSERVATION":"O",SRVN="NEWBORN":"N",1:"I")
+ ;S TYPE=$S(SRVN["OBSERVATION":"O",SRVN="NEWBORN":"N",1:"I")  orig
+ S TYPE=$S(SRVN["OBSERVATION":"O",SRVN="NEWBORN":"N",SRVN="DAY SURGERY":"D",1:"I")  ;ihs/cmi/maw 09/13/2011 PATCH 1013
  ;
  ; count up adult & peds numbers
  S CNT(1)=REMA+REMP                            ;prev remaining

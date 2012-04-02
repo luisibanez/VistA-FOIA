@@ -1,11 +1,11 @@
 BIREPT3 ;IHS/CMI/MWR - REPORT, TWO-YR-OLD RATES; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW TWO-YR-OLD IMMUNIZATION RATES REPORT.
  ;
  ;
  ;----------
-GETDATA(BICC,BIHCF,BICM,BIBEN,BIQDT,BITAR,BIAGRPS,BISITE,BIERR) ;EP
+GETDATA(BICC,BIHCF,BICM,BIBEN,BIQDT,BITAR,BIAGRPS,BISITE,BIUP,BIERR) ;EP
  ;---> Gather Immunization History data on selected patients.
  ;---> Parameters:
  ;     1 - BICC    (req) Current Community array.
@@ -16,18 +16,20 @@ GETDATA(BICC,BIHCF,BICM,BIBEN,BIQDT,BITAR,BIAGRPS,BISITE,BIERR) ;EP
  ;     6 - BITAR   (opt) Two-Yr-Old Age Range; default="19-35" (months).
  ;     7 - BIAGRPS (req) String of Age Groups (e.g., 3,5,7,16,19,24,36)
  ;     8 - BISITE  (req) Site IEN.
- ;     9 - BIERR   (ret) Error.
+ ;     9 - BIUP    (req) User Population/Group (Registered, Imm, User, Active).
+ ;    10 - BIERR   (ret) Error.
  ;
  S:'$G(BISITE) BISITE=$G(DUZ(2)) I '$G(BISITE) S BIERR=109 Q
  S:'$G(BIQDT) BIQDT=DT
  S:'$D(BITAR) BITAR="19-35"
+ S:$G(BIUP)="" BIUP="u"
  ;
  ;---> Get Begin and End Dates (DOB's).
  D AGEDATE^BIAGE(BITAR,BIQDT,.BIBEGDT,.BIENDDT,.BIERR)
  Q:$G(BIERR)]""
  ;
  ;---> Gather and sort patients.
- D GETPATS^BIREPT4(BIBEGDT,BIENDDT,.BICC,.BIHCF,.BICM,.BIBEN,BIQDT,BIAGRPS,BISITE)
+ D GETPATS^BIREPT4(BIBEGDT,BIENDDT,.BICC,.BIHCF,.BICM,.BIBEN,BIQDT,BIAGRPS,BISITE,BIUP)
  Q
  ;
  ;
@@ -76,13 +78,14 @@ VGRP(BILINE,BIVGRP,BIAGRPS,BIERR) ;EP
  ;
  ;
  ;----------
-VCOMB(BILINE,BICOMB,BIAGRPS,BIERR) ;EP
+VCOMB(BILINE,BICOMB,BIAGRPS,BIERR,BIUTD) ;EP
  ;---> Write Stats lines for each Vaccine Combination.
  ;---> Parameters:
  ;     1 - BILINE  (req) Line number in ^TMP Listman array.
  ;     2 - BICOMB  (req) Numeric code of Vaccine Combination.
  ;     3 - BIAGRPS (req) String of Age Groups (e.g., 3,5,7,16,19,24,36)
  ;     4 - BIERR   (ret) Error.
+ ;     5 - BIUTD   (opt) If BIUTD=1, tack on text: "*UTD"
  ;
  I '$G(BIVGRP) D ERRCD^BIUTL2(678,.BIERR) Q
  I '$G(BIAGRPS) D ERRCD^BIUTL2(677,.BIERR) Q
@@ -95,7 +98,7 @@ VCOMB(BILINE,BICOMB,BIAGRPS,BIERR) ;EP
  .I I<3 S BIX(1)=BIX(1)_" "_X Q
  .I I<5 S BIX(2)=BIX(2)_" "_X Q
  .I I<7 S BIX(3)=BIX(3)_" "_X Q
- .I I<9 S BIX(4)=BIX(4)_" "_X Q
+ .I I<9 S BIX(4)=BIX(4)_" "_X S:$G(BIUTD) BIX(4)=BIX(4)_"  *UTD" Q
  .S BIX(5)=BIX(5)_" "_X
  ;
  ;---> Now loop through the age groups, concating subtotals.

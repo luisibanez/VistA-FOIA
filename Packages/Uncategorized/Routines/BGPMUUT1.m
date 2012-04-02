@@ -1,13 +1,13 @@
 BGPMUUT1 ; IHS/MSC/MGH - Meaningful use utility calls ;01-Mar-2011 15:35;MGH
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;
  ;
 WH(P,BDATE,EDATE,T,F) ;EP
  I '$G(P) Q ""
- I '$G(T) Q ""
- I '$G(F) S F=1
  I $G(EDATE)="" Q ""
  I $G(BDATE)="" S BDATE=$$FMADD^XLFDT(EDATE,-365)
+ I $G(T)="" Q ""
+ I '$G(F) S F=1
  ;go through procedures in a date range for this patient, check proc type
  NEW D,X,Y,G,V,O
  S (G,V)=0,I="" F  S V=$O(^BWPCD("C",P,V)) Q:V=""  D
@@ -34,31 +34,37 @@ PLCODE(P,A) ;EP
  I T'>0 Q ""
  N X,Y,I S (X,Y,I)=0 F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X!(I)  I $D(^AUPNPROB(X,0)) S Y=$P(^AUPNPROB(X,0),U) I Y=T S I=1
  Q I
-PLTAX(DFN,TAX,STAT) ;EP - is DX on problem list 1 or 0
+PLTAX(DFN,TAX,STAT,CDATE) ;EP - is DX on problem list 1 or 0
  ;Input variables
  ;STAT - A for all problems, C for active problems, I for inactive
  ;DFN=IEN of the patient
  ;TAX=Name of the taxonomy
+ ;CDATE=Date to check against
+ I $G(CDATE)="" S CDATE=0
  I $G(DFN)="" Q 0
  I $G(TAX)="" Q 0
  I $G(STAT)="" S STAT="A"
  N TIEN,PLSTAT S TIEN=$O(^ATXAX("B",TAX,0))
  I 'TIEN Q 0
- N PROB,ICD,I,SDTE,EDTE,PDTE
+ N PROB,ICD,I,SDTE,EDTE,PDTE,EDT
  S (PROB,ICD,I)=0
  F  S PROB=$O(^AUPNPROB("AC",DFN,PROB)) Q:PROB'=+PROB!(+I)  D
  .I $D(^AUPNPROB(PROB,0)) S ICD=$P($G(^AUPNPROB(PROB,0)),U),PLSTAT=$P($G(^AUPNPROB(PROB,0)),U,12)
+ .S EDT=$P($G(^AUPNPROB(PROB,0)),U,8)
+ .S SDTE=$P($G(^AUPNPROB(PROB,0)),U,13)
+ .I SDTE'="" S EDT=SDTE
+ .Q:+CDATE&(EDT>CDATE)
  .I $$ICD^ATXCHK(ICD,TIEN,9) D
- ..I STAT="A" S Y=$$GET1^DIQ(80,ICD,.01) S I=1_U_Y
  ..S SDTE=$P($G(^AUPNPROB(PROB,0)),U,13)
  ..S EDTE=$P($G(^AUPNPROB(PROB,0)),U,8)
  ..I +SDTE S PDTE=SDTE
  ..E  S PDTE=EDTE
- ..I (STAT="C")&(PLSTAT="A") S Y=$$GET1^DIQ(80,ICD,.01) S I=1_U_Y_U_PDTE
- ..I (STAT="I")&(PLSTAT="I") S Y=$$GET1^DIQ(80,ICD,.01) S I=1_U_Y_U_PDTE
+ ..I STAT="A" S Y=$$GET1^DIQ(80,ICD,.01) S I=1_U_Y_U_PDTE_U_PROB
+ ..I (STAT="C")&(PLSTAT="A") S Y=$$GET1^DIQ(80,ICD,.01) S I=1_U_Y_U_PDTE_U_PROB
+ ..I (STAT="I")&(PLSTAT="I") S Y=$$GET1^DIQ(80,ICD,.01) S I=1_U_Y_U_PDTE_U_PROB
  Q I
 CPT(DFN,BDATE,EDATE,TAX) ;EP - return ien of CPT entry if patient had this CPT
- N TIEN,ED,BD,G,CPTT,CPTDATE
+ N TIEN,ED,BD,G,CPTT,CPTDATE,VDATE,VST
  I '$G(DFN) Q 0
  I $G(TAX)="" Q 0
  I $G(EDATE)="" Q 0
@@ -78,9 +84,11 @@ CPT(DFN,BDATE,EDATE,TAX) ;EP - return ien of CPT entry if patient had this CPT
  .Q
  I 'G Q 0
  I G D
+ .S VDATE=""
  .S CPT=$P($G(^AUPNVCPT(G,0)),U,1),CPTT=$P($G(^ICPT(CPT,0)),U,1)
  .S CPTDATE=$P($G(^AUPNVCPT(G,12)),U,1)
- .S G=1_U_CPTT_U_CPTDATE
+ .S VST=$P($G(^AUPNVCPT(G,0)),U,3),VDATE=$P($G(^AUPNVSIT(VST,0)),U,1)
+ .S G=1_U_CPTT_U_CPTDATE_U_VDATE_U_VST
  Q $S(G:G,1:0)
 VSTCPT(DFN,VIEN,TAX) ;EP Check to see if the patient had a CPT on a particular visit
  N TIEN,X,G,CPTT,CPT,EVDT
@@ -98,24 +106,27 @@ VSTCPT(DFN,VIEN,TAX) ;EP Check to see if the patient had a CPT on a particular v
  I G D
  .S EVDT=$P($G(^AUPNVCPT(G,12)),U,1)
  .S CPT=$P($G(^AUPNVCPT(G,0)),U,1),CPTT=$P($G(^ICPT(CPT,0)),U,1)
- .S G=1_U_CPTT_U_EVDT
+ .S G=1_U_CPTT_U_EVDT_U_G
  Q $S(G:G,1:0)
 RAD(P,BDATE,EDATE,T,F) ;EP - return ien of CPT entry if patient had this CPT
  I '$G(P) Q ""
- I '$G(T) Q ""
- I '$G(F) S F=1
  I $G(EDATE)="" Q ""
  I $G(BDATE)="" S BDATE=$$FMADD^XLFDT(EDATE,-365)
+ I $G(T)="" Q ""
+ I '$G(F) S F=1
  ;go through visits in a date range for this patient, check cpts
- NEW D,BD,ED,X,Y,D,G,V,C
+ NEW D,BD,ED,X,Y,D,G,V,C,TIEN
+ S TIEN="" S TIEN=$O(^ATXAX("B",T,TIEN)) Q:'TIEN
  S ED=(9999999-EDATE),BD=9999999-BDATE,G=0
  F  S ED=$O(^AUPNVSIT("AA",P,ED)) Q:ED=""!($P(ED,".")>BD)!(G)  D
  .S V=0 F  S V=$O(^AUPNVSIT("AA",P,ED,V)) Q:V'=+V!(G)  D
  ..Q:'$D(^AUPNVSIT(V,0))
  ..Q:'$D(^AUPNVRAD("AD",V))
  ..S X=0 F  S X=$O(^AUPNVRAD("AD",V,X)) Q:X'=+X!(G)  D
+ ...S EVDATE=$P($G(^AUPNVRAD(X,12)),U)
+ ...Q:EVDATE<BDATE!(EVDATE>EDATE)
  ...S C=$P(^AUPNVRAD(X,0),U) Q:C=""  S C=$P($G(^RAMIS(71,C,0)),U,9) Q:C=""
- ...I $$ICD^ATXCHK(C,T,1) S G=X
+ ...I $$ICD^ATXCHK(C,TIEN,1) S G=X
  ...Q
  ..Q
  .Q
@@ -126,6 +137,7 @@ RAD(P,BDATE,EDATE,T,F) ;EP - return ien of CPT entry if patient had this CPT
  I F=4 S V=$P(^AUPNVRAD(G,0),U,3) I V Q $$FMTE^XLFDT($P($P($G(^AUPNVSIT(V,0)),U),"."))
  I F=5 S V=$P(^AUPNVRAD(G,0),U,3) I V Q $P($P($G(^AUPNVSIT(V,0)),U),".")_"^"_$P(^RAMIS(71,$P(^AUPNVRAD(G,0),U),0),U,9)
  I F=6 S V=$P(^AUPNVRAD(G,0),U,3) I V Q 1_"^"_$P($P($G(^AUPNVSIT(V,0)),U),".")_"^"_$P(^RAMIS(71,$P(^AUPNVRAD(G,0),U),0),U)_"^"_G
+ I F=7 S V=$P(^AUPNVRAD(G,0),U,3) I V Q $P($P($G(^AUPNVRAD(G,12)),U),".")_"^"_$P(^RAMIS(71,$P(^AUPNVRAD(G,0),U),0),U,9)
  Q ""
 CPTI(DFN,BDATE,EDATE,CPTI,SCEX,SCLN,SMOD) ;EP - did patient have this cpt (ien) in date range
  I '$G(P) Q ""
@@ -164,6 +176,14 @@ LASTITEM(P,BD,ED,BGPT,BGPV) ;PEP - return last item APCLV OF TYPE APCLT DURING B
  Q 1_U_$P(BGPR(1),U,1)_U_$P(BGPR(1),U,3)_U_$P(BGPR(1),U,2)
  ;
 PRV(VISIT,PROV) ;Is this provider a provider for this visit
+ ;CHANGED ON 10/26 TO ONLY RETURN TRUE IF PRIMARY PROVIDER - PER Aneel Advani
+ N I,PRVIEN,PRVDATA
+ S I=""
+ S PRVIEN="" F  S PRVIEN=$O(^AUPNVPRV("AD",VISIT,PRVIEN)) Q:'+PRVIEN!(I)  D
+ .S PRVDATA=$G(^AUPNVPRV(PRVIEN,0))
+ .I $P(PRVDATA,U,1)=PROV&($P(PRVDATA,U,4)="P") S I=1
+ Q $S(I=1:1,1:"")
+PRVOLD(VISIT,PROV) ;Is this provider a provider for this visit - NO PRIMARY/SECONDARY CHECK
  N I,PRVIEN
  S I=""
  S PRVIEN="" F  S PRVIEN=$O(^AUPNVPRV("AD",VISIT,PRVIEN)) Q:'+PRVIEN!(I)  D

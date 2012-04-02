@@ -1,5 +1,5 @@
 BLRRLMV ; cmi/anch/maw - BLR View/Refile Raw Reference Lab Messages ;
- ;;5.2;LR;**1021**;Jul 27, 2006
+ ;;5.2;LR;**1021,1030**;Jul 27, 2006;Build 9
  ;;1.0;BLR REFERENCE LAB;;MAR 14, 2005
  ;
  ;
@@ -32,10 +32,55 @@ ASKF() ;-- ask file
  Q +$G(Y)
  ;
 ASKM() ;-- ask message number
- S DIR(0)="N",DIR("A")="Which Message Would You Like to View/Refile "
+ S DIR(0)="N",DIR("A")="Which Message Would You Like to View/Refile"
  D ^DIR
  K DIR
  Q +$G(Y)
+ ;
+LEDI  ;EP - main LEDI driver
+ N BLRAN,BLRIN,BLRYN
+ S BLRAN=$$ASKA
+ I $G(BLRAN) S BLRIN=$$ACCLOOK(BLRAN)
+ I '$G(BLRIN) D EOJ Q
+ S BLRYN=$$RFL
+ I $G(BLRYN) D REPROC^HLUTIL(BLRIN,"D ORU^LA7VHL")
+ D EOJ
+ Q
+ ;
+RFL() ;-- ask if they want to refile
+ S DIR(0)="Y",DIR("A")="Is this the entry you want to refile",DIR("B")="Y"
+ D ^DIR
+ Q +$G(Y)
+ ;
+ASKA() ;-- ask the accession number
+ S DIR(0)="N",DIR("A")="Which Accession/Order # Would You Like to View/Refile "
+ D ^DIR
+ K DIR
+ Q +$G(Y)
+ ;
+ACCLOOK(ACC)  ;lets look up the accession number in HL(772
+ N BLRDA,BLRIEN,BLRMT,BLRD,BLRI,BLRM
+ S BLRMT=0
+ S BLRDA=0 F  S BLRDA=$O(^HL(772,BLRDA)) Q:'BLRDA!($G(BLRMT))  D
+ . S BLRIEN=0 F  S BLRIEN=$O(^HL(772,BLRDA,"IN",BLRIEN)) Q:'BLRIEN!($G(BLRMT))  D
+ .. I $G(^HL(772,BLRDA,"IN",BLRIEN,0))[ACC,$$CHKMSG(BLRDA) D
+ ... S BLRD=BLRDA,BLRI=BLRIEN,BLRMT=1
+ I '$G(BLRD) W !,"Could not find an entry to refile" Q ""
+ D WRT(BLRD)
+ S BLRM=$O(^HLMA("B",BLRD,0))
+ Q $G(BLRM)
+ ;
+CHKMSG(M) ;-- check to see if this is an ORU R01 message
+ N MI
+ S MI=$O(^HLMA("B",M,0))
+ I 'MI Q 0
+ I $$GET1^DIQ(779.001,$P($G(^HLMA(MI,0)),U,14),.01)="R01" Q 1
+ Q 0
+WRT(RD) ;-- lets call DIQ to display the entry
+ N BLRI
+ S BLRI=0 F  S BLRI=$O(^HL(772,RD,"IN",BLRI)) Q:'BLRI  D
+ . W !,$G(^HL(772,RD,"IN",BLRI,0))
+ Q
  ;
 LOOP ;-- loop the xref and call VER
  I $O(^BLRRLG("B",0))="" D  Q

@@ -1,7 +1,6 @@
-XQ1 ; SEA/MJM - DRIVER FOR MENUMAN (PART 2) ;10/29/2003  11:27
- ;;8.0;KERNEL;**1002,1003,1004,1005,1007,1016**;APR 1, 2003;Build 5
- ;;8.0;KERNEL;**1,15,59,67,46,151,170,242**;Jul 10, 1995
- ;THIS ROUTINE CONTAINS IHS MODIFICATION BY IHS/ADC/GTH 12/29/97
+XQ1 ; SEA/MJM - DRIVER FOR MENUMAN (PART 2) ;08/28/08  13:20
+ ;;8.0;KERNEL;**1,15,59,67,46,151,170,242,446**;Jul 10, 1995;Build 3
+ ;Per VHA Directive 2004-038, this routine should not be modified.
  S DIC=19,DIC(0)="AEQM" D ^DIC Q:Y<0  S (XQDIC,XQY)=+Y K DIC,XQUR,Y,^VA(200,DUZ,202.1)
  D INIT^XQ12
  G M^XQ
@@ -11,7 +10,7 @@ KILL K D,D0,D1,DA,DIC,DIE,DIR,DIS,DR,XQI,XQV,XQW,XQZ
  ;
 OUT ;Exit point for all option types
  S U="^"
- I $D(XQXFLG("ZEBRA")) L ^XWB("SESSION",XQXFLG("ZEBRA")) ;Clear by setting new lock
+ I $D(XQXFLG("ZEBRA")) L ^XWB("SESSION",XQXFLG("ZEBRA")):15 ;Clear by setting new lock
  E  L  ;Clear the lock table
  ;
  I $D(ZTQUEUED),'$D(XQUIT) D
@@ -30,12 +29,12 @@ OUT ;Exit point for all option types
  I $D(^XUTL("XQ",$J,"T")) S XQTT=$S($D(XQUIT):^XUTL("XQ",$J,"T"),1:^XUTL("XQ",$J,"T")-1) K XQUIT
  I XQTT'<1 S ^XUTL("XQ",$J,"T")=XQTT,XQY=^(XQTT),XQY0=$P(XQY,U,2,999),XQPSM=$P(XQY,U,1),XQY=+XQPSM,XQPSM=$P(XQPSM,XQY,2,99),XQABOLD=1
  I XQTT=0 S XQY=-1
- ;----- BEGIN IHS MODIFICATION - XU*8.0*1007
+  ;----- BEGIN IHS MODIFICATION - XU*8.0*1007
  ;This line is commented out to prevent IHS menu headers from printing
  ;when exiting a menu. Original modification by IHS/ADC/GTH 12/29/97
  ;I $P(XQY0,U,4)="M" S XQAA=$P(XQY0,U,2) I $P(XQY0,U,17),$D(^DIC(19,+XQY,26)),$L(^(26)) X ^(26) ;W "  ==> OUT^XQ1"
  ;----- END IHS MODIFICATION
- K %,X,XQDICNEW,XQF,XQCO,XQEA,XQFLG,XQI,XQJ,XQJS,XQK,XQOK,XQTT,XQX,XQZ,Y,Z
+ K %,X,XQDICNEW,XQF,XQCO,XQEA,XQFLG,XQI,XQJ,XQJS,XQK,XQLOK,XQNOPE,XQOK,XQTT,XQX,XQZ,Y,Z
  G M1^XQ
  ;
 A ;ACTION type option entry point
@@ -131,14 +130,14 @@ W ;Window type option entry point
  ;.D GET^XGCLOAD(XQZ,$NA(^TMP($J,XQWIN)))
  ;.D M^XG(XQWIN,$NA(^TMP($J,XQWIN)))
  ;.D ESTA^XG() ;Send it off to window land
- ;.; 
+ ;.;
  ;.D K^XG(XQWIN) ;Return here after the ESTOP
  ;.;I $D(^%ZOSF("OS")),^%ZOSF("OS")["MSM" ZSTOP
  ;.Q
  ;
  G M1^XQ ;Window failed
  ;
-Z ;Window suite option       
+Z ;Window suite option
  G EN^XQSUITE
  ;
 S ;Server-type option pseudo entry-point can't be invoked from Meun System
@@ -160,21 +159,25 @@ ZTSK ;Task Manager entry point
  K ZTQPARAM ;Build params from schedule in case we delete it.
  I $D(^DIC(19.2,XQSCH,3)),$L(^(3)) S ZTQPARAM=^(3)
  I $D(^DIC(19.2,XQSCH,2)) D  ;Build other symbols
- . S X2=XQSCH N XQSCH,XQY,XQ
+ . N X1,X2 S X2=XQSCH N XQSCH,XQY,XQ
  . F X1=0:0 S X1=$O(^DIC(19.2,X2,2,X1)) Q:X1'>0  S X=^(X1,0),@($P(X,U)_"="_$P(X,U,2))
  . Q
-REQ S X1=$P(XQ,U,2),X2=$P(XQ,U,6) ;Get params for new schedule
- S DA=XQSCH,DIE="^DIC(19.2,",DR=$S((X2="")&($P(XQ,U,9)=""):".01///@",X2="":"2///@",1:"2////"_$$SCH^XLFDT(X2,+X1,1))
- L +^%ZTSK(ZTSK,0) D ^DIE L -^%ZTSK(ZTSK,0) ;File new schedule
- K DA,DIE,DR,X1,X2,XQ
- S X=$P($G(^DIC(19.2,XQSCH,1.1)),U) I X>0 D DUZ^XUP(X) ;User to run job
-ZTSK2 S ZTREQ="@" Q:'$D(XQY)
+ ;
+ S X=$P($G(^DIC(19.2,XQSCH,1.1)),U) I X>0 D DUZ^XUP(X) ;User to run job ;p446
+REQ D  ;Set the user and Requeue
+ . N DA,DIE,DR,X,X1,X2
+ . S X1=$P(XQ,U,2),X2=$P(XQ,U,6) ;Get params for new schedule
+ . S DA=XQSCH,DIE="^DIC(19.2,",DR=$S((X2="")&($P(XQ,U,9)=""):".01///@",X2="":"2///@",1:"2////"_$$SCH^XLFDT(X2,+X1,1))
+ . L +^%ZTSK(ZTSK,0):15 D ^DIE L -^%ZTSK(ZTSK,0) ;File new schedule
+ . Q
+ ;ZTREQ is set by TM.
+ZTSK2 I '$D(XQY) K ZTREQ Q  ;Leave task
  D UI^XQ12
  Q:'$D(^DIC(19,XQY,0))  S XQY0=^(0),XQT=$P(XQY0,U,4) Q:XQT'="A"&(XQT'="P")&(XQT'="R")
  ;Kernel no longer supports reseting priority
  ;S X=$P(XQY0,U,8) I X>0,X<11 X ^%ZOSF("PRIORITY")
  I $P(XQY0,U,3)]""!($D(XQUIT)) S XQT="KILL"
  ;
- S XQ=$$S^%ZTLOAD("Run Task")
+ S %=$$S^%ZTLOAD("Run Task")
 RUN S:XQT="P"&$L(IO) XQIOP=ION_";"_IOST_";"_IOM_";"_IOSL G @XQT
  Q

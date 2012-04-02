@@ -1,5 +1,5 @@
-BEHOXQ ;MSC/IND/DKM - Notification Support ;17-Dec-2010 08:04;PLS
- ;;1.1;BEH COMPONENTS;**002003,002004**;Mar 20, 2007
+BEHOXQ ;MSC/IND/DKM - Notification Support ;13-Apr-2011 22:28;PLS
+ ;;1.1;BEH COMPONENTS;**002003,002004,002006**;Mar 20, 2007;Build 1
  ;=================================================================
  ; RPC: Get alerts for user
  ;   DFN = If specified, limit alerts to only that patient
@@ -235,3 +235,6 @@ GETDIV(USR) ;EP
  .S X=+$O(^VA(200,USR,2,0))
  .S:$O(^VA(200,USR,2,X)) X=0
  Q X
+CANCHGPT(DATA,DFN) ; EP-
+ S DATA=$$ISACTIVE^BEHOPTCX(DFN)
+ Q

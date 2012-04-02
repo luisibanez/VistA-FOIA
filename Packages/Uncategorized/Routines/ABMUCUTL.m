@@ -1,5 +1,5 @@
 ABMUCUTL ; IHS/SD/SDR - 3PB/UFMS Cashiering Utilities   
- ;;2.6;IHS Third Party Billing;**1,3,4,6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,3,4,6,8**;NOV 12, 2009
  ; New routine - v2.5 p12 SDD item 4.9.1
  ; Cashiering Utilities
  ;
@@ -311,7 +311,8 @@ FINDLOC() ;EP - return what site should bills be filed under for export
 GETBILL(ABMPREC) ;EP - get bill info from appropriate 3P Bill file
  S ABMHOLD=DUZ(2)
  S DUZ(2)=$P(ABMPREC,U,2)
- S ABMLOC=$$FINDLOC^ABMUCUTL
+ ;S ABMLOC=$$FINDLOC^ABMUCUTL  ;abm*2.6*8 HEAT27136
+ S ABMBLOC=$$FINDLOC^ABMUCUTL  ;abm*2.6*8 HEAT27136
  S ABMP("BDFN")=$P(ABMPREC,U,3)
  S ABMDTAPP=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),1)),U,5)  ;date/time approved
  S ABMP("INS")=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),0)),U,8)  ;active insurer

@@ -1,11 +1,14 @@
-ACHSMERG ; IHS/ITSC/PMF - CHS PATIENT MERGE INTERFACE ;  [ 10/16/2001   8:16 AM ]
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;;JUN 11, 2001
+ACHSMERG ; IHS/ITSC/TPF/PMF - CHS PATIENT MERGE INTERFACE ; 
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**20**;JUN 11, 2001
  ;
  ; This entire routine is in support
  ; of the patient merge development and testing.
  ;
  ; XDRMRG("FR") contains DFN of FROM pt (one being merged away)
  ; XDRMRG("TO") contains DFN of TO pt (the one being kept)
+ ;
+ ;ACHS*3.1*20 IHS.OIT.FCJ 7-28-11 ADDED NXT LINE FOR CALL FROM MERGE ROUTINES
+EN(XDRMRG) ;EP
  ;
  Q:'$D(XDRMRG("FR"))
  Q:'$D(XDRMRG("TO"))

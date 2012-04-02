@@ -1,5 +1,5 @@
 ABMDE2X ; IHS/ASDST/DMJ - PAGE 2 - INSURER data chk ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**3,6**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,6,8**;NOV 12, 2009
  ;
  ; IHS/SD/SDR - V2.5 P3 - 1/24/03 - NOIS NEA-0301-180044
  ;     Modified routine to display patient info when workers comp
@@ -108,6 +108,7 @@ SEL ;EP - Entry Point for Checking Select Insurer for Errors
  .S $P(ABMV("X2"),U)=$P(ABMV("X2"),U)_";"_$S($P($G(^AUPN3PPH($P(ABMV("X2"),U),1)),U)'="":$P($G(^AUPN3PPH($P(ABMV("X2"),U),1)),U),1:$P($G(^AUPN3PPH($P(ABMV("X2"),U),0)),U))
  .S:$P(ABMV("X2"),U,2)]"" $P(ABMV("X2"),U,2)=$S($D(^AUTTRLSH($P(ABMV("X2"),U,2),0)):$P(ABMV("X2"),U,2)_";"_$P(^(0),U),1:"")
  S:$P(ABMV("X1"),U,4)="" ABME(68)=""
+ I $P(ABMP("C0"),U,8)="" S ABME(111)=""  ;abm*2.6*8 HEAT37612
  I $P($G(^AUTNINS(ABMX("INS"),2)),U)="R" D
  .S $P(ABMV("X1"),U,7)=$P(^AUTTLOC(ABMP("LDFN"),0),U,19)
  .S:$P($G(^AUTTLOC(ABMP("LDFN"),0)),U,19)="" ABME(173)=""

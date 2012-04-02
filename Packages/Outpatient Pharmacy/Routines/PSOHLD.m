@@ -1,6 +1,8 @@
-PSOHLD ;BIR/SAB - hold unhold functionality ;07/15/96
- ;;7.0;OUTPATIENT PHARMACY;**1,16,21,24,27,32,55,82,114,130,166**;DEC 1997
+PSOHLD ;BIR/SAB - hold unhold functionality ;21-Jul-2011 17:05;PLS
+ ;;7.0;OUTPATIENT PHARMACY;**1,16,21,24,27,32,55,82,114,130,166,1011**;DEC 1997;Build 17
  ;External reference to ^DD(52-DBIA 999,  VA(200-DBIA 224, NA^ORX1-DBIA 2186,
+ ;
+ ;Modified - IHS/MSC/PLS - 07/21/2011 - Lines EN+5 and EN+19
  ; L, UL, PSOL, and PSOUL^PSSLOCK-DBIA 2789, ^%DTC-DBIA 10000, ^DIE-DBIA 10018, ^DIR-DBIA 10026,
  ; ^DIK-DBIA 10013, ^VALM1-DBIA 10016, ^XUSEC(-DBIA 10076
 UHLD I '$D(PSOPAR) D ^PSOLSET G:'$D(PSOPAR) EX
@@ -20,7 +22,9 @@ EN S RXF=0 F I=0:0 S I=$O(^PSRX(DA,1,I)) Q:'I  S RXF=I,RSDT=$P(^(0),"^")
  I RXF D  I $D(Y) D ULP G EX
  .S (PSDA,DA(1))=DA,DA=RXF,DIE="^PSRX("_DA(1)_",1,"
  .S RLDT=$P(^PSRX(DA(1),1,DA,0),"^",18)
- .S DR=$S('RLDT:".01R;2;",1:"")_"3COMMENTS"
+ .;IHS/MSC/PLS - Updated division
+ .;S DR=$S('RLDT:".01R;2;",1:"")_"3COMMENTS"
+ .S DR=$S('RLDT:".01R;2;",1:"")_"3COMMENTS"_";8///"_PSOSITE
  .S PSOUNHLD=1 D ^DIE K PSOUNHLD
  .S ZD(PSDA)=$P(^PSRX(DA(1),1,DA,0),"^")
  .Q:$D(Y)  S PSORX("FILL DATE")=$P(^PSRX(DA(1),1,DA,0),"^"),DA=PSDA K DA(1)
@@ -32,6 +36,7 @@ EN S RXF=0 F I=0:0 S I=$O(^PSRX(DA,1,I)) Q:'I  S RXF=I,RSDT=$P(^(0),"^")
  I RLDT&($P(^PSRX(DA,2),"^",2)="") S DR="22//^S X=RLDTP1;11;Q;"
  S DR=DR_"100///0;101///^S X=$S(RXF:$G(ZD(PSDA)),1:$P(^PSRX(PSDA,2),""^"",2))"
  ;
+ S:'RXF DR=DR_";20///"_PSOSITE  ;IHS/MSC/PLS - 07/21/2011 - Updated division
  D ^DIE  K FDT I $D(Y) S VALMBCK="R" D ULP G EX
  S COMM="Medication Removed from Hold by Pharmacy" D EN^PSOHLSN1(DA,"OE","",COMM,PSONOOR) K COMM,PSONOOR
  S PSORX("FILL DATE")=$S('RXF:$P(^PSRX(DA,2),"^",2),1:ZD(PSDA)) K ^PSRX("AH",$P(^PSRX(DA,"H"),"^"),DA) S ^PSRX(DA,"H")="" D ACT S (NEW1,NEW11)="^^"

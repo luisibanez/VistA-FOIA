@@ -1,13 +1,21 @@
 ABME8L1 ; IHS/ASDST/DMJ - Header 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**8**;NOV 12, 2009
  ;Header Segments
  ;
 START ;START HERE
  S ABMSTOT=0
- D ^ABME8ISA
- D WR^ABMUTL8("ISA")
- D ^ABME8GS
- D WR^ABMUTL8("GS")
+ ;start old code abm*2.6*8
+ ;D ^ABME8ISA
+ ;D WR^ABMUTL8("ISA")
+ ;D ^ABME8GS
+ ;D WR^ABMUTL8("GS")
+ ;end old code start new code
+ I ABMER("CNT")=1 D  ;only do ISA/GS first time through
+ .D ^ABME8ISA
+ .D WR^ABMUTL8("ISA")
+ .D ^ABME8GS
+ .D WR^ABMUTL8("GS")
+ ;end new code
  D ^ABME8ST
  D WR^ABMUTL8("ST")
  D ^ABME8BHT

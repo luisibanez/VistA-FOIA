@@ -1,5 +1,5 @@
-APSPCSM1 ; IHS/MSC/PLS - CONTROLLED SUBSTANCE MANAGEMENT REPORT ;03-Nov-2008 08:22;SM
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1007**;Sep 23, 2004
+APSPCSM1 ; IHS/MSC/PLS - CONTROLLED SUBSTANCE MANAGEMENT REPORT ;22-Jul-2011 09:30;PLS
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1007,1011**;Sep 23, 2004;Build 17
  ;
  Q
 PRINT ;EP
@@ -184,11 +184,12 @@ PRINT2(DATA) ; EP -
  .W !,$$TAG("Provider",2,$$GET1^DIQ(200,$P(DATA,U,14),.01))
  .W !,$$TAG("ProviderDEA",2,$$GET1^DIQ(200,$P(DATA,U,14),53.2))
  .W !,$$TAG("Pharmacist",2,$$GET1^DIQ(200,$P(DATA,U,15),.01))
+ .W !,$$TAG("RefillsRemaining",2,$P(DATA,U,16))
  .W !,$$TAG("Dosing",2,$$GETSIG(RX))
  .W !,$$TAG("Dispense",1)
  E  D
  .W !,$P($TR($$FMTE^XLFDT($P(DATA,U,2),"5Z"),"@"," "),":",1,2),?14,$P(DATA,U,9),?20,$E($$GET1^DIQ(2,DFN,.01),1,16),?38,HRN,?48,$$GET1^DIQ(52,RX,.01),?60,$P(DATA,U,8),?107,$P(DATA,U,6),?117,$P(DATA,U,13),?127,$P(DATA,U,7)
- .W !,?5,$$GET1^DIQ(200,$P(DATA,U,14),.01),?35,$$GET1^DIQ(200,$P(DATA,U,14),53.2),?50,$$GET1^DIQ(200,$P(DATA,U,15),.01)
+ .W !,?5,$$GET1^DIQ(200,$P(DATA,U,14),.01),?35,$$GET1^DIQ(200,$P(DATA,U,14),53.2),?50,$E($$GET1^DIQ(200,$P(DATA,U,15),.01),1,22),?74,$P(DATA,U,16)
  .I APSPDOSE D
  ..W !,?5,"Dosing:" D OUTSIG($$GETSIG(RX),IOM,12)
  .D PRINT3 ;check page length
@@ -219,7 +220,7 @@ HDR ;EP
 HDR1 ;EP
  D DASH
  W "Date Disp.",?14,"Type",?20,"Patient",?40,"HRN",?48,"Rx Number",?60,"Drug Name",?107,"Qty",?113,"Days Supply",?127,"Drug Schedule"
- W !,?5,"Prescriber",?35,"DEA Number",?50,"Pharmacist"
+ W !,?5,"Prescriber",?35,"DEA Number",?50,"Pharmacist",?74,"Refills left"
  W !,?5,"Dosage Ordered"
  D DASH
  Q

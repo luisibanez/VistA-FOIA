@@ -1,5 +1,5 @@
 ABMMUPVP ;IHS/SD/SDR - MU Patient Volume EP Report ;
- ;;2.6;IHS 3P BILLING SYSTEM;**7**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**7,8**;NOV 12, 2009
  ;
  I $P($G(^ABMMUPRM(1,0)),U,2)="" D  Q
  .W !!,"Setup has not been done.  Please do MUP option prior to running any reports",!
@@ -23,7 +23,8 @@ EN ;
  W !,"facility are included in the calculation."
  W !!
  D RTYPE
- I ABMY("RTYP")="GRP" W !!,"GRP not available at this time...defaulting to SEL" S ABMY("RTYP")="SEL"
+ ;I ABMY("RTYP")="GRP" W !!,"GRP not available at this time...defaulting to SEL" S ABMY("RTYP")="SEL"  ;abm*2.6*8
+ Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)  ;abm*2.6*8
  I ABMY("RTYP")="SEL" D  Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)!'$D(ABMPRVDR)
  .D PRVDR Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)!'$D(ABMPRVDR)
  D PARTYR Q:$D(DTOUT)!$D(DUOUT)!$D(DIRUT)!$D(DIROUT)
@@ -34,7 +35,8 @@ EN ;
  S DIR(0)="S^P:Print Report;R:Return to Selection Criteria -Erases ALL previous selections"
  S DIR("A")="<P> to Print or <R> to Reselect"
  D ^DIR K DIR Q:$D(DTOUT)!$D(DUOUT)!$D(DIRUT)!$D(DIROUT)
- I $P(Y,U)="R" K ABMY,ABMPRVDR,ABMF G EN
+ ;I $P(Y,U)="R" K ABMY,ABMPRVDR,ABMF G EN  ;abm*2.6*8
+ I $P(Y,U)="R" K ABMY,ABMPRVDR,ABMF,ABMP,ABMPRV G EN  ;abm*2.6*8
  W !!,"Note: This report will take a while to run based on the amount of data you have"
  S ABMQ("RX")="POUT^ABMDRUTL"
  S ABMQ("NS")="ABM"
@@ -45,7 +47,8 @@ EN ;
 RTYPE ;
  K ^XTMP("ABM-PVP",$J)
  D ^XBFMK
- S DIR(0)="S^SEL:Encounter method for each EP;GRP:Group method for facilities (not available at this time)"
+ ;S DIR(0)="S^SEL:Encounter method for each EP;GRP:Group method for facilities (not available at this time)"  ;abm*2.6*8
+ S DIR(0)="S^SEL:Encounter method for each EP;GRP:Group method for facilities"  ;abm*2.6*8
  S DIR("A")="Select report type"
  D ^DIR K DIR
  Q:$D(DTOUT)!$D(DUOUT)!$D(DIRUT)!$D(DIROUT)
@@ -205,6 +208,7 @@ SUMMARY ;
  D CENTER^ABMUCUTL("SUMMARY OF PATIENT VOLUME REPORT TO BE GENERATED")
  W !!!,"Report Name: "
  I ABMY("RTYP")="SEL" W "Patient Volume Report for Eligible Professionals"
+ I ABMY("RTYP")="GRP" W "Patient Volume Report for Group Practice"  ;abm*2.6*8
  I ABMY("RTYP")="HOS" W "Patient Volume Report for Eligible Hospitals"
  W !,"The date ranges for this report are:"
  W !?3,"Participation Year: ",ABMY("PYR")
@@ -216,12 +220,13 @@ SUMMARY ;
  W:$G(ABMY("TVDTS")) !!,"Number of top volume dates to display if minimum thresholds are not met: ",ABMY("TVDTS")
  W !!,"Report Method Type: "
  W:ABMY("RTYP")="SEL" "Individual"
+ W:ABMY("RTYP")="GRP" "Group"  ;abm*2.6*8
  W:ABMY("RTYP")="HOS" "Hospital/ER"
  I ABMY("RTYP")="SEL" D
  .W !!,"Eligible Professional(s):"
  .S ABMPRV=0
  .F  S ABMPRV=$O(ABMPRVDR(ABMPRV)) Q:'ABMPRV  D
- ..W !?3,$$GET1^DIQ(200,ABMPRV,".01")_" ("_$$GET1^DIQ(200,ABMPRV,53.5,"E")_")"
+ ..W !?3,$$GET1^DIQ(200,ABMPRV,".01")_" ("_$$GET1^DIQ(7,$$GET1^DIQ(200,ABMPRV,53.5,"I"),.01,"E")_")"
  W !
  W !,"Facility(s):"
  S ABMFC=0

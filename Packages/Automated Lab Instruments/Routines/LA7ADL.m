@@ -1,4 +1,5 @@
-LA7ADL ;DALOI/JMC - Automatic Download of Test Orders; 1/30/95 09:00
+LA7ADL ;VA/DALOI/JMC - Automatic Download of Test Orders; 1/30/95 09:00
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**1001,1030**;NOV 01, 1997
  ;;5.2;AUTOMATED LAB INSTRUMENTS;**17,25,23,57**;Sep 27, 1994
  ;
  ; This routine will monitor the ^LA("ADL") node to check for accessions which are to have test orders automatically
@@ -90,6 +91,9 @@ UID ; Start loop to monitor for accessions to download.
  . I $QS(X,3)'=LA7UID D CLEANUP Q
  . ; Setup accession variables for auto downloading.
  . S LRAA=+$QS(X,4),LRAD=+$QS(X,5),LRAN=+$QS(X,6)
+ . ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
+ . I +$O(^LRO(68,LRAA,1,LRAD,1,LRAN,5,0))<1  D MAILALRT  D CLEANUP  Q
+ . ; ----- END IHS/OIT/MKK - LR*5.2*1030
  . D BLDTST
  . S LA7INST=0
  . F  S LA7INST=$O(LA7AUTO(LA7INST)) Q:'LA7INST  D
@@ -102,7 +106,7 @@ UID ; Start loop to monitor for accessions to download.
  . . D @$P(LA7AUTO(LA7INST,9),"^",3,4)
  . D CLEANUP
  ;
- F  D  Q:$O(^LA("ADL","Q",""))'=""  Q:TOUT>60 
+ F  D  Q:$O(^LA("ADL","Q",""))'=""  Q:TOUT>60
  . I $G(^LA("ADL","STOP"))>1 S TOUT=61 Q
  . ; Task has been requested to stop.
  . I $$S^%ZTLOAD S TOUT=61,ZTSTOP=1 Q
@@ -143,6 +147,9 @@ CHKTEST ; Check tests to determine if they should build in message.
  I LRDPF'=62.3,'$P(X,"^",3),'$P(^TMP("LA7-INST",$J,LA7INST),"^") Q
  ;
  S X=$O(^LRO(68,LRAA,1,LRAD,1,LRAN,5,0))
+ ;
+ Q:+$G(X)<1        ; If no SITE/SPECIMEN, Quit -- IHS/OIT/MKK - LR*5.2*1030
+ ;
  S LA761=$P(^LRO(68,LRAA,1,LRAD,1,LRAN,5,X,0),"^")
  S LA760=0
  F  S LA760=$O(LA7TREE(LA760)) Q:'LA760  D
@@ -230,3 +237,34 @@ EXIT ; Exit and cleanup.
  I +$G(^LA("ADL","STOP"))<2 K ^LA("ADL","STOP")
  ;
  Q
+ ;
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
+ ; Only sent if the ACCESSION has no SPECIMEN node.
+ ; Issue first surfaced at Chinle post Patch 1027 Install.
+MAILALRT ; Send mail message alert
+ N J,LRCNT,LRMTXT,X,XMINSTR,XMSUB,XMTO
+ ;
+ S LRMTXT(1)="     This is from routine LA7ADL."
+ S LRMTXT(2)=" "
+ S LRMTXT(3)="     This message was generated during the donwloading of"
+ S LRMTXT(4)="     information. The SPECIMEN node of this Accessions is"
+ S LRMTXT(5)="     NULL. This is an error."
+ S LRMTXT(6)=" "
+ S LRMTXT(7)="     The following *debugging* information is provided to"
+ S LRMTXT(8)="     assist support staff in resolving this error."
+ S LRMTXT(9)=" "
+ S LRCNT=9
+ ;
+ F J="LA7UID","LRAA","LRAD","LRAN","LRDFN" D
+ . S X=$G(@J)
+ . I $L(X) S LRCNT=LRCNT+1,LRMTXT(LRCNT)=J_"="_X
+ . F  S J=$Q(@J) Q:J=""  S LRCNT=LRCNT+1,LRMTXT(LRCNT)=J_"="_@J
+ ;
+ S XMSUB="ACCESSION has no SPECIMEN node."
+ S XMTO("G.LMI")=""
+ S XMINSTR("FROM")="Lab Routine LA7ADL"
+ S XMINSTR("ADDR FLAGS")="R"
+ D SENDMSG^XMXAPI(DUZ,XMSUB,"LRMTXT",.XMTO,.XMINSTR)
+ Q
+ ;
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030

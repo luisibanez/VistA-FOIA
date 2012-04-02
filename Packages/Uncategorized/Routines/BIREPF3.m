@@ -1,11 +1,11 @@
 BIREPF3 ;IHS/CMI/MWR - REPORT, FLU IMM; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW INFLUENZA IMMUNIZATION REPORT.
  ;
  ;
  ;----------
-AGETOT(BILINE,BICC,BIHCF,BICM,BIBEN,BIYEAR,BIPOP,BIFH) ;EP
+AGETOT(BILINE,BICC,BIHCF,BICM,BIBEN,BIYEAR,BIPOP,BIFH,BIUP) ;EP
  ;---> Write Age Total line.
  ;---> Parameters:
  ;     1 - BILINE (req) Line number in ^TMP Listman array.
@@ -17,9 +17,11 @@ AGETOT(BILINE,BICC,BIHCF,BICM,BIBEN,BIYEAR,BIPOP,BIFH) ;EP
  ;                      the report year; otherwise End Date=Dec 31 of BIYEAR)
  ;     7 - BIPOP  (ret) BIPOP=1 if error.
  ;     8 - BIFH   (opt) F=report on Flu Vaccine Group (default), H=H1N1 group.
+ ;     9 - BIUP   (req) User Population/Group (Registered, Imm, User, Active).
  ;
  S BIPOP=0
  S:($G(BIFH)="") BIFH="F"
+ S:$G(BIUP)="" BIUP="u"
  ;---> Check for required Variables.
  I '$G(BIYEAR) D ERRCD^BIUTL2(679,.X) D WRITERR^BIREPF2(BILINE,X) S BIPOP=1 Q
  N BIQDT S BIQDT=(BIYEAR-1700)_1231
@@ -31,7 +33,7 @@ AGETOT(BILINE,BICC,BIHCF,BICM,BIBEN,BIYEAR,BIPOP,BIFH) ;EP
  .D AGEDATE^BIAGE(I,BIQDT,.BIBEGDT,.BIENDDT)
  .;---> Leave an Age Group=5 for High Risk (subset of Group 4
  .S N=N+1 S:(N=5) N=6
- .D GETPATS^BIREPF4(BIBEGDT,BIENDDT,N,.BICC,.BIHCF,.BICM,.BIBEN,BIQDT,BIFH,BIYEAR)
+ .D GETPATS^BIREPF4(BIBEGDT,BIENDDT,N,.BICC,.BIHCF,.BICM,.BIBEN,BIQDT,BIFH,BIYEAR,BIUP)
  ;
  ;---> Count patients.
  N BIAGRP,BITOT S BITOT=0

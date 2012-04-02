@@ -1,11 +1,11 @@
 BIREPQ2 ;IHS/CMI/MWR - REPORT, QUARTERLY IMM; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW QUARTERLY IMMUNIZATION REPORT, GATHER DATA.
  ;
  ;
  ;----------
-HEAD(BIQDT,BICC,BIHCF,BICM,BIBEN) ;EP
+HEAD(BIQDT,BICC,BIHCF,BICM,BIBEN,BIUP) ;EP
  ;---> Produce Header array for Quarterly Immunization Report.
  ;---> Parameters:
  ;     1 - BIQDT  (req) Quarter Ending Date.
@@ -13,6 +13,7 @@ HEAD(BIQDT,BICC,BIHCF,BICM,BIBEN) ;EP
  ;     3 - BIHCF  (req) Health Care Facility array.
  ;     4 - BICM   (req) Case Manager array.
  ;     5 - BIBEN  (req) Beneficiary Type array.
+ ;     6 - BIUP    (req) User Population/Group (Registered, Imm, User, Active).
  ;
  ;---> Check for required Variables.
  Q:'$G(BIQDT)
@@ -20,6 +21,7 @@ HEAD(BIQDT,BICC,BIHCF,BICM,BIBEN) ;EP
  Q:'$D(BIHCF)
  Q:'$D(BICM)
  Q:'$D(BIBEN)
+ S:$G(BIUP)="" BIUP="u"
  ;
  K VALMHDR
  N BILINE,X S BILINE=0
@@ -32,13 +34,18 @@ HEAD(BIQDT,BICC,BIHCF,BICM,BIBEN) ;EP
  S X=$$REPHDR^BIUTL6(DUZ(2)) D CENTERT^BIUTL5(.X)
  D WH^BIW(.BILINE,X)
  ;
- S X="3-27 Month Immunization Report" D CENTERT^BIUTL5(.X)
+ S X="*  3-27 Month Immunization Report  *" D CENTERT^BIUTL5(.X)
  D WH^BIW(.BILINE,X)
  ;S X="For Children 3-27 Months of Age" D CENTERT^BIUTL5(.X)  vvv83
  ;D WH^BIW(.BILINE,X)
  ;
- S X=$$TXDT1^BIUTL5(BIQDT) D CENTERT^BIUTL5(.X)
+ S X=$$SP^BIUTL5(27)_"Report Date: "_$$SLDT1^BIUTL5(DT)
+ D WH^BIW(.BILINE,X)
+ ;
+ S X=$$SP^BIUTL5(30)_"End Date: "_$$SLDT1^BIUTL5(BIQDT)
  D WH^BIW(.BILINE,X,1)
+ ;
+ S X=" "_$$BIUPTX^BIUTL6(BIUP) D WH^BIW(.BILINE,X)
  D WH^BIW(.BILINE,$$SP^BIUTL5(79,"-"))
  ;
  D
@@ -79,7 +86,7 @@ HEAD(BIQDT,BICC,BIHCF,BICM,BIBEN) ;EP
  ;
  ;
  ;----------
-START(BIQDT,BICC,BIHCF,BICM,BIBEN,BIHPV) ;EP
+START(BIQDT,BICC,BIHCF,BICM,BIBEN,BIHPV,BIUP) ;EP
  ;---> Produce array for Quarterly Immunization Report.
  ;---> Parameters:
  ;     1 - BIQDT  (req) Quarter Ending Date.
@@ -88,6 +95,7 @@ START(BIQDT,BICC,BIHCF,BICM,BIBEN,BIHPV) ;EP
  ;     4 - BICM   (req) Case Manager array.
  ;     5 - BIBEN  (req) Beneficiary Type array.
  ;     6 - BIHPV  (opt) 1=Include Varicella & Pneumo.
+ ;     7 - BIUP    (req) User Population/Group (Registered, Imm, User, Active).
  ;
  K ^TMP("BIREPQ1",$J)
  N BILINE,BITMP,X S BILINE=0,BIPOP=0
@@ -100,9 +108,10 @@ START(BIQDT,BICC,BIHCF,BICM,BIBEN,BIHPV) ;EP
  I '$D(BICM) D ERRCD^BIUTL2(615,.X) D WRITERR(BILINE,X) Q
  I '$D(BIBEN) D ERRCD^BIUTL2(662,.X) D WRITERR(BILINE,X) Q
  S:'$D(BIHPV) BIHPV=1
+ S:$G(BIUP)="" BIUP="u"
  ;
  ;---> Write Age Totals line.
- D AGETOT^BIREPQ3(.BILINE,.BICC,.BIHCF,.BICM,.BIBEN,BIQDT,BIHPV,.BIPOP)
+ D AGETOT^BIREPQ3(.BILINE,.BICC,.BIHCF,.BICM,.BIBEN,BIQDT,BIHPV,BIUP,.BIPOP)
  Q:BIPOP
  ;
  ;---> Write lines that define minimum needs.

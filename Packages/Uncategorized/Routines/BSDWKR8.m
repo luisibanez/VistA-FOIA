@@ -1,5 +1,5 @@
 BSDWKR8 ; cmi/flag/maw - BSD Advanced Access Report [ 01/04/2005  4:42 PM ]
- ;;5.3;PIMS;**1012**;APR 26, 2002
+ ;;5.3;PIMS;**1012,1013**;APR 26, 2002
  ;
 ASK ; -- ask user questions
  NEW VAUTC,VAUTD,POP,BSDBD,BSDED,BSDTT,BSDDET,BSDSUB,BSDSRT,BSDSEEN,Y
@@ -34,7 +34,7 @@ EN ; -- main entry point for BSDRM WORK STATS
 HDR ; -- header code
  S VALMHDR(1)=$$SP(30)_"Advanced Access Report"
  S VALMHDR(2)=$$SP(20)_"For dates: "_$$RANGE^BDGF(BSDBD,BSDED)
- S VALMHDR(3)=$$SP(40)_"External Demand"_$$SP(8)_"Internal Demand"
+ S VALMHDR(3)=$$SP(40)_"External Demand"_$$SP(8)_"Internal"_$$SP(3)_"Unmet"
  Q
  ;
 INIT ; -- init variables and list array
@@ -89,15 +89,23 @@ INIT ; -- init variables and list array
  .. S LINE=LINE_$$PAD(FC,11)
  .. S LINE=LINE_$$PAD(LC,11)
  .. D SET(LINE,.VALMCNT)
+ . D SET("",.VALMCNT)
  . S LINE=""
  . S LINE="External Demand Subtotal"
  . S LINE=LINE_$$SP(16)
  . S INT=+$G(^TMP("BSD",$J,"TOT",S1,"EXTERNAL"))
  . S LINE=LINE_$$PAD(INT,10)
  . ;S LINE=LINE_$$PAD(+$G(^TMP("BSD",$J,"TOT",S1,"WI")),12)
- . S LINE=LINE_$$SP(1)_"FU Subtotal"_$$SP(1)
+ . D SET(LINE,.VALMCNT)
+ . S LINE=""
+ . S LINE=LINE_"Internal Demand Subtotal"
+ . S LINE=LINE_$$SP(16)
  . S LINE=LINE_$$PAD(+$G(^TMP("BSD",$J,"TOT",S1,"FU")),11)
- . ;S LINE=LINE_$$PAD(+$G(^TMP("BSD",$J,"TOT",S1,"WL")),11)
+ . D SET(LINE,.VALMCNT)
+ . S LINE=""
+ . S LINE=LINE_"Unmet Demand Subtotal"
+ . S LINE=LINE_$$SP(19)
+ . S LINE=LINE_$$PAD(+$G(^TMP("BSD",$J,"TOT",S1,"WL")),11)
  . D SET(LINE,.VALMCNT)
  . D SET("",.VALMCNT)
  D SET("",.VALMCNT)
@@ -105,7 +113,7 @@ INIT ; -- init variables and list array
  S LINE="External Demand Total"
  S LINE=LINE_$$SP(19)
  S LINE=LINE_+$G(^TMP("BSD",$J,"TOT","EXTTOTAL"))
- S LINE=LINE_$$SP(9)_"FU Total"_$$SP(4)
+ S LINE=LINE_$$SP(10)_"FU Total"_$$SP(4)
  S LINE=LINE_$G(^TMP("BSD",$J,"TOT","FUTOTAL"))
  D SET(LINE,.VALMCNT)
  K ^TMP("BSD",$J)
@@ -176,15 +184,18 @@ FNDWL(C,A) ;-- check to see if a patient is on the wait list
  Q +$G(CNT)
  ;
 CNTAPP(C,A) ;-- count all appointments made on date passed in for clinic
- N AD,CNT,DAM,BDA,BDI,BDO,PAT,AP
+ N AD,CNT,DAM,BDA,BDI,BDO,PAT,AP,BG,ED
  S AP=$P(A,".")
  S CNT=0
  I $G(ACNTR(C,AP)) Q 0
- S BDA=0 F  S BDA=$O(^SC("AIHSDAM",C,BDA)) Q:'BDA  D
+ S BG=AP-.0001,ED=AP+.9999
+ S BDA=BG F  S BDA=$O(^SC("AIHSDAM",C,BDA)) Q:'BDA!(BDA>ED)  D
  . S BDI=0 F  S BDI=$O(^SC("AIHSDAM",C,BDA,BDI)) Q:'BDI  D
  .. S BDO=0 F  S BDO=$O(^SC("AIHSDAM",C,BDA,BDI,BDO)) Q:'BDO  D
  ... S PAT=+$P($G(^SC(C,"S",BDI,1,BDO,0)),U)
- ... Q:$$VALI^XBDIQ1(2.98,PAT_","_A,9)=4  ;8/19/2010 screen out walkins per lisa dolan email
+ ... Q:'$G(PAT)  ;ihs/cmi/maw 08/08/2011 added for missing patient pointer
+ ... Q:'$D(^DPT(PAT,"S",BDI))  ;another bad data filter
+ ... Q:$$VALI^XBDIQ1(2.98,PAT_","_BDI,9)=4  ;8/19/2010 screen out walkins per lisa dolan email
  ... S DAM=$P(BDA,".")
  ... Q:$$DEMO^APCLUTL(PAT,$G(BSDDEMO))
  ... I DAM=AP S CNT=CNT+1

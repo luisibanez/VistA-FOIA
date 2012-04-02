@@ -1,8 +1,9 @@
 BDGSTAT2 ; IHS/ANMC/LJF - INPT STATS BY WARD ; 
- ;;5.3;PIMS;**1009**;APR 26, 2002
+ ;;5.3;PIMS;**1009,1013**;APR 26, 2002
  ;
  ;
  ;cmi/anch/maw  04/08/2007 PATCH 1009 requirement 24 added code to count swing beds
+ ;ihs/cmi/maw 04/15/2011 PATCH 1013 RQMT155 add day surgery
  ;
  NEW BDGBD,BDGED,BDGIA,BDGTYP
  ;
@@ -11,7 +12,8 @@ BDGSTAT2 ; IHS/ANMC/LJF - INPT STATS BY WARD ;
  ;
  S BDGIA=$$READ^BDGF("Y","Include INACTIVE Wards","NO")
  ;
- S BDGTYP=$$READ^BDGF("S^1:Inpatients Only;2:Observation Patients Only;3:Both","Select Patient Type","BOTH") Q:BDGTYP=U
+ ;S BDGTYP=$$READ^BDGF("S^1:Inpatients Only;2:Observation Patients Only;3:Both","Select Patient Type","BOTH") Q:BDGTYP=U
+ S BDGTYP=$$READ^BDGF("S^1:Inpatients Only;2:Observation Patients Only;3:Day Surgery Patients Only;4:All","Select Patient Type","ALL") Q:BDGTYP=U  ;ihs/cmi/maw 04/15/2011 PATCH 1013 RQMT155  
  ;
  D ZIS^BDGF("PQ","EN^BDGSTAT2","STATS BY WARD","BDGBD;BDGED;BDGIA;BDGTYP")
  Q
@@ -27,8 +29,9 @@ HDR ; -- header code
  NEW X
  S X="For "_$$FMTE^XLFDT(BDGBD)_" through "_$$FMTE^XLFDT(BDGED)
  S VALMHDR(1)=$$SP(75-$L(X)\2)_X
- I BDGTYP=3 S X="Includes Inpatients AND Observations"
- E  S X=$S(BDGTYP=1:"Inpatients Only",1:"Observations Only")
+ ;I BDGTYP=3 S X="Includes Inpatients AND Observations"
+ I BDGTYP=4 S X="Includes Inpatients, Observations AND Day Surgery"
+ E  S X=$S(BDGTYP=1:"Inpatients Only",BDGTYP=2:"Observations Only",1:"Day Surgery Only")
  S VALMHDR(2)=$$SP(75-$L(X)\2)_X
  Q
  ;
@@ -49,7 +52,7 @@ INIT ; -- init variables and list array
  . F  S DATE=$O(^BDGCWD(WARD,1,DATE)) Q:DATE>BDGED  Q:'DATE  D
  .. ;
  .. ; if inpatient only or observation only
- .. I BDGTYP'=3 D ONLY(WARD,WRDNM,DATE) Q
+ .. I BDGTYP'=4 D ONLY(WARD,WRDNM,DATE) Q
  .. ;
  .. ; else grab all
  .. S X=$G(^BDGCWD(WARD,1,DATE,0))     ;grab data node
@@ -128,6 +131,7 @@ ONLY(WARD,NAME,DATE) ;  find data by inpt service
  . S SRVNM=$$GET1^DIQ(45.7,SRV,.01)
  . I BDGTYP=1 Q:SRVNM["OBSERVATION"
  . I BDGTYP=2 Q:SRVNM'["OBSERVATION"
+ . I BDGTYP=3 Q:SRVNM'="DAY SURGERY"  ;ihs/cmi/maw 04/15/2011 PATCH 1013 RQMT155
  . ;
  . S X=$G(^BDGCWD(WARD,1,DATE,1,SRV,0))      ;grab data node
  . ;

@@ -1,5 +1,5 @@
-BHSDMPRE ;IHS/CIA/MGH - Health Summary for Pre-Diabetic Supplement ;10-Dec-2010 17:13;MGH
- ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,4**;March 17, 2006;Build 13
+BHSDMPRE ;IHS/CIA/MGH - Health Summary for Pre-Diabetic Supplement ;04-Aug-2011 14:34;MGH
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,4,6**;March 17, 2006;Build 5
  ;===================================================================
  ;VA version of IHS components for supplemental summaries
  ;Taken from APCHS9D1
@@ -68,9 +68,12 @@ SETARRAY ;set up array containing dm care summary
  D S(X)
  S X="" I $D(APCHX(3)) S X="",$E(X,20)=$P(APCHX(3),U,2)_"     "_$$FMTE^XLFDT($P(APCHX(3),U))
  D S(X)
+ ;Patch 6
+ N BDMSDFN,BDMTOBC,BDMTOBS,BDMSBEG
  S BDMSDFN=BHSDFN
- D TOBACCO^BDMS9B6
- S X="Tobacco Use:  "_$G(BDMTOB) D S(X,1)
+ D TOBACCO^BDMS9B3
+ S X="Tobacco Use:  "_$P($G(BDMTOBS),U,1) D S(X)
+ I $G(BDMTOBC)]"" S X="              "_$P(BDMTOBC,U,1) D S(X)
  S X="Prediabetes Education Provided (in past yr):" D S(X,1)
  S X="   Last Dietitian Visit:   "_$$DIETV^BDMS9B3(BHSDFN) D S(X)
  S (BHSBEG,BDMSBEG)=$$FMADD^XLFDT(DT,-366)

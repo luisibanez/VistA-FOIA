@@ -1,5 +1,6 @@
-BADEHL2 ;IHS/MSC/MGH/PLS - Dentrix HL7 interface  ;16-Jul-2009 10:54;PLS
- ;;1.0;DENTAL/EDR INTERFACE;;Oct 13, 2009
+BADEHL2 ;IHS/MSC/MGH/PLS/VAC - Dentrix HL7 interface  ;16-Jul-2009 10:54;PLS
+ ;;1.0;DENTAL/EDR INTERFACE;**1**;AUG 22, 2011
+ ;; Modified - IHS/MSC/AMF - 11/23/10 - More descriptive alert messages
  Q
  ; Build Outbound Master File Updates for the provider file
 NEWMSG(IEN,MFNTYP) ;EP
@@ -10,7 +11,7 @@ NEWMSG(IEN,MFNTYP) ;EP
  S HLPM("EVENT")="M02"
  S HLPM("VERSION")=2.4
  I '$$NEWMSG^HLOAPI(.HLPM,.HLST,.ERR) D  Q
- .D NOTIF(IEN,"Unable to build HL7 message."_$S($D(ERR):" ERR:"_$G(ERR),1:""))
+ .D NOTIF(IEN,"Unable to build HL7 message. "_$G(ERR)) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  S HLFS=HLPM("FIELD SEPARATOR")
  S HLECH=HLPM("ENCODING CHARACTERS")
  S HL1("ECH")=HLECH
@@ -35,7 +36,7 @@ NEWMSG(IEN,MFNTYP) ;EP
  .S WHO("RECEIVING APPLICATION")="DENTRIX"
  .S WHO("FACILITY LINK NAME")="DENTRIX"
  .I '$$SENDONE^HLOAPI1(.HLST,.APPARMS,.WHO,.ERR) D
- ..D NOTIF(IEN,"Unable to send HL7 message."_$S($D(ERR):" ERR:"_$G(ERR),1:""))
+ ..D NOTIF(IEN,"Unable to send HL7 message. "_$G(ERR)) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
  ;
 ERR ;
@@ -53,7 +54,7 @@ MFI ;Create the MFI segment
  D SET(.ARY,NOW,5)
  D SET(.ARY,"NE",6)
  S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF(IEN,"Unable to create the MFI segment")
+ I $D(ERR) D NOTIF(IEN,"Can't create MFI. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
  ; Create MFE segment
 MFE(IEN) ;EP
@@ -67,7 +68,7 @@ MFE(IEN) ;EP
  D SET(.ARY,IEN,4)
  D SET(.ARY,"CE",5)
  S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF(IEN,"Unable to build MFE segment.")
+ I $D(ERR) D NOTIF(IEN,"Can't create MFE. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
  ; Create segment
 STF(IEN) ;Create the STF segment
@@ -82,14 +83,15 @@ STF(IEN) ;Create the STF segment
  D SET(.ARY,"STF",0)
  S NPI=""
  S NPI=$$NPI^XUSNPI("Individual_ID",IEN)
- I NPI<1 S ERR="Provider "_IEN_" does not have NPI" D NOTIF(IEN,ERR) Q
+ I NPI<1 S ERR="No NPI.  Can't create STF." D NOTIF(IEN,ERR) Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  D SET(.ARY,+IEN,1)  ;Primary Key
  D SET(.ARY,+NPI,2)   ;NPI
  S DGNAME("FILE")=200,DGNAME("IENS")=IEN
  S DGNAME("FIELD")=.01
  ;Name of provider
  S FLD=$$HLNAME^XLFNAME(.DGNAME,"","^")
- I FLD="" S ERR="Provider "_IEN_" does not have a name" D NOTIF(IEN,ERR) Q
+ I FLD="" S ERR="No provider name.  Can't create STF." D NOTIF(IEN,ERR) Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
+ ; More descriptive alert message
  F LP=1:1:$L(FLD,$E(HLECH)) S VAL=$P(FLD,$E(HLECH),LP) D
  .D SET(.ARY,VAL,3,LP)
  D SET(.ARY,"N",4)  ; Staff type
@@ -113,7 +115,7 @@ STF(IEN) ;Create the STF segment
  .D SET(.ARY,VAL,11,LP)   ;Address
  ;D SET(.ARY,TODAY,12)  ;Activation Date
  S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF(IEN,"Unable to build STF segment")
+ I $D(ERR) D NOTIF(IEN,"Can't create STF. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
 PRA(IEN) ;Create the PRA segment
  Q:'$G(IEN)
@@ -157,17 +159,19 @@ PRA(IEN) ;Create the PRA segment
  ;.F LP=1:1:$L(VAL1,$E(HLECH)) S VAL=$P(VAL1,$E(HLECH),LP) D
  ;..D SET(.ARY,VAL,6,LP,,RP)
  S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF(IEN,"Unable to build PRA segment")
+ I $D(ERR) D NOTIF(IEN,"Can't create PRA. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
 SET(ARY,V,F,C,S,R) ;EP
  D SET^HLOAPI(.ARY,.V,.F,.C,.S,.R)
  Q
-NOTIF(IEN,MSG) ;EP
- N PNAM,PVDIEN,RET,X,SAVE
+NOTIF(IEN,MSG) ;EP ------- IHS/MSC/AMF 11/23/10 More descriptive alert
+ N PVDIEN,RET,X,SAVE,STR,LEN
  N XQA,XQAID,XQDATA,XQAMSG
- S PNAM=$E($P($G(^VA(200,IEN,0)),U,1),1,9)
- S XQAMSG=PNAM_" "
- S XQAMSG=XQAMSG_$G(MSG)
+ S LEN=$L("Provider:  ["_IEN_"]. "_$G(MSG))
+ S STR=""
+ I $L(IEN) S STR=$P($G(^VA(200,IEN,0)),U,1) I ($L(STR)+LEN)>70 S STR=$E(STR,1,(67-LEN))_"..."
+ S XQAMSG="Provider: "_STR_" ["_IEN_"]. "_$G(MSG)
+ ; -------- end IHS/MSC/AMF 11/23/10 
  S XQAID="ADEN,"_IEN_","_50
  S XQDATA="IEN="_IEN
  S XQA("G.RPMS DENTAL")=""

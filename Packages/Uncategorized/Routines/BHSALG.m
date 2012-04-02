@@ -1,6 +1,7 @@
-BHSALG ; IHS/MSC/MGH - ALL Health Summary Allergies ;08-Mar-2011 08:40;DU
- ;;1.0;HEALTH SUMMARY COMPONENTS;**5**;March 17, 2006;Build 9
+BHSALG ; IHS/MSC/MGH - ALL Health Summary Allergies ;04-Aug-2011 14:20;DU
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**5,6**;March 17, 2006;Build 5
  ;
+ ;Patch 6 updated for allergy review
  ; External References
  ;   DBIA 10096  ^%ZOSF("TEST"
  ;   DBIA 10035  ^DPT(
@@ -74,6 +75,18 @@ ALLRGP ; Allergy Print
  ....D CKP^GMTSUP Q:$D(GMTSQIT)  W !,?10,"Date/Time:  " S ODT=$P(GMTSAFN,U,4) S X=ODT D REGDTM4^GMTSU W X,!
  ....D DATES
  ....S CC="" F  S CC=$O(^GMR(120.8,GMTSALNM,26,"B",CC)) Q:CC=""  D CKP^GMTSUP Q:$D(GMTSQIT)  W !,?15,"Comments at: " S X=CC D REGDTM4^GMTSU S CD=X S CCC=0 F  S CCC=$O(^GMR(120.8,GMTSALNM,26,"B",CC,CCC)) Q:'CCC  D TEXT
+COMMON1 ;additional stuff for CHHIT bjpc 2.0 patch 5
+ ;get date last reviewed and display
+ N BHSX
+ S BHSX=$$LASTALR^APCLAPI6(DFN,,DT,"A")
+ D CKP^GMTSUP Q:$D(GMTSQIT)
+ W !,"Allergy List Reviewed On: ",?36,$$FMTE^XLFDT($P(BHSX,U,1)) W ?51,"By: ",?54,$E($S($P(BHSX,U,3):$P($G(^VA(200,$P(BHSX,U,3),0)),U),1:""),1,25),!
+ S BHSX=$$LASTALU^APCLAPI6(DFN,,DT,"A")
+ D CKP^GMTSUP Q:$D(GMTSQIT)
+ W "Allergy List Updated On: ",?36,$$FMTE^XLFDT($P(BHSX,U,1)) W ?51,"By: ",?54,$E($S($P(BHSX,U,3):$P($G(^VA(200,$P(BHSX,U,3),0)),U),1:""),1,25),!
+ S BHSX=$$LASTNAA^APCLAPI6(DFN,,DT,"A")
+ D CKP^GMTSUP Q:$D(GMTSQIT)
+ W "No Allergies Documented On: ",?36,$$FMTE^XLFDT($P(BHSX,U,1)) W ?51,"By: ",$E($S($P(BHSX,U,3):$P($G(^VA(200,$P(BHSX,U,3),0)),U),1:""),1,25),!
  Q
 NKA ; No known allergies
  D UNASS(DFN)

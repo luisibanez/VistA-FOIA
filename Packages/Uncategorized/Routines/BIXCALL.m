@@ -1,5 +1,5 @@
 BIXCALL ;IHS/CMI/MWR - XCALL TO IMMSERVE LIBRARY; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  XCALL TO IMMSERVE LIBRARY FOR FORCASTING IMMUNIZATIONS.
  ;;  Called from ^BIPATUP.
@@ -56,14 +56,16 @@ RUN(BIHX,BIRPT,BIDATA,BIERR) ;EP
  ..;********** VERSION 8.4, v8.4, APR 15,2010, IHS/CMI/MWR
  ..;---> Change to "02" for new Immserve, e.g., biwin3202 instead of biwin3201.
  ..;---> Change to "04" for new Immserve, e.g., biwin3204 instead of biwin3202.
+ ..;********** VERSION 8.5, JUL 01,2011, IHS/CMI/MWR
+ ..;---> Change to "05" for new Immserve, e.g., biwin3205 instead of biwin3204.
  ..;
- ..I ((Y["Windows")&(BIT=8)) S BIDLLPROG="biwin6404.dll" Q
- ..I Y["Windows" S BIDLLPROG="biwin3204.dll" Q
- ..I ((Y["Linux")&(BIT=8)) S BIDLLPROG="bilin6404.so" Q
- ..I Y["Linux" S BIDLLPROG="bilin3204.so" Q
- ..I ((Y["Solaris")&(BIT=8)) S BIDLLPROG="bisol6404.so" Q
- ..I ((Y["UNIX")&(BIT=8)) S BIDLLPROG="biaix6404.so" Q
- ..I Y["UNIX" S BIDLLPROG="biaix3204.so" Q
+ ..I ((Y["Windows")&(BIT=8)) S BIDLLPROG="biwin6405.dll" Q
+ ..I Y["Windows" S BIDLLPROG="biwin3205.dll" Q
+ ..I ((Y["Linux")&(BIT=8)) S BIDLLPROG="bilin6405.so" Q
+ ..I Y["Linux" S BIDLLPROG="bilin3205.so" Q
+ ..I ((Y["Solaris")&(BIT=8)) S BIDLLPROG="bisol6405.so" Q
+ ..I ((Y["UNIX")&(BIT=8)) S BIDLLPROG="biaix6405.so" Q
+ ..I Y["UNIX" S BIDLLPROG="biaix3205.so" Q
  ..;---> NEXT LINE: Good for calling a new version conditional upon Immserve path.
  ..;I ((Y["UNIX")&(BIT=8)) S BIDLLPROG="biaix6403.so" S:BIDLLPATH["84a" BIDLLPROG="biaix6404.so" Q
  ..;**********

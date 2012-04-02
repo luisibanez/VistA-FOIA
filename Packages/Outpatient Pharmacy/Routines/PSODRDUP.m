@@ -1,9 +1,10 @@
-PSODRDUP ;BIR/SAB - Dup drug class checker ;19-Oct-2010 17:03;SM
- ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,39,56,130,132,1006,1009**;DEC 1997
+PSODRDUP ;BIR/SAB - Dup drug class checker ;28-Mar-2011 18:30;DU
+ ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,39,56,130,132,1006,1009,1011**;DEC 1997;Build 17
  ;External references PSOL and PSOUL^PSSLOCK supported by DBIA 2789
  ; Modified - IHS/MSC/PLS - 10/05/07 - Added auto RTS/Delete feature
  ;                          09/27/10 - Added Expired med to ASKCAN1+8
  ;                          10/19/10 - Added EXPCMF API
+ ;                          03/28/11 - Added ASKCAN+12
  S $P(PSONULN,"-",79)="-",(STA,DNM)="" K CLS
  F  S STA=$O(PSOSD(STA)) Q:STA=""  F  S DNM=$O(PSOSD(STA,DNM)) Q:DNM=""!$G(PSORX("DFLG"))  I $P(PSOSD(STA,DNM),"^")'=$G(PSORENW("OIRXN")) D  Q:$G(PSORX("DFLG"))
  .I STA="PENDING" D ^PSODRDU1 Q
@@ -54,7 +55,9 @@ ASKCAN ;IHS/MSC/PLS - 09/27/10
  .I $P($G(PSOMSG),"^",2)'="" W !!,$P(PSOMSG,"^",2),! Q
  .W !!,"Another person is editing Rx "_$P($G(^PSRX(RXRECLOC,0)),"^"),!
  ; IHS/MSC/PLS - 10/05/07 - added next two lines
- N APSPRTS,APSPQ S:$P(^PSRX(RXREC,2),U,2)=DT&('($P(PSOSD(STA,DNM),"^",2)=12)) APSPRTS=$$DIRYN^APSPUTIL("Return Rx # "_$P(^PSRX(+PSOSD(STA,DNM),0),U)_" to stock and mark it for deletion?","Yes",,.APSPQ)
+ ;N APSPRTS,APSPQ S:$P(^PSRX(RXREC,2),U,2)=DT&('($P(PSOSD(STA,DNM),"^",2)=12)) APSPRTS=$$DIRYN^APSPUTIL("Return Rx # "_$P(^PSRX(+PSOSD(STA,DNM),0),U)_" to stock and mark it for deletion?","YES",,.APSPQ)
+ ; IHS/MSC/PLS - 03/28/2011 - removed default and set to required
+ N APSPRTS,APSPQ S:$P(^PSRX(RXREC,2),U,2)=DT&('($P(PSOSD(STA,DNM),"^",2)=12)) APSPRTS=$$DIRYNR^APSPUTIL("Return Rx # "_$P(^PSRX(+PSOSD(STA,DNM),0),U)_" to stock and mark it for deletion?","",,.APSPQ)
  I '$G(APSPQ),$G(APSPRTS),$$CHK(.APSPRTS,RXREC) S Y=1 G ASKCAN1
  K PSOMSG S DIR("A")=$S($P(PSOSD(STA,DNM),"^",2)=12:"Reinstate",1:"Discontinue")_" RX # "_$P(^PSRX(+PSOSD(STA,DNM),0),"^"),DIR(0)="Y",DIR("?")="Enter Y to "_$S($P(PSOSD(STA,DNM),"^",2)=12:"reinstate",1:"discontinue")_" this RX."
  D ^DIR K DIR

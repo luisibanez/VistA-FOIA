@@ -1,22 +1,21 @@
-AUM111RL ;IHS/SD/RNB - ICD 9 CODES FOR FY 2011 ; [ 09/09/2010  8:30 AM ]
- ;;11.0;TABLE MAINTENANCE;;OCT 15,2010
+AUM111RL ;IHS/SD/RNB - ICD 9 CODES FOR FY 2012 ; [ 09/09/2010  8:30 AM ]
+ ;;12.0;TABLE MAINTENANCE;;SEP 27,2011
 START ;EP
  ;
 SVARS ;;A,C,E,F,L,M,N,O,P,R,S,T,V;Single-character work variables.
  NEW DA,DIC,DIE,DINUM,DLAYGO,DR,@($P($T(SVARS),";",3))
  S U="^"
- D RSLT^AUM111R1("Beginning AUM 11.0 LOAD, ICD Update.")
+ D RSLT^AUM111R1("Beginning AUM 12.0 LOAD, ICD Update.")
  D DRGS^AUM111E  ;update DRGs
  D DASH^AUM111R1,ICD9NEW
  D DASH^AUM111R1,ICD9REV
  D DASH^AUM111R1,ICD9INAC
  D DASH^AUM111R1,ICD0NEW
+ D DASH^AUM111R1,ICD0RE2
  D DASH^AUM111R1,ICD0REV
  D DASH^AUM111R1,ICD0INAC
- ;D DASH^AUM111R1,ICD9OREV
- ;D DASH^AUM111R1,ICD0OREV
  D DASH^AUM111R1
- D RSLT^AUM111R1("End AUM 11.0 LOAD ICD Update.")
+ D RSLT^AUM111R1("End AUM 12.0 LOAD ICD Update.")
  Q
  ; ---------------------------------
 ICD9NEW ;
@@ -42,8 +41,8 @@ ICD9NPRC ;
  S DR=DR_";100////@"                    ;inactive flag
  S DR=DR_";102////@"                    ;inactive date
  ;
- S DR=DR_";9999999.04///3101001"        ;date added
- S DR=DR_";16///3101001"                ;activation date
+ S DR=DR_";9999999.04///3111001"        ;date added
+ S DR=DR_";16///3111001"                ;activation date
  ;
  S DR=DR_";9.5///"_$P(AUMLN,U,4)        ;use with sex
  S DR=DR_";5///"_$P(AUMLN,U,5)          ;MDC
@@ -62,7 +61,6 @@ ICD9NPRC ;
  D MDCMULT("NEW")
  ;CC multiple
  D CCMULT("NEW")
- ;
  ;  this part loads DRGs if there are any
  S (AUMDRG,AUMDRGS,DR)=""
  S AUMDRGS=$P(AUMLN,U,6)
@@ -110,17 +108,14 @@ NEWVCODS ;  loads NEW V-CODES
  .S DA=+Y
  .S DR="3///"_$P(AUMLN,U,2)        ;diagnosis
  .S DR=DR_";10///"_$P(AUMLN,U,3)   ;description
- .;
  .S DR=DR_";100///@"               ;inactive flag
  .S DR=DR_";102///@"               ;inactive date
- .S DR=DR_";9999999.04///3101001"  ;date added
- .;
+ .S DR=DR_";9999999.04///3111001"  ;date added
  .S DR=DR_";9.5///"_$P(AUMLN,U,4)  ;use with sex
  .S DR=DR_";5///"_$P(AUMLN,U,5)    ;MDC
  .S DIE="^ICD9("
  .S AUMDA=DA
  .D DIE^AUM111R1
- .;
  .;effective date multiple
  .K AUMFLG
  .D EFFDTMUL("NEW")
@@ -128,7 +123,6 @@ NEWVCODS ;  loads NEW V-CODES
  .D SDSCMULT("NEW")
  .;description multiple
  .D DESCMULT("NEW")
- .;
  .;  this part loads the DRGs if there are any
  .S (AUMDRGS,DR)=""
  .S AUMDRGS=$P(AUMLN,U,6)
@@ -151,7 +145,6 @@ NEWVCODS ;  loads NEW V-CODES
  F AUMI=1:1 S AUMLN=$P($T(ICD9ENEW+AUMI^AUM111B),";;",2) Q:AUMLN="END"  D
  .S AUMLN=$TR(AUMLN,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
  .;don't add space if E- or V-code; lookup fails
- .;;S Y=$$IXDIC^AUM111R1("^ICD9(","ILXM","AB",$P(AUMLN,U)_$S($A($E($P(AUMLN,U)))<58:" ",1:""),80)
  .S Y=$$IXDIC^AUM111R1("^ICD9(","ILXM","AB",$P(AUMLN,U)_" ",80)
  .I Y=-1 S Y=$$IXDIC3^AUM111R1("^ICD9(","ILXM","AB",$P(AUMLN,U)_" ",80)
  .I Y=-1 D RSLT^AUM111R1("ERROR:  Lookup/Add of CODE '"_$P(AUMLN,U)_"' FAILED.") Q
@@ -160,12 +153,11 @@ NEWVCODS ;  loads NEW V-CODES
  .S DR=DR_";10///"_$P(AUMLN,U,3)   ;description
  .S DR=DR_";100///@"               ;inactive flag
  .S DR=DR_";102///@"               ;inactive date
- .S DR=DR_";9999999.04///3101001"  ;date added
+ .S DR=DR_";9999999.04///3111001"  ;date added
  .S DR=DR_";9.5///"_$P(AUMLN,U,4)  ;use with sex
  .S DIE="^ICD9("
  .S AUMDA=DA
  .D DIE^AUM111R1
- .;
  .;effective date multiple
  .K AUMFLG
  .D EFFDTMUL("NEW")
@@ -173,7 +165,6 @@ NEWVCODS ;  loads NEW V-CODES
  .D SDSCMULT("NEW")
  .;description multiple
  .D DESCMULT("NEW")
- .;
  .I $G(AUMFLG) D RSLT^AUM111R1("ERROR:  Edit of fields for CODE '"_$P(AUMLN,U,1)_"' FAILED.") Q
  .D RSLT^AUM111R1($J("",8)_$P(AUMLN,U,1)_$J("",4)_$E($P(AUMLN,U,2),1,30))
  .Q
@@ -193,7 +184,7 @@ ICD9INA2 ;
  .I Y=-1 D RSLT^AUM111R1(" CODE '"_X_"' not found (that's OK).") Q
  .S DA=+Y,AUMDA=+Y
  .S DIE="^ICD9("
- .S DR="102///3101001"  ;inactive date
+ .S DR="102///3111001"  ;inactive date
  .S DR=DR_";100////1"   ;inactive flag
  .D DIE^AUM111R1
  .;effective date multiple
@@ -203,14 +194,13 @@ ICD9INA2 ;
  .S DIC="^ICD9("_DA(1)_",66,"
  .S DIC("P")=$P(^DD(80,66,0),U,2)
  .S DIC(0)="L"
- .S X="3101001"  ;use active date of 10/01/2010
+ .S X="3111001"  ;use active date of 10/01/2011
  .S DIC("DR")=".02////0"
  .D ^DIC
  .I $G(AUMFLG) D RSLT^AUM111R1("ERROR:  Edit of INACTIVE DATE field for CODE '"_$P(X,U)_"' FAILED.") Q
  .D RSLT^AUM111R1($J("",8)_$P(^ICD9(AUMDA,0),U,1)_$J("",4)_$E($P(^ICD9(AUMDA,0),U,3),1,30))
  .Q
  Q
- ;
 ICD9OINA ;
  D RSLT^AUM111R1("ICD 9 DIAGNOSIS, OTHER INACTIVATED CODES:")  ;("ICD9OINA")
  D RSLT^AUM111R1($J("",8)_"CODE     DESCRIPTION")
@@ -221,7 +211,7 @@ ICD9OINA ;
  .I Y=-1 D RSLT^AUM111R1(" CODE '"_X_"' not found (that's OK).") Q
  .S DA=+Y,AUMDA=+Y
  .S DIE="^ICD9("
- .S DR="102///3101001"  ;inactive date
+ .S DR="102///3111001"  ;inactive date
  .S DR=DR_";100////1"   ;inactive flag
  .D DIE^AUM111R1
  .;effective date multiple
@@ -230,14 +220,13 @@ ICD9OINA ;
  .S DIC="^ICD9("_DA(1)_",66,"
  .S DIC("P")=$P(^DD(80,66,0),U,2)
  .S DIC(0)="L"
- .S X="3101001"  ;use active date of 10/01/2010
+ .S X="3111001"  ;use active date of 10/01/2011
  .S DIC("DR")=".02////0"
  .D ^DIC
  .I $D(Y) D RSLT^AUM111R1("ERROR:  Edit of INACTIVE DATE field for CODE '"_$P(AUMLN,U,1)_"' FAILED.") Q
  .D RSLT^AUM111R1($J("",8)_$P(^ICD9(AUMDA,0),U,1)_$J("",4)_$E($P(^ICD9(AUMDA,0),U,3),1,30))
  .Q
  Q
- ;
 ICD9REV ;
  D RSLT^AUM111R1("ICD 9 DIAGNOSIS, MODIFIED CODES:")
  D RSLT^AUM111R1($J("",8)_"CODE      DESCRIPTION")
@@ -245,7 +234,6 @@ ICD9REV ;
  NEW AUMDA,AUMI,AUMLN,DA,DIE,DR
  F AUMI=1:1 S AUMLN=$P($T(ICD9REV+AUMI^AUM111C),";;",2) Q:AUMLN="END"  D PROCESS
  Q
- ;
 PROCESS S AUMLN=$TR(AUMLN,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
  ;;S Y=$$IXDIC^AUM111R1("^ICD9(","ILX","AB",$P(AUMLN,U)_$S($A($E($P(AUMLN,U)))<58:" ",1:""),80)
  S Y=$$IXDIC^AUM111R1("^ICD9(","ILX","AB",$P(AUMLN,U)_" ",80)
@@ -253,13 +241,13 @@ PROCESS S AUMLN=$TR(AUMLN,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWX
  S DA=+Y
  S DR="3///"_$P(AUMLN,U,2)        ;diagnosis
  S DR=DR_";10///"_$P(AUMLN,U,3)   ;description
- ;
  S DR=DR_";100///@"               ;inactive flag
  S DR=DR_";102///@"               ;inactive date
- S DR=DR_";2100000///"_DT         ;date updated
- ;
+ ;;S DR=DR_";2100000///3111001"     ;date updated
+ S DR=DR_";2100000///"_DT     ;date updated
  S DR=DR_";9.5///"_$P(AUMLN,U,4)  ;use with sex
  S DR=DR_";5///"_$P(AUMLN,U,5)    ;MDC
+ I $P(AUMLN,U,7)=1 S DR=DR_";70///1"    ;complication/comorbidity
  S DIE="^ICD9("
  S AUMDA=DA
  D DIE^AUM111R1
@@ -269,14 +257,12 @@ PROCESS S AUMLN=$TR(AUMLN,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWX
  D SDSCMULT("REV")
  ;description multiple
  D DESCMULT("REV")
- ;
  ;clear DRGs in case there are less than before
  F AUMJ=60:1:65 D
  .S DIE="^ICD9("
  .S DA=AUMDA
  .S DR=AUMJ_"////@"
  .D ^DIE
- ;
  ;  this part loads the DRGs if there are any
  S (AUMDRGS,DR)=""
  S AUMDRGS=$P(AUMLN,U,6)
@@ -290,7 +276,6 @@ PROCESS S AUMLN=$TR(AUMLN,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWX
  I $D(Y) D RSLT^AUM111R1("ERROR:  Edit of fields for CODE '"_$P(AUMLN,U,1)_"' FAILED.") Q
  D RSLT^AUM111R1($J("",8)_$P(AUMLN,U,1)_$J("",4)_$E($P(AUMLN,U,2),1,30))
  Q
- ;
 ICD9OREV ;
  D RSLT^AUM111R1("ICD 9 DIAGNOSIS, OTHER MODIFIED CODE TITLES:")  ;("ICD9OREV")
  D RSLT^AUM111R1($J("",8)_"CODE      DESCRIPTION")
@@ -303,11 +288,9 @@ ICD9OREV ;
  .S DA=+Y
  .S DR="3///"_$P(AUMLN,U,2)       ;diagnosis
  .S DR=DR_";10///"_$P(AUMLN,U,3)  ;description
- .;
  .S DR=DR_";100///@"              ;inactive flag
  .S DR=DR_";102///@"              ;inactive date
- .S DR=DR_";2100000///"_DT        ;date updated
- .;
+ .S DR=DR_";2100000///3111001"    ;date updated
  .S DR=DR_";9.5///"_$P(AUMLN,U,4) ;use with sex
  .S DR=DR_";5///"_$P(AUMLN,U,5)   ;MDC
  .S DIE="^ICD9("
@@ -320,8 +303,6 @@ ICD9OREV ;
  ;description multiple
  D DESCMULT("REV")
  Q
- ;
- ;
 EFFDTMUL(AUMX) ;
  ;effective date multiple
  S AUMLDT=0
@@ -329,7 +310,7 @@ EFFDTMUL(AUMX) ;
  I +AUMLDT>0 D  ;entry exists; check if status is correct (active)
  .S AUMMIEN=$O(^ICD9(AUMDA,66,"B",AUMLDT,0))
  .I +AUMMIEN=0 S AUMLDT=0 Q  ;quit if incomplete entry for some reason
- .I AUMX="REV",(AUMLDT=3101001) Q  ;already has 10/01/2010 entry
+ .I AUMX="REV",(AUMLDT=3111001) Q  ;already has 10/01/2011 entry
  .I $P($G(^ICD9(AUMDA,66,AUMMIEN,0)),U,2)=1 Q  ;already active
  .S AUMLDT=0  ;set date to zero so it will add entry
  I +AUMLDT=0 D  ;no entry or needs a new entry
@@ -338,11 +319,10 @@ EFFDTMUL(AUMX) ;
  .S DIC="^ICD9("_DA(1)_",66,"
  .S DIC("P")=$P(^DD(80,66,0),U,2)
  .S DIC(0)="L"
- .S X="3101001"  ;use active date of 10/01/2010
+ .S X="3111001"  ;use active date of 10/01/2011
  .S DIC("DR")=".02////1"
  .D ^DIC
  Q
- ;
 DESCMULT(AUMX) ;
  S AUMODESC=""
  S AUMLDT=0
@@ -350,7 +330,7 @@ DESCMULT(AUMX) ;
  I +AUMLDT>0 D  ;there is an entry
  .S AUMMIEN=$O(^ICD9(AUMDA,68,"B",AUMLDT,0))
  .I +AUMMIEN=0 S AUMLDT=0  Q
- .I AUMX="REV",(AUMLDT=3101001) Q  ;already has 10/01/2010 entry
+ .I AUMX="REV",(AUMLDT=3111001) Q  ;already has 10/01/2011 entry
  .I $P($G(^ICD9(AUMDA,68,AUMMIEN,0)),U)=$P(AUMLN,U,3) Q
  .S AUMLDT=0
  I +AUMLDT=0 D  ;no entry or needs a new entry
@@ -359,18 +339,17 @@ DESCMULT(AUMX) ;
  .S DIC="^ICD9("_DA(1)_",68,"
  .S DIC("P")=$P(^DD(80,68,0),U,2)
  .S DIC(0)="L"
- .S X="3101001"  ;use active date of 10/01/2010
+ .S X="3111001"  ;use active date of 10/01/2011
  .S DIC("DR")="1////"_$P(AUMLN,U,3)  ;description
  .D ^DIC
  Q
- ;
 SDSCMULT(AUMX) ;
  S AUMLDT=0
  S AUMLDT=$O(^ICD9(AUMDA,67,"B",9999999),-1)  ;get last entry
  I +AUMLDT>0 D  ;there is an entry
  .S AUMMIEN=$O(^ICD9(AUMDA,67,"B",AUMLDT,0))
  .I +AUMMIEN=0 S AUMLDT=0 Q  ;quit if incomplete entry
- .I AUMX="REV",(AUMLDT=3101001) Q  ;already has 10/01/2010 entry
+ .I AUMX="REV",(AUMLDT=3111001) Q  ;already has 10/01/2011 entry
  .I $P($G(^ICD0(AUMDA,67,AUMMIEN,0)),U,2)=$P(AUMLN,U,2) Q
  .S AUMLDT=0  ;set date to zero so it will add entry
  I +AUMLDT=0 D  ;no entry or needs a new entry
@@ -379,18 +358,17 @@ SDSCMULT(AUMX) ;
  .S DIC="^ICD9("_DA(1)_",67,"
  .S DIC("P")=$P(^DD(80,67,0),U,2)
  .S DIC(0)="L"
- .S X="3101001"  ;use active date of 10/01/2010
+ .S X="3111001"  ;use active date of 10/01/2011
  .S DIC("DR")="1////"_$P(AUMLN,U,2)  ;diagnosis
  .D ^DIC
  Q
- ;
 MDCMULT(AUMX) ;
  S AUMLDT=0
  S AUMLDT=$O(^ICD9(AUMDA,4,"B",9999999),-1)  ;get last entry
  I +AUMLDT>0 D  ;there is an entry
  .S AUMMIEN=$O(^ICD9(AUMDA,4,"B",AUMLDT,0))
  .I +AUMMIEN=0 S AUMLDT=0 Q  ;quit if incomplete entry
- .I AUMX="REV",(AUMLDT=3101001) Q  ;already has 10/01/2010 entry
+ .I AUMX="REV",(AUMLDT=3111001) Q  ;already has 10/01/2011 entry
  .I $P($G(^ICD0(AUMDA,4,AUMMIEN,0)),U,2)=$P(AUMLN,U,2) Q
  .S AUMLDT=0  ;set date to zero so it will add entry
  I +AUMLDT=0 D  ;no entry or needs a new entry
@@ -399,11 +377,10 @@ MDCMULT(AUMX) ;
  .S DIC="^ICD9("_DA(1)_",4,"
  .S DIC("P")=$P(^DD(80,72,0),U,2)
  .S DIC(0)="L"
- .S X="3101001"  ;use active date of 10/01/2010
+ .S X="3111001"  ;use active date of 10/01/2011
  .S DIC("DR")="1////"_$P(AUMLN,U,5)  ;MDC
  .D ^DIC
  Q
- ;
 CCMULT(AUMX) ;
  Q:$P(AUMLN,U,7)'=1  ;not cc
  S AUMLDT=0
@@ -411,7 +388,7 @@ CCMULT(AUMX) ;
  I +AUMLDT>0 D  ;there is an entry
  .S AUMMIEN=$O(^ICD9(AUMDA,69,"B",AUMLDT,0))
  .I +AUMMIEN=0 S AUMLDT=0 Q  ;quit if incomplete entry
- .I AUMX="REV",(AUMLDT=3101001) Q  ;already has 10/01/2010 entry
+ .I AUMX="REV",(AUMLDT=3111001) Q  ;already has 10/01/2011 entry
  .I $P($G(^ICD0(AUMDA,69,AUMMIEN,0)),U,2)=$P(AUMLN,U,2) Q
  .S AUMLDT=0  ;set date to zero so it will add entry
  I +AUMLDT=0 D  ;no entry or needs a new entry
@@ -420,18 +397,18 @@ CCMULT(AUMX) ;
  .S DIC="^ICD9("_DA(1)_",69,"
  .S DIC("P")=$P(^DD(80,103,0),U,2)
  .S DIC(0)="L"
- .S X="3101001"  ;use active date of 10/01/2010
+ .S X="3111001"  ;use active date of 10/01/2011
  .S DIC("DR")="1////1"  ;cc
  .D ^DIC
  Q
- ;
 ICD0NEW ;
  D ICD0NEW^AUM111R2
  Q
- ;
- ; -----------------------------------------------------
 ICD0REV ;
  D ICD0REV^AUM111R2
+ Q
+ICD0RE2 ;
+ D ICD0REV^AUM111R3
  Q
 ICD0INAC ;
  D ICD0INAC^AUM111R2

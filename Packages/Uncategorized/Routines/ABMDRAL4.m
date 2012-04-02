@@ -1,5 +1,5 @@
 ABMDRAL4 ; IHS/ASDST/DMJ - Bills Cost Report ;
- ;;2.6;IHS 3P BILLING SYSTEM;**3**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,8**;NOV 12, 2009
  ;Original;TMD;
  ; IHS/SD/SDR - abm*2.6*3 - HEAT12210 - fix output so $amounts display
  ;
@@ -8,20 +8,24 @@ PRINT ;EP for printing data
  W:$D(ABM("PRINT",16)) @ABM("PRINT",16) D HDB
  F ABM="N","B","PD","DD","WO","OB" S ABM("T"_ABM)=0
  S ABM("L")="",ABM("V")=0,ABM("TN")=0
- F  S ABM("L")=$O(^TMP(ABM("SUBR"),"ST",$J,ABM("L"))) Q:ABM("L")=""  D  Q:$D(DUOUT)
+ ;F  S ABM("L")=$O(^TMP(ABM("SUBR"),"ST",$J,ABM("L"))) Q:ABM("L")=""  D  Q:$D(DUOUT)  ;abm*2.6*8 HEAT49932
+ F  S ABM("L")=$O(^TMP(ABM("SUBR"),$J,"ST",ABM("L"))) Q:ABM("L")=""  D  Q:$D(DUOUT)  ;abm*2.6*8 HEAT49932
  .S (ABM("SN"),ABM("V"))=0 F ABM="DD","B","PD","WO","OB" S ABM("S"_ABM)=0
  .D WLOC:$Y<(IOSL-7)
- .F ABM("VI")=1:1 S ABM("V")=$O(^TMP(ABM("SUBR"),"ST",$J,ABM("L"),ABM("V"))) Q:'ABM("V")  D  Q:$D(DUOUT)
+ .;F ABM("VI")=1:1 S ABM("V")=$O(^TMP(ABM("SUBR"),"ST",$J,ABM("L"),ABM("V"))) Q:'ABM("V")  D  Q:$D(DUOUT)  ;abm*2.6*8 HEAT49932
+ .F ABM("VI")=1:1 S ABM("V")=$O(^TMP(ABM("SUBR"),$J,"ST",ABM("L"),ABM("V"))) Q:'ABM("V")  D  Q:$D(DUOUT)  ;abm*2.6*8 HEAT49932
  ..I $Y>(IOSL-6) D HD Q:$D(DUOUT)  D WLOC I 1
  ..E  I ABM("VI")>1 W !
  ..D WSRT
  ..F ABM="DD","B","PD","WO","OB" S ABM("M"_ABM)=0
  ..S ABM("E")="",ABM("OE")="",ABM("CN")=0
- ..F  S ABM("E")=$O(^TMP(ABM("SUBR"),"ST",$J,ABM("L"),ABM("V"),ABM("E"))) Q:ABM("E")=""  D  G XIT:$D(DUOUT)
+ ..;F  S ABM("E")=$O(^TMP(ABM("SUBR"),"ST",$J,ABM("L"),ABM("V"),ABM("E"))) Q:ABM("E")=""  D  G XIT:$D(DUOUT)  ;abm*2.6*8 HEAT49932
+ ..F  S ABM("E")=$O(^TMP(ABM("SUBR"),$J,"ST",ABM("L"),ABM("V"),ABM("E"))) Q:ABM("E")=""  D  G XIT:$D(DUOUT)  ;abm*2.6*8 HEAT49932
  ...I $Y>(IOSL-4) D HD Q:$D(DUOUT)  D WLOC,WSRT
  ...W ! I ABM("E")'=ABM("OE") W $E(ABM("E"),1,30)
  ...S ABM("C")=0,ABM("AI")=0
- ...F  S ABM("C")=$O(^TMP(ABM("SUBR"),"ST",$J,ABM("L"),ABM("V"),ABM("E"),ABM("C"))) Q:'ABM("C")  D  Q:$D(DUOUT)
+ ...;F  S ABM("C")=$O(^TMP(ABM("SUBR"),"ST",$J,ABM("L"),ABM("V"),ABM("E"),ABM("C"))) Q:'ABM("C")  D  Q:$D(DUOUT)  ;abm*2.6*8 HEAT49932
+ ...F  S ABM("C")=$O(^TMP(ABM("SUBR"),$J,"ST",ABM("L"),ABM("V"),ABM("E"),ABM("C"))) Q:'ABM("C")  D  Q:$D(DUOUT)  ;abm*2.6*8 HEAT49932
  ....I $Y>(IOSL-4) D HD Q:$D(DUOUT)  D WLOC,WSRT
  ....I ABM("AI") W !
  ....S ABM("AI")=ABM("AI")+1

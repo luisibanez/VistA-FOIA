@@ -1,5 +1,5 @@
 ABME8REF ; IHS/ASDST/DMJ - 837 REF Segment 
- ;;2.6;IHS Third Party Billing;**1**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,8**;NOV 12, 2009
  ;other payer provider info
  ;
  ; IHS/SD/SDR - v2.5 p5 - 5/17/04 - Added code to pull referring provider
@@ -36,7 +36,7 @@ EP(X,Y,Z) ;EP
  S ABMEIC=X
  S ABMFILE=+$G(Y)
  S ABMIEN=+$G(Z)
- S ABMSIEN=$G(Z)
+ ;S ABMSIEN=$G(Z)  ;abm*2.6*8
  S ABME("RTYPE")="REF"
  D LOOP
  K ABME,ABM
@@ -121,7 +121,8 @@ LOOP ;LOOP HERE
  I ABMEIC="F8" D
  .S ABMR("REF",30)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),4)),U,9)
  I +ABMIEN=0,$D(ABMP("PRV","F")),($G(Z)'="") S ABMR("REF",30)=$P($G(ABMP("PRV","F",Z)),"^")
- I +$G(Z)=0,($G(ABMSIEN)'=""),(ABMR("REF",30)="") S ABMR("REF",30)=$P($G(ABMP("PRV","S",Z)),U)
+ ;I +$G(Z)=0,($G(ABMSIEN)'=""),(ABMR("REF",30)="") S ABMR("REF",30)=$P($G(ABMP("PRV","S",Z)),U)  ;abm*2.6*8
+ I +$G(Z)=0,($G(ABMIEN)'=""),(ABMR("REF",30)="") S ABMR("REF",30)=$P($G(ABMP("PRV","S",Z)),U)  ;abm*2.6*8
  Q
 40 ;REF03 - Description-not used
  S ABMR("REF",40)=""

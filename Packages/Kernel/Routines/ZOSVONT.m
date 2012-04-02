@@ -1,5 +1,5 @@
-%ZOSV ;SFISC/AC - $View commands for Open M for NT.  ;03/03/2008
- ;;8.0;KERNEL;**34,94,107,118,136,215,293,284,385,425,440**;Jul 10, 1995;Build 13
+%ZOSV ;SFISC/AC - $View commands for Open M for NT.  ;09/15/08  12:12
+ ;;8.0;KERNEL;**34,94,107,118,136,215,293,284,385,425,440,499**;Jul 10, 1995;Build 24
  ;Per VHA Directive 2004-038, this routine should not be modified
 ACTJ() ;# Active jobs
  N %,V,Y S V=$$VERSION()
@@ -41,6 +41,7 @@ GETPEER() ;Get the PEER tcp/ip address
  N PEER,NL,$ET S NL="",PEER="",$ET="S $EC=NL Q NL"
  I $$OS="VMS" S PEER=$ZF("TRNLNM","VISTA$IP")
  I '$L(PEER) S PEER=$ZU(111,0) S:$L(PEER) PEER=$A(PEER,1)_"."_$A(PEER,2)_"."_$A(PEER,3)_"."_$A(PEER,4)
+ I $G(^XTV(8989.3,1,"PEER"))[PEER S PEER="" ;p499
  Q PEER
  ;
 SHARELIC(TYPE) ;See if can share a C/S license

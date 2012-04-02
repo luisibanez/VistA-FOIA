@@ -1,5 +1,5 @@
-BEHORXRT ;IHS/MSC/MGH - E-Prescribing receipt ;03-Mar-2011 17:38;PLS
- ;;1.1;BEH COMPONENTS;**009004,009006**;Mar 20, 2007
+BEHORXRT ;IHS/MSC/MGH - E-Prescribing receipt ;14-Jul-2011 17:12;PLS
+ ;;1.1;BEH COMPONENTS;**009004,009006,009007**;Mar 20, 2007
  ;=================================================================
  ; RPC: Retrieve reports for date range
 GETRPTS(DATA,DFN,BEHFLG,STRT,END) ;EP
@@ -128,3 +128,66 @@ FOOTER ;
  W !!,$$REPEAT^XLFSTR("=",80),!
  F I=$Y:1:IOSL-8 W !
  Q
+ ; Return XML array for a list of prescriptions
+RECXML(DATA,RXARY,DFN) ;EP-
+ N DAT,ID,CNT,PNM,RX,LP
+ S DATA=$$TMPGBL^CIAVMRPC
+ K @DATA
+ S CNT=0
+ S PNM=$$GET1^DIQ(2,DFN,.01)
+ S PNM=$P(PNM,",",2)_" "_$P(PNM,",")
+ D ADD("<?xml version=""1.0"" ?>")
+ D ADD($$TAG("Transactions",0))
+ D ADD($$TAG("PatientName",2,PNM))
+ S LP=0 F  S LP=$O(RXARY(LP)) Q:'LP  D
+ .S RX=$$GETPSIFN^BEHORXFN(RXARY(LP))
+ .D:RX ADDXML(RX)
+ D ADD($$TAG("Transactions",1))
+ Q
+ADDXML(RX) ;EP-
+ N PHMI,INI,PFN
+ S PFN=9009033.9
+ S PHMI=$$GET1^DIQ(52,RX,9999999.24,"I")
+ S INI=$$GET1^DIQ(44,$$GET1^DIQ(52,RX,5,"I"),3,"I")
+ D ADD($$TAG("Transaction",0))
+ I PHMI D
+ .D ADD($$TAG("PharmacyName",2,$$GET1^DIQ(PFN,PHMI,.1)))
+ .D ADD($$TAG("PharmacyAddr1",2,$$GET1^DIQ(PFN,PHMI,1.1)))
+ .D ADD($$TAG("PharmacyAddr2",2,$$GET1^DIQ(PFN,PHMI,1.2)))
+ .D ADD($$TAG("PharmacyCity",2,$$GET1^DIQ(PFN,PHMI,1.3)))
+ .D ADD($$TAG("PharmacyState",2,$$GET1^DIQ(PFN,PHMI,1.4)))
+ .D ADD($$TAG("PharmacyZip",2,$$GET1^DIQ(PFN,PHMI,1.5)))
+ I INI D
+ .D ADD($$TAG("InstitutionName",2,$$GET1^DIQ(4,INI,.01)))
+ .D ADD($$TAG("InstitutionAddr1",2,$$GET1^DIQ(4,INI,1.01)))
+ .D ADD($$TAG("InstitutionCity",2,$$GET1^DIQ(4,INI,1.03)))
+ .D ADD($$TAG("InstitutionState",2,$$GET1^DIQ(4,INI,.02)))
+ .D ADD($$TAG("InstitutionZip",2,$$GET1^DIQ(4,INI,1.04)))
+ .D ADD($$TAG("InstitutionFax",2,$$GET^XPAR("ALL","APSP AUTO RX FAXED FROM NUMBER")))
+ D ADD($$TAG("DrugName",2,$$GET1^DIQ(52,RX,6)))
+ D ADD($$TAG("DEA",2,$$GET1^DIQ(50,$$GET1^DIQ(52,RX,6,"I"),3)))
+ D ADD($$TAG("Provider",2,$$GET1^DIQ(52,RX,4)))
+ D ADD($$TAG("Date_Time",2,$$XMTDATE(RX)))
+ D ADD($$TAG("Transaction",1))
+ Q
+ ; Return formatted transmission date/time
+XMTDATE(RX) ;EP-
+ N IEN,TDT
+ S IEN=$O(^PS(52.51,"B",RX,0))
+ Q $$GET1^DIQ(52.51,IEN,3)
+ ; Add data to array
+ADD(VAL) ;EP-
+ S CNT=CNT+1
+ S @DATA@(CNT)=VAL
+ Q
+ ; Returns formatted tag
+ ; Input: TAG - Name of Tag
+ ;        TYPE - (-1) = empty 0 =start <tag>   1 =end </tag>  2 = start -VAL - end
+ ;        VAL - data value
+TAG(TAG,TYPE,VAL) ;EP -
+ S TYPE=$G(TYPE,0)
+ S:$L($G(VAL)) VAL=$$SYMENC^MXMLUTL(VAL)
+ I TYPE<0 Q "<"_TAG_"/>"  ;empty
+ E  I TYPE=1 Q "</"_TAG_">"
+ E  I TYPE=2 Q "<"_TAG_">"_$G(VAL)_"</"_TAG_">"
+ Q "<"_TAG_">"

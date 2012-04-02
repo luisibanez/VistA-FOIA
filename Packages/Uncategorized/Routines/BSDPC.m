@@ -1,8 +1,9 @@
 BSDPC ; IHS/ITSC/LJF,WAR - 1ST AVAIL APPT FOR PRIN CLINIC ; [ 08/20/2004  11:54 AM ]
- ;;5.3;PIMS;**1001,1004,1005**;MAY 28, 2004
+ ;;5.3;PIMS;**1001,1004,1005,1013**;MAY 28, 2004
  ;IHS/ITSC/WAR 07/30/2004 PATCH 1001 check for undef of VALMCNT
  ;IHS/OIT/LJF  07/15/2005 PATCH 1004 fixed heading & spacing
  ;IHS/OIT/LJF  12/30/2005 PATCH 1005 removed 3 day restriction; fix to heading
+ ;ihs/cmi/maw  04/06/2011 PATCH 1013 added code to sort print clinic alphabetically
  ;
 EN ;EP; called by SDM with SDPC set
  NEW SDAY,SDX,SDN,SDD,Y,Z,SDSLOT
@@ -69,9 +70,18 @@ RESET2 ; -- update partition without recreating display array
  ;
  ;
 SC ;EP; entry point to gather available appts from each clinic
- NEW SDN,SDCNT,SDD,SDSLOT,SDX,Z
+ NEW SDN,SDCNT,SDD,SDSLOT,SDX,Z,NDA
+ N CLNORD
  NEW BSDIOM,BSDTOT S BSDIOM=150,BSDTOT=BSDIOM-15  ;used in place of 80 & 65;IHS/OIT/LJF 7/15/2005 PATCH 1004
- S SDN=0 F  S SDN=$O(^SC("AIHSPC",SDPC,SDN)) Q:'SDN  D DAY
+ ;ihs/cmi/maw 04/06/2011 PATCH 1013 RQMT153 added next 6 lines to sort alpha
+ ;S SDN=0 F  S SDN=$O(^SC("AIHSPC",SDPC,SDN)) Q:'SDN  D DAY
+ S NDA=0 F  S NDA=$O(^SC("AIHSPC",SDPC,NDA)) Q:'NDA  D
+ . S (CLNORD($P(^SC(NDA,0),U),NDA))=""
+ N CDA,SDN
+ S CDA=0 F  S CDA=$O(CLNORD(CDA)) Q:CDA=""  D
+ . S SDN=0 F  S SDN=$O(CLNORD(CDA,SDN)) Q:'SDN  D
+ .. D DAY
+ ;ihs/cmi/maw 04/06/2011 end of mods
  W ! Q
  ;
 HD ;Write month heading lines

@@ -1,5 +1,5 @@
-XWBSEC ;SFISC/VYD - RPC BROKER ;09/23/2004  13:01
- ;;1.1;RPC BROKER;**3,6,10,35**;Mar 28, 1997
+XWBSEC ;SFISC/VYD - RPC BROKER ;02/03/10  11:37
+ ;;1.1;RPC BROKER;**3,6,10,35,53**;Mar 28, 1997;Build 5
 CHKPRMIT(XWBRP) ;checks to see if remote procedure is permited to run
  ;Input:  XWBRP - Remote procedure to check
  Q:$$KCHK^XUSRB("XUPROGMODE")
@@ -11,7 +11,7 @@ CHKPRMIT(XWBRP) ;checks to see if remote procedure is permited to run
  S:'$G(DUZ) DUZ=0,XQY0="XUS SIGNON"   ;set up default context
  ;
  ;These RPC's are allowed in any context, so we can just quit
- I "^XWB IM HERE^XWB CREATE CONTEXT^XWB RPC LIST^XWB IS RPC AVAILABLE^XUS GET USER INFO^XUS GET TOKEN^"[(U_XWBRP_U) Q
+ I "^XWB IM HERE^XWB CREATE CONTEXT^XWB RPC LIST^XWB IS RPC AVAILABLE^XUS GET USER INFO^XUS GET TOKEN^XUS SET VISITOR^"[(U_XWBRP_U) Q  ;p53
  ;VistAlink RPC's that are always allowed.
  I "^XUS KAAJEE GET USER INFO^XUS KAAJEE LOGOUT^"[(U_XWBRP_U) Q
  ;

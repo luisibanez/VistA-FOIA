@@ -1,5 +1,5 @@
 LRRP1 ;DALOI/RWF/BA-PRINT THE DATA FOR INTERIM REPORTS ;December 16, 2010 1:45 PM
- ;;5.2;LAB SERVICE;**1004,1013,1016,1018,1025,1026,1027,1028**;NOV 01, 1997;Build 46
+ ;;5.2;LAB SERVICE;**1004,1013,1016,1018,1025,1026,1027,1028,1030**;NOV 01, 1997
  ;;5.2;LAB SERVICE;**153,221,283,286,356,372**;NOV 01, 1997
  ;from LRRP, LRRP2, LRRP3
  ;
@@ -113,8 +113,12 @@ COLHEADS ; EP - IHS/OIT/MKK - LR*5.2*1027
 BOTTOMPG ; EP - IHS/OIT/MKK - LR*5.2*1027
  NEW STR
  W !,$TR($J("",IOM)," ","=")
- S STR="KEY: L=Abnormal low, H=Abnormal high, *=Critical value, TR=Therapeutic Range"
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030 -- Add "Abnormal" & make two lines
+ S STR="KEY: A=Abnormal          L=Abnormal Low          H=Abnormal High"
  W !,$$CJ^XLFSTR(STR,IOM)
+ S STR="*=Critical value          TR=Therapeutic Range"
+ W !,$$CJ^XLFSTR(STR,IOM)
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030 -- Add "Abnormal" & make two lines
  S LRFOOT=1
  Q
  ; End - IHS/OIT/MKK - LR*5.2*1027 - IHS Modified TEST Code
@@ -163,8 +167,7 @@ DATA ; EP - Begin IHS/OIT/MKK - LR*5.2*1027 - IHS Modified DATA code
  ; W ?16,@$S(LRPC="":"$J(X,LRCW)",1:LRPC)," ",$P(LR63DATA,"^",2)
  W ?16,@$S(LRPC="":"$J(X,LRCW)",1:LRPC)
  W ?26,$P(LR63DATA,"^",2)
- ;
- W ?29,$P(LR63DATA,U,5)
+ W ?29,$P(LR63DATA,"^",5)
  I $G(LRREFS)["$S(" D MUMPRNGE(.LRREFS)
  W ?43,$E(LRREFS,1,15)  K LRREFS
  W ?55,$S(LRTHER:"(TR)",1:"")
@@ -308,7 +311,8 @@ FOOTORIG ;from LRRP, LRRP2, LRRP3
  ;
  ; From LRRP, LRRP2, LRRP3
 FOOT ;EP - Begin IHS/OIT/MKK - LR*5.2*1027 - IHS Modified FOOT Code
- Q:LRSTOP                            ; If stop, then quit
+ Q:LRSTOP                              ; If stop, then quit
+ Q:+$G(LREND)!(+$G(LRIDT)>+$G(LREDT))  ; Double check to stop -- IHS/OIT/MKK - LR*5.2*1030
  ;
  NEW LRIRAP,WOTERR
  ;
@@ -378,9 +382,19 @@ HDR ; EP - Begin IHS/OIT/MKK - LR*5.2*1027 - IHS Modified HDR Code
  . S:AGE["YR" AGE=+AGE                      ; If Age in Years, get rid of "YR" string.
  ;
  W !?5,"HRCN:",HRCN
- W ?25,"SEX:",SEX
- W ?35,"DOB:",$S(DOB>0:$$FMTE^XLFDT(DOB),1:" ")
- W:+$G(AGE)>0 ?54,"CURRENT AGE:",AGE
+ ; W ?25,"SEX:",SEX
+ ; W ?35,"DOB:",$S(DOB>0:$$FMTE^XLFDT(DOB),1:" ")
+ ; W:+$G(AGE)>0 ?54,"CURRENT AGE:",AGE
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
+ W ?20,"SEX:",SEX
+ W ?27,"DOB:",$S(DOB>0:$$FMTE^XLFDT(DOB),1:" ")
+ W:+$G(AGE)>0 ?45,"CURRENT AGE:",AGE
+ NEW LOCIEN,LOCDESC
+ S LOCIEN=+$P($P(LR0,"^",13),";")
+ S LOCDESC=$P($G(^SC(LOCIEN,0)),"^")
+ W:$L(LOCDESC)<1!($L(LOCDESC)>14) ?62,"LOC:",LROC
+ W:$L(LOCDESC)>0&($L(LOCDESC)<15) ?62,"LOC:",LOCDESC
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030
  Q
  ; End - IHS/OIT/MKK - LR*5.2*1027 - IHS Modified HDR Code
  ;

@@ -1,5 +1,5 @@
 ABME5L9 ; IHS/ASDST/DMJ - Header 
- ;;2.6;IHS Third Party Billing System;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,8**;NOV 12, 2009
  ;Header Segments
 EP ;START HERE
  N ABM
@@ -70,7 +70,8 @@ EP ;START HERE
  ;
  ; LOOP 2310E - Ambulance Pick-Up Location
  S ABMLOOP="2310E"
- I $G(ABMP("CLIN"))="A3"&($P($G(^ABMDBILL(DUZ(2),+ABMP("PCN"),12)),U,2)'="") D
+ ;I $G(ABMP("CLIN"))="A3"&($P($G(^ABMDBILL(DUZ(2),+ABMP("PCN"),12)),U,2)'="") D  ;abm*2.6* HEAT45242
+ I $G(ABMP("CLIN"))="A3"&($P($G(^ABMDBILL(DUZ(2),+ABMP("BDFN"),12)),U,2)'="") D  ;abm*2.6* HEAT45242
  .D EP^ABME5NM1("PW")
  .D WR^ABMUTL8("NM1")
  .D EP^ABME5N3("AMB","PU")
@@ -80,7 +81,8 @@ EP ;START HERE
  ;
  ; LOOP 2310F - Ambulance Drop-Off Location
  S ABMLOOP="2310F"
- I $G(ABMP("CLIN"))="A3"&($P($G(^ABMDBILL(DUZ(2),+ABMP("PCN"),12)),U,7)'="") D
+ ;I $G(ABMP("CLIN"))="A3"&($P($G(^ABMDBILL(DUZ(2),+ABMP("PCN"),12)),U,7)'="") D  ;abm*2.6*8 HEAT45242
+ I $G(ABMP("CLIN"))="A3"&($P($G(^ABMDBILL(DUZ(2),+ABMP("BDFN"),12)),U,7)'="") D  ;abm*2.6*8 HEAT45242
  .D EP^ABME5NM1(45)
  .D WR^ABMUTL8("NM1")
  .D EP^ABME5N3("AMB","DO")

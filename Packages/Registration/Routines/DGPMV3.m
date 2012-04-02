@@ -1,10 +1,11 @@
 DGPMV3 ;ALB/MIR - ENTER TRANSACTION INFORMATION; [ 03/15/2002  10:10 AM ]
- ;;5.3;Registration;**34,54,62,95,1003,1005**;Aug 13, 1993
+ ;;5.3;Registration;**34,54,62,95,1003,1005,1013**;Aug 13, 1993
  ;IHS/ANMC/LJF  2/21/2000 changed to IHS input templates
  ;              3/08/2001 set ^utility for IHS fields
  ;              7/25/2001 added code for silent APIs
  ;IHS/ITSC/LJF 04/14/2005 PATCH 1003 cannot allow user to ^ out of EBC
  ;IHS/OIT/LJF  05/26/2006 PATCH 1005 don't allow ^ out for discharges
+ ;ihs/cmi/maw  04/08/2011 PATCH 1013 add delete reason for bulletin
  ;
  K ^UTILITY("DGPM",$J)
  D NOW^%DTC S DGNOW=%,DGPMHY=DGPMY,DGPMOUT=0 G:'DGPMN DT S X=DGPMY
@@ -73,6 +74,7 @@ OKD ;IHS/ANMC/LJF 3/08/2001 added set of IHS node in ^utility
  K %DT W ! S DGPMER=0,(^UTILITY("DGPM",$J,DGPMT,DGPMDA,"P"),DGPMP)=^DGPM(DGPMDA,0),Y=DGPMDA D:DGPMT=6 PRIOR^DGPMV36 D @("D"_DGPMT_"^DGPMVDL"_$S(DGPMT>2:1,1:"")) G Q:DGPMER
  W !,"Are you sure you want to delete this movement" S %=2 D YN^DICN G Q:%<0,DT:%=2 I '% W !?5,"Answer yes to delete this ",DGPMUC," or no to continue" G OKD
  D @(DGPMT_"^DGPMVDL"_$S(DGPMT>2:1,1:""))
+ S BDGDLREA=$$DELREAS()  ;ihs/cmi/maw 04/08/2011 Patch 1013 RQMT157 add delete reason
  I DGPMT'=3,(DGPMT'=5) S DIK="^DGPM(",DA=DGPMDA D ^DIK:DGPMDA
  ;
  ;IHS/ANMC/LJF 3/08/2001 added setting of IHS nodes in ^utility
@@ -107,4 +109,11 @@ PRODAT(NODE) ;-- This function will add the ward and other data from the
  S Y=NODE,X=$O(^DGPM("ATS",DFN,DGPMCA,9999999.9999999-$P(NODE,U))) I X S X=$O(^(X,0)) I X S X=$O(^(X,0)) I X S X=^DGPM(X,0)
  S $P(Y,U,4)=$P(X,U,4),$P(Y,U,9)=$P(X,U,9)
  Q Y
+ ;
+DELREAS() ;-- get the delete reason PATCH 1013
+ S DIR(0)="S^A:Admit Error;P:Patient Refused;L:Left Without Being Seen;O:Other"
+ S DIR("A")="Delete Reason"
+ D ^DIR
+ I $D(DIRUT) Q ""
+ Q $G(Y(0))
  ;

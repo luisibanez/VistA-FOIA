@@ -1,5 +1,5 @@
 LA7VQIN ;VHA/DALOI/JMC - Process Incoming Lab HL7 Messages ;JUL 06, 2010 3:14 PM
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,1027**;NOV 01, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,1027**;NOV 01, 1997;Build 9
  ; This routine processes incoming messages for various Lab HL7 configurations.
  Q
  ;

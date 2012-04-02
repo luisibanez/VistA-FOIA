@@ -1,9 +1,10 @@
-APSPCSM ; IHS/MSC/PLS - CONTROLLED SUBSTANCE MANAGEMENT REPORT ;14-Oct-2009 14:33;SM
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1007,1008**;Sep 23, 2004
+APSPCSM ; IHS/MSC/PLS - CONTROLLED SUBSTANCE MANAGEMENT REPORT ;03-Aug-2011 16:21;PLS
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1007,1008,1011**;Sep 23, 2004;Build 17
  ;
  ; IHS/MSC/PLS - 12/29/2008 - Line OUT+4 - Fixed variable name
  ;               04/21/2009 - Line FIND+10 - Fixed issue with external vs internal value
  ;               08/31/2009 - Added DSPRDT API for check of release date
+ ;               05/16/2011 - Added Remaining Refills to data store
 EN ;EP
  N APSPBD,APSPED,APSPBDF,APSPEDF,APSPDIV,APSPRTYP,APSPQ,APSPDSUB,APSPDCLS
  N APSPDCT,APSPDCTN,APSPDRG,APSPDET,APSPSORT,STATS,APSPDOSE,APSPXML,APSPPRV
@@ -151,9 +152,9 @@ SET(FDT,RX,XREF,SIEN) ;EP
  S OPRVNM=$$GET1^DIQ(200,OPRV,.01)
  S:'$L(OPRVNM) OPRVNM="NONAME"
  S PHRM=$$GET1^DIQ($S(FTYPE="P":52.2,FTYPE="R":52.1,1:52),$S("PR"[FTYPE:SIEN_","_RX_",",1:RX),$S(FTYPE="P":.05,FTYPE="R":4,1:23),"I")
- ;                1            2             3                  4             5            6       7         8         9       10      11         12          13          14        15
- ;Format: Prescription IEN^Fill Date^Xref ("AD" or "ADP")^Fill SubIEN^Prescription Number^QTY^Drug Class^Drug Name^Fill Type^RI Flg^Drug IEN^RX Division^Days Supply^Prescriber^Pharmacist
- S ^TMP($J,"DATA",NXT)=RXIEN_U_FDT_U_XREF_U_SIEN_U_$P(NODE0,U)_U_QTY_U_DCLS_U_DRGNM_U_FTYPE_U_RIFLG_U_DRUG_U_DIV_U_DAYS_U_OPRV_U_PHRM
+ ;                1            2             3                  4             5            6       7         8         9       10      11         12          13          14        15          16
+ ;Format: Prescription IEN^Fill Date^Xref ("AD" or "ADP")^Fill SubIEN^Prescription Number^QTY^Drug Class^Drug Name^Fill Type^RI Flg^Drug IEN^RX Division^Days Supply^Prescriber^Pharmacist^RemainingRefills
+ S ^TMP($J,"DATA",NXT)=RXIEN_U_FDT_U_XREF_U_SIEN_U_$P(NODE0,U)_U_QTY_U_DCLS_U_DRGNM_U_FTYPE_U_RIFLG_U_DRUG_U_DIV_U_DAYS_U_OPRV_U_PHRM_U_+$$RMNRFL^APSPFUNC(RXIEN,FDT)
  S ^TMP($J,"XREF",DIV,"FDT",FDT,DRGNM,NXT)=""
  S ^TMP($J,"XREF",DIV,"DRUG",DRGNM,FDT,NXT)=""
  S ^TMP($J,"XREF",DIV,"S-DRUG",DRGNM,NXT)=""

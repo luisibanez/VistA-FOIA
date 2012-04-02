@@ -1,5 +1,5 @@
-BEHOENPC ;MSC/IND/DKM - PCC Data Management ;04-Jan-2011 18:46;DU
- ;;1.1;BEH COMPONENTS;**005003,005004,005005,005006**;Sep 18, 2007
+BEHOENPC ;MSC/IND/DKM - PCC Data Management ;01-Sep-2011 12:42;DU
+ ;;1.1;BEH COMPONENTS;**005003,005004,005005,005006,005007**;Sep 18, 2007
  ;=================================================================
  ; RPC: Update PCC data
  ; DATA = Returned as 0 if successful
@@ -51,7 +51,7 @@ EVAL(ARY) ;
  ; CRT = Additional lookup criteria
  ; NEW = Returned as true if entry is new
 STORE(FN,CF,CRT,NEW) ;
- N BEHFLD,BEHERR,BEHIEN,IEN,DELX
+ N BEHFLD,BEHERR,BEHIEN,IEN,DELX,BPRV
  S NEW=0
  S:'$G(VIEN) VIEN=$$FNDVIS^BEHOENCX(DFN,VDAT,VCAT,VLOC,1,,.VOLOC)
  I VIEN'>0 S:'DEL DATA=VIEN,VIEN="" G STXIT
@@ -71,6 +71,10 @@ STORE(FN,CF,CRT,NEW) ;
  .S:CF&$D(COM) FLD(CF)=$P(COM,U,3,999)
  .I '$D(FLD(1204)),VCAT'="E" S FLD(1204)=DUZ
  .S:'$D(FLD(1201))&$G(DAT) FLD(1201)=DAT
+ I TYP="PRV"&($G(FLD(.04))="P") D
+ .S BPRV="" F  S BPRV=$O(^AUPNVPRV("AD",VIEN,BPRV)) Q:BPRV=""  D
+ ..Q:FLD(.01)=$P($G(^AUPNVPRV(BPRV,0)),U,1)
+ ..I $P($G(^AUPNVPRV(BPRV,0)),U,4)="P" S FLD(.04)="S"
  M BEHFLD(FN,IEN_",")=FLD
  K FLD
  D UPDATE^DIE("","BEHFLD","BEHIEN","BEHERR")
@@ -115,6 +119,7 @@ VST ;; Patient and encounter date
  Q
 PRV ;; Provider
  ; PRV[1]^ien[2]^^^name[5]^primary/secondary flag[6]
+ N BPRV
  S PRV=+CODE,ADD=0
  D:PRV>0 SET(.04,6,"1:P;0:S;:@"),STORE(.06)
  Q
@@ -123,16 +128,21 @@ POV ;; Purpose of visit
  N NAR,VAL1
  ;IHS/MSC/MGH updated to use correct lookup
  ;S CODE=$$FIND1^DIC(80,,"X",CODE_" ","BA")
+ ;MGH fix for patch 9
+ S CODE=$P(CODE,":",1)
  S CODE=+$$CODEN^ICDCODE(CODE,80)
  Q:CODE'>0
  ;S NAR=$$NARR($P(VAL,U,4))
  S $P(VAL,U,4)=$$NARR($P(VAL,U,4))
+ S NAR=$P(VAL,U,4)
  S VAL1=$P(VAL,U,2)
  D SET(.04,4),SET(.12,6,"1:P;0:S;:@"),SET(.08,7),STORE(.07)
  ;Update problem list
  I $P(VAL,U,8)=1 D PROBLST(VAL1)
  Q
 CPT ;; CPT codes
+ ;IHS/MSC/MGH fix for patch 9
+ S CODE=$P(CODE,":",1)
  S CODE=+$$CPT^ICPTCOD(CODE)
  D:CODE>0 SET(.16,7),STORE(.18)
  Q
@@ -225,6 +235,8 @@ MSR ;; Vital measurements (new format)
  S WHEN=$$NOW^XLFDT()
  S TAKEN=$P(VAL,U,12),TAKEN=$$CVTDATE^BGOUTL(TAKEN)
  I TAKEN="" S TAKEN=$P(VAL,U,11),TAKEN=$$CVTDATE^BGOUTL(TAKEN)
+ ;IHS/MSC/MGH Change for EHR patch 9
+ I TAKEN=""&(VCAT="E") S TAKEN=VDAT
  I TAKEN="" S TAKEN=WHEN
  S ENTERIEN=$P(VAL,U,13)
  I ENTERIEN="" S ENTERIEN=DUZ

@@ -1,5 +1,5 @@
 BIREPF ;IHS/CMI/MWR - REPORT, FLU IMM; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW INFLUENZA IMMUNIZATION REPORT.
  ;
@@ -43,7 +43,7 @@ INIT ;EP
  .;---> If today is Sept=Dec, set default year=this year.
  .S BIYEAR=1700+$E(DT,1,3)
  ;
- S X="     1 - Report Year (Flu Season).......: "_+BIYEAR
+ S X="     1 - Report Year (Flu Season).......: "_+BIYEAR_"/"_(BIYEAR+1)
  S X=X_"  (09/01/"_$E(BIYEAR,3,4)
   D
   .I $P(BIYEAR,U,2)="m" S X=X_" - 03/31/"_$E((BIYEAR+1),3,4)_")" Q
@@ -65,9 +65,23 @@ INIT ;EP
  S:$O(BIBEN(0))="" BIBEN(1)=""
  D DISP^BIREP(.BILINE,"BIREPF",.BIBEN,"Beneficiary Type",5,4,,,40)
  ;
+ ;---> User Population.
+ D:($G(BIUP)="")
+ .I $$GPRAIEN^BIUTL6 S BIUP="a" Q
+ .S BIUP="u"
+ ;
+ S X="     6 - Patient Population Group.......: "
+ D
+ .I BIUP="r" S X=X_"Registered Patients (All)" Q
+ .I BIUP="i" S X=X_"Immunization Register Patients (Active)" Q
+ .I BIUP="u" S X=X_"User Population (1 visit, 3 yrs)" Q
+ .I BIUP="a" S X=X_"Active Users (2+ visits, 3 yrs)" Q
+ D WRITE(.BILINE,X,1)
+ K X
+ ;
  ;---> Report Type.
  S:($G(BIFH)="") BIFH="F"
- S X="     6 - Report Type (Standard or H1N1).: "_$S(BIFH="H":"H1N1",1:"Standard Flu")
+ S X="     7 - Report Type (Standard or H1N1).: "_$S(BIFH="H":"H1N1",1:"Standard Flu")
  D WRITE(.BILINE,X,1)
  K X
  ;
@@ -114,7 +128,7 @@ HELP ;EP
 HELP1 ;EP
  ;----> Explanation of this report.  vvv83
  N BITEXT D TEXT1(.BITEXT)
- D START^BIHELP("3-27 MONTH IMMUNIZATION REPORT - HELP",.BITEXT)
+ D START^BIHELP("INFLUENZA IMMUNIZATION REPORT - HELP",.BITEXT)
  Q
  ;
  ;
@@ -162,15 +176,15 @@ TEXT1(BITEXT) ;EP
  ;;
  ;;  10-23 Months Old:
  ;;    1) Received 2 doses during the influenza season of the year selected.
- ;;       (Sept 1 - Report date or January 31, whichever is first),
+ ;;       (Sept 1 - Dec 31 or Mar 31, whichever is selected),
  ;;   or
- ;;    2) Received 1+ dose before Sept 1 and 1+ dose during Sept-December.
+ ;;    2) Received 1+ dose before Sept 1 and 1+ dose during Sept-Dec/March.
  ;;
  ;;  24-59 Months Old:
  ;;    1) Received 2 doses during the influenza season of the year selected.
- ;;       (Sept 1 - Report date or January 31, whichever is first),
+ ;;       (Sept 1 - Dec 31 or Mar 31, whichever is selected),
  ;;   or
- ;;    2) Received 2+ dose before Sept 1 and 1+ dose during Sept-December.
+ ;;    2) Received 2+ dose before Sept 1 and 1+ dose during Sept-Dec/March.
  ;;
  ;;All other age columns reflect patients who were fully immunized by
  ;;receiving a signal dose in the current season.
@@ -178,15 +192,15 @@ TEXT1(BITEXT) ;EP
  ;;The INFLUENZA IMMUNIZATION REPORT screen allows you to adjust the
  ;;report to your needs.
  ;;
- ;;There are 6 items or "parameters" on the screen that you may
+ ;;There are 7 items or "parameters" on the screen that you may
  ;;change in order to select for a specific group of patients.
- ;;To change an item, enter its left column number (1-5) at the
+ ;;To change an item, enter its left column number (1-7) at the
  ;;prompt on the bottom of the screen.  Use "?" at any prompt where
  ;;you would like help or more information on the parameter you are
  ;;changing.
  ;;
  ;;Once you have the parameters set to retrieve the group of patients
- ;;you want, select V to View the Adolescent Report or P to print it.
+ ;;you want, select V to View the Influenza Report or P to print it.
  ;;
  ;;If it customarily takes a long time for your computer to prepare
  ;;this report, it may be preferable to Print and Queue the report
@@ -214,6 +228,12 @@ TEXT1(BITEXT) ;EP
  ;;only patients whose Beneficiary Type is one of those you select
  ;;will be included in the report.  "Beneficiary Type" refers to
  ;;Item 3 on Page 2 of the RPMS Patient Registration.
+ ;;
+ ;;PATIENT POPULATION GROUP: You may select one of four patient groups
+ ;;to be considered in the report: Registered Patients (All),
+ ;;Immunization Register Patients (Active), User Population (1+ visits
+ ;;in 3 yrs), or Active Clinical Users (2+ visits in 3 yrs).
+ ;;Active Clinical Users is the default.
  ;;
  ;;REPORT TYPE: If you select Standard Report, the report will display
  ;;statistics for standard influenza immunizations (excluding H1N1).

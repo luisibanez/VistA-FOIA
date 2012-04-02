@@ -1,7 +1,6 @@
-DIR3 ;SFISC/DCM,RDS-READER-MAID (PROCESS RANGE/LIST) ;12:19 PM  8 Feb 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**30**;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DIR3 ;SFISC/DCM,RDS-READER-MAID (PROCESS RANGE/LIST) ;6/28/2009
+ ;;22.0;VA FileMan;**30,164**;Mar 30, 1999;Build 21
+ ;Per VHA Directive 2004-038, this routine should not be modified.
  ;12364;2913754;3396;
  ;
 L ; LIST OR RANGE
@@ -19,7 +18,7 @@ L ; LIST OR RANGE
  . S %W=$P($T(@(%E)),";;",2)
  . I %W[";",%E=1 S %W=$P(%W,";")_+%B1_$P(%W,";",2)_" "_%B2
  . I %W[";",%E=2 S %W=$P(%W,";")_+%B3_$P(%W,";",2)_$S(%B3>1:"s",1:"")
- I $G(%E) K Y S Y="" Q  ; Prevent Erronious Data
+ I $G(%E) K Y S Y="" Q  ; Prevent Erroneous Data
  S Y=Y(0)
  Q
  ;
@@ -51,7 +50,7 @@ L1 I %A["C" D  Q
  ;%B = $P#2 "^" of DIR(0)
  ;%B1 = $P#1 ":" Low Value
  ;%B2 = $P#2 ":" High Value
- ;%B3 = $P#3 ":" Number of Decimals; Null If Undefed
+ ;%B3 = $P#3 ":" Number of Decimals; Null If Undefined
  ;%X = Range Entered, i.e. 2-4
  ;% = End of Range Entered i.e. 4
 LCK I %X["-" D  Q
@@ -59,7 +58,7 @@ LCK I %X["-" D  Q
  . I %A'["I",%<+%X S %E=4 Q
  . I %A["I",%<+%X N %3 S %3=%,%=+%X,$P(%X,"-",2)=%,$P(%X,"-")=%3
  . I %<%B1!(+%X>%B2) S %E=1 Q
- . I +%X<%B1 S $P(%X,"-")=%B1
+ . I +%X<%B1 S %E=1 Q
  . I +%>%B2 S %E=1 Q
  . I $L($P(+%X,".",2))>%B3!($L($P(+%,".",2))>%B3) S %E=2 Q
  I +%X<%B1!(+%X>%B2) S %E=1 Q

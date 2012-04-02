@@ -1,7 +1,8 @@
-ORWDXR ; SLC/KCM/JDL - Utilites for Order Actions;17-Jun-2009 16:16;PLS
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,125,131,134,141,149,187,190,1004,1005**;Dec 17, 1997
+ORWDXR ; SLC/KCM/JDL - Utilites for Order Actions;22-Jun-2011 17:21;PLS
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,125,131,134,141,149,187,190,1004,1005,1008**;Dec 17, 1997
  ;
  ; Modified - IHS/MSC/PLS - 09/22/08 - RENEW API mods for REFREQ
+ ;                          06/22/11 - Line RNWFLDS+7
 ISREL(VAL,ORIFN) ; Return true if an order has been released
  N STS S STS=$P(^OR(100,+ORIFN,3),U,3)
  S VAL=$S(STS=10:0,STS=11:0,1:1)  ; false if delayed or unreleased order
@@ -81,9 +82,14 @@ RNWFLDS(LST,ORIFN) ; Return fields for renew action
  S PKG=$E($P(^DIC(9.4,PKG,0),U,2),1,2),DG=$P(^ORD(100.98,DG,0),U,3)
  S LST(0)=$S(PKG="OR":999,PKG="PS"&(DG="O RX"):140,PKG="PS"&(DG="UD RX"):130,PKG="PS"&(DG="NV RX"):145,1:0)
  I +LST(0)=140 D
+ . ;IHS/MSC/PLS - 06/22/2011
+ . N PHM
+ . S PHM=$$VAL(ORIFN,"PHARMACY")
+ . I PHM S PHM=PHM_";"_$$GET1^DIQ(9009033.9,PHM,.01)
  . ;IHS/MSC/DKM - 1/21/08 - Modified next line for e-prescribing and chronic med support
  . ;S LST(0)=LST(0)_U_U_U_+$$VAL(ORIFN,"REFILLS")_U_$$VAL(ORIFN,"PICKUP")
- . S LST(0)=LST(0)_U_U_U_+$$VAL(ORIFN,"REFILLS")_U_$$VAL(ORIFN,"PICKUP")_U_$$VAL(ORIFN,"PHARMACY")_U_$$GETCMF1^APSPFNC1(+ORIFN)
+ . ;S LST(0)=LST(0)_U_U_U_+$$VAL(ORIFN,"REFILLS")_U_$$VAL(ORIFN,"PICKUP")_U_$$VAL(ORIFN,"PHARMACY")_U_$$GETCMF1^APSPFNC1(+ORIFN)
+ . S LST(0)=LST(0)_U_U_U_+$$VAL(ORIFN,"REFILLS")_U_$$VAL(ORIFN,"PICKUP")_U_PHM_U_$$GETCMF1^APSPFNC1(+ORIFN)
  . D WPVAL(.LST,ORIFN,"COMMENT")
  I +LST(0)=999 S LST(0)=LST(0)_U_$$VAL(ORIFN,"START")_U_$$VAL(ORIFN,"STOP")
  ; make sure start/stop times are relative times, otherwise use NOW, no Stop

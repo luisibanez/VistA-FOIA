@@ -1,5 +1,5 @@
 BDGADD ; IHS/ANMC/LJF - A&D DETAILED PRINT ;  [ 06/11/2002  2:27 PM ]
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1013**;APR 26, 2002
  ;
  ; Assumes VA variables RD and GL and set
  ;
@@ -25,7 +25,7 @@ INIT ; -- init variables and list array
  K ^TMP("BDGADD",$J)
  S VALMCNT=0
  S PREV=$$FMADD^XLFDT(BDGT,-1)                     ;previous date
- S (TOT1,TOT2)=0 F I="O","I","N" S TOT(I)=""       ;initialize totals
+ S (TOT1,TOT2)=0 F I="O","I","N","D" S TOT(I)=""       ;initialize totals
  ;
  D REMAIN           ;display total patients remaining at end of day
  D HDG              ;display column headings
@@ -42,16 +42,17 @@ SET(DATA,NUM) ; put display line into array
 REMAIN ; total up patients remaining at end of day
  ; count by service to pull out newborns and oberservations
  NEW COUNT,I,SV,SNM,SUB,LINE,N
- F I="I","O","N" S COUNT(I)=0
+ F I="I","O","N","D" S COUNT(I)=0
  S SV=0 F  S SV=$O(^BDGCTX(SV)) Q:'SV  D
  . S N=$G(^BDGCTX(SV,1,BDGT,0)) I N="" Q
  . S SNM=$$GET1^DIQ(45.7,SV,.01)             ;service name
- . S SUB=$S(SNM="NEWBORN":"N",SNM["OBSERVATION":"O",1:"I")
+ . S SUB=$S(SNM="NEWBORN":"N",SNM["OBSERVATION":"O",SNM="DAY SURGERY":"D",1:"I")
  . S COUNT(SUB)=COUNT(SUB)+$P(N,U,2)+$P(N,U,12)
  ;
  S LINE="Inpatients:"_COUNT("I")
  S LINE=$$PAD(LINE,25)_"Observations: "_COUNT("O")
- S LINE=$$PAD(LINE,55)_"Newborns: "_COUNT("N")
+ S LINE=$$PAD(LINE,55)_"Day Surgerys: "_COUNT("D")  ;ihs/cmi/maw 09/14/2011 patch 1013
+ S LINE=$$PAD(LINE,85)_"Newborns: "_COUNT("N")
  D SET(LINE,.VALMCNT),SET("",.VALMCNT)
  Q
  ;

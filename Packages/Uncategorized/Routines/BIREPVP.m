@@ -1,5 +1,5 @@
 BIREPVP ;IHS/CMI/MWR - REPORT, VIEW PATIENTS IN REPORT.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  REPORTS, VIEW LIST OF PATIENTS IN REPORT: REJECTED, APPROPRIATE, OR ALL.
  ;
@@ -8,28 +8,31 @@ BIREPVP ;IHS/CMI/MWR - REPORT, VIEW PATIENTS IN REPORT.; MAY 10, 2010
  ;---> Assumption is that a list of patients is sitting out in ^TMP("BIDUL",$J.
  ;
  ;----------
-MAIN(BIVAL,BIRTN,BITITL,BIRPDT) ;
+MAIN(BIPG1,BIRTN,BITITL,BIRPDT,BIPG2) ;
  ;W !,"JUST CALLED BIREPVP, PASSED BIRTN: ",BIRTN R ZZZ
  ;---> Display Patients.
  ;---> Parameters:
- ;     1 - BIVAL  (opt) Value indicates which patients:
- ;                      0=All, 1=Due only, 2=Appropriate only.
+ ;     1 - BIPG1  (opt) Patient Group: 0=All, 1=Due only, 2=Appropriate only.
  ;     2 - BIRTN  (req) Routine to make Init call when returning.
  ;     3 - BITITL (opt) Report Name
  ;     4 - BIRPDT (opt) Report Date: Today unless passed from reports
  ;                                   (e.g., Quarterly Report).
+ ;     5 - BIPG2  (opt) Patient Group: Text for Patient Group report header.
+ ;                                     If it follows null, overrides BIPG1.
  ;
  ;---> If <STKOV> errors appear here, increase STACK in SYSGEN,
  ;---> System Configuration Parameters.
  ;
- S:(($G(BIVAL)<1)!($G(BIVAL)>2)) BIVAL=0
+ S:(($G(BIPG1)<1)!($G(BIPG1)>2)) BIPG1=0
  S BITITL=$S($G(BITITL)]"":BITITL_" ",1:"")
  S:'$G(BIRPDT) BIRPDT=DT
  ;
  D
- .N BIAGRPS,BIBEN,BICC,BICM,BICPT,BICPTI,BIDAR,BIFDT,BIFH,BIHCF,BIHPV,BILOT,BIMD
- .N BIMMD,BIMMR,BINFO,BINFO1,BIORD,BIPG,BIQDT,BIRTN,BISITE,BIT,BITAR,BITOTPTS,BIUP,BIYEAR
- .D START(BIVAL,BITITL,BIRPDT)
+ .N BIAGRPS,BIBEGDT,BIBEN,BICC,BICM,BICPT,BICPTI,BIDAR,BIENDDT,BIFDT,BIFH,BIHCF
+ .N BIHPV,BILOT,BIMD
+ .N BIMMD,BIMMR,BINFO,BINFO1,BIORD,BIPG,BIQDT,BIRTN,BISITE,BIT,BITAR,BITOTFPT
+ .N BITOTMPT,BITOTPTS,BIUP,BIYEAR
+ .D START(BIPG1,BITITL,BIRPDT,$G(BIPG2))
  ;
  Q:$G(BIRTN)=""
  D TITLE^BIUTL5("RETURNING TO THE "_BITITL_"REPORT"),TEXT4
@@ -42,14 +45,15 @@ MAIN(BIVAL,BIRTN,BITITL,BIRPDT) ;
  ;
  ;
  ;----------
-START(BIVAL,BITITL,BIRPDT) ;EP
+START(BIPG1,BITITL,BIRPDT,BIPG2) ;EP
  ;---> Display Patients.
  ;---> Parameters:
- ;     1 - BIVAL (opt) Value indicates which patients:
- ;                     0=All, 1=Due only, 2=Appropriate only.
+ ;     1 - BIPG1  (opt) Patient Group: 0=All, 1=Due only, 2=Appropriate only.
  ;     2 - BITITL (opt) Report Name
  ;     3 - BIRPDT (opt) Report Date: Today unless passed from reports
  ;                                   (e.g., Quarterly Report).
+ ;     4 - BIPG2  (opt) Patient Group: Text for Patient Group report header.
+ ;                                     If it follows null, overrides BIPG1.
  ;
  ;---> If Vaccine Table is not standard, display Error Text and quit.
  I $D(^BISITE(-1)) D ERRCD^BIUTL2(503,,1) Q
@@ -57,37 +61,40 @@ START(BIVAL,BITITL,BIRPDT) ;EP
  ;
  N BIPOP
  D  D DIRZ^BIUTL3(.BIPOP)
- .I $G(BIVAL)=1 D  Q
+ .I $G(BIPG1)=1 D  Q
  ..D TITLE^BIUTL5("VIEW PATIENTS NOT CURRENT IN "_BITITL_"REPORT"),TEXT1 Q
- .I $G(BIVAL)=2 D  Q
+ .I $G(BIPG1)=2 D  Q
  ..D TITLE^BIUTL5("VIEW PATIENTS CURRENT IN "_BITITL_"REPORT"),TEXT2
  .D TITLE^BIUTL5("VIEW ALL PATIENTS REVIEWED IN "_BITITL_"REPORT"),TEXT3 Q
  Q:$G(BIPOP)
  W !!?5,"Please hold...",!
  ;
  ;---> Get Total Patients from ^TMP("BIDUL",$J,CURCOM,1,HRCN,BIDFN)
+ ;---> Seed loops with -1 to pick up entries with a subscript of 0. Imm v8.5.
  N BIT S BIT=0
  D
  .N BIDFN,N,M,P
- .S N=0
+ .S N=-1
  .F  S N=$O(^TMP("BIDUL",$J,N)) Q:N=""  D
- ..S M=0
+ ..S M=-1
  ..F  S M=$O(^TMP("BIDUL",$J,N,M)) Q:M=""  D
- ...S P=0
+ ...S P=-1
  ...F  S P=$O(^TMP("BIDUL",$J,N,M,P)) Q:P=""  D
- ....N BIVAL1
+ ....N BIPG11
  ....S BIDFN=0
- ....F  S BIDFN=$O(^TMP("BIDUL",$J,N,M,P,BIDFN)) Q:'BIDFN  S BIVAL1=^(BIDFN) D
- .....;---> BIVAL=0=All (no filter), 1=Not Appro, 2=Appropriate.
- .....I $G(BIVAL) Q:BIVAL'=BIVAL1
+ ....F  S BIDFN=$O(^TMP("BIDUL",$J,N,M,P,BIDFN)) Q:'BIDFN  S BIPG11=^(BIDFN) D
+ .....;---> BIPG1=0=All (no filter), 1=Not Appro, 2=Appropriate.
+ .....I $G(BIPG1) Q:BIPG1'=BIPG11
  .....S BIT=BIT+1
  ;
  ;---> For now, comment out any additional info, per Group's request v8.0.
  ;N BINFO S BINFO="1,2,3,5,7,8"
- N BIPG S BIPG="Report - "_$S(BIVAL=1:"Not Current",BIVAL=2:"Current",1:"Both Groups")
+ N BIPG D
+ .I BIPG2]"" S BIPG=BIPG2 Q
+ .S BIPG="Report - "_$S(BIPG1=1:"Not Current",BIPG1=2:"Current",1:"Both Groups")
  ;---> Second piece of Age: 0 or null=months, 1=years.
  K ^TMP("BIDULV",$J)
- D START^BIDUVLS1(+$G(DT),,BIPG,$G(BIAG),BIT,BIVAL,1,BITITL,BIRPDT)
+ D START^BIDUVLS1(+$G(DT),,BIPG,$G(BIAG),BIT,BIPG1,1,BITITL,BIRPDT)
  Q
  ;
  ;

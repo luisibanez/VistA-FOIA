@@ -1,5 +1,5 @@
 BIREPD ;IHS/CMI/MWR - REPORT, ADOLESCENT RATES; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW ADOLESCENT IMMUNIZATION RATES REPORT.
  ;
@@ -40,7 +40,7 @@ INIT ;EP
  ;---> Date.
  D WRITE(.BILINE)
  S:'$G(BIQDT) BIQDT=$G(DT)
- D DATE^BIREP(.BILINE,"BIREPD",1,$G(BIQDT),"Quarter Ending Date")
+ D DATE^BIREP(.BILINE,"BIREPD",1,$G(BIQDT),"Quarter Ending Date",,,,1)
  ;
  ;---> Current Community.
  D DISP^BIREP(.BILINE,"BIREPD",.BICC,"Community",2,1)
@@ -127,9 +127,8 @@ TEXT1(BITEXT) ;EP  vvv83
  ;;single vaccines and groups of vaccines in children  11-12 years,
  ;;13 years and 13-17 years of age by certain key ages  (i.e.
  ;;3 Hep B and 2 MMR and 1-Td/Tdap, 3-HepB, 2-MMR,1-Var) by the
- ;;the date of the report.  Current status is defined as 1-Td/Tdap,
- ;;3-HepB, 2-MMR, 1-Var, which is a nationally reported measure in
- ;;the National Immunization Survey.
+ ;;the date of the report.  Current status is defined as 1-Tdap_Td
+ ;;and 1-Mening.
  ;;
  ;;This report displays Active clinical users who are between 11
  ;;years 0 months and 17 years 11 months of age on the selected date
@@ -151,7 +150,7 @@ TEXT1(BITEXT) ;EP  vvv83
  ;;
  ;;There are 6 items or "parameters" on the screen that you may
  ;;change in order to select for a specific group of patients.
- ;;To change an item, enter its left column number (1-5) at the
+ ;;To change an item, enter its left column number (1-6) at the
  ;;prompt on the bottom of the screen.  Use "?" at any prompt where
  ;;you would like help or more information on the parameter you are
  ;;changing.
@@ -188,8 +187,9 @@ TEXT1(BITEXT) ;EP  vvv83
  ;;
  ;;PATIENT POPULATION GROUP: You may select one of four patient groups
  ;;to be considered in the report: Registered Patients (All),
- ;;Immunization Register Patients (Active), User Population (1+ visits),
- ;;or Active Clinical Users (2+ visits).
+ ;;Immunization Register Patients (Active), User Population (1+ visits
+ ;;in 3 yrs), or Active Clinical Users (2+ visits in 3 yrs).
+ ;;Active Clinical Users is the default.
  ;;
  ;;
  D LOADTX("TEXT1",,.BITEXT)

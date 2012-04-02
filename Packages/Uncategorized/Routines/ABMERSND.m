@@ -1,5 +1,5 @@
 ABMERSND ; IHS/ASDST/DMJ - RE-SEND A BATCH OF BILLS ELECTRONIC FORMAT ; 
- ;;2.6;IHS Third Party Billing System;**2,6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**2,6,8**;NOV 12, 2009
  ;Original;DMJ;
  ; IHS/SD/SDR - abm*2.6*2 - 5PMS10005 - Set var for 3P Bill EXPORT NUMBER RE-EXPORT multiple
  ; IHS/SD/SDR - abm*2.6*6 - 5010 - Changes for clearinghouse
@@ -35,13 +35,14 @@ LIST ; EP
  .S ABMT("GLIST",ABMT("GCN"))=""
  .S ABMT("XCNT")=+$G(ABMT("XCNT"))+1,ABMT("XLINE")=+$G(ABMT("XLINE"))+1
  I '$D(ABMT("XLIST")) D
- .F  S ABMT("XMIT")=$O(^ABMDTXST(DUZ(2),"C",ABMT("ORIGGCN"),ABMT("XMIT"))) Q:'+ABMT("XMIT")  D
+ .F  S ABMT("XMIT")=$O(^ABMDTXST(DUZ(2),"C",ABMT("ORIGGCN"),ABMT("XMIT"))) Q:'+ABMT("XMIT")
  ..I $G(ABMT("GCN"))="" S ABMT("GCN")=$P($G(^ABMDTXST(DUZ(2),ABMT("XMIT"),1)),U,6)
  ..Q:(ABMT("GCN")'=ABMT("ORIGGCN"))
  ..S ABMT("CHKLIST",ABMT("XMIT"))=1
  ..S ABMT("XLIST",ABMT("XLINE"),ABMT("XMIT"))=""
  ..S ABMT("GLIST",ABMT("GCN"))=""
  .S ABMT("XCNT")=+$G(ABMT("XCNT"))+1,ABMT("XLINE")=+$G(ABMT("XLINE"))+1
+ S ABMER("LAST")=+$G(ABMT("XCNT"))  ;abm*2.6*8
  ;
  I +$G(ABMT("XCNT"))>1 D
  .W !,"There are multiple batches associated with your selection."
@@ -76,17 +77,23 @@ LIST ; EP
  ;
  S:+$G(ABMER("LAST"))=0 ABMER("LAST")=(ABMT("XCNT")-1)
  S ABMT("XCNT")=0
+ S ABMER("CNT")=0  ;abm*2.6*8
  F  S ABMT("XCNT")=$O(ABMT("XLIST",ABMT("XCNT"))) Q:'ABMT("XCNT")  D
  .S ABMT("XMIT")=0
  .F  S ABMT("XMIT")=$O(ABMT("XLIST",ABMT("XCNT"),ABMT("XMIT"))) Q:'ABMT("XMIT")  D
- ..I $D(ABMP("XLIST",ABMT("XCNT"),ABMP("XMIT")))<11 D  Q  ;this is for entries created prior to p6 install
- ...S ABMP("XMIT")=ABMT("XMIT"),ABMER("CNT")=ABMT("XCNT")
+ ..;I $D(ABMP("XLIST",ABMT("XCNT"),ABMP("XMIT")))<11 D  Q  ;this is for entries created prior to p6 install  ;abm*2.6*8
+ ..I $D(ABMP("XLIST",ABMT("XCNT"),ABMT("XMIT")))<11 D  Q  ;this is for entries created prior to p6 install  ;abm*2.6*8
+ ...;S ABMP("XMIT")=ABMT("XMIT"),ABMER("CNT")=ABMT("XCNT")  ;abm*2.6*8
+ ...S ABMP("XMIT")=ABMT("XMIT"),ABMER("CNT")=+$G(ABMER("CNT"))+1  ;abm*2.6*8
+ ...K ABMP("INS")  ;abm*2.6*8
  ...D CRBATCH
  ..S ABMT("SIEN")=0
  ..F  S ABMT("SIEN")=$O(ABMT("XLIST",ABMT("XCNT"),ABMT("XMIT"),ABMT("SIEN"))) Q:'ABMT("SIEN")  D
  ...S ABMT("GCN")=0
  ...F  S ABMT("GCN")=$O(ABMT("XLIST",ABMT("XCNT"),ABMT("XMIT"),ABMT("SIEN"),ABMT("GCN"))) Q:'ABMT("GCN")  D
- ....S ABMP("XMIT")=ABMT("XMIT"),ABMER("CNT")=ABMT("XCNT")
+ ....;S ABMP("XMIT")=ABMT("XMIT"),ABMER("CNT")=ABMT("XCNT")  ;abm*2.6*8
+ ....S ABMP("XMIT")=ABMT("XMIT"),ABMER("CNT")=+$G(ABMER("CNT"))+1  ;abm*2.6*8
+ ....K ABMP("INS")  ;abm*2.6*8
  ....D CRBATCH
  K ABMP
  K ABME
@@ -114,6 +121,20 @@ CRBATCH S ABMP("EXP")=$P(^ABMDTXST(DUZ(2),ABMP("XMIT"),0),"^",2)
  S ABMREX("RECREATE")=1  ;abm*2.6*2 5PMS10005
  ;D GCNMULT^ABMERUTL("C",1)  ;abm*2.6*3 5PMS10005#2  ;abm*2.6*6 5010
  I ABMER("CNT")=1 D GCNMULT^ABMERUTL("C",1)  ;abm*2.6*3 5PMS10005#2  ;abm*2.6*6 5010
+ ;start new code abm*2.6*8
+ I ABMER("CNT")>1 D
+ .S DA(1)=ABMP("XMIT")
+ .S DIC="^ABMDTXST(DUZ(2),"_DA(1)_",3,"
+ .S DIC("P")=$P(^DD(9002274.6,3,0),U,2)
+ .S DIC(0)="L"
+ .D NOW^%DTC
+ .S (X,ABMXMTDT)=%
+ .S DIC("DR")=".02////"_ABMGCN
+ .S DIC("DR")=DIC("DR")_";.03////C"
+ .S DIC("DR")=DIC("DR")_";.04////"_DUZ
+ .I +$G(ABM("CHIEN"))'=0  S DIC("DR")=DIC("DR")_";.07////"_+$G(ABM("CHIEN"))
+ .D ^DIC
+ ;end new code abm*2.6*8
  D @("^"_ABMP("XRTN"))
  ;start old code abm*2.6*6 5010
  ;S DIR(0)="E"

@@ -1,5 +1,5 @@
 ABMURCN1 ; IHS/SD/SDR - 3PB/UFMS Reconcile Sessions Option   
- ;;2.6;IHS Third Party Billing;**1**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,8**;NOV 12, 2009
  ;
  ; New routine - v2.5 p12 SDD item 4.9.2.4
  ; Reconcile Sessions Option
@@ -169,7 +169,8 @@ BATCH ;EP - put bill entry in batch file
  I ABMDUZ S DIC="^ABMUTXMT("_DA(3)_",1,"_DA(2)_",2,"_DA(1)_",11,"
  I 'ABMDUZ S DIC="^ABMUTXMT("_DA(3)_",2,"_DA(2)_",2,"_DA(1)_",11,"
  S X=ABMBAOUT
- S DIC(0)="L"
+ ;S DIC(0)="L"  ;abm*2.6*8 HEAT28427
+ S DIC(0)="LMX"  ;abm*2.6*8 HEAT28427
  D ^DIC
  Q:+Y<0
  S ABMBCHBA=+Y

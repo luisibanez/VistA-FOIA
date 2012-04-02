@@ -1,5 +1,5 @@
 ABMUTL8 ; IHS/ASDST/DMJ - 837 UTILITIES ;      
- ;;2.6;IHS Third Party Billing;**1,4,6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,4,6,8**;NOV 12, 2009
  ;Original;DMJ;09/21/95 12:47 PM
  ;
  ; 02/18/04 V2.5 P5 - 837 modification
@@ -63,6 +63,7 @@ DXE(X) ;EP - E-Code
  Q ABMDXE
 DXSET(X) ;EP - set dx array
  ;x=bill ien
+ I +$G(ABMP("EXP"))=31!(+$G(ABMP("EXP"))=32) D DXSET2(X) Q  ;abm*2.6*8 5010
  K ABMDX
  N I,J
  S ABMCNT=0
@@ -74,7 +75,36 @@ DXSET(X) ;EP - set dx array
  ..S:ABMCNT=1 ABMDX(ABMCNT)="BK"
  ..S:ABMCNT'=1 ABMDX(ABMCNT)="BF"
  ..S $P(ABMDX(ABMCNT),":",2)=$TR($P($$DX^ABMCVAPI(J,ABMP("VDT")),U,2),".")  ;CSV-c
+ I $P($G(^ABMDBILL(DUZ(2),X,5)),U,9)'="" S ABMDX("ADM")=$TR($P($$DX^ABMCVAPI($P($G(^ABMDBILL(DUZ(2),X,5)),U,9),ABMP("VDT")),U,2),".")   ;abm*2.6*8 5010
  Q
+ ;start new code abm*2.6*8 5010
+DXSET2(X) ;EP - set dx array
+ ;x=bill ien
+ K ABMDX
+ N I,J
+ S ABMCNT=0
+ S I=0
+ F  S I=$O(^ABMDBILL(DUZ(2),X,17,"C",I)) Q:'I  D
+ .S J=0
+ .F  S J=$O(^ABMDBILL(DUZ(2),X,17,"C",I,J)) Q:'J  D
+ ..Q:$E($P($$DX^ABMCVAPI($P($G(^ABMDBILL(DUZ(2),X,5)),U,9),ABMP("VDT")),U,2),1)="E"  ;skip E-codes
+ ..S ABMCNT=ABMCNT+1
+ ..S:ABMCNT=1 ABMDX(ABMCNT)="BK"
+ ..S:ABMCNT'=1 ABMDX(ABMCNT)="BF"
+ ..S $P(ABMDX(ABMCNT),":",2)=$TR($P($$DX^ABMCVAPI(J,ABMP("VDT")),U,2),".")  ;CSV-c 
+ ;
+ S ABMCNT=0
+ S I=0
+ F  S I=$O(^ABMDBILL(DUZ(2),X,17,"C",I)) Q:'I  D
+ .S J=0
+ .F  S J=$O(^ABMDBILL(DUZ(2),X,17,"C",I,J)) Q:'J  D
+ ..Q:$E($P($$DX^ABMCVAPI(J,ABMP("VDT")),U,2),1)'="E"  ;skip E-codes
+ ..S ABMCNT=ABMCNT+1
+ ..S ABMDXE(ABMCNT)="BN:"_$TR($P($$DX^ABMCVAPI(J,ABMP("VDT")),U,2),".")  ;CSV-c
+ ..I $P($G(^ABMDBILL(DUZ(2),X,17,J,0)),U,5)'="" S $P(ABMDXE(ABMCNT),":",9)=$P($G(^ABMDBILL(DUZ(2),X,17,J,0)),U,5)
+ I $P($G(^ABMDBILL(DUZ(2),X,5)),U,9)'="" S ABMDX("ADM")=$TR($P($$DX^ABMCVAPI($P($G(^ABMDBILL(DUZ(2),X,5)),U,9),ABMP("VDT")),U,2),".")   ;abm*2.6*8 5010
+ Q
+ ;end new code abm*2.6*8
 PXSET(X) ;EP - set px array
  ;x=bill ien
  K ABMPX

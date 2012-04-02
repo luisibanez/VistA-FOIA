@@ -1,5 +1,5 @@
 ABMDE4X ; IHS/ASDST/DMJ - Edit Page 4 - Providers DATA CK ;    
- ;;2.6;IHS Third Party Billing;**1**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,3,8**;NOV 12, 2009
  ;
  ; IHS/DSD/LSL - 05/20/98 - NOIS HQW-0598-100109
  ;               Modified to check file 200, payer assigned provider
@@ -26,6 +26,7 @@ ABMDE4X ; IHS/ASDST/DMJ - Edit Page 4 - Providers DATA CK ;
  ;   Made change to 190 error to check for Rendering provider
  ; IHS/SD/SDR - v2.5 p11 - NPI
  ; IHS/SD/SDR - abm*2.6*1 - NO HEAT - remove error 189 if NPI ONLY
+ ; IHS/SD/SDR - abm*2.6*3 - HEAT12442 - made error 92 display for all 837s
  ; 
  ; *********************************************************************
  ;
@@ -38,7 +39,7 @@ ERR S ABME("TITL")="PAGE 4 - PROVIDER INFORMATION"
  .S ABM("NUM")=ABM("I")
  .D SEL
  I '$D(ABM("A")) D
- .Q:ABMP("EXP")=22
+ .Q:ABMP("EXP")=22  ;abm*2.6*3 HEAT12442
  .S ABME(92)=""
 OP I '$D(^ABMDCLM(DUZ(2),ABMP("CDFN"),41,"C","O")),$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),19,0)),ABMP("PAGE")'[8 S ABME(2)=""
  I ABMP("EXP")=2!(ABMP("EXP")=3)!(ABMP("EXP")=14),$P(^ABMDPARM(DUZ(2),1,0),U,17)=2 K ABME
@@ -78,8 +79,8 @@ DR ;PHYSICIAN'S PROVIDER NUMBER
  .S:ABMP("EXP")="" ABMP("EXP")=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,14)
  .S:ABMP("LDFN")="" ABMP("LDFN")=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,3)
  .I ABMP("VTYP")=999 D
- ..;I $G(ABMP("ITYP"))="R" D  ;abm*2.6*1 NO HEAT
- ..I $G(ABMP("ITYP"))="R",(ABMNPIUS'="N") D  ;abm*2.6*1 NO HEAT
+ ..I $G(ABMP("ITYP"))="R" D  ;abm*2.6*1 NO HEAT
+ ..;I $G(ABMP("ITYP"))="R",(ABMNPIUS'="N") D  ;abm*2.6*1 NO HEAT
  ...I +ABMP("EXP"),(($P($G(^ABMDEXP(+ABMP("EXP"),0)),U)["HCFA")!($P($G(^ABMDEXP(+ABMP("EXP"),0)),U)["CMS")) D
  ....S ABM("PNUM")=$P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),3,+ABM("X0"),0)),U,2)
  ....S:ABM("PNUM")="" ABME(189)=""

@@ -44,6 +44,9 @@ FILES ; Build FILES() mapping FGR components to file number
  Q
 FILE(N)
  N I,FILE
+ I N["DUZ(2)" S INDEX=$F(N,"DUZ(2)") S $E(N,INDEX-6,INDEX)="" ; FILE PER DIVISION, REMOVE DUZ(2)
+ I N["(" S N=$P(N,"(",1) ; REMOVE EMPTY ROOTS
+ I N[",)" S N=$P(N,",)",1)_")" ; REMOVE TRAILING ,
  S FILE=$NAME(FILES($QS(N,0)))
  F I=1:1:$QL(N) S FILE=$NAME(@FILE@($QS(N,I)))
  Q FILE
@@ -86,6 +89,7 @@ HOSTPATH(N)
  Q DIR_N_".zwr"
 HOSTFILE(F)
  N HF S HF=@F_"+"_$TRANSLATE($$FILENAME(@F),"/()*'","-") ; #&
+ I $E(HF,1)="." S HF="0"_HF ; File numbers < 1
  Q $$HOSTPATH(HF)
 OPENGBL(G)
  N IO S IO=$$HOSTPATH($E(G,2,$L(G)))

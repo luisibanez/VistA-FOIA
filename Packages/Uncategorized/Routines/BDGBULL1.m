@@ -1,5 +1,5 @@
 BDGBULL1 ; IHS/ANMC/LJF - POST ADT BULLETINS ;  
- ;;5.3;PIMS;**1007**;FEB 27, 2007
+ ;;5.3;PIMS;**1007,1013**;FEB 27, 2007
  ; Called by ADT Event Driver protocol
  ;
  ; Input Variables:
@@ -13,6 +13,7 @@ BDGBULL1 ; IHS/ANMC/LJF - POST ADT BULLETINS ;
  ;
  ;
  ;cmi/anch/maw 2/22/2007 added code OBS and code in EVENT to send bulletin if a patient goes from observation to admission PATCH 1007 item 1007.43
+ ;ihs/cmi/maw 04/08/2011 PATCH 1013 RQMT157 added code for delete admit reason
  ;
 EVENT ; process event type
  NEW DIV S DIV=$$DIV^BDGPAR(DUZ(2)) Q:'DIV
@@ -162,6 +163,8 @@ DELADM ; bulletin for deleted admission
  S XMB(4)=$$GET1^DIQ(42,+$P(DGPMP,U,6),.01)      ;ward
  S XMB(5)=$$GET1^DIQ(200,DUZ,.01)                ;deleted by
  S XMB(6)=$$HTE^XLFDT($H)                        ;deleted at
+ S XMB(7)=$G(BDGDLREA)                           ;delete reason ihs/cmi/maw 04/08/2011 Patch 1013 RQMT157
+ K BDGDLREA
  D ^XMB Q
  ;
 ICU ; -- bulletin for ICU transfers

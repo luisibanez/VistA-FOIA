@@ -1,5 +1,5 @@
 ABME5SBR ; IHS/ASDST/DMJ - 837 SBR Segment 
- ;;2.6;IHS Third Party Billing System;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,8**;NOV 12, 2009
  ;Transaction Set Header
  ;
 EP(X) ;EP
@@ -41,18 +41,21 @@ LOOP ;LOOP HERE
  S ABMR("SBR",60)=""
  D PREV^ABMDFUTL
  I (ABMPST=1)&(+$G(ABMP("PD"))=0)&(+$G(ABMP("DED"))=0)&(+$G(ABMP("COI"))=0)&(+$G(ABMP("NONC"))=0) Q
- Q:ABMP("EXP")'=22
+ ;Q:ABMP("EXP")'=32  ;abm*2.6*8 5010
+ Q:ABMP("EXP")=31  ;abm*2.6*8 5010
  I $P(ABMP("INS",ABMPST),U,2)="R",(ABMPST'=1) S ABMR("SBR",60)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),12)),U)
  I $P(ABMP("INS",ABMPST),U,2)="R",(ABMPST=1),($G(ABMLOOP)=2320) S ABMR("SBR",60)=$G(ABMP("SOP",ABMPST))
- I ($G(ABMR("SBR",60))=""),($G(ABMLOOP)=2320) S ABMR("SBR",60)=$G(ABMP("SOP",ABMPST))
+ ;I ($G(ABMR("SBR",60))=""),($G(ABMLOOP)=2320) S ABMR("SBR",60)=$G(ABMP("SOP",ABMPST))
+ I ($G(ABMR("SBR",60))=""),($G(ABMLOOP)=2320) Q
  S:ABMR("SBR",60)="CI" ABMR("SBR",60)="C1"
  S:ABMR("SBR",60)="BL" ABMR("SBR",60)="C1"
  Q
 70 ;SBR06 - Coordination of Benefits Code
  S ABMR("SBR",70)=""
- I ABMI=1,ABMP("EXP")=23 D
+ I ABMI=1,ABMP("EXP")=33 D
  .I $G(ABMP("INS",2)) S ABMR("SBR",70)=1
  .I '$G(ABMP("INS",2)) S ABMR("SBR",70)=6
+ .I ABMPST=1 S ABMR("SBR",70)=""  ;abm*2.6*8 HEAT28632 - Removes "1" from SBR06 for primary payer when 2ndry payer billed
  Q
 80 ;SBR07 - Yes/No Condition or Response Code
  S ABMR("SBR",80)=""

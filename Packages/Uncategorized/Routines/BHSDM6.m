@@ -1,5 +1,5 @@
-BHSDM6 ;IHS/CIA/MGH - Health Summary for Diabetic Supplement ;16-Jan-2009 19:36;MGH
- ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2**;March 17, 2006
+BHSDM6 ;IHS/CIA/MGH - Health Summary for Diabetic Supplement ;04-Aug-2011 14:33;MGH
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,6**;March 17, 2006;Build 5
  ;===================================================================
  ;Taken from APCHS9B6
  ;VA version of IHS components for supplemental summaries
@@ -7,6 +7,7 @@ BHSDM6 ;IHS/CIA/MGH - Health Summary for Diabetic Supplement ;16-Jan-2009 19:36;
  ;;2.0;IHS RPMS/PCC Health Summary;**8,11,12**;JUN 24, 1997
  ;Patch 1 updates up to IHS patch 14
  ;Patch 2 code set versioning
+ ;Patch 6 updated for tobacco changes
  ;===================================================================
 DENTAL(P,APCHSED) ;EP
  NEW BHSY,DENTDATE,E
@@ -46,7 +47,30 @@ TOBACCO ;EP
  S BHDTOB="UNDOCUMENTED",BHDTOB="UNDOCUMENTED"
  Q
 TOBACCO0 ;check for tobacco documented in health factors
- S X=$$LASTHF^BHSMU(BHSDFN,"TOBACCO","B") I X]"" S BHDTOB=X
+ ;S X=$$LASTHF^BHSMU(BHSDFN,"TOBACCO","B") I X]"" S BHDTOB=X
+ NEW CTGN,HF,HFDT,LIST,RESULT,X,BTIU,BHST,CTG
+ I '$G(DFN) Q ""
+ F BHST=1:1 D  Q:CTG=""
+ .S CTG=$P($T(TOBU+BHST),";;",2)
+ .Q:CTG=""
+ .S CTGN=$O(^AUTTHF("B",CTG,0)) I 'CTGN Q    ;ien of category passed
+ .;
+ .S HF=0
+ .F  S HF=$O(^AUTTHF("AC",CTGN,HF))  Q:'+HF  D        ;find health factors in category
+ ..Q:'$D(^AUPNVHF("AA",DFN,HF))                     ;quit if patient doesn't have health factor
+ ..S HFDT=$O(^AUPNVHF("AA",DFN,HF,"")) Q:'HFDT      ;get visit date for health factor
+ ..S LIST(HFDT)=$O(^AUPNVHF("AA",DFN,HF,HFDT,""))   ;store iens by date
+ ;
+ I '$O(LIST(0)) Q
+ S HFDT=$O(LIST(0))                                  ;find latest date (inverse dates)
+ S RESULT=$$GET1^DIQ(9000010.23,LIST(HFDT),.01)
+ S BHDTOB=RESULT_" "_$$FMTE^XLFDT(9999999-HFDT)
+ Q
+TOBU ;;
+ ;;TOBACCO (EXPOSURE)
+ ;;TOBACCO (SMOKELESS - CHEWING/DIP)
+ ;;TOBACCO (SMOKING)
+ ;
  Q
 TOBACCO3 ;lookup in health status
  N C
@@ -64,7 +88,8 @@ TOBACCO3 ;lookup in health status
  S BHDTOB=$$VAL^XBDIQ1(9000010.23,O(D),.01)_" "_$$FMTE^XLFDT((9999999-D))
  Q
 TOBACCO1 ;check problem file for tobacco use
- K APCH S APCHX=BHSDFN_"^PROBLEMS [DM AUDIT PROBLEM SMOKING DXS" S E=$$START1^APCLDF(APCHX,"APCH(") Q:E  I $D(APCH(1)) D
+ K APCH,APCHX
+ S APCHX=BHSDFN_"^PROBLEMS [DM AUDIT PROBLEM SMOKING DXS" S E=$$START1^APCLDF(APCHX,"APCH(") Q:E  I $D(APCH(1)) D
  . ;I $P(^ICD9($P(APCH(1),U,2),0),U,1)=305.13 S BHDTOB="PAST USE OF TOBACCO"_" - "_$E($P(^AUTNPOV($P(^AUPNPROB(+$P(APCH(1),U,4),0),U,5),0),U),1,30) Q
  . I $$ICDDX^ICDCODE($P(APCH(1),U,2),U,2)=305.13 S BHDTOB="PAST USE OF TOBACCO"_" - "_$E($P(^AUTNPOV($P(^AUPNPROB(+$P(APCH(1),U,4),0),U,5),0),U),1,30) Q  ;code set versioning cmi/anch/maw 8/27/2007 code set versioning
  . S BHDTOB="YES, USES TOBACCO - "_$E($P(^AUTNPOV($P(^AUPNPROB(+$P(APCH(1),U,4),0),U,5),0),U),1,30)

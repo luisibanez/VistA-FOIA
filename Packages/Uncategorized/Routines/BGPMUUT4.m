@@ -1,5 +1,5 @@
 BGPMUUT4 ;IHS/MSC/MGH - Find is med is active on date ;02-Mar-2011 16:53;MGH
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  Q
 FIND(DFN,TAX,BDATE,MEDTYPE,EDATE) ; EP
  ;This function is designed to see if the patient has any drugs
@@ -26,7 +26,7 @@ FIND(DFN,TAX,BDATE,MEDTYPE,EDATE) ; EP
  .E  I $O(^TMP("PS",$J,BGPIND,"B",0))>0 S BGPTYPE="IV"
  .I BGPTYPE=MEDTYPE!(MEDTYPE="ALL") D
  ..S BGPMED=$P(BGPNODE,U,2)
- ..I MEDTYPE="OP" S BGPIDX=$O(^PSDRUG("B",BGPMED,0))
+ ..I MEDTYPE="OP"!(MEDTYPE="ALL") S BGPIDX=$O(^PSDRUG("B",BGPMED,0))
  ..N IDX,ID
  ..S ID=$P(BGPNODE,U),IDX=+ID,ID=$E(ID,$L(IDX)+1,$L(ID))
  ..;Check dates on outpt RX
@@ -57,7 +57,7 @@ OUTPAT(BGPIDX,IDX,ID,BDATE,BGPEND,TAX) ;EP
  I +CA&(CA<BDATE) Q RETURN   ;Cancelled before the date in question
  ;Med was issued on the date in question
  I $P(ID,".",1)=BDATE!($P(ID,".",1)=$P(BGPEND,".",1)) D
- .S RETURN=$$NDC(BGPIDX,TAX)
+ .S RETURN=$$NDC(BGPIDX,TAX)_U_RD
  ;Issue date was prior to discharge, could be already on it
  I $P(ID,".",1)<BDATE D
  .S DS=$P(N0,U,8),NR=$P(N0,U,9)
@@ -67,7 +67,7 @@ OUTPAT(BGPIDX,IDX,ID,BDATE,BGPEND,TAX) ;EP
  .S END=$$FMADD^XLFDT(RD,+DS)
  .;if this date is after the discharge date, it was an active med
  .;see if it is in the chosen taxonomy
- .I END>BDATE S RETURN=$$NDC(BGPIDX,TAX)
+ .I END>BDATE S RETURN=$$NDC(BGPIDX,TAX)_U_RD
  Q RETURN
 NVA(BGPIDX,IDX,BGPEND,TAX) ;Check Non-VA meds
  N N0,STATUS,ST,ED,DC,RESULT
@@ -119,7 +119,7 @@ NDC(BGPIDX,TAX) ;Find out if this drug is in the taxonomy
  S NDC=$P($G(^PSDRUG(BGPIDX,2)),U,4)
  Q:'NDC 0
  ;Setup the NDC code for a proper lookup in the taxonomy
- S NDCCODE=$$RJ^XLFSTR($P(NDC,"-"),6,0)_$$RJ^XLFSTR($P(NDC,"-",2),4,0)_$$RJ^XLFSTR($P(NDC,"-",3),2,0)
+ S NDCCODE=$$RJ^XLFSTR($P(NDC,"-"),5,0)_$$RJ^XLFSTR($P(NDC,"-",2),4,0)_$$RJ^XLFSTR($P(NDC,"-",3),2,0)
  ;call the taxonomy lookup
  S NDCF=$$MEDTAX^BGPMUUT3(DFN,NDCCODE,TAX)
  Q NDCF

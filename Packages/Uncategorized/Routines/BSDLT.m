@@ -1,5 +1,5 @@
 BSDLT ;ALB/LDB - CANCELLATION LETTERS ; 14 Feb 2003 [ 03/10/2004  10:53 AM ]
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1013**;APR 26, 2002
  ;COPY OF SDLT WITH IHS MODS
  ;;5.3;Scheduling;**185,213,281**;Aug 13, 1993
  ;IHS/ANMC/LJF 8/18/2000 changed SSN to HRCN using VA(PID)
@@ -9,6 +9,7 @@ BSDLT ;ALB/LDB - CANCELLATION LETTERS ; 14 Feb 2003 [ 03/10/2004  10:53 AM ]
  ;             3/23/2001 changed X ^DD("FUNC",2,1) to $$TIME^BDGF
  ;            11/03/2001 used zip code instead of zip+4
  ;             6/05/2002 moved form feed to end of letter
+ ;ihs/cmi/maw 05/03/2011 PATCH 1013 added storing of patient tracking on letters
  ;
  ;**************************************************************************
  ;                          MODIFICATIONS
@@ -31,7 +32,19 @@ W1 ;
  W !?5,$$GREETING^BSDU(SDLET,+A)   ;IHS/ANMC/LJF 8/18/2000
  W !! K ^UTILITY($J,"W"),DIWF,DIWR,DIWF S DIWL=6,DIWF="C70W" F Z0=0:0 S Z0=$O(^VA(407.5,SDLET,1,Z0)) Q:Z0'>0  S X=^(Z0,0) D ^DIWP  ;IHS/ANMC/LJF 11/24/2000
  ;
- D ^DIWW K ^UTILITY($J,"W") Q
+ D ^DIWW K ^UTILITY($J,"W")
+ D STORE(+A,SDLET,DT)  ;ihs/cmi/maw store the letter and date printed
+ Q
+ ;
+STORE(PAT,LET,D) ;-- lets store the date printed and letter for tracking
+ Q:'$P($G(^BSDPAR($S($G(DIV):DIV,1:1),0)),U,28)  ;quit if the site parameter for tracking letter printing is off
+ N FDA,FIENS,FERR
+ S FIENS="+2,"_LET_","
+ S FDA(407.51,FIENS,.01)=PAT
+ S FDA(407.51,FIENS,.02)=DT
+ D UPDATE^DIE("","FDA","FIENS","FERR(1)")
+ Q
+ ;
 WRAPP ;WRITE APPOINTMENT INFORMATION
  S:$D(SC)&'$D(SDC) SDC=SC S SDCL=$P(^SC(+SDC,0),"^",1),SDCL=SDCL_" Clinic" D FORM
  S SDX1=$S($D(SDX):SDX,1:X) S:$D(SDS) S=SDS F B=3,4,5 I $P(S,"^",B)]"" S SDCL=$S(B=3:"LAB",B=4:"XRAY",1:"EKG"),SDX=$P(S,"^",B) D FORM
@@ -41,6 +54,14 @@ FORM ;EP;
  S:$D(SDX) X=SDX S SDHX=X D DW^%DTC S DOW=X,X=SDHX S SDT0=$$TIME^BDGF(X),SDDAT=$P("JAN^FEB^MAR^APR^MAY^JUN^JUL^AUG^SEP^OCT^NOV^DEC","^",$E(SDHX,4,5))_" "_+$E(SDHX,6,7)_", "_(1700+$E(SDHX,1,3)) W !?9,DOW,?19,$J(SDDAT,12)
  W ?32,$J(SDT0,8)," ",SDCL ;I $D(SDLT)&($Y>(IOSL-8)) W @IOF  ;IHS/ANMC/LJF 11/24/2000
  Q
+RECALL(CL,P) ;-- get recall information and clinic based on patient and clinic passed in
+ N RC,CDA
+ S CDA=0 F  S CDA=$O(^BSDWL("AB",P,CL,CDA)) Q:'CDA  D
+ . Q:$P($G(^BSDWL(CL,1,CDA,0)),U,7)
+ . S RC=$P($G(^BSDWL(CL,1,CDA,0)),U,5)
+ W !!,?5,"Recall Date: "_$$FMTE^XLFDT($G(RC)),?40,"Clinic/Ward: "_$$GET1^DIQ(44,$P($G(^BSDWL(CL,0)),U),.01)
+ Q
+ ;
 REST ;EP; WRITE THE REMAINDER OF LETTER
  I $G(S1)="C" D FUTURE^BSDLT1(+A,$G(BSDCNT)) K BSDCNT  ;IHS/ANMC/LJF 11/29/2000;9/11/2001
  I SDLET W !?12 K ^UTILITY($J,"W"),DIWL,DIWR,DIWF S DIWL=6,DIWF="C70W" F Z5=0:0 S Z5=$O(^VA(407.5,SDLET,2,Z5)) Q:Z5'>0  S X=^(Z5,0) D ^DIWP  ;IHS/ANMC/LJF 11/24/2000

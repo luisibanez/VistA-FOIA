@@ -1,5 +1,5 @@
 LA7SMP0 ;VA/DALOI/JMC - Shipping Manifest Print (Cont'd);JUL 06, 2010 3:14 PM
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,1027**;NOV 01, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,1027**;NOV 01, 1997;Build 9
  ;
 HED ; Header
  I $E(IOST,1,2)="C-" D TERM Q:$G(LA7EXIT)
@@ -154,6 +154,20 @@ CMT ; Print comments on manifest
  . W !,?11,LA7CMT(LA7I,0)
  Q
  ;
+ ;
+OCMT(UID) ;now check here for order comment
+ ;ihs/cmi/maw 07/26/2011 added for ref lab
+ N ORD,ORDI,ORDD,ORDA,ORDB
+ S ORD=$$GETORDA^LA7VORM1(UID)
+ Q:'ORD
+ S ORDD=$O(^LRO(69,"C",ORD,0))
+ Q:'ORDD
+ S ORDI=0 F  S ORDI=$O(^LRO(69,ORDD,1,ORDI)) Q:'ORDI  D
+ . S ORDA=0 F  S ORDA=$O(^LRO(69,ORDD,1,ORDI,2,ORDA)) Q:'ORDA  D
+ .. Q:$G(^LRO(69,ORDD,1,ORDI,2,ORDA,.3))'=UID
+ .. S ORDB=0 F  S ORDB=$O(^LRO(69,ORDD,1,ORDI,2,ORDA,1,ORDB)) Q:'ORDB  D
+ ... W !,?11,$G(^LRO(69,ORDD,1,ORDI,2,ORDA,1,ORDB,0))
+ Q
  ;
 PTID ; Get/setup patient identifier information
  ;

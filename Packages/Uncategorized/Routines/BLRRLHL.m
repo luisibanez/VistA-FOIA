@@ -1,5 +1,5 @@
 BLRRLHL ;cmi/anch/maw - BLR HL7 Utilities for Reference Lab 3/31/2009 9:19:59 AM;JUL 06, 2010 3:14 PM
- ;;5.2;IHS LABORATORY;**1027,1028**;NOV 01, 1997;Build 46
+ ;;5.2;IHS LABORATORY;**1027,1028**;NOV 01, 1997;Build 9
  Q
  ;
  ;

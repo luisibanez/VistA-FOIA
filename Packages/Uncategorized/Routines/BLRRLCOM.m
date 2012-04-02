@@ -1,5 +1,5 @@
 BLRRLCOM ; cmi/anch/maw - BLR Get Order Comments for HL7 Order Message ;
- ;;5.2;LR;**1021**;Jul 27, 2006
+ ;;5.2;LR;**1021**;Jul 27, 2006;Build 9
  ;;1.0;BLR REFERENCE LAB;;MAR 14, 2005
  ;
  ;
@@ -9,8 +9,8 @@ BLRRLCOM ; cmi/anch/maw - BLR Get Order Comments for HL7 Order Message ;
  ;with the appropriate result code and value to be stuffed into
  ;the order's OBX segment
  ;
-COM(TIEN)          ; EP -- check to see if there are any comments
- I $G(BLRPHASE)'="A" Q ""
+COM(TIEN,LEDI)          ; EP -- check to see if there are any comments
+ I $G(BLRPHASE)'="A",'$G(LEDI) Q ""  ;added check of LEDI for backward compatibility
  S BLRCRL=$P($G(^BLRSITE(DUZ(2),"RL")),U)
  I '$G(BLRCRL) Q "No Reference Lab Defined"
  S BLRRIEN=$O(^BLRRL("ALP",TIEN,BLRCRL,0))

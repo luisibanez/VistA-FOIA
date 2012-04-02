@@ -1,5 +1,5 @@
-ORQ20 ; SLC/MKB - Detailed Order Report cont ;06-Oct-2010 11:16;PLS
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**12,27,92,94,116,141,177,186,190,1006**;Dec 17, 1997
+ORQ20 ; SLC/MKB - Detailed Order Report cont ;12-Apr-2011 13:40;DU
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**12,27,92,94,116,141,177,186,190,1006,1008**;Dec 17, 1997
  ;Modified - IHS/MSC/PLS - 09/21/2010 - Line ACTION+2
 ACT ; -- add Activity [from ^ORQ2]
  N ORACT S ORACT=$P(ACTION,U,2)
@@ -27,7 +27,9 @@ A1 I $P(ACTION,U,12) D  ;Nature of Order/Release
  . D EVENT(.ORV) S CNT=CNT+1,@ORY@(CNT)="     Released by:       "_ORV(1)
  . S I=1 F  S I=$O(ORV(I)) Q:I'>0  S CNT=CNT+1,@ORY@(CNT)=$$REPEAT^XLFSTR(" ",24)_$G(ORV(I))
 A2 I $P(ACTION,U,5) S CNT=CNT+1,@ORY@(CNT)=$S($P(ACTION,U,4)=7:"      Dig",1:"     Elec")_" Signature:    "_$$USER(+$P(ACTION,U,5))_" on "_$$DATE($P(ACTION,U,6))
- I '$P(ACTION,U,5)!($P(ACTION,U,3)'=$P(ACTION,U,5)),'$$SERVCORR S CNT=CNT+1,@ORY@(CNT)="     "_$S($D(NVA):"Documented by:",1:"Ordered by:   ")_"     "_$$USER(+$P(ACTION,U,3))
+ ;IHS/MSC/MGH Change Documented by to entering user for non-va meds
+ N DOCBY S DOCBY=$S($D(NVA):$$USER($P(OR0,U,6)),1:$$USER(+$P(ACTION,U,3)))
+ I '$P(ACTION,U,5)!($P(ACTION,U,3)'=$P(ACTION,U,5)),'$$SERVCORR S CNT=CNT+1,@ORY@(CNT)="     "_$S($D(NVA):"Documented by:",1:"Ordered by:   ")_"     "_DOCBY
  I '$P(ACTION,U,5),$L($P(ACTION,U,4)) S:$P(ACTION,U,4)=0 CNT=CNT+1,@ORY@(CNT)="     Released by:       "_$$USER(+$P(ACTION,U,7))_" on "_$$DATE($P(ACTION,U,16)) S CNT=CNT+1,@ORY@(CNT)="     Signature:         "_$$SIG($P(ACTION,U,4)) ;186
  I $P(ACTION,U,9) S CNT=CNT+1,@ORY@(CNT)="     Nurse Verified:    "_$S($P(ACTION,U,8):$$USER(+$P(ACTION,U,8))_" on ",1:"")_$$DATE($P(ACTION,U,9))
  I $P(ACTION,U,11) S CNT=CNT+1,@ORY@(CNT)="     Clerk Verified:    "_$S($P(ACTION,U,10):$$USER(+$P(ACTION,U,10))_" on ",1:"")_$$DATE($P(ACTION,U,11))

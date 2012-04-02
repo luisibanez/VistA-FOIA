@@ -1,5 +1,5 @@
 BIOUTPT5 ;IHS/CMI/MWR - WRITE SUBHEADERS.; AUG 10,2010
- ;;8.4;IMMUNIZATION;**1**;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  WRITE SUBHEADER LINES TO ^TMP FOR REPORTS.
  ;;  v8.4 PATCH 1: Manage subheader Items more than 20.  SUBH+35
@@ -205,13 +205,13 @@ RYEAR(BIYEAR,BIRTN) ;EP
  ;
  ;----------
 TEXT1 ;EP
- ;;The "Report Year" represents the influenza season of the year you
- ;;select.  So, for example, 2007 will cover the influenza season from
- ;;September 1, 2007 until December 31, 2007 (or until March 31, if
- ;;that End Date is chosen).
+ ;;The "Report Year" represents the start of a particular influenza
+ ;;season.  So, for example, 2011 will cover the influenza season from
+ ;;September 1, 2011 until December 31, 2011 (or until March 31, 2012,
+ ;;if that End Date is chosen).
  ;;
  ;;The patient ages in the report will be calculated as of 12/31 of the
- ;;Report Year you select (12/31/2007 in the above example).
+ ;;Report Year you select (12/31/2011 in the above example).
  ;;
  D PRINTX("TEXT1")
  Q

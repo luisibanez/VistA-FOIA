@@ -1,11 +1,12 @@
 BDGM202A ; IHS/ANMC/LJF - M202 CALCULATE ;  [ 12/27/2004  3:24 PM ]
- ;;5.3;PIMS;**1001,1003,1005,1006,1008,1010**;MAY 28, 2004
+ ;;5.3;PIMS;**1001,1003,1005,1006,1008,1010,1013**;MAY 28, 2004
  ;IHS/ITSC/LJF 10/25/2004 PATCH 1001 count even if service is now inactive
  ;             04/27/2005 PATCH 1003 fixed code so transfers from observation to inpatient are counted as admissions
  ;IHS/OIT/LJF  05/04/2006 PATCH 1005 rewrote logic to count authorized beds
  ;             08/24/2006 PATCH 1006 added separate counts for observations and swing beds
  ;cmi/anch/maw 11/07/2007 PATCH 1008 Q:'$D(REM) as sometimes its not there when PEAK gets called
  ;cmi/anch/maw 09/19/2008 PATCH 1010 counts for special service (observations) were not correct in BOM and EOM
+ ;ihs/cmi/maw  04/18/2011 PATCH 1013 RQMT155 added day surgery
  ;
  NEW BDGBD,BDGED,REM,DGA,DGLOS,BDGOB
  D INIT                ;initialize counts
@@ -30,7 +31,8 @@ INIT ; -- initialize variables
  F I=1:1:7 F J=1:1:10 S DGA(I,J)=0
  ;
  ;IHS/OIT/LJF 08/24/2006 PATCH 1006 adding swing bed & observations
- F I=8,9 F J=1:1:10 S DGA(I,J)=0
+ ;F I=8,9 F J=1:1:10 S DGA(I,J)=0
+ F I=8,9,10 F J=1:1:10 S DGA(I,J)=0  ;ihs/cmi/maw 04/18/2011 added day surgery
  ;
  ; length of stay stats (Part III) only has 3 categories
  ;     adult, peds and newborn
@@ -200,7 +202,8 @@ SS(T) ; -- special service  3 ob, 4 nb, 5 tb, 6 mh, 7 al
  ;
  ;IHS/OIT/LJF 08/24/2006 PATCH 1006 accounts for observations & swing bed
  ;Q $S(X["O":"",X="08":3,X="07":4,X="13":5,X="15":6,X="12":7,1:0)
- Q $S(X["O":9,X="08":3,X="07":4,X="13":5,X="15":6,X="12":7,X="21":8,1:0)
+ ;Q $S(X["O":9,X="08":3,X="07":4,X="13":5,X="15":6,X="12":7,X="21":8,1:0)
+ Q $S(X["O":9,X="08":3,X="07":4,X="13":5,X="15":6,X="12":7,X="21":8,X="23":10,1:0)  ;ihs/cmi/maw 04/18/2011 added day surgery
  ;
 ITS(T) ; find corresponding inpt service for observation service
  NEW X,Y

@@ -1,5 +1,5 @@
 BIREPA3 ;IHS/CMI/MWR - REPORT, VAC ACCOUNTABILITY; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW OR PRINT VACCINE ACCOUNTABILITY REPORT.
  ;
@@ -43,7 +43,7 @@ CHKSET(BIDATE,BIVIEN,BIIIEN,BICC,BIHCF,BICM,BIBEN,BIHIST,BIVT) ;EP
  ;     6 - BICM   (req) Case Manager array.
  ;     7 - BIBEN  (req) Beneficiary Type array.
  ;     8 - BIHIST (req) Include Historical (1=yes,0=no).
- ;     9 - BIVT    (req) Visit Type array.
+ ;     9 - BIVT   (req) Visit Type array.
  ;
  Q:'$G(BIDATE)
  Q:'$G(BIVIEN)
@@ -56,9 +56,12 @@ CHKSET(BIDATE,BIVIEN,BIIIEN,BICC,BIHCF,BICM,BIBEN,BIHIST,BIVT) ;EP
  Q:'$D(BIBEN)
  Q:'$D(BIVT)
  ;
- N BIAGRP,BIDFN,BIIMM,BIVGRP,BIVNAM,BIDOSE,Y
+ N BIAGRP,BIDFN,BIIMM,BILOT,BIVGRP,BIVNAM,BIDOSE,Y
  S Y=^AUPNVIMM(BIIIEN,0)
- S BIDFN=$P(Y,U,2),BIIMM=$P(Y,U) ;,BIDOSE=$P(Y,U,4)
+ S BIDFN=$P(Y,U,2),BIIMM=$P(Y,U),BILOT=$P(Y,U,5) ;,BIDOSE=$P(Y,U,4)
+ ;
+ I BILOT S BILOT=$P($G(^AUTTIML(BILOT,0)),U)
+ S:BILOT="" BILOT="No Lot Number"
  ;
  ;---> Quit if this Vaccine should not be included in this report.
  ;---> As of v8.4, include all vaccines given during the selected time.
@@ -89,24 +92,23 @@ CHKSET(BIDATE,BIVIEN,BIIIEN,BICC,BIHCF,BICM,BIBEN,BIHIST,BIVT) ;EP
  S BIVGRP=$$IMMVG^BIUTL2(BIIMM,4)
  ;
  N Z
+ ;---> Now store in stats arrays.
  ;
- ;---> **** NEXT LINES: COULD SUBSTITUTE LOT# FOR DOSE. *****
+ ;---> Add for this Vaccine, Lot, Age.
+ S Z=$G(BITMP("STATS",BIVGRP,BIVNAM,BILOT,BIAGRP))
+ S BITMP("STATS",BIVGRP,BIVNAM,BILOT,BIAGRP)=Z+1
  ;
- ;---> Add for this Vaccine, Dose, Age.
- ;S Z=$G(BITMP("STATS",BIVGRP,BIVNAM,BIDOSE,BIAGRP))
- ;S BITMP("STATS",BIVGRP,BIVNAM,BIDOSE,BIAGRP)=Z+1
+ ;---> Add for this Vaccine, Lot, Total.
+ S Z=$G(BITMP("STATS",BIVGRP,BIVNAM,BILOT,"TOTAL"))
+ S BITMP("STATS",BIVGRP,BIVNAM,BILOT,"TOTAL")=Z+1
  ;
- ;---> Add for this Vaccine, Dose, Total.
- ;S Z=$G(BITMP("STATS",BIVGRP,BIVNAM,BIDOSE,"TOTAL"))
- ;S BITMP("STATS",BIVGRP,BIVNAM,BIDOSE,"TOTAL")=Z+1
- ;
- ;---> Add for this Vaccine, Age, Total.
- S Z=$G(BITMP("STATS",BIVGRP,BIVNAM,"AGE",BIAGRP))
- S BITMP("STATS",BIVGRP,BIVNAM,"AGE",BIAGRP)=Z+1
+ ;---> Add for this Vaccine, ALL Lots, Age.
+ S Z=$G(BITMP("STATS",BIVGRP,BIVNAM,"ALL",BIAGRP))
+ S BITMP("STATS",BIVGRP,BIVNAM,"ALL",BIAGRP)=Z+1
  ;
  ;---> Add for this Vaccine, Total.
- S Z=$G(BITMP("STATS",BIVGRP,BIVNAM,"TOTAL"))
- S BITMP("STATS",BIVGRP,BIVNAM,"TOTAL")=Z+1
+ S Z=$G(BITMP("STATS",BIVGRP,BIVNAM,"ALL","TOTAL"))
+ S BITMP("STATS",BIVGRP,BIVNAM,"ALL","TOTAL")=Z+1
  ;
  ;---> Add for ALL Vaccines, Total.
  S Z=$G(BITMP("STATS","ALL","TOTAL"))

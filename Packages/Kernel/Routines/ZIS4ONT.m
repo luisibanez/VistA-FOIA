@@ -1,6 +1,7 @@
-%ZIS4 ;SFISC/RWF,AC - DEVICE HANDLER SPOOL SPECIFIC CODE (Cache) ;1/24/08  16:08
- ;;8.0;KERNEL;**34,59,69,191,278,293,440**;Jul 10, 1995;Build 13
+%ZIS4 ;SFISC/RWF,AC - DEVICE HANDLER SPOOL SPECIFIC CODE (Cache) ;04/06/09  13:28
+ ;;8.0;KERNEL;**34,59,69,191,278,293,440,499,524**;Jul 10, 1995;Build 15
  ;Per VHA Directive 2004-038, this routine should not be modified
+ ;
 OPEN ;Called for TRM devices
  G OPN2:$D(IO(1,IO))
  S POP=0 D OP1 G NOPEN:'$D(IO(1,IO))
@@ -39,13 +40,16 @@ O1 N $ET S $ET="G OPNERR^%ZIS4"
  S IO("ERROR")=""
  Q
  ;Version 3 used ip/port, Version 4 has ip:port|xx
-ZIO N %,%1 S %=$ZIO,%1=$$VERSION^%ZOSV
+ZIO I $D(IO("IP")),$D(IO("ZIO")) Q  ;p499,p524
+ N %,%1 S %=$ZIO,%1=$$VERSION^%ZOSV
  S IO("ZIO")=$S(%1<4:$I,1:$ZIO),%1=$S(%["/":"/",1:":")
  ;Drop prefix
  S:%["|TNT|" %=$E(%,6,999) S:%["|TNA|" %=$E(%,6,999)
  ;Get IP name or number
- I '$D(IO("IP")) D
- . S:$P(%,%1)["." IO("IP")=$P(%,%1)
+ S:$P(%,%1)["." IO("IP")=$P(%,%1)
+ I $$OS^%ZOSV="VMS",$G(IO("IP"))="" S IO("IP")=$P($ZF("TRNLNM","SYS$REM_NODE"),":") ;For SSH, p499
+ S:'$L(IO("ZIO")) IO("ZIO")=$G(IO("IP"))
+ I $L($G(IO("IP"))),IO("IP")'?1.3N1P1.3N1P1.3N1P1.3N S IO("IP")=$P($ZU(54,13,IO("IP")),",") ;p499
  Q
  ;
 SPOOL ;%ZDA=pointer to ^XMB(3.51, %ZFN=spool file Num/Name.
@@ -91,7 +95,8 @@ CLOSE N %ZOS,%Z1,%ZCR,%2,%3,%X,%Y,ZTSK,%ZFN S %ZOS=$$OS^%ZOSV
  . D ADD($P(%X,$C(13),1))
  K ^SPOOL(%ZFN),^SPOOL(0,$P(%ZS,U,1)),%Y,%X,%1,%2,%3 D CLOSE^ZISPL1
  Q
-ADD(L) S %=%+1,^XMBS(3.519,XS,2,%,0)=L Q
+ADD(L) S %=%+1,^XMBS(3.519,XS,2,%,0)=L
+ Q
 LIMIT D ADD("*** INCOMPLETE REPORT  -- SPOOL DOCUMENT LINE LIMIT EXCEEDED ***") S $P(^XMB(3.51,%ZDA,0),"^",11)=1
  Q
 CLVMS ;Close for Cache VMS

@@ -1,5 +1,5 @@
 BIREPQ ;IHS/CMI/MWR - REPORT, QUARTERLY IMM; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW QUARTERLY IMMUNIZATION REPORT.
  ;
@@ -38,7 +38,7 @@ INIT ;EP
  D WRITE(.BILINE)
  ;---> Date.
  S:'$G(BIQDT) BIQDT=$G(DT)
- D DATE^BIREP(.BILINE,"BIREPQ",1,$G(BIQDT),"Quarter Ending Date")
+ D DATE^BIREP(.BILINE,"BIREPQ",1,$G(BIQDT),"Quarter Ending Date",,,,1)
  ;
  ;---> Current Community.
  D DISP^BIREP(.BILINE,"BIREPQ",.BICC,"Community",2,1)
@@ -54,10 +54,23 @@ INIT ;EP
  S:$O(BIBEN(0))="" BIBEN(1)=""
  D DISP^BIREP(.BILINE,"BIREPQ",.BIBEN,"Beneficiary Type",5,4)
  ;
- ;---> Include Hep A, Pneumo, Var.
+ ;---> User Population.
+ D:($G(BIUP)="")
+ .I $$GPRAIEN^BIUTL6 S BIUP="i" Q
+ .S BIUP="u"
+ ;
+ S X="     6 - Patient Population Group...: "
+ D
+ .I BIUP="r" S X=X_"Registered Patients (All)" Q
+ .I BIUP="i" S X=X_"Immunization Register Patients (Active)" Q
+ .I BIUP="u" S X=X_"User Population (1 visit, 3 yrs)" Q
+ .I BIUP="a" S X=X_"Active Users (2+ visits, 3 yrs)" Q
+ D WRITE(.BILINE,X,1)
+ K X
+ ;
+ ;---> Include Hep A, Pneumo.
  S:'$D(BIHPV) BIHPV=1
- ;S X="     6 - Include Hep A, Pneumo & Var: "
- S X="     6 - Include Varicella & Pneumo.: "
+ S X="     7 - Include Varicella & Pneumo.: "
  S X=X_$S($G(BIHPV):"YES",1:"NO")
  D WRITE(.BILINE,X,1)
  K X
@@ -134,13 +147,30 @@ TEXT1(BITEXT) ;EP
  ;;     19-23 months old     4-DTaP 3-IPV 3-Hib 3-HepB 4-PCV 1-MMR 1-VAR
  ;;     24-27 months old     4-DTaP 3-IPV 3-Hib 3-HepB 4-PCV 1-MMR 1-VAR
  ;;
+ ;;In Version 8.5 we have revised the 3-27 month report to have
+ ;;manufacturer-specific logic:
+ ;;
+ ;;   PedvaxHib (PRP-OMP) requires 3 doses
+ ;;   ActHib (PRP-T0 requires 4 doses
+ ;;   RotaTeq (Rota-5) requires 3 doses
+ ;;   RotaRix (Rota-1) requires 2 doses
+ ;;
+ ;;Version 8.5 also adjusts for catch-up schedules to require fewer doses
+ ;;of Hib and PCV13 in children who start late:
+ ;;
+ ;;   Hib:   16-27 months - requires 3 doses, or 2 doses >=12 months,
+ ;;          or 1 dose >=15 months
+ ;;
+ ;;   PCV13: 16-27 months - requires 4 doses, or 3 doses >=7 months,
+ ;;          or 2 doses >=12 months, or 1 dose >=24 months
+ ;;
  ;;
  ;;The 3-27 MONTH IMMUNIZATION REPORT screen allows you to adjust
  ;;the report to your needs.
  ;;
- ;;There are 6 items or "parameters" on the screen that you may
+ ;;There are 7 items or "parameters" on the screen that you may
  ;;change in order to select for a specific group of patients.
- ;;To change an item, enter its left column number (1-6) at the
+ ;;To change an item, enter its left column number (1-7) at the
  ;;prompt on the bottom of the screen.  Use "?" at any prompt where
  ;;you would like more information on the parameter you are changing.
  ;;
@@ -173,6 +203,12 @@ TEXT1(BITEXT) ;EP
  ;;only patients whose Beneficiary Type is one of those you select
  ;;will be included in the report.  "Beneficiary Type" refers to
  ;;Item 3 on Page 2 of the RPMS Patient Registration.
+ ;;
+ ;;PATIENT POPULATION GROUP: You may select one of four patient groups
+ ;;to be considered in the report: Registered Patients (All),
+ ;;Immunization Register Patients (Active), User Population (1+ visits
+ ;;in 3 yrs), or Active Clinical Users (2+ visits in 3 yrs).
+ ;;Immunization Register Patients (Active) is the default.
  ;;
  ;;INCLUDE VARICELLA & PNEUMO: Answer "YES" if you wish to have Varicella
  ;;and Pneumo included in the statistics of the "Appropriate for Age" row

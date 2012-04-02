@@ -1,5 +1,5 @@
-ORQPTQ4 ; slc/CLA - Extrinsic functions for patient information ;27-Feb-2007 11:27;DKM
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**1002**;Dec 17, 1997
+ORQPTQ4 ; slc/CLA - Extrinsic functions for patient information ;13-Jul-2011 15:25;MGH
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**1002,1008**;Dec 17, 1997
  Q
 DOB(DFN) ; extrinsic function to return patient date of birth:
  N VADM
@@ -42,11 +42,18 @@ HT(DFN) ; extrinsic function to return patient height:
  ; IHS/CIA/DKM - Added LASTVITL function
  ; Return most recent vital value of specified type
 LASTVITL(DFN,TYP) ;
- N IDT,IEN
+ N IDT,IEN,EIE,MSR
+ S MSR=""
  S:TYP'=+TYP TYP=$O(^AUTTMSR("B",TYP,0))
  Q:'TYP ""
- S IDT=$O(^AUPNVMSR("AA",DFN,TYP,0)) Q:'IDT "" S IEN=$O(^(IDT,0))
- Q $S(IEN:$P($G(^AUPNVMSR(IEN,0)),U,4),1:"")
+ S IDT=""
+ F  S IDT=$O(^AUPNVMSR("AA",DFN,TYP,IDT)) Q:'IDT!(+MSR)  D
+ .S IEN="" F  S IEN=$O(^AUPNVMSR("AA",DFN,TYP,IDT,IEN)) Q:'IEN!(+MSR)  D
+ ..;Return needs to be in second piece IHS/MSC/MGH
+ ..S EIE=$$GET1^DIQ(9000010.01,IEN,2,"I")
+ ..Q:+EIE
+ ..S MSR=IEN_U_$P($G(^AUPNVMSR(IEN,0)),U,4)
+ Q MSR
 PRIM(DFN) ; extrinsic function to return patient primary provider
  ; based on current patient location
  N ORQPRIM

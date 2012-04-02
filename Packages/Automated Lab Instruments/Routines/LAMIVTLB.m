@@ -1,6 +1,7 @@
-LAMIVTLB ; IHS/DIR/FJE - LA*5.2*12 ENVIRNMENT CHECK ROUTINE ;
- ;;5.2;LA;;NOV 01, 1997
- ;;5.2;AUTOMETED LAB INSTRUMENTS;**12**;Sep 27, 1994
+LAMIVTLB ;IHS/DIR/FJE - LA*5.2*12 ENVIRNMENT CHECK ROUTINE ;1/22/96  08:30 ;
+ ;;5.2;AUTOMETED LAB INSTRUMENTS;**1030**;NOV 01, 1997
+ ;;5.2;AUTOMETED LAB INSTRUMENTS;**12**;Sep 27, 1994;Build 7
+ ;;5.2;LA;;NOV 01, 1997;Build 6
 EN ; Does not prevent loading of the transport global.
  ;Envirnment check is done only during the install.
  Q:'$G(XPDENV)
@@ -20,7 +21,7 @@ USER ;
  .  W !,$$CJ^XLFSTR("You are not a valid user on this system",80),!
  .  S XPDQUIT=2
  ;-------------------------------------------------------------------
- I +$G(^LAM("VR"))'>5.1 D
+ I +$P($G(^LAM("VR")),";",3)'>5.1 D
  .  W !,$$CJ^XLFSTR("You must have LAB V5.2 or greater Installed",80),!
  .  S XPDQUIT=2
  ;-------------------------------------------------------------------

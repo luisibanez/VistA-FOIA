@@ -1,4 +1,4 @@
-BGOVPED ; IHS/BAO/TMD - Patient Education ;28-Apr-2011 10:02;DU
+BGOVPED ; IHS/BAO/TMD - Patient Education ;27-Apr-2011 18:49;DU
  ;;1.1;BGO COMPONENTS;**1,2,3,5,6,8**;Mar 20, 2007
  ;---------------------------------------------
  ;  Get patient ed records for a patient
@@ -205,10 +205,7 @@ SETTOP(CODEIEN,EDCVIEN,ICDFLG) ;
  .S FDA=$NA(FDA(9999999.09,"+1,"))
  .S @FDA@(.01)=F01
  .S @FDA@(1)=$S($$NEWVPED:NAME,1:MNEM)
- .;MSC/MGH patch 8 change
- .I ICDFLG D
- ..S @FDA@(ICDFLD)=CODEIEN
- .E  S @FDA@(.11)=CODEIEN
+ .S @FDA@(ICDFLD)=CODEIEN           ;Patch 8 change
  .S RET=$$UPDATE^BGOUTL(.FDA,,.IEN)
  .S:'RET RET=IEN(1)_U_F01
  Q RET

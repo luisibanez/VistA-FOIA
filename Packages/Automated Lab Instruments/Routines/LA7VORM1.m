@@ -1,5 +1,5 @@
 LA7VORM1 ;VA/DALOI/DLR - LAB ORM (Order) message builder ;JUL 06, 2010 3:14 PM
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**27,51,46,61,64,1027**;NOV 01, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**27,51,46,61,64,1027**;NOV 01, 1997;Build 9
  ;
 BUILD(LA7628) ;
  ; Call with LA7628 = ien of entry in file #62.8 Shipping Manifest
@@ -54,7 +54,8 @@ BUILD(LA7628) ;
  . I $G(LA7SMSG)'=3 D  ;cmi/maw for LEDI IHS order
  .. I $P(X(0),"^"),$L($P(X(0),"^",5)) S ^TMP("LA7628",$J,+$P(X(0),"^"),$P(X(0),"^",5),LA762801)=""
  . I $G(LA7SMSG)=3 D  ;cmi/maw for LEDI IHS order
- . I $P(X(0),"^"),$L($P(X(0),"^",5)) S ^TMP("LA7628",$J,+$P(X(0),"^"),$$GETORDA($P(X(0),"^",5))_"~"_$P(X(0),"^",5),LA762801)=""
+ .. I $P(X(0),"^"),$L($P(X(0),"^",5)) S ^TMP("LA7628",$J,$$GETORDA($P(X(0),"^",5)),$P(X(0),"^",5),LA762801)=""
+ .. ;I $P(X(0),"^"),$L($P(X(0),"^",5)) S ^TMP("LA7628",$J,+$P(X(0),"^"),$$GETORDA($P(X(0),"^",5))_"~"_$P(X(0),"^",5),LA762801)=""
  K LA762801
  ;
  ; Nothing to send
@@ -65,39 +66,80 @@ BUILD(LA7628) ;
  . D STARTMSG
  . I $G(HL) D EXIT
  ;
- S (LRDFN,LRI,LA7PIDSN)=0
- F  S LRDFN=$O(^TMP("LA7628",$J,LRDFN)) Q:'LRDFN  D  Q:$G(HL)
- . N LA7PID,LA7PV1
+ ;S (LRDFN,LRI,LA7PIDSN,LA7ORD)=0  ;ihs/cmi/maw 11/17/2010
+ S (LRDFN,LRI,LA7PIDSN,LA7ORD,LA7OBRSN)=0  ;ihs/cmi/maw 11/17/2010
+ F  S LA7ORD=$O(^TMP("LA7628",$J,LA7ORD)) Q:'LA7ORD  D  Q:$G(HL)
+ . N LA7PID,LA7PV1,LA7ORDI,LA7ORDD,LA7ORI
  . I LA7SMSG=1 D STARTMSG Q:$G(HL)
- . S LA7ORD=$$GETORD(LRDFN)  ;cmi/maw get order number
+ . S LA7ORDI=$Q(^LRO(69,"C",LA7ORD))
+ . I $QS(LA7ORDI,3)'=LA7ORD Q
+ . S LA7ORDD=$QS(LA7ORDI,4)
+ . S LA7ORI=$QS(LA7ORDI,5)
+ . S LRDFN=+$G(^LRO(69,LA7ORDD,1,LA7ORI,0))
+ . ;S LA7ORD=$$GETORD(LRDFN)  ;cmi/maw get order number
  . I LA7SMSG<2 D PID,PV1,IN1(LA7ORD),GT1(LA7ORD)  ;cmi/maw for billing info
  . I LA7SMSG=3 D STARTMSG Q:$G(HL)  D PID,PV1,IN1(LA7ORD),GT1(LA7ORD)  ;,INS  ;cmi/maw 5/26/2010 insurance added LEDI order
  . S LA7UID=""
  . S (LA7GUAR,LA7DGQ)=0  ;cmi/maw 5/26/2010 insurance
- . F  S LA7UID=$O(^TMP("LA7628",$J,LRDFN,LA7UID)) Q:LA7UID=""  D
+ . F  S LA7UID=$O(^TMP("LA7628",$J,LA7ORD,LA7UID)) Q:LA7UID=""  D
  . . N LA76802,LA7ORC,X
- . . S X=$Q(^LRO(68,"C",$P(LA7UID,"~",2)))
- . . I $QS(X,3)'=$P(LA7UID,"~",2) Q
+ . . S X=$Q(^LRO(68,"C",LA7UID))
+ . . I $QS(X,3)'=LA7UID Q
  . . S LRAA=$QS(X,4),LRAD=$QS(X,5),LRAN=$QS(X,6)
  . . F I=0,.1,.3,3 S LA76802(I)=$G(^LRO(68,LRAA,1,LRAD,1,LRAN,I))  ;cmi/maw 3/10/2010 get .1 node as well
  . . ;F I=0,.3,3 S LA76802(I)=$G(^LRO(68,LRAA,1,LRAD,1,LRAN,I))  cmi/maw 3/10/2010 orig line
  . . S I=$O(^LRO(68,LRAA,1,LRAD,1,LRAN,5,0))
  . . S LA76802(5)=$G(^LRO(68,LRAA,1,LRAD,1,LRAN,5,I,0))
  . . I LA7SMSG=2 D STARTMSG Q:$G(HL)  D PID,PV1,IN1(LA7ORD),GT1(LA7ORD)  ;,INS  ;cmi/maw 5/26/2010 insurance added
- . . S (LA7OBRSN,LA762801)=0
- . . F  S LA762801=$O(^TMP("LA7628",$J,LRDFN,LA7UID,LA762801)) Q:'LA762801  D
+ . . S (LA7OBRSN,LA762801)=0  ;ihs/cmi/maw 11/16/2010 orig line changed back 04/04/2011 to this
+ . . ;S LA762801=0  ;ihs/cmi/maw 11/17/2010 mod changed back 04/04/2011
+ . . F  S LA762801=$O(^TMP("LA7628",$J,LA7ORD,LA7UID,LA762801)) Q:'LA762801  D
  . . . N LA7OBR,I
  . . . F I=0,.1,1,2,5 S LA762801(I)=$G(^LAHM(62.8,LA7628,10,LA762801,I))
  . . . I $$CHKTST^LA7SMU(LA7628,LA762801)'=0 Q  ;deleted accession
- . . . D ORC,OBR^LA7VORM3,DG1(LA7ORD),OBX^LA7VORM3  ;cmi/maw 06/23/2010 added DG1 segment for LEDI
+ . . . D ORC,OBR^LA7VORM3,DG1(LA7ORD),OBX(LA7ORD,LA7UID)  ;cmi/maw 06/23/2010 added DG1 segment for LEDI
  . . I LA7SMSG=2 D BLG,SENDMSG
- . . I LA7SMSG=3 D BLG,SENDMSG  ;cmi/maw 7/1/2010 for ledi insurance
- . . S (LA7DGQ,LA7GUAR)=0  ;cmi/maw 5/26/2010 added for insurance
+ . I LA7SMSG=3 D BLG,SENDMSG  ;cmi/maw 7/1/2010 for ledi insurance
+ . S (LA7DGQ,LA7GUAR)=0  ;cmi/maw 5/26/2010 added for insurance
  . I LA7SMSG<2 D BLG
  . I LA7SMSG=1 D SENDMSG
  ;
  I LA7SMSG=0 D SENDMSG
  ;
+ ;ihs/cmi/maw 9/27/10 below is original ledi code
+ ;S (LRDFN,LRI,LA7PIDSN)=0
+ ;F  S LRDFN=$O(^TMP("LA7628",$J,LRDFN)) Q:'LRDFN  D  Q:$G(HL)
+ ;. N LA7PID,LA7PV1
+ ;. I LA7SMSG=1 D STARTMSG Q:$G(HL)
+ ;. S LA7ORD=$$GETORD(LRDFN)  ;cmi/maw get order number
+ ;. I LA7SMSG<2 D PID,PV1,IN1(LA7ORD),GT1(LA7ORD)  ;cmi/maw for billing info
+ ;. I LA7SMSG=3 D STARTMSG Q:$G(HL)  D PID,PV1,IN1(LA7ORD),GT1(LA7ORD)  ;,INS  ;cmi/maw 5/26/2010 insurance added LEDI order
+ ;. S LA7UID=""
+ ;. S (LA7GUAR,LA7DGQ)=0  ;cmi/maw 5/26/2010 insurance
+ ;. F  S LA7UID=$O(^TMP("LA7628",$J,LRDFN,LA7UID)) Q:LA7UID=""  D
+ ;. . N LA76802,LA7ORC,X
+ ;. . S X=$Q(^LRO(68,"C",$P(LA7UID,"~",2)))
+ ;. . I $QS(X,3)'=$P(LA7UID,"~",2) Q
+ ;. . S LRAA=$QS(X,4),LRAD=$QS(X,5),LRAN=$QS(X,6)
+ ;. . F I=0,.1,.3,3 S LA76802(I)=$G(^LRO(68,LRAA,1,LRAD,1,LRAN,I))  ;cmi/maw 3/10/2010 get .1 node as well
+ ;. . ;F I=0,.3,3 S LA76802(I)=$G(^LRO(68,LRAA,1,LRAD,1,LRAN,I))  cmi/maw 3/10/2010 orig line
+ ;. . S I=$O(^LRO(68,LRAA,1,LRAD,1,LRAN,5,0))
+ ;. . S LA76802(5)=$G(^LRO(68,LRAA,1,LRAD,1,LRAN,5,I,0))
+ ;. . I LA7SMSG=2 D STARTMSG Q:$G(HL)  D PID,PV1,IN1(LA7ORD),GT1(LA7ORD)  ;,INS  ;cmi/maw 5/26/2010 insurance added
+ ;. . S (LA7OBRSN,LA762801)=0
+ ;. . F  S LA762801=$O(^TMP("LA7628",$J,LRDFN,LA7UID,LA762801)) Q:'LA762801  D
+ ;. . . N LA7OBR,I
+ ;. . . F I=0,.1,1,2,5 S LA762801(I)=$G(^LAHM(62.8,LA7628,10,LA762801,I))
+ ;. . . I $$CHKTST^LA7SMU(LA7628,LA762801)'=0 Q  ;deleted accession
+ ;. . . D ORC,OBR^LA7VORM3,DG1(LA7ORD),OBX^LA7VORM3  ;cmi/maw 06/23/2010 added DG1 segment for LEDI
+ ;. . I LA7SMSG=2 D BLG,SENDMSG
+ ;. . I LA7SMSG=3 D BLG,SENDMSG  ;cmi/maw 7/1/2010 for ledi insurance
+ ;. . S (LA7DGQ,LA7GUAR)=0  ;cmi/maw 5/26/2010 added for insurance
+ ;. I LA7SMSG<2 D BLG
+ ;. I LA7SMSG=1 D SENDMSG
+ ;
+ ;I LA7SMSG=0 D SENDMSG
+ ;ihs/cmi/maw end of orig ledi code
  ;
 EXIT ;
  K @GBL,^TMP("LA7628",$J)
@@ -208,7 +250,8 @@ ORC ;Order Control
  ; Quantity/Timing
  S (LA76205,LA7DUR,LA7DURU)=""
  S LA762801=0
- F  S LA762801=$O(^TMP("LA7628",$J,LRDFN,LA7UID,LA762801)) Q:'LA762801  D
+ ;F  S LA762801=$O(^TMP("LA7628",$J,LRDFN,LA7UID,LA762801)) Q:'LA762801  D  ;ihs/cmi/maw ledi orig
+ F  S LA762801=$O(^TMP("LA7628",$J,LA7ORD,LA7UID,LA762801)) Q:'LA762801  D  ;ihs/cmi/maw 09/27/2010 ledi new
  . N I,LA760
  . ; Test duration
  . F I=0,2 S LA762801(I)=$G(^LAHM(62.8,LA7628,10,LA762801,I))
@@ -239,10 +282,10 @@ ORC ;Order Control
  Q
  ;
 GETORD(DF) ;-- get the order number
- N CHNUID
- S CHNUID=$O(^TMP("LA7628",$J,DF,0))
- I $G(CHNUID)="" Q ""
- Q $P(CHNUID,"~")
+ N LA7QUID
+ S LA7QUID=$O(^TMP("LA7628",$J,DF,0))
+ I $G(LA7QUID)="" Q ""
+ Q $P(LA7QUID,"~")
  ;
 GETORDA(UID) ;-- get the order number
  N X
@@ -258,15 +301,20 @@ DG1(ORD) ;-- handle the diagnosis
  Q
  ;
 GT1(ORD) ;-- handle the guarantor
- Q:$P($$ACCT^LA7VQINS(ORD),U,4)'="T"
+ Q:$P($$ACCT^LA7VQINS(ORD),U,4)="C"  ;ihs/cmi/maw 11/18/2010 changed to send if T or P
  D GAR^LA7VQINS(DFN,,,1)
  Q
  ;
 IN1(ORD) ;-- handle insurance
- Q:$P($$ACCT^LA7VQINS(ORD),U,4)'="T"
+ ;Q:$P($$ACCT^LA7VQINS(ORD),U,4)'="T"
+ K IN1  ;maybe this is hanging around?
+ S CNT=0  ;ihs/cmi/maw resets the IN1 segment counter 1/12/2011
  D INS^LA7VQINS(1,ORD)
  Q
  ;
+OBX(ORD,UID) ;-- build the obx ask at order questions
+ D OBX^LA7VQINS(ORD,UID)  ;ihs/cmi/maw 11/15/2010 - lets put the local ask at order questions in OBX
+ Q
 BLG ; Billing segment
  ;
  Q  ;cmi/maw 4/14/2010 no BLG segment, will replace with DG1, IN1, and GT1

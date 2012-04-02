@@ -1,5 +1,5 @@
 BIEXPRT2 ;IHS/CMI/MWR - EXPORT IMMUNIZATION RECORDS; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EXPORT IMMUNIZATION RECORDS: GATHER PATIENTS ACCORDING TO
  ;;  CRITERIA AND STORE IN ^BITMP(1,.
@@ -156,7 +156,7 @@ HRCN(BIDFN,BIHCF,BIACT) ;EP
  ;---> Return Health Record Number Indicator.
  ;---> Return 1 if this patient DOES NOT HAVE an Active HRCN/Chart# at any
  ;---> of the facilities in the BIHCF array; otherwise, return 0.
- ;---> Also return 1 if patient has NO Chart# ANYWHERE.  vvv83
+ ;---> Also return 1 if patient has NO Chart# ANYWHERE.
  ;---> Parameters:
  ;     1 - BIDFN  (req) IEN of Patient in ^DPT.
  ;     2 - BIHCF  (req) Health Care Facility array. Can be BIHCF("ALL").

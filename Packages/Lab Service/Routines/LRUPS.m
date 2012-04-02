@@ -1,12 +1,14 @@
-LRUPS ;AVAMC/REG/WTY - PATIENT SPEC LOOK-UP ;06/19/00
- ;;5.2T9;LR;**1018**;Nov 17, 2004
- ;;5.2;LAB SERVICE;**72,248**;Sep 27, 1994
+LRUPS ;AVAMC/REG/WTY - PATIENT SPEC LOOK-UP ;3/20/01
+ ;;5.2;LAB SERVICE;**1030**;NOV 01, 1997
+ ;;5.2;LAB SERVICE;**72,248,259**;Sep 27, 1994
+ ;Removed space between "No  data" at tag EN
+ ;
 GETP W ! K LRAN,DIC S X="",DFN=-1,DIC(0)="EQM",(LRX,LRDPF)="" D DPA^LRDPA
  I DFN=-1 S LRAN=-1 Q
 I N LRAY
  I '$D(LRPFLG) N LRPFLG S LRPFLG=0
  I LRSS="AU" G AU
-EN I '$D(^LR(LRDFN,LRSS)) W $C(7),!!,"No  data for ",PNM G GETP
+EN I '$D(^LR(LRDFN,LRSS)) W $C(7),!!,"No data for ",PNM G GETP
  S (LRI,LRLIDT,E)=0 S:'$D(LRABV) LRABV=0
  I "CYEMSP"'[LRSS W !!,"Count #",?10,"Accession #",?29,"Date",?45,"Site/specimen"
  E  W !!,"Specimen(s)",?30,"Count #",?40,"Accession #",?55,"Date Obtained"

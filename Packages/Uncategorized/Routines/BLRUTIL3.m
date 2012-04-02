@@ -1,5 +1,5 @@
 BLRUTIL3 ;IHS/OIT/MKK - MISC IHS LAB UTILITIES (Cont) ;JUL 06, 2010 3:14 PM
- ;;5.2;IHS LABORATORY;**1025,1027**;NOV 01, 1997
+ ;;5.2;IHS LABORATORY;**1025,1027,1030**;NOV 01, 1997
  ;
  Q
  ;
@@ -63,7 +63,7 @@ GETACCCP(LRAS,LRAA,LRAD,LRAN) ; EP -- Take Accession # & break apart
  S LRAN=+X3
  Q 1
  ;
-DATE ;
+DATE ; EP
  K DTOUT,DUOUT S LREND=0
  W !,"DATE",!!,$S($D(%DT("A")):%DT("A"),1:"DATE: "),$S($D(%DT("B")):%DT("B"),1:"TODAY"),"//" R X:DTIME S:X="^" DUOUT=1 S:'$T X="^",DTOUT=1 I $D(DUOUT)!($D(DTOUT)) S LREND=1,Y=-1 Q
  S:X="" X=$S($D(%DT("B")):%DT("B"),1:"T") S:$D(%DT)[0 %DT="E" S:%DT["A" %DT=$P(%DT,"A",1)_$P(%DT,"A",2) S:%DT'["E" %DT="E"_%DT D ^%DT G DATE:X="?"!(Y<1)
@@ -85,9 +85,9 @@ REVIDEO(STR) ; EP -- Write string in Reverse Video & BOLDED
  W *27,"[1;7m",STR,*27,"[0m"
  Q
  ; ----- END IHS/OIT/MKK LR*5.2*1025
- ; 
+ ;
  ; ----- BEGIN IHS/OIT/MKK LR*5.2*1027
-ESIGINFO ;EP -- Rework of BLRUTIL ESIGINFO subroutine.
+ESIGINFO ; EP -- Rework of BLRUTIL ESIGINFO subroutine.
  NEW DOCDUZ,DOCIEN,ESIGDSTR,REVIEWDV,TAB
  NEW REVSTS
  ;
@@ -133,7 +133,7 @@ BLINKER(STR) ; EP -- Write string in BOLDED, UNDERLINED, & BLINKING
  Q
  ;
  ; Cloned from LR7OSAP1.  Wrap Text in array to ^TMP global
-WRAP(ROOT,FMT) ;Wrap text
+WRAP(ROOT,FMT) ; EP - Wrap text
  I '$L($G(ROOT)) Q ""
  N CCNT,GCNT,INC,LRI,LRINDX,LRTX,SP,X
  S:'$G(FMT) FMT=79
@@ -154,3 +154,262 @@ ALERT ; EP
  W "        TEST:",$P(XQADATA,"^",3),!!
  Q
  ; ----- END IHS/OIT/MKK LR*5.2*1027
+ ; 
+ ; ----- BEGIN IHS/OIT/MKK -- LR*5.2*1030
+REVBLINK(STR) ; EP - Print string in Bold, Blinking, Reverse Video
+ W *27,"[1;7;5m",STR,*27,"[0m"
+ Q
+ ;
+ ; Moved PCC Bulletin code to here in order to standardize messages
+ ; BLRBUL=1 SENDS BLRTXLOG BULLETIN
+ ; BLRBUL=2 SENDS BLRTXLOGERR BULLETIN
+ ; BLRBUL=3 SENDS BLRTXLOG AND BLRTXLOGERR BULLETIN
+BULTNS ; EP - Send PCC Bulletin
+ D:+$P($G(^BLRSITE($G(DUZ(2)),0)),U,10) ENTRYAUD^BLRUTIL("BULTNS^BLRUTIL3 0.0")
+ ;
+ Q:BLRPCC["Lab deleted test"      ; If Lab Deleted Test, don't send message.
+ ;
+ I "13"[BLRBUL D BULTX("BLRTXLOG")  Q:BLRBUL=1
+ D BULTX("BLRTXLOGERR")
+ Q
+ ;
+BULTX(BULLETIN)     ; EP - SEND BULLETIN IF PCC ERROR IN FILING
+ D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("BULTX^BLRUTIL3 0.0")
+ ;
+ K XMB                  ; Initialize array
+ S Y=""                 ; Initialize variable
+ ;
+ ; If BLRTXLOG number exists, use ^BLRTXLOG database
+ I +$G(BLRLOGDA)>0 D BULTXSET
+ ;
+ ; If BLRTXLOG number DOES NOT exist, use variables
+ I +$G(BLRLOGDA)<1 D BLTXNSET
+ ;
+ S XMB(7)=$G(BLRLOGDA)  ; BLR Transaction Log Number
+ ;
+ S XMB(8)=BLRPCC        ; Error Message
+ ;
+ S XMB=BULLETIN         ; Bulletin to use
+ ;
+ ; Send the Bulletin
+ ; S BLRDUZ=DUZ,DUZ=.5 D ^XMB S DUZ=BLRDUZ
+ S XMDUZ="Lab to PCC Link Processor"
+ D ^XMB
+ ;
+ D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("EXIT BULTX^BLRUTIL3","APCDALVR","XMB")
+ ;
+ ; Clean up
+ K XMB
+ Q
+ ;
+ ; Set bulletin parameters from ^BLRTXLOG global
+BULTXSET ; EP 
+ NEW COLLDT,LABTIEN,PTPTR
+ ;
+ S PTPTR=+$P($G(^BLRTXLOG(BLRLOGDA,0)),"^",4)    ; Patient Pointer
+ ;
+ S XMB(1)=$P($G(^DPT(PTPTR,0)),"^",1)            ; Patient Name
+ S XMB(2)=$G(^DPT(PTPTR,"LR"))                   ; LRDFN
+ ;
+ ; Date of Visit -- Collection Date
+ S COLLDT=$P($G(^BLRTXLOG(BLRLOGDA,12)),"^",1)
+ S XMB(3)=$$FMTE^XLFDT(COLLDT,"1D")
+ ;
+ S XMB(4)=$P($G(^BLRTXLOG(BLRLOGDA,11)),"^",3)   ; Order Number
+ S XMB(5)=$P($G(^BLRTXLOG(BLRLOGDA,12)),"^",2)   ; Accession Number
+ ;
+ S LABTIEN=+$P($G(^BLRTXLOG(BLRLOGDA,0)),"^",6)
+ S XMB(6)=$P($G(^LAB(60,LABTIEN,0)),"^",1)       ; Lab Test
+ ;
+ D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("BULTXSET^BLRUTIL3 9.0","XMB")
+ Q
+ ;
+ ; Set bulletin parameters from variables
+BLTXNSET ; EP
+ NEW PTPTR
+ ;
+ S PTPTR=+$G(APCDALVR("APCDPAT"))                ; Patient Pointer
+ ;
+ S XMB(1)=$P($G(^DPT(PTPTR,0)),"^",1)            ; Patient Name
+ S XMB(2)=$G(^DPT(PTPTR,"LR"))                   ; LRDFN
+ ;
+ ; Visit/Collection Date
+ S XMB(3)=$$FMTE^XLFDT($G(APCDALVR("APCDDATE")),"1D")
+ ;
+ S XMB(4)=$G(BLRORD)                             ; Order Number
+ S XMB(5)=$G(BLRACCN)                            ; Accession Number
+ S XMB(6)=$P($G(^LAB(60,+$G(BLRTEST),0)),"^",1)  ; Test Description
+ ;
+ D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("BLTXNSET^BLRUTIL3 9.0","XMB")
+ Q
+ ;
+ ; Get Reference Range for a Test for File 63
+ ; Used by MEAG Delta Check
+GETREFR(TESTNAME) ; EP
+ NEW IEN,MESSAGE,REFL,REFH,SPEC,TARGET,UNITS
+ ;
+ ; Get Internal Entry Number of Test
+ D FIND^DIC(60,,,,TESTNAME,,,,,"TARGET","MESSAGE")
+ S IEN=+$G(TARGET("DILIST",2,1))
+ Q:IEN<1 "!!!!!!!!"
+ ;
+ S SPEC=+$O(^LAB(60,IEN,1,0))  ; First Site/Spec
+ Q:SPEC<1 "!!!!!!!!"
+ ;
+ S REFL=$$GET1^DIQ(60.01,SPEC_","_IEN_",",1,"I")
+ S REFH=$$GET1^DIQ(60.01,SPEC_","_IEN_",",2,"I")
+ S UNITS=$$GET1^DIQ(60.01,SPEC_","_IEN_",",6,"I")
+ ;
+ ; If UNITS is a pointer to the IHS UCUM file, get units text
+ S:+$G(UNITS)>0 UNITS=$P($G(^BLRUCUM(UNITS,0)),"^")
+ ;
+ Q SPEC_"!"_REFL_"!"_REFH_"!!!!"_UNITS_"!!"
+ ;
+INSTLRPT ; EP -- Report of ^BLRINSTL global
+ NEW CP,CNT,WHO,WHEN
+ NEW HEADER,PG,LINES,MAXLINES,QFLG,HD1
+ ;
+ D INSTLRPI
+ ;
+ F  S CP=$O(^BLRINSTL("LAB PATCH",CP))  Q:CP<1!(QFLG="Q")  D
+ . F  S CNT=$O(^BLRINSTL("LAB PATCH",CP,"INSTALLED BY",CNT))  Q:CNT<1!(QFLG="Q")  D
+ .. D INSTLRPL
+ Q
+ ;
+INSTLRPI ; EP -- Initialize variables
+ NEW DTRANGE,FIRST,FIRSTDT,FRSTPTCH,LAST,LASTPTCH
+ S HEADER(1)="IHS LAB Patches Report"
+ ;
+ S FRSTPTCH=$O(^BLRINSTL("LAB PATCH",0))
+ S FIRST=$O(^BLRINSTL("LAB PATCH",FRSTPTCH,"INSTALLED BY",0))
+ S FIRSTDT=$P($G(^BLRINSTL("LAB PATCH",FRSTPTCH,"INSTALLED BY",FIRST,"DATE/TIME")),"@")
+ ;
+ S LASTPTCH=$O(^BLRINSTL("LAB PATCH","A"),-1)
+ S LAST=$O(^BLRINSTL("LAB PATCH",LASTPTCH,"INSTALLED BY","A"),-1)
+ S LASTDT=$P($G(^BLRINSTL("LAB PATCH",LASTPTCH,"INSTALLED BY",LAST,"DATE/TIME")),"@")
+ ;
+ S HEADER(2)="Patches Installed From "_FIRSTDT_" thru "_LASTDT
+ S HEADER(3)=" "
+ S $E(HEADER(4),5)="Patch"
+ S $E(HEADER(4),15)="Who"
+ S $E(HEADER(4),45)="When"
+ ;
+ S MAXLINES=22,LINES=MAXLINES+10,PG=0,(HD1,QFLG)="NO"
+ S (CP,CNT)=0
+ Q
+ ;
+INSTLRPL ; EP -- Line of Data
+ I LINES>MAXLINES D HEADERPG^BLRGMENU(.PG,.QFLG,HD1)  Q:QFLG="Q"
+ ;
+ W ?4,CP
+ W ?14,$G(^BLRINSTL("LAB PATCH",CP,"INSTALLED BY",CNT))
+ W ?44,$TR($P($G(^BLRINSTL("LAB PATCH",CP,"INSTALLED BY",CNT,"DATE/TIME")),":",1,2),"@"," ")
+ W !
+ S LINES=LINES+1
+ Q
+ ;
+MAKE132 ; EP - Force Screen to 132 Characters
+ W "Setting display to 132 column mode",!
+ W $C(27)_"[?3h",!
+ W "132 column mode active.",!
+ W $TR($J("",132)," ","*"),!
+ W !
+ S IOM=132
+ Q
+ ;
+MAKE80 ; EP - Force Screen to 80 Characters
+ W "Setting display to 80 column mode",!
+ W $C(27)_"[?3l",!
+ W "80 column mode active.",!
+ W $TR($J("",80)," ","*"),!
+ W !
+ S IOM=80
+ Q
+ ;
+MAILALMI(MESSAGE,MSGARRAY,FROMWHOM) ; EP - send e-MAIL and an Alert to members of the LMI Mail Group
+ NEW MAILARRY
+ ;
+ ; Alert just sends MESSAGE string
+ D SNDALERT(MESSAGE)
+ ;
+ ; Setup variables for sending MailMan e-mail
+ I $L($G(MSGARRAY(1))) M MAILARRY=MSGARRAY
+ ;
+ I $L($G(MSGARRAY(1)))<1 D     ; If MSGARRAY null, create generic array
+ . S MAILARRY(1)="The Subject of this email is the message:"
+ . S MAILARRY(2)="     "_MESSAGE
+ ;
+ I $G(FROMWHOM)="" S FROMWHOM="RPMS Lab Package"
+ ;
+ D SENDMAIL(MESSAGE,.MAILARRY,FROMWHOM)
+ Q
+ ;
+SNDALERT(ALERTMSG) ; EP - Send alert to LMI group AND User (if not member of LMI Mail Group)
+ S XQAMSG=ALERTMSG
+ S XQA("G.LMI")=""
+ ;
+ ; If user not part of LMI Mail Group, send them alert also
+ S:$$NINLMI(DUZ) XQA(DUZ)=""
+ ;
+ S X=$$SETUP1^XQALERT
+ K XQA,XQAMSG
+ Q:X
+ ;
+ NEW SUBSCRPT
+ S SUBSCRPT="BLRLINKU Alert^"_+$H_"^"_$J
+ S ^XTEMP(SUBSCRPT,0)=$$FMADD^XLFDT($$DT^XLFDT,90)_"^"_$$DT^XLFDT_"^"_"Lab Package Alert."
+ S ^XTEMP(SUBSCRPT,1)="Alert was not sent."
+ S ^XTEMP(SUBSCRPT,2)="  Message that should have been sent follows:"
+ S ^XTEMP(SUBSCRPT,3)="     "_ALERTMSG
+ S ^XTEMP(SUBSCRPT,4)="  ALERT Error Message Follows:"
+ S ^XTEMP(SUBSCRPT,5)="     "_XQALERR
+ Q
+ ;
+NINLMI(CHKDUZ) ; EP -- Check to see if DUZ is NOT part of LMI Mail Group
+ NEW MGRPIEN,XMDUZ
+ ;
+ ; Get IEN of LMI MaiL Group
+ D CHKGROUP^XMBGRP("LMI",.MGRPIEN)  ; VA DBIA 1146
+ Q:+(MGRPIEN)<1 1                   ; If no Mail Group, return TRUE
+ ;
+ ; XMDUZ = DUZ of the user
+ ; Y     = IEN of the mail group
+ S XMDUZ=DUZ
+ S Y=MGRPIEN
+ D CHK^XMA21                        ; VA DBIA 10067
+ ;
+ Q $S($T=1:0,1:1)
+ ;
+ ; Send MailMan E-mail to LMI group AND User (if User is not a member of LMI Mail Group)
+SENDMAIL(MAILMSG,MAILARRY,FROMWHOM,NOUSER) ; EP 
+ NEW DIFROM
+ ;
+ K XMY
+ S XMY("G.LMI")=""
+ ;
+ ; If User not part of LMI Mail Group, send them e-mail also, but
+ ; If-And-Only-If the NOUSER variable is null.
+ S:$G(NOUSER)=""&($$NINLMI(DUZ)) XMY(DUZ)=""
+ ;
+ S LRBLNOW=$E($$NOW^XLFDT,1,12)
+ ;
+ S XMSUB=MAILMSG
+ S XMTEXT="MAILARRY("
+ S XMDUZ=FROMWHOM
+ S XMZ="NOT OKAY"
+ D ^XMD
+ ;
+ I $G(XMMG)'=""!(XMZ="NOT OKAY") D
+ . NEW SUBSCRPT,ARRAY
+ . S SUBSCRPT="MailMan Message Failure^"_+$H_"^"_$J
+ . S ^XTEMP(SUBSCRPT,0)=$$FMADD^XLFDT($$DT^XLFDT,90)_"^"_$$DT^XLFDT_"^"_"Lab Package MailMan Message."
+ . S ^XTEMP(SUBSCRPT,1)="MailMan Message was not sent."
+ . S ^XTEMP(SUBSCRPT,2)="  Message that should have been sent follows:"
+ . S ARRAY=0
+ . F  S ARRAY=$O(MAILARRY(ARRAY))  Q:ARRAY<1  D
+ .. S ^XTEMP(SUBSCRPT,(ARRAY+3))="     "_$G(MAILARRY(ARRAY))
+ ;
+ K X,XMDUZ,XMSUB,XMTEXT,XMY,XMZ,Y   ; Cleanup
+ Q
+ ;
+ ; ----- END IHS/OIT/MKK -- LR*5.2*1030

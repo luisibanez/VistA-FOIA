@@ -1,5 +1,5 @@
 ABMDE6X ; IHS/ASDST/DMJ - Page 6 - ERROR CHECKS ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**8**;NOV 12, 2009
  ;
  ; Added code for new error 217
  ;
@@ -18,8 +18,13 @@ A1 S ABMX("X0")=^ABMDCLM(DUZ(2),ABMP("CDFN"),33,ABMX,0)
  S ABMCODXS=$P(ABMX("X0"),U,4)
  I ABMCODXS'="" D
  .F ABMJ=1:1 S ABMCODX=$P(ABMCODXS,",",ABMJ) Q:+$G(ABMCODX)=0  D
- ..I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX
- ..I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX
+ ..;start old code abm*2.6*8 NOHEAT
+ ..;I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX
+ ..;I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX
+ ..;end old code start new code
+ ..I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX("I")
+ ..I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX("I")
+ ..;end new code
  I $P(ABMX("X0"),U,7)]"",$P(ABMX("X0"),U,7)<ABMP("VDT") S ABME(127)=""
  I $P(^AUTTADA(+ABMX("X0"),0),U,9)]"" Q
  I $P(ABMX("X0"),U,5)="",$P(ABMX("X0"),U,11)="" S ABME(133)=""

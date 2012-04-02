@@ -1,15 +1,38 @@
-LRAPBS1 ; IHS/DIR/AAB - BLOCK/SLIDE DATA ENTRY 8/11/97 ; [ 8/11/97 4:54 PM ]
- ;;5.2;LR;**1003**;JUN 01, 1998
- ;;5.2;LAB SERVICE;**121**;Sep 27, 1994
-ASK N CORRECT S %DT="",X="T" D ^%DT S LRY=$E(Y,1,3)+1700 W !!,"Enter year: ",LRY,"// " R X:DTIME G:'$T!(X[U) END S:X="" X=LRY
+LRAPBS1 ;VA/AVAMC/REG - BLOCK/SLIDE DATA ENTRY;3/25/2002
+ ;;5.2;LAB SERVICE;**1030**;NOV 01, 1997
+ ;;5.2;LAB SERVICE;**121,259**;Sep 27, 1994
+ ;
+ASK N CORRECT,LRREL,LRMSG
+ S %DT="",X="T" D ^%DT S LRY=$E(Y,1,3)+1700 W !!,"Enter year: ",LRY,"// " R X:DTIME G:'$T!(X[U) END S:X="" X=LRY
  S LRN="",%DT="EQ" D ^%DT G:Y<1 ASK S LRY=$E(Y,1,3),LRAD=$E(LRY,1,3)_"0000",LRH(0)=LRY+1700 W "  ",LRH(0)
  I '$O(^LRO(68,LRAA,1,LRAD,1,0)) W $C(7),!!,"NO ",LRAA(1)," ACCESSIONS IN FILE FOR ",LRH(0),!! Q
-W K X,Y,LR("CK") W !!,"Select Accession Number: ",LRN,$S(LRN:"// ",1:"") R LRAN:DTIME G:'$T!(LRAN[U)!(LRN=""&(LRAN="")) END S:LRAN="" LRAN=LRN I LRAN'?1N.N S LRN="" W $C(7),!!,"Enter a number." G W
- S LRN=$O(^LRO(68,LRAA,1,LRAD,1,LRAN)) S:LRN'=+LRN LRN="" D OE1^LR7OB63D,REST,OERR^LR7OB63D G W
-REST W "  for ",LRH(0) I '$D(^LRO(68,LRAA,1,LRAD,1,LRAN,0)) W $C(7),!!,"Accession # ",LRAN," for ",LRH(0)," not in ACCESSION file",!! Q
- S X=^LRO(68,LRAA,1,LRAD,1,LRAN,0),LRLLOC=$P(X,"^",7),LRDFN=+X Q:'$D(^LR(LRDFN,0))  S X=^(0) D ^LRUP
- ;W !,LRP,"  ID: ",SSN Q:'$D(^LRO(68,LRAA,1,LRAD,1,LRAN,3))  S LRI=$P(^(3),"^",5),LRA=$S("SPCYEM"[LRSS:^LR(LRDFN,LRSS,LRI,0),$D(^LR(LRDFN,"AU")):^("AU"),1:""),LRRC=$S("SPCYEM"[LRSS:$P(LRA,"^",10),1:+LRA)
- W !,LRP,"  ID: ",HRCN Q:'$D(^LRO(68,LRAA,1,LRAD,1,LRAN,3))  S LRI=$P(^(3),"^",5),LRA=$S("SPCYEM"[LRSS:^LR(LRDFN,LRSS,LRI,0),$D(^LR(LRDFN,"AU")):^("AU"),1:""),LRRC=$S("SPCYEM"[LRSS:$P(LRA,"^",10),1:+LRA)  ;IHS/ANMC/CLS 11/1/95
+W ;
+ K X,Y,LR("CK")
+ W !!,"Select Accession Number: ",LRN,$S(LRN:"// ",1:"")
+ R LRAN:DTIME
+ I '$T!(LRAN[U)!(LRN=""&(LRAN="")) D END Q
+ S:LRAN="" LRAN=LRN
+ I LRAN'?1N.N S LRN="" W $C(7),!!,"Enter a number." G W
+ S LRN=$O(^LRO(68,LRAA,1,LRAD,1,LRAN)) S:LRN'=+LRN LRN=""
+ D OE1^LR7OB63D,REST,OERR^LR7OB63D
+ G W
+REST ;
+ W "  for ",LRH(0)
+ I '$D(^LRO(68,LRAA,1,LRAD,1,LRAN,0)) D  Q
+ .W $C(7),!!,"Accession # ",LRAN," for ",LRH(0)," not in"
+ .W " ACCESSION file",!!
+ S X=^LRO(68,LRAA,1,LRAD,1,LRAN,0),LRLLOC=$P(X,"^",7),LRDFN=+X
+ Q:'$D(^LR(LRDFN,0))  S X=^(0) D ^LRUP
+ W !,LRP,"  ID: ",SSN
+ Q:'$D(^LRO(68,LRAA,1,LRAD,1,LRAN,3))  S LRI=$P(^(3),"^",5)
+ S LRA=$S("SPCYEM"[LRSS:^LR(LRDFN,LRSS,LRI,0),$D(^LR(LRDFN,"AU")):^("AU"),1:"")
+ S LRRC=$S("SPCYEM"[LRSS:$P(LRA,"^",10),1:+LRA)
+ ;K LRREL
+ ;D RELEASE^LRAPUTL(.LRREL,LRDFN,LRSS,$G(LRI))
+ ;I +$G(LRREL(1)) D  Q
+ ;.K LRMSG
+ ;.S LRMSG=$C(7)_"Report verified.  Cannot use this option."
+ ;.D EN^DDIOL(LRMSG,"","!!")
  I LRSS="CY",LRCAPA D C^LRAPCWK Q:LRK<1
  W ! I "AUSPEM"[LRSS S %DT("A")=$S('$D(LRF):"Date/time blocks prepared/modified: ",1:"Date/time Gross Description/Cutting: ") D W^LRAPWU Q:Y<1  S LRK(1)=LRK D CK Q:'$D(Y)  G:$D(LRF) A
  S %DT("A")="Date/time  "_$S("AUSPCY"[LRSS:"slides stained: ",1:"sections prepared: ") D W^LRAPWU Q:Y<1  I LRSS="CY" D CK Q:'$D(Y)

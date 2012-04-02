@@ -1,5 +1,5 @@
-APSPFNC2 ;IHS/MSC/PLS - Prescription Creation Support ;25-Aug-2010 09:52;SM
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1005,1006,1007,1008,1009**;Sep 23, 2004
+APSPFNC2 ;IHS/MSC/PLS - Prescription Creation Support ;01-Jul-2011 11:40;PLS
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1005,1006,1007,1008,1009,1011**;Sep 23, 2004;Build 17
  ;=================================================================
  ; Create a verified prescription
 MAKEVRX(DATA,RXORD) ;
@@ -10,7 +10,7 @@ MAKEVRX(DATA,RXORD) ;
 CREATE(ORIEN,FORCE) ;
  N PSOX,NODE0,ORD,OR0,USER1,SIGOK,PSODRUG,PSONEW,PSOMAX,PSOMSG,PSODFN,PSOCOU
  N PSOCOUU,PSOCS,PSOFDR,PSONOOR,PSOPAR,PSORX,PSOSITE,RXFL,RXORD,SEG1,SPEED
- N TALK,ARY,RET,PRC,PSOINSFL,IEN,INSTIEN,EPHMFLG,RNWORDER
+ N TALK,ARY,RET,PRC,PSOINSFL,IEN,INSTIEN,EPHMFLG,RNWORDER,PICKUP
  S FORCE=$G(FORCE,0)
  S IEN=0
  S ORIEN=+$G(ORIEN)
@@ -26,6 +26,9 @@ CREATE(ORIEN,FORCE) ;
  S OR0=^PS(52.41,ORD,0)
  S PSONEW("ELECTRONIC PHARMACY")=$$VALUE^ORCSAVE2(+OR0,"PHARMACY")
  S PSONEW("DAW")=$$VALUE^ORCSAVE2(+OR0,"DAW")
+ S PICKUP=$$VALUE^ORCSAVE2(+OR0,"PICKUP")
+ S:(EPHMFLG=2)&(PICKUP="C") FORCE=1  ;P11
+ S:(EPHMFLG>0)&(PICKUP="P") FORCE=1  ;P11
  I 'FORCE Q:((EPHMFLG=1!(EPHMFLG=2))&'PSONEW("ELECTRONIC PHARMACY"))
  S PSODFN=+$P(OR0,U,2)
  S RNWORDER=$P(OR0,U,21)
@@ -41,6 +44,7 @@ CREATE(ORIEN,FORCE) ;
  .S DFN=+$P(OR0,U,2)
  .S POIN=$$GET1^DIQ(50.7,$P(OR0,U,8),.01)
  .D NOTIF(DUZ,DFN,ORIEN,"Unable to generate "_POIN_" prescription for "_$$GET1^DIQ(2,DFN,.01))
+ .D AFLOG(.RET,+OR0,0,"No available drug for "_POIN)
  ;
 DRG I $P($G(^PSDRUG(+$G(PSODRUG("IEN")),"CLOZ1")),"^")="PSOCLO1" D CLOZ^PSOORFI2
  S PSODRUG("DEA")=1
@@ -95,6 +99,7 @@ DRG I $P($G(^PSDRUG(+$G(PSODRUG("IEN")),"CLOZ1")),"^")="PSOCLO1" D CLOZ^PSOORFI2
  S ARY("REASON")="B"
  S ARY("RX REF")=0
  D UPTLOG(.RET,+$G(PSONEW("IRXN")),0,.ARY)
+ D AFLOG(.RET,+OR0,1)
  D EN^PSOHLSN1(PSONEW("IRXN"),"SC","CM")
  D EN^PSOHLSN1(PSONEW("IRXN"),"OK","CM")
  D EN^APSPELRX(PSONEW("IRXN"),PSONEW("ELECTRONIC PHARMACY"))
@@ -149,20 +154,22 @@ SIG ;
  Q
  ; Update activity or label log and return success flag
  ; Input: RX - IEN to Prescription File (52)
- ;        TYPE - 0=Activity, 1=Label
+ ;        TYPE - 0=Activity, 1=Label, 2=Reprint
  ;        ARY - Holds data for log type
 UPTLOG(DATA,RX,TYPE,ARY) ;EP
  N FDA,ERR,FN,IENS,USR
  S IENS="+1,"_RX_","
  S USR=$S($G(ARY("USER")):ARY("USER"),1:DUZ)
  S DATA=0
- I '$G(TYPE) D  ;Activity Log
+ I '$G(TYPE)!($G(TYPE)=2) D  ;Activity Log
  .S FN=52.3
  .S FDA(FN,IENS,.01)=$$NOW^XLFDT()
  .S FDA(FN,IENS,.02)=$G(ARY("REASON"))
  .S FDA(FN,IENS,.03)=USR
  .S FDA(FN,IENS,.04)=$G(ARY("RX REF"))
  .S FDA(FN,IENS,.05)=$G(ARY("COM"))
+ .S FDA(FN,IENS,9999999.01)=$G(ARY("DEV"))
+ .S FDA(FN,IENS,9999999.02)=$G(ARY("TYPE"))
  E  I $G(TYPE)=1 D  ;Print Label Log
  .S FN=52.032
  .S FDA(FN,IENS,.01)=$$NOW^XLFDT()
@@ -170,6 +177,25 @@ UPTLOG(DATA,RX,TYPE,ARY) ;EP
  .S FDA(FN,IENS,2)=$G(ARY("COM"))
  .S FDA(FN,IENS,3)=USR
  .S FDA(FN,IENS,5)=$G(ARY("DEV"))
+ D UPDATE^DIE(,"FDA",,"ERR")
+ I '$D(ERR) S DATA=1
+ E  S DATA="0^Unable to update log"
+ Q
+ ;
+ ; Log autofinish activity
+ ; Input: OIEN - Order IEN
+ ;        SUC  - Successful flag
+ ;        COM  - Comment for unsuccessful
+AFLOG(DATA,OIEN,SUC,COM) ;EP
+ N FDA,ERR,FN
+ I '$G(SUC),$O(^APSPAF("C",+$G(OIEN),0)) Q
+ S IENS="+1,"
+ S DATA=0
+ S FN=9009033.92
+ S FDA(FN,IENS,.01)=$$NOW^XLFDT()
+ S FDA(FN,IENS,.02)=$G(OIEN)
+ S FDA(FN,IENS,.03)=$G(SUC)
+ S FDA(FN,IENS,.04)=$G(COM)
  D UPDATE^DIE(,"FDA",,"ERR")
  I '$D(ERR) S DATA=1
  E  S DATA="0^Unable to update log"
@@ -270,13 +296,14 @@ ERXUSER(DATA,USR) ; EP
  Q
  ; Returns availablity of Orderable Item to be e-prescribed
  ; Input: OIIEN - Orderable Item IEN
-ERXOI(DATA,OIIEN) ; EP
+ ;          SCH - String of schedules - defaults to 2345
+ERXOI(DATA,OIIEN,SCH) ; EP
  N PSOI
- S DATA=1
+ S DATA=1,SCH=$G(SCH,"2345")
  I $G(OIIEN) D
  .S PSOI=+$P($G(^ORD(101.43,+OIIEN,0)),U,2)  ; Pharmacy Orderable Item IEN
  .S DIEN=0 F  S DIEN=$O(^PSDRUG("ASP",PSOI,DIEN)) Q:'DIEN  D  Q:'DATA
- ..S DATA='$$ISSCH(DIEN,"2345")
+ ..S DATA='$$ISSCH(DIEN,SCH)
  Q
  ; Returns result of DEA Special Handling Comparison
  ; Input : ORD = Order ID
@@ -306,7 +333,7 @@ NOTIF(USR,DFN,ORIEN,MSG) ;EP -
  N XQA,XQAID,XQADATA,XQAMSG
  S XQA(USR)=""
  S XQAMSG="e-Prescribe Failure:"_$G(MSG)
- S XQAID="OR"_","_DFN_","_50
+ S XQAID="OR"_","_DFN_","_99003
  S:$G(ORIEN) XQADATA=ORIEN_"@"
  D SETUP^XQALERT
  Q

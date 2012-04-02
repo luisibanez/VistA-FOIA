@@ -1,5 +1,5 @@
 ABMDF27X ; IHS/ASDST/DMJ - New HCFA-1500 (08/05) Format ;   
- ;;2.6;IHS Third Party Billing;**1,3,4**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,3,4,8**;NOV 12, 2009
  ;
  ; Objective: Print designated form using data contained in the
  ;            ABMF array.
@@ -143,7 +143,8 @@ TEXT ;;TABS;;FIELD LENGTH
  ;;3^30^50;;25^19^29  ;abm*2.6*4 HEAT12115 original 31
 33 ;;3^13^29^38^50;;^10^10^9^10^29C
  ;;3^30^50;;25^19^29C  ;abm*2.6*4 HEAT12115 original 33
-36 ;;1^63^65;;61^2^15
+36 ;;1^65^68;;61^2^12
+ ;;1^63^65;;61^2^15  ;abm*2.6*8 HEAT14200 original 36
 37 ;;1^10^19^22^23^45^50^59^63^65^68;;8T^8T^2R^1R^19^7^8$^3R^2R^2R^10
 49 ;;1^17^19^23^38^43^51^61^71;;15^1^1^14C^1^1^9$^8$^8$
 50 ;;65;;14

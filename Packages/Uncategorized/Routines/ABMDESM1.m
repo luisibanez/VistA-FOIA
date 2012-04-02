@@ -1,5 +1,5 @@
 ABMDESM1 ; IHS/ASDST/DMJ - Display Summarized Claim Info ; 
- ;;2.6;IHS Third Party Billing;**1,6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,6,8**;NOV 12, 2009
  ;
  ; IHS/SD/SDR - V2.5 P2 - 5/9/02 - NOIS HQW-0302-100190
  ;     Modified to display 2nd and 3rd modifiers and units
@@ -55,6 +55,9 @@ ABMDESM1 ; IHS/ASDST/DMJ - Display Summarized Claim Info ;
  ..S ABMAPRV=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),41,ABMAPRV,0),U)
  ..S $P(ABMS(1),U,9)=$$K24N^ABMDFUTL(ABMAPRV)
  ..S $P(ABMS(ABMS("I")),U,11)=$P($$NPI^XUSNPI("Individual_ID",ABMAPRV),U)
+ ..;Below line for South Dakota Urban (SD Urban)
+ ..S ABMTLOC=$$GET1^DIQ(9999999.06,ABMP("LDFN"),.05,"E")  ;abm*2.6*8 NOHEAT
+ ..I ((ABMTLOC["PIERRE URBAN")!(ABMTLOC["SOUTH DAKOTA URBAN"))&($P($G(^AUTNINS(ABMP("INS"),0)),U)="SOUTH DAKOTA MEDICAID") S $P(ABMS(ABMS("I")),U,11)=$P($$NPI^XUSNPI("Organization_ID",ABMP("LDFN")),U)  ;abm*2.6*8 NOHEAT
  ..I $G(ABMP("NPIS"))="N" S $P(ABMS(1),U,9)=$$PTAX^ABMEEPRV(ABMAPRV)
  I ABMP("PAGE")'[8 G XIT
 ITEM ;itemized

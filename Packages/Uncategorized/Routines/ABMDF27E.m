@@ -1,5 +1,5 @@
 ABMDF27E ; IHS/ASDST/DMJ - Set HCFA1500 Print Array - Part 5 ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**3,4**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,4,8**;NOV 12, 2009
  ;
  ; IHS/SD/SDR - v2.5 p12 - IM25331 - Put taxonomy code if NPI ONLY
  ; IHS/SD/SDR - v2.5 p12 - IM25352 - Included fix supplied by Walt Reich (PIMC)
@@ -70,18 +70,33 @@ PROC ;EP for setting the procedure portion of the ABMF array
  .S $P(ABMR(ABMS,ABMLN),U,5)=" "_$P(ABMR(ABMS,ABMLN),U,5)_$S($E($P(ABMS(ABMS),U,8))="#":" "_$P($P(ABMS(ABMS),U,8)," "),1:"")
  .S:$G(ABM("EPSDT")) $P(ABMR(ABMS,ABMLN),U,9)="X"  ; Form locator 24H
  .S:$G(ABM("EMG")) $P(ABMR(ABMS,ABMLN),U,4)="X"   ; Form locator 24C
- E  D
- .I $L($P(ABMS(ABMS),U,8))>16 D  Q
- ..S ABMU("LNG")=60
- ..S ABMU("TXT")=$P(ABMS(ABMS),U,8)
- ..S ABMU=3
- ..D LNG^ABMDWRAP
- ..S ABMLND=ABMLN-1,J=0
- ..F  S J=$O(ABMU(J)) Q:+J=0!(+J>2)  D
- ...S $P(ABMR(ABMS,ABMLND),U)=$G(ABMU(J))
- ...S ABMLND=ABMLND+1
- ..K ABMU
- .S $P(ABMR(ABMS,ABMLN),U,5)=$P(ABMS(ABMS),U,8)
+ ;E  D  ;abm*2.6*7 HEAT30524
+ ;start old code abm*2.6*8
+ ;I $P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),U,16)]"" D  ;abm*2.6*7 HEAT30524
+ ;.I $L($P(ABMS(ABMS),U,8))>16 D  Q
+ ;..S ABMU("LNG")=60
+ ;..S ABMU("TXT")=$P(ABMS(ABMS),U,8)
+ ;..S ABMU=3
+ ;..D LNG^ABMDWRAP
+ ;..S ABMLND=ABMLN-1,J=0
+ ;..F  S J=$O(ABMU(J)) Q:+J=0!(+J>2)  D
+ ;...S $P(ABMR(ABMS,ABMLND),U)=$G(ABMU(J))
+ ;...S ABMLND=ABMLND+1
+ ;.K ABMU
+ ;.S $P(ABMR(ABMS,ABMLN),U,5)=$P(ABMS(ABMS),U,8)
+ ;end old code start new code
+ I $L($P(ABMS(ABMS),U,8))>16,($E($P(ABMS(ABMS),U,8),1,2)="N4") D
+ .S ABMU("LNG")=60
+ .S ABMU("TXT")=$P(ABMS(ABMS),U,8)
+ .S ABMU=3
+ .D LNG^ABMDWRAP
+ .S ABMLND=ABMLN-1,J=0
+ .F  S J=$O(ABMU(J)) Q:+J=0!(+J>2)  D
+ ..S $P(ABMR(ABMS,ABMLND),U)=$G(ABMU(J))
+ ..S ABMLND=ABMLND+1
+ .K ABMU
+ E  S:($E($P(ABMS(ABMS),U,8),1,2)="N4") $P(ABMR(ABMS,ABMLN),U,5)=$P(ABMS(ABMS),U,8)
+ ;end new code abm*2.6*8
  S ABMCORDX=$P(ABMS(ABMS),U,5)
  ;I +ABMCORDX>4,$G(ABMP("BDFN")) D  ;abm*2.6*4 HEAT12115
  I +ABMCORDX>8,$G(ABMP("BDFN")) D  ;abm*2.6*4 HEAT12115
@@ -104,7 +119,15 @@ PROC ;EP for setting the procedure portion of the ABMF array
  ..S $P(ABMR(ABMS,ABMLN-1),U,3)=ABMLOCAL
  .K ABMLOCAL
  ;S:($P(ABMS(ABMS),U,11)&($G(ABMP("NPIS"))'="")&(ABMP("NPIS")'="N")) $P(ABMR(ABMS,ABMLN-1),U,3)=$P(ABMS(ABMS),U,9)  ;abm*2.6*3 NOHEAT
- S:($P(ABMS(ABMS),U,11)&($G(ABMP("NPIS"))'="")&(ABMP("NPIS")'="N")) $P(ABMR(ABMS,ABMLN-1),U,3)="ZZ "_$P(ABMS(ABMS),U,9)
+ ;S:($P(ABMS(ABMS),U,11)&($G(ABMP("NPIS"))'="")&(ABMP("NPIS")'="N")) $P(ABMR(ABMS,ABMLN-1),U,3)="ZZ "_$P(ABMS(ABMS),U,9)  ;abm*2.6*8 HEAT31586
+ ;start new code abm*2.6*8 HEAT31586
+  I $G(ABMP("EXP"))=27 D
+ .S:+$G(ABMDUZ2)=0 ABMDUZ2=DUZ(2)
+ .S ABMPQ=$S(ABMP("ITYPE")="R":"1C"_" ",ABMP("ITYPE")="D":"1D"_" ",$P($G(^ABMNINS(ABMDUZ2,ABMP("INS"),1,ABMP("VTYP"),1)),U)'="":$P($G(^ABMREFID($P($G(^ABMNINS(ABMDUZ2,ABMP("INS"),1,ABMP("VTYP"),1)),U),0)),U),1:"0B"_" ")
+ I ($P(ABMS(ABMS),U,11)&($G(ABMP("NPIS"))'="")&(ABMP("NPIS")'="N")) D
+ .S $P(ABMR(ABMS,ABMLN-1),U,2)=ABMPQ
+ .S $P(ABMR(ABMS,ABMLN-1),U,3)=$P(ABMS(ABMS),U,9)
+ ;end new code HEAT31586
  I $G(ABMP("ITYPE"))="R"&($G(ABMP("BTYP"))="831") S $P(ABMR(ABMS,ABMLN-1),U,3)=""
  S:$P(ABMS(ABMS),U,11) $P(ABMR(ABMS,ABMLN),U,11)=$P(ABMS(ABMS),U,11)  ;Form Locator 24K (2)
  K ABMS(ABMS),ABMPTR,ABMCORDX

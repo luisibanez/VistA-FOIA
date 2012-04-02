@@ -1,25 +1,41 @@
-%ZTM5 ;SEA/RDS-TaskMan: Manager, Part 5 (Short Subroutines) ;10/29/2003  22:07
- ;;8.0;KERNEL;**24,36,118,127,136,162,275,355**;JUL 10, 1995;Build 9
+%ZTM5 ;SEA/RDS-TaskMan: Manager, Part 5 (Short Subroutines) ;10/01/08  14:35
+ ;;8.0;KERNEL;**24,36,118,127,136,162,275,355,446**;JUL 10, 1995;Build 44
+ ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
 ER ;primary error trap for manager
- S %ZTERLGR=$$LGR^%ZOSV
+ S %ZTERLGR=$$LGR^%ZOSV,ZTERCODE=$$EC^%ZOSV ;Grab LGR and EC first p446
  S $ETRAP="D ER2^%ZTM5"
- L  S ^%ZTSCH("RUN")=$H
- S ^%ZTSCH("STATUS",$J)=$H_"^ERROR^Recording A Trapped Error."
+ D ^%ZTER ;Record error now p446
+ L  ;Clear all locks
+ S ^%ZTSCH("RUN")=$H
+ D STATUS^%ZTM("ERROR","Recording A Trapped Error.") ;p446
  ;
- S ZTERCODE=$$EC^%ZOSV,ZTE=""
+ N ZT1,ZT2 ;p446
  I '$$SCREEN^%ZTER(ZTERCODE) D
- . L ^%ZTSCH("ER") H 1 S ZT=$H
- . S ^%ZTSCH("ER",+ZT,$P(ZT,",",2))=ZTERCODE
- . S ^($P(ZT,",",2),1)="Caused by the manager." L
+ . L +^%ZTSCH("ER"):15 H 1 S ZT1=$H,ZT2=$P(ZT1,",",2),ZT1=+ZT1 ;p446
+ . S ^%ZTSCH("ER",ZT1,ZT2)=ZTERCODE,^(ZT2,1)="Caused by the manager." ;p446
+ . L -^%ZTSCH("ER")
  . Q
  ;
- D ^%ZTER K ZTERCODE
+ K ZTERCODE
  ;Lets wait before restarting.
 ER2 H 10 S $ET="Q:$STACK  S $EC="""" G RESTART^%ZTM0" S $EC=",U99,"
  ;
 UPDATE ;CHECK^%ZTM/LOOKUP^%ZTM0--update TaskMan site parameters
- L ^%ZTSCH("UPDATE",$J)
+ L +^%ZTSCH("UPDATE",$J):99
+ I '$D(^%ZTSCH("LOAD")) S ^%ZTSCH("LOAD")="" ;Starting value p446
+ D PARAMS ;p446
+ D MON^%ZTM ;Setup Task Counting
+ S ^%ZTSCH("UPDATE",$J)=$H
+ K ^%ZTSCH("LOADA",%ZTPAIR) ;Clear LB in case we stop doing LB.
+ L -^%ZTSCH("UPDATE",$J)
+ I "GP"'[%ZTYPE D  X "HALT  "
+ . K ^%ZTSCH("STATUS")
+ . S ^%ZTSCH("RUN")=%ZTNODE_" is the wrong type of volume set for TaskMan."
+ . Q
+ Q
+ ;
+PARAMS ;Setup Parameters ;p446
  S %ZTOS=^%ZOSF("OS"),U="^"
  D GETENV^%ZOSV
  S %ZTUCI=$P(Y,U),%ZTVOL=$P(Y,U,2),%ZTNODE=$P(Y,U,3),%ZTPAIR=$P(Y,U,4)
@@ -34,21 +50,17 @@ U1 ;
  S %ZTVMJ=+$P(%ZTPS,U,7) ;TM job limit
  S %ZTSLO=+$P(%ZTPS,U,8) ;TM slow down
  S %ZTYPE=$P(%ZTPS,U,9) ;TM Mode
+ K %ZTPFLG S %ZTPFLG="" ;Start Clean
  S %ZTPFLG("DCL")=$P(%ZTPS,U,10) ;TM mode, VAX DCL
- S %ZTPFLG("BAL")=$E($G(^%ZIS(14.7,%ZTPN,2)),1,40)
+ S %ZTPFLG("BAL")=$G(^%ZIS(14.7,%ZTPN,2))
  S %ZTPFLG("MINSUB")=$S($P(%ZTPS,U,12):$P(%ZTPS,U,12),1:1)
- S %ZTPFLG("LBT")=0,%ZTPFLG("BI")=$S($P(%ZTPS,U,14):$P(%ZTPS,U,14),1:30) ;Balance Interval
+ S %ZTPFLG("LBT")=0,%ZTPFLG("BI")=$S($P(%ZTPS,U,14):$P(%ZTPS,U,14),1:120) ;Balance Interval ;p446
+ S %ZTPFLG("JLC")=0 ;Job Limit check ;P446
  S %ZTPFLG("TM-DELAY")=$P($G(^%ZIS(14.7,%ZTPN,3),"^60"),U,2) ;Start Delay
  S %ZTPFLG("START")=+$H
  S %ZTPFLG("XUSCNT")=0 I %ZTOS["GT.M" S %ZTPFLG("XUSCNT")=$L($T(^XUSCNT))
- S ^%ZTSCH("UPDATE",$J)=$H
- S %ZTMON("DAY")=+$H D MON^%ZTM ;Setup Task Counting
- K ^%ZTSCH("LOADA",%ZTPAIR) ;Clear LB in case we stop doing LB.
- L
- I "GP"'[%ZTYPE D  HALT
- . K ^%ZTSCH("STATUS")
- . S ^%ZTSCH("RUN")=%ZTNODE_" is the wrong type of volume set for TaskMan."
- . Q
+ S %ZTLKTM=+$G(^DD("DILOCKTM"),1) ;Lock timeout p446
+ S %ZTMON("DAY")=+$H
  ;For Cache Map CPF to Node.
  I %ZTOS["OpenM",$ZV["VMS" D
  . N I,X,Y S Y=$P(%ZTPAIR,":"),X=Y
@@ -60,6 +72,7 @@ U1 ;
  ;
 HOUR ;Run once an hour for each taskman
  D SUBCHK
+ D SCHCHK
  Q
  ;
 DAY ;Run once a DAY for each Taskman
@@ -68,13 +81,21 @@ DAY ;Run once a DAY for each Taskman
  ;
 MON ;Save off the monitor data
  N X S X=""
- F I=0:1:23 S X=X_$G(%ZTMON(I))_"^",%ZTMON(I)=0
+ F I=0:1:23 S X=X_(+$G(%ZTMON(I)))_"^",%ZTMON(I)=0
  S ^%ZTSCH("MON",%ZTPAIR,%ZTMON("DAY"))=X
  S %ZTMON("DAY")=+$H
  Q
  ;
 SUBCHK ;Job the SUB check routine
- J SUBCHK^%ZTMS5
+ J SUBCHK^%ZTMS5(%ZTLKTM)
+ Q
+ ;
+SCHCHK ;Queue the check of the option schedule file. ;p446
+ I $$DIFF^%ZTM(%ZTIME,$G(^%ZTSCH("HOUR")),1)<3599 Q
+ S ^%ZTSCH("HOUR")=%ZTIME
+ N ZTRTN,ZTDTH,ZTDESC,ZTSK,ZTIO,DUZ
+ S DUZ=.5,ZTRTN="HOUR^XUTMHR",ZTIO="",ZTDTH=$H,ZTDESC="Taskman Hourly Job"
+ D ^%ZTLOAD
  Q
  ;
 REQUIR ;UPDATE/CHECK^%ZTM--ensure required links are available
@@ -91,8 +112,8 @@ TEST ;REQUIR--test a required volume set
  I $P(ZTS,U,4)="Y" S ZTREQUIR=ZTN Q
  S ZTU=$O(^%ZIS(14.6,"AV",ZTN,"")) I ZTU="" Q
  S $ET="S ZTREQUIR=ZTN,$EC=NULL Q"
- S X=$D(^[ZTU,ZTN]DIC(0))
- L +^%ZTSCH("LINK",ZTN)
+ S @("X=$D(^[ZTU,ZTN]DIC(0))")
+ L +^%ZTSCH("LINK",ZTN):99
  I $D(^%ZTSCH("LINK",ZTN)) S ^%ZTSCH("LINK")=0
  L -^%ZTSCH("LINK",ZTN)
  Q

@@ -1,5 +1,5 @@
 BLRSHPML ;cmi/anch/maw - BLR Reference Lab Shipping Manifest Others 11:46 ;JUL 06, 2010 3:14 PM
- ;;5.2;IHS LABORATORY;**1027**;NOV 01, 1997
+ ;;5.2;IHS LABORATORY;**1027,1028**;NOV 01, 1997;Build 9
  ;
  ;
  ;
@@ -74,7 +74,8 @@ PHDR ;-- write the common stuff to the device
  W !,"SEX: "_$G(SEX),?10,"DOB: "_$G(DOB),?30,"SSN: "_$S($P($G(^DPT(^TMP("BLRRL",$J,"COMMON","PAT"),0)),U,9)]"":"XXX-XX-"_$E($P($G(^DPT(^TMP("BLRRL",$J,"COMMON","PAT"),0)),U,9),6,9),1:"NOT ON FILE")  ;cmi/maw 10/1/08 mask ssn
  ;W !,"LOCATION: "_^TMP("BLRRL",$J,"COMMON","LOC"),?55,"Bill Type: Client" cmi/maw 10/31/07 orig line
  W !,"LOCATION: "_^TMP("BLRRL",$J,"COMMON","LOC")
- W ?30,"BILL TYPE: "_$S($E($G(^TMP("BLRRL",$J,"COMMON","BILL TYPE")),1,1)="T":$G(^TMP("BLRRL",$J,"COMMON","INSTYP")),$E($G(^TMP("BLRRL",$J,"COMMON","BILL TYPE")),1,1)="P":"Patient",1:"Client")  ;cmi/maw 10/31/07 new line
+ ;W ?30,"BILL TYPE: "_$S($E($G(^TMP("BLRRL",$J,"COMMON","BILL TYPE")),1,1)="T":$G(^TMP("BLRRL",$J,"COMMON","INSTYP")),$E($G(^TMP("BLRRL",$J,"COMMON","BILL TYPE")),1,1)="P":"Patient",1:"Client")  ;cmi/maw 10/31/07 new line
+ W ?30,"BILL TYPE: "_$S($E($G(^TMP("BLRRL",$J,"COMMON","BILL TYPE")),1,1)="T":"Private Insurance",$E($G(^TMP("BLRRL",$J,"COMMON","BILL TYPE")),1,1)="P":"Patient",1:"Client")  ;cmi/maw 04/04/2011 per labcorp request
  ;cmi/maw 2/29/2008 added UPIN/NPI print based on site parameter
  W !,"PRACTITIONER: "_$P(^TMP("BLRRL",$J,"COMMON","ORDPNM"),U)_", "_$P(^TMP("BLRRL",$J,"COMMON","ORDPNM"),U,2)
  W ?55,$S($P($G(^BLRSITE($S($G(BLRALTDZ):BLRALTDZ,1:DUZ(2)),"RL")),U,19)="N":"NPI: "_$G(^TMP("BLRRL",$J,"COMMON","ORDPNPI")),1:"UPIN: "_$G(^TMP("BLRRL",$J,"COMMON","ORDPUPIN")))

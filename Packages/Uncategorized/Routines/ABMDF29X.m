@@ -1,5 +1,5 @@
 ABMDF29X ; IHS/ASDST/DMJ - ADA-2006 FORM ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**3,4**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,8**;NOV 12, 2009
  ;
  ; IHS/SD/SDR - v2.5 p12 - IM25568 - Corrected alignment issues
  ; IHS/SD/PMT - abm*2.6*3 - HEAT8604 - Corrected report to start at line 1, not line 2
@@ -21,12 +21,24 @@ LOOP ;
  ;I ABM("LN")>27,ABM("LN")<37 S ABM("FL")=27 ;Lines 27 thru 36 are same  HEAT8604
  I ABM("LN")>25,ABM("LN")<37 S ABM("FL")=26 ;Lines 27 thru 36 are same
  ;I ABM("LN")>39,ABM("LN")<44 S ABM("FL")=40 ;Lines 40 thru 42 are same  HEAT8604
- ;I ABM("LN")>38,ABM("LN")<43 S ABM("FL")=40 ;Lines 39 thru 42 are same  ;abm*2.6*4 HEAT8604
- I ABM("LN")>38,ABM("LN")<43 S ABM("FL")=39 ;Lines 39 thru 42 are same  ;abm*2.6*4 HEAT8604
+ I ABM("LN")>38,ABM("LN")<43 S ABM("FL")=40 ;Lines 39 thru 42 are same
   ;
  ;Set tab & format variables
  S ABM("TABS")=$P($T(@ABM("FL")),";;",2)
  S ABM("FMAT")=$P($T(@ABM("FL")),";;",3)
+ ;
+ ;start new code abm*2.6*8 HEAT41791
+ ;added NE Medicaid code for W0047 to print first
+ I $P(ABMF(7),U)["NEBRASKA MEDICAID" D
+ .F ABMLOOP=26:1:36 D
+ ..Q:'$D(ABMF(ABMLOOP))
+ ..S ABMCHK=$TR($P(ABMF(ABMLOOP),U,6)," ","")
+ ..I ABMCHK["T1015",ABMLOOP'=26 D
+ ...S ABMF("TMP")=$G(ABMF(26))
+ ...S ABMF(26)=$G(ABMF(ABMLOOP))
+ ...S ABMF(ABMLOOP)=$G(ABMF("TMP"))
+ K ABMLOOP,ABMCHK,ABMF("TMP")
+ ;end new code abm*2.6*8 HEAT41791
  ;
  ;Skip to req'd line
  F  Q:$Y-ABM("TM")>(ABM("LN")+0)  W !
@@ -171,4 +183,5 @@ TEXT ;;TABS;;FIELD LENGTH
  ;60 ;;1^14^27^43;;10^10^11^30  HEAT8604
 59 ;;1^14^27^43;;10^10^11^30
  ;61 ;;6^28^46^68;;14^14^12^10  HEAT8604
-60 ;;6^28^46^68;;14^14^12^10
+60 ;;6^28^46^68;;14^14^14^10
+ ;60 ;;6^28^46^68;;14^14^12^10  ;abm*2.6*8

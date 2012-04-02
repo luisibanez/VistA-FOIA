@@ -1,7 +1,8 @@
-XWBTCPM ;ISF/RWF - BROKER TCP/IP PROCESS HANDLER ;01/04/2006  62562.56228
- ;;1.1;RPC BROKER;**35,43**;Mar 28, 1997
+XWBTCPM ;ISF/RWF - BROKER TCP/IP PROCESS HANDLER ;02/08/10  07:46
+ ;;1.1;RPC BROKER;**35,43,49,53**;Mar 28, 1997;Build 5
+ ;Per VHA Directive 2004-038, this routine should not be modified
  ;Based on: XWBTCPC & XWBTCPL, Modified by ISF/RWF
- ;Changed to be started by UCX or %ZISTCPS
+ ;Changed to be started by TCPIP service or %ZISTCPS
  ;
 DSM ;DSM called from ucx, % passed in with device.
  D ESET
@@ -13,7 +14,7 @@ DSM ;DSM called from ucx, % passed in with device.
  ;
 CACHEVMS ;Cache'/VMS tcpip entry point, called from XWBTCP_START.COM file
  D ESET
- S XWBTDEV="SYS$NET"
+ S XWBTDEV=$S($ZV["VMS":"SYS$NET",1:$P) ;Support for both VMS/TCPIP and Linux/xinetd
  ; **Cache'/VMS specific code**
  O XWBTDEV::5
  X "U XWBTDEV:(::""-M"")" ;Packet mode like DSM
@@ -37,12 +38,13 @@ GTMLNX ;From Linux xinetd script
  D ESET
  ;GTM specific code
  S @("$ZINTERRUPT=""I $$JOBEXAM^ZU($ZPOSITION)""")
- S XWBTDEV=$P X "U XWBTDEV:(nowrap:nodelimiter)"
+ S XWBTDEV=$P X "U XWBTDEV:(nowrap:nodelimiter:ioerror=""TRAP"")"
  S %="",@("%=$ZTRNLNM(""REMOTE_HOST"")") S:$L(%) IO("GTM-IP")=%
  G CONNTYPE
  ;
 ESET ;Set inital error trap
  S U="^",$ETRAP="D ^%ZTER H" ;Set up the error trap
+ S X="",@("$ZT=X") ;Clear old trap
  Q
  ;Find the type of connection and jump to the processing routine.
 CONNTYPE ;
@@ -51,12 +53,12 @@ CONNTYPE ;
  N SOCK,TYPE
  D INIT
  S XWB=$$BREAD^XWBRW(5,XWBTIME)
- D LOG("MSG format is "_XWB_" type "_$S(XWB="[XWB]":"NEW",XWB="{XWB}":"OLD",XWB="<?xml":"M2M",1:"Unk"))
+ D LOG("MSG format is "_XWB_" type "_$S(XWB="[XWB]":"NEW",XWB="{XWB}":"OLD",XWB="<?xml":"M2M",XWB="~BSE~":"BSE",XWB="~EAC~":"EAC",XWB="~SVR~":"SVR",1:"Unk")) ; XWB*1.1*XX
  I XWB["[XWB]" G NEW
  I XWB["{XWB}" G OLD^XWBTCPM1
  I XWB["<?xml" G M2M
  I $L($T(OTH^XWBTCPM2)) D OTH^XWBTCPM2 ;See if a special code.
- D LOG("Prefix not known: "_XWB)
+ I '$L($T(OTH^XWBTCPM2)) D LOG("Prefix not known: "_XWB) ; XWB*1.1*XX
  Q
  ;
 NEWJOB() ;Check if OK to start a new job, Return 1 if OK, 0 if not OK.
@@ -100,13 +102,13 @@ NEW ;New broker
  ;Attempt to share license, Must have TCP port open first.
  U XWBTDEV ;D SHARELIC^%ZOSV(1)
  ;setup null device "NULL"
- S %ZIS="0H",IOP="NULL" D ^%ZIS S XWBNULL=IO I POP S XWBERROR="No NULL device" D ^%ZTER,EXIT Q
+ S %ZIS="0H",IOP="NULL" D ^%ZIS S XWBNULL=IO I POP S XWBERROR="No NULL device" D LOG(XWBERROR),EXIT Q
  D SAVDEV^%ZISUTL("XWBNULL")
  ;change process name
  D CHPRN("ip"_$P(XWBTIP,".",3,4)_":"_XWBTDEV)
  ;
 RESTART ;The error trap returns to here
- N $ESTACK S $ETRAP="D ETRAP^XWBTCPM"
+ N $ESTACK S $ETRAP="D ETRAP^XWBTCPM(0)"
  S DT=$$DT^XLFDT,DTIME=30
  U XWBTDEV D MAIN
  D LOG("Exit: "_XWBTBUF)
@@ -146,22 +148,21 @@ MAIN ; -- main message processing loop. debug at MAIN+1
  Q  ;End Of Main
  ;
  ;
-ETRAP ; -- on trapped error, send error info to client
+ETRAP(EXIT) ; -- on trapped error, send error info to client
  N XWBERC,XWBERR
  ;Change trapping during trap.
- S $ETRAP="D ^%ZTER,EXIT^XWBTCPM HALT"
+ S $ETRAP="D ^%ZTER,ETRAP^XWBTCPM(1)"
  S XWBERC=$E($$EC^%ZOSV,1,200),XWBERR="M  ERROR="_XWBERC_$C(13,10)_"LAST REF="_$$LGR^%ZOSV
  I $EC["U411" S XWBERROR="U411",XWBSEC="",XWBERR="Data Transfer Error to Server"
  D ^%ZTER ;%ZTER clears $ZE and $ZCODE
  D LOG("In ETRAP: "_XWBERC) ;Log
- I (XWBERC["READ")!(XWBERC["WRITE")!(XWBERC["SYSTEM-F") D EXIT HALT
+ I (XWBERC["READ")!(XWBERC["WRITE")!(XWBERC["SYSTEM-F")!(XWBERC["IOEOF") D EXIT X "HALT "
  U XWBTDEV
- I $G(XWBT("PCNT")) L ^XUTL("XUSYS",$J,0)
+ I $G(XWBT("PCNT")) L +^XUTL("XUSYS",$J,0):99
  E  L  ;Clear Locks
- ;I XWBOS'="DSM" D
- S XWBPTYPE=1 ;So SNDERR won't check XWBR
- ;D SNDERR^XWBRW,WRITE^XWBRW($C(24)_XWBERR_$C(4))
+ ;
  D ESND^XWBRW($C(24)_XWBERR_$C(4))
+ I EXIT D EXIT X "HALT "
  S $ETRAP="Q:($ESTACK&'$QUIT)  Q:$ESTACK -9 S $ECODE="""" D CLEANP^XWBTCPM G RESTART^XWBTCPM",$ECODE=",U99,"
  Q
  ;
@@ -182,8 +183,8 @@ CHPRN(N) ;change process name
  Q
  ;
 SETTIME(%) ;Set the Read timeout 0=RPC, 1=sign-on
- S XWBTIME=$S($G(%):90,$G(XWBVER)>1.105:$$BAT^XUPARAM,1:36000),XWBTIME(1)=2
- I $G(%) S XWBTIME=$S($G(XWBVER)>1.1:90,1:36000)
+ ; Increased timeout period (%=1) during signon from 90 to 180 for accessibility reasons
+ S XWBTIME=$S($G(%):180,$G(XWBVER)>1.1:$$BAT^XUPARAM,1:36000),XWBTIME(1)=5 ; (*p35)
  Q
 TIMEOUT ;Do this on MAIN  loop timeout
  I $G(DUZ)>0 D QSND^XWBRW("#BYE#") Q
@@ -193,7 +194,7 @@ TIMEOUT ;Do this on MAIN  loop timeout
  Q
  ;
 OS() ;Return the OS
- Q $S(^%ZOSF("OS")["DSM":"DSM",^("OS")["UNIX":"UNIX",^("OS")["OpenM":"OpenM",1:"MSM")
+ Q $S(^%ZOSF("OS")["OpenM":"OpenM",^%ZOSF("OS")["GT.M":"GT.M",^("OS")["DSM":"DSM",1:"UNK")
  ;
 INIT ;Setup
  S U="^",XWBTIME=10,XWBOS=$$OS,XWBDEBUG=0,XWBRBUF=""
@@ -204,12 +205,12 @@ INIT ;Setup
  Q
  ;
 DEBUG ;Entry point for debug, Build a server to get the connect
- ;DSM sample;ZDEBUG ON S $ZB(1)="SERV+1^XWBTCPM:1",$ZB="ETRAP+1^XWBTCPM:1"
+ ;Cache sample;ZB SERV+1^XWBTCPM:"L+" ZB ETRAP+1^XWBTCPM:"B"
  W !,"Before running this entry point set your debugger to stop at"
  W !,"the place you want to debug. Some spots to use:"
  W !,"'SERV+1^XWBTCPM', 'MAIN+1^XWBTCPM' or 'CAPI+1^XWBPRS.'",!
  W !,"or location of your choice.",!
- W !,"IP Socket to Listen on: " R SOCK:300 Q:'$T!(SOCK["^")
+ W !,"IP Socket to Listen on: " R SOCK:300,! Q:'$T!(SOCK["^")
  ;Use %ZISTCP to do a single server
  D LISTEN^%ZISTCP(SOCK,"SERV^XWBTCPM")
  U $P W !,"Done"

@@ -1,5 +1,5 @@
-AUM111E ;IHS/SD/RNB - ICD 9 CODES FOR FY 2011 ; [ 09/09/2010   8:30 AM ]
- ;;11.0;TABLE MAINTENANCE;;OCT 15,2010
+AUM111E ;IHS/SD/RNB - ICD 9 CODES FOR FY 2012 ; [ 09/09/2010   8:30 AM ]
+ ;;12.0;TABLE MAINTENANCE;;SEP 27,2011
  ;
 DRGS ;EP
  NEW AUMDA,AUMI,AUMLN,DA,DIE,DR
@@ -25,68 +25,72 @@ DRG ;;DRG^MDC^SURGERY?^DRG TITLE
  ;;END
  Q
 ICD9PINA ;;ICD 9 PROCEDURE, INACTIVE CODES: CODE NUMBER(#.01)^DESCRIPTION(#10)^INACTIVE DATE(#102)
- ;;39.8^Operations on carotid body, carotid sinus and other vascular bodies^OCT 1, 2010
+ ;;02.2^Ventriculostomy^OCT 1, 2011
  ;;END
 ICD9VNEW ;;ICD 9 DIAGNOSIS, NEW V-CODES: CODE NUMBER(#.01)^DIAGNOSIS(#3)^DESCRIPTION(#10)^USE ONLY WITH SEX(#9.5)^MDC(#5)^DRG(#60-65)
- ;;V11.4^Hx combat and oper stres react^Personal history of combat and operational stress reaction^^23^951^
- ;;V13.23^Hx of vaginal dysplasia^Personal history of vaginal dysplasia^^23^951^
- ;;V13.24^Hx of vulvar dysplasia^Personal history of vulvar dysplasia^^23^951^
- ;;V13.62^Hx oth congen malfor genit sys^Personal history of other (corrected) congenital malformations of genitourinary system^^23^951^
- ;;V13.63^Hx congential mal of nerv sys^Personal history of (corrected) congenital malformations of nervous system^^23^951^
- ;;V13.64^Hx congen mal of eye,ea,fac,ne^Personal history of (corrected) congenital malformations of eye, ear, face and neck^^23^951^
- ;;V13.65^Hx congen malf heart, cir sys^Personal history of (corrected) congenital malformations of heart and circulatory system^^23^951^
- ;;V13.66^Hx congen malfor respir sys^Personal history of (corrected) congenital malformations of respiratory system^^23^951^
- ;;V13.67^Hx congen malfo of digest sys^Personal history of (corrected) congenital malformations of digestive system^^23^951^
- ;;V13.68^Hx cong mal integu,lim,musosk^Personal history of (corrected) congenital malformations of integument, limbs, and musculoskeletal systems^^23^951^
- ;;V15.53^Hx retained forgn body removed^Personal history of retained foreign body fully removed^^23^951^
- ;;V25.11^Insertion IUD^Encounter for insertion of intrauterine contraceptive device^^23^951^
- ;;V25.12^Removal of IUD^Encounter for removal of intrauterine contraceptive device^^23^951^
- ;;V25.13^Removal/insertion of IUD^Encounter for removal and reinsertion of intrauterine contraceptive device^^23^951^
- ;;V49.86^Do not resuscitate status^Do not resuscitate status^^23^951^
- ;;V49.87^Physical restraints status^Physical restraints status^^23^951^
- ;;V62.85^Homicidal ideation^Homicidal ideation^^23^951^
- ;;V85.41^BMI 40.0-44.9, adult^Body Mass Index 40.0-44.9, adult^^10^640,641^1
- ;;V85.42^BMI 45.0-49.9, adult^Body Mass Index 45.0-49.9, adult^^10^640,641^1
- ;;V85.43^BMI 50.0-59.9, adult^Body Mass Index 50.0-59.9, adult^^10^640,641^1
- ;;V85.44^BMI 60.0-69.9, adult^Body Mass Index 60.0-69.9, adult^^10^640,641^1
- ;;V85.45^BMI 70 and over, adult^Body Mass Index 70 and over, adult^^10^640,641^1
- ;;V88.11^Acq total absence of pancreas^Acquired total absence of pancreas^^23^951^
- ;;V88.12^Acq part absence of pancreas^Acquired partial absence of pancreas^^23^951^
- ;;V90.01^Retain depleted uranium fragm^Retained depleted uranium fragments^^23^951^
- ;;V90.09^Oth retain radioactiv fragmen^Other retained radioactive fragments^^23^951^
- ;;V90.10^Retain metal fragments, unspec^Retained metal fragments, unspecified^^23^951^
- ;;V90.11^Retain magnetic metal fragment^Retained magnetic metal fragments^^23^951^
- ;;V90.12^Retain nonmagnetic metal frag^Retained nonmagnetic metal fragments^^23^951^
- ;;V90.2^Retained plastic fragments^Retained plastic fragments^^23^951^
- ;;V90.31^Retain animal quills or spines^Retained animal quills or spines^^23^951^
- ;;V90.32^Retained tooth^Retained tooth^^23^951^
- ;;V90.33^Retained wood fragments^Retained wood fragments^^23^951^
- ;;V90.39^Oth retained organic fragments^Other retained organic fragments^^23^951^
- ;;V90.81^Retained glass fragments^Retained glass fragments^^23^951^
- ;;V90.83^Retain stone or crystall frag^Retained stone or crystalline fragments^^23^951^
- ;;V90.89^Oth spec retain foreign body^Other specified retained foreign body^^23^951^
- ;;V90.9^Retain forein body, unspec mat^Retained foreign body, unspecified material^^23^951^
- ;;V91.00^Twin gest, unspec # placen,sac^Twin gestation, unspecified number of placenta, unspecified number of amniotic sacs^^23^951^
- ;;V91.01^Twin gest, 1 placen,1 amno sac^Twin gestation, monochorionic/monoamniotic (one placenta, one amniotic sac)^^23^951^
- ;;V91.02^Twin gest, 1 placen,2 amno sac^Twin gestation, monochorionic/diamniotic (one placenta, two amniotic sacs)^^23^951^
- ;;V91.03^Twin gest, 2 placen,2 amno sac^Twin gestation, dichorionic/diamniotic (two placentae, two amniotic sacs)^^23^951^
- ;;V91.09^Twin gest, unable # of pla/sac^Twin gestation, unable to determine number of placenta and number of amniotic sacs^^23^951^
- ;;V91.10^Trip gest, unspec # of pla/sac^Triplet gestation, unspecified number of placenta and unspecified number of amniotic sacs^^23^951^
- ;;V91.11^Trip gest, 2/+ monochor fetuse^Triplet gestation, with two or more monochorionic fetuses^^23^951^
- ;;V91.12^Trip gest, 2/+ monoamno fetuse^Triplet gestation, with two or more monoamniotic fetuses^^23^951^
- ;;V91.19^Trip gest, unable # of pla/sac^Triplet gestation, unable to determine number of placenta and number of amniotic sacs^^23^951^
- ;;V91.20^Quad gest, unspec # of pla/sac^Quadruplet gestation, unspecified number of placenta and unspecified number of amniotic sacs^^23^951^
- ;;V91.21^Quad gest, 2/+ monochor fetuse^Quadruplet gestation, with two or more monochorionic fetuses^^23^951^
- ;;V91.22^Quad gest, 2/+ monoamno fetuse^Quadruplet gestation, with two or more monoamniotic fetuses^^23^951^
- ;;V91.29^Quad gest, unable # of pla/sac^Quadruplet gestation, unable to determine number of placenta and number of amniotic sacs^^23^951^
- ;;V91.90^Oth mul gest, unspec # pla/sac^Other specified multiple gestation, unspecified number of placenta and unspecified number of amniotic sacs^^23^951^
- ;;V91.91^Oth spec mult gest, 2/+ monoch^Other specified multiple gestation, with two or more monochorionic fetuses^^23^951^
- ;;V91.92^Oth spec mulgest, 2/+ monoamn^Other specified multiple gestation, with two or more monoamniotic fetuses^^23^951^
- ;;V91.99^Oth spec mult gest,unab # p/s^Other specified multiple gestation, unable to determine number of placenta and number of amniotic sacs^^23^951^
+ ;;V12.21^Hx gestational diabetes^Personal history of gestational diabetes^^23^951^
+ ;;V12.29^Hx-endocr/meta/immun dis^Personal history of other endocrine, metabolic, and immunity disorders^^23^951^
+ ;;V12.55^Hx pulmonary embolism^Personal history of pulmonary embolism^^23^951^
+ ;;V13.81^Hx of anaphylaxis^Personal history of anaphylaxis^^23^951^
+ ;;V13.89^Hx diseases NEC^Personal history of other specified diseases^^23^951^
+ ;;V19.11^Family history glaucoma^Family history of glaucoma^^23^951^
+ ;;V19.19^Family hx-eye disord NEC^Family history of other specified eye disorder^^23^951^
+ ;;V23.42^Preg w hx ectopic preg^Pregnancy with history of ectopic pregnancy^F^14^998^
+ ;;V23.87^Preg w incon fetl viabil^Pregnancy with inconclusive fetal viability^F^14^998^
+ ;;V40.31^Wandering-dis elsewhere^Wandering in diseases classified elsewhere^^23^951^
+ ;;V40.39^Oth spc behavior problem^Other specified behavioral problem^^23^951^
+ ;;V54.82^Aftcr explantatn jt pros^Aftercare following explantation of joint prosthesis^^8^559,560,561^
+ ;;V58.68^Lng term bisphosphonates^Long term (current) use of bisphosphonates^^23^949,950^
+ ;;V87.02^Cont/susp expose uranium^Contact with and (suspected) exposure to uranium^^23^951^
+ ;;V88.21^Acq absence of hip joint^Acquired absence of hip joint^^23^951^
+ ;;V88.22^Acq absence knee joint^Acquired absence of knee joint^^23^951^
+ ;;V88.29^Acq absence of oth joint^Acquired absence of other joint^^23^951^
  ;;END
 ICD9NEW2 ;
+ ;;996.88^Comp tp organ-stem cell^Complications of transplanted organ, stem cell^^21^919,920,921^1
+ ;;997.32^Postproc aspiration pneu^Postprocedural aspiration pneumonia^^4^205,206^1
+ ;;997.41^Ret cholelh fol cholecys^Retained cholelithiasis following cholecystectomy^^6^393,394,395^1
+ ;;997.49^Oth digestv system comp^Other digestive system complications^^6^393,394,395^1
+ ;;998.00^Postoperative shock, NOS^Postoperative shock, unspecified^^15^791,793^1
+ ;;998.01^Postop shock,cardiogenic^Postoperative shock, cardiogenic^^15^791,793^1
+ ;;998.02^Postop shock, septic^Postoperative shock, septic^^15^791,793^1
+ ;;998.09^Postop shock, other^Postoperative shock, other^^15^791,793^1
+ ;;999.32^Blood inf dt cen ven cth^Bloodstream infection due to central venous catheter^^5^314,315,316^1
+ ;;999.33^Lcl inf dt cen ven cth^Local infection due to central venous catheter^^5^314,315,316^1
+ ;;999.34^Ac inf fol trans,inf bld^Acute infection following transfusion, infusion, or injection of blood and blood products^^15^791,793^1
+ ;;999.41^Anaphyl d/t adm bld/prod^Anaphylactic reaction due to administration of blood and blood products^^15^791,793^1
+ ;;999.42^Anaphyl react d/t vaccin^Anaphylactic reaction due to vaccination^^15^791,793^1
+ ;;999.49^Anaph react d/t ot serum^Anaphylactic reaction due to other serum^^15^791,793^1
+ ;;999.51^Ot serum react d/t blood^Other serum reaction due to administration of blood and blood products^^15^791,793^1
+ ;;999.52^Ot serum react d/t vacc^Other serum reaction due to vaccination^^15^791,793^1
+ ;;999.59^Other serum reaction^Other serum reaction^^15^791,793^1
  ;;END
 ICD9PREV ;;ICD OPERATION/PROCEDURE, REVISED CODES: CODE NUMBER(#.01)^OPERATION/PROCEDURE(#4)^DESCRIPTION(#10)^USE ONLY WITH SEX(#9.5)^MDC(#80.12)-DRG(#80.12,1-6) (Multiple MDCs/DRGs separated by "~")
+ ;;00.56^Ins/rep sens-crd/vsl mtr^Insertion or replacement of implantable pressure sensor with lead for intracardiac or great vessel hemodynamic monitoring^^5-260,261,262,264^^
+ ;;00.61^Perc angio extracran ves^Percutaneous angioplasty of extracranial vessel(s)^^1-34,35,36,37,38,39~5-252,253,254~21-907,908,909~24-957,958,959^^
+ ;;00.62^Perc angio intracran ves^Percutaneous angioplasty of intracranial vessel(s)^^1-23,24,25,26,27~5-252,253,254~21-907,908,909~24-957,958,959^^
+ ;;00.64^Perc ins extracran stent^Percutaneous insertion of other extracranial artery stent(s)^^^^
+ ;;00.66^PTCA^Percutaneous transluminal coronary angioplasty [PTCA]^^5-231,232,246,247,248,249,250,251^^
+ ;;02.39^Vent shunt extracran NEC^Ventricular shunt to extracranial site NEC^^1-31,32,33~17-820,821,822,826,827,828~21-907,908,909~24-957,958,959^^
+ ;;13.65^After-cataract excision^Excision of secondary membrane [after cataract]^^2-116,117^^
+ ;;35.20^Opn/oth rep hrt vlv NOS^Open and other replacement of unspecified heart valve^^5-216,217,218,219,220,221^^
+ ;;35.21^Opn/oth rep aort vlv-tis^Open and other replacement of aortic valve with tissue graft^^5-216,217,218,219,220,221^^
+ ;;35.22^Opn/oth rep aortic valve^Open and other replacement of aortic valve^^5-216,217,218,219,220,221^^
+ ;;35.23^Opn/oth rep mtrl vlv-tis^Open and other replacement of mitral valve with tissue graft^^5-216,217,218,219,220,221^^
+ ;;35.24^Opn/oth rep mitral valve^Open and other replacement of mitral valve^^5-216,217,218,219,220,221^^
+ ;;35.25^Opn/oth rep pulm vlv-tis^Open and other replacement of pulmonary valve with tissue graft^^5-216,217,218,219,220,221^^
+ ;;35.26^Opn/oth repl pul valve^Open and other replacement of pulmonary valve^^5-216,217,218,219,220,221^^
+ ;;35.27^Opn/oth rep tcspd vlv-ts^Open and other replacement of tricuspid valve with tissue graft^^5-216,217,218,219,220,221^^
+ ;;35.28^Opn/oth repl tcspd valve^Open and other replacement of tricuspid valve^^5-216,217,218,219,220,221^^
+ ;;37.36^Exc,destrct,exclus LAA^Excision, destruction, or exclusion of left atrial appendage (LAA)^^5-250,251^^
+ ;;39.50^Angio oth non-coronary^Angioplasty of other non-coronary vessel(s)^^1-37,38,39~4-166,167,168~5-252,253,254~6-356,357,358~7-423,424,425~8-515,516,517~9-579,580,581~10-628,629,630~11-673,674,675~21-907,908,909~24-957,958,959^^
+ ;;39.71^Endo imp oth grf abd aor^Endovascular implantation of other graft in abdominal aorta^^5-237,238~11-673,674,675~21-907,908,909~24-957,958,959^^
+ ;;39.72^Endovasc embol hd/nk ves^Endovascular (total) embolization or occlusion of head and neck vessels^^1-20,21,22,23,24,25,26,27~5-237,238~11-673,674,675~21-907,908,909~24-957,958,959^^
+ ;;43.89^Opn/oth part gastrectomy^Open and other partial gastrectomy^^5-264~6-326,327,328~10-619,620,621~17-820,821,822,826,827,828~21-907,908,909~24-957,958,959^^
+ ;;86.95^Ins/re pls gn no rechrg^Insertion or replacement of multiple array neurostimulator pulse generator, not specified as rechargeable^^1-23,24,29,40,41,42~8-490^^
+ ;;86.98^Ins/rep mul pul gn,rechg^Insertion or replacement of multiple array (two or more) rechargeable neurostimulator pulse generator^^1-29,40,41,42~8-490^^
+ ;;END
+ICD9PRE2 ;;ICD OPERATION/PROCEDURE, REVISED CODES: CODE NUMBER(#.01)^OPERATION/PROCEDURE(#4)^DESCRIPTION(#10)^USE ONLY WITH SEX(#9.5)^MDC(#80.12)-DRG(#80.12,1-6) (Multiple MDCs/DRGs separated by "~")
  ;;00.55^Insert drug-elut stent(s) oth peripheral vessel(s)^Insertion of drug-eluting stent(s) of other peripheral vessel(s)^^^^
  ;;35.96^Percutaneous balloon valvuloplasty^Percutaneous balloon valvuloplasty^^5-231,232,246,247,248,249,250,251^^
  ;;37.34^Excise/destruc oth heart les or tissue, endovascul^Excision or destruction of other lesion or tissue of heart, endovascular approach^^5-246,247,248,249,250,251^^

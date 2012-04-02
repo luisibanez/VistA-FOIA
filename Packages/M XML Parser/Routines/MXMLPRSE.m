@@ -1,5 +1,5 @@
-MXMLPRSE ;SAIC/DKM - XML Parser ;05/04/2005  15:20
- ;;7.3;TOOLKIT;**58,67,89**;Apr 25, 1995
+MXMLPRSE ;SAIC/DKM - XML Parser ;09/08/08  11:50
+ ;;7.3;TOOLKIT;**58,67,89,116**;Apr 25, 1995;Build 5
  ;=================================================================
  ; Main entry point.
  ; DOC = Closed reference to global array containing document
@@ -187,12 +187,12 @@ ATTRIBS(ENAME,ATTR) ;
  ; Returns 1 if successful, 0 if not.
 ATTRIB(ENAME,ATTR) ;
  N ANAME
- D WS()
+ D READ,WS() ;p116
  S ANAME=$$NAME
  Q:ANAME="" 0
  I $D(ATTR(ANAME)) D ERROR(4,ANAME) Q 0
  D:'$D(^TMP(ID,$J,"ATT",ENAME,ANAME)) ERROR(29,ANAME)
- D WS()
+ D READ,WS() ;p116
  Q:'$$NEXT("=",3) 0
  D WS()
  S ATTR(ANAME)=$$VALUE(1)

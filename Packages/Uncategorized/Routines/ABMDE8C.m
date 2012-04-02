@@ -1,5 +1,5 @@
 ABMDE8C ; IHS/ASDST/DMJ - Page 8 - ROOM AND BOARD ; 
- ;;2.6;IHS Third Party Billing System;**2,6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**2,6,8**;NOV 12, 2009
  ;
  ; IHS/SD/SDR - v2.5 p9 - IM16660 - 4-digit revenue codes
  ; IHS/SD/SDR - v2.5 p10 - IM20018 - Added CPT prompt
@@ -80,7 +80,9 @@ E ;EDIT EXISTING ENTRY
  ;S:'$P(^AUTTREVN(ABMZ("RVCODE"),0),"^",5) DR=DR_";.04"  ;abm*2.6*6 NOHEAT
  S DR=DR_";.04"  ;abm*2.6*6 NOHEAT
  D ^DIE
- I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),25,DA,0)),U,7)'="",($P($G(^DIC(81.1,$P($G(^ICPT($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),25,DA,0)),U,7),0)),U,3),0)),U)["IMMUNIZATION") S DR="15//" D ^DIE  ;abm*2.6*6 5010
+ ;I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),25,DA,0)),U,7)'="",($P($G(^DIC(81.1,$P($G(^ICPT($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),25,DA,0)),U,7),0)),U,3),0)),U)["IMMUNIZATION") S DR="15//" D ^DIE  ;abm*2.6*6 5010  ;abm*2.6*8 HEAT41190
+ S ABMTCPT=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),25,DA,0)),U,7)  ;abm*2.6*8 HEAT41190
+ I ABMTCPT'="",$P($G(^ICPT($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),25,DA,0)),U,7),0)),U,3),($P($G(^DIC(81.1,$P($G(^ICPT(ABMTCPT,0)),U,3),0)),U)["IMMUNIZATION") S DR="15//" D ^DIE  ;abm*2.6*8 HEAT41190
  Q
 DEL100 ;if 100 ask to delete
  Q:ABMZ("RVCODE")'=100

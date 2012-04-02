@@ -1,5 +1,5 @@
 ABMDTFED ; IHS/ASDST/DMJ - REPORT OF 3P FEE SCHEDULES ; 
- ;;2.6;IHS Third Party Billing System;**3**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**3,8**;NOV 12, 2009
  ;
  ; IHS/SD/SDR - v2.5 p9 - IM11865 - Made change so it will print to printer
  ; IHS/SD/SDR - abm*2.6*3 - FIXPMS10008 and FIXPMS10012 - Modified to not use templates and to print by
@@ -34,6 +34,17 @@ SEL W !!,"======== FEE SCHEDULE CATEGORIES ========",!
  S:ABM("S")="HCPCS" ABM("CAT")=13
  S:ABM("S")="DRUG" ABM("CAT")=25
  S:ABM("S")="CHARGE MASTER" ABM("CAT")=32
+ ;start new code abm*2.6*8 HEAT19236
+ W !,"Looking for effective dates..."
+ S ABMCODE=0
+ F  S ABMCODE=$O(^ABMDFEE(ABM("FEE"),ABM("CAT"),ABMCODE)) Q:'ABMCODE  D
+ .S ABMEFFDT=0
+ .F  S ABMEFFDT=$O(^ABMDFEE(ABM("FEE"),ABM("CAT"),ABMCODE,1,"B",ABMEFFDT)) Q:'ABMEFFDT  D
+ ..S ABMELST(ABMEFFDT)=""
+ W !!,"Possible effective dates:"
+ S ABMEFFDT=0
+ F  S ABMEFFDT=$O(ABMELST(ABMEFFDT)) Q:'ABMEFFDT  W !?3,$$SDT^ABMDUTL(ABMEFFDT)
+ ;end new code HEAT19236
  D ^XBFMK
  S DIR(0)="DA"
  S DIR("A")="Use what effective date? "
@@ -41,20 +52,31 @@ SEL W !!,"======== FEE SCHEDULE CATEGORIES ========",!
  K DIR
  Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)!$D(DIROUT)
  S ABM("EFFDT")=Y
- S ABM("TMP")=$O(^ABMDFEE(ABM("FEE"),1,"B",0))
- I (ABM("EFFDT")<($P(ABM("TMP"),".",1))) D  G FEE
- .W !!?2,"The effective date you selected is before any effective date in this"
- .W !?2,"fee schedule."
+ ;start old code abm*2.6*8 HEAT19236
+ ;S ABM("TMP")=$O(^ABMDFEE(ABM("FEE"),1,"B",0))
+ ;I (ABM("EFFDT")<($P(ABM("TMP"),".",1))) D  G FEE
+ ;.W !!?2,"The effective date you selected is before any effective date in this"
+ ;.W !?2,"fee schedule."
+ ;end old code HEAT19236
  ;end new code FIXPMS10008
  ;
-W1 W !!!
+W1 ;EP
+ W !!!
+ ;start old code abm*2.6*8 HEAT26652
+ ;S %ZIS="NQ"
+ ;S %ZIS("B")=""
+ ;D ^%ZIS
+ ;G:'$D(IO)!$G(POP) XIT
+ ;S ABM("ION")=ION
+ ;G:$D(IO("Q")) QUE
+ ;I IO'=IO(0),$E(IOST)'="C",'$D(IO("S")),$P($G(^ABMDPARM(DUZ(2),1,0)),U,13)="Y" W !!,"As specified in the 3P Site Parameters File FORCED QUEUEING is in effect!",! G QUE
+ ;end old code start new code HEAT26652
  S %ZIS="NQ"
- S %ZIS("B")=""
- D ^%ZIS
- G:'$D(IO)!$G(POP) XIT
- S ABM("ION")=ION
- G:$D(IO("Q")) QUE
- I IO'=IO(0),$E(IOST)'="C",'$D(IO("S")),$P($G(^ABMDPARM(DUZ(2),1,0)),U,13)="Y" W !!,"As specified in the 3P Site Parameters File FORCED QUEUEING is in effect!",! G QUE
+ S %ZIS("A")="Enter DEVICE: "
+ D ^%ZIS Q:POP
+ I IO'=IO(0) D QUE,HOME^%ZIS S DIR(0)="E" D ^DIR K DIR Q
+ I $D(IO("S")) S IOP=ION D ^%ZIS
+ ;end new code HEAT26652
 PRQUE ;EP - Entry Point for Taskman
 S2 ;start old code abm*2.6*3 FIXPMS10008
  ;S L=0
@@ -96,12 +118,23 @@ XIT D ^%ZISC
  K ABM
  Q
  ;
-QUE K IO("Q")
+QUE ;EP
+ ;start old code abm*2.6*8
+ ;K IO("Q")
+ ;S ZTRTN="PRQUE^ABMDTFED"
+ ;S ZTDESC="REPORT OF 3P FEE SCHEDULES"
+ ;F ABM="ABM(" S ZTSAVE(ABM)=""
+ ;D ^%ZTLOAD
+ ;W:$D(ZTSK) !,"REQUEST QUEUED!",! G XIT
+ ;end old code start new code
  S ZTRTN="PRQUE^ABMDTFED"
  S ZTDESC="REPORT OF 3P FEE SCHEDULES"
- F ABM="ABM(" S ZTSAVE(ABM)=""
+ S ZTSAVE("ABM*")=""
+ K ZTSK
  D ^%ZTLOAD
- W:$D(ZTSK) !,"REQUEST QUEUED!",! G XIT
+ W:$G(ZTSK) !,"Task # ",ZTSK," queued.",!
+ Q
+ ;end new code
  ;
  ;start new code abm*2.6*3 FIXPMS10008
 HD D PAZ^ABMDRUTL Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)

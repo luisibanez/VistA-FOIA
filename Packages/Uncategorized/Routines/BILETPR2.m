@@ -1,5 +1,5 @@
 BILETPR2 ;IHS/CMI/MWR - PRINT PATIENT LETTERS; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  PRINT PATIENT LETTERS.
  ;
@@ -76,4 +76,19 @@ OFFICIAL(BIDFN,BIRTN) ;EP
  .D ^%ZISC
  ;
  I $G(BIRTN)]"" S VALMBCK="R" D @("RESET^"_BIRTN)
+ Q
+ ;
+ ;
+ ;----------
+DATELOC(BILET,BILINE,BIDLOC) ;EP
+ ;---> Store Date/Location line in WP ^TMP global.
+ ;---> Parameters:
+ ;     1 - BILET  (req) IEN of Letter in BI LETTER File.
+ ;     2 - BILINE (ret) Last line written into ^TMP array.
+ ;     3 - BIDLOC (req) Text of Date/Location line.
+ ;
+ ;---> Quit if this Form Letter does not included a Date/Loc line.
+ Q:'$P(^BILET(BILET,0),U,4)
+ S:$G(BIDLOC)="" BIDLOC="     Date/Location line not provided."
+ D WRITE^BILETPR1(.BILINE),WRITE^BILETPR1(.BILINE,"     "_BIDLOC),WRITE^BILETPR1(.BILINE)
  Q

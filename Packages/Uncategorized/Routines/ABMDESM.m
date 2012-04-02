@@ -1,5 +1,5 @@
 ABMDESM ; IHS/ASDST/DMJ - Display Summarized Claim Info ;    
- ;;2.6;IHS 3P BILLING SYSTEM;**6**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8**;NOV 12, 2009
  ;
  ; IHS/ASDS/DMJ - 04/18/00 - V2.4 Patch 1 - NOIS XAA-0400-200044
  ;     Modified mode of export loop to include 16 and 17
@@ -22,7 +22,8 @@ ABMDESM ; IHS/ASDST/DMJ - Display Summarized Claim Info ;
  I '$G(ABMQUIET) W $$EN^ABMVDF("IOF")
  S ABMP("TMP-EXP")=ABMP("EXP")
  ;F ABMP("EXP")=1,10,11,2,3,13,14,15,16,17,19,20,21,22,23,24,27,28,51 I $D(ABMP("EXP",ABMP("EXP"))) D  ;abm*2.6*6 5010
- F ABMP("EXP")=1,10,11,2,3,13,14,15,16,17,19,20,21,22,23,24,27,28,32,51 I $D(ABMP("EXP",ABMP("EXP"))) D  ;abm*2.6*6 5010
+ ;F ABMP("EXP")=1,10,11,2,3,13,14,15,16,17,19,20,21,22,23,24,27,28,32,51 I $D(ABMP("EXP",ABMP("EXP"))) D  ;abm*2.6*6 5010  ;abm*2.6*8 5010
+ F ABMP("EXP")=1,10,11,2,3,13,14,15,16,17,19,20,21,22,24,27,28,31,32,51 I $D(ABMP("EXP",ABMP("EXP"))) D  ;abm*2.6*6 5010  ;abm*2.6*8 5010
  .D ^ABMDESM1
  .S ABMP("EXP",ABMP("EXP"))=+ABMS("TOT")
  .I $P(^ABMDEXP(ABMP("EXP"),0),U)["UB" D  Q
@@ -48,10 +49,11 @@ VTYP S ABMP=3 F  S ABMP=$O(ABMP("EXP",ABMP)) Q:'ABMP  D
  .Q:ABMP=20
  .Q:ABMP=21
  .Q:ABMP=22
- .Q:ABMP=23
+ .;Q:ABMP=23  ;abm*2.6*8
  .Q:ABMP=24
  .Q:ABMP=27
  .Q:ABMP=28
+ .Q:ABMP=31  ;abm*2.6*8 5010
  .Q:ABMP=32  ;abm*2.6*6 5010
  .Q:ABMP=51
  .I $P($G(^ABMDEXP(ABMP,1)),U)]"" D @("^"_$P(^(1),U)) I 1

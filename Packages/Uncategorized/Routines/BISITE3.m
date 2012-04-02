@@ -1,5 +1,5 @@
 BISITE3 ;IHS/CMI/MWR - EDIT SITE PARAMETERS; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EDIT SITE PARAMETERS.
  ;
@@ -111,7 +111,7 @@ TEXT3 ;EP
  ;
  ;----------
 PNUFLU ;EP
- ;---> Edit Pneumo and Flu site parameters.
+ ;---> Edit Pneumo, Flu, and Zoster site parameters.  v8.5
  ;
  ;---> Edit the age at which adults should be forecast to receive
  ;---> pneumococcal vaccines.
@@ -142,6 +142,18 @@ PNUFLU ;EP
  D DIR^BIFMAN("YO",.Y,,BIPRMPT,BIDFLT,BIHELP,BIHELP1)
  I $G(Y)="^" D RESET^BISITE Q
  D DIE^BIFMAN(9002084.02,".27///"_Y,BISITE)
+ ;
+ ;---> Zoster Vaccine Forecast question.
+ D TITLE^BIUTL5("SELECT FORECASTING FOR ZOSTER VACCINE"),TEXT12
+ N BIDFLT,BIHELP,BIHELP1,BIPRMPT,X,Y
+ S BIPRMPT="     Forecast Zoster vaccine for ALL patients over age 60"
+ S BIHELP1="        Enter Yes to forecast Zoster vaccine for ALL patients over age 60."
+ S BIHELP="        Enter No to disable Zoster vaccine forecasting."
+ S BIDFLT=$S($$ZOSTER^BIPATUP2(BISITE):"YES",1:"NO")
+ W !
+ D DIR^BIFMAN("YO",.Y,,BIPRMPT,BIDFLT,BIHELP,BIHELP1)
+ I $G(Y)="^" D RESET^BISITE Q
+ D DIE^BIFMAN(9002084.02,".29///"_Y,BISITE)
  ;
  D RESET^BISITE
  Q
@@ -181,6 +193,17 @@ TEXT11 ;EP
  ;;Do you wish to forecast Flu vaccination for ALL patients (over 6 months)?
  ;;
  D PRINTX("TEXT11")
+ Q
+ ;
+ ;
+ ;----------
+TEXT12 ;EP
+ ;;A single dose of Zoster vaccine vaccination is recommended for ALL
+ ;;patients over 60 years of age.
+ ;;
+ ;;Do you wish to forecast Zoster vaccine for ALL patients over age 60?
+ ;;
+ D PRINTX("TEXT12")
  Q
  ;
  ;

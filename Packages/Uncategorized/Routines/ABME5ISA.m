@@ -1,5 +1,5 @@
 ABME5ISA ; IHS/ASDST/DMJ - 837 ISA Segment 
- ;;2.6;IHS Third Party Billing System;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,8**;NOV 12, 2009
  ;Interchange Control Header
  ;
 START ;START HERE
@@ -47,6 +47,11 @@ LOOP ;LOOP HERE
  S:$$RCID^ABMUTLP(ABMP("INS"))="C00900" ABMR("ISA",80)=27
  S:$$RCID^ABMUTLP(ABMP("INS"))="04402" ABMR("ISA",80)=27
  S:$G(ABMPITYP)="P" ABMR("ISA",80)=33
+ ;start new code abm*2.6*8
+ I $D(^ABMRECVR("C",ABMP("INS"))) D
+ .S ABMCHIEN=$O(^ABMRECVR("C",ABMP("INS"),0))
+ .S:ABMCHIEN ABMR("ISA",80)=$P($G(^ABMRECVR(ABMCHIEN,0)),U,5)
+ ;end new code
  Q
 90 ;ISA08 - Interchange Receiver ID
  S ABMR("ISA",90)=$$RCID^ABMUTLP(ABMP("INS"))

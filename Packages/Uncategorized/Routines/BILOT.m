@@ -1,7 +1,7 @@
-BILOT ;IHS/CMI/MWR - EDIT VACCINES.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+BILOT ;IHS/CMI/MWR - EDIT LOT NUMBERS.; MAY 10, 2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
- ;;  EDIT VACCINE FIELDS: CURRENT LOT, ACTIVE, VIS DATE DEFAULT.
+ ;;  EDIT LOT NUMBER FIELDS.
  ;
  ;
  ;
@@ -31,8 +31,8 @@ EN ;EP
  ;----------
 PRINT ;EP
  ;---> Print Vaccine Table.
- ;---> Called by Protocol BI VACCINE TABLE PRINT, which is the
- ;---> Print List Protocol for the List: BI VACCINE TABLE EDIT.
+ ;---> Called by Protocol BI LOT NUMBER TABLE PRINT, which is the
+ ;---> Print List Protocol for the List: BI LOT NUMBER TABLE EDIT.
  ;
  D DEVICE(.BIPOP)
  I $G(BIPOP) D RESET Q
@@ -72,7 +72,7 @@ HDR(BIPRT) ;EP
  D:$G(BIPRT)
  .S X=$$SP^BIUTL5(51)_"Printed: "_$$NOW^BIUTL5()
  .D WH^BIW(.BILINE,X,1)
- .S X="  #  Lot Number    Vaccine     MVX  Status    Exp Date  Start  Unused  Facility"
+ .S X="  #  Lot Number            Vaccine     Status  Exp Date  Start Unused  Facility"
  .D WH^BIW(.BILINE,X)
  Q
  ;
@@ -174,6 +174,12 @@ TEXT1(BITEXT) ;EP
  ;;     able to select it when entering NEW patient immunizations for this.
  ;;     vaccine.  However, previous immunizations with this Lot Number will
  ;;     continue to show up on the patient histories.
+ ;;
+ ;;Source - Choice are VFC, Other State, or IHS/Tribal,.
+ ;;
+ ;;NDC Code - This is the NDC on the box or vial for this lot.  Available
+ ;;      NDC's are limited by virtue of the particular vaccine chosen for
+ ;;      this lot number.
  ;;
  ;;Expiration Date - This is the date that the Lot expires.
  ;;

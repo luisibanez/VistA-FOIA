@@ -1,5 +1,5 @@
 BGPMUDP1 ; IHS/MSC/SAT - Print MU EP  measure NQF0028b ;02-Mar-2011 10:55;DU
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;This routine does the printed output of these 2 EP measures
 TOB ;EP
  D P1
@@ -73,7 +73,7 @@ P2 ;Do the Details
 DATA(NODE) ;GET DATA
  N AGE,DEN,DFN,COMM,HRN,NAME,NUM,SEX
  S DFN=$P(NODE,U,1)
- S NAME=$E($$GET1^DIQ(2,$P(NODE,U,1),.01),1,15)
+ S NAME=$E($$GET1^DIQ(2,$P(NODE,U,1),.01),1,22)
  S HRN=$$HRN^AUPNPAT(DFN,DUZ(2))
  S AGE=$$AGE^AUPNPAT(DFN,BGPED)
  S SEX=$$SEX^AUPNPAT(DFN)
@@ -87,7 +87,7 @@ DATA(NODE) ;GET DATA
  ; line 1
  W !,NAME,?23,HRN,?30,COMM,?42,SEX,?46,AGE
  W ?50,$S($P($P(DEN,":",1),";",1)'="":"EN:"_$P($$FMTE^XLFDT($P($P(DEN,":",1),";",1),2),"@",1)_$S($L($P(DEN,":",1),";")>1:";",1:""),1:"")
- W ?63,$S(NUM'="":"M: "_$P(NUM,";",1)_" "_$$FMTE^XLFDT($P(NUM,";",2),2),1:"NM:")
+ W ?63,$S(NUM'="":"M:"_$P(NUM,";",1)_" "_$$FMTE^XLFDT($P(NUM,";",2),2),1:"NM:")
  ;line 2
  S BGPTMP=$S($P($P(DEN,":",1),";",2)'="":"EN",1:"HF")
  W !,?50,$S(BGPTMP="EN":"EN:"_$P($$FMTE^XLFDT($P($P(DEN,":",1),";",2),2),"@",1),1:"HF:"_$P($$FMTE^XLFDT($P(DEN,":",2),2),"@",1))
@@ -166,7 +166,7 @@ P2A ;Do the Details
 DATA3(NODE) ;GET DATA
  N AGE,DEN,DFN,COMM,HRN,NAME,NUM,SEX
  S DFN=$P(NODE,U,1)
- S NAME=$E($$GET1^DIQ(2,$P(NODE,U,1),.01),1,15)
+ S NAME=$E($$GET1^DIQ(2,$P(NODE,U,1),.01),1,22)
  S HRN=$$HRN^AUPNPAT(DFN,DUZ(2))
  S AGE=$$AGE^AUPNPAT(DFN,BGPED)
  S SEX=$$SEX^AUPNPAT(DFN)
@@ -211,7 +211,7 @@ SUM28A ;Populate "BGPMU SUMMARY" for Tobacco Assessment
  S BNUM1CT=+$G(^TMP("BGPMU0028A",$J,"B","INCL",N))
  S BMP=$S(BDEN1CT>0:$$ROUND^BGPMUA01(BNUM1CT/BDEN1CT,3)*100,1:0)
  S BGPDNCNT=BGPDNCNT+1
- S BGPSSTR="MU.EP.0028A."_N_U_"18+ screening w/in 24 mos"_U_""_U_CDEN1CT_U_CNUM1CT_U_CMP_U_U_U_U
+ S BGPSSTR="MU.EP.0028A."_N_U_"18+ screening w/in 24 mos"_U_0_U_CDEN1CT_U_CNUM1CT_U_CMP_U_U_U_U
  ; 11 12 13 14
  S BGPSSTR=BGPSSTR_U_""_U_PDEN1CT_U_PNUM1CT_U_PMP
  ; 15 16 17 18
@@ -237,7 +237,7 @@ SUM28B ;Populate "BGPMU SUMMARY" for Tobacco Cessation
  S BNUM1CT=+$G(^TMP("BGPMU0028B",$J,"B","INCL",N))
  S BMP=$S(BDEN1CT>0:$$ROUND^BGPMUA01(BNUM1CT/BDEN1CT,3)*100,1:0)
  S BGPDNCNT=BGPDNCNT+1
- S BGPSSTR="MU.EP.0028B."_N_U_"18+ cessation counsel/agent w/in 24 mos"_U_""_U_CDEN1CT_U_CNUM1CT_U_CMP_U_U_U_U
+ S BGPSSTR="MU.EP.0028B."_N_U_"18+ cessation counsel/agent w/in 24 mos"_U_0_U_CDEN1CT_U_CNUM1CT_U_CMP_U_U_U_U
  ; 11 12 13 14
  S BGPSSTR=BGPSSTR_U_""_U_PDEN1CT_U_PNUM1CT_U_PMP
  ; 15 16 17 18

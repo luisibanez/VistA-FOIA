@@ -1,12 +1,12 @@
 BIREPF2 ;IHS/CMI/MWR - REPORT, FLU IMM; AUG 10,2010
- ;;8.4;IMMUNIZATION;**1**;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW INFLUENZA IMMUNIZATION REPORT, GATHER DATA.
  ;;  PATCH 1: Add "Dose#" header to Doses column.  HEAD+86
  ;
  ;
  ;----------
-HEAD(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH) ;EP
+HEAD(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH,BIUP) ;EP
  ;---> Produce Header array for Quarterly Immunization Report.
  ;---> Parameters:
  ;     1 - BIYEAR (req) Report Year.
@@ -15,6 +15,7 @@ HEAD(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH) ;EP
  ;     4 - BICM   (req) Case Manager array.
  ;     5 - BIBEN  (req) Beneficiary Type array.
  ;     6 - BIFH   (opt) F=report on Flu Vaccine Group (default), H=H1N1 group.
+ ;     7 - BIUP   (req) User Population/Group (Registered, Imm, User, Active).
  ;
  ;---> Check for required Variables.
  Q:'$G(BIYEAR)
@@ -23,6 +24,7 @@ HEAD(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH) ;EP
  Q:'$D(BICM)
  Q:'$D(BIBEN)
  S:($G(BIFH)="") BIFH="F"
+ Q:'$D(BIUP)
  ;
  K VALMHDR
  N BILINE,X S BILINE=0
@@ -35,18 +37,21 @@ HEAD(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH) ;EP
  S X=$$REPHDR^BIUTL6(DUZ(2)) D CENTERT^BIUTL5(.X)
  D WH^BIW(.BILINE,X)
  ;
- S X=$S($G(BIFH)="H":"H1N1",1:"Standard Flu")_" Immunization Report"
+ S X="*  "_$S($G(BIFH)="H":"H1N1",1:"Standard Flu")_" Immunization Report  *"
  D CENTERT^BIUTL5(.X)
  D WH^BIW(.BILINE,X)
  ;
- S X=$$TXDT1^BIUTL5(DT) D CENTERT^BIUTL5(.X)
+ S X=$$SP^BIUTL5(27)_"Report Date: "_$$SLDT1^BIUTL5(DT)
+ D WH^BIW(.BILINE,X)
+ ;
+ N BIBEG,BIEND S BIBEG="09/15/"_$P(BIYEAR,U)
+ D
+ .I $P(BIYEAR,U,2)="m" S BIEND="03/31/"_($P(BIYEAR,U)+1) Q
+ .S BIEND="12/31/"_$P(BIYEAR,U)
+ S X=$$SP^BIUTL5(28)_"Date Range: "_BIBEG_" - "_BIEND
  D WH^BIW(.BILINE,X,1)
  ;
- N BIBEG,BIEND S BIBEG="9/15/"_$E(BIYEAR,3,4)
- D
- .I $P(BIYEAR,U,2)="m" S BIEND="03/31/"_$E(BIYEAR+1,3,4) Q
- .S BIEND="12/31/"_$E(BIYEAR,3,4)
- S X=" Date Range: "_BIBEG_" - "_BIEND
+ S X=" "_$$BIUPTX^BIUTL6(BIUP),X=$$PAD^BIUTL5(X,48)
  D WH^BIW(.BILINE,X)
  ;
  D WH^BIW(.BILINE,$$SP^BIUTL5(79,"-"))
@@ -95,7 +100,7 @@ HEAD(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH) ;EP
  ;
  ;
  ;----------
-START(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH) ;EP
+START(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH,BIUP) ;EP
  ;---> Produce array for Quarterly Immunization Report.
  ;---> Parameters:
  ;     1 - BIYEAR (req) Report Year^m (if 2nd pc="m", then End Date=March 31 of
@@ -105,6 +110,7 @@ START(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH) ;EP
  ;     4 - BICM   (req) Case Manager array.
  ;     5 - BIBEN  (req) Beneficiary Type array.
  ;     6 - BIFH   (opt) F=report on Flu Vaccine Group (default), H=H1N1 group.
+ ;     7 - BIUP   (req) User Population/Group (Registered, Imm, User, Active).
  ;
  K ^TMP("BIREPF1",$J)
  N BILINE,BITMP,X S BILINE=0,BIPOP=0
@@ -117,9 +123,10 @@ START(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH) ;EP
  I '$D(BICM) D ERRCD^BIUTL2(615,.X) D WRITERR(BILINE,X) Q
  I '$D(BIBEN) D ERRCD^BIUTL2(662,.X) D WRITERR(BILINE,X) Q
  S:($G(BIFH)="") BIFH="F"
+ S:$G(BIUP)="" BIUP="u"
  ;
  ;---> Write Age Totals line.
- D AGETOT^BIREPF3(.BILINE,.BICC,.BIHCF,.BICM,.BIBEN,BIYEAR,.BIPOP,BIFH)
+ D AGETOT^BIREPF3(.BILINE,.BICC,.BIHCF,.BICM,.BIBEN,BIYEAR,.BIPOP,BIFH,BIUP)
  Q:BIPOP
  ;
  ;---> Write Approp for Age and Vaccine Group lines.

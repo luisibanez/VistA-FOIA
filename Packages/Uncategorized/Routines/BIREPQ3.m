@@ -1,12 +1,12 @@
 BIREPQ3 ;IHS/CMI/MWR - REPORT, QUARTERLY IMM; OCT 15, 2010
- ;;8.4;IMMUNIZATION;**2**;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW QUARTERLY IMMUNIZATION REPORT.
  ;;  PATCH 2: Fix header at 16-18mths to say 4-PCV.  MNEED+24
  ;
  ;
  ;----------
-AGETOT(BILINE,BICC,BIHCF,BICM,BIBEN,BIQDT,BIHPV,BIPOP) ;EP
+AGETOT(BILINE,BICC,BIHCF,BICM,BIBEN,BIQDT,BIHPV,BIUP,BIPOP) ;EP
  ;---> Write Age Total line.
  ;---> Parameters:
  ;     1 - BILINE (req) Line number in ^TMP Listman array.
@@ -16,7 +16,8 @@ AGETOT(BILINE,BICC,BIHCF,BICM,BIBEN,BIQDT,BIHPV,BIPOP) ;EP
  ;     5 - BIBEN  (req) Beneficiary Type array.
  ;     6 - BIQDT  (req) Quarter Ending Date.
  ;     7 - BIHPV  (req) 1=include Hep A.
- ;     8 - BIPOP  (ret) BIPOP=1 if error.
+ ;     8 - BIUP   (req) User Population/Group (Registered, Imm, User, Active).
+ ;     9 - BIPOP  (ret) BIPOP=1 if error.
  ;
  S BIPOP=0
  ;---> Check for required Variables.
@@ -28,7 +29,7 @@ AGETOT(BILINE,BICC,BIHCF,BICM,BIBEN,BIQDT,BIHPV,BIPOP) ;EP
  .;---> For each age range, get Begin and End Dates (DOB's).
  .D AGEDATE^BIAGE(I,BIQDT,.BIBEGDT,.BIENDDT)
  .S N=N+1
- .D GETPATS^BIREPQ4(BIBEGDT,BIENDDT,N,.BICC,.BIHCF,.BICM,.BIBEN,BIQDT,BIHPV)
+ .D GETPATS^BIREPQ4(BIBEGDT,BIENDDT,N,.BICC,.BIHCF,.BICM,.BIBEN,BIQDT,BIHPV,BIUP)
  ;
  ;---> Count patients.
  N BIAGRP,BITOT S BITOT=0

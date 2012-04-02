@@ -1,5 +1,5 @@
 ABMDE2E ; IHS/ASDST/DMJ - DSD/DMJ - Check visit for elig ;     
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**8**;NOV 12, 2009
  ;
  ; IHS/ASDS/SDH - 06/08/01 - V2.4 Patch 9 - NOIS QDA-0399-130023
  ;     Modified to update Mode of Export in Insurer has changed.
@@ -49,14 +49,28 @@ ENT ;EP - Entry Point to update Elig Info
  ;
 HITCHK ;HIT CHECK
  N I
- S I=0
- F  S I=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I)) Q:'I  D
- .I '$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0),U) D  Q
- ..K ^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0)
- .S ABM("INS")=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0),U)
- .S ABM("ITYPE")=$P($G(^AUTNINS(ABM("INS"),2)),U)
- .I ABM("ITYPE")="D"!(ABM("ITYPE")="K") D DCFX^ABMDEFIP(ABMP("CDFN"),I)
- .D HITCHK2
+ ;start old code abm*2.6*8
+ ;S I=0
+ ;F  S I=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I)) Q:'I  D
+ ;.I '$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0),U) D  Q
+ ;..K ^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0)
+ ;.S ABM("INS")=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0),U)
+ ;.S ABM("ITYPE")=$P($G(^AUTNINS(ABM("INS"),2)),U)
+ ;.I ABM("ITYPE")="D"!(ABM("ITYPE")="K") D DCFX^ABMDEFIP(ABMP("CDFN"),I)
+ ;.D HITCHK2
+ ;end old code start new code
+ N K
+ S K=0
+ F  S K=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,"C",K)) Q:'K  D
+ .S I=0
+ .F  S I=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,"C",K,I)) Q:'I  D
+ ..I '$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0),U) D  Q
+ ...K ^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0)
+ ..S ABM("INS")=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0),U)
+ ..S ABM("ITYPE")=$P($G(^AUTNINS(ABM("INS"),2)),U)
+ ..I ABM("ITYPE")="D"!(ABM("ITYPE")="K") D DCFX^ABMDEFIP(ABMP("CDFN"),I)
+ ..D HITCHK2
+ ;end new code
  G PRIM
  ;
  ; *********************************************************************
@@ -71,7 +85,8 @@ HITCHK2 ;
  ..I "FPUI"[$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0),U,3),$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0)),U,9)!($P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),U,4)="F") D
  ...S DA=I
  ...D KILL
- ..I ABM("INS")'=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),U,8) D
+ ..;I ABM("INS")'=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),U,8) D  ;abm*2.6*8
+ ..I ABM("INS")=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),U,8),($P(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0),U,3)="U") D  ;abm*2.6*8
  ...S DA=ABMP("CDFN")
  ...S DIE="^ABMDCLM(DUZ(2),"
  ...S DR=".08///@"
@@ -92,7 +107,7 @@ INS ;
  F  S ABM("INS")=$O(ABML(ABM("PRI"),ABM("INS"))) Q:'ABM("INS")  D ADDCHK
  Q
  ;
-MERGECK ;remove entries from claim that aren't in eligibility array
+MERGECK ;mark entries unbillable that aren't in eligibility array
  Q:("CU"[$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,4))  ;quit if billed/complete
  S ABMIIEN=0
  F  S ABMIIEN=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,"B",ABMIIEN)) Q:+ABMIIEN=0  D
@@ -100,11 +115,21 @@ MERGECK ;remove entries from claim that aren't in eligibility array
  .F  S ABMPRI=$O(ABML(ABMPRI)) Q:+ABMPRI=0  D
  ..I $O(ABML(ABMPRI,0))=ABMIIEN S ABMMATCH=1
  .I ABMMATCH'=1 D
+ ..;start old code abm*2.6*8 HEAT37612
+ ..;S DA(1)=ABMP("CDFN")
+ ..;S DA=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,"B",ABMIIEN,0))
+ ..;Q:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,DA,0)),U,9)="Y"
+ ..;S DIK="^ABMDCLM(DUZ(2),"_DA(1)_",13,"
+ ..;D ^DIK
+ ..;end old code start new code HEAT37612
  ..S DA(1)=ABMP("CDFN")
  ..S DA=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,"B",ABMIIEN,0))
  ..Q:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,DA,0)),U,9)="Y"
- ..S DIK="^ABMDCLM(DUZ(2),"_DA(1)_",13,"
- ..D ^DIK
+ ..Q:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,DA,0)),U,3)="C"
+ ..S DIE="^ABMDCLM(DUZ(2),"_DA(1)_",13,"
+ ..S DR=".03////U"  ;set status to unbillable if not returned in elig array
+ ..D ^DIE
+ ..;end new code HEAT37612
  Q
  ; *********************************************************************
 ADDCHK ; EP

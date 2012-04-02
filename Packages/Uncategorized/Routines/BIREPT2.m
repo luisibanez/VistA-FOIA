@@ -1,11 +1,11 @@
 BIREPT2 ;IHS/CMI/MWR - REPORT, TWO-YR-OLD RATES; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW TWO-YR-OLD IMMUNIZATION RATES REPORT, GATHER DATA.
  ;
  ;
  ;----------
-HEAD(BIQDT,BITAR,BIAGRPS,BICC,BIHCF,BICM,BIBEN) ;EP
+HEAD(BIQDT,BITAR,BIAGRPS,BICC,BIHCF,BICM,BIBEN,BIUP) ;EP
  ;---> Produce Header array for Two-Yr-Old Report.
  ;---> Parameters:
  ;     1 - BIQDT   (req) Quarter Ending Date.
@@ -15,6 +15,7 @@ HEAD(BIQDT,BITAR,BIAGRPS,BICC,BIHCF,BICM,BIBEN) ;EP
  ;     5 - BIHCF   (req) Health Care Facility array.
  ;     6 - BICM    (req) Case Manager array.
  ;     7 - BIBEN   (req) Beneficiary Type array.
+ ;     8 - BIUP    (req) User Population/Group (Registered, Imm, User, Active).
  ;
  ;---> Check for required Variables.
  Q:'$G(BIQDT)
@@ -24,6 +25,7 @@ HEAD(BIQDT,BITAR,BIAGRPS,BICC,BIHCF,BICM,BIBEN) ;EP
  Q:'$D(BIBEN)
  Q:'$D(BITAR)
  Q:'$G(BIAGRPS)
+ S:$G(BIUP)="" BIUP="u"
  ;
  K VALMHDR
  N BILINE,X S BILINE=0
@@ -36,16 +38,24 @@ HEAD(BIQDT,BITAR,BIAGRPS,BICC,BIHCF,BICM,BIBEN) ;EP
  S X=$$REPHDR^BIUTL6(DUZ(2)) D CENTERT^BIUTL5(.X)
  D WH^BIW(.BILINE,X)
  ;
- S X="IHS Two-Yr-Old Immunization Rates" D CENTERT^BIUTL5(.X)
- D WH^BIW(.BILINE,X)
- S X="For Children between "_$P(BITAR,"-")_" and 35 Months of Age"
+ S X="*  Two-Yr-Old Immunization Report ("_$P(BITAR,"-")_"-35 mths)  *"
  D CENTERT^BIUTL5(.X)
+ D WH^BIW(.BILINE,X)
+ ;
+ S X=$$SP^BIUTL5(27)_"Report Date: "_$$SLDT1^BIUTL5(DT)
+ D WH^BIW(.BILINE,X)
+ ;
+ S X=$$SP^BIUTL5(30)_"End Date: "_$$SLDT1^BIUTL5(BIQDT)
  D WH^BIW(.BILINE,X,1)
- S X=" As of: "_$$TXDT1^BIUTL5(BIQDT)_$$SP^BIUTL5(32)
+ ;
+ S X=" "_$$BIUPTX^BIUTL6(BIUP)
+ I BIUP="i" S X=" "_$$BIUPTX^BIUTL6(BIUP,1)_" (Active)"
+ S X=$$PAD^BIUTL5(X,54)
+ ;
  S X=X_$J("Total Patients: "_$G(BITOTPTS),24)
  D WH^BIW(.BILINE,X)
- S X=$$SP^BIUTL5(79,"-")
- D WH^BIW(.BILINE,X)
+ ;
+ D WH^BIW(.BILINE,$$SP^BIUTL5(79,"-"))
  ;
  D
  .;---> If specific Communities were selected (not ALL), then print
@@ -85,7 +95,7 @@ HEAD(BIQDT,BITAR,BIAGRPS,BICC,BIHCF,BICM,BIBEN) ;EP
  ;
  ;
  ;----------
-START(BIQDT,BITAR,BIAGRPS,BICC,BIHCF,BICM,BIBEN,BISITE) ;EP
+START(BIQDT,BITAR,BIAGRPS,BICC,BIHCF,BICM,BIBEN,BISITE,BIUP) ;EP
  ;---> Produce array for Quarterly Immunization Report.
  ;---> Parameters:
  ;     1 - BIQDT   (req) Quarter Ending Date.
@@ -96,6 +106,7 @@ START(BIQDT,BITAR,BIAGRPS,BICC,BIHCF,BICM,BIBEN,BISITE) ;EP
  ;     6 - BICM    (req) Case Manager array.
  ;     7 - BIBEN   (req) Beneficiary Type array.
  ;     8 - BISITE  (req) Site IEN.
+ ;     9 - BIUP    (req) User Population/Group (Registered, Imm, User, Active).
  ;
  K ^TMP("BIREPT1",$J)
  N BILINE,BITMP,X S BILINE=0
@@ -110,13 +121,14 @@ START(BIQDT,BITAR,BIAGRPS,BICC,BIHCF,BICM,BIBEN,BISITE) ;EP
  I '$D(BIBEN)  D ERRCD^BIUTL2(662,.X) D WRITE^BIREPT3(.BILINE,X) Q
  I '$G(BISITE) S BISITE=$G(DUZ(2))
  I '$G(BISITE) D ERRCD^BIUTL2(109,.X) D WRITE^BIREPT3(.BILINE,X) Q
+ S:$G(BIUP)="" BIUP="u"
  ;
  ;---> Gather data.
- D GETDATA^BIREPT3(.BICC,.BIHCF,.BICM,.BIBEN,BIQDT,BITAR,BIAGRPS,BISITE,.BIERR)
+ D GETDATA^BIREPT3(.BICC,.BIHCF,.BICM,.BIBEN,BIQDT,BITAR,BIAGRPS,BISITE,BIUP,.BIERR)
  I $G(BIERR)]"" D WRITE^BIREPT3(.BILINE,BIERR) Q
  ;
  ;---> Write Statistics lines for each Vaccine Group (BIVGRP).
- F BIVGRP=1,2,3,4,6,7,9,11,15 D VGRP^BIREPT3(.BILINE,BIVGRP,BIAGRPS,.BIERR)
+ F BIVGRP=1,2,3,4,6,7,9,10,11,15 D VGRP^BIREPT3(.BILINE,BIVGRP,BIAGRPS,.BIERR)
  I $G(BIERR)]"" D WRITE^BIREPT3(.BILINE,BIERR) Q
  ;
  ;---> Write Statistics lines for each Vaccine Combinations.
@@ -128,7 +140,8 @@ START(BIQDT,BITAR,BIAGRPS,BICC,BIHCF,BICM,BIBEN,BISITE) ;EP
  D VCOMB^BIREPT3(.BILINE,"1|4^2|3^6|1^3|3^4|3",BIAGRPS,.BIERR)
  D VCOMB^BIREPT3(.BILINE,"1|4^2|3^6|1^3|3^4|3^7|1",BIAGRPS,.BIERR)
  D VCOMB^BIREPT3(.BILINE,"1|4^2|3^6|1^3|3^4|3^7|1^11|3",BIAGRPS,.BIERR)
- D VCOMB^BIREPT3(.BILINE,"1|4^2|3^6|1^3|3^4|3^7|1^11|4",BIAGRPS,.BIERR)
+ ;---> Next combo is up to date (UTD); send 5th parameter=1.
+ D VCOMB^BIREPT3(.BILINE,"1|4^2|3^6|1^3|3^4|3^7|1^11|4",BIAGRPS,.BIERR,1)
  D VCOMB^BIREPT3(.BILINE,"1|4^2|3^6|1^3|3^4|3^7|1^11|4^9|1",BIAGRPS,.BIERR)
  D VCOMB^BIREPT3(.BILINE,"1|4^2|3^6|1^3|3^4|3^7|1^11|4^9|2^15|3",BIAGRPS,.BIERR)
  D VCOMB^BIREPT3(.BILINE,"1|4^2|3^6|1^3|3^4|3^7|1^11|4^9|2^15|3^10|2",BIAGRPS,.BIERR)

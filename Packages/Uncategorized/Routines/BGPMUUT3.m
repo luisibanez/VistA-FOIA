@@ -1,5 +1,5 @@
 BGPMUUT3 ; IHS/MSC/MGH - Meaningful use utility calls ;02-Mar-2011 10:38;DU
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;
 VSTPOV(DFN,VIEN,TAX) ;EP Check to see if the patient had an ICD on a particular visit
  N TIEN,X,G,ICD,ICDT,EVDT
@@ -20,7 +20,7 @@ VSTPOV(DFN,VIEN,TAX) ;EP Check to see if the patient had an ICD on a particular 
  .S G=1_U_ICDT_U_EVDT
  Q $S(G:G,1:0)
 VSTICD0(DFN,VIEN,TAX) ;EP Check to see if the patient had an ICD on a particular visit
- N TIEN,X,G,ICD,ICDT
+ N TIEN,X,G,ICD,ICDT,EVDT
  S G=0
  I '$G(DFN) Q 0
  I $G(TAX)="" Q 0
@@ -33,8 +33,9 @@ VSTICD0(DFN,VIEN,TAX) ;EP Check to see if the patient had an ICD on a particular
  .Q
  I 'G Q 0
  I G D
+ .S EVDT=$P($G(^AUPNVPRC(G,12)),U,1)
  .S ICD=$P($G(^AUPNVPRC(G,0)),U,1),ICDT=$P($G(^ICD0(ICD,0)),U,1)
- .S G=1_U_ICDT
+ .S G=1_U_ICDT_U_EVDT_U_G
  Q $S(G:G,1:0)
 VSTPOVA(DFN,VIEN,TAX) ;EP Check to see if the patient had an ICD on a particular visit
  ; ALSO checks that the PRIMARY/SECONDARY flag is active
@@ -95,11 +96,12 @@ MEDTAX(DFN,NDC,TAX) ;EP Check to see if the NDC code is in a taxonomy
  I $G(NDC)="" Q 0
  S TIEN="" S TIEN=$O(^ATXAX("B",TAX,TIEN)) I 'TIEN Q 0
  S ATXBEG=0
- F  S ATXBEG=$O(^ATXAX(TIEN,21,"AA",ATXBEG)) Q:ATXBEG=""!(ATXFLG=1)  D
- .S ATXEND=$O(^ATXAX(TIEN,21,"AA",ATXBEG,0)) Q:ATXEND=""
- .Q:NDC<ATXBEG
- .I NDC'>ATXEND S ATXFLG=1   ;found code in taxonomy
- I ATXFLG=1 S G=1_U_NDC
+ ;F  S ATXBEG=$O(^ATXAX(TIEN,21,"AA",ATXBEG)) Q:ATXBEG=""!(ATXFLG=1)  D
+ ;.S ATXEND=$O(^ATXAX(TIEN,21,"AA",ATXBEG,0)) Q:ATXEND=""
+ ;.Q:NDC<ATXBEG
+ ;.I NDC'>ATXEND S ATXFLG=1   ;found code in taxonomy
+ S ATXEND="" S ATXEND=$O(^ATXAX(TIEN,21,"B",NDC,ATXEND))
+ I +ATXEND S G=1_U_NDC
  Q $S(G:G,1:0)
 COMFORT(DFN,VIEN,TAX,ADMIT,CMF) ;EP Check to see if the patient had this code in the first 24hrs of admisssion
  ; CMF = check modifier flag

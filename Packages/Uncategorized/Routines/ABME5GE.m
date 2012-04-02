@@ -1,5 +1,5 @@
 ABME5GE ; IHS/ASDST/DMJ - 837 GE Segment 
- ;;2.6;IHS Third Party Billing System;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,8**;NOV 12, 2009
  ;Functional Group Trailer
  ;
 START ;START HERE
@@ -20,7 +20,8 @@ LOOP ;LOOP HERE
  S ABMR("GE",10)="GE"
  Q
 20 ;GE01 - Number of Included Functional Groups
- S ABMR("GE",20)=1
+ ;S ABMR("GE",20)=1  ;abm*2.6*8
+ S ABMR("GE",20)=ABMER("LAST")  ;abm*2.6*8
  Q
 30 ;GE02 - Interchange Contol Number
  S ABMR("GE",30)=$$TCN^ABMERUTL(ABMPXMIT)

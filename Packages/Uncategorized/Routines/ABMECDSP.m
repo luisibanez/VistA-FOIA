@@ -1,5 +1,5 @@
 ABMECDSP ; IHS/ASDST/DMJ - ELECTRONIC CLAIMS DISPLAY (SUMMARY) ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**6**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8**;NOV 12, 2009
  ; Original;DMJ;03/18/96 5:05 PM
  ; IHS/ASDS/SDR - 01/16/02 - V2.4 Patch 10 - NOIS XAA-0800-200136
  ;     Modified so as not to combine different export modes into one file.
@@ -16,8 +16,8 @@ START ;
  Q:$D(DTOUT)!($D(DUOUT))
  I $G(ABMDET) D
  .D ASKSEQ             ; Ask for seq # to show detail
- .;Q:ABMSEQ=""!($D(DTOUT))!($D(DUOUT))  ;abm*2.6*6 5010
- .Q:ABMNEXT=""!($D(DTOUT))!($D(DUOUT))  ;abm*2.6*6 5010
+ .Q:ABMSEQ=""!($D(DTOUT))!($D(DUOUT))  ;abm*2.6*6 5010  ;abm*2.6*8
+ .;Q:ABMNEXT=""!($D(DTOUT))!($D(DUOUT))  ;abm*2.6*6 5010  ;abm*2.6*8
  .D DETHEAD            ; Write detail report headers
  .D DISPDET            ; Display detail report
  .Q
@@ -219,7 +219,8 @@ ASKSEQ ;
  S DIR("B")="YES"
  D ^DIR
  K DIR
- I Y'=1 K ABMSEQ Q
+ ;I Y'=1 K ABMSEQ Q  ;abm*2.6*8
+ I Y'=1 S ABMSEQ="" Q  ;abm*2.6*8
  ;end new code 5010
  Q
 DISPDET ;

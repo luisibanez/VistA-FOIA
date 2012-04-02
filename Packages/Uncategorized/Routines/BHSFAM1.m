@@ -1,5 +1,5 @@
-BHSFAM1 ;IHS/CIA/MGH - Health Summary for Women's health profile ;22-Feb-2010 10:34;MGH
- ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,3**;March 17, 2006
+BHSFAM1 ;IHS/CIA/MGH - Health Summary for Women's health profile ;04-Aug-2011 14:35;MGH
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,3,6**;March 17, 2006;Build 5
  ;===================================================================
  ;Copy of APCHS8 for use in VA health summary.  Incoporates several APIs
  ;for health summary components
@@ -36,7 +36,7 @@ OUTC D CKP^GMTSUP Q:$D(GMTSQIT)  D:GMTSNPG OFFHDR
  ;
 REPHX ; ********** REPRODUCTIVE HISTORY * 9000017 **********
  ; <SETUP>
- N TOT,GRAV,PARA,LC,SA,TA,OTHER,BHSPAT
+ N TOT,GRAV,PARA,LC,SA,TA,OTHER,BHSPAT,LAC,LAC1,LACDATE
  S BHSPAT=DFN
  Q:$P(^DPT(BHSPAT,0),U,2)'="F"
  Q:'$D(^AUPNREP(BHSPAT))
@@ -66,13 +66,21 @@ REPHXX K BHSN,BHSM,BHSN11,BHSP,X,Y
  Q
  ;
 NEWREP ;new reproductive factors dd
+ N I
  S BHSN11=$G(^AUPNREP(BHSPAT,0))
  D CKP^GMTSUP Q:$D(GMTSQIT)
- S X=$$RHX^AUPNREP(BHSPAT) I X]"" W !,"Reproductive History: ",!?2,$P(X,";",1,4),";",!?3,$P(X,";",5,7),!?3,";",$P(X,";",8,99),!
- D CKP^GMTSUP Q:$D(GMTSQIT)
- S X=$P(BHSN,U,4) I X]"" W "LMP: " D REGDT4^GMTSU W X S BHSP=5 D DTOBT W !
- S X=$P(BHSN,U,6) I X]"" S Y=$P(^DD(9000017,3,0),U,3),X=$P(Y,";",X+1) S BHSM=$P(X,":",2) D CKP^GMTSUP Q:$D(GMTSQIT) REPHXX W "CONTRACEPTION: ",BHSM S X=$P(BHSN,U,7) X:+X "D REGDT4^GMTSU W "", EFFECTIVE "",X" S BHSP=8 D DTOBT W !
+ S X=$$RHX^AUPNREP(BHSPAT) I X]"" W !,"Reproductive History: "
+ F I=1:1:8 D
+ .W !?2,$P(X,";",I)
+ .D CKP^GMTSUP Q:$D(GMTSQIT)
+ S X=$P(BHSN,U,4) I X]"" W !,?2,"LMP: " D REGDT4^GMTSU W X S BHSP=5 D DTOBT W !
+ S X=$P(BHSN,U,6) I X]"" S Y=$P(^DD(9000017,3,0),U,3),X=$P(Y,";",X+1) S BHSM=$P(X,":",2) D CKP^GMTSUP Q:$D(GMTSQIT) REPHXX W ?2,"Contraception: ",BHSM S X=$P(BHSN,U,7) X:+X "D REGDT4^GMTSU W "", EFFECTIVE "",X" S BHSP=8 D DTOBT W !
  S X=$P(BHSN,U,9) I X]"" D CKP^GMTSUP Q:$D(GMTSQIT) REPHXX D EDC
+ S LAC=$G(^AUPNREP(BHSPAT,2))
+ I LAC'="" D
+ .S LAC1=$$GET1^DIQ(9000017,BHSPAT,2.01)
+ .S LACDATE=$$GET1^DIQ(9000017,BHSPAT,2.02)
+ .W ?2,"Lactation Status: "_LAC1_" "_LACDATE
  Q
 LATER ;
  I $O(^AUPNREP(BHSPAT,2101,0)) D

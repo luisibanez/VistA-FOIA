@@ -1,5 +1,6 @@
-XPDIA1 ;SFISC/RSD - Install Pre/Post Actions for Kernel files cont. ;10/20/2006  13:32
- ;;8.0;KERNEL;**2,44,51,58,68,85,131,146,182,229,302,399**;Jul 10, 1995;Build 12
+XPDIA1 ;SFISC/RSD - Install Pre/Post Actions for Kernel files cont. ;06/24/2008
+ ;;8.0;KERNEL;**2,44,51,58,68,85,131,146,182,229,302,399,507**;Jul 10, 1995;Build 13
+ ;Per VHA Directive 2004-038, this routine should not be modified.
  Q
 HLPF1 ;help frames file pre
  K ^TMP($J,"XPD")
@@ -185,15 +186,23 @@ HLLLE ;HL7 logical link #870 entry pre
  . S J=$G(^XTMP("XPDI",XPDA,"KRN",870,OLDA,500))
  . S:J]"" $P(^XTMP("XPDI",XPDA,"KRN",870,OLDA,500),U)=""
  Q
-KEYF2 ;file post
- N DA,DIK,I,X,Y,Y0,XPDF
+KEYF1 ;SECURITY KEY file pre
+ K ^TMP($J,"XPD")
+ Q
+KEYE1 ;SECURITY KEY file entry pre
+ S ^TMP($J,"XPD",DA)=""
+ Q
+KEYF2 ;SECURITY KEY file post
+ N DA,DIK,I,X,Y,Y0
  ;Repoint fields
- S DA=0,DIK=DIC,XPDF=19.1 F  S DA=$O(^TMP($J,"XPD",DA)) Q:'DA  D
- . ;repoint Related Frame (3;0)
- . S I=0 F  S I=$O(^DIC(XPDF,DA,3,I)) Q:'I  S Y0=$G(^(I,0)),Y=$$LK^XPDIA("^DIC("_XPDF_")",$P(Y0,U,1)) S:Y $P(^DIC(XPDF,DA,2,I,0),U,1)=Y
- . ;repoint OBJECT (5;0)
- . S (I,X)=0 F  S I=$O(^DIC(XPDF,DA,5,I)) Q:'I  S Y0=$G(^(I,0)) D
- . . S Y=$$LK^XPDIA("^DIC("_XPDF_")",$P(Y0,U)) S:Y $P(^DIC(9.2,DA,5,I,0),U)=Y
+ S DA=0,DIK=DIC
+ F  S DA=$O(^TMP($J,"XPD",DA)) Q:'DA  D
+ . ;Repoint SUBORDINATE (3)
+ . S I=0 F  S I=$O(^DIC(19.1,DA,3,I)) Q:'I  S Y0=$G(^(I,0)) D
+ . . S Y=$$LK^XPDIA("^DIC(19.1)",$P(Y0,U)) S:Y $P(^DIC(19.1,DA,3,I,0),U)=Y
+ . ;MUTUALLY EXCLUSIVE KEYS (5)
+ . S (I,X)=0 F  S I=$O(^DIC(19.1,DA,5,I)) Q:'I  S Y0=$G(^(I,0)) D
+ . . S Y=$$LK^XPDIA("^DIC(19.1)",$P(Y0,U)) S:Y $P(^DIC(19.1,DA,5,I,0),U)=Y
  . D IX1^DIK
  K ^TMP($J,"XPD")
  Q

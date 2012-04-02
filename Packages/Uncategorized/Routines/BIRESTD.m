@@ -1,5 +1,5 @@
 BIRESTD ;IHS/CMI/MWR - CHECK AND RESTANDARDIZE VACCINE TABLE.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  CHECK IMMUNIZATION (VACCINE) TABLE AGAINST HL7 STANDARD;
  ;;  RESTANDARDIZE IF NECESSARY.
@@ -102,8 +102,11 @@ COPYNEW(BIPOP) ;EP
  .;---> Copy HL7 Standard Table pieces to the Vaccine Table.
  .;---> Imm v8.3: Remove .07 field, "ACTIVE"; (leave local site setting).  vvv83
  .N BIPC F BIPC=1,2,3,8,9,10,11,12,13,14,15,16,17,18,21:1:26 D
- ..;W !,BIN,"  ",BIPC
  ..S $P(^AUTTIMM(BIN,0),U,BIPC)=$P(^BITN(BIN,0),U,BIPC)
+ .;
+ .;---> Set Status, .07, if not already set (i.e., don't overwrite local settings).
+ .I $P(^AUTTIMM(BIN,0),U,7)="" S $P(^AUTTIMM(BIN,0),U,7)=$P(^BITN(BIN,0),U,7)
+ .;
  .Q:'$D(^BITN(BIN,1))
  .;---> Reset 1 node as well.  Include 1.15 - vvv83.
  .F BIPC=1:1:15 S $P(^AUTTIMM(BIN,1),U,BIPC)=$P(^BITN(BIN,1),U,BIPC)

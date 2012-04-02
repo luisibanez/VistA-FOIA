@@ -1,17 +1,12 @@
 ABMUTLP ; IHS/ASDST/DMJ - PAYER UTILITIES ;      
- ;;2.6;IHS 3P BILLING SYSTEM;**3,6**;NOV 12, 2009
- ; 03/09/04 V2.5 P5-837 mod - Remove "Unknown" from Group Name if Mcare
- ; IHS/SD/SDR-v2.5 p8-IM14722 - Added FL override for 837 for FL32
- ; IHS/SD/SDR-v2.5 p9-IM15541 - Don't check status of ins anymore (was checking for I)
- ; IHS/SD/SDR-v2.5 p9-IM16155 - print pt's ID number, not PH's number in box1
- ; IHS/SD/SDR-v2.5 p9-IM16962 - Check REF ID in 3P Insurer file
- ; IHS/SD/SDR-v2.5 p10-IM20068 - Fix policy number
- ; IHS/SD/SDR-v2.5 p10-IM20089 - Check new site parameter (ISA08 VALUE)
- ; IHS/SD/SDR-v2.5 p11-IM24104 - Reset Y for RCID tag; it was carrying info over from a prev. call
- ; IHS/SD/SDR-v2.5 p13-IM25471 - Changes for CAS when SAR=A2
- ; IHS/SD/SDR-v2.5 p13-IM25436 - Mcare Suppl. i.type should be SP for SOP
- ; IHS/SD/SDR-abm*2.6*3-HEAT12676 - Check insurer type or MEDICARE name
- ; IHS/SD/SDR-abm*2.6*3-HEAT7574-tribal self-insured changes
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,6,8**;NOV 12, 2009
+ ;V2.5 P5-837 mod - Remove "Unknown" from Group Name if Mcare
+ ;IHS/SD/SDR-v2.5 p10-IM20089-Check new site parameter (ISA08 VALUE)
+ ;IHS/SD/SDR-v2.5 p11-IM24104-Reset Y for RCID tag; it was carrying info over from a prev. call
+ ;IHS/SD/SDR-v2.5 p13-IM25471-Changes for CAS when SAR=A2
+ ;IHS/SD/SDR-v2.5 p13-IM25436-Mcare Suppl. i.type should be SP for SOP
+ ;IHS/SD/SDR-abm*2.6*3-HEAT12676-Check insurer type or MEDICARE name
+ ;IHS/SD/SDR-abm*2.6*3-HEAT7574-tribal self-insured changes
 SET(X,ABMDUZ2) ; EP - set up standard vars
  ;x=bill ien
  ;abmduz2=duz(2)
@@ -24,16 +19,16 @@ SET(X,ABMDUZ2) ; EP - set up standard vars
  I $G(ABMB6) F I=2,4 D
  .I $L($P(ABMB6,"^",I))=1 D
  ..S $P(ABMB6,"^",I)="0"_$P(ABMB6,"^",I)
- S ABMP("PDFN")=$P(ABMB0,U,5)   ;Patient IEN
- S ABMP("LDFN")=$P(ABMB0,U,3)   ;Visit location IEN
- S ABMP("BTYP")=$P(ABMB0,U,2)   ;Bill type
- S ABMP("EXP")=$P(ABMB0,U,6)    ;Export mode IEN
- S ABMP("VTYP")=$P(ABMB0,U,7)   ;Visit type IEN
- S ABMP("INS")=$P(ABMB0,U,8)    ;Active Insurer IEN
+ S ABMP("PDFN")=$P(ABMB0,U,5)  ;Pt IEN
+ S ABMP("LDFN")=$P(ABMB0,U,3)  ;Visit loc IEN
+ S ABMP("BTYP")=$P(ABMB0,U,2)  ;Bill type
+ S ABMP("EXP")=$P(ABMB0,U,6)   ;Exp mode IEN
+ S ABMP("VTYP")=$P(ABMB0,U,7)  ;Visit type IEN
+ S ABMP("INS")=$P(ABMB0,U,8)   ;Active Ins IEN
  S ABMP("CLIN")=$P(ABMB0,U,10)  ;Clinic
  S ABMP("CLIN")=$P($G(^DIC(40.7,+ABMP("CLIN"),0)),U,2)
- S ABMP("VDT")=$P($G(^ABMDBILL(ABMDUZ2,ABMP("BDFN"),7)),U) ;Service date from
- S ABMP("ITYPE")=$P($G(^AUTNINS(+ABMP("INS"),2)),U)  ;Type of insurer
+ S ABMP("VDT")=$P($G(^ABMDBILL(ABMDUZ2,ABMP("BDFN"),7)),U)  ;Service date from
+ S ABMP("ITYPE")=$P($G(^AUTNINS(+ABMP("INS"),2)),U)  ;Type of ins
  S ABMP("RTYPE")=$S(ABMP("ITYPE")="R":"1G",ABMP("ITYPE")="D":"1D",$P($G(^ABMNINS(ABMDUZ2,ABMP("INS"),1,ABMP("VTYP"),1)),U)'="":$P($G(^ABMREFID($P($G(^ABMNINS(ABMDUZ2,ABMP("INS"),1,ABMP("VTYP"),1)),U),0)),U),1:"0B")
  I ABMP("EXP")=22,ABMP("RTYPE")="1G" S ABMP("RTYPE")="1C"
  D PCN^ABMERUTL
@@ -42,7 +37,7 @@ ISET ; EP
  ;Set up Insurers
  K ABMCDNUM
  K ABMP("INS")
- S ABMP("INS")=$P(ABMB0,U,8)    ;Active Ins IEN
+ S ABMP("INS")=$P(ABMB0,U,8)  ;Active Ins IEN
  S ABME("PRIO")=0
  S ABME("INS#")=0
  ;Loop down priority
@@ -119,9 +114,8 @@ TCR(X) ; EP
  Q X
 MCDBFX(X,Y) ; EP
  ; Fix BILL Insurance Multiple if broken ptr medicaid
- ;
- ;  INPUT:  X = IEN (CLAIM OR BILL)
- ;          Y = INSURER IEN UNDER FIELD #13 (INS MULTIPLE)
+ ;  INPUT: X = IEN (CLAIM OR BILL)
+ ;         Y = INSURER IEN UNDER FIELD #13 (INS MULTIPLE)
  ; OUTPUT:
  N ABMP
  S ABMP("D0")=X
@@ -213,30 +207,30 @@ MCR ;medicare
  .S ABMPRFX=$P($G(^AUTTRRP(+ABMPRFX,0)),U)
  .S ABMP("PNUM",ABMI)=ABMPRFX_ABMHIC
  .K ABMPRFX,ABMHIC
- .;start new code abm*2.6*3 HEAT12676
+ .;start new abm*2.6*3 HEAT12676
  .S ABMP("SNUM",ABMI)=ABMP("PNUM",ABMI)
  .S ABMP("REL",ABMI)=18
  .S ABMP("GRP#",ABMI)=""
  .S ABMSBR(ABMI)=2_"-"_ABMP("PDFN")
- ;end new code HEAT12676
+ ;end new HEAT12676
  ;I $P(^AUTNINS(+ABMINS,0),U)["MEDICARE" D  ;abm*2.6*3 HEAT12676
  I $P($G(^AUTNINS(+ABMINS,2)),U)="R"!($P(^AUTNINS(+ABMINS,0),U)["MEDICARE") D  Q  ;abm*2.6*3 HEAT12676
  .S ABMHIC=$P($G(^AUPNMCR(ABMP("PDFN"),0)),U,3),ABMSUFX=$P($G(^(0)),U,4)
  .S ABMSUFX=$P($G(^AUTTMCS(+ABMSUFX,0)),U)
  .S ABMP("PNUM",ABMI)=ABMHIC_ABMSUFX
  .K ABMHIC,ABMSUFX
- .;start new code abm*2.6*3 HEAT12676
+ .;start new abm*2.6*3 HEAT12676
  .S ABMP("SNUM",ABMI)=ABMP("PNUM",ABMI)
  .S ABMP("REL",ABMI)=18
  .S ABMP("GRP#",ABMI)=""
  .S ABMSBR(ABMI)=2_"-"_ABMP("PDFN")
- ;end new code HEAT12676
- ;start old code abm*2.6*3 HEAT12676
+ ;end new HEAT12676
+ ;start old abm*2.6*3 HEAT12676
  ;S ABMP("SNUM",ABMI)=ABMP("PNUM",ABMI)
  ;S ABMP("REL",ABMI)=18
  ;S ABMP("GRP#",ABMI)=""
  ;S ABMSBR(ABMI)=2_"-"_ABMP("PDFN")
- ;end old code HEAT12676
+ ;end old HEAT12676
  Q
 PST(X) ;EP - primary, secondary, tertiary  
  D SET(X)
@@ -280,8 +274,10 @@ SOP ;EP - source of pay (claim filing indicator)
  I ABMTYP D  Q
  .S ABMP("SOP",ABMI)=$P(^AUTTCFI(ABMTYP,0),U)
  S ABMTYP=$P(ABMP("INS",ABMI),"^",2)
- S Y=$F("HMDRPWCFNIK",ABMTYP)
- S ABMP("SOP",ABMI)=$P("^HM^SP^MC^MA^CI^WC^CH^ZZ^09^OF^MC","^",Y)
+ ;S Y=$F("HMDRPWCFNIK",ABMTYP)  ;abm*2.6*8 5010
+ S Y=$F("HMDRPWCFIK",ABMTYP)  ;abm*2.6*8 5010
+ ;S ABMP("SOP",ABMI)=$P("^HM^SP^MC^MA^CI^WC^CH^ZZ^09^OF^MC","^",Y)  ;abm*2.6*8 5010
+ S ABMP("SOP",ABMI)=$P("^HM^SP^MC^MA^CI^WC^CH^ZZ^OF^MC","^",Y)  ;abm*2.6*8 5010
  I $$BCBS1^ABMERUTL(+ABMP("INS",ABMI)) D
  .S ABMP("SOP",ABMI)="BL"
  I ABMP("SOP",ABMI)="MA",(ABMP("VTYP")=999!($P($G(^ABMDPARM(DUZ(2),1,5)),U,3)="C00900"))!((ABMP("BTYP")=831)&(ABMP("EXP")=22)) D
@@ -314,14 +310,14 @@ RCID(X) ;EP - receiver id
  ;x=insurer
  K Y
  S X=$G(X)
- ;start new code abm*2.6*6 5010
+ ;start new abm*2.6*6 5010
  I $D(^ABMRECVR("C",X)) D
  .S ABMCHIEN=$O(^ABMRECVR("C",X,0))
- .S:ABMCHIEN Y=$P($G(^ABMRECVR(ABMCHIEN,0)),U,2)
- .S Y=$P($G(^ABMRECVR(ABMCHIEN,1,X,0)),U,2)
+ .;S:ABMCHIEN Y=$P($G(^ABMRECVR(ABMCHIEN,0)),U,2)  ;abm*2.6*8
+ .S:ABMCHIEN Y=$P($G(^ABMRECVR(ABMCHIEN,0)),U,3)  ;abm*2.6*8
  .K ABMCHIEN
  Q:$G(Y) Y
- ;end new code 5010
+ ;end new 5010
  I $P($G(^AUTNINS(+X,2)),U)="R" S Y=$P($G(^ABMDPARM(DUZ(2),1,5)),U,3)
  I $G(Y)="" S Y=$P($G(^AUTNINS(+X,2)),U,12)
  I $G(Y)="" S Y=$$RCID^ABMERUTL(X)
@@ -332,13 +328,15 @@ SNDR(X,Y) ;EP - sender id
  S X=$G(X)
  S Y=$G(Y)
  ;S Z=$P($G(^ABMNINS(DUZ(2),+X,1,+Y,0)),U,19)  ;abm*2.6*6 5010
- ;start new code abm*2.6*6 5010
+ ;start new abm*2.6*6 5010
  I $D(^ABMRECVR("C",X)) D
  .S ABMCHIEN=$O(^ABMRECVR("C",X,0))
- .S:ABMCHIEN Z=$P($G(^ABMRECVR(ABMCHIEN,0)),U,2)
+ .;S:ABMCHIEN Z=$P($G(^ABMRECVR(ABMCHIEN,0)),U,2)  ;abm*2.6*8 HEAT45044
+ .S:ABMCHIEN&($G(ABMR("ISA",10))'="") Z=$P($G(^ABMRECVR(ABMCHIEN,0)),U,2)  ;abm*2.6*8 HEAT45044
+ .S:ABMCHIEN&($G(ABMR("GS",10))'="") Z=$P($G(^ABMRECVR(ABMCHIEN,0)),U,4)  ;abm*2.6*8 HEAT45044
  .K ABMCHIEN
  S:$G(Z)="" Z=$P($G(^ABMNINS(DUZ(2),+X,1,+Y,0)),U,19)
- ;end new code 5010
+ ;end new 5010
  S:Z="" Z=$P($G(^ABMNINS(DUZ(2),+X,0)),U,2)
  S:Z="" Z=$P($G(^AUTTLOC(DUZ(2),0)),U,18)
  Q Z

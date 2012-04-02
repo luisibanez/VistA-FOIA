@@ -1,5 +1,5 @@
 ABMDE1A ; IHS/ASDST/DMJ - PAGE 1 - VIEW INFO ; 
- ;;2.6;IHS Third Party Billing;**1**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,8**;NOV 12, 2009
  ;
  ; IHS/SD/SDR - abm*2.6*1 - HEAT4158 - added mammograpy cert#
  ;
@@ -30,8 +30,14 @@ LOC ;
  W ?48,"Phone.......: ",$P(ABMV("X1"),U,5)
  W !?10,$P(ABMV("X1"),U,3)
  W ?48,"NPI.........: "
- S ABMLNPI=$S($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,8)'="":$P(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1),U,8),$P($G(^ABMDPARM(ABMP("LDFN"),1,2)),U,12)'="":$P(^ABMDPARM(ABMP("LDFN"),1,2),U,12),1:ABMP("LDFN"))
- W $S($P($$NPI^XUSNPI("Organization_ID",+ABMLNPI),U)>0:$P($$NPI^XUSNPI("Organization_ID",+ABMLNPI),U),1:"")
+ ;start old code abm*2.6*8
+ ;S ABMLNPI=$S($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,8)'="":$P(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1),U,8),$P($G(^ABMDPARM(ABMP("LDFN"),1,2)),U,12)'="":$P(^ABMDPARM(ABMP("LDFN"),1,2),U,12),1:ABMP("LDFN"))
+ ;W $S($P($$NPI^XUSNPI("Organization_ID",+ABMLNPI),U)>0:$P($$NPI^XUSNPI("Organization_ID",+ABMLNPI),U),1:"")
+ ;end old start new code
+ I $G(ABMP("INS"))'="" D
+ .S ABMLNPI=$S($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,8)'="":$P(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1),U,8),$P($G(^ABMDPARM(ABMP("LDFN"),1,2)),U,12)'="":$P(^ABMDPARM(ABMP("LDFN"),1,2),U,12),1:ABMP("LDFN"))
+ .W $S($P($$NPI^XUSNPI("Organization_ID",+ABMLNPI),U)>0:$P($$NPI^XUSNPI("Organization_ID",+ABMLNPI),U),1:"")
+ ;end new code abm*2.6*8
  W !?10,$P(ABMV("X1"),U,4)
  W ?48,"ASUFAC......: ",$$ASUFAC^ABMUCUTL($P(ABMV("X1"),";"),ABMP("VDT"))
  W !?48,"Mammo Cert#.: ",$P($G(^ABMDPARM(ABMP("LDFN"),1,5)),U,4)  ;abm*2.6*1 HEAT4158

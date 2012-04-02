@@ -1,8 +1,7 @@
 BIUTL7 ;IHS/CMI/MWR - UTIL: SCREENMAN CODE; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  SCREENMAN RELATED CODE TO LOAD & SAVE: VISIT, CASE DATA, CONTRAS.
- ;;  PATCH 1: Allow for BI array variables not existing.  READCHK+5
  ;
  ;
  ;----------
@@ -62,8 +61,11 @@ LOADVIS(BIVTYPE) ;EP
  ..I $G(BI("Y")) D PUT^DDSVALF(15,,,"*Imported"_$S(BI("Y")=2:" (edited)*",1:"*"))
  ..;
  ..;---> Load VFC Eligibility.
- ..;---> If Patient Ben Type is 01 (Am Indian/AK Native), set VFC default=4.
- ..;I $G(BI("P"))="",$G(BIDFN),$$BENTYP^BIUTL11(BIDFN,2)="01" S BI("P")=4
+ ..D VFCSET^BIUTL8
+ ..;
+ ..;---> Load NDC Code.
+ ..I $G(BI("H"))]"" D PUT^DDSVALF(3.8,,,BI("H"),"I")
+ ..;
  .;
  .;
  .;---> SKIN TESTS * SKIN TESTS * SKIN TESTS * SKIN TESTS * SKIN TESTS
@@ -180,7 +182,6 @@ READCHK ;EP
  .;
  .D HLP^DDSUTL("*** NOTE! If you enter a Result you MUST enter a Reading! ***")
  .S DDSBR=3
- .;D HLP^DDSUTL("*** NOTE! If you enter a Result, it is helpful to enter a Reading. ***")
  Q
  ;
  ;
@@ -267,7 +268,7 @@ SAVISIT(BIVTYPE,BI) ;EP
  ;---> not="S" (Skin Test Visit), then set Error Code and quit.
  I ($G(BIVTYPE)'="I")&($G(BIVTYPE)'="S") D ERRCD^BIUTL2(410,,1) Q
  ;
- N A,B,BIDATA,C,D,E,F,G,I,J,K,L,M,N,O,P,Q,R,S,T,V,W,X,Y,Z S V="|"
+ N A,B,BIDATA,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,V,W,X,Y,Z S V="|"
  ;
  S A=$G(BI("A"))      ;Patient DFN.
  S B=$G(BI("B"))      ;Vaccine or Skin Test IEN.
@@ -276,6 +277,7 @@ SAVISIT(BIVTYPE,BI) ;EP
  S E=$G(BI("E"))      ;Date of Visit.
  S F=$G(BI("F"))      ;Location of Encounter IEN.
  S G=$G(BI("G"))      ;Other Location of Encounter Text.
+ S H=$G(BI("H"))      ;NDC Code.
  S I=$G(BI("I"))      ;Catgegory of Visit (A,E,I).
  S J=$G(BI("J"))      ;Visit IEN
  S K=$G(BI("K"))      ;Old Visit IEN (for edits).
@@ -301,7 +303,7 @@ SAVISIT(BIVTYPE,BI) ;EP
  S BIDATA=BIVTYPE_V_A_V_B_V_C_V_D_V_E_V_F_V_G_V_I_V_J_V_K
  ;---> NOTE: Y will be pc 25 (not 24) because BIRPC6 feeds CPT Import to pc 24.
  ;---> Piece:     12  13  14  15  16  17  18  19  20  21  22  23  24 25
- S BIDATA=BIDATA_V_L_V_M_V_N_V_O_V_P_V_Q_V_R_V_S_V_T_V_W_V_X_V_Z_V_V_Y
+ S BIDATA=BIDATA_V_L_V_M_V_N_V_O_V_P_V_Q_V_R_V_S_V_T_V_W_V_X_V_Z_V_V_Y_V_H
  ;
  ;---> Call RPC to save visit to PCC Files.
  D ADDEDIT^BIRPC3(.BIERR,BIDATA)
@@ -312,6 +314,18 @@ SAVISIT(BIVTYPE,BI) ;EP
  .W !!," * ",BIERR,!?3,"NO Changes made! (Visit NOT added/edited.)"
  .D DIRZ^BIUTL3()
  ;
+ Q
+ ;
+ ;
+ ;----------
+CREASCHK ;EP
+ ;---> Called by Post Action field of Field 4 on BI FORM-CONTRAIND ADD/EDIT.
+ ;---> If user entered a Contraindication in Field 1, then a Reason is required
+ ;---> in Field 4.
+ ;
+ I (BI("B")]"")&(BI("C")="") D
+ .D HLP^DDSUTL("*** NOTE! A Reason for the contraindication is required! ***")
+ .S DDSBR=1
  Q
  ;
  ;

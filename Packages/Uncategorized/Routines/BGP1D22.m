@@ -1,5 +1,5 @@
 BGP1D22 ; IHS/CMI/LAB - measure I2 ;
- ;;11.1;IHS CLINICAL REPORTING SYSTEM;;JUN 27, 2011;Build 33
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;
 I2 ;EP
  K BGPN1,BGPN2,BGPN3,BGPN4,BGPVALUE,BGPLHGB,BGPN5,BGPN6,BGPN7,BGPN8,BGPD7
@@ -230,14 +230,15 @@ PER3 ;
  ..I $D(^ATXAX(T,21,"B",Z))!($$NDC(Z,T3)) D
  ...Q:$$LEUK(Z,T2,T5)  ;don't count if it is a leukotriene
  ...S J=$P(^AUPNVMED(Y,0),U,8)
- ...I J]"" S S=$$FMADD^XLFDT(J,$P($P(^AUPNVSIT(V,0),U),"."))
+ ...I J]"" S S=$$FMDIFF^XLFDT(J,$P($P(^AUPNVSIT(V,0),U),"."))
  ...I J="" S S=$P(^AUPNVMED(Y,0),U,7)
- ...S K=S/30,M=M+K
+ ...;S K=S/30,M=M+K
+ ...S K=S\30 S:K<1 K=1 S M=M+K
  ..I $D(^ATXAX(T2,21,"B",Z))!($$NDC(Z,T5)) D  Q
  ...S J=$P(^AUPNVMED(Y,0),U,8)
- ...I J]"" S S=$$FMADD^XLFDT(J,$P($P(^AUPNVSIT(V,0),U),"."))
+ ...I J]"" S S=$$FMDIFF^XLFDT(J,$P($P(^AUPNVSIT(V,0),U),"."))
  ...I J="" S S=$P(^AUPNVMED(Y,0),U,7)
- ...S K=S/30,M=M+K,E=E+K
+ ...S K=S\30 S:K<1 K=1 S M=M+K,E=E+K
  I G>3,M>1 Q 1_U_"4 POVS AND 2 MEDS"  ;had 4 povs and 2 dispensing events
  I M>3,E<M Q 1_U_"4 meds"  ;had 4 meds, not all were leuko
  I M>3,E=M,G>0 Q 1_U_"LEUKOTRIENE AND 1 DX"  ;had all leuk and 1 dx

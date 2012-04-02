@@ -1,14 +1,15 @@
 BGPMUEP ; IHS/MSC/MMT - IHS MU PERFORMANCE MEASURE REPORT FRONT-END ;02-Mar-2011 13:57;DU
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;
  ;
  W:$D(IOF) @IOF
- W !!,$$CTR("IHS Meaningful Use Clinical Performance Measure Report",80)
+ W !!,$$CTR("IHS Meaningful Use Clinical Quality Measure Report",80)
  W !,$$CTR("Report on all Patients regardless of Community of Residence",80),!!
+ D MUCHECK Q:BGPQUIT
 INTRO ;
  D XIT
- W !,"This will produce a Performance Measure Report for one or more measures for a"
- W !,"period you specify.  You will be asked to provide: 1) the length of the"
+ W !,"This will produce a Clinical Quality Measure Report for one or more measures"
+ W !,"for a period you specify.  You will be asked to provide: 1) the length of the"
  W !,"reporting period , 2) the desired start date for your reporting period and,"
  W !,"3) the baseline period to compare data to."
 SETIND ;
@@ -36,6 +37,7 @@ TP ;get time period
  I BGPPER="" W !,"Start date not entered.",! G TP
  ;Setup: BGPBD - begin date & BGPED - end date
  S BGPBD=BGPPER
+ S:$E(BGPBD,4,7)="0000" $E(BGPBD,4,7)="0101"
  S BGPED=$$FMADD^XLFDT(BGPPER,BGPLEN)
  ;I BGPLEN=90 S BGPMON=$E(BGPPER,4,5)+3 S:BGPMON<10 BGPMON="0"_BGPMON S BGPED=$E(BGPPER,1,3)_BGPMON_$E(BGPPER,6,7)
  ;I BGPLEN=365 S BGPED=($E(BGPPER,1,3)+1)_$E(BGPPER,4,7)
@@ -98,7 +100,7 @@ BEN ;
  S BGPBEN=Y
 SUM ;display summary of this report
  W:$D(IOF) @IOF
- W !,$$CTR("SUMMARY OF MEANINGFUL USE PERFORMANCE MEASURE REPORT TO BE GENERATED")
+ W !,$$CTR("SUMMARY OF MEANINGFUL USE CLINICAL QUALITY MEASURE REPORT TO BE GENERATED")
  W !!,"The date ranges for this report are:"
  W !?5,"Report Period: ",?31,$$FMTE^XLFDT(BGPBD)," to ",?31,$$FMTE^XLFDT(BGPED)
  W !?5,"Baseline Period: ",?31,$$FMTE^XLFDT(BGPBBD)," to ",?31,$$FMTE^XLFDT(BGPBED)
@@ -198,7 +200,25 @@ XIT ;
  K VALMBCK,VALMCNT,VALMHDR
  D ^XBFMK
  Q
- ;
+MUCHECK ;Site must have EHR 1.1 Patch 8 installed to qualify for MU since that is the certified version
+ ;S XPXPCH="EHR*1.1*8"
+ ;S X=$$PATCH^XPDUTL(XPXPCH)
+ ;Q:X
+ ;W !!,$$C^XBFUNC("Meaningful Use CQM reporting requires that the certified version be installed.")
+ ;W !!,$$C^XBFUNC("EHR 1.1 Patch 8 must first be installed.")
+ N IN,INSTDA,STAT
+ S BGPQUIT=0
+ S IN="EHR*1.1*8",INSTDA=""
+ I '$D(^XPD(9.7,"B",IN)) D  Q
+ .W !!,$$C^XBFUNC("Meaningful Use CQM reporting requires that the certified version be installed.")
+ .W !!,$$C^XBFUNC("EHR 1.1 Patch 8 must first be installed.") S BGPQUIT=1
+ S INSTDA=$O(^XPD(9.7,"B",IN,INSTDA),-1)
+ S STAT=+$P($G(^XPD(9.7,INSTDA,0)),U,9)
+ I STAT'=3 D  Q
+ .W !!,$$C^XBFUNC("Meaningful Use CQM reporting requires that the certified version be installed.")
+ .W !!,$$C^XBFUNC("EHR 1.1 Patch 8 must first be installed.")
+ .S BGPQUIT=1
+ Q
 CTR(X,Y) ;EP - Center X in a field Y wide.
  Q $J("",$S($D(Y):Y,1:IOM)-$L(X)\2)_X
  ;----------

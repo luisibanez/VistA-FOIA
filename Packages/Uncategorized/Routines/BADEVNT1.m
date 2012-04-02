@@ -1,5 +1,6 @@
 BADEVNT1 ;IHS/MSC/MGH - Dentrix HL7 interface (cont) ;08-Jul-2009 16:38;PLS
- ;;1.0;DENTAL/EDR INTERFACE;;Oct 13, 2009
+ ;;1.0;DENTAL/EDR INTERFACE;**1**;AUG 22, 2011
+ ;; Modified - IHS/MSC/AMF - 11/23/10 - Updated Out of Order, alerts, removed H 2
  Q
 TPROV ;EP Taskman call to start provider load
  N STOP,ZTDTH,ZTIO,ZTDESC,ZTRTN,ZTSAVE,ZTPRI,ZTSK
@@ -9,7 +10,7 @@ TPROV ;EP Taskman call to start provider load
  I STOP="NO" D  H 3 Q
  .W !,"Process is already running",!
  I $$GET^XPAR("ALL","BADE LAST NEW PERSON") D  H 3 Q
- W !,"Upload process has already begun. Please use Restart option.",!
+ .W !,"Upload process has already begun. Please use Restart option.",!
  S ZTIO=""
  S ZTDESC="Load Provider Data to EDR"
  S ZTRTN="LOADPRV^BADEVNT1"
@@ -95,19 +96,20 @@ RESTPRV ;EP Restart the provider load
  .D EN^XPAR("SYS","BADE EDR PRV TSK",1,"")
  .D COMPLETE
  Q
-COMPLETE ;Mark menu options out of order
- N DA,MSG
- S DA="",MSG="Upload completed"
- S DA=$O(^DIC(19,"B","BADE EDR UPLOAD ALL PROVIDERS",DA))
- I DA'=""  D
- .S DIE="^DIC(19,",DR="2///^S X=MSG"
- .D ^DIE
- N DA,DIE,DR
- S DA="",MSG="Upload completed"
- S DA=$O(^DIC(19,"B","BADE EDR RESTART PROV UPLOAD",DA))
- I DA'=""  D
- .S DIE="^DIC(19,",DR="2///^S X=MSG"
- .D ^DIE
+ ; ----- IHS/MSC/AMF 10/9/10 modified to mark all provider upload options complete
+COMPLETE ;Mark options out of order
+ N MSG,MENU,I
+ S MENU(1)="BADE EDR UPLOAD ALL PROVIDERS"
+ S MENU(2)="BADE EDR RESTART PROV UPLOAD"
+ S MENU(3)="BADE EDR PAUSE PROV UPLOAD"
+ F I=1:1:3 D
+ .N DA,DIE,DR
+ .S MSG="Upload completed"
+ .S DA=$O(^DIC(19,"B",MENU(I),""))
+ .I DA'=""  D
+ ..S DIE="^DIC(19,",DR="2///^S X=MSG"
+ ..D ^DIE
+ ; ----- end IHS/MSC/AMF 10/9/10 
  ; Enable event protocol
  D EDPROT^BADEUTIL("BADE PROVIDER UPDATE MFN-M02")
  Q
@@ -129,10 +131,19 @@ STATUS ;EP Display the status
  ;Display the processing status
  S PSTOP=$$GET^XPAR("ALL","BADE EDR PAUSE PROV UPLOAD",1,"E")
  S PTASK=$$GET^XPAR("ALL","BADE EDR PRV TSK")
+ ; ----- IHS/SAIC/FJE 3/9/11 added to complete display for merge
+ ;Get MERGED PATIENTS processed and total number processed
+ S MRGDFN=$$GET^XPAR("ALL","BADE EDR MRG DFN")
+ S MRGDATA=$$GET1^DIQ(2,MRGDFN,.01)_$S(MRGDFN>0:"  ("_MRGDFN_")",1:"")
+ S MRGTOTAL=$$GET^XPAR("ALL","BADE EDR MRG TOTAL")
+ ;Display the processing status
+ S MRGSTOP=$$GET^XPAR("ALL","BADE EDR PAUSE MRG LOAD",1,"E")
+ S MRGTASK=$$GET^XPAR("ALL","BADE EDR MRG LOAD TSK")
+ ; ----- end IHS/SAIC/FJE 3/9/11
  ; Display statistics
  Q:$E($G(IOST),1,2)'="C-"
  N X,%ZIS,IORVON,IORVOFF,MNU
- S VER="Version "_$G(VER,6.0),PKG=$G(PKG,"RPMS-Dentrix Upload")
+ S VER="Version "_$G(VER,1.0),PKG=$G(PKG,"RPMS-Dentrix Upload")
  S X="IORVON;IORVOFF"
  D ENDR^%ZISS
  U IO
@@ -146,8 +157,12 @@ STATUS ;EP Display the status
  W !,?5,"Last Provider Processed: "_PDATA
  W !,?5,"Total Prov processed: "_PTOTAL
  W !,?5,"Currently stopped: "_PSTOP,?40,"Task: "_PTASK
+ W !,"Merge Upload Data"
+ W !,?5,"Last Merged Patient Processed: "_MRGDATA
+ W !,?5,"Total Merged Patients processed: "_MRGTOTAL
+ W !,?5,"Currently stopped: "_MRGSTOP,?40,"Task: "_MRGTASK
  W !!
- W !,"Press RETURN to continue: " R X:$S($D(DTIME):DTIME,1:300)
+ S DIR(0)="EA",DIR("?")="",DIR("A")="Press ENTER to continue..." D ^DIR K DIR
  Q
 SENDMFN ;Send one MFN message
  N ERR,INDA,DIC,D,MFNTYP
@@ -156,10 +171,11 @@ SENDMFN ;Send one MFN message
  D IX^DIC I +Y>0 D
  .S INDA=+Y
  .I $$NPI^XUSNPI("Individual_ID",INDA)<0 D  Q
- ..W !,"Selected provider lacks NPI number" H 2
+ ..W !,"Selected provider lacks NPI number"
  .D MFN^BADEVNT1(INDA)
  .W !,$S($D(ERR):"Unable to send HL7 message...",$G(MSG):MSG,1:"Message was sent...")
- .H 2
+ ; IHS/MSC/AMF 10/9/10 modified - removed H, replaced with Enter to continue.
+ S DIR(0)="EA",DIR("?")="",DIR("A")="Press ENTER to continue..." D ^DIR K DIR
  Q
 MFN(INDA) ;EP Create and send one MFN message
  ;Make sure its a dentist
@@ -193,7 +209,7 @@ EDITPAR(PARAM) ;EP
 TITLE(PKG,VER) ;EP
  Q:$E($G(IOST),1,2)'="C-"
  N X,%ZIS,IORVON,IORVOFF,MNU
- S MNU=$P(XQY0,U,2),VER="Version "_$G(VER,6.0),PKG=$G(PKG,"RPMS-Dentrix Upload")
+ S MNU=$P(XQY0,U,2),VER="Version "_$G(VER,1.0),PKG=$G(PKG,"RPMS-Dentrix Upload")
  S X="IORVON;IORVOFF"
  D ENDR^%ZISS
  U IO
@@ -207,7 +223,7 @@ CHECK(FIL,VAL,ENT) ;
  ; Pause for user response
 PAUSE ;EP
  N X
- R !!,"Press ENTER or RETURN to continue...",X:$G(DTIME,300),!
+ S DIR(0)="EA",DIR("?")="",DIR("A")="Press ENTER to continue..." D ^DIR K DIR
  Q
  ; Returns true if user is a dentist (52)
 ISDENTST(USR) ;EP

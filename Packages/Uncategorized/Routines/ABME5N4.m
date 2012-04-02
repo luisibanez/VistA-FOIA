@@ -1,5 +1,5 @@
 ABME5N4 ; IHS/ASDST/DMJ - 837 N4 Segment 
- ;;2.6;IHS Third Party Billing System;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,8**;NOV 12, 2009
  ;City/State/Zip
  ;
 EP(X,Y) ;EP - START HERE
@@ -33,9 +33,16 @@ LOOP ;LOOP HERE
  I X="AMB",(Y="DO") D
  .S ABMR("F")=$P($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),12)),U,7),";",2)
  .S ABMR("IEN")=$P($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),12)),U,7),";")
- .I ABMR("F")["AUTNINS" S ABMR("N3",20)=$P($G(^AUTNINS(ABMR("IEN"),0)),U,3)
- .I ABMR("F")["AUPNPAT" S ABMR("N3",20)=$P($G(^DPT(ABMR("IEN"),.11)),U,4)
- .I ABMR("F")["AUTTLOC" S ABMR("N3",20)=$P($G(^DIC(4,ABMR("IEN"),1)),U,3)
+ .;start old code abm*2.6*8 HEAT45242
+ .;I ABMR("F")["AUTNINS" S ABMR("N3",20)=$P($G(^AUTNINS(ABMR("IEN"),0)),U,3)
+ .;I ABMR("F")["AUPNPAT" S ABMR("N3",20)=$P($G(^DPT(ABMR("IEN"),.11)),U,4)
+ .;I ABMR("F")["AUTTLOC" S ABMR("N3",20)=$P($G(^DIC(4,ABMR("IEN"),1)),U,3)
+ .;end old code start new code HEAT45242
+ .;I ABMR("F")["AUTNINS" S ABMR("N4",20)=$P($G(^AUTNINS(ABMR("IEN"),0)),U,3)
+ .I ABMR("F")["AUPNPAT" S ABMR("N4",20)=$P($G(^DPT(ABMR("IEN"),.11)),U,4)
+ .I ABMR("F")["AUTTLOC" S ABMR("N4",20)=$P($G(^DIC(4,ABMR("IEN"),1)),U,3)
+ .I ABMR("F")["AUTTVNDR" S ABMR("N4",20)=$P($G(^AUTTVNDR(ABMR("IEN"),13)),U,2)
+ .;end new code HEAT45242
  Q
 30 ;N402 - State or Province
  I X=2 S ABMR("N4",30)=$P($G(^DPT(Y,.11)),"^",5)
@@ -49,9 +56,16 @@ LOOP ;LOOP HERE
  I X="AMB",(Y="DO") D
  .S ABMR("F")=$P($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),12)),U,7),";",2)
  .S ABMR("IEN")=$P($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),12)),U,7),";")
- .I ABMR("F")["AUTNINS" S ABMR("N3",20)=$P($G(^AUTNINS(ABMR("IEN"),0)),U,4)
- .I ABMR("F")["AUPNPAT" S ABMR("N3",20)=$P($G(^DPT(ABMR("IEN"),.11)),U,5)
- .I ABMR("F")["AUTTLOC" S ABMR("N3",20)=$P($G(^DIC(4,ABMR("IEN"),0)),U,2)
+ .;start old code abm*2.6*8 HEAT45242
+ .;I ABMR("F")["AUTNINS" S ABMR("N3",20)=$P($G(^AUTNINS(ABMR("IEN"),0)),U,4)
+ .;I ABMR("F")["AUPNPAT" S ABMR("N3",20)=$P($G(^DPT(ABMR("IEN"),.11)),U,5)
+ .;I ABMR("F")["AUTTLOC" S ABMR("N3",20)=$P($G(^DIC(4,ABMR("IEN"),0)),U,2)
+ .;end old code start new code HEAT45242
+ .;I ABMR("F")["AUTNINS" S ABMR("N4",30)=$P($G(^AUTNINS(ABMR("IEN"),0)),U,4)
+ .I ABMR("F")["AUPNPAT" S ABMR("N4",30)=$P($G(^DPT(ABMR("IEN"),.11)),U,5)
+ .I ABMR("F")["AUTTLOC" S ABMR("N4",30)=$P($G(^DIC(4,ABMR("IEN"),0)),U,2)
+ .I ABMR("F")["AUTTVNDR" S ABMR("N4",30)=$P($G(^AUTTVNDR(ABMR("IEN"),13)),U,3)
+ .;end new codes HEAT45242
  S ABMR("N4",30)=$P($G(^DIC(5,+ABMR("N4",30),0)),"^",2)
  Q
 40 ;N403 - Postal Code
@@ -66,10 +80,16 @@ LOOP ;LOOP HERE
  I X="AMB",(Y="DO") D
  .S ABMR("F")=$P($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),12)),U,7),";",2)
  .S ABMR("IEN")=$P($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),12)),U,7),";")
- .I ABMR("F")["AUTNINS" S ABMR("N3",20)=$P($G(^AUTNINS(ABMR("IEN"),0)),U,5)
- .I ABMR("F")["AUPNPAT" S ABMR("N3",20)=$P($G(^DPT(ABMR("IEN"),.11)),U,6)
- .I ABMR("F")["AUTTLOC" S ABMR("N3",20)=$P($G(^DIC(4,ABMR("IEN"),1)),U,4)
- S ABMR("N4",40)=$TR(ABMR("N4",40)," -")
+ .;start old code abm*2.6*8 HEAT 45242
+ .;I ABMR("F")["AUTNINS" S ABMR("N3",20)=$P($G(^AUTNINS(ABMR("IEN"),0)),U,5)
+ .;I ABMR("F")["AUPNPAT" S ABMR("N3",20)=$P($G(^DPT(ABMR("IEN"),.11)),U,6)
+ .;I ABMR("F")["AUTTLOC" S ABMR("N3",20)=$P($G(^DIC(4,ABMR("IEN"),1)),U,4)
+ .;end old code start new code HEAT45242
+ .I ABMR("F")["AUTNINS" S ABMR("N4",40)=$P($G(^AUTNINS(ABMR("IEN"),0)),U,5)
+ .I ABMR("F")["AUPNPAT" S ABMR("N4",40)=$P($G(^DPT(ABMR("IEN"),.11)),U,6)
+ .I ABMR("F")["AUTTLOC" S ABMR("N4",40)=$P($G(^DIC(4,ABMR("IEN"),1)),U,4)
+ .;end new code HEAT45242
+ S:(+ABMR("N4",40)'=0) ABMR("N4",40)=$$FMT^ABMERUTL($TR(ABMR("N4",40)," -"),"9N")
  Q
 50 ;N404 - Country Code
  S ABMR("N4",50)=""

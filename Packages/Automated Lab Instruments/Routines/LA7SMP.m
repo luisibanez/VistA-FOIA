@@ -1,5 +1,5 @@
 LA7SMP ;VA/DALOI/JMC - Shipping Manifest Print ;11/25/96  14:39
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**27,45,46,64**;NOV 01, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**27,45,46,64**;NOV 01, 1997;Build 9
 EN ;
  D EN^DDIOL("Print Shipping Manifest","","!!")
  D KILL^LA7SMP0
@@ -80,6 +80,7 @@ DQ ;
  . I $G(LA7CHK) D CHKREQI^LA7SM2(+LA7SM,LA762801)
  . ;S ^TMP("LA7SM",$J,+$P(LA762801(0),"^",7),+$P(LA762801(0),"^",9),$P(LA762801(0),"^",5),LA762801)=""  ;ihs/cmi/maw 8/4/2010 orig line
  . S ^TMP("LA7SM",$J,+$P(LA762801(0),"^",7),+$P(LA762801(0),"^"),$P(LA762801(0),"^",5),LA762801)=""  ;ihs/cmi/maw 8/4/2010 changed sort to LRDFN from Packaging container
+ . ;S ^TMP("LA7SM",$J,+$P(LA762801(0),"^",7),+$P(LA762801(0),"^"),$$GETORDA^LA7VORM1($P(LA762801(0),"^",5)),LA762801)=""  ;ihs/cmi/maw 8/4/2010 changed sort to LRDFN from Packaging container
  . D BUILDRI^LA7SM2
  ;
  S (LA7SCOND,LA7SCONT,LA7UID)=""
@@ -144,6 +145,7 @@ DQ ;
  . . S X="Relevant clinical information: "_LA762801(.1) D ^DIWP
  . . M LA7CMT=^UTILITY($J,"W",DIWL)
  . . W ! D CMT^LA7SMP0 W !
+ . W ! D OCMT^LA7SMP0(LA7UID) W !  ;ihs/cmi/maw 07/26/2011 for ref lab
  . ;W !,?13,"VA NLT Code [Name]: "  ;ihs/cmi/maw 8/4/2010 not wanted
  . ;S LA7NLT=$$GET1^DIQ(64,+$$GET1^DIQ(60,LA760_",",64,"I")_",",1) ; NLT code.  ;ihs/cmi/maw 8/4/2010 not wanted
  . ;W $S($L(LA7NLT):LA7NLT,1:"*** None specified ***")  ;ihs/cmi/maw 8/4/2010 not wanted
@@ -155,8 +157,12 @@ DQ ;
  . . S LA7X=$P($G(^DIC(4,+$P(LA7SCFG(0),"^",3),0),"UNKNOWN"),"^",1)_" Order Code [Name]: "
  . . W !,?11,LA7X,$S($L($P(LA762801(5),"^")):$P(LA762801(5),"^"),1:"*** None specified ***")," "
  . . S LA7Y="["_$S($L($P(LA762801(5),"^",2)):$P(LA762801(5),"^",2),1:"*** None specified ***")_"]"
- . . I $L(LA7Y)<(IOM-$X) W LA7Y Q
+ . . I $L(LA7Y)<(IOM-$X) D  Q
+ . . .W LA7Y
+ . . .D AO^LA7VQINS(LA7UID)
  . . S LA7X=IOM-$X W $E(LA7Y,1,LA7X)
+ . . ;lets try adding ask at order questions here
+ . . D AO^LA7VQINS(LA7UID)
  . . S LA7Y=$E(LA7Y,LA7X+1,$L(LA7Y)),LA7Z=IOM-11
  . . F  S LA7X=$E(LA7Y,1,LA7Z) Q:LA7X=""  W !,?11,LA7X S LA7Y=$E(LA7Y,LA7Z+1,$L(LA7Y))
  ;

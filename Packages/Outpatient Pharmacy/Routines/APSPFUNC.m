@@ -1,5 +1,5 @@
-APSPFUNC ;IHS/CIA/PLS - MISC FUNCTIONS ;23-Jan-2011 07:16;SM
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1002,1004,1005,1006,1007,1008,1009,1010**;Sep 23, 2004
+APSPFUNC ;IHS/CIA/PLS - MISC FUNCTIONS ;03-Aug-2011 16:15;PLS
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1002,1004,1005,1006,1007,1008,1009,1010,1011**;Sep 23, 2004;Build 17
  ;
 HRC(DFN,D) ;EP; -- IHS health record number
  ; Input: IEN to File 200
@@ -264,3 +264,33 @@ FDTWARN(PPLARY) ;EP
  ; Return status of prescription
 RXSTAT(RX) ;EP
  Q $G(^PSRX(RX,"STA"))
+ ; Return user's DEA, or Facility DEA-VA-USPHS or null
+DEAVAUS(PRV) ;EP -
+ ; 1.     If provider DEA# exists in File 200 use that.
+ ; 2.     If no provider DEA# exists but has VA#
+ ;        then return Facility DEA-VA-USPHS
+ ;        else return null
+ ;        Facility DEA#-VA#-USPHS (ie AU1234567-BB1234-USPHS)
+ Q:$G(PRV)="" ""
+ N DEAID,VAID,RET,FACID
+ S RET=""
+ S DEAID=$$GET1^DIQ(200,PRV,53.2)  ;Provider DEA#
+ S VAID=$$GET1^DIQ(200,PRV,53.3)   ;Provider VA#
+ S FACID=$$GET1^DIQ(4,DUZ(2),52) ;Facility DEA#
+ I $L(DEAID) D
+ .S RET=DEAID
+ E  I $L(VAID) D
+ .S RET=FACID_"-"_VAID_"-"_"USPHS"
+ Q RET
+ ; Returns remaining refill count
+ ; Input: RX : Prescription IEN - Required
+ ;        FDT: Fill date - optional - If passed will restrict count to
+ ;             refill count to exclude refills past the value in FDT.
+RMNRFL(RX,FDT) ;EP-
+ N RFS,IEN
+ S RX=$G(RX,0)
+ Q:'$D(^PSRX(RX,0)) 0
+ S RFS=$P(^PSRX(RX,0),U,9),IEN=0 F  S IEN=$O(^PSRX(RX,1,IEN)) Q:'IEN  D
+ .I $G(FDT) Q:$P(^PSRX(RX,1,IEN,0),U)>FDT
+ .S RFS=RFS-1
+ Q RFS

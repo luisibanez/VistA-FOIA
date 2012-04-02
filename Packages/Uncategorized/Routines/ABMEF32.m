@@ -1,5 +1,5 @@
 ABMEF32 ; IHS/ASDST/DMJ - Electronic 837 version 5010 Professional ;      
- ;;2.6;IHS 3P BILLING SYSTEM;**6**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8**;NOV 12, 2009
  ;
 START ;
  ;START HERE
@@ -21,6 +21,7 @@ START ;
  I ($G(ABMER("CNT"))=1) D  Q:$G(POP)
  .D OPEN
  .I $G(POP) W !,"File could not be created/opened.",! Q
+ Q:$G(POP)  ;abm*2.6*8
  S DIE="^ABMDTXST(DUZ(2),"
  S DA=ABMPXMIT
  S DR=".14///"_ABMFN

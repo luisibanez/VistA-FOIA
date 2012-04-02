@@ -1,5 +1,6 @@
-XTID    ;OAKCIOFO/JLG - API set for VUID-Term/Concepts in VistA ;04/22/2005 15:12
- ;;7.3;TOOLKIT;**93**;Apr 25, 1995
+XTID    ;OAKCIOFO/JLG - API set for VUID-Term/Concepts in VistA ;08/18/2008 15:12
+ ;;7.3;TOOLKIT;**93,108**;Apr 25, 1995;Build 8
+ ;Per VHA Directive 2004-038, this routine should not be modified
  Q
  ;  API set for VUID Term/Concepts in VistA
  ; supported by IA # 4631
@@ -191,7 +192,7 @@ GETIREF(TFILE,TFIELD,TVUID,TARRAY,TMASTER) ;
  ;          
  G GETIREF^XTID1
  ;
-SCREEN(TFILE,TFIELD,TIREF,TDATE) ;
+SCREEN(TFILE,TFIELD,TIREF,TDATE,TCACHE) ;
  ;Function: Returns the screening condition for the given term (TIREF) 
  ;  and date (TDATE).  TIREF is represented differently based in its 
  ;  context--the combined value of TFILE and TFIELD.
@@ -209,6 +210,14 @@ SCREEN(TFILE,TFIELD,TIREF,TDATE) ;
  ;          in TFILE.
  ; TDATE =  FileMan date/time, defaults to NOW.
  ; (opt)
+ ; TCACHE = A local variable passed by reference.  It must be KILLed
+ ; (opt)    before initiating each search query (e.g. before calling
+ ;          the ^DIC).  Using this parameter speeds up the search
+ ;          (especially in big files).
+ ;          
+ ;    Note: This parameter keeps internal values between calls to the
+ ;          screen logic.  Do not make any assumptions regarding its
+ ;          value and do not use it in your code!
  ; 
  ;Returns:  0 (i.e. don't screen) if the term is/was active or 
  ;          1 if the term is/was inactive (i.e. screen).

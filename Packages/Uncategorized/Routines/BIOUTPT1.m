@@ -1,5 +1,5 @@
 BIOUTPT1 ;IHS/CMI/MWR - PROMPTS FOR REPORTS.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  PROMPTS FOR REPORTS.
  ;
@@ -253,7 +253,7 @@ TEXT3 ;EP
  ;
  ;----------
 USERPOP(BIUP,BIRTN) ;EP - Select User Population Parameter.
- ;---> Called by Protocol BBI OUTPUT USER POPULATION.
+ ;---> Called by Protocol BI OUTPUT USER POPULATION.
  ;---> Parameters:
  ;     1 - BIUP  (ret) R=Registered Patients; U=User Population (1+ visits)
  ;                     A=Active Users.
@@ -270,10 +270,8 @@ USERPP1 ;
  ;---> If GPRA is set up, set BIGPRA=1.
  I $$GPRAIEN^BIUTL6 S BIGPRA=1
  ;
- S DIR(0)="SM^r:Registered Patients (All)"
- S DIR(0)=DIR(0)_";i:Immunization Patients (Active Only)"
- S DIR(0)=DIR(0)_";u:User Population (1+ visits)"
- S DIR(0)=DIR(0)_";a:Active Clinical Users (2+ visits)"
+ S DIR(0)="SM^r:"_$$BIUPTX^BIUTL6("r")_";i:"_$$BIUPTX^BIUTL6("i")
+ S DIR(0)=DIR(0)_";u:"_$$BIUPTX^BIUTL6("u")_";a:"_$$BIUPTX^BIUTL6("a")
  ;
  S DIR("A")="     Select User Population Group"
  D

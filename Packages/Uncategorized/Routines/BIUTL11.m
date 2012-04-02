@@ -1,5 +1,5 @@
 BIUTL11 ;IHS/CMI/MWR - UTIL: PATIENT INFO; AUG 10,2010
- ;;8.4;IMMUNIZATION;**1**;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  UTILITY: PATIENT FUNCTIONS: CONTRAS, INPATIENT, HIDOSE.
  ;;  PATCH 1: Correct typo "Q", so that unmatched CVX returns 0 (zero),
@@ -277,12 +277,12 @@ CURCOM(BIDFN,TEXT) ;EP
  ;
  ;
  ;----------
-ISGPRA(BIDFN,BISITE,BIERR) ;PEP - Return 1 if Pt's Current Community is in Imm GPRA Set.
+ISGPRA(BIDFN,BISITE,BINOCOM,BIERR) ;PEP - Return 1 if Pt's Current Community is in Imm GPRA Set.
  ;---> Return 1 if Patient's Current Community is in the Immunization GPRA Set
  ;---> of Communities as defined in the BI Site Parameters File.
  ;---> Parameters:
- ;     1 - BIDFN  (req) Patient's IEN (BIDFN).
- ;     2 - BISITE (req) IEN of Site (often the user's DUZ(2)).
+ ;     1 - BIDFN   (req) Patient's IEN (BIDFN).
+ ;     2 - BISITE  (req) IEN of Site (often the user's DUZ(2)).
  ;
  N BIPCC,BIGPRA,BIERR S BIERR=""
  I '$G(BIDFN) D ERRCD^BIUTL2(201,.BIERR) Q 0
@@ -332,14 +332,15 @@ NEXTAPPT(BIDFN) ;EP
  ;
  ;
  ;----------
-LASTIMM(BIDFN,BICVXS,BIQDT) ;PEP - Return latest date patient received CVX vaccine(s).
- ;**********
+LASTIMM(BIDFN,BICVXS,BIQDT,BIALL) ;PEP - Return latest date patient received CVX vaccine(s).
  ;---> Return the latest Fileman date on which any one of the CVX's in the
  ;---> string BICVXS was received.  Return 0 (zero) if none received.
  ;---> Parameters:
  ;     1 - BIDFN  (req) IEN of Patient in ^DPT.
  ;     2 - BICVXS (req) String of CVX Codes to check, delimited by comma.
  ;     3 - BIQDT  (opt) Quarter Ending Date (ignore Visits after this date).
+ ;     4 - BIALL  (opt) If BIALL=1 return string of dates (comma delim) before BIQDT.
+ ;     5 - BIVG   (opt) *NOT USED* Vaccine Group (if BIVG=IEN of Vaccine Group, check that way).
  ;
  Q:'$G(BIDFN) 0
  Q:'$G(BICVXS) 0
@@ -348,14 +349,8 @@ LASTIMM(BIDFN,BICVXS,BIQDT) ;PEP - Return latest date patient received CVX vacci
  F I=1:1 S BICVX=$P(BICVXS,",",I) Q:BICVX=""  D
  .S BIIEN=$$HL7TX^BIUTL2(BICVX)
  .;---> Quit if CVX Code does not exist in Vaccine Table (or=OTHER).
- .;
- .;********** PATCH 1, v8.4, AUG 01,2010, IHS/CMI/MWR
- .;---> Correct typo "Q", so that unmatched CVX returns 0 (zero), not "Q".
- .;Q:('BIIEN!(BIIEN=137)) Q
  .Q:('BIIEN!(BIIEN=137)) 0
- .;**********
- .;
- .S N=0
+ .N N S N=0
  .F  S N=$O(^AUPNVIMM("AC",BIDFN,N)) Q:'N  D
  ..N X,Y S X=$G(^AUPNVIMM(N,0))
  ..;---> Quit if this visit doesn't match the desired CVX Code.
@@ -368,7 +363,13 @@ LASTIMM(BIDFN,BICVXS,BIQDT) ;PEP - Return latest date patient received CVX vacci
  ..Q:'Y
  ..;---> Quit if this Visit was after the Quarter Ending Date.
  ..I $G(BIQDT) Q:(Y>BIQDT)
- ..;---> Okay, good visit, reset BIDATE if this is later than any prior BIDATE.
+ ..;
+ ..;---> If returning all dates, concat string and quit.
+ ..I $G(BIALL) D  Q
+ ...I BIDATE S BIDATE=BIDATE_","_Y Q
+ ...S BIDATE=Y
+ ..;
+ ..;---> If only returning last date, reset BIDATE if this is later than any prior BIDATE.
  ..S:(Y>BIDATE) BIDATE=Y
  ;
  ;---> Return the latest Visit Date for this set of CVX Codes.
@@ -376,24 +377,31 @@ LASTIMM(BIDFN,BICVXS,BIQDT) ;PEP - Return latest date patient received CVX vacci
  ;
  ;
  ;----------
-LASTCPT(BIDFN,BICPTS,BIQDT) ;EP
+LASTCPT(BIDFN,BICPTS,BIQDT,BIALL) ;EP
  ;---> Return the latest Fileman date on which any one of the CPT's in the
  ;---> string BICPTS was received.  Return 0 (zero) if none received.
  ;---> Parameters:
  ;     1 - BIDFN  (req) Patient DFN
  ;     2 - BICPTS (req) String of CPT Codes to check, delimited by comma.
  ;     3 - BIQDT  (opt) Quarter Ending Date (ignore Visits after this date).
+ ;     4 - BIALL  (opt) If BIALL=1 return string of dates (comma delim) before BIQDT.
  ;
  Q:'$G(BIDFN) 0
  Q:'$G(BICPTS) 0
  N BICPT,BIDATE,I S BIDATE=0
  F I=1:1 S BICPT=$P(BICPTS,",",I) Q:BICPT=""  D
- .N Y S Y=$O(^AUPNVCPT("AA",BIDFN,BICPT,0))
- .Q:'Y
- .S Y=9999999-Y
- .;---> Quit if this CPT Visit was after the Quarter Ending Date.
- .I $G(BIQDT) Q:(Y>BIQDT)
- .S:(Y>BIDATE) BIDATE=Y
+ .N N S N=0
+ .F  S N=$O(^AUPNVCPT("AA",BIDFN,BICPT,N)) Q:'N  D
+ ..N BIDATE1 S BIDATE1=9999999-N
+ ..I $G(BIQDT) Q:(BIDATE1>BIQDT)
+ ..;
+ ..;---> If returning all dates, concat string and quit.
+ ..I $G(BIALL) D  Q
+ ...I BIDATE S BIDATE=BIDATE_","_BIDATE1 Q
+ ...S BIDATE=BIDATE1
+ ..;
+ ..;---> If only returning last date, reset BIDATE if this is later than any prior BIDATE.
+ ..S:(BIDATE1>BIDATE) BIDATE=BIDATE1
  ;
  ;---> Return the latest Visit Date for this set of CPT Codes.
  Q BIDATE

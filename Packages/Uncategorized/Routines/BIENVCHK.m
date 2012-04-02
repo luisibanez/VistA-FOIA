@@ -1,5 +1,5 @@
 BIENVCHK ;IHS/CMI/MWR - ENVIRONMENTAL CHECK FOR KIDS; OCT 15, 2010
- ;;8.4;IMMUNIZATION;**2**;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  ENVIRONMENTAL CHECK ROUTINE FOR KIDS INSTALLATION.
  ;;  PATCH 2: Check environment for Imm v8.4 Patch 1.  START+53
@@ -65,9 +65,15 @@ START ;EP
  .;---> Either never before installed or at least v8.4, Patch 1.
  .;Q:($$VERSION^XPDUTL("BI")="")
  I '$$VCHK("BI","8.4",2) S XPDQUIT=2
+ ;
+ ;---> Check Patch Level of Imm.
  S X=$$LAST("IMMUNIZATION","8.4")
- I $P(X,U)'=1&($P(X,U)'>1) D  S XPDQUIT=2
- .W !,$$CJ^XLFSTR("BI v8.4 Patch 1 NOT INSTALLED",IOM)
+ ;---> Patch 1.
+ ;I $P(X,U)'=1&($P(X,U)'>1) D  S XPDQUIT=2
+ ;.W !,$$CJ^XLFSTR("BI v8.4 Patch 1 NOT INSTALLED",IOM)
+ ;---> Patch 2.
+ I $P(X,U)'=2&($P(X,U)'>2) D  S XPDQUIT=2
+ .W !,$$CJ^XLFSTR("BI v8.4 Patch 2 NOT INSTALLED",IOM)
  ;
  ;---> Check for multiple BI entries in the Package File.
  N DA,DIC

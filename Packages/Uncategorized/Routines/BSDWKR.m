@@ -1,5 +1,5 @@
 BSDWKR ; IHS/ANMC/LJF - WORKLOAD/STATS REPORTS ;  [ 08/20/2004  11:58 AM ]
- ;;5.3;PIMS;**1001,1005,1007,1011,1012**;MAY 28, 2004
+ ;;5.3;PIMS;**1001,1005,1007,1011,1012,1013**;MAY 28, 2004
  ;IHS/ITSC/WAR 05/03/2004 PATCH 1001 added back in v5.0 report
  ;IHS/OIT/LJF  04/12/2006 PATCH 1005 changed intro call to v5.3 routine
  ;cmi/anch/maw 2/20/2007 PATCH 1007 item 1007.24 added new report for Turn Around Time (TAT)
@@ -32,7 +32,6 @@ SP(N) ; -- SUBRTN to pad N number of spaces
  ;IHS/ITSC/WAR 5/3/2004 P #1001 Added 'Clinic Workload Report'
  ;IHS/OIT/LJF 04/12/2006 PATCH 1005 changed WR^ASDH02 to WK5^BSDH021
  ;cmi/anch/maw 2/27/2007 PATCH 1007 added Turn Around Time Report and Routing Slip/Chart Request Report
- ;;Advanced Access Report;;^BSDWKR8;;WK8^BSDH021
 REPORTS ;;
  ;;Statistics by Type of Appointment;;^BSDWKR1;;WK1^BSDH021
  ;;Scheduled vs. Patients Seen;;^BSDWKR4;;WK4^BSDH021
@@ -41,4 +40,5 @@ REPORTS ;;
  ;;Clinic Workload Report;;^SDCWL;;WK5^BSDH021
  ;;Turn Around Time Report;;^BSDWKR6;;WK6^BSDH021
  ;;Routing Slip/Chart Request Report;;^BSDWKR7;;WK7^BSDH021
+ ;;Advanced Access Report;;^BSDWKR8;;WK8^BSDH021
  ;;On-line Help (Report Descriptions);;

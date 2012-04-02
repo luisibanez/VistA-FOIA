@@ -1,5 +1,5 @@
 ABMEF23 ; IHS/ASDST/DMJ - Electronic 837 version 4010 Dental ;      
- ;;2.6;IHS Third Party Billing System;**2,3**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**2,3,8**;NOV 12, 2009
  ;
  ; IHS/SD/SDR - v2.5 p8 - IM15585 - Modified to check when patient changes as well as
  ;    subcriber
@@ -22,8 +22,24 @@ START ;
  S ABMPINS=ABMP("INS")
  S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)
  S ABMPITYP=ABMP("ITYPE")
- D OPEN
- I $G(POP) W !,"File could not be created/opened.",! Q
+ ;start old code abm*2.6*8
+ ;D OPEN
+ ;I $G(POP) W !,"File could not be created/opened.",! Q
+ ;S DIE="^ABMDTXST(DUZ(2),"
+ ;S DA=ABMPXMIT
+ ;S DR=".14///"_ABMFN
+ ;D ^DIE
+ ;D LOOP
+ ;I '$G(ABMSTOT) D
+ ;.W !,"No Bills in Batch.",!
+ ;I $G(ABMSTOT) D
+ ;.D ^ABME8L11
+ ;D END
+ ;end old code start new code
+ I ($G(ABMER("CNT"))=1) D  Q:$G(POP)
+ .D OPEN
+ .I $G(POP) W !,"File could not be created/opened.",! Q
+ Q:$G(POP)  ;abm*2.6*8
  S DIE="^ABMDTXST(DUZ(2),"
  S DA=ABMPXMIT
  S DR=".14///"_ABMFN
@@ -32,8 +48,9 @@ START ;
  I '$G(ABMSTOT) D
  .W !,"No Bills in Batch.",!
  I $G(ABMSTOT) D
- .D ^ABME8L11
- D END
+ .D ^ABME5L11
+ I (ABMER("CNT")=ABMER("LAST")) D END
+ ;end new code
  Q
  ;
 LOOP ;loop through bills

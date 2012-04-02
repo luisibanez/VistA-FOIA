@@ -1,5 +1,6 @@
-XINDX3 ;ISC/REL,GRK,RWF - PROCESS MERGE/SET/READ/KILL/NEW/OPEN COMMANDS ;10/23/2003  17:43
- ;;7.3;TOOLKIT;**20,27,61,68**;Apr 25, 1995
+XINDX3 ;ISC/REL,GRK,RWF - PROCESS MERGE/SET/READ/KILL/NEW/OPEN COMMANDS ;06/24/08  15:44
+ ;;7.3;TOOLKIT;**20,27,61,68,110,121**;Apr 25, 1995;Build 10
+ ; Per VHA Directive 2004-038, this routine should not be modified.
 PEEK S Y=$G(LV(LV,LI+1)) Q
 PEEK2 S Y=$G(LV(LV,LI+2)) Q
 INC2 S LI=LI+1 ;Drop into INC
@@ -13,15 +14,17 @@ FIND F Y=LI:1:AC Q:L[$G(LV(LV,Y))
 ERR D E^XINDX1(43) S (S,S1,CH)="" Q
  Q
  Q
-S S ERR=10 G:ARG="" ^XINDX1 S STR=ARG,ARG="",RHS=0 D ^XINDX9
+S ;Set
+ S STR=ARG,ARG="",RHS=0 D ^XINDX9
 S2 S GK="" D INC I S="" D:'RHS E^XINDX1(10) Q
+ I CH=",","!""#&)*+-,./:;<=?\]_~"[$E(S1),RHS=1 D E^XINDX1(10) G S2 ;patch 121
  I CH="," S RHS=0 G S2
- I CH="=" S RHS=1 D:","[S1 E^XINDX1(10) G S2
- I CH="$",'RHS D  D:% E^XINDX1(10)
+ I CH="=" S RHS=1 D:"!#&)*,/:;<=?\]_~"[$E(S1) E^XINDX1(10) G S2 ;patch 119
+ I CH="$",'RHS D  D:% E^XINDX1(10) ;Can't be on RHS of set.
  . S %=1
  . I "$E$P$X$Y"[$E(S,1,2) S %=0 Q
  . I "$EC$ET$QS"[$E(S,1,3) S %=0 Q
- . I "$ZE$ZT"[$E(S,1,3) D E^XINDX1(28) S %=0 Q  ;Should not be used
+ . I "$ZE$ZT"[$E(S,1,3) S %=0 Q  ;Pickup in XINDX9
  . Q
  I CH="^" D FL G S2
  I CH="@" S Y=$$ASM(LV,LI,",") S:Y'["=" RHS=1 D INC,ARG^XINDX2 G S2
@@ -34,14 +37,14 @@ FL ;
  S:'RHS GK="*" D ARG^XINDX2
  Q
 VLNF(X) ;Drop into VLN
-VLN S ERR=0
- Q:X?1.8UN
- Q:X?1"%".7UN
- I X'?1.8AN,X'?1"%".7AN D E^XINDX1(11)
- D E^XINDX1(57) ;Must contain lowercase
- ;I X'?1.8UN,X'?1.8LN,X'?1"%".7UN,X'?1"%".7LN D E^XINDX1(ERR)
+VLN ;Valid Local Name > Variable
+ S ERR=0
+ Q:X?1(1U,1"%").15UN
+ I X?1(1A,1"%").15AN D E^XINDX1(57) Q  ;Lowercase
+ D E^XINDX1(11) ;Too long or other problem
  Q
-VGN S ERR=0 I X'?1.8UN,X'?1"%".7UN D E^XINDX1(12)
+VGN ;Valid Global Name
+ S ERR=0 I X'?1(1U,1"%").7UN D E^XINDX1(12)
  Q
 KL ;Process KILL
  S STR=ARG,ARG(1)=ARG,ARG="" D ^XINDX9

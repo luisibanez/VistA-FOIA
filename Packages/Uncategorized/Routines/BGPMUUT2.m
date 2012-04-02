@@ -1,5 +1,5 @@
 BGPMUUT2 ; IHS/MSC/MGH - MEANINGFUL USE UTILITIES 02 Jul 2008 2:07 PM ;01-Mar-2011 15:32;DU
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;
  ;
 NPI(USR) ;Return the NPI for the selected Provider
@@ -64,8 +64,8 @@ LASTPRC(DFN,BDATE,EDATE,TAX) ;EP
  I BGPTX5="" Q ""  ;not a valid taxonomy
  S BGPDX4=0  ;return value
  S BGPDXBD=9999999-BDATE,BGPDXED=9999999-EDATE  ;get inverse date and begin at edate-1 and end when greater than begin date
- S BGPDX1=BGPDXED-1 F  S BGPDX1=$O(^AUPNVPRC("AA",DFN,BGPDX1)) Q:BGPDX1=""!(BGPDX1>BGPDXBD)!(BGPDX4]"")  D
- .S BGPDX2=0 F  S BGPDX2=$O(^AUPNVPRC("AA",DFN,BGPDX1,BGPDX2)) Q:BGPDX2'=+BGPDX2!(BGPDX4]"")  D
+ S BGPDX1=BGPDXED-1 F  S BGPDX1=$O(^AUPNVPRC("AA",DFN,BGPDX1)) Q:BGPDX1=""!(BGPDX1>BGPDXBD)!(+BGPDX4)  D
+ .S BGPDX2=0 F  S BGPDX2=$O(^AUPNVPRC("AA",DFN,BGPDX1,BGPDX2)) Q:BGPDX2'=+BGPDX2!(+BGPDX4)  D
  ..S BGPDX3=$P($G(^AUPNVPRC(BGPDX2,0)),U)
  ..Q:BGPDX3=""  ;bad xref
  ..Q:'$$ICD^ATXCHK(BGPDX3,BGPTX5,0)
@@ -149,7 +149,7 @@ MEDREF(PAT,BDT,EDT,TAX) ;EP
  .S NDC=$P($G(^PSDRUG(ITEM,2)),U,4)
  .Q:'NDC
  .;Setup the NDC code for a proper lookup in the taxonomy
- .S NDCCODE=$$RJ^XLFSTR($P(NDC,"-"),6,0)_$$RJ^XLFSTR($P(NDC,"-",2),4,0)_$$RJ^XLFSTR($P(NDC,"-",3),2,0)
+ .S NDCCODE=$$RJ^XLFSTR($P(NDC,"-"),5,0)_$$RJ^XLFSTR($P(NDC,"-",2),4,0)_$$RJ^XLFSTR($P(NDC,"-",3),2,0)
  .;call the taxonomy lookup
  .S NDCF=$$MEDTAX^BGPMUUT3(DFN,NDCCODE,TAX)
  .I +NDCF D
@@ -174,6 +174,33 @@ RADREF(P,BDATE,EDATE,T) ;EP - return ien of CPT entry if patient had this CPT
  ..S G="1^"_D_"^"_$P(^AUPNPREF(Y,0),U,7)
  .Q
  Q G
+LABREF(P,BDATE,EDATE,LT,CT) ;EP - return date and reason for refusal of LAB (LOINC)
+ ; P     = Patient IEN
+ ; BDATE = begin date to search
+ ; EDATE = end date to search
+ ; LT    = Taxonomy name for LOINC check
+ ; CT    = Taxonomy name for CPT check
+ I '$G(P) Q ""
+ I $G(LT)="" Q ""
+ I $G(EDATE)="" Q ""
+ I $G(BDATE)="" S BDATE=$$FMADD^XLFDT(EDATE,-365)
+ NEW G,X,Y,Z,I
+ S C=""
+ S G=0
+ S I=0 F  S I=$O(^AUPNPREF("AA",P,60,I)) Q:I=""!($P(G,U))  D
+ .S (X,G)=0 F  S X=$O(^AUPNPREF("AA",P,60,I,X)) Q:X'=+X!($P(G,U))  S Y=0 F  S Y=$O(^AUPNPREF("AA",P,60,I,X,Y)) Q:Y'=+Y  S D=$P(^AUPNPREF(Y,0),U,3) I D'<BDATE&(D'>EDATE) D
+ ..S BGPH=0 F  S BGPH=$O(^LAB(60,I,1,BGPH)) Q:BGPH'>0  D
+ ...S L=$P($G(^LAB(60,I,1,BGPH,95.3)),U,1)
+ ...I L'="" I $$LOINCREF(L,LT) S G="1^"_D_"^"_$P(^AUPNPREF(Y,0),U,7)
+ ...Q:+G
+ ...S C=$P($G(^LAB(60,I,1,BGPH,3)),U,1)
+ ...I L'="" I $$ICD^ATXCHK(C,CT,1) S G="1^"_D_"^"_$P(^AUPNPREF(Y,0),U,7)
+ Q G
+LOINCREF(C,T) ;check taxonomy T for LOINC code; passed in LOINC code might not have the check digit
+ N TIEN
+ S TIEN="" S TIEN=$O(^ATXAX("B",T,TIEN)) Q:'TIEN 0
+ Q +$O(^ATXAX(TIEN,21,"B",$P(C,"-",1)_"-"))
+ ;
 LASTECOD(P,T,BDATE,EDATE) ;EP
  N BGPDX1,BGPDX2,BGPDX3,BGPDX4,BGPDX5,BGPDX6,BGPDX7,BGPDXBD,BGPDXED
  I '$G(P) Q ""
@@ -257,6 +284,22 @@ LOINC2(A,B) ;EP
  S %=$P($G(^LAB(95.3,A,0)),U)_"-"_$P($G(^LAB(95.3,A,0)),U,15)
  I $D(^ATXAX(B,21,"B",%)) S CODE=% Q 1
  Q ""
+ ;
+COLD(DFN,BDATE,EDATE,TAX) ;Retuns IEN of Lab test if pt has this LOINC code
+ N IEN,CODE,COLDTE,B,E,D,L,G,X,J
+ S (CODE,B,E,D,L,G,X,J)=""
+ S IEN=$O(^ATXAX("B",TAX,0))
+ Q:'IEN
+ S B=9999999-BDATE,E=9999999-EDATE S D=E-1 F  S D=$O(^AUPNVLAB("AE",DFN,D)) Q:D'=+D!(D>B)!(G]"")  D
+ .S L=0 F  S L=$O(^AUPNVLAB("AE",DFN,D,L)) Q:L'=+L!(G]"")  D
+ ..S X=0 F  S X=$O(^AUPNVLAB("AE",DFN,D,L,X)) Q:X'=+X!(G]"")  D
+ ...Q:'$D(^AUPNVLAB(X,0))
+ ...S J=$P($G(^AUPNVLAB(X,11)),U,13) Q:J=""
+ ...S COLDTE=$P($G(^AUPNVLAB(X,12)),U,1)
+ ...Q:COLDTE<BDATE!(COLDTE>EDATE)
+ ...I $$LOINC2(J,IEN) D
+ ....S G=(9999999-D)_U_X_U_$P($G(^AUPNVLAB(X,12)),U,1) Q
+ Q G
  ;
 GETIMMS(P,EDATE,C,BGPX,CPTLST) ;EP
  K BGPX

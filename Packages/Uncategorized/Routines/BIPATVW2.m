@@ -1,5 +1,5 @@
 BIPATVW2 ;IHS/CMI/MWR - ADD/EDIT/DELETE VISITS; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  ADD, EDIT, DELETE VISITS VIA LIST MANAGER.
  ;;  PATCH 1: Do not stuff default VFC if patient < 19 yrs.  ADDIMM+33
@@ -187,6 +187,7 @@ EDITIMM ;EP
  .S BI("T")=$P(Y,V,20)      ;Injection Site.
  .S BI("W")=$P(Y,V,21)      ;Volume.
  .S BI("Y")=$P(Y,V,24)      ;Imported From Outside Source (=1).
+ .S BI("H")=$P(Y,V,25)      ;NDC Code pointer IEN.
  .;
  .S DR="[BI FORM-IMM VISIT ADD/EDIT]"
  ;

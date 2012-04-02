@@ -1,5 +1,5 @@
 BIREPA ;IHS/CMI/MWR - REPORT, VAC ACCOUNTABILITY; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW VACCINE ACCOUNTABILITY REPORT.
  ;
@@ -40,20 +40,21 @@ INIT ;EP
  ;---> Date Range.
  S:'$G(BIBEGDT) BIBEGDT=(DT-10000)
  S:'$G(BIENDDT) BIENDDT=DT
- D DATERNG^BIREP(.BILINE,"BIREPA",1,BIBEGDT,BIENDDT)
+ ;D DATERNG^BIREP(.BILINE,"BIREPA",1,BIBEGDT,BIENDDT)
+ D DATERNG^BIREP(.BILINE,"BIREPA",1,BIBEGDT,BIENDDT,1,1,1)
  ;
  ;---> Current Community.
- D DISP^BIREP(.BILINE,"BIREPA",.BICC,"Community",2,1)
+ D DISP^BIREP(.BILINE,"BIREPA",.BICC,"Community",2,1,0)
  ;
  ;---> Health Care Facility.
  N A,B S A="Health Care Facility",B="Facilities"
- D DISP^BIREP(.BILINE,"BIREPA",.BIHCF,A,3,2,,,,B)
+ D DISP^BIREP(.BILINE,"BIREPA",.BIHCF,A,3,2,0,,,B)
  ;
  ;---> Case Manager.
  D DISP^BIREP(.BILINE,"BIREPA",.BICM,"Case Manager",4,3)
  ;
  ;---> Beneficiary Type.
- D DISP^BIREP(.BILINE,"BIREPA",.BIBEN,"Beneficiary Type",5,4)
+ D DISP^BIREP(.BILINE,"BIREPA",.BIBEN,"Beneficiary Type",5,4,0)
  ;
  ;---> Visit Type.
  D VTYPE^BIREP(.BILINE,"BIREPA",.BIVT,6)
@@ -63,6 +64,14 @@ INIT ;EP
  S:'$D(BIHIST) BIHIST=1
  S BIHIST1=$S(BIHIST:"YES",1:"NO")
  S X="     7 - Include Historical.........: "_BIHIST1
+ D WRITE(.BILINE,X)
+ K X
+ ;
+ ;---> Display by Lot Number.
+ N BIDLOT1 S BIDLOT1=""
+ S:'$D(BIDLOT) BIDLOT=0
+ S BIDLOT1=$S(BIDLOT:"YES",1:"NO")
+ S X="     8 - Display by Lot Number......: "_BIDLOT1
  D WRITE(.BILINE,X)
  K X
  ;
@@ -124,9 +133,9 @@ TEXT1(BITEXT) ;EP
  ;;printed for any time period, for a given facility, visit type, or
  ;;community(s).
  ;;
- ;;There are 7 items or "parameters" on the screen that you may
+ ;;There are 8 items or "parameters" on the screen that you may
  ;;change in order to select for a specific group of patients.
- ;;To change an item, enter its left column number (1-7) at the
+ ;;To change an item, enter its left column number (1-8) at the
  ;;prompt on the bottom of the screen.  Use "?" at any prompt where
  ;;you would like help or more information on the parameter you are
  ;;changing.
@@ -169,6 +178,11 @@ TEXT1(BITEXT) ;EP
  ;;Accountability Report.  (Category is displayed and edited on the
  ;;ADD/EDIT IMMUNIZATION VISIT Screen.)  If set to "NO", they will
  ;;not be counted in the report.
+ ;;
+ ;;DISPLAY BY LOT NUMBERS: The report lists the statistics by age for
+ ;;each vaccine.  However, you may elect to display the statistics for
+ ;;each separate lot number under each vaccine.  The totals for all
+ ;;lot numbers of each vaccine will also be displayed.
  ;;
  D LOADTX("TEXT1",,.BITEXT)
  Q

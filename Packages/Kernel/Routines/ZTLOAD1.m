@@ -1,12 +1,13 @@
-%ZTLOAD1 ;SEA/RDS-TaskMan: P I: Queue ;01/16/2007
- ;;8.0;KERNEL;**112,118,127,162,275,363,409,415,425**;Jul 10, 1995;Build 18
+%ZTLOAD1 ;SEA/RDS-TaskMan: P I: Queue ;09/23/08  10:06
+ ;;8.0;KERNEL;**112,118,127,162,275,363,409,415,425,446**;Jul 10, 1995;Build 44
+ ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
 GET ;get task data
  N %X,%Y,X,Y,X1,ZT,ZTC1,ZTC2,ZTA1,ZTA4,ZTA5,ZTINC,ZTGOT,ZTC34P
  K %ZTLOAD
  I ("^"[$G(ZTRTN))!($L($G(ZTRTN),"^")>2) D REJECT^%ZTLOAD2("Bad Routine") G EXIT
  S U="^" I ZTRTN'[U S ZTRTN=U_ZTRTN
- S ZTC1=$G(DUZ),ZTC2=""
+ S ZTC1=+$G(DUZ),ZTC2=""
  I ZTC1>0 S ZTC2=$P($G(^VA(200,ZTC1,0)),U)
  ;Check Date/Time
 1 I $D(ZTDTH)[0 S ZTDTH=""
@@ -56,7 +57,7 @@ RECORD ;build record
  . ;Find a free entry, Claim it and Lock it.
  . L +^%ZTSK(-1):0 S ZTSK=^%ZTSK(-1) ;This is just a starting point
  . F  S ZTSK=ZTSK+1 I '$D(^%ZTSK(ZTSK)) D  Q:ZTGOT
- . . L +^%ZTSK(ZTSK):0 Q:'$T  ;Can we lock it
+ . . L +^%ZTSK(ZTSK):$G(DILOCKTM,3) Q:'$T  ;Can we lock it
  . . I $D(^%ZTSK(ZTSK)) L -^%ZTSK(ZTSK) ;Already claimed
  . . S ^%ZTSK(ZTSK,.1)=0,^%ZTSK(-1)=ZTSK,ZTGOT=1 ;Claim it
  . . Q
@@ -64,8 +65,9 @@ RECORD ;build record
  . Q
  I ZTINC D  ;For DSM and OpenM. Faster over network(DDP)
  . S ZTSK=$INCREMENT(^%ZTSK(-1))
- . L +^%ZTSK(ZTSK):0 S ZTGOT=$T
+ . L +^%ZTSK(ZTSK):$G(DILOCKTM,3) S ZTGOT=$T ;p446
  I 'ZTGOT!($D(^%ZTSK(ZTSK,0))) L -^%ZTSK(ZTSK) G RECORD
+ TSTART  ;
  S ^%ZTSK(ZTSK,0)=ZTRTN_U_ZTC1_U_$G(ZTUCI)_U_$H_U_ZTDTH_U_ZTA1_U_ZTA4_U_ZTA5_U_ZTC2_U_$P(ZTC34P,U,1,2)_U_"ZTDESC"_U_$G(ZTCPU)_U_$G(ZTPRI)
  S ^%ZTSK(ZTSK,.1)=0,^%ZTSK(ZTSK,.03)=ZTDESC
  S ^%ZTSK(ZTSK,.2)=ZTIO_"^^^^"_ZTIO(1)_U_$G(ZTIO("H")) S:$D(ZTSYNC) $P(^%ZTSK(ZTSK,.2),U,7)=ZTSYNC
@@ -76,8 +78,9 @@ RECORD ;build record
 SCHED ;schedule task and quit
  S ZTSTAT=$S(ZTDTH'="@":1,1:"K")_"^"_$H,$P(ZTSTAT,U,8)=$G(ZTKIL)
  S ^%ZTSK(ZTSK,.1)=ZTSTAT
- I ZTDTH'="@" S ZT=$$H3(ZTDTH),^%ZTSK(ZTSK,.04)=ZT,^%ZTSCH(ZT,ZTSK)=""
+ I ZTDTH'="@" L +^%ZTSCH("SCHQ"):$G(DILOCKTM,3) S ZT=$$H3(ZTDTH),^%ZTSK(ZTSK,.04)=ZT,^%ZTSCH(ZT,ZTSK)="" L -^%ZTSCH("SCHQ")
  L -^%ZTSK(ZTSK) S ZTSK("D")=ZTDTH
+ TCOMMIT  ;
 EXIT ;Clean up
  I $E($G(ZTIO),1,9)="P-MESSAGE" K ^TMP("XM-MESS",$J) ;Clean up the Global
  K X1,ZT,ZT1,ZTDTH,ZTKIL,ZTSAVE,ZTSTAT,ZTIO

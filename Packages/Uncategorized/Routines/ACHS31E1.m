@@ -1,5 +1,5 @@
 ACHS31E1 ;IHS/OIT/FCJ - ACHS 3.1 PATCH ENV CHECK ;
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**19**;JUN 11,2001
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**20**;JUN 11,2001
  ;3.1*14 1/11/2008;IHS/OIT/FCJ
  ; CHANGE INTROE SECTION WITH EACH PATCH
  ;
@@ -25,7 +25,7 @@ AR ;
  I $D(DTOUT)!$D(DUOUT)!$D(DIRUT) W !,"User stopped environment check." Q
  S ACHSAR=+Y
 CHK ;
- I '$$INSTALLD("ACHS*3.1*18") S XPDQUIT=2
+ I '$$INSTALLD("ACHS*3.1*19") S XPDQUIT=2
  I $$VCHK("DI","22.0",2,"<")
  I $$VCHK("XU","8.0",2,"<")
  I '$$INSTALLD("AUPN*99.1*16") S XPDQUIT=2
@@ -87,29 +87,10 @@ INSTALLD(ACHS) ;EP; Determine if patch ACHS was installed, where ACHS is
 INTROE ; Intro text during KIDS Environment check.
  ;;In this distribution:
  ;;(1)Modifications: 
- ;;    1. Denial changes
- ;;       a. displaying reasons and options
- ;;       b. selecting multiple denial reasons
- ;;       c. displaying the selected reasons and options
- ;;    2. Changed the naming convention for the facility export file.
- ;;       Facilities will be able to export more then 1 file a day.
- ;;              Example: ACHS505201.20100101_091240                      
- ;;    3. Addition of the vendor fax number to the edit a vendor option,
- ;;       and printing the fax number on the PO.
- ;;    4. Modification to the Pay option for Tribal sites using the FI, when Paying
- ;;       manually they will be prompted for EOBR information.
- ;;    5. Modifcation to the Programmer's option to set documents in the print queue
- ;;       Documents will now be selected by FY and Beginning and ending PO number.
- ;;    6. Miscellaneous changes
- ;;       a. E-sig and Signed E-sig report to include Blanket PO
- ;;       b. GAO report problem with variables resetting after running
- ;;          report
- ;;       c. Eligibility report modified to test for undefined
- ;;          patient's in DPT
- ;;       d. GPRA report modified for slave printing
- ;;       e. PO laser print changes for Penobscot
- ;;       f. Tucson changes for UFMS and FI database identification
- ;;       g. S Ute modifications for FI processing
+ ;;    1. ACHSRPFU,ACHSRPF,ACHSRPF1 - Routines for using the GUI
+ ;;       formless printing.
+ ;;    2. ACHSRPU - Fixed the document number printing.
+ ;;    3. ACHSMERG - Added entry point for patient merge.
  ;;
  ;;###
  ;

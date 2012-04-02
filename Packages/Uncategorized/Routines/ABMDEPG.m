@@ -1,5 +1,5 @@
 ABMDEPG ; IHS/ASDST/DMJ - EDIT PAGE SELECTION ; 
- ;;2.6;IHS Third Party Billing;**1,6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,6,8**;NOV 12, 2009
  ;
  ;IHS/DSD/MRS - 8/19/1999 - NOIS QBA-0299-130064 Patch 3 #10
  ;    Modified jump variable to remove illegal spaces.A space is used
@@ -77,6 +77,7 @@ JUMP ;EP for Jumping to a Page
  .S ABMP("SCRN")=$S(X="J3B"&(ABMP("PAGE")[",32,"):"32",1:$E(X,2))  ;abm*2.6*6 5010
  .S ABM("EX")=$P($T(@ABM("EX")),$E(X,3)_$E(X,2)_" ",2)
  .S X=$E(X,2,3)
- .I $P($G(^ABMDEXP(ABMP("EXP"),0)),U)["ADA",(X'["F"),(X["9") S ABM("EX")=";;",ABMP("SCRN")=0
+ .;I $P($G(^ABMDEXP(ABMP("EXP"),0)),U)["ADA",(X'["F"),(X["9") S ABM("EX")=";;",ABMP("SCRN")=0  ;ABM*2.6*8 NOHEAT
+ .I $P($G(^ABMDEXP(ABMP("EXP"),0)),U)["ADA",((X'["F")&(X'["G")),(X["9") S ABM("EX")=";;",ABMP("SCRN")=0  ;ABM*2.6*8 NOHEAT
  .X ABM("EX")
  Q

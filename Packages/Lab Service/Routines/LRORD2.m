@@ -1,8 +1,11 @@
-LRORD2 ;SLC/CJS - MORE OF LAZY ACCESSION LOGGING ;8/11/97 [ 04/09/2003  8:55 AM ]
- ;;5.2T9;LR;**1010,1018**;Nov 17, 2004
+LRORD2 ;VA/SLC/CJS - MORE OF LAZY ACCESSION LOGGING ;8/11/97 [ 04/09/2003  8:55 AM ]
+ ;;5.2;LR;**1010,1018,1030**;NOV 01, 1997
  ;;5.2;LAB SERVICE;**121,153**;Sep 27, 1994
 MORE ;get more tests, from LRORD1
-LRM F LRSSX=LRM:1 D Q15,^DIC Q:Y<1  S LRWPC=LRWPC+1,LRTSTS=+Y,LRTX(LRTSTS)="",LRURGG=$P(Y(0),U,18) D ENQ K DIC("S") D GS^LRORD3 I LRSAMP>0&(LRSPEC>0) D Q20 S:'LREND LRM=LRM+1 I LREND K LRSAME Q
+LRM ; F LRSSX=LRM:1 D Q15,^DIC  Q:Y<1  S LRWPC=LRWPC+1,LRTSTS=+Y,LRTX(LRTSTS)="",LRURGG=$P(Y(0),U,18) D ENQ K DIC("S") D GS^LRORD3 I LRSAMP>0&(LRSPEC>0) D Q20 S:'LREND LRM=LRM+1 I LREND K LRSAME Q
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030 -- S:Y<1 %=1 corrects an issue at Q14^LRORD1
+ F LRSSX=LRM:1 D Q15,^DIC  S:Y<1 %=1  Q:Y<1  S LRWPC=LRWPC+1,LRTSTS=+Y,LRTX(LRTSTS)="",LRURGG=$P(Y(0),U,18) D ENQ K DIC("S") D GS^LRORD3  I LRSAMP>0&(LRSPEC>0) D Q20 S:'LREND LRM=LRM+1  I LREND K LRSAME Q
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030
  K LRSAME Q
 ENQ Q:$D(LRLABKY)  S DIC="^LAB(60,",DA=LRTSTS,DR=6 D EN^DIQ Q
 Q15 ;from LRORD
@@ -13,7 +16,8 @@ Q15 ;from LRORD
 Q20 ;
  ;S LREND=0,Z=0 F  S Z=$O(LROT(LRSAMP,LRSPEC,Z)) Q:Z<1  I +LROT(LRSAMP,LRSPEC,Z)=LRTSTS W !!?20," ~ ",$P(^LAB(60,LRTSTS,0),U),"   ",$S($D(^LAB(62,LRSAMP,0)):$P(^(0),U),1:""),"   ",$S($D(^LAB(61,LRSPEC,0)):$P(^(0),U),1:"")," ~" D DUP^LRORD2 H 2
  ;----- BEGIN IHS MODIFICATION LR*5.2*1018
- S LREND=0,Z=0 F  S Z=$O(LROT(LRSAMP,LRSPEC,Z)) Q:Z<1  I +LROT(LRSAMP,LRSPEC,Z)=LRTSTS W:'$G(BLRGUI) !!?20," ~ ",$P(^LAB(60,LRTSTS,0),U),"   ",$S($D(^LAB(62,LRSAMP,0)):$P(^(0),U),1:""),"   ",$S($D(^LAB(61,LRSPEC,0)):$P(^(0),U),1:"")," ~" D DUP^LRORD2 H 2
+ S LREND=0,Z=0
+ F  S Z=$O(LROT(LRSAMP,LRSPEC,Z)) Q:Z<1  I +LROT(LRSAMP,LRSPEC,Z)=LRTSTS W:'$G(BLRGUI) !!?20," ~ ",$P(^LAB(60,LRTSTS,0),U),"   ",$S($D(^LAB(62,LRSAMP,0)):$P(^(0),U),1:""),"   ",$S($D(^LAB(61,LRSPEC,0)):$P(^(0),U),1:"")," ~" D DUP^LRORD2 H 2
  ;----- END IHS MODIFICATION
  Q:LREND
  S LROT(LRSAMP,LRSPEC,LRSSX)=LRTSTS,LREXP=$S($P($G(^LAB(60,LRTSTS,3,+$O(^LAB(60,LRTSTS,3,"B",+LRSAMP,0)),0)),U,6):$P(^(0),U,6),$P(^LAB(60,LRTSTS,0),U,19):$P(^(0),U,19),1:0)
@@ -58,7 +62,12 @@ ZQ S X=$S(LRCCOM="??":"??",1:"?"),(DIE,DIC)="^LAB(62.5,",DIC(0)="Q",DIC("S")="I 
 GCOM ;from LRORD1, LRPHITEM, LRTSTJAN, LRWU1
  S LREXP=0 D RCOM S LRGCOM=LRCCOM Q
 DUP ;from LRORDD
- I '$G(BLRGUI),LRTSTS=+LROT(LRSAMP,LRSPEC,Z) W !,"Since this test, collection sample, and site/specimen has already",!,"been requested on this order, it will NOT be duplicated.",$C(7),!,"If you really need a duplicate, place a separate order." S LREND=1
+ ;I '$G(BLRGUI),LRTSTS=+LROT(LRSAMP,LRSPEC,Z) W !,"Since this test, collection sample, and site/specimen has already",!,"been requested on this order, it will NOT be duplicated.",$C(7),!,"If you really need a duplicate, place a separate order." S LREND=1
+ I '$G(BLRGUI),LRTSTS=+LROT(LRSAMP,LRSPEC,Z) D
+ . W !,"Since this test, collection sample, and site/specimen has already",!
+ . W "been requested on this order, it will NOT be duplicated.",$C(7),!
+ . W "If you really need a duplicate, place a separate order."
+ . S LREND=1
  I $G(BLRGUI),LRTSTS=+LROT(LRSAMP,LRSPEC,Z) S LREND=1  ;NEW LINE FOR LR*5.2*1018 PATIENT CHART
  Q
 TCOM(TEST,COM) ;Get comments by test

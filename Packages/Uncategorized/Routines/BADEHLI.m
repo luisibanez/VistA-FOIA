@@ -1,8 +1,11 @@
 BADEHLI ;IHS/MSC/MGH/PLS - Insurance or Dental Interface ;08-May-2009 20:54;PLS
- ;;1.0;DENTAL/EDR INTERFACE;;Oct 13, 2009
- ;==================================================================;
+ ;;1.0;DENTAL/EDR INTERFACE;**1**;AUG 22, 2011
+ ;; Modified IHS/MSC/AMF 11/23/10 More descriptive alert messages, N for BHS variables
+ ;=====================================================================================;
 INS ;Entry point - Create the Insurance segment
  N CNT,INSARRAY,DGNAME,IN1,IN2
+ ;IHS/MSC/AMF 1/4/2011 Newed BHS variables
+ N BHSCOV,BHSDTL,BHSDTN,BHSDTS,BHSEDN,BHSI,BHSIDN,BHSINS,BHSITB,BHSJ,BHSN,BHSNM,BHSP,BHSPDN,BHSUFF,BHSXDT,BHSQ
  S CNT=0
  D MAID,MCARE,THIRD,RR
  I 'CNT D
@@ -64,6 +67,7 @@ DMAID ;
  I $L(POLICY) D
  .D SET^BADEHL1(.ARY,$P(POLICY,U,9),19,1)  ; Street Address
  .D SET^BADEHL1(.ARY,$P(POLICY,U,11),19,3) ; City
+ .S BADEPOLP=$P(POLICY,U,12)  ;SAIC/FJE FIX STATE POINTER 08/22/2011
  .D SET^BADEHL1(.ARY,$$GET1^DIQ(5,$$GET1^DIQ(9000003.1,+BADEPOLP,.12,"I"),1),19,4)  ; State Abbrev
  .D SET^BADEHL1(.ARY,$P(POLICY,U,13),19,5)  ; Zip
  ; IN1-36 is left blank
@@ -71,7 +75,7 @@ DMAID ;
  D SET^BADEHL1(.ARY,$P(BHSNM,U,3),47)  ;Coverage Type
  D SET^BADEHL1(.ARY,$P(BHSN,U,3),49) ; Insured's Medicaid ID number
  S IN1=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF^BADEHL1(DFN,"Medicaid segment could not be created")
+ I $D(ERR) D NOTIF^BADEHL1(DFN,"Can't create IN1. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  ;Setup the IN2 segment
  D IN2(INSCO,POLICY,$P(BHSN,U,3))
  Q
@@ -129,7 +133,7 @@ DMCARE ;
  D SET^BADEHL1(.ARY,$P(BHSNM,U,3),47)  ;Coverage Type
  D SET^BADEHL1(.ARY,$P(BHSN,U,3),49)  ; Insured's Medicare ID Number
  S IN1=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF^BADEHL1(DFN,"Medicare segment could not be created")
+ I $D(ERR) D NOTIF^BADEHL1(DFN,"Can't create Medicaid IN1. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  D IN2(INSCO,"")
  K BHSXDT,BHSNM
  Q
@@ -205,7 +209,7 @@ DTHIRD ;Private insurance data
  D SET^BADEHL1(.ARY,$$GET1^DIQ(9000003.1,+BADEPOLP,.05),47)  ;Coverage Type
  ;D SET^BADEHL1(.ARY,$P(POLICY,U,4),49)     ;Insured's ID number
  S IN1=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF^BADEHL1(DFN,"Insurance segment could not be created")
+ I $D(ERR) D NOTIF^BADEHL1(DFN,"Can't create IN1. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  ;Do IN2 segment
  D IN2(INSCO,POLICY)
  Q
@@ -270,7 +274,7 @@ DRR ;
  D SET^BADEHL1(.ARY,$P(BHSNM,U,3),47)  ; Coverage Type
  D SET^BADEHL1(.ARY,$S(BHSCTYP="D":$P(BHSNM,U,6),1:BHSPFX_$P(BHSN,U,4)),49)  ; ID Number
  S IN1=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF^BADEHL1(DFN,"Railroad insurance could not be created")
+ I $D(ERR) D NOTIF^BADEHL1(DFN,"Can't create Railroad IN1. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  ;Setup the IN2 segment
  D IN2(INSCO,"")
  K BHSNM,BHSXDT
@@ -320,18 +324,18 @@ IN2(INSCO,POLICY,CASENUM) ;Do the IN2 Segment
  E  S DENI="DN"
  D SET^BADEHL1(.ARY,DENI,59)
  S IN2=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF^BADEHL1(DFN,"Insurance segment 2 could not be created")
+ I $D(ERR) D NOTIF^BADEHL1(DFN,"Can't create IN2. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
  ;
 CRTNULL ; Creates empty IN1/IN2
  D SET^BADEHL1(.ARY,"IN1",0)
  D SET^BADEHL1(.ARY,1,1)
  S IN1=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF^BADEHL1(DFN,"Insurance segment could not be created")  Q
+ I $D(ERR) D NOTIF^BADEHL1(DFN,"Can't create IN1. "_ERR) Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  D SET^BADEHL1(.ARY,"IN2",0)
  D SET^BADEHL1(.ARY,1,1)
  S IN2=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF^BADEHL1(DFN,"Insurance segment 2 could not be created")
+ I $D(ERR) D NOTIF^BADEHL1(DFN,"Can't create IN2. "_ERR) Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
  ; Return HL7 formed patient address
 PTADDR(DFN) ;EP

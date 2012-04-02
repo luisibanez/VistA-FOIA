@@ -1,5 +1,5 @@
 ABMDFUTL ; IHS/ASDST/DMJ - Export Forms Utility ;     
- ;;2.6;IHS Third Party Billing System;**2,6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**2,6,8**;NOV 12, 2009
  ;Original;TMD;
  ;
  ; IHS/ASDS/DMJ - 05/15/00 - V2.4 Patch 1 - NOIS HQW-0500-100032
@@ -143,7 +143,7 @@ K24N(X) ;EP - get payer assigned number (x=provider file 200 ien)
  .D PIREFID^ABME8L2
  .S:$G(ABMPQ)="" ABMPQ=ABMIDCD
  S:$G(ABMPQ)="" ABMPQ="G2"
- S Y=$S(ABMP("EXP")=27&($G(Y)'=""):$G(ABMPQ),1:"")_Y K ABMPQ
+ ;S Y=$S(ABMP("EXP")=27&($G(Y)'=""):$G(ABMPQ),1:"")_Y K ABMPQ  ;abm*2.6*8 HEAT31586
  Q Y
 F54() ;EP - flag 54 HCFA BOX 33
  I $G(ABMP("ITYPE"))="K" Q 1

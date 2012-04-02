@@ -1,5 +1,5 @@
 BDGAD3 ; IHS/ANMC/LJF - A&D SERV TRANSFERS ;  [ 04/16/2004  4:39 PM ]
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1013**;APR 26, 2002
  ;
 LOOP ;--loop service transfers
  NEW DGDT,DFN,IFN
@@ -17,6 +17,7 @@ GATHER ; gather info on service transfers and put counts into arrays
  I IFN=$$ADMTXN^BDGF1(ADM,DFN) Q               ;don't use admit service
  S ADULT=$S($$AGE<$$ADULT^BDGPAR:0,1:1)        ;1=adult, 0=peds
  ;
+ Q:'+$$PRIORTXN^BDGF1(DGDT,ADM,DFN)  ;ihs/cmi/maw 10/29/2010 patch 1014
  S OLDSV=$P(^DGPM(+$$PRIORTXN^BDGF1(DGDT,ADM,DFN),0),U,9)  ;old srv
  I +OLDSV=0 W !,DFN_"    "_ADM
  S X=$O(^DGPM("AMV6",DGDT,DFN,0)) Q:'X

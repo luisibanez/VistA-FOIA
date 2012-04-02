@@ -1,5 +1,5 @@
 BIDUPLT ;IHS/CMI/MWR - BI PRINT LETTERS.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  PRINT PATIENT LETTERS.
  ;
@@ -20,6 +20,7 @@ PRINTDUE ;EP
  ;     9 - BILOT  (req) Lot Number array.
  ;    10 - BIORD  (req) Order of listing.
  ;    11 - BIRDT  (opt) Date Range for Received Imms (form BEGDATE:ENDDATE).
+ ;    12 - BIBEN  (req) Beneficiary Type array: either BIBEN(1) or BIBEN("ALL").
  ;
  ;---> Check for required Variables.
  I '$D(BIAG) D ERROR(613) Q
@@ -32,6 +33,7 @@ PRINTDUE ;EP
  I '$D(BIHCF) D ERROR(625) Q
  I '$D(BILOT) D ERROR(630) Q
  I '$G(BIORD) D ERROR(618) Q
+ I '$D(BIBEN) S BIBEN(1)=""
  ;
  S BIPOP=0
  ;
@@ -68,7 +70,7 @@ RETRIEVE(BIT,BIERR) ;EP
  ;     2 - BIERR (ret) If error, return Error#.
  ;
  ;  vvv83
- D R^BIDUR(BIAG,BIPG,BIFDT,.BICC,.BICM,.BIMMR,.BIMMD,.BILOT,BIMD,BIORD,$G(BIRDT),,.BIT,.BIHCF,.BIDPRV,.BIERR)
+ D R^BIDUR(BIAG,BIPG,BIFDT,.BICC,.BICM,.BIMMR,.BIMMD,.BILOT,BIMD,BIORD,$G(BIRDT),,.BIT,.BIHCF,.BIDPRV,.BIERR,.BIBEN)
  Q
  ;
  ;

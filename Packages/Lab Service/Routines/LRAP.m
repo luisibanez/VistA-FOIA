@@ -1,34 +1,33 @@
-LRAP ;AVAMC/REG/WTY - ANATOMIC PATH UTILITY ;9/25/00
- ;;5.2T9;LR;**72,248,1018**;Nov 17, 2004
- ;
- ;Reference to ^DIC(4 supported by IA #10090
- ;Reference to ^DIC supported by IA #10006
- ;Reference to ^DIE supported by IA #10018
- ;Reference to EN^DDIOL supported by IA #10142
+LRAP ;AVAMC/REG/WTY - ANATOMIC PATH UTILITY ;10/23/01
+ ;;5.2;LAB SERVICE;**1030**;NOV 01, 1997
+ ;;5.2;LAB SERVICE;**72,248,259**;Sep 27, 1994
  ;
  ;called by many routines in AP package
  D END,CK G:Y=-1 END D LRDICS G:Y B
- S DIC=68,DIC(0)="AEOQMZ",DIC("A")="Select ANATOMIC PATHOLOGY SECTION: ",DIC("S")="I LRDICS[$P(^(0),U,2),$P(^(0),U,2)]"""",$G(^(3,DUZ(2),0))" D ^DIC K DIC,LRDICS G:Y<1 END
+ S DIC=68,DIC(0)="AEOQMZ"
+ S DIC("A")="Select ANATOMIC PATHOLOGY SECTION: "
+ S DIC("S")="I LRDICS[$P(^(0),U,2),$P(^(0),U,2)]"""",$G(^(3,DUZ(2),0))"
+ D ^DIC K DIC,LRDICS G:Y<1 END
 B S X=$P(Y,U,2) D ^LRUTL G:Y=-1 END Q
 AU ;log-in autopsy
  Q  ;see routine LRAUAW
 CY ;log-in cytopath
  S (LRMD,LRSIT)=""
  S DR=".06///"_LRAC_";.08///"_$S(LRLLOC["?":"UNKNOWN",1:LRLLOC)
- S DR=DR_";.07;D:X P^LRUA;.011//^S X=LRMD;.012;.1//NOW"
+ S DR=DR_";.07;D:X P^LRUA;.011//^S X=LRPRAC(1);.012;.1//NOW"
  S DR=DR_";S LRRC=X;.02;.99;S LRC(5)=X;1"
  S DR(2,63.902)=".01;S LR(63.902)=X;S:'LRCAPA Y=0;.02//^S X=LR(63.902)"
  Q
 EM ;log-in electron microscopy
  S (LRMD,LRSIT)=""
  S DR=".06///"_LRAC_";.08///"_$S(LRLLOC["?":"UNKNOWN",1:LRLLOC)
- S DR=DR_";.07;D:X P^LRUA;.011//^S X=LRMD;.012;.1//NOW;S LRRC=X"
+ S DR=DR_";.07;D:X P^LRUA;.011//^S X=LRPRAC(1);.012;.1//NOW;S LRRC=X"
  S DR=DR_";.02;.021;.99;S LRC(5)=X",DR(2,63.202)=.01
  Q
 SP ;log-in surg path
  S LR("FS")=+$G(^LAB(69.9,1,11)),(LRMD,LRSIT)=""
  S DR=".06///"_LRAC_";.08///"_$S(LRLLOC["?":"UNKNOWN",1:LRLLOC)
- S DR=DR_";.07//^S X=LR(.07);D:X P^LRUA;.011//^S X=LRMD;.012;.1//NOW"
+ S DR=DR_";.07//^S X=LR(.07);D:X P^LRUA;.011//^S X=LRPRAC(1);.012;.1//NOW"
  S DR=DR_";S LRRC=X;.02;.99;S LRC(5)=X;S:'LR(""FS"") Y=0;1.3"
  S DR(2,63.812)=.01
  S:LRABV'["SP" LR("FS")=""

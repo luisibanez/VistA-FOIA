@@ -1,7 +1,6 @@
-DIDT ;SFISC/XAK-DATE/TIME UTILITY ;12:45 PM  25 Apr 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**14,35**;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DIDT ;SFISC/XAK-DATE/TIME UTILITY ;31AUG2009
+ ;;22.0;VA FileMan;**14,35,162**;Mar 30, 1999;Build 21
+ ;Per VHA Directive 2004-038, this routine should not be modified
 %DT ;
  I $G(DUZ("LANG"))>1,($G(^DI(.85,DUZ("LANG"),20.2))]"") X ^(20.2) Q
 CONT ;
@@ -11,7 +10,7 @@ CONT ;
  I $D(%DT("B")),X="" S X=%DT("B")
  I "^"[X S Y=-1 K %I,% Q
 NA S %(0)=X G 1:X'?.ANP,1:$P(X,"@")?15.N,1:$P(X,"@",2)?15.N,1:$L(X)>39
- F %=1:1:$L(X) Q:X?.UNP  S Y=$E(X,%) I Y?1L S X=$E(X,1,%-1)_$C($A(Y)-32)_$E(X,%+1,99)
+ F %=1:1:$L(X) Q:X?.UNP  S Y=$E(X,%) I Y?1L S X=$E(X,1,%-1)_$C($A(Y)-32)_$E(X,%+1,99) ;UPPER CASE
  I %DT["E",X?."?" D HELP^%DTC G B
  I %DT["N",X?.N G NO
  I X?1.A,(X["MID"!(X["NOON")) S X="@"_X
@@ -25,7 +24,7 @@ NA S %(0)=X G 1:X'?.ANP,1:$P(X,"@")?15.N,1:$P(X,"@",2)?15.N,1:$L(X)>39
  F %=2,3 S %I=$P(Y,":",%) I %I?1N.E,%I'?2N.PA G 1
  S:X="" X="T" S Y=$P(Y,":")_$P(Y,":",2)_$P(Y,":",3,9),%I=Y
  I Y?1.A S Y=$S(Y["MID":2400,Y["NOON":1200,1:"")
- G G:Y?4N,G1:Y?6N&(%DT["S"),1:Y'?1.N." ".1(1"AM",1"A",1"A.M",1"PM",1"P",1"P.M").P I %DT["R",Y="" G NO
+T G G:Y?4N,G1:Y?6N&(%DT["S"),1:Y'?1.6N." ".1(1"AM",1"A",1"A.M",1"PM",1"P",1"P.M").P I %DT["R",Y="" G NO
  S %I=$P(1_%I,+(1_Y),2) S:%I]"" Y=$P(Y,%I)
  I Y?5.6N G:%DT'["S" 1 S %(3)=$E(Y,$L(Y)-1,$L(Y)),Y=$E(Y,1,$L(Y)-2) G 1:%(3)>59
  I Y?1.2N G:Y'<13 1 S Y=Y_"00"
@@ -89,7 +88,7 @@ Z I $P("NOW",%(0))="" S %=Y
  E  D NOW^%DTC
  S:%DT(0)["-" %=-% Q
 DD I $G(DUZ("LANG"))>1 S Y=$$OUT^DIALOGU(Y,"DD") Q
- Q:'Y  S Y=$S($E(Y,4,5):$P($T(M)," ",$E(Y,4,5)+2)_" ",1:"")_$S($E(Y,6,7):$E(Y,6,7)_", ",1:"")_($E(Y,1,3)+1700)_$S(Y[".":"."_$P(Y,".",2),1:"")
+ Q:'Y  S Y=$S($E(Y,4,5):$E($P($T(M)," ",$E(Y,4,5)+2),1,3)_" ",1:"")_$S($E(Y,6,7):$E(Y,6,7)_", ",1:"")_($E(Y,1,3)+1700)_$S(Y[".":"."_$P(Y,".",2),1:"")
  I Y["." S Y=$P(Y,".")_"@"_$E(Y_0,14,15)_":"_$E(Y_"000",16,17)_$S($E(Y,18,19):":"_$E(Y_0,18,19),1:"")
  I $D(%DT)#2,%DT["S",Y["@",$P(Y,":",3)="" S Y=Y_":00"
  Q
@@ -99,7 +98,7 @@ MTH S %=X D % G:%I>3 1
  D TY S %I(3)=% D:$D(%(9)) PF^%DTC
  G D
 % I %DT["I",%?3.A S %I=9 Q
- I %?3.A S %=$F($T(M),$E(%,1,3))-4\4 I %>0,%I=1 D
- . N T S T=%I(1),%I(1)=%,%=T
+ I %?3.A S %=$F($T(M)," "_%) I %>0 S %=$L($E($T(M),6,%-1)," ") D:%I=1  S %("ALPHA")=1 ;ONLY MONTH IS ALPHA
+ . N T S T=%I(1),%I(1)=%,%=T I $D(%("ALPHA")) S %I=9
  S:%<1&(%'="00")&(%I'=2) %I=9 S %I=%I+1,%I(%I)=%,%=""
-M ;; JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC
+M ;; JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER

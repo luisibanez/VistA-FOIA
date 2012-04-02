@@ -1,9 +1,10 @@
 BPMXDRV ;IHS/PHXAO/AEF - PATIENT MERGE SPECIAL ROUTINES DRIVER
- ;;1.0;IHS PATIENT MERGE;;MAR 01, 2010
+ ;;1.0;IHS PATIENT MERGE;**1**;JUL 12, 2011
  ;IHS/OIT/LJF 10/26/2006 routine originated from Phoenix Area Office
  ;                       changed namespace from BZXM to BPM
  ;                       changed names of speical merge routines
  ;                       added check for REPOINT DELETED VISITS parameter
+ ;IHS/DIT/ENM 08/20/10 EDR MODS ADDED BELOW
  ;;
 DESC ;;----- ROUTINE DESCRIPTION
  ;;
@@ -69,4 +70,14 @@ EN(BPMRY) ;EP
  ;IHS/DIT/ENM 02/23/10
  ;MERGE MPI DATA (Calls ^AGMPIHLO
  S X="AGMPIHLO" X ^%ZOSF("TEST") I $T D NEWMSG^AGMPIHLO(BPMRY)
+ ;
+ ;IHS/DIT/ENM 08/20/10 next 7 lines sent by FJ for the EDR project
+ ;Added for support of GENERIC merge trigger to subscribing applications fje 8/13/10
+ ;S X="BADEMRG" X ^%ZOSF("TEST") I $T D THIS LINE IS NOT NEEDED
+ S BPMFR=$O(@BPMRY@(0))
+ Q:'BPMFR
+ S BPMTO=$O(@BPMRY@(BPMFR,0))
+ Q:'BPMTO
+ S X="BPM MERGE PATIENT ADT-A40",DIC=101,DFNFROM=+BPMFR,DFNTO=+BPMTO
+ D EN^XQOR
  Q

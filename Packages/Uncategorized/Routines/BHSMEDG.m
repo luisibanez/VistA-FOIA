@@ -1,5 +1,5 @@
-BHSMEDG ;IHS/CIA/MGH - Health Summary for V MED file ;11-Feb-2009 14:52;MGH
- ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2**;March 17, 2006
+BHSMEDG ;IHS/CIA/MGH - Health Summary for V MED file ;02-Aug-2011 17:08;MGH
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,6**;March 17, 2006;Build 5
  ;===================================================================
  ;Taken from APCHS71
  ; IHS/TUCSON/LAB - PART 7 OF APCHS -- SUMMARY PRODUCTION COMPONENTS ;  [ 01/20/04  8:46 PM ]
@@ -8,6 +8,7 @@ BHSMEDG ;IHS/CIA/MGH - Health Summary for V MED file ;11-Feb-2009 14:52;MGH
  ;Routine to disiplay component for meds which is sorted by group
  ;Patch 1 changes prescribed at to dispensed at as in IHS patch 15
  ;Patch 2 changes for patch 16
+ ;Patch 6 - Updates for non-VA meds and med review
  ;====================================================================
 MEDS ;EP - called from component -  <SETUP>
  N BHSPAT,X,Y,Z
@@ -23,6 +24,8 @@ MEDS ;EP - called from component -  <SETUP>
  Q:$D(GMTSQIT)
  ;Patch 2 refusals
  S BHST="MEDICATION",BHSFN=50 D DISPREF^BHSRAD
+ ;Patch 6
+ D MEDRU^BHSMED  ;display last date reviewed/updated/nam
  K BHST,BHSFN
 MEDX ;
  K ^TMP($J,"BHSAOM"),^TMP($J,"BHSBCM"),^TMP("BHSMEDS",$J)
@@ -75,6 +78,18 @@ OTH ;gather up all others by date range in components, get last of each
  ..S ^TMP($J,"BHSAOM",$P(^AUPNVMED(X,0),U))=X
  ..Q
  .Q
+ ;NOW MERGE IN NON VA MEDS FROM PS(55
+NONVA ; S DFN=APCHSPAT,PSOACT=1 D ^PSOHCSUM
+ ;quit if chronic
+ S X=0 F  S X=$O(^PS(55,BHSPAT,"NVA",X)) Q:X'=+X  D
+ .I $P($G(^PS(55,BHSPAT,"NVA",X,999999911)),U,1),$D(^AUPNVMED($P(^PS(55,BHSPAT,"NVA",X,999999911),U,1),0)) Q
+ .S L=$P($P($G(^PS(55,BHSPAT,"NVA",X,0)),U,10),".")
+ .S L=9999999-L
+ .Q:L>GMTSDLM
+ .S D=$P(^PS(55,BHSPAT,"NVA",X,0),U,2)  ;DRUG
+ .I D="" S D="NO DRUG IEN"
+ .S N=$S(D:$P(^PSDRUG(D,0),U,1),1:$P(^PS(50.7,$P(^PS(55,BHSPAT,"NVA",X,0),U,1),0),U,1))  ;NAME
+ .S ^TMP($J,"BHSAOM",$S(D:D,1:N))=U_$P(^PS(55,BHSPAT,"NVA",X,0),U,6)_U_N_U_$P(^PS(55,BHSPAT,"NVA",X,0),U,4)_" "_$P(^PS(55,BHSPAT,"NVA",X,0),U,5)_U_$P(^PS(55,BHSPAT,"NVA",X,0),U,7)_U_(9999999-L)_U_$S(D:$P(^PSDRUG(D,0),U,1),1:N)
 REORDER ;
  ;reorder by NDC or by name
  NEW I,N,O,S,M S (C,I)=0 F  S I=$O(^TMP($J,"BHSBCM",I)) Q:I'=+I  S C=C+1,N=$$VAL^XBDIQ1(50,I,25),O="ZZZ-"_$$VAL^XBDIQ1(50,I,.01) S S=$S(N]"":N,1:O),M(S,C)=^TMP($J,"BHSBCM",I)

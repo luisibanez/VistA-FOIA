@@ -1,12 +1,11 @@
 BIDUR ;IHS/CMI/MWR - RETRIEVE PATIENTS.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  RETRIEVE PATIENTS FOR DUE LISTS & LETTERS.
- ;;  PATCH 1: Defines Age Range Dates for Search Template List.  SEARCH+12
  ;
  ;
  ;----------
-R(BIAG,BIPG,BIFDT,BICC,BICM,BIMMR,BIMMD,BILOT,BIMD,BIORD,BIRDT,BIDED,BIT,BIHCF,BIDPRV,BIERR) ;EP
+R(BIAG,BIPG,BIFDT,BICC,BICM,BIMMR,BIMMD,BILOT,BIMD,BIORD,BIRDT,BIDED,BIT,BIHCF,BIDPRV,BIERR,BIBEN) ;EP
  ;---> Retrieve patients according to specs.
  ;---> Parameters:
  ;     1 - BIAG   (req) Age Range in months or years.
@@ -25,6 +24,7 @@ R(BIAG,BIPG,BIFDT,BICC,BICM,BIMMR,BIMMD,BILOT,BIMD,BIORD,BIRDT,BIDED,BIT,BIHCF,B
  ;    14 - BIHCF  (req) Health Care Facility array.
  ;    15 - BIDPRV (req) Designated Provider array.
  ;    16 - BIERR  (ret) Error Code.
+ ;    17 - BIBEN  (req) Beneficiary Type array: either BIBEN(1) or BIBEN("ALL").
  ;
  ;     Removed for v8.1: 8 - BIHCF (req) Health Care Facility array.
  ;
@@ -47,6 +47,7 @@ R(BIAG,BIPG,BIFDT,BICC,BICM,BIMMR,BIMMD,BILOT,BIMD,BIORD,BIRDT,BIDED,BIT,BIHCF,B
  I '$D(BILOT) S BIERR=630 Q
  I '$D(BIMD) S BIERR=617 Q
  I '$G(BIORD) S BIERR=618 Q
+ I '$D(BIBEN) S BIERR=662 Q
  ;
  ;---> Parse out BIPG.  vvv83
  N I F I=1,2,4,5,7,8 N @("BIPG"_I) S @("BIPG"_I)=$P(BIPG,U,I)
@@ -140,6 +141,9 @@ CHKSET(BIDFN,BIPG1,BIPG2,BIPG4,BIPG5,BIT) ;EP
  ;
  ;---> Quit if Case Manager isn't one of those selected.
  Q:$$CMGR(BIDFN,.BICM)
+ ;
+ ;---> Quit if Beneficiary Type doesn't match.
+ Q:$$BENT^BIDUR1(BIDFN,.BIBEN)
  ;
  ;---> Quit if Designated Provider isn't one of those selected.
  Q:$$DPRV(BIDFN,.BIDPRV)

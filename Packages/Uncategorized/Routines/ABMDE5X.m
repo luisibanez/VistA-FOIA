@@ -1,5 +1,5 @@
 ABMDE5X ; IHS/ASDST/DMJ - Edit Page 5 - ERROR CHK ;
- ;;2.6;IHS Third Party Billing System;**3**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**3,8**;NOV 12, 2009
  ;
  ; IHS/SD/SDR - v2.5 p13 - POA changes
  ;   Added check for error 231
@@ -17,7 +17,8 @@ A ;EP
  F  S ABMX("PRI")=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMX("PRI"))) Q:ABMX("PRI")=""  S ABMX=$O(^(ABMX("PRI"),"")) D
  .S ABMX("X0")=$G(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,ABMX,0))
  .I $P($G(^ABMDPARM(ABMP("LDFN"),1,2)),U,13)="Y"&(($E(ABMP("BTYP"),1,2)=11)!($E(ABMP("BTYP"),1,2)="12")) D
- ..Q:(ABMP("EXP")'=28)&(ABMP("EXP")'=21)  ;UB04 and 837I only
+ ..;Q:(ABMP("EXP")'=28)&(ABMP("EXP")'=21)  ;UB04 and 837I only  ;abm*2.6*8 5010
+ ..Q:(ABMP("EXP")'=28)&(ABMP("EXP")'=21)&(ABMP("EXP")'=31)  ;UB04 and 837I only  ;abm*2.6*8 5010
  ..Q:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),6)),U,3)<3071001  ;discharge date prior to 10/1/07; req'd after that
  ..Q:$P(ABMX("X0"),U,5)'=""  ;has POA
  ..;Q:+$G(ABMMCRA)'=1  ;quit if not Medicare  ;abm*2.6*3 HEAT7670
@@ -29,6 +30,7 @@ A1 S ABMX("X0")=^ABMDCLM(DUZ(2),ABMP("CDFN"),17,ABMX,0)
  I $P(ABMX("X0"),U,3)="" S ABME(162)=""
  E  I '$D(^AUTNPOV($P(ABMX("X0"),U,3),0)) S ABME(162)=""
  S ABMX(ABMX)=""
+ I ABMP("EXP")=31,$P(ABMX("X0"),U,5)=1 S ABME(240)=""  ;abm*2.6*8 5010
  I ABMX("I")'=0 Q
  I $E($P($$DX^ABMCVAPI(+ABMX("X0"),ABMP("VDT")),U,2),1)="V" S ABME(154)=""  ;CSV-c
  I $E($P($$DX^ABMCVAPI(+ABMX("X0"),ABMP("VDT")),U,2),1)="E" S ABME(158)=""  ;CSV-c

@@ -1,5 +1,5 @@
 AGED10A ; VNGT/HS/BEE - EDIT PG 10 - ETHNICITY/RACE/LANGUAGE/MIGRANT/HOMELESS/INTERNET/HOUSEHOLD INFO ; MAR 19, 2010   
- ;;7.1;PATIENT REGISTRATION;**7,8,9**;AUG 25, 2005
+ ;;7.1;PATIENT REGISTRATION;**7,8,9,10**;AUG 25, 2005;Build 7
  ;
 VAR N AG,AGI,AGY,CLLST,DFOUT,DIR,DIROUT,DLOUT,DQOUT,DTOUT,DUOUT,DIRUT,DOTS,MYERRS,MYVARS,ROUTID,Y
  ;
@@ -38,6 +38,8 @@ VAR N AG,AGI,AGY,CLLST,DFOUT,DIR,DIROUT,DLOUT,DQOUT,DTOUT,DUOUT,DIRUT,DOTS,MYERR
  ;Edit field(s)
  I $D(DQOUT)!(+Y<1)!(+Y>AG("E")) W !!,"You must enter a number from 1 to ",AG("E") H 2 D KILL G VAR
  S AGY=Y
+ ;AG*7.1*10;Added next line to stop bad user entry errors
+ I $TR(AGY,",")'?1N.N W !!,"Invalid entry - Enter a line number or line numbers separated by a ',' to edit" H 3 G VAR
  F AGI=1:1 S AG("SEL")=+$P(AGY,",",AGI) Q:AG("SEL")<1!(AG("SEL")>AG("E"))  D
  . D @(CLLST(AG("SEL")))
  D UPDATE1^AGED(DUZ(2),DFN,2,"")
@@ -58,7 +60,9 @@ DRAW ;EP
  S CALLS="ETHNIC^AGED10B,RACE^AGED10B,LANG^AGED10B,PREF^AGED10B(0),MIG,HOM,WEB^AGED1,EDEMAIL^AGED1,PERM,PREF,NIH^AGED10B,THI^AGED10B"
  S AG("PG")=10
  S AG("N")=12
- S AG("E")=12 S:AGOPT(22)="N" AG("E")=9
+ S AG("E")=12 S:AGOPT(22)="N" AG("E")=10
+ S:$G(AGOPT(26))'="Y" AG("E")=AG("E")-1
+ S:$G(AGOPT(27))'="Y" AG("E")=AG("E")-1
  S CLLST=0
  ;
  D ^AGED   ;Main editor routine - Print Header

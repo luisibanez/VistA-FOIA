@@ -1,5 +1,5 @@
 ABMDE ; IHS/ASDST/DMJ - Claim Editor Selection ;      
- ;;2.6;IHS Third Party Billing;**1,3,6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,3,6,8**;NOV 12, 2009
  ;
  ; IHS/ASDS/LSL - 08/13/2001 - V2.4 Patch 9 - NOIS HQW-0798-100082
  ;     Only check eligibility once.
@@ -105,10 +105,11 @@ SCRN ;EP - Entry Point for Detailed Claim Display
 RTN ;
  S:ABMP("SCRN")="3A" ABMP("SCRN")="31"
  S:ABMP("SCRN")="3B" ABMP("SCRN")="32"  ;abm*2.6*6 5010
+ S:ABMP("SCRN")[5 ABMP("SCRN")=5  ;abm*2.6*8
  ;I ABMP("SCRN")["9" S ABP("SCRN")="9"  ;abm*2.6*1 HEAT6439  ;abm*2.6*6
  I ABMP("SCRN")["9" S ABMP("SCRN")="9"  ;abm*2.6*1 HEAT6439  ;abm*2.6*6
  I $P($G(^ABMDEXP(ABMP("EXP"),0)),U)["837 P",(+ABMP("SCRN")["9") S ABMP("LABEL")="OPT6"  ;abm*2.6*3 HEAT10547
- I $P($G(^ABMDEXP(ABMP("EXP"),0)),U)["ADA",(+ABMP("SCRN")["9") S ABMP("LABEL")="OPT6"
+ ;I $P($G(^ABMDEXP(ABMP("EXP"),0)),U)["ADA",(+ABMP("SCRN")["9") S ABMP("LABEL")="OPT6"  ;abm*2.6*8
  S:+ABMP("SCRN")=0 ABMP("SCRN")=0
  S ABMP("RTN")=ABMP("LABEL")_"^ABMDE"_ABMP("SCRN")
  I '$G(ABMPERM("EDITOR")),($G(ABMP("SCRN"))="") G XIT

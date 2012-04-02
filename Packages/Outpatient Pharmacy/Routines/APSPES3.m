@@ -1,5 +1,5 @@
-APSPES3 ;IHS/MSC/PLS - SureScripts HL7 interface - con't;14-Oct-2009 14:37;SM
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1008**;Sep 23, 2004
+APSPES3 ;IHS/MSC/PLS - SureScripts HL7 interface - con't;03-May-2011 10:09;PLS
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1008,1011**;Sep 23, 2004;Build 17
  ; Send denial message
  ; Input:  ORID - ^OR(100 IEN
  ;        RXIEN - Prescription IEN
@@ -60,6 +60,7 @@ DENY1 N DATA,HLMSGIEN,HLMSTATE,ARY,SEG
  .N LOG,RET
  .S LOG("REASON")="X"
  .S LOG("RX REF")=0
+ .S ARY("TYPE")="U"
  .S LOG("COM")="E-Prescribe denial response sent to "_$$PHMINFO^APSPES2(RXIEN)
  .D UPTLOG^APSPFNC2(.RET,RXIEN,0,.LOG)
  Q
@@ -120,6 +121,7 @@ ACCEPT(RX,ORID,MSGTXT) ;
  .N LOG,RET
  .S LOG("REASON")="X"
  .S LOG("RX REF")=0
+ .S ARY("TYPE")="U"
  .S LOG("COM")="E-Prescribe accept response sent to "_$$PHMINFO^APSPES2(RX)
  .D UPTLOG^APSPFNC2(.RET,RX,0,.LOG)
  Q

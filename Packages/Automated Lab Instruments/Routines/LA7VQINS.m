@@ -1,10 +1,14 @@
 LA7VQINS ;VA/DALOI/DLR - LAB ORM (Order) message builder ;JUL 06, 2010 3:14 PM
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**1027**;NOV 01, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**1027**;NOV 01, 1997;Build 9
 INS(STORE,OR) ;Handle insurance
  N ORI,BDA,STR,IIEN,IPIEN,IEIEN
  S ORI=$O(^BLRRLO("B",OR,0))
  I 'ORI S ORI=$O(^BLRRLO("ACC",OR,0))
  Q:'ORI
+ I $P($G(^BLRRLO(ORI,0)),U,5)="P"!($P($G(^BLRRLO(ORI,0)),U,5)="C") D  Q
+ . S CNT=CNT+1
+ . S IN1(48)=$S($P($G(^BLRRLO(ORI,0)),U,5)="P":"P",1:"C")
+ . D IN1(.IN1)
  S BDA=0 F  S BDA=$O(^BLRRLO(ORI,2,BDA)) Q:'BDA  D
  . S STR=$G(^BLRRLO(ORI,2,BDA,0))
  . S IIEN=$P($P(STR,"~",11),",")
@@ -91,13 +95,13 @@ PI(IEN,PE,ST) ;private insurance
  S IN1(10)=$G(IN(9000003.1,IENS,.06,"E"))
  S IN1(16)=$S($G(IN(9999999.18,INS,.21,"I"))="H":"HM",1:"PI")
  S IN1(17)=$$HLNAME^HLFNC($G(IN(9000003.1,IENS,.01,"E")),LA7ECH)
- S IN1(18)=$G(IN(9000006.11,IENS,.05,"E"))
+ ;S IN1(18)=$G(IN(9000006.11,IENS,.05,"E"))
  S IN1(20)=$$ADD(9000003.1)
  S IN1(37)=$G(IN(9000003.1,IENS,.04,"E"))
  S IN1(48)=$S($G(ORD):$P($$ACCT^LA7VQINS(ORD),U,4),1:"")
  S IN1(18)=+$P($G(^AUTTRLSH(+$P($G(^AUPNPRVT(DFN,11,+PE,0)),U,5),0)),U,3)
  S IN1(18)=$S(IN1(18)=2:2,IN1(18)=1:1,IN1(18)=0:1,1:8)
- S IN1("18E")=$P($G(^AUTTRLSH(+$P($G(^AUPNPRVT(DFN,11,+PE,0)),U,5),0)),U)
+ S IN1("18E")=$S(IN1(18)=1:"SELF",IN1(18)=2:"SPOUSE",1:"OTHER")  ;$P($G(^AUTTRLSH(+$P($G(^AUPNPRVT(DFN,11,+PE,0)),U,5),0)),U)
  Q:'ST
  D IN1(.IN1)
  Q
@@ -115,8 +119,11 @@ ADD(FILE) ;
  S $P(X,$E(LA7ECH),4)=$P($G(^DIC(5,+$G(IN(FILE,$S(FILE[3:IENS,1:INS),$P(LINE,U,4),"I")),0)),U,2)
  Q X
 IN1(IN1) ;
+ ;
+ K LA7BLG(0)
  S LA7BLG(0)="IN1"_LA7FS_$G(CNT,1)
- F I=0:0 S I=$O(IN1(I)) Q:'I  S $P(LA7BLG(0),LA7FS,I)=IN1(I)
+ ;F I=0:0 S I=$O(IN1(I)) Q:'I  S $P(LA7BLG(0),LA7FS,I)=IN1(I)
+ S I=0 F  S I=$O(IN1(I)) Q:'I  I I'="18E" S $P(LA7BLG(0),LA7FS,I)=IN1(I)  ;ihs/cmi/maw 3/7/11 added for external relationship filter
  D FILESEG^LA7VHLU(GBL,.LA7BLG)
  D FILE6249^LA7VHLU(LA76249,.LA7BLG)
  Q
@@ -196,7 +203,8 @@ SFMAP(MNE) ;-- get sliding fee scale if mnemonic is Labcorp sliding scale
  Q ""
  ;
 PRT(UID) ;EP -- print out insurance information on manifest
- N ORI,STR,IIEN,IEIEN,IPIEN,BTP,ORD
+ N ORI,STR,IIEN,IEIEN,IPIEN,BTP,ORD,NINS,CNT
+ S NINS=$S($P($G(^BLRSITE(DUZ(2),"RL")),U,23):$P($G(^BLRSITE(DUZ(2),"RL")),U,23),1:99)  ;number of insurances to print
  S LA7ECH="^~&\"
  S ORI=$O(^BLRRLO("ACC",UID,0))
  Q:'ORI
@@ -208,7 +216,13 @@ PRT(UID) ;EP -- print out insurance information on manifest
  W !,?11,$E(LA7LINE,1,41)  ;put in a dashed line here
  D WR("Account Number: ",$$GET1^DIQ(9009026.3,ORI,.03),11,1)
  D WR("Bill Type: ",BTP,11,1)
+ I $P($G(^BLRRLO(ORI,0)),U,5)="P" D  Q
+ . D WR("Guarantor: ",$TR(GT1(4),"^"," "),11,1)
+ . D WR("Telephone: ",GT1(7),55)
+ . D WR("Guarantor Address: ",$TR(GT1(6),"^"," "),11,1)
+ S CNT=0
  S BDA=0 F  S BDA=$O(^BLRRLO(ORI,2,BDA)) Q:'BDA  D
+ . Q:CNT>$G(NINS)
  . S STR=$G(^BLRRLO(ORI,2,BDA,0))
  . S IIEN=$P($P(STR,"~",11),",")
  . I $P(STR,"~",10)="D" D
@@ -225,11 +239,13 @@ PRT(UID) ;EP -- print out insurance information on manifest
  .. S IEIEN=$P($P(STR,"~",11),",",3)
  .. D PI(IPIEN,IEIEN,0)
  . D WR("Insurer ID: ",IN1(4),11,1)
+ . I $P(STR,"~",10)="P" D
+ .. D WR("Group: ",$G(IN1(9)),59)  ;ihs/cmi/maw 04/04/2011 added group to manifest
  . D WR("Insurer Name: ",$TR(IN1(5),"^"," "),11,1)
  . D WR("Telephone: ",IN1(7),55)
  . D WR("Insurer Address: ",$TR(IN1(6),"^"," "),11,1)
  . D WR("Insured Name: ",$TR(IN1(17),"^"," "),11,1)
- . D WR("Relationship: ",$S($G(IN1("18E"))]"":IN1("18E"),1:"Self"),50)
+ . D WR("Relationship: ",$S($G(IN1("18E"))]"":IN1("18E"),1:"Self"),52)
  . D WR("Insured Address: ",$TR(IN1(20),"^"," "),11,1)
  . D WR("Guarantor: ",$TR(GT1(4),"^"," "),11,1)
  . D WR("Telephone: ",GT1(7),55)
@@ -237,6 +253,7 @@ PRT(UID) ;EP -- print out insurance information on manifest
  . D WR("Insured ID: ",IN1(37),11,1)
  . W !,?11,$E(LA7LINE,1,41)
  . D DGP(ORI)
+ . S CNT=CNT+1
  Q
  ;
 WR(CAP,VAL,TAB,NL) ;-- write out the line
@@ -254,4 +271,59 @@ DGP(ORI) ;
  . S DXEE=$E($P($G(^ICD9(DX,0)),U,3),1,39)
  . D WR("Diagnosis: ",DXE,11,1)
  . D WR("Description: ",DXEE,30)
+ Q
+ ;
+AO(UID) ;-- print ask at order questions/responses
+ N ORI,HEAD,TB
+ S ORI=$O(^BLRRLO("ACC",UID,0))
+ Q:'ORI
+ N ODA,DATA,ACC,QUES,ANS,RSC,LA7OBX
+ S ODA=0 F  S ODA=$O(^BLRRLO(ORI,4,ODA)) Q:'ODA  D
+ . S DATA=$G(^BLRRLO(ORI,4,ODA,0))
+ . S ACC=$P(DATA,U,2)
+ . Q:ACC'=UID
+ . I '$G(HEAD) D
+ .. S HEAD=1
+ .. W !!,"ORDER ENTRY QUESTIONS: "
+ . S QUES=$P(DATA,U,3)
+ . S ANS=$P(DATA,U,4)
+ . S RSC=$P(DATA,U,5)
+ . D WR("",QUES,11,1)
+ . S TB=$L(QUES)+3
+ . D WR("   ",ANS,TB)
+ K HEAD
+ Q
+ ;
+OBX(ORD,UI) ;-- build the OBX segment for ask at order questions
+ N OR
+ S OR=$O(^BLRRLO("B",ORD,0))
+ Q:'OR
+ N ODA,DATA,ACC,QUES,ANS,RSC,LA7OBX
+ S ODA=0 F  S ODA=$O(^BLRRLO(OR,4,ODA)) Q:'ODA  D
+ . S DATA=$G(^BLRRLO(OR,4,ODA,0))
+ . S ACC=$P(DATA,U,2)
+ . Q:ACC'=UI
+ . S QUES=$P(DATA,U,3)
+ . S ANS=$P(DATA,U,4)
+ . S RSC=$P(DATA,U,5)
+ . S LA7OBX(2)="ST"
+ . ;lets add code here so if quest add 3 component separators to obx if not then it goes it first piece
+ . S LA7OBX(3)=U_U_U_RSC_U_QUES ; ask at order question and code
+ . S LA7OBX(5)=ANS ; ask at order value/response
+ . D GEN
+ Q
+ ;
+GEN ;--  generate the OBX segment
+ N LA7DATA
+ ;
+ S LA7OBX(0)="OBX"
+ ; OBX segment id
+ S LA7OBX(1)=$$OBX1^LA7VOBX(.LA7OBXSN)
+ ;S LA7OBX(11)="F"
+ ; Facility that performed the testing
+ ;S LA7OBX(15)=$$OBX15^LA7VOBX(LA74,LA7FS,LA7ECH)
+ ;
+ D BUILDSEG^LA7VHLU(.LA7OBX,.LA7DATA,LA7FS)
+ D FILESEG^LA7VHLU(GBL,.LA7DATA)
+ D FILE6249^LA7VHLU(LA76249,.LA7DATA)
  Q

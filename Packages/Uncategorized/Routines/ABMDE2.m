@@ -1,5 +1,5 @@
 ABMDE2 ; IHS/ASDST/DMJ - Edit Page 2 - PAYERS ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**6**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8**;NOV 12, 2009
  ;
  ; IHS/SD/SDR - 10/29/02 - V2.5 P2 - NHA-0402-180088
  ;     Modified so it would allow the deletion of insurer from page 2
@@ -53,23 +53,61 @@ DISP ;
  S ABMP("GL")="^ABMDCLM(DUZ(2),"_ABMP("CDFN")_","
  D ^ABMDE2X
  D ^ABMDE2X1
- W:$D(ABMP("VTYP",999)) ?68,"Prof-Comp"
- W !,"To: ",$P(ABMV("X5"),U)
- W ?40,"Bill Type...: ",$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),"^",12)
- W:$D(ABMP("VTYP",999)) ?68,"========="
- W !?4,$P(ABMV("X5"),U,2)
- W ?40,"Proc. Code..: ",$S($P(ABMV("X6"),U,2)="C":"CPT4",$P(ABMV("X6"),U,2)="A":"ADA",1:"ICD9")
- I $D(ABMP("VTYP",999)) D
- .I '$D(ABMP("FLAT")) D  Q
- ..W ?68,$S($P(ABMV("X6"),U,2)="C":"CPT4",$P(ABMV("X6"),U,2)="A":"ADA",1:"ICD9")
- .W ?68,$S($P(ABMP("FLAT"),U,5)="C":"CPT4",$P(ABMP("FLAT"),U,5)="A":"ADA",1:"ICD9")
- W !?4,$P(ABMV("X5"),U,3)
- W ?40,"Export Mode.: "
- I +ABMV("X6") W $P($G(^ABMDEXP(+ABMV("X6"),0)),U)
- W:$G(ABMP("VTYP",999)) ?68,$P(^ABMDEXP(ABMP("VTYP",999),0),U)
- W !?4,$P(ABMV("X5"),U,4)
- W ?40,"Flat Rate...: ",$S(+$P(ABMV("X6"),U,5):$J($P(ABMV("X6"),U,5),4,2),1:"N/A")
- W:$D(ABMP("VTYP",999)) ?68,$S('$D(ABMP("FLAT")):"N/A",$P(ABMP("FLAT"),U,4)]"":$J($P(ABMP("FLAT"),U,4),4,2),1:"N/A")
+ ;start old code abm*2.6*8 HEAT34042
+ ;W:$D(ABMP("VTYP",999)) ?68,"Prof-Comp"
+ ;W !,"To: ",$P(ABMV("X5"),U)
+ ;W ?40,"Bill Type...: ",$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),"^",12)
+ ;W:$D(ABMP("VTYP",999)) ?68,"========="
+ ;W !?4,$P(ABMV("X5"),U,2)
+ ;W ?40,"Proc. Code..: ",$S($P(ABMV("X6"),U,2)="C":"CPT4",$P(ABMV("X6"),U,2)="A":"ADA",1:"ICD9")
+ ;I $D(ABMP("VTYP",999)) D
+ ;.I '$D(ABMP("FLAT")) D  Q
+ ;..W ?68,$S($P(ABMV("X6"),U,2)="C":"CPT4",$P(ABMV("X6"),U,2)="A":"ADA",1:"ICD9")
+ ;.W ?68,$S($P(ABMP("FLAT"),U,5)="C":"CPT4",$P(ABMP("FLAT"),U,5)="A":"ADA",1:"ICD9")
+ ;W !?4,$P(ABMV("X5"),U,3)
+ ;W ?40,"Export Mode.: "
+ ;I +ABMV("X6") W $P($G(^ABMDEXP(+ABMV("X6"),0)),U)
+ ;W:$G(ABMP("VTYP",999)) ?68,$P(^ABMDEXP(ABMP("VTYP",999),0),U)
+ ;W !?4,$P(ABMV("X5"),U,4)
+ ;W ?40,"Flat Rate...: ",$S(+$P(ABMV("X6"),U,5):$J($P(ABMV("X6"),U,5),4,2),1:"N/A")
+ ;W:$D(ABMP("VTYP",999)) ?68,$S('$D(ABMP("FLAT")):"N/A",$P(ABMP("FLAT"),U,4)]"":$J($P(ABMP("FLAT"),U,4),4,2),1:"N/A")
+ ;end old code start new code HEAT34042
+ I $P(ABMV("X6"),U,6)="Y" D
+ .W:$D(ABMP("VTYP",999)) ?68,"Prof-Comp"
+ .W !,"To: ",$P(ABMV("X5"),U)
+ .W ?40,"Bill Type...: ",$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),"^",12)
+ .W:$D(ABMP("VTYP",999)) ?68,"========="
+ .W !?4,$P(ABMV("X5"),U,2)
+ .W ?40,"Proc. Code..: ",$S($P(ABMV("X6"),U,2)="C":"CPT4",$P(ABMV("X6"),U,2)="A":"ADA",1:"ICD9")
+ .I $D(ABMP("VTYP",999)) D
+ ..I '$D(ABMP("FLAT")) D  Q
+ ...W ?68,$S($P(ABMV("X6"),U,2)="C":"CPT4",$P(ABMV("X6"),U,2)="A":"ADA",1:"ICD9")
+ ..W ?68,$S($P(ABMP("FLAT"),U,5)="C":"CPT4",$P(ABMP("FLAT"),U,5)="A":"ADA",1:"ICD9")
+ .W !?4,$P(ABMV("X5"),U,3)
+ .W ?40,"Export Mode.: "
+ .I +ABMV("X6") W $P($G(^ABMDEXP(+ABMV("X6"),0)),U)
+ .W:$G(ABMP("VTYP",999)) ?68,$P(^ABMDEXP(ABMP("VTYP",999),0),U)
+ .W !?4,$P(ABMV("X5"),U,4)
+ .W ?40,"Flat Rate...: ",$S(+$P(ABMV("X6"),U,5):$J($P(ABMV("X6"),U,5),4,2),1:"N/A")
+ .W:$D(ABMP("VTYP",999)) ?68,$S('$D(ABMP("FLAT")):"N/A",$P(ABMP("FLAT"),U,4)]"":$J($P(ABMP("FLAT"),U,4),4,2),1:"N/A")
+ I ($P(ABMV("X6"),U,6)="")!($P(ABMV("X6"),U,6)="N") D  ;if null or NO
+ .W:$D(ABMP("VTYP",999)) ?54,"Prof-Comp"
+ .W !,"To: ",$P(ABMV("X5"),U)
+ .W:'$D(ABMP("VTYP",999)) ?40,"Bill Type...: ",$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),"^",12)
+ .W:$D(ABMP("VTYP",999)) ?54,"========="
+ .W !?4,$P(ABMV("X5"),U,2)
+ .W:'$D(ABMP("VTYP",999)) ?40,"Proc. Code..: ",$S($P(ABMV("X6"),U,2)="C":"CPT4",$P(ABMV("X6"),U,2)="A":"ADA",1:"ICD9")
+ .I $D(ABMP("VTYP",999)) D
+ ..I '$D(ABMP("FLAT")) D  Q
+ ...W ?40,"Proc. Code..: ",$S($P(ABMV("X6"),U,2)="C":"CPT4",$P(ABMV("X6"),U,2)="A":"ADA",1:"ICD9")
+ ..W ?40,"Proc. Code..: ",$S($P(ABMP("FLAT"),U,5)="C":"CPT4",$P(ABMP("FLAT"),U,5)="A":"ADA",1:"ICD9")
+ .W !?4,$P(ABMV("X5"),U,3)
+ .I '$D(ABMP("VTYP",999)) W ?40,"Export Mode.: " I +ABMV("X6") W $P($G(^ABMDEXP(+ABMV("X6"),0)),U)
+ .I $G(ABMP("VTYP",999)) W ?40,"Export Mode.: ",$P(^ABMDEXP(ABMP("VTYP",999),0),U)
+ .W !?4,$P(ABMV("X5"),U,4)
+ .W:'$D(ABMP("VTYP",999)) ?40,"Flat Rate...: ",$S(+$P(ABMV("X6"),U,5):$J($P(ABMV("X6"),U,5),4,2),1:"N/A")
+ .W:$D(ABMP("VTYP",999)) ?40,"Flat Rate...: ",$S('$D(ABMP("FLAT")):"N/A",$P(ABMP("FLAT"),U,4)]"":$J($P(ABMP("FLAT"),U,4),4,2),1:"N/A")
+ ;end new code HEAT34042
  S ABMX=""
  S $P(ABMX,".",80)=""
  W !,ABMX,!
@@ -84,9 +122,11 @@ DISP ;
  ..S ABMMSPSV=ABMMSP
  .; write the entry with date
  .I ABMFLAG=1 D
+ ..K %DT  ;abm*2.6*8
  ..S Y=ABMMSP
  ..D DD^%DT
  ..S ABMMSPDT=Y
+ ..K %DT  ;abm*2.6*8
  ..S ABMMSPRS=$S($G(ABMMSPSV)="":"NO REASON ENTERED",$P($G(^AUPNMSP(ABMMSPSV,0)),U,4)'="":$P($G(^AUPNMSP(ABMMSPSV,0)),U,4),1:"NO REASON ENTERED")
  ..W "MSP STATUS AS OF "_ABMMSPDT_": "
  ..I $G(ABMMSPSV)'="",$P($G(^AUPNMSP(ABMMSPSV,0)),U,3)["Y" W "["_ABMMSPRS_"]-"_$$GET1^DIQ(9000037,ABMMSPSV,.04)

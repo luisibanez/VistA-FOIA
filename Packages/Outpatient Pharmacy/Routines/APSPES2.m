@@ -1,5 +1,5 @@
-APSPES2 ;IHS/MSC/PLS - SureScripts HL7 interface - con't;14-Oct-2009 14:37;SM
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1008**;Sep 23, 2004
+APSPES2 ;IHS/MSC/PLS - SureScripts HL7 interface - con't;03-May-2011 10:01;PLS
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1008,1011**;Sep 23, 2004;Build 17
  ; Return array of message data
  ; Input: MIEN - IEN to HLO MESSAGES and HLO MESSAGE BODY files
  ; Output: DATA
@@ -37,6 +37,7 @@ DISP ;EP
  S DRG=$$GET^HLOPRS(.SEGRXD,2,2)
  S DCODEQ=$$GET^HLOPRS(.SEGRXD,2,3)
  S ARY("REASON")="X"
+ S ARY("TYPE")="U"
  S ARY("RX REF")=$S(DSPNUM>5:DSPNUM+1,1:DSPNUM) ; adjust for 6=partial
  S ARY("COM")="DDrg:"_DRG_$S($L(DCODE):" ("_DCODEQ_":"_DCODE_")",1:"")
  S ARY("USER")=PVDIEN

@@ -1,15 +1,15 @@
-XQ82 ;SF-ISC.SEA/JLI - CLEAN OLD $JOB DATA OUT OF XUTL("XQ", & OTHERS ;05/26/2005  11:36
- ;;8.0;KERNEL;**59,67,157,258,312,353,1010,1016**;Jul 10, 1995;Build 5
+XQ82 ;SF-ISC.SEA/JLI - CLEAN OLD $JOB DATA OUT OF XUTL("XQ", & OTHERS ;02/03/10  15:12
+ ;;8.0;KERNEL;**59,67,157,258,312,353,542,1017**;Jul 10, 1995;Build 3
  ;THIS ROUTINE CONTAINS IHS MODIFICATION
  ;Make sure that can run from a DCL script
  N A,X,%DT,Y,J,K,DDATE,HDATA,HPID3,XQOS
- S DT=$$DT^XLFDT
+ S U="^",DT=$$DT^XLFDT
  S HDATE=$H-7 ;Get seven days ago in $H days
  S DDATE=$$HTFM^XLFDT(HDATE) ;Get seven days ago in FM format
  S XQOS=^%ZOSF("OS"),HPID3=$E($$CNV^XLFUTL($J,16),1,3)
  S HJOB=$J
  ;Do work as a set of sub routines
- D L0,L1,L2,L3,L4,L5,L6
+ D L0,L1,L2,L3,L4,L5,L6,L7
 EXIT ;
  Q
  ;We keep track of jobs by putting data in ^XUTL("XQ",$J).
@@ -35,7 +35,7 @@ L1 S A="" F  S A=$O(^UTILITY(A)) Q:A=""  D
  . Q:A>0  Q:"^ROU^GLO^LRLTR^"[("^"_A_"^")
  . ;----- BEGIN IHS MODIFICATION
  . ;IHS/ITSC/DMJ - don't kill msm os error trap
- . Q:A="%ER"
+ . Q:A="%ER"  ;XU*8.0*1017
  . ;----- END IHS MODIFICATION
  . F J=0:0 S J=$O(^UTILITY(A,J)) Q:J'>0  I '$D(^XUTL("XQ",J)) K ^UTILITY(A,J) ;Remove UTILITY(namespace,$J) w/o XUTL("XQ",$J)
  . Q
@@ -65,6 +65,12 @@ L6 ;Clean out old build nodes from ^XUTL
  S K=""
  F  S K=$O(^XUTL("XQO",K)) Q:K=""  D
  . I $D(^XUTL("XQO",K,"^BUILD")),($P($H,",",2)-^("^BUILD")>1800)!(^("^BUILD")>$P($H,",",2)) K ^("^BUILD")
+ Q
+ ;
+L7 ;Kill ^DISV for TERMINATED or DISUSER Users.
+ N DA,USER
+ S DA="",U="^"
+ F  S DA=$O(^DISV(DA)) Q:DA=""  S USER=$$ACTIVE^XUSER(DA) I '(+USER) K ^DISV(DA)
  Q
  ;
 L51(NDX) ;Clean old Sign-on log entries from X-ref

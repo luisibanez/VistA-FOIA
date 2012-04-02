@@ -1,5 +1,5 @@
 BIUTL4 ;IHS/CMI/MWR - UTIL: SCREENMAN CODE; OCT 15, 2010
- ;;8.4;IMMUNIZATION;**2**;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  UTILITY: SCREENMAN CODE: VAC SELECT ACTIONS, SERIES VALID,
  ;;           LOC BRANCHING LOGIC, VISIT LOC DEF, SKIN TEST READ MM.
@@ -197,18 +197,37 @@ LOTSEL(BIX) ;EP
  ;---> Action: If a Vaccine was not chosen, but instead a Lot Number was entered first,
  ;---> then populate the Vaccine field on the form (which triggers VACCHG above).
  ;
- ;---> Don't change the Vaccine if it has already been selected.
- Q:(+$G(BI("B")))
  Q:'BIX
  ;
- ;---> Retrieve Vaccine IEN for this Lot Number.
- N BIVAC S BIVAC=$$LOTTX^BIUTL6(BIX,1)
- D PUT^DDSVALF(2,,,BIVAC,"I")
- D VACSEL(BIVAC)
- ;Q
- D LOTWARN^BIUTL7($G(BI("D")),$G(BI("E")),$G(BI("F")))
- D VISVOL(BIVAC)
+ D
+ .;---> Don't change the Vaccine if it has already been selected.
+ .Q:(+$G(BI("B")))
+ .;---> Stuff Vaccine IEN for this Lot Number.
+ .N BIVAC S BIVAC=$$LOTTX^BIUTL6(BIX,1)
+ .D PUT^DDSVALF(2,,,BIVAC,"I")
+ .D VACSEL(BIVAC)
+ .D LOTWARN^BIUTL7($G(BI("D")),$G(BI("E")),$G(BI("F")))
+ .D VISVOL(BIVAC)
  ;
+ D
+ .;---> Stuff default NDC IEN for this Lot Number.
+ .Q:(+$G(BI("H")))
+ .N BINDC S BINDC=$$LOTTX^BIUTL6(BIX,3)
+ .I BINDC D PUT^DDSVALF(3.8,,,BINDC,"I")
+ ;
+ Q
+ ;
+ ;
+ ;----------
+NDCSCR ;EP
+ ;---> Set Screen for NDC Code selection in Screen field of
+ ;---> "Form Only Field Parameters" of the Form BI FORM-IMM VISIT ADD/EDIT
+ ;---> when selecting NDC Code.
+ ;---> Screen: If this NDC is Active, AND this NDC is assigned to the selected
+ ;---> vaccine in BI("B").
+ ;
+ ;W !!,"This screen in NDCSCR^BIUTL4",! X ^O
+ S DIR("S")="I $P(^BINDC(Y,0),U,6)'=1,$D(^BINDC(""C"",+$G(BI(""B"")),Y))"
  Q
  ;
  ;
@@ -253,6 +272,15 @@ OLDDATE(X) ;EP
  I '$G(BI("K"))&($P(X,".")'=DT) D
  .D PUT^DDSVALF(11,,,"E","I") S BI("I")="E"
  .I ($G(DT)-X)>5 D NOPROV^BIUTL7("E")
+ ;
+ ;---> If the patient is/was 19 yrs or older on the Imm date, DISABLE
+ ;---> Field 10.5 VFC Eligibility and set VFC="".
+ N BIDATE S BIDATE=X
+ N BIDOB S BIDOB=$$DOB^BIUTL1($G(BIDFN))
+ Q:'BIDATE  Q:'BIDOB
+ I ((BIDOB+190000)'>BIDATE) D  Q
+ .D UNED^DDSUTL(10.5,,,1) S BI("P")="" D PUT^DDSVALF(10.5) Q
+ D UNED^DDSUTL(10.5,,,0)
  Q
  ;
  ;

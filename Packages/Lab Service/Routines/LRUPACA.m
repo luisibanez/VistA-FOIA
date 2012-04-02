@@ -1,5 +1,5 @@
 LRUPACA ;IHS/DIR/FJE - LAB ACC COUNTS BY LOC 2/18/93 13:09 ;JUL 06, 2010 3:14 PM
- ;;5.2;LAB SERVICE;**1007,1013,1015,1022,1027**;NOV 01, 1997
+ ;;5.2;LAB SERVICE;**1007,1013,1015,1022,1027,1030**;NOV 01, 1997
  ;;5.2;LR;;NOV 01, 1997
  ;
  ;;5.2;LAB SERVICE;;Sep 27, 1994
@@ -22,13 +22,18 @@ QUE U IO K ^TMP($J) D:IOST?1"C".E WAIT^LRU D L^LRU,S^LRU,@($S(T(3)["0000":"ACY",
  NEW TESTCNT,CUMCNT  ; IHS/OIT/MKK 05/20/2009 -- Patch 1027
  F T=0:0 S T=$O(^TMP($J,T)) Q:'T!(LR("Q"))  D:$Y>(IOSL-6) H3 Q:LR("Q")  W !,$S($D(^LAB(60,T,0)):$P(^(0),"^"),1:T) D B Q:LR("Q")
  ; ------ BEGIN IHS/OIT/MKK PATCH 1027 MODIFICATIONS
- W !
- W ?56,"---------"
- W !
- W ?36,"Total tests:"
- W ?56,$J(TESTCNT,9)
- W !
+ ; W !
+ ; W ?56,"---------"
+ ; W !
+ ; W ?36,"Total tests:"
+ ; W ?56,$J(TESTCNT,9)
+ ; W !
  ; ------ END IHS/OIT/MKK PATCH 1027 MODIFICATIONS
+ ; ------ BEGIN IHS/OIT/MKK LR*5.2*1030 -- make sure TESTCNT variable > zero.
+ I +$G(TESTCNT)>0 D
+ . W !,?56,"---------",!
+ . W ?36,"Total tests:",?56,$J(TESTCNT,9),!
+ ; ------ END IHS/OIT/MKK LR*5.2*1030
 OUT D END^LRUTL,END Q
 T F T=0:0 S T=$O(^TMP($J,"B",S,T)) Q:'T!(LR("Q"))  D:$Y>(IOSL-6) H1 Q:LR("Q")  S T(1)=^TMP($J,"B",S,T) W !?41,$S($D(^LAB(60,T,0)):$P(^(0),"^"),1:T),?70,$J(T(1),9) S T(2)=T(2)+T(1)
  Q

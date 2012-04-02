@@ -1,5 +1,5 @@
 ABME5REF ; IHS/ASDST/DMJ - 837 REF Segment 
- ;;2.6;IHS Third Party Billing;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**6,8**;NOV 12, 2009
  ;other payer provider info
  ;
 EP(X,Y,Z) ;EP
@@ -10,7 +10,7 @@ EP(X,Y,Z) ;EP
  S ABMEIC=X
  S ABMFILE=+$G(Y)
  S ABMIEN=+$G(Z)
- S ABMSIEN=$G(Z)
+ ;S ABMSIEN=$G(Z)  ;abm*2.6*8
  S ABME("RTYPE")="REF"
  D LOOP
  K ABME,ABM
@@ -34,16 +34,16 @@ LOOP ;LOOP HERE
  I $G(ABMR("REF",20))="",ABMIEN=0,($G(ABMFILE)=200),$D(ABMP("PRV","F")) S ABMR("REF",20)="1G"
  I +$G(Z)'=0,$D(ABMP("PRV","S",Z)) S ABMR("REF",20)="1D"  ;supervising
  Q
-30 ;REF02 - Reference Identification
+30 ;REF02 - Reference Secondary Identification
  I ABMEIC="EI" S ABMR("REF",30)=$P($G(^AUTTLOC(DUZ(2),0)),U,18)
  I ABMEIC="G4" S ABMR("REF",30)=$P(ABMB5,"^",8)
  I ABMEIC="9F" S ABMR("REF",30)=$P(ABMB5,"^",11)
  I ABMEIC="G1" S ABMR("REF",30)=$P(ABMB5,"^",12)
  I ABMEIC="Y4" S ABMR("REF",30)=$P(ABMB7,U,13)
- I ABMEIC="XZ" S ABMR("REF",30)=$P(ABMRV(ABMI,ABMJ,ABMK),U,13)
+ I ABMEIC="XZ" S ABMR("REF",30)=$P(ABMRV(ABMI,ABMJ,ABMK),U,2)
  I ABMEIC="SY"!(ABMEIC="1W") S ABMR("REF",30)=$P(ABMB7,U,26)
  I ABMEIC="BT" S ABMR("REF",30)=$P(ABMRV(ABMI,ABMJ,ABMK),U,37)  ;immun. batch#
- I ABMEIC="6R" S ABMR("REF",30)=$S($D(ABMP("FLAT")):$P($G(ABMRV(ABMI,ABMJ,ABMK)),U,12),1:$P($G(ABMRV(ABMI,ABMJ,ABMK)),U,38))  ;line item control number
+ I ABMEIC="6R" S ABMR("REF",30)=$P($G(ABMRV(ABMI,ABMJ,ABMK)),U,38)  ;line item control number
  ;mammography cert#
  I ABMEIC="EW" S ABMR("REF",30)=$P($G(^ABMDPARM(ABMP("LDFN"),1,5)),U,4)
  I ABMEIC="F4" D
@@ -89,10 +89,13 @@ LOOP ;LOOP HERE
  ..I ABMRCID="FHC&AFFILIATES"&(ABMEIC="LU") D
  ...S ABMR("REF",30)=$P($G(^AUTNINS(ABMP("INS"),15,ABMIEN,0)),U,2)
  ..E  S ABMR("REF",30)=$$PI^ABMUTLF(ABMP("LDFN"))
+ .I ABMFILE=0,ABMEIC="LU" S ABMR("REF",30)=$$GET1^DIQ(5,$P(ABMB8,U,16),1,"E")  ;abm*2.6*8 5010
  I ABMEIC="F8" D
  .S ABMR("REF",30)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),4)),U,9)
  I +ABMIEN=0,$D(ABMP("PRV","F")),($G(Z)'="") S ABMR("REF",30)=$P($G(ABMP("PRV","F",Z)),"^")
- I +$G(Z)=0,($G(ABMSIEN)'=""),(ABMR("REF",30)="") S ABMR("REF",30)=$P($G(ABMP("PRV","S",Z)),U)
+ ;I +$G(Z)=0,($G(ABMSIEN)'=""),(ABMR("REF",30)="") S ABMR("REF",30)=$P($G(ABMP("PRV","S",Z)),U)  ;abm*2.6*8
+ Q:($G(ABMR("REF",30))'="")  ;abm*2.6*8
+ I +$G(Z)=0,($G(ABMIEN)'=""),(ABMR("REF",30)="") S ABMR("REF",30)=$P($G(ABMP("PRV","S",Z)),U)  ;abm*2.6*8
  Q
 40 ;REF03 - Description-not used
  S ABMR("REF",40)=""

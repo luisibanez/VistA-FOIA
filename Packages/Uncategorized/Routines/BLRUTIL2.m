@@ -1,5 +1,5 @@
 BLRUTIL2 ;IHS/OIT/MKK - MISC IHS LAB UTILITIES (Cont) ;December 16, 2010 1:45 PM
- ;;5.2;IHS LABORATORY;**1020,1022,1024,1027,1028**;NOV 01, 1997;Build 46
+ ;;5.2;IHS LABORATORY;**1020,1022,1024,1027,1028,1030**;NOV 01, 1997
  ;
  ; Cloned from ACTIVE^XUSER -- VA Code
 ACTIVE(XUDA) ; EP - Get if a user is active.
@@ -29,7 +29,8 @@ ACTIVE(XUDA) ; EP - Get if a user is active.
  ;
 BLRHEADR(LINE1,LINE2,LINE3) ; EP -- Generic HEADER array
  NEW TMPLN
- W $$CJ^XLFSTR($$LOC^XBFUNC,IOM)                  ; Location
+ ; W $$CJ^XLFSTR($$LOC^XBFUNC,IOM)                  ; Location
+ W $$CJ^XLFSTR($$LOC^XBFUNC,IOM),!                  ; Location -- LR*5.2*1030
  ;
  S TMPLN=$$CJ^XLFSTR(LINE1,IOM)
  S $E(TMPLN,1,13)="Date:"_$$HTE^XLFDT($H,"2DZ")   ; Today's Date
@@ -167,7 +168,8 @@ HDRBLREN ; EP -- Header if BLR MASTER FILE address fields ARE NOT blank
  ;. S STR=$$TRIM^XLFSTR(STR,"R"," ")
  ; ----- END IHS/OIT/MKK - LR*5.2*1027
  S STR=$$CJ^XLFSTR(STR,IOM)       ; IHS/OIT/MKK - LR*5.2*1028
- W STR,!
+ ; W STR,!
+ W !,STR,!                        ; IHS/OIT/MKK - LR*5.2*1030
  ;
  S INTRPTH2=$$GET1^DIQ(9009029,INSTNUM_",3","INTERIM REPORT LINE 2")
  W:$G(INTRPTH2)'="" $$CJ^XLFSTR(INTRPTH2,IOM)

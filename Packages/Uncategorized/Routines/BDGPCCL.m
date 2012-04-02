@@ -1,5 +1,5 @@
 BDGPCCL ; IHS/ANMC/LJF,WAR - PCC LINK CODE ;  [ 09/14/2004  2:11 PM ]
- ;;5.3;PIMS;**1001,1003,1004,1005,1006,1010**;MAY 28, 2004
+ ;;5.3;PIMS;**1001,1003,1004,1005,1006,1010,1013**;MAY 28, 2004
  ;IHS/ITSC/LJF 09/01/2004 PATCH 1001 change visit pointer if "A" visit
  ;IHS/ITSC/LJF 05/13/2005 PATCH 1003 HASVISIT changed to find only H visit at date/time stamp
  ;             06/24/2005 PATCH 1003 fix typo so update to Discharge UB-92 works
@@ -7,6 +7,7 @@ BDGPCCL ; IHS/ANMC/LJF,WAR - PCC LINK CODE ;  [ 09/14/2004  2:11 PM ]
  ;IHS/OIT/LJF  05/03/2006 PATCH 1005 if default visit type not set in one file, check another
  ;             09/08/2006 PATCH 1006 prevent PCC visit deletion if already coded
  ;cmi/anch/maw 10/20/2008 PATCH 1010 added set of APCDALVR("APCDOPT") to BDG VISIT CREATOR
+ ;ihs/cmi/maw  09/26/2011 PATCH 1013 added service cat and clinic for DAY SURGERY
  ;
  ; Called by ADT Event Driver as first protocol
  ;
@@ -116,8 +117,9 @@ ADDVST ; create visit
  . S APCDALVR("APCDANE")=""    ;no user interactive w/FM
  ;
  NEW ASRV S ASRV=$$LASTSRVN^BDGF1(DGPMCA,DFN)    ;admit service name
- S APCDALVR("APCDCAT")=$S(ASRV["OBSERVATION":"O",1:"H")   ;srv category
+ S APCDALVR("APCDCAT")=$S(ASRV["OBSERVATION":"O",ASRV="DAY SURGERY":"S",1:"H")   ;srv category maw 09/26/2011
  I ASRV["OBSERVATION" S APCDALVR("APCDCLN")=$O(^DIC(40.7,"C",87,0))
+ I ASRV="DAY SURGERY" S APCDALVR("APCDCLN")=$O(^DIC(40.7,"C",44,0))  ;ihs/cmi/maw 09/26/2011 PATCH 1013
  ;
  D ^APCDALV
  ;
@@ -202,7 +204,10 @@ CHKCAT ; called by ADDVH to check visit service category
  . NEW DA,DIK S DA=$O(^AUPNVINP("AD",VST,0)) I DA S DIK="^AUPNVINP(" D ^DIK
  ;
  ; if visit changed from O to H, make sure has V Hosp entry if discharged
- I DSRV'["OBSERVATION",CAT="O" D
+ I DSRV'["OBSERVATION",CAT="O" D  Q
+ . S APCDALVR("APCDCAT")="H" D EDITVST(VST,DFN)
+ . I '$O(^AUPNVINP("AD",VST,0)),$$GET1^DIQ(405,DGPMCA,.17)]"" D ADDVH
+ I DSRV'="DAY SURGERY",CAT="S" D  Q  ;ihs/cmi/maw 09/26/2011 PATCH 1013 for day surgery
  . S APCDALVR("APCDCAT")="H" D EDITVST(VST,DFN)
  . I '$O(^AUPNVINP("AD",VST,0)),$$GET1^DIQ(405,DGPMCA,.17)]"" D ADDVH
  ;
@@ -237,7 +242,7 @@ ADDVH ;EP; -- create v hosp
  S V=$$GET1^DIQ(405,DGPMCA,.27,"I")
  ;
  I $$GET1^DIQ(9000010,+V,.11)="DELETED" S V=""
- I "OH"'[$$GET1^DIQ(9000010,+V,.07,"I") S V=""   ;IHS/ITSC/LJF 9/1/2004 PATCH #1001 change if linked to "A" visit
+ I "OHS"'[$$GET1^DIQ(9000010,+V,.07,"I") S V=""   ;IHS/ITSC/LJF 9/1/2004 PATCH #1001 change if linked to "A" visit
  I 'V D
  . S DGSAV=DGPMA,DGPMA=$G(^DGPM(DGPMCA,0))  ;reset DGPMA to admit node
  . D ADDVST

@@ -1,18 +1,20 @@
 BIDUVLS2 ;IHS/CMI/MWR - VIEW DUE LIST VIEW.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  LIST TEMPLATE CODE FOR VIEWING PATIENTS DUE, SET LINES FOR
  ;;  INDIVIDUAL PATIENTS.
  ;
  ;
  ;----------
-PATIENT(BILINE,BIDFN,BINFO,BIDASH) ;EP
+PATIENT(BILINE,BIDFN,BINFO,BIDASH,BIMMRF,BIMMLF) ;EP
  ;---> Set line in Listman display global.
  ;---> Parameters:
  ;     1 - BILINE (req) Line Number in display area.
  ;     2 - BIDFN  (req) Patient DFN.
- ;     3 - BINFO  (req) Aarray of Additional Info elements.
+ ;     3 - BINFO  (req) Array of Additional Info elements.
  ;     4 - BIDASH (opt) 1=Omit Dash line between records; 0=include it.
+ ;     5 - BIMMRF (opt) Imms Received Filter array (subscript=CVX's included).
+ ;     6 - BIMMLF (opt) Lot Number Filter array (subscript=lot number text).
  ;
  Q:$G(BILINE)=""
  N BIPLIN,BIPLIN1,X
@@ -78,17 +80,22 @@ PATIENT(BILINE,BIDFN,BINFO,BIDASH) ;EP
  .D APPEND(BIPLIN1,X,.BILINE)
  ;
  ;---> Immunization History.
- I (BINFODS[13)!(BINFODS[14)!(BINFODS[20)!(BINFODS[22)!BIALL D
- .;---> Write either History or History w/Lot#'s, with or without Skin Tests.
- .N X S X=$S(BINFODS[14:2,1:1)
+ I (BINFODS[13)!(BINFODS[14)!(BINFODS[20)!(BINFODS[22)!(BINFODS[25)!BIALL D
+ .;---> Write either History or History w/Lot#'s, VFC, with or without Skin Tests.
+ .N X D
+ ..I (BINFODS[14)&(BINFODS'[25) S X=2 Q
+ ..I (BINFODS'[14)&(BINFODS[25) S X=5 Q
+ ..I (BINFODS[14)&(BINFODS[25) S X=7 Q
+ ..S X=1
+ .;
  .;---> Include location where shot was given.
  .N Y S Y=$S(BINFODS[22:1,1:0)
  .N Z S Z=1
  .D:(BINFODS[20)
- ..I ((BINFODS'[13)&(BINFODS'[14)) S Z=2 Q
+ ..I ((BINFODS'[13)&(BINFODS'[14)&(BINFODS'[25)) S Z=2 Q
  ..S Z=0
  .D WRITE(.BILINE),WRITE(.BILINE,"     History:")
- .D HISTORY1^BILETPR1(.BILINE,BIDFN,X,,"BIDULV",,,Z,Y)
+ .D HISTORY1^BILETPR1(.BILINE,BIDFN,X,,"BIDULV",,,Z,Y,.BIMMRF,.BIMMLF)
  ;
  ;
  ;---> Refusals.

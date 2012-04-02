@@ -1,5 +1,5 @@
 BIREPF4 ;IHS/CMI/MWR - REPORT, FLU IMM; OCT 15, 2010
- ;;8.4;IMMUNIZATION;**2**;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  INFLUENZA IMM REPORT, GATHER/STORE PATIENTS.
  ;;  PATCH 1: Exclude patients whose Inactive Date=Not in Register.  CHKSET+31
@@ -8,7 +8,7 @@ BIREPF4 ;IHS/CMI/MWR - REPORT, FLU IMM; OCT 15, 2010
  ;
  ;
  ;----------
-GETPATS(BIBEGDT,BIENDDT,BIAGRP,BICC,BIHCF,BICM,BIBEN,BIQDT,BIFH,BIYEAR) ;EP
+GETPATS(BIBEGDT,BIENDDT,BIAGRP,BICC,BIHCF,BICM,BIBEN,BIQDT,BIFH,BIYEAR,BIUP) ;EP
  ;---> Get patients from VA PATIENT File, ^DPT(.
  ;---> Parameters:
  ;     1 - BIBEGDT (req) Begin DOB for this group.
@@ -22,6 +22,7 @@ GETPATS(BIBEGDT,BIENDDT,BIAGRP,BICC,BIHCF,BICM,BIBEN,BIQDT,BIFH,BIYEAR) ;EP
  ;     9 - BIFH    (req) F=report on Flu Vaccine Group (default), H=H1N1 group.
  ;    10 - BIYEAR  (req) Report Year^m (if 2nd pc="m", then End Date=March 31 of
  ;                       the report year; otherwise End Date=Dec 31 of BIYEAR)
+ ;    11 - BIUP    (req) User Population/Group (Registered, Imm, User, Active).
  ;
  ;---> Set begin and end dates for search through PATIENT File.
  ;
@@ -31,12 +32,12 @@ GETPATS(BIBEGDT,BIENDDT,BIAGRP,BICC,BIHCF,BICM,BIBEN,BIQDT,BIFH,BIYEAR) ;EP
  F  S N=$O(^DPT("ADOB",N)) Q:(N>BIENDDT!('N))  D
  .S BIDFN=0
  .F  S BIDFN=$O(^DPT("ADOB",N,BIDFN)) Q:'BIDFN  D
- ..D CHKSET(BIDFN,.BICC,.BIHCF,.BICM,.BIBEN,BIAGRP,BIQDT,BIFH,BIYEAR)
+ ..D CHKSET(BIDFN,.BICC,.BIHCF,.BICM,.BIBEN,BIAGRP,BIQDT,BIFH,BIYEAR,BIUP)
  Q
  ;
  ;
  ;----------
-CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIAGRP,BIQDT,BIFH,BIYEAR) ;EP
+CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIAGRP,BIQDT,BIFH,BIYEAR,BIUP) ;EP
  ;---> Check if this patient fits criteria; if so, set DFN
  ;---> in ^TMP("BIREPF1".
  ;---> Parameters:
@@ -48,8 +49,9 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIAGRP,BIQDT,BIFH,BIYEAR) ;EP
  ;     6 - BIAGRP (req) Node/number for this Age Group.
  ;     7 - BIQDT  (req) Quarter Ending Date.
  ;     8 - BIFH   (req) F=report on Flu Vaccine Group, H=H1N1 group.
- ;     9 - BIYEAR  (req) Report Year^m (if 2nd pc="m", then End Date=March 31 of
+ ;     9 - BIYEAR (req) Report Year^m (if 2nd pc="m", then End Date=March 31 of
  ;                       the report year; otherwise End Date=Dec 31 of BIYEAR)
+ ;    10 - BIUP   (req) User Population/Group (Registered, Imm, User, Active).
  ;
  Q:'$G(BIDFN)
  Q:'$D(BICC)
@@ -60,25 +62,17 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIAGRP,BIQDT,BIFH,BIYEAR) ;EP
  Q:'$G(BIQDT)
  S:($G(BIFH)="") BIFH="F"
  Q:'$G(BIYEAR)
+ Q:$G(BIUP)=""
  ;
  ;---> Quit if patient is not in the Register.
  Q:'$D(^BIP(BIDFN,0))
  ;
- ;---> Quit if patient does not have an Active HRCN at one or more
- ;---> of the Health Care Facilities selected.
- Q:$$HRCN^BIEXPRT2(BIDFN,.BIHCF)
+ ;---> Filter for standard Patient Population parameter.
+ Q:'$$PPFILTR^BIREP(BIDFN,.BIHCF,BIQDT,BIUP)
  ;
  ;---> For first Age Group, 10-23m, filter by Active in Imm Register.
  ;---> Quit if patient became Inactive before the Quarter Ending Date.
  ;I BIAGRP=1 N X S X=$$INACT^BIUTL1(BIDFN) I X]"" Q:X<BIQDT
- ;
- ;---> For all Age Groups, filter by Active Clinical User criteria.
- ;---> Quit if patient did not have 2 (real) visits in the last 3 years.
- ;
- ;********** PATCH 2, v8.4, OCT 15,2010, IHS/CMI/MWR
- ;---> Filter for Active Clinical, all ages, using $$ACTCLIN^BIUTL6 call.
- Q:'$$ACTCLIN^BIUTL6(BIDFN,BIQDT)
- ;**********
  ;
  ;---> For 18-49y Age Group, if this patient is High Risk for Flu set BIRISKI=1.
  N BIRISKI S BIRISKI=0
@@ -88,9 +82,6 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIAGRP,BIQDT,BIFH,BIYEAR) ;EP
  ;S:(BIDFN=30) BIRISKI=1  ;MWRZZZ
  ;---> If this patient is (18-49y) High Risk, change Age Group to 5.
  I BIRISKI S BIAGRP=5
- ;
- ;---> Quit if patient died before the Quarter Ending Date.
- N X S X=$$DECEASED^BIUTL1(BIDFN,1) I X Q:X<BIQDT
  ;
  ;---> Quit if Current Community doesn't match.
  Q:$$CURCOM^BIEXPRT2(BIDFN,.BICC)
@@ -181,7 +172,7 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIAGRP,BIQDT,BIFH,BIYEAR) ;EP
  ;
  ;---> Following lines matrix: Vaccine Group, Dose#.
  ;
- ;---> X=1 is NOT appropriate for age; X=2 IS appropriate for age.
+ ;---> X=1 is NOT Current/appropriate for age; X=2 IS Current/appropriate for age.
  N X
  ;---> For 6-23m old patients (BIAGRP=1).
  S X=1

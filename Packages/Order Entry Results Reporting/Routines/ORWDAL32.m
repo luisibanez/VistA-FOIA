@@ -1,5 +1,5 @@
-ORWDAL32 ; SLC/REV - Allergy calls to support windows ;10-May-2011 09:44;DU
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,109,190,1007**;Dec 17, 1997
+ORWDAL32 ; SLC/REV - Allergy calls to support windows ;17-Aug-2011 12:47;DU
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,109,190,1007,1008**;Dec 17, 1997
  ;
 DEF(LST) ; Get dialog data for allergies
  N ILST,I,X S ILST=0
@@ -11,7 +11,8 @@ DEF(LST) ; Get dialog data for allergies
 TOPTEN ;  Get top ten symptoms from Allergy Site Parameters file
  N X0,I,CNT S I=0,X0="",CNT=0
  F  S I=$O(^GMRD(120.84,1,1,I)),CNT=CNT+1 Q:+I=0!(CNT>10)  D
- . S X0=^GMRD(120.84,1,1,I,0) Q:'$D(^GMRD(120.83,X0))
+ . S X0=^GMRD(120.84,1,1,I,0) Q:'$D(^GMRD(120.83,X0))  Q:$P(^GMRD(120.83,X0,0),"^")="OTHER REACTION" ;IHS/MSC/MGH 1008
+ . I $L($T(SCREEN^XTID)) Q:$$SCREEN^XTID(120.83,.01,X0_",")  ;IHS/MSC/MGH 1008
  . S LST($$NXT)="i"_X0_U_$P($G(^GMRD(120.83,X0,0)),U,1)
  Q
 ALLSRCH(Y,X) ; Return list of partial matches  ; CHANGED TO PRODUCE TREEVIEW IN GUI
@@ -21,6 +22,7 @@ ALLSRCH(Y,X) ; Return list of partial matches  ; CHANGED TO PRODUCE TREEVIEW IN 
  . S INACT=0,ORSRC=ORSRC+1,ORFILE=$P(ROOT,",",1)_")",ORSRC(ORSRC)=$P($T(FILENAME+ORSRC),";;",2)
  . I (ORSRC'=2),(ORSRC'=6) S CNT=CNT+1,Y(CNT)=ORSRC_U_ORSRC(ORSRC)_U_U_U_"TOP"_U_"+"
  . I $D(@ROOT@(X)) D
+ . . I ORSRC=1,X="OTHER ALLERGY/ADVERSE REACTION" Q  ;IHS/MSC/MGH 1008
  . . I ORSRC=5!(ORSRC=6) Q  ;Patch 8 don't send file 50 entries
  . . ;IHS/MSC/MGH Screen out inactive allergies
  . . S ORIEN=$O(@ROOT@(X,0))
@@ -33,6 +35,7 @@ ALLSRCH(Y,X) ; Return list of partial matches  ; CHANGED TO PRODUCE TREEVIEW IN 
  . . S Y(CNT)=Y(CNT)_U_ORREAX_U_$S(ORSRC=2:1,ORSRC=6:5,1:ORSRC)
  . S XP=X F  S XP=$O(@ROOT@(XP)) Q:XP=""  Q:$E(XP,1,$L(X))'=X  D
  . . S ORIEN=$O(@ROOT@(XP,0))
+ . . I ORSRC=1,XP="OTHER ALLERGY/ADVERSE REACTION" Q  ;IHS/MSC/MGH 1008
  . . ;IHS/MSC/MGH Changes made to screen out inactive allergies
  . . I ORSRC=5!(ORSRC=6) Q
  . . I ORSRC=1!(ORSRC=2) S INAC=$$CHECK(ORIEN) Q:+INAC
@@ -70,6 +73,7 @@ SYMPTOMS(Y,FROM,DIR) ; Return a subset of symptoms
  ; .Return Array, Starting Text, Direction
  N I,IEN,CNT,X S I=0,CNT=44
  F  Q:I'<CNT  S FROM=$O(^GMRD(120.83,"B",FROM),DIR) Q:FROM=""  D
+ . I FROM="OTHER REACTION" Q  ;Don't send this entry IHS/MSC/MGH 1008
  . S IEN=0 F  S IEN=$O(^GMRD(120.83,"B",FROM,IEN)) Q:'IEN  D
  . . S I=I+1
  . . S Y(I)=IEN_U_FROM

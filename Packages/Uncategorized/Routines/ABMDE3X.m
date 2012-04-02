@@ -1,5 +1,5 @@
 ABMDE3X ; IHS/ASDST/DMJ - Edit Page 3 - ERROR CHK ;
- ;;2.6;IHS 3P BILLING SYSTEM;**6**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8**;NOV 12, 2009
  ;
  ; 03/10/04 V2.5 Patch 5 - 837 Modifications - Added errror code 192 for imprecise accident dates
  ; IHS/SD/SDR - v2.5 p5 - 5/17/2004 - Added code to check for error 193
@@ -21,7 +21,8 @@ ABMDE3X ; IHS/ASDST/DMJ - Edit Page 3 - ERROR CHK ;
  I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,3) D
  .I +$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,2),$E($P(^(8),U,2),6,7)="00" S ABME(192)=""
  I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,8)'="" D
- .I ABMP("EXP")=21!(ABMP("EXP")=22)!(ABMP("EXP")=23) D
+ .;I ABMP("EXP")=21!(ABMP("EXP")=22)!(ABMP("EXP")=23) D  ;abm*2.6*8 5010
+ .I ABMP("EXP")=21!(ABMP("EXP")=22)!(ABMP("EXP")=23)!(ABMP("EXP")=31)!(ABMP("EXP")=32)!(ABMP("EXP")=33) D  ;abm*2.6*8 5010
  ..I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,11)'="",(($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,13)="")&($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,14)="")&($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,15)="")) S ABME(193)=""
  ..I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,13)'="" D  ;Person class
  ...I $G(^ABMPTAX("AUSC",$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,13)))="" S ABME(201)=""
@@ -29,7 +30,8 @@ ABMDE3X ; IHS/ASDST/DMJ - Edit Page 3 - ERROR CHK ;
  ...S ABMPTAX=$P($G(^DIC(7,$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),8),U,14),9999999)),U)
  ...I $G(ABMPTAX)="" S ABME(202)=""
  ...I $G(ABMPTAX),$G(^ABMPTAX("A7",ABMPTAX))="" S ABME(202)=""
- .I ABMP("EXP")=21!(ABMP("EXP")=22)!(ABMP("EXP")=23)!(ABMP("EXP")=27)!(ABMP("EXP")=28)!(ABMP("EXP")=29) D
+ .;I ABMP("EXP")=21!(ABMP("EXP")=22)!(ABMP("EXP")=23)!(ABMP("EXP")=27)!(ABMP("EXP")=28)!(ABMP("EXP")=29) D  ;abm*2.6*8 5010
+ .I ABMP("EXP")=21!(ABMP("EXP")=22)!(ABMP("EXP")=23)!(ABMP("EXP")=27)!(ABMP("EXP")=28)!(ABMP("EXP")=29)!(ABMP("EXP")=31)!(ABMP("EXP")=32)!(ABMP("EXP")=33) D  ;abm*2.6*8 5010
  ..S ABMNPIU=$$NPIUSAGE^ABMUTLF(ABMP("LDFN"),ABMP("INS"))
  ..I ABMNPIU="N"!(ABMNPIU="B"),$D(ABM("QU",12)),($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,17)="") S ABME(223)=""  ;Ref prv NPI missing
  ..I ABMNPIU="N"!(ABMNPIU="B"),$D(ABM("QU",25)),($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),9)),U,12)'=""),($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),9)),U,25)="") S ABME(224)=""  ;sup prv NPI missing

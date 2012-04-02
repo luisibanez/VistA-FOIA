@@ -1,5 +1,5 @@
 BIREPD4 ;IHS/CMI/MWR - REPORT, ADOLESCENT RATES; AUG 10,2010
- ;;8.4;IMMUNIZATION;**1**;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW ADOLESCENT IMMUNIZATION RATES REPORT, WRITE HEADERS, ETC.
  ;;  PATCH 1: Fix to count only one Flu dose per season; do not affect
@@ -67,29 +67,8 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  ;---> Don't include this patient in Roster unless set below.
  S BIVAL=0
  ;
- ;---> Quit if patient is not in the Register.
- ;---> Emails of March 2010: For Adolescent Report, include whether patients
- ;---> are in the Register or not.
- ;Q:'$D(^BIP(BIDFN,0))
- ;
- ;---> Quit if patient does not have an Active HRCN at one or more
- ;---> of the Health Care Facilities selected.
- ;---> This would be the only Patient Pop filter if BIUP="r".
- Q:$$HRCN^BIEXPRT2(BIDFN,.BIHCF)
- ;
- ;---> Quit if patient died before the Quarter Ending Date.
- N X S X=$$DECEASED^BIUTL1(BIDFN,1) I X Q:X<BIQDT
- ;
- ;---> If Patient Pop filter is for patients Active in the Imm Register,
- ;---> quit if patient became Inactive before the Quarter Ending Date.
- ;---> Exclude patients whose "Inactive Date"="Not in Register."
- I BIUP="i" N X S X=$$INACT^BIUTL1(BIDFN) I X]"" Q:X<BIQDT
- ;
- ;---> Quit if patient is not in selected User Population Group.
- ;---> Comment out next 2 lines for TESTING PURPOSES - MWRZZZ.
- I BIUP="u" Q:'$$USERPOP^BIUTL6(BIDFN,BIQDT)
- I BIUP="a" Q:'$$ACTCLIN^BIUTL6(BIDFN,BIQDT)
- ;Q:'$$LASTVD^BIREPL3(BIDFN,$$FMADD^XLFDT(BIQDT,(-365*3)),BIQDT)
+ ;---> Filter for standard Patient Population parameter.
+ Q:'$$PPFILTR^BIREP(BIDFN,.BIHCF,BIQDT,BIUP)
  ;
  ;---> Quit if Current Community doesn't match.
  Q:$$CURCOM^BIEXPRT2(BIDFN,.BICC)
@@ -100,8 +79,9 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  ;---> Quit if Beneficiary Type doesn't match.
  Q:$$BENT^BIDUR1(BIDFN,.BIBEN)
  ;
- ;---> If patient is female BISEX=1 (male-0).
- N BISEX S BISEX=$S($$SEX^BIUTL1(BIDFN)="F":1,1:0)
+ ;---> Get patient gender.
+ N BISEX S BISEX=$$SEX^BIUTL1(BIDFN)
+ Q:((BISEX'="F")&(BISEX'="M"))
  ;
  ;---> Get patient age in years on report date.
  N BIAGE S BIAGE=$$AGE^BIUTL1(BIDFN,1,BIQDT)
@@ -121,24 +101,15 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  .S Z=$G(BITMP("STATS","TOTLPTS",1313)) S BITMP("STATS","TOTLPTS",1313)=Z+1
  ;
  ;
- ;---> Set up Male and Female denominators.
- D
- .I $G(BISEX) D  Q
- ..;---> Total Female patients.
- ..S Z=$G(BITMP("STATS","TOTLFPTS")) S BITMP("STATS","TOTLFPTS")=Z+1
- ..;---> Total female patients in Age Group.
- ..S Z=$G(BITMP("STATS","TOTLFPTS",BIAGRP)) S BITMP("STATS","TOTLFPTS",BIAGRP)=Z+1
- ..;---> Duplicate tracking of 13-yr-olds.
- ..D:BIAGE=13
- ...S Z=$G(BITMP("STATS","TOTLFPTS",1313)) S BITMP("STATS","TOTLFPTS",1313)=Z+1
- .;
- .;---> Total Male patients.  Work Order Item #09.
- .;.S Z=$G(BITMP("STATS","TOTLMPTS")) S BITMP("STATS","TOTLMPTS")=Z+1
- .;.;---> Total male patients in Age Group.
- .;.S Z=$G(BITMP("STATS","TOTLMPTS",BIAGRP)) S BITMP("STATS","TOTLMPTS",BIAGRP)=Z+1
- .;.;---> Duplicate tracking of 13-yr-olds.
- .;.D:BIAGE=13
- .;..S Z=$G(BITMP("STATS","TOTLMPTS",1313)) S BITMP("STATS","TOTLMPTS",1313)=Z+1
+ ;---> Set node for female or male denominators.
+ N BISXNOD S BISXNOD=$S(BISEX="F":"TOTLFPTS",1:"TOTLMPTS")
+ ;---> Total Female patients.
+ S Z=$G(BITMP("STATS",BISXNOD)) S BITMP("STATS",BISXNOD)=Z+1
+ ;---> Total female patients in Age Group.
+ S Z=$G(BITMP("STATS",BISXNOD,BIAGRP)) S BITMP("STATS",BISXNOD,BIAGRP)=Z+1
+ ;---> Duplicate tracking of 13-yr-olds.
+ D:BIAGE=13
+ .S Z=$G(BITMP("STATS",BISXNOD,1313)) S BITMP("STATS",BISXNOD,1313)=Z+1
  ;
  ;
  ;---> Store for Patient Report Roster (not yet determined if complete 1321).
@@ -193,14 +164,17 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  .;---> Exclude immunization visits after the Quarter Ending Date, BIQDT.
  .Q:(J>BIQDT)
  .;
+ .;********** v8.5, MAY 15,2011, IHS/CMI/MWR
+ .;---> This code moved up from below.  BIHX(10,D) was getting set for a prior
+ .;---> year's dose, then quitting (because >1year), but also blocking this
+ .;---> year's dose--since BIHX(10 already existed.
+ .;---> Quit if V=FLU and Date of Visit is more than 1 year before Report Date.
+ .Q:((V=10)&($$FMDIFF^XLFDT(BIQDT,J,1)>365))
+ .;**********
+ .;
  .;---> Quit if one Flu dose has already been recorded (only want one Flu
  .;---> dose per patient per season).
- .;
- .;********** PATCH 1, v8.4, AUG 01,2010, IHS/CMI/MWR
- .;---> Quit only if FLU (not for other Vaccine Groups).
- .;Q:$D(BIHX(10))  ;v8.41
  .Q:((V=10)&($D(BIHX(10))))
- .;**********
  .;
  .;---> Build local array for setting combinations stats below.
  .;
@@ -210,19 +184,21 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  ..I $D(BIHX(V,D)) S D=D+1 Q
  ..S BIHX(V,D)="",Q=1
  .;
- .;---> Quit if V=HPV and patient is not female.
- .Q:((V=17)&('BISEX))
- .;
- .;---> Quit if V=FLU and Date of Visit is more than 1 year before Report Date.
- .Q:((V=10)&($$FMDIFF^XLFDT(BIQDT,J,1)>365))
- .;
  .;---> For Flu count every dose as a "dose #1". Might want to go to dose #2. MWRZZZ
  .I V=10 S D=1
  .;
- .;**** HERE FIGURE OUT HOW TO SET APART MALE & FEMALE HPV STATS. USE BISEC, perhaps
- .;****      CONCAT WITH AGE GROUP.
  .;---> Set each immunization in the STATS array by Vaccine Group (V),
  .;---> Dose (D), and Age Group (BIAGRP).
+ .;
+ .;---> If this is HPV, separate female and male by appending sex to age group.
+ .I V=17 D  Q
+ ..N Z S Z=$G(BITMP("STATS",V,D,BIAGRP_BISEX)) S BITMP("STATS",V,D,BIAGRP_BISEX)=Z+1
+ ..S BIHX(V,D,BIAGRP)=""
+ ..;---> Duplicate tracking of 13-yr-olds.
+ ..D:BIAGE=13
+ ...S Z=$G(BITMP("STATS",V,D,1313_BISEX)) S BITMP("STATS",V,D,1313_BISEX)=Z+1
+ .;
+ .;---> Okay, not HPV (don't append sex).
  .N Z S Z=$G(BITMP("STATS",V,D,BIAGRP)) S BITMP("STATS",V,D,BIAGRP)=Z+1
  .S BIHX(V,D,BIAGRP)=""
  .;---> Duplicate tracking of 13-yr-olds.
@@ -255,8 +231,8 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  .;---> Either 1-VAR or Hx of Chicken Pox will count as "1:3:2:1 Current."
  .Q:(('$D(BIHX(7,1,A)))&('$D(BIHXX(132,1,A))))
  .D COMBO("8|1^4|3^6|2^7|1",A,.BITMP,BIAGE)
- .;---> Store for Patient Report Roster (complete 43133).
- .S BIVAL=2
+ .;---> Store for Patient Report Roster (complete 1321).
+ .;S BIVAL=2
  ;
  ;---> 1-Td_B, 3-HEPB, 2-MMR, 1-MEN, 2-VAR
  F K=1:1 S A=$P(BIAGRPS,",",K) Q:'A  D
@@ -266,8 +242,18 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  .Q:'$D(BIHX(16,1,A))
  .Q:'$D(BIHX(7,2,A))
  .D COMBO("8|1^4|3^6|2^16|1^7|2",A,.BITMP,BIAGE)
+ .;---> Store for Patient Report Roster (complete 13212).
+ .;S BIVAL=2
  ;
- ;---> 1-Td_B, 3-HEPB, 2-MMR, 1-MEN, 2-VAR, 3-HPV
+ ;---> 1-Td_B, 1-MEN
+ F K=1:1 S A=$P(BIAGRPS,",",K) Q:'A  D
+ .Q:'$D(BIHX(8,1,A))
+ .Q:'$D(BIHX(16,1,A))
+ .D COMBO("8|1^16|1",A,.BITMP,BIAGE)
+ .;---> Store for Patient Report Roster (complete 11).
+ .S BIVAL=2
+ ;
+ ;---> 1-Td_B, 3-HEPB, 2-MMR, 1-MEN, 2-VAR, 3-HPV (because HPV include BISEX).
  F K=1:1 S A=$P(BIAGRPS,",",K) Q:'A  D
  .Q:'$D(BIHX(8,1,A))
  .Q:'$D(BIHX(4,3,A))
@@ -275,25 +261,30 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  .Q:'$D(BIHX(16,1,A))
  .Q:'$D(BIHX(7,2,A))
  .Q:'$D(BIHX(17,3,A))
- .D COMBO("8|1^4|3^6|2^16|1^7|2^17|3",A,.BITMP,BIAGE)
- ;
+ .D COMBO("8|1^4|3^6|2^16|1^7|2^17|3",A_BISEX,.BITMP,BIAGE,BISEX)
  ;
  Q
  ;
  ;
  ;----------
-COMBO(BICOMB,BIAGRP,BITMP,BIAGE) ;EP
+COMBO(BICOMB,BIAGRP,BITMP,BIAGE,BISEX) ;EP
  ;---> Store Patient vaccine combination for Age Group.
  ;---> Parameters:
  ;     1 - BICOMB (req) Combination number.
  ;     2 - BIAGRP (req) Node/number for this Age Group.
  ;     3 - BITMP  (ret) Stores Patient Totals by Age Group and Sex.
  ;     4 - BIAGE  (opt) Age of patient (if 13, duplicate stats).
+ ;     5 - BISEX  (opt) F or M for HPV.
  ;
  ;---> Store Patient in Age Group.
  N Z S Z=$G(BITMP("STATS",BICOMB,BIAGRP))
  S BITMP("STATS",BICOMB,BIAGRP)=Z+1
  ;---> Duplicate tracking of 13-yr-olds.
  D:BIAGE=13
+ .;---> If this is the HPV combo, include BISEX.
+ .I ((BIAGRP["F")!(BIAGRP["M")) D  Q
+ ..S Z=$G(BITMP("STATS",BICOMB,1313_BISEX)) S BITMP("STATS",BICOMB,1313_BISEX)=Z+1
+ .;
  .S Z=$G(BITMP("STATS",BICOMB,1313)) S BITMP("STATS",BICOMB,1313)=Z+1
+ ;
  Q

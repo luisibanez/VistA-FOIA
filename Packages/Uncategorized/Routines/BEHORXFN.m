@@ -1,5 +1,5 @@
-BEHORXFN ;MSC/IND/DKM/PLS - Supporting calls for EHR ;09-Feb-2011 17:03;PLS
- ;;1.1;BEH COMPONENTS;**009005,009006**;Sep 18, 2007
+BEHORXFN ;MSC/IND/DKM/PLS - Supporting calls for EHR ;25-May-2011 10:11;DKM
+ ;;1.1;BEH COMPONENTS;**009005,009006,009007**;Sep 18, 2007
  ;=================================================================
  ; RPC: BEHORXFN FINISH
  ; Finish a pending script
@@ -8,7 +8,7 @@ BEHORXFN ;MSC/IND/DKM/PLS - Supporting calls for EHR ;09-Feb-2011 17:03;PLS
  ;  DATA returned as:
  ;    Drug[1] ^ Rx #[2] ^ ExpDate[3] ^ RefRem[4] ^ Issue Date[5] ^ Status[6] ^
  ;    Days Supply[7] ^ Quantity[8] ^ Provider IEN~Name[9] ^ PharmID[10] ^ OrderID[11] ^
- ;    LastFill[12] ^ PharmSite[13] ^ NDC[14] ^ RXNORM[15]
+ ;    LastFill[12] ^ PharmSite[13] ^ NDC[14] ^ RXNORM[15] ^ Process State[16] ^ External Pharmacy[17]
  ;   <"\" or " "><Instruction Text>  where "\" indicates a new line
  ;
 FINISH(DATA,DFN,ORIFN) ;
@@ -26,6 +26,8 @@ FINISH(DATA,DFN,ORIFN) ;
  S $P(RXINFO,U,10)=PSIFN_"R;O",$P(RXINFO,U,13)=$$LOC^APSPFNC2(+ORIFN)
  S $P(RXINFO,U,14)=$$NDCVAL^APSPFUNC(PSIFN)
  S $P(RXINFO,U,15)=$$GETRXNRM(+ORIFN,PSIFN)
+ S $P(RXINFO,U,16)=$$PSTATE(PSIFN)
+ S $P(RXINFO,U,17)=$$EPHARM(PSIFN)
  D ADDOUT(RXINFO)
  S INST(1)=" "_$P(RXINFO,U),Y=1
  S:$L($P(RXINFO,U,8)) INST(1)=INST(1)_"  Qty: "_$P(RXINFO,U,8)
@@ -41,16 +43,24 @@ FINISH(DATA,DFN,ORIFN) ;
  Q
  ; RPC: BEHORXFN PRINTLOG
  ; Log print activity
-PRINTLOG(DATA,ORIFN,PRINTER,ACTION) ;
+PRINTLOG(DATA,ORIFN,PRINTER,ACTION,COM) ;
  N ARY,PSIFN
  S:$L(PRINTER)>40 $E(PRINTER,1,$L(PRINTER)-37)="..."
  S PRINTER=$TR(PRINTER,U)
- S ARY("COM")=$S(ACTION:"Sample label",1:"Prescription")_" printed on "_PRINTER_"."
+ I ACTION=2 D
+ .S ARY("COM")=$G(COM,"Comment not provided.")
+ .S ARY("TYPE")="R"
+ E  D
+ .S ARY("COM")=$S(ACTION:"Sample label",1:"Prescription")_" printed on "_PRINTER_"."
+ .S ARY("TYPE")="P"
  S ARY("REASON")="B"
  S ARY("RX REF")=0
  S ARY("DEV")=PRINTER
+ S:$L($G(COM)) ARY("COM")=COM
  S PSIFN=+$$GETPSIFN(ORIFN)
- D:PSIFN UPTLOG^APSPFNC2(.DATA,PSIFN,ACTION,.ARY)
+ I $$ORDFSIG(ORIFN) D
+ .D UPTLOG^BEHORXF1(.DATA,ORIFN,ACTION,.ARY)
+ E  D:PSIFN UPTLOG^APSPFNC2(.DATA,PSIFN,ACTION,.ARY)
  Q
  ; RPC: BEHORXFN GETRXS
  ; Fetch list of current prescriptions
@@ -62,7 +72,8 @@ PRINTLOG(DATA,ORIFN,PRINTER,ACTION) ;
  ;    TotDose[7] ^ UnitDose[8] ^ OrderID[9] ^ Status[10] ^ LastFill[11] ^
  ;    Days Supply[12] ^ Quantity[13] ^ Chronic[14] ^ Issued[15] ^
  ;    Rx #[16] ^ Provider IEN~Name[17] ^ Status Reason[18] ^ DEA Handling[19] ^
- ;    Pharmacy Site[20] ^ Indication ICD~Text[21] ^ DAW[22] ^ NVOA[23] ^ NDC[24] ^ RXNORM[25]
+ ;    Pharmacy Site[20] ^ Indication ICD~Text[21] ^ DAW[22] ^ NVOA[23] ^ NDC[24] ^ RXNORM[25] ^
+ ;    Process State[26] ^ External Pharmacy[27]
  ;
  ;   <"\" or " "><Instruction Text>  where "\" indicates a new line
 GETRXS(DATA,DFN,DAYS) ;
@@ -73,8 +84,9 @@ GETRXS(DATA,DFN,DAYS) ;
  D OCL^PSOORRL(DFN,$$FMADD^XLFDT(DT,-DAYS),"")
  S ILST=0,INDEX=""
  F  S INDEX=$O(^TMP("PS",$J,INDEX),-1) Q:'INDEX  D
- .N INSTRUCT,COMMENTS,FIELDS,NVSDT,TYPE,IND,CMF,RXN,PRV,REASON,DEA,IFN,DAW,J,K,X,NDC,RXNORM
- .S (INSTRUCT,COMMENTS,IND,CMF,RXN,REASON,DEA,DAW,NDC,RXNORM)="",FIELDS=^TMP("PS",$J,INDEX,0),PRV=$TR($G(^("P",0)),U,"~")
+ .N INSTRUCT,COMMENTS,FIELDS,NVSDT,TYPE,IND,CMF,RXN,PRV,REASON,DEA,IFN,DAW,J,K,X,NDC,RXNORM,ATF,EPHARM
+ .S (INSTRUCT,COMMENTS,IND,CMF,RXN,REASON,DEA,DAW,NDC,RXNORM,ATF,EPHARM)=""
+ .S FIELDS=^TMP("PS",$J,INDEX,0),PRV=$TR($G(^("P",0)),U,"~")
  .S IFN=+$P(FIELDS,U,8),X=$O(^OR(100,IFN,4.5,"ID","DRUG",0))
  .S:X X=+$G(^OR(100,IFN,4.5,X,1))
  .S:X DEA=$P($G(^PSDRUG(X,0)),U,3)
@@ -94,6 +106,8 @@ GETRXS(DATA,DFN,DAYS) ;
  ..S DAW=$$GETDAW(IFN)
  ..S NDC=$$GETNDC(IFN)
  ..S RXNORM=$$GETRXNRM(IFN)
+ ..S ATF=$$PSTATE(+$$GETPSIFN(IFN))
+ ..S EPHARM=$$EPHARM(+$$GETPSIFN(IFN))
  ..S J=$P($P(FIELDS,U),";")
  ..I J["R" D
  ...S RXN=$P($G(^PSRX(+J,0)),U),J=$G(^(2)),K=+$G(^("STA"))
@@ -109,7 +123,7 @@ GETRXS(DATA,DFN,DAYS) ;
  ..S $P(FIELDS,U,15)=$G(NVSDT)
  .S:$D(COMMENTS(1)) COMMENTS(1)="\"_COMMENTS(1)
  .S:$P(FIELDS,U,9)="HOLD" REASON=$$HLDRSN(IFN)
- .D ADDOUT("~"_TYPE_U_$P(FIELDS,U,1,12)_U_CMF_U_$P(FIELDS,U,15)_U_RXN_U_PRV_U_REASON_U_DEA_U_$S(IFN:$$LOC^APSPFNC2(IFN),1:"")_U_IND_U_DAW_U_$$NVOA()_U_NDC_U_RXNORM)
+ .D ADDOUT("~"_TYPE_U_$P(FIELDS,U,1,12)_U_CMF_U_$P(FIELDS,U,15)_U_RXN_U_PRV_U_REASON_U_DEA_U_$S(IFN:$$LOC^APSPFNC2(IFN),1:"")_U_IND_U_DAW_U_$$NVOA()_U_NDC_U_RXNORM_U_ATF_U_EPHARM)
  .S J=0
  .F  S J=+$O(INSTRUCT(J)) Q:'J  D ADDOUT(INSTRUCT(J))
  .F  S J=+$O(COMMENTS(J)) Q:'J  D ADDOUT("t"_COMMENTS(J))
@@ -260,6 +274,26 @@ GETRXNRM(ORIFN,PSIFN) ;EP
  .S RXNORM=+$O(^C0CRXN(176.002,"NDC",NDC,0))
  .S RXNORM=$$GET1^DIQ(176.002,RXNORM,.01)
  Q RXNORM
+ ; Return process state of E, Q, P, or I
+PSTATE(PSIFN) ;EP-
+ N RES,ATF,PMY,PRT
+ S RES=""
+ S ATF=$$GET1^DIQ(52,PSIFN,9999999.23,"I")  ;autofinish
+ S PMY=$$GET1^DIQ(52,PSIFN,9999999.24,"I")  ;pharmacy
+ I 'ATF S RES="I"
+ E  D
+ .S PRT=$$CKRXACT^APSPFNC6(PSIFN,"B","PR")
+ .I PMY D
+ ..; if pharmacy and either transmitted or failed to transmit and no print then return E
+ ..; else
+ ..I $$CKRXACT^APSPFNC6(PSIFN,"X","T")!($$CKRXACT^APSPFNC6(PSIFN,"X","F"))&('PRT) S RES="E"
+ ..E  S RES=$S(PRT:"P",1:"Q")
+ .E  D
+ ..S RES=$S(PRT:"P",1:"Q")
+ Q RES
+ ; Return external pharmacy information
+EPHARM(PSIFN) ;EP-
+ Q $$GET1^DIQ(52,PSIFN,9999999.24,"I")_";"_$$GET1^DIQ(52,PSIFN,9999999.24)
  ; Get pharmacy IFN from order IFN
 GETPSIFN(ORIFN) ;
  N PKG,PSIFN
@@ -342,3 +376,8 @@ CLNNVA ;EP -
  ..S FDA(55.05,IEN_","_DFN_",",9999999.11)="@"
  D:$D(FDA) UPDATE^DIE("","FDA",,"NVAERR")
  Q
+ ; Returns boolean flag indicating if order is Order For Signature
+ORDFSIG(ORIFN) ;EP-
+ N ORD
+ S ORD=$G(^OR(100,ORIFN,4))
+ Q (ORD?.N1"S")&($P($G(^OR(100,ORIFN,3)),U,3)=5)

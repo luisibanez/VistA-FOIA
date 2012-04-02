@@ -1,5 +1,5 @@
 BIUTL2 ;IHS/CMI/MWR - UTIL: ZIS, PATH, ERRCODE; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  UTILITY: ZIS, ERROR CODE, VACCINE NAME & GROUP,
  ;;           MAX SERIES#, LOT DFLT, CASE MGR DFLT, VIS DATE DFLT.
@@ -145,6 +145,7 @@ VGROUP(BIVG,Z) ;EP
  S BIVG0=$G(^BISERT(BIVG,0))
  S:BIVG0="" BIVG=12,BIVG0=$G(^BISERT(BIVG,0))
  ;
+ S:('$G(Z)) Z=1
  I Z=3 Q +$P(BIVG0,U,5)
  I Z=4 Q +$P(BIVG0,U,2)
  I Z=5 Q $P(BIVG0,U,3)
@@ -394,7 +395,7 @@ VALIDRUL(DUZ2) ;EP - Return 0 if not a valid choice of Immserve Rules.
  ;---> For a new set of Immserve Rules, change here below and $$RULES+10^BISITE2.
  ;---> Current valid choices are 1,2,3,4,5,11.
  Q:((X<1)!(X>11)) 0
- Q:((X>6)&(X<11)) 0
+ Q:((X>7)&(X<11)) 0
  Q X_$S($P(Y,U,21):"g",1:"")_$S($P(Y,U,24)=2:"m26",1:"m18")
  ;
  ;

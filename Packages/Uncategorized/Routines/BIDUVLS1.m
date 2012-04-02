@@ -1,12 +1,12 @@
 BIDUVLS1 ;IHS/CMI/MWR - VIEW DUE LIST.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  LIST TEMPLATE CODE FOR VIEWING PATIENTS.
  ;;  PATCH 1: Corrects Patient Group for not displaying Age Range.  HDR+21
  ;
  ;
  ;----------
-START(BIFDT,BINFO,BIPG,BIAG,BIT,BIVAL,BIDASH,BITITL,BIRPDT) ;EP
+START(BIFDT,BINFO,BIPG,BIAG,BIT,BIVAL,BIDASH,BITITL,BIRPDT,BIBEN) ;EP
  ;---> Display Immunizations Due List via Listman.
  ;---> Parameters:
  ;     1 - BIFDT  (req) Forecast/Clinic Date.
@@ -21,6 +21,7 @@ START(BIFDT,BINFO,BIPG,BIAG,BIT,BIVAL,BIDASH,BITITL,BIRPDT) ;EP
  ;                      in report header.
  ;     9 - BIRPDT (opt) Report Date: Today unless passed from reports
  ;                                   (e.g., Quarterly Report).
+ ;    10 - BIBEN  (req) Beneficiary Type array: either BIBEN(1) or BIBEN("ALL").
  ;
  ;----------
 MAIN ;EP
@@ -62,10 +63,11 @@ HDR ;EP
  S X=X_"        Total Patients: "_$G(BIT)
  ;
  D:$G(BIAG)]""
- .;---> For Patient Group (7=Search Template) to not display Age Range.
- .Q:(+BIPG=7)
+ .;---> For Patient Group (8=Search Template) to not display Age Range.
+ .Q:(+BIPG=8)
  .I BIAG="ALL" S X=X_"  (All Ages)" Q
  .S X=X_" ("_$$MTHYR^BIAGE(BIAG)_")"
+ I +BIPG'=8 S X=X_" *"_$S($D(BIBEN("ALL")):"All",1:"01")
  D WH^BIW(.BILINE,X)
  ;
  D
@@ -166,13 +168,13 @@ INIT ;EP
  ;
  ;
  ;---> Loop through ^TMP("BIDUL",$J,...,BIDFN) adding patients to list.
+ ;---> Seed loops with -1 to pick up entries with a subscript of 0. Imm v8.5.
  N BIDFN,N,M,P
- ;
- S N=0
+ S N=-1
  F  S N=$O(^TMP("BIDUL",$J,N)) Q:N=""  D
- .S M=0
+ .S M=-1
  .F  S M=$O(^TMP("BIDUL",$J,N,M)) Q:M=""  D
- ..S P=0
+ ..S P=-1
  ..F  S P=$O(^TMP("BIDUL",$J,N,M,P)) Q:P=""  D
  ...N BIVAL1
  ...S BIDFN=0
@@ -181,7 +183,7 @@ INIT ;EP
  ....I $G(BIVAL) Q:BIVAL'=BIVAL1
  ....N N,M,P
  ....;---> Write line to ^TMP("BIDULV",$J,BILINE,0)=BIVAL global.
- ....D PATIENT^BIDUVLS2(.BILINE,BIDFN,.BINFO,$G(BIDASH))
+ ....D PATIENT^BIDUVLS2(.BILINE,BIDFN,.BINFO,$G(BIDASH),.BIMMRF,.BIMMLF)
  ;
  ;---> If no records were found to match, report it.
  D:'$G(BIT)

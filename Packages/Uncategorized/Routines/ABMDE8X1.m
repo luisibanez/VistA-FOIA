@@ -1,5 +1,5 @@
 ABMDE8X1 ; IHS/ASDST/DMJ - Page 8 - ERROR CHECKS-CONT ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**8**;NOV 12, 2009
  ;
  ; IHS/SD/SDR - v2.5 p8 - task 6
  ;    Added code for page 8K error checks; also added
@@ -22,8 +22,13 @@ E1 ;EP - Entry Point Page 8E error checks cont
  .S ABMCODXS=$P(ABMX("X0"),U,9)
  .I ABMCODXS'="" D
  ..F ABMJ=1:1 S ABMCODX=$P(ABMCODXS,",",ABMJ) Q:+$G(ABMCODX)=0  D
- ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX
- ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX
+ ...;start old code abm*2.6*8 NOHEAT
+ ...;I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX
+ ...;I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX
+ ...;end old code start new code
+ ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX("I")
+ ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX("I")
+ ...;end new code
  I $P(ABMX("X0"),U,3)="" S ABME(123)=""
  I $P(ABMX("X0"),U,4)="" S ABME(126)=""
  I +$O(^ABMNINS(ABMP("LDFN"),ABMP("INS"),4,"B",$P(ABMX("X0"),U),0))'=0 D
@@ -38,8 +43,13 @@ E1 ;EP - Entry Point Page 8E error checks cont
  .F  S ABMPIEN=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),37,ABMX,"P",ABMPIEN)) Q:+ABMPIEN=0  D
  ..S ABMNPIUS=$$NPIUSAGE^ABMUTLF(ABMP("LDFN"),ABMP("INS"))
  ..S ABMPRV=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),37,ABMX,"P",ABMPIEN,0)),U)
- ..I ABMNPIUS="N",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(220)=$S('$D(ABME(220)):ABMX,1:ABME(220)_","_ABMX)
- ..I ABMNPIUS="B",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(221)=$S('$D(ABME(221)):ABMX,1:ABME(221)_","_ABMX)
+ ..;start old code abm*2.6*8 NOHEAT
+ ..;I ABMNPIUS="N",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(220)=$S('$D(ABME(220)):ABMX,1:ABME(220)_","_ABMX)
+ ..;I ABMNPIUS="B",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(221)=$S('$D(ABME(221)):ABMX,1:ABME(221)_","_ABMX)
+ ..;end old code start new code
+ ..I ABMNPIUS="N",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(220)=$S('$D(ABME(220)):ABMX("I"),1:ABME(220)_","_ABMX("I"))
+ ..I ABMNPIUS="B",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(221)=$S('$D(ABME(221)):ABMX("I"),1:ABME(221)_","_ABMX("I"))
+ ..;end new code
  ..Q:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),37,ABMX,"P",ABMPIEN,0)),U,2)'="D"
  ..S ABMPRV=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),37,ABMX,"P",ABMPIEN,0)),U)
  ..I $P($G(^VA(200,ABMPRV,.11)),U)="" S ABME(216)=ABMX  ;provider street
@@ -58,8 +68,13 @@ F1 ;EP - Entry Point Page 8F error checks cont
  .S ABMCODXS=$P(ABMX("X0"),U,8)
  .I ABMCODXS'="" D
  ..F ABMJ=1:1 S ABMCODX=$P(ABMCODXS,",",ABMJ) Q:+$G(ABMCODX)=0  D
- ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX
- ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX
+ ...;start old code abm*2.6*8 NOHEAT
+ ...;I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX
+ ...;I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX
+ ...;end old code start new code
+ ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX("I")
+ ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX("I")
+ ...;end new code
  I $P(ABMX("X0"),U,3)="" S ABME(123)=""
  I $P(ABMX("X0"),U,4)="" S ABME(126)=""
  I ABMMODE(6)=22!(ABMMODE(6)=27) D
@@ -67,8 +82,13 @@ F1 ;EP - Entry Point Page 8F error checks cont
  .F  S ABMPIEN=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),35,ABMX,"P",ABMPIEN)) Q:+ABMPIEN=0  D
  ..S ABMNPIUS=$$NPIUSAGE^ABMUTLF(ABMP("LDFN"),ABMP("INS"))
  ..S ABMPRV=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),35,ABMX,"P",ABMPIEN,0)),U)
- ..I ABMNPIUS="N",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(220)=$S('$D(ABME(220)):ABMX,1:ABME(220)_","_ABMX)
- ..I ABMNPIUS="B",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(221)=$S('$D(ABME(221)):ABMX,1:ABME(221)_","_ABMX)
+ ..;start old code abm*2.6*8 NOHEAT
+ ..;I ABMNPIUS="N",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(220)=$S('$D(ABME(220)):ABMX,1:ABME(220)_","_ABMX)
+ ..;I ABMNPIUS="B",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(221)=$S('$D(ABME(221)):ABMX,1:ABME(221)_","_ABMX)
+ ..;end old code start new code
+ ..I ABMNPIUS="N",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(220)=$S('$D(ABME(220)):ABMX("I"),1:ABME(220)_","_ABMX("I"))
+ ..I ABMNPIUS="B",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(221)=$S('$D(ABME(221)):ABMX("I"),1:ABME(221)_","_ABMX("I"))
+ ..;end new code
  ..Q:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),35,ABMX,"P",ABMPIEN,0)),U,2)'="D"
  ..S ABMPRV=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),35,ABMX,"P",ABMPIEN,0)),U)
  ..I $P($G(^VA(200,ABMPRV,.11)),U)="" S ABME(216)=ABMX  ;provider street
@@ -87,8 +107,13 @@ G1 ;EP - Entry Point Page 8G error checks cont
  .S ABMCODXS=$P(ABMX("X0"),U,10)
  .I ABMCODXS'="" D
  ..F ABMJ=1:1 S ABMCODX=$P(ABMCODXS,",",ABMJ) Q:+$G(ABMCODX)=0  D
- ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX
- ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX
+ ...;start old code abm*2.6*8 NOHEAT
+ ...;I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX
+ ...;I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX
+ ...;end old code start new code
+ ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX("I")
+ ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX("I")
+ ...;end new code
  I $P(ABMX("X0"),U,3)="" S ABME(132)=""
  I $P(ABMX("X0"),U,4)="" S ABME(126)=""
  I ABMMODE(7) D
@@ -96,8 +121,13 @@ G1 ;EP - Entry Point Page 8G error checks cont
  .F  S ABMPIEN=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),39,ABMX,"P",ABMPIEN)) Q:+ABMPIEN=0  D
  ..S ABMNPIUS=$$NPIUSAGE^ABMUTLF(ABMP("LDFN"),ABMP("INS"))
  ..S ABMPRV=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),39,ABMX,"P",ABMPIEN,0)),U)
- ..I ABMNPIUS="N",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(220)=$S('$D(ABME(220)):ABMX,1:ABME(220)_","_ABMX)
- ..I ABMNPIUS="B",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(221)=$S('$D(ABME(221)):ABMX,1:ABME(221)_","_ABMX)
+ ..;start old code abm*2.6*8 NOHEAT
+ ..;I ABMNPIUS="N",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(220)=$S('$D(ABME(220)):ABMX,1:ABME(220)_","_ABMX)
+ ..;I ABMNPIUS="B",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(221)=$S('$D(ABME(221)):ABMX,1:ABME(221)_","_ABMX)
+ ..;end old code start new code
+ ..I ABMNPIUS="N",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(220)=$S('$D(ABME(220)):ABMX("I"),1:ABME(220)_","_ABMX("I"))
+ ..I ABMNPIUS="B",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(221)=$S('$D(ABME(221)):ABMX("I"),1:ABME(221)_","_ABMX("I"))
+ ..;end new code
  ..Q:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),39,ABMX,"P",ABMPIEN,0)),U,2)'="D"
  ..S ABMPRV=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),39,ABMX,"P",ABMPIEN,0)),U)
  ..I $P($G(^VA(200,ABMPRV,.11)),U)="" S ABME(216)=ABMX  ;provider street
@@ -116,8 +146,8 @@ H1 ;EP - Entry Point Page 8H error checks cont
  .S ABMCODXS=$P(ABMX("X0"),U,6)
  .I ABMCODXS'="" D
  ..F ABMJ=1:1 S ABMCODX=$P(ABMCODXS,",",ABMJ) Q:+$G(ABMCODX)=0  D
- ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX
- ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX
+ ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX("I")
+ ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX("I")
  I $P(ABMX("X0"),U,3)="" S ABME(123)=""
  I $P(ABMX("X0"),U,4)="" S ABME(126)=""
  I $P($G(^DIC(40.7,ABMP("CLN"),0)),U,2)["A3" D
@@ -133,8 +163,13 @@ H1 ;EP - Entry Point Page 8H error checks cont
  .F  S ABMPIEN=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),43,ABMX,"P",ABMPIEN)) Q:+ABMPIEN=0  D
  ..S ABMNPIUS=$$NPIUSAGE^ABMUTLF(ABMP("LDFN"),ABMP("INS"))
  ..S ABMPRV=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),43,ABMX,"P",ABMPIEN,0)),U)
- ..I ABMNPIUS="N",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(220)=$S('$D(ABME(220)):ABMX,1:ABME(220)_","_ABMX)
- ..I ABMNPIUS="B",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(221)=$S('$D(ABME(221)):ABMX,1:ABME(221)_","_ABMX)
+ ..;start old code abm*2.6*8 NOHEAT
+ ..;I ABMNPIUS="N",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(220)=$S('$D(ABME(220)):ABMX,1:ABME(220)_","_ABMX)
+ ..;I ABMNPIUS="B",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(221)=$S('$D(ABME(221)):ABMX,1:ABME(221)_","_ABMX)
+ ..;end old code start new code
+ ..I ABMNPIUS="N",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(220)=$S('$D(ABME(220)):ABMX("I"),1:ABME(220)_","_ABMX("I"))
+ ..I ABMNPIUS="B",($P($$NPI^XUSNPI("Individual_ID",ABMPRV),U)<0) S ABME(221)=$S('$D(ABME(221)):ABMX("I"),1:ABME(221)_","_ABMX("I"))
+ ..;end new code
  ..Q:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),43,ABMX,"P",ABMPIEN,0)),U,2)'="D"
  ..S ABMPRV=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),43,ABMX,"P",ABMPIEN,0)),U)
  ..I $P($G(^VA(200,ABMPRV,.11)),U)="" S ABME(216)=ABMX  ;provider street
@@ -152,8 +187,13 @@ K1 ;EP - Entry Point Page 8K error checks cont
  .S ABMCODXS=$P(ABMX("X0"),U,6)
  .I ABMCODXS'="" D
  ..F ABMJ=1:1 S ABMCODX=$P(ABMCODXS,",",ABMJ) Q:+$G(ABMCODX)=0  D
- ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX
- ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX
+ ...;start old code abm*2.6*8 NOHEAT
+ ...;I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX
+ ...;I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX
+ ...;end old code start new code
+ ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))'="") S ABME(217)=$G(ABME(217))_","_ABMX("I")
+ ...I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABMCODX,0))=0,($G(ABME(217))="") S ABME(217)=ABMX("I")
+ ...;end new code
  I $P(ABMX("X0"),U,3)="" S ABME(123)=""
  I $P(ABMX("X0"),U,4)="" S ABME(126)=""
  I $P(ABMX("X0"),U,5)="" D

@@ -1,5 +1,5 @@
 ABMDE2X3 ; IHS/ASDST/DMJ - PAGE 2 - INSURER DATA CK PART 3 ;    
- ;;2.6;IHS Third Party Billing System;**3**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**3,8**;NOV 12, 2009
  ;
  ; IHS/ASDS/DMJ - 10/04/00 - V2.4 P3 - NOIS HQW-1000-100062
  ;     Modified code to be CACHE compliant
@@ -26,7 +26,8 @@ ABMDE2X3 ; IHS/ASDST/DMJ - PAGE 2 - INSURER DATA CK PART 3 ;
  ;
  ;start new code abm*2.6*3 HEAT8996
 GRP ;
- I $P($G(^AUTNINS(ABMP("INS"),2)),U)="D" D
+ ;I $P($G(^AUTNINS(ABMP("INS"),2)),U)="D" D  ;abm*2.6*8 HEAT37612
+ I +$G(ABMP("INS"))'=0,$P($G(^AUTNINS(ABMP("INS"),2)),U)="D" D  ;abm*2.6*8 HEAT37612
  .S:(+$G(ABMX("2"))'=0) ABMX("GRP")=$P($G(^AUPNMCD(+ABMX("2"),0)),U,17)
  .I $G(ABMX("GRP"))]"" D
  ..I $D(^AUTNEGRP(ABMX("GRP"),0)) D

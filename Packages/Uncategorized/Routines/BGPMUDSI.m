@@ -1,5 +1,5 @@
 BGPMUDSI ; IHS/MSC/MMT - DISPLAY MEASURE LISTS ;02-Mar-2011 16:50;MGH
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;; ;
 EP ;EP - CALLED FROM OPTION
  D EN
@@ -36,8 +36,8 @@ ENM ;EP -- main entry point for Menu Set measure selection
  Q
  ;
 HDR ; -- header code
- S VALMHDR(1)="IHS Meaningful Use Performance Measures"
- S VALMHDR(2)="* indicates the performance measure has been selected"
+ S VALMHDR(1)="IHS Meaningful Use Clinical Quality Measures"
+ S VALMHDR(2)="* indicates the clinical quality measure has been selected"
  Q
  ;
 INIT ; ALL EP Measures -- init variables and list array

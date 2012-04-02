@@ -1,10 +1,12 @@
-BHSAST ;IHS/MSC/MGH - Asthma supplement data ;22-Feb-2010 10:42;MGH
- ;;1.0;HEALTH SUMMARY COMPONENTS;**3**;March 17,2006
+BHSAST ;IHS/MSC/MGH - Asthma supplement data ;04-Aug-2011 14:21;MGH
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**3,6**;March 17,2006;Build 5
  ;============================================================
  ; IHS/CMI/LAB - ;16-Jul-2009 09:38;MGH
  ;;2.0;IHS PCC SUITE;;MAY 14, 2009
  ;Copy of APCHAST routine in IHS health summary
  ;BJPC v1.0 patch 1
+ ;Patch 6 upgraded for tobacco
+ ;-----------------------------------------------------
 S(Y,F,C,T) ;EP - set up array
  I '$G(F) S F=0
  I '$G(T) S T=0
@@ -132,7 +134,10 @@ TRIGHF ;trigger health factors
  S X="Triggers:  "_$S('BHG:"No Triggers identified.",1:"") D S(X,1)
  S BHG=0 F  S BHG=$O(BHSX(BHG)) Q:BHG'=+BHG  D S(BHSX(BHG))
 TOB ;
- S Y=$$LASTTOBS^APCLAPI1(DFN,,,"A"),X="Last Recorded TOBACCO Screening: "_$P(Y,U,2)_"  "_$$FMTE^XLFDT($P(Y,U,1)) D S(X,1)
+ ;S Y=$$LASTTOBS^APCLAPI1(DFN,,,"A"),X="Last Recorded TOBACCO Screening: "_$P(Y,U,2)_"  "_$$FMTE^XLFDT($P(Y,U,1)) D S(X,1)
+ S Y=$$LASTSMOK^APCLAPI7(DFN,,,"A"),X="Last TOBACCO (SMOKING) Screening: "_$P(Y,U,2)_"  "_$$DATE^APCHSMU($P(Y,U,1))  D S(X,1)
+ S Y=$$LASTSMLE^APCLAPI7(DFN,,,"A"),X="Last TOBACCO (SMOKELESS) Screening: "_$P(Y,U,2)_"  "_$$DATE^APCHSMU($P(Y,U,1))  D S(X,1)
+ S Y=$$LASTSMEX^APCLAPI7(DFN,,,"A"),X="Last TOBACCO (EXPOSURE) Screening: "_$P(Y,U,2)_"  "_$$DATE^APCHSMU($P(Y,U,1))  D S(X,1)
 V D LAST5
  S X="Last 5 Visits w/LUNG FUNCTION Measurements" D S(X,1)
  S X="",$E(X,3)="DATE",$E(X,20)="FEV1/FVC",$E(X,38)="Highest Visit Peak Flow",$E(X,65)="FEF 25-75" D S(X)

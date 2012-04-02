@@ -1,8 +1,9 @@
 BDGAD4 ; IHS/ANMC/LJF - A&D DISCHARGES ; 
- ;;5.3;PIMS;**1003,1005,1009**;MAY 28, 2004
+ ;;5.3;PIMS;**1003,1005,1009,1013**;MAY 28, 2004
  ;IHS/ITSC/LJF 06/03/2005 PATCH 1003 added code for multiple discharges per patient
  ;IHS/OIT/LJF  12/29/2005 PATCH 1005 changed AGE^BDGF2 to official API
  ;cmi/anch/maw 02/11/2008 added fix in GATHER PATCH 1009
+ ;ihs/cmi/maw  09/14/2011 added check of service being DAY SURGERY
  ;
 LOOP ;--loop discharges
  NEW DGDT,DFN,IFN
@@ -27,7 +28,7 @@ GATHER ; gather info on discharges and put counts into arrays
  I OLDSVN["OBSERVATION" S LOS=$$LOSHRS^BDGF1(ADM,DGDT,DFN)  ;los-hours
  ;
  ;  collect patient data for report
- S NAME=$$GET1^DIQ(2,DFN,.01),X=$S(OLDSVN["OBSERVATION":"O",1:"I")
+ S NAME=$$GET1^DIQ(2,DFN,.01),X=$S(OLDSVN["OBSERVATION":"O",OLDSVN="DAY SURGERY":"D",1:"I")
  S DATA=OLDSV_U_OLDWD
  ;IHS/OIT/LJF 12/29/2005 PATCH 1005 changed AGE call to official API
  ;I BDGFRM="D" S DATA=DATA_U_$$LASTPRV^BDGF1(ADM,DFN)_U_$$AGE^BDGF2(DFN,+$G(^DGPM(ADM,0)))  ;add provider and age at admission

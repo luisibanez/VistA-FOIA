@@ -1,5 +1,5 @@
 BIPATE ;IHS/CMI/MWR - PATIENT CASE DATA EDIT; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EDIT PATIENT CASE DATA.
  ;
@@ -82,8 +82,9 @@ AUTOADD(BIDFN,BISITE,BIERR,BINACT) ;PEP - Automatically add a Patient to the Imm
  ;---> If an Inactive Date is passed, Patient will be added as Inactive today.
  ;---> If no Inactive Date is passed and the Patient is under 36 months of age
  ;---> and has a Current Community in the GPRA Set of Communities (defined by
- ;---> Imm Manager under Edit Site Parameters), then the Patient will be
- ;---> added as Active.  Otherwise the Patient is added as Inactive.
+ ;---> Imm Manager under Edit Site Parameters), or if the Patient has NO Current
+ ;---> Cummunity set yet, then the Patient will be added as Active.
+ ;---> Otherwise the Patient is added as Inactive.
  ;---> Parameters:
  ;     1 - BIDFN  (req)   Patient's IEN in VA PATIENT File #2.
  ;     2 - BISITE (req)   DUZ(2) for default Case Manager.
@@ -102,7 +103,12 @@ AUTOADD(BIDFN,BISITE,BIERR,BINACT) ;PEP - Automatically add a Patient to the Imm
  .;---> Forced Inactive by passing Inactive Date.
  .I $G(BINACT) S BINACTR="n" Q
  .;---> Under 36 mths and in GPRA, this patient will be Active.
- .I $$AGE^BIUTL1(BIDFN,2)<36,$$ISGPRA^BIUTL11(BIDFN,BISITE) Q
+ .;I $$AGE^BIUTL1(BIDFN,2)<36,$$ISGPRA^BIUTL11(BIDFN,BISITE) Q
+ .N BIAGE S BIAGE=$$AGE^BIUTL1(BIDFN,2)
+ .;---> Request by Amy Groom:
+ .;---> If under 36 mths and patient has NO Cur Community, add as Active.
+ .I BIAGE<36,'$$CURCOM^BIUTL11(BIDFN) Q
+ .I BIAGE<36,$$ISGPRA^BIUTL11(BIDFN,BISITE) Q
  .;---> Older than 36 mths or not in GPRA, this patient will be Inactive
  .;---> as of today with a Reason of "Never Activated."
  .S BINACT=$G(DT),BINACTR="n"

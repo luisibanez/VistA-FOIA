@@ -1,5 +1,5 @@
 ABMAPASS ; IHS/ASDST/DMJ - PASS INFO TO A/R ;    
- ;;2.6;IHS 3P BILLING SYSTEM;**3,4,6**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,4,6,8**;NOV 12, 2009
  ;Original;DMJ
  ;
  ;IHS/DSD/MRS-4/1/1999 Modify to check for missing root of insurer array
@@ -60,6 +60,7 @@ ABMAPASS ; IHS/ASDST/DMJ - PASS INFO TO A/R ;
  ; ABMA("PROV")   =        Attending Provider (Pointer)
  ; ABMA("CREDIT") =        Total payments (payment+deductable+coins)
  ; ABMA("OTHIDENT") =      Other Bill Identifier for A/R (from POS)
+ ; ABMA("LICN") =          Line Item Control Number (if flat rate)  ;abm*2.6*8
  ;
  ;  ITEM ARRAY
  ;
@@ -73,6 +74,7 @@ ABMAPASS ; IHS/ASDST/DMJ - PASS INFO TO A/R ;
  ; ABMA(counter,"ITNM")   = Revenue code description (item)
  ; ABMA(counter,"ITCODE") = Revenue code (item code)
  ; ABMA(counter,"DOS")    = Date of service
+ ; ABMA(counter,"LICN")   = Line Item Control Number  ;abm*2.6*8
  ;
  ; start new code abm*2.6*3 POS Rejection codes
  ; ABMA(73,"REJDATE") = POS rejection date
@@ -228,6 +230,7 @@ CONV ;
  ...S ABMA(K,"ITQT")=$P(ABMRV(L,J,M),U,5)
  ...S ABMA(K,"ITTOT")=$P(ABMRV(L,J,M),U,6)
  ...S ABMA(K,"ITUC")=ABMA(K,"ITTOT")
+ ...S ABMA(K,"LICN")=$P(ABMRV(L,J,M),U,38)  ;abm*2.6*8
  ...I I=23 D
  ....S ABMA(K,"OTUC")=ABM(5)
  ....S ABMA(K,"OTIT")="DISPENSE FEE"
@@ -286,9 +289,11 @@ TXT ;FIELDS
  ;;.15;;DTAP
  ;;.17;;DTBILL
  ;;.21;;BLAMT
+ ;;.29;;LICN
  ;;.71;;DOSB
  ;;.72;;DOSE
  ;;END
+ ;abm*2.6*8 added .29 field above
  ;
  ; *********************************************************************
 EXT ;EP 

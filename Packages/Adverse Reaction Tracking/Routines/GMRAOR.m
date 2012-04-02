@@ -1,5 +1,5 @@
-GMRAOR ;HIRMFO/WAA,RM-OERR UTILITIES ;04-Nov-2010 09:17;DU
- ;;4.0;Adverse Reaction Tracking;**2,13,1002**;Mar 29, 1996;Build 32
+GMRAOR ;HIRMFO/WAA,RM-OERR UTILITIES ;02-Aug-2011 11:45;DU
+ ;;4.0;Adverse Reaction Tracking;**2,13,1002,1003**;Mar 29, 1996;Build 18
  ;IHS/MSC/MGH Updated order check to screen out inactive entries
 ORCHK(DFN,TYP,PTR) ; Given a patient IEN (DFN), this function will
  ; return 1 (true) if the patient has an allergy to an agent defined
@@ -49,7 +49,7 @@ DRUG(DFN,PTR) ; Subroutine checks for Drug Reaction, returns 1 or 0.
  ..;IHS/MSC/MGH Added check for inactive entries
  ..S GMRAI=0,%=1 F  S GMRAI=$O(^TMP("PSN",$J,GMRAI)) Q:GMRAI<1  I $D(^GMR(120.8,"API",DFN,GMRAI)) D
  ...S X1="" S X1=$O(^GMR(120.8,"API",DFN,GMRAI,X1)) Q:X1=""  D
- ....I $$ACTIVE(X1) S FLG=1,GMRAING(%)=^TMP("PSNDD",$J,GMRAI),%=%+1
+ ....I $$ACTIVE(X1) S FLG=1,GMRAING(%)=^TMP("PSN",$J,GMRAI),%=%+1
  ..K ^TMP("PSN",$J)
  ..Q
  .Q:FLG  ; Rxn to ingredient, quit now.

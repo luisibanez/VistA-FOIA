@@ -1,5 +1,5 @@
 ABME8SBR ; IHS/ASDST/DMJ - 837 SBR Segment 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**8**;NOV 12, 2009
  ;Transaction Set Header
  ;
  ; IHS/SD/SDR - v2.5 p8 - IM15307/IM14092
@@ -66,6 +66,7 @@ LOOP ;LOOP HERE
  I ABMI=1,ABMP("EXP")=23 D
  .I $G(ABMP("INS",2)) S ABMR("SBR",70)=1
  .I '$G(ABMP("INS",2)) S ABMR("SBR",70)=6
+ .I ABMPST=1 S ABMR("SBR",70)=""  ;abm*2.6*8 HEAT28632 - Removes "1" from SBR06 for primary payer when 2ndry payer billed
  Q
 80 ;SBR07 - Yes/No Condition or Response Code
  S ABMR("SBR",80)=""

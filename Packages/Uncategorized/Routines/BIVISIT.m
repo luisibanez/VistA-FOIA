@@ -1,5 +1,5 @@
 BIVISIT ;IHS/CMI/MWR - ADD/EDIT IMM/SKIN VISITS.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  CODE TO ADD V IMMUNIZATION AND V SKIN TEST VISITS.
  ;;  CALLED BY BIRPC3.
@@ -41,6 +41,7 @@ PARSE(Y,Z) ;EP
  ;    24 - BICCPT  (opt) If created from CPT ^DD BICCPT=1 or IEN; otherwise=""
  ;                       (called from BIRPC6
  ;    25 - BIMPRT  (opt) If =1 it was imported.
+ ;    26 - BINDC   (opt) NDC Code IEN pointer to file #9002084.95.
  ;
  N V S V="|"
  ;
@@ -69,6 +70,7 @@ PARSE(Y,Z) ;EP
  S BISITE=$P(Y,V,23)
  S BICCPT=$P(Y,V,24)
  S BIMPRT=$P(Y,V,25)
+ S BINDC=$P(Y,V,26)
  Q
  ;
  ;
@@ -209,8 +211,9 @@ VFILE(BIVSIT,BIDATA,BIERR) ;EP
  .;---> Lot Number IEN for this immunization.
  .S:'$G(BILOT) BILOT=""
  .;---> Lot Number passed to PCC more reliably if prepend "`". ;MWRZZZ 10/30/06
- .S:BILOT BILOT="`"_BILOT
- .S APCDALVR("APCDTLOT")=BILOT
+ .;---> Imm v8.5: Handle Lot Number below
+ .;S:BILOT BILOT="`"_BILOT
+ .;S APCDALVR("APCDTLOT")=BILOT
  .;
  .;---> Reaction to this vaccine on this Visit.
  .S:'$G(BIREC) BIREC=""
@@ -308,12 +311,17 @@ VFILE(BIVSIT,BIDATA,BIERR) ;EP
  ;---> Build DR string.
  S:BIVISD="" BIVISD="@" S:BIOVRD="" BIOVRD="@"
  S:BIINJS="" BIINJS="@" S:BIVOL="" BIVOL="@"
+ S:BILOT="" BIILOT="@" S:BINDC="" BINDC="@"
  ;
  ;---> Store Additional data.
- N BIFLD S BIFLD(.08)=BIOVRD,BIFLD(.09)=BIINJS
+ N BIFLD
+ ;---> Imm v8.5: Move add/edit of Lot Number here, so it doesn't mess up APDC call.
+ S BIFLD(.05)=BILOT
+ S BIFLD(.08)=BIOVRD,BIFLD(.09)=BIINJS
  S BIFLD(.11)=BIVOL,BIFLD(.12)=BIVISD,BIFLD(.13)=BICCPT
  S BIFLD(.14)=BIVFC
  S BIFLD(.15)=$S(BIMPRT>0:2,1:"")
+ S BIFLD(.16)=BINDC
  D FDIE^BIFMAN(9000010.11,BIADFN,.BIFLD,.BIERR)
  I BIERR=1 D  Q
  .D ERRCD^BIUTL2(421,.BIERR) S BIERR="1^"_BIERR

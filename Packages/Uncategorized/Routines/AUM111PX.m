@@ -1,5 +1,5 @@
-AUM111PX ;IHS/VEN/RNB - AUM v11.0 pre-init ;
- ;;11.0;TABLE MAINTENANCE;;OCT 15, 2010
+AUM111PX ;IHS/VEN/RNB - AUM v12.0 pre-init ;
+ ;;12.0;TABLE MAINTENANCE;;SEP 27,2011
  ;
  ; From orignal AUMPREX routine
  ; This is the pre-init for AUM 9.1. It strips all control chars

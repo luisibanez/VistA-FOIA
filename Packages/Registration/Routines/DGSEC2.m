@@ -1,7 +1,9 @@
 DGSEC2 ;ALB/RMO - Display User Access to Patient Record ; 22 JUN 87 1:00 pm
- ;;5.3;Registration;**391**;Aug 13, 1993
+ ;;5.3;Registration;**391,1013**;Aug 13, 1993
  ;IHS/ANMC/LJF  9/01/2000 added call to list template
  ;              1/04/2002 removed screen on lookup
+ ;
+ ;ihs/cmi/maw 05/10/2011 PATCH 1013 RQMT 158 changed width of record to accomodate more option used text
  ;
  I '$D(^XUSEC("DG SECURITY OFFICER",DUZ)) W !!?3,*7,"You do not have the appropriate access privileges to display user access." Q
  S DIC("A")="Select PATIENT NAME: ",DIC="^DGSL(38.1,",DIC(0)="AEMQ"
@@ -37,7 +39,7 @@ CHKDTE ;F DGDTE=DGENDDT:0 S DGDTE=$O(^DGSL(38.1,"AU",DFN,DGUSR,DGDTE)) Q:'DGDTE!
  Q
  ;
 PRT W !,$S($D(^VA(200,DGUSR,0)):$E($P(^(0),"^"),1,20),1:"Unknown") S Y=$P(DGSL0,"^") W ?23 D DT^DIQ
- W ?46,$S($P(DGSL0,"^",3)]"":$E($P(DGSL0,"^",3),1,20),1:"Unknown"),?70,$P($P(^DD(38.11,4,0),$P(DGSL0,"^",4)_":",2),";",1)
+ W ?46,$S($P(DGSL0,"^",3)]"":$E($P(DGSL0,"^",3),1,65),1:"Unknown"),?113,$P($P(^DD(38.11,4,0),$P(DGSL0,"^",4)_":",2),";",1)
  Q
  ;
 HD D CRCHK Q:DGX="^"  W @IOF,!,"Sensitive Patient Access Report for ",DGRNG1," to ",DGRNG2 S DGPGE=DGPGE+1 W ?70,"Page: ",DGPGE

@@ -1,5 +1,5 @@
 SDROUT ;BSN/GRR - ROUTING SLIPS ; [ 11/03/2001  9:04 AM ]
- ;;5.3;Scheduling;**3,39**;Aug 13, 1993
+ ;;5.3;Scheduling;**3,39,1013**;Aug 13, 1993
  ;IHS/ANMC/LJF 11/15/2000 added IHS call for sorts & reprint questions
  ;                        added kill of ^TMP (used instead of ^UTILITY)
  ;                        changed $N to $O
@@ -9,6 +9,8 @@ SDROUT ;BSN/GRR - ROUTING SLIPS ; [ 11/03/2001  9:04 AM ]
  ;             12/06/2000 made all vs. add-on question clearer
  ;             11/02/2001 added code to print range for ALL
  ;
+ ;ihs/cmi/maw 04/11/2011 PATCH 1013 RQMT151
+ ;
  N VAUTC
  S SDSTOP=""   ;IHS/ANMC/LJF 11/02/2001
  S (SDIQ,SDX,DIV,SDREP,SDSTART)="" D DIV^SDUTL I $T D ROUT^SDDIV G:Y<0 END
@@ -16,7 +18,14 @@ R1 S %=2 W !,"DO YOU WANT ROUTING SHEET FOR A SINGLE PATIENT" D YN^DICN I '% D Q
  ;G:%<0 END S SDSP=$S(%=2:"N",1:"Y") G:SDSP["Y" SIN1^SDROUT1
  G:%<0 END S SDSP=$S(%=2:"N",1:"Y") G:SDSP["Y" ONE^BSDROUT  ;IHS/ANMC/LJF 11/17/2000
 R2 ;R !,"WANT (A)LL ROUTING SHEETS OR (O)NLY ADD-ONS: ONLY ADD-ONS// ",X:DTIME G:X["^"!('$T) END I X="" S X="O" W X  ;IHS/ANMC/LJF 12/06/2000
- R !,"Select All Routing Slips (A) or Only Add-ons (O): O// ",X:DTIME G:X["^"!('$T) END I X="" S X="O" W X  ;IHS/ANMC/LJF 12/06/2000
+ ;ihs/cmi/maw 04/11/2011 Patch 1013 RQMT151 for routing slip default
+ N BSDRSDF,BSDPROM
+ S BSDRSDF=$S($G(DIV):$$GET1^DIQ(9009020.2,DIV,.27,"I"),1:"O")
+ ;R !,"Select All Routing Slips (A) or Only Add-ons (O): O// ",X:DTIME G:X["^"!('$T) END I X="" S X="O" W X  ;IHS/ANMC/LJF 12/06/2000
+ S DIR(0)="S^A:All Routing Slips;O:Only Add-Ons",DIR("A")="Select All Routing Slips (A) or Only Add-ons (O): "
+ S DIR("B")=BSDRSDF
+ D ^DIR
+ G END:$D(DIRUT)
  S Z="^ALL ROUTING SHEETS^ONLY ADD-ONS" D IN^DGHELP I %=-1 W !?12,"CHOOSE FROM:",!?12,"O - To only see add-ons",!?9,"or A - To see all routing sheets" G R2
  S SDX=$S(X="O":"ADD-ONS",1:"ALL")
  ;

@@ -1,5 +1,5 @@
 ABMMUMUP ;IHS/SD/SDR - MU Report Parameters ;
- ;;2.6;IHS 3P BILLING SYSTEM;**7**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**7,8**;NOV 12, 2009
  ;
  W !!
  I $P($G(^ABMMUPRM(1,0)),U,2)'="" D  Q
@@ -100,9 +100,17 @@ ADDENTRY(ABMLOC) ;
  S DIC(0)="LMQ"
  S X="`"_ABMLOC
  D ^DIC
- S DIE=DIC
+ ;start old code abm*2.6*8
+ ;S DIE=DIC
+ ;S DA(1)=1
+ ;S DA=ABMLOC
+ ;end old code start new code
+ S ABMIEN=+Y
+ D ^XBFMK
  S DA(1)=1
- S DA=ABMLOC
+ S DA=ABMIEN
+ S DIE="^ABMMUPRM("_DA(1)_",1,"
+ ;end new code
  S DR=".02////"_$G(ABMF(ABMLOC))
  D ^DIE
  Q

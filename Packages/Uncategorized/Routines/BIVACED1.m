@@ -1,5 +1,5 @@
 BIVACED1 ;IHS/CMI/MWR - EDIT VACCINES.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EDIT VACCINE FIELDS: CURRENT LOT, ACTIVE, VIS DATE DEFAULT.
  ;;  PATCH 1: Comment out unnecessary forecast check.  EDIT1+34
@@ -43,7 +43,7 @@ INIT ;EP
  .S X=$$PAD^BIUTL5(X,24,".")
  .;
  .;---> Active/Inactive.
- .S X=X_$S($P(BI0,U,7)=1:"Inactive",1:"Active")
+ .S X=X_$S($P(BI0,U,7)=1:"Inactive",$P(BI0,U,7)=0:"Active",1:"")
  .;
  .;---> Default Lot#.
  .D:$P(BI0,U,4)

@@ -1,5 +1,5 @@
 AUMPRE ;IHS/VEN/RNB - AUM v 10.3 pre-init ;
- ;;11.0;TABLE MAINTENACE;**6**;Oct 15, 2010
+ ;;11.0;TABLE MAINTENACE;**7**;OCT 15, 2010
  ;
  ; This is the pre-init for AUM 10.1. It strips all control chars
  ; out of multiple globals prior to the install of the patch.

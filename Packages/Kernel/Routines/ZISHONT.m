@@ -1,12 +1,10 @@
-%ZISH ;IHS/PR,SFISC/AC - Host File Control for Cache for VMS/NT/UNIX ;1/24/08  16:11
- ;;8.0;KERNEL;**34,65,84,104,191,306,385,440,1011,1016**;JUL 10, 1995;Build 5
- ;Per VHA Directive 2004-038, this routine should not be modified
- ; **MODIFIED VERSION FOR CACHE/VMS -- 9/7/01**
+%ZISH ;IHS/PR,SFISC/AC - Host File Control for Cache for VMS/NT/UNIX ;12/07/09  15:44
+ ;;8.0;KERNEL;**34,65,84,104,191,306,385,440,518,524,1017**;JUL 10, 1995;Build 3
  ;THIS ROUTINE CONTAINS IHS MODIFICATIONS BY TASSC/MFD
  ;
  ;TASSC/MFD Many mods to enable functioning on Cache, Windows or Unix.
  ;          This routine no longer calls any other routines.
- 
+ ;
 OPEN(X1,X2,X3,X4,X5,X6)    ;SR. Open Host File
  I '$D(X4) Q $$OPENI(X1,X2,X3)      ;TASSC/MFD added call
  ;X1=handle name
@@ -22,24 +20,22 @@ OPEN(X1,X2,X3,X4,X5,X6)    ;SR. Open Host File
  ;The next line eliminates the <ENDOFFILE> error for sequential files for the current process.
  S %ZA=$ZUTIL(68,40,1) ;Work like DSM
  S %=X2_X3 O %:(%1):2 I '$T S POP=1 Q
- ;U % S %ZA=$ZA ;Comment out, $ZA is for READ status
- ;I %ZA=-1 U:%I]"" %I C % S POP=1 Q
  S IO=%,IO(1,IO)="",IOT="HFS",IOM=80,IOSL=60,POP=0 D SUBTYPE^%ZIS3($G(X6,"P-OTHER"))
  I $G(X1)]"" D SAVDEV^%ZISUTL(X1)
- U $S(%I]"":%I,1:$P)
+ ;I $L($G(%I)) U %I ;Would only needed if we had done a USE.
  Q
  ;
 OPNERR ;Handle open error
  S POP=1,$ECODE=""
- U:$P]"" $P
+ ;I $L($G(%I)) U %I
  Q
  ;
 CLOSE(X) ;SR. Close HFS device not opened by %ZIS.
  ;X=HANDLE NAME
  ;IO=Device
  N %
- I $G(IO)]"" C IO K IO(1,IO)
- I $G(X)]"" D RMDEV^%ZISUTL(X)
+ I $L($G(IO)) C IO K IO(1,IO)
+ I $L($G(X)) D RMDEV^%ZISUTL(X)
  ;Only reset home if one setup.
  I $D(IO("HOME"))!$D(^XUTL("XQ",$J,"IOS")) D HOME^%ZIS
  Q
@@ -47,7 +43,7 @@ CLOSE(X) ;SR. Close HFS device not opened by %ZIS.
 OPENERR ;
  Q 0
  ;
- ;----- BEGIN IHS MODIFICATION - XU*8.0*1016
+ ;----- BEGIN IHS MODIFICATION - XU*8.0*1017
 DEL(%ZX1,%ZX2) ;ef,SR. Del fl(s)
  ;S Y=$$DEL^ZOSHMSM("\dir\",$NA(array))
  ;TASSC/MFD modified to accommodate IHS calls without $NA array in %ZX2
@@ -97,7 +93,7 @@ DEL(%ZX1,%ZX2) ;ef,SR. Del fl(s)
  ;;
  ;I %ZXDEL S %ZXDEL='$$LIST(%ZX1,%ZX2,"%ZLIST")
  ;Q %ZXDEL
- ;
+ ;;
  ;DELERR ;Trap any $ETRAP error, unwind and return.
  ;S $ETRAP="D UNWIND^%ZTER"
  ;S %ZXDEL=0,%ZARG=""
@@ -124,8 +120,9 @@ DEL(%ZX1,%ZX2) ;ef,SR. Del fl(s)
  ;N %ZISH,%ZISHY
  ;S %ZISH=$$LIST(%PATH,%FL,"%ZISHY")
  ;Q %ZISH
+ ;;
+ ;----- END IHS MODIFICATION XU*8.0*1017
  ;
- ;----- END IHS MODIFICATION XU*8.0*1016
 LIST(%ZX1,%ZX2,%ZX3) ;ef,SR. Create a local array holding file names
  ;S Y=$$LIST^%ZISH("\dir\",$NA(array),$NA(return array)) Return 1 if found anything
  ;
@@ -133,12 +130,12 @@ LIST(%ZX1,%ZX2,%ZX3) ;ef,SR. Create a local array holding file names
  S %ZX1=$$DEFDIR($G(%ZX1)),%ZOS=$$OS^%ZOSV
  ;S %ZX1=$$TRNLNM(%ZX1)
  ;
- ;----- BEGIN IHS MODIFICATION - XU*8.0*1016
+ ;----- BEGIN IHS MODIFICATION - XU*8.0*1017
  ;TASSC/MFD added LISTI sub to accommodate IHS call without $NA array in %ZX2
  S %ZISHT=$ZT,X="*LISTI",@^%ZOSF("TRAP")             ;TASSC/MFD, 9/9/02 added * to not unwind stack
  I %ZX2'["*",$D(@%ZX2)<10 G LISTI                  ;TASSC/MFD
  I %ZX2["*",$D(@%ZX2)<10 G LISTI                    ;TASSC/MFD
- ;----- END IHS MODIFICATION - XU*8.0*1016
+ ;----- END IHS MODIFICATION - XU*8.0*1017
  ;
  ;Get fls to act on
  S %ZISH="" F  S %ZISH=$O(@%ZX2@(%ZISH)) Q:%ZISH=""  D
@@ -157,7 +154,7 @@ LIST(%ZX1,%ZX2,%ZX3) ;ef,SR. Create a local array holding file names
  S X=%ZISHT,@^%ZOSF("TRAP")                         ;TASSC/MFD reset trap
  Q $O(@%ZX3@(""))]""
  ;
- ;----- BEGIN IHS MOFIDICATION - XU*8.0*1016
+ ;----- BEGIN IHS MOFIDICATION - XU*8.0*1017
  ; Re-introducing IHS code
 MV(X1,X2,Y1,Y2) ;ef,SR. Rename a fl
  ;S Y=$$MV^ZOSHDOS("\dir\","fl","\dir\","fl")
@@ -196,7 +193,7 @@ SLOWCOPY ; Copy without view buffer
  Q
  ;
  ;---------------------------------------------
- ; Commented below VA logic due to unknown side effects IHS/OIT/BWF-FBD
+ ; Commented below VA logic due to unknown side effects IHS/OIT/FBD
  ;MV(X1,X2,Y1,Y2) ;ef,SR. Rename a fl
  ;;S Y=$$MV^ZOSHDOS("\dir\","fl","\dir\","fl")
  ;;Unix use mv, NT/VMS use COPY and DEL
@@ -204,16 +201,18 @@ SLOWCOPY ; Copy without view buffer
  ;S X1=$$DEFDIR($G(X1)),Y1=$$DEFDIR($G(Y1))
  ;S X=$ZSEARCH(X1_X2),Y=Y1_Y2 ;move X to Y
  ;I X="" Q 0
+ ;;Move to same place can delete file. Since at destination return 1
+ ;I $P(X,";")=Y Q 1
  ;S %=$ZF(-1,$S(%ZOS="UNIX":"mv ",1:"copy ")_X_" "_Y) ;Use NT/VMS copy
  ;I %ZOS'="UNIX" D
  ;. S X2=$P(X,X1,2),%ZISHX(X2)=""
  ;. S Y=$$DEL^%ZISH(X1,$NA(%ZISHX))
  ;Q 1
  ;;
- ;----- END IHS MODIFICATION - XU*8.0*1016
+ ;----- END IHS MODIFICATION - XU*8.0*1017
  ;-----------------------------------------------------
- ; BEGIN IHS MODIFICATION - XU*8.0*1016
- ; Re-introduce IHS code and comment VA modifications - IHS/OIT/BWF-FBD
+ ; BEGIN IHS MODIFICATION - XU*8.0*1017
+ ; Re-introduce IHS code and comment VA modifications - IHS/OIT/FBD
  ;
 PWD(X) ;ef,SR. Print working directory    ;TASSC/MFD parameter put back in for IHS
  N Y
@@ -222,13 +221,13 @@ PWD(X) ;ef,SR. Print working directory    ;TASSC/MFD parameter put back in for I
  S X(1)=$P(Y,".",1)
  Q X(1)      ;TASSC/MFD changed to subscripted return var
  ;
- ; Commented below VA code - IHS/OIT/BWF-FBD - XU*8.0*1016
+ ; Commented below VA code - IHS/OIT/FBD - XU*8.0*1017
  ;PWD() ;ef,SR. Print working directory
  ;N Y,%ZOS
  ;S Y=$$DEFDIR(""),%ZOS=$$OS^%ZOSV
  ;I Y="" S Y=$ZSEARCH("*")
  ;Q $S(%ZOS["VMS":Y,1:$P(Y,".",1))
- ; - END IHS MODIFICATION - XU*8.0*1016
+ ; - END IHS MODIFICATION - XU*8.0*1017
  ;
 TRNLNM(PATH) ;ef. Expand logical path
  N %ZOS,P1,P2
@@ -236,12 +235,13 @@ TRNLNM(PATH) ;ef. Expand logical path
  I %ZOS="VMS" D  Q PATH
  . S P1=PATH_$S(PATH[":":"*.*",1:":*.*")
  . S P2=$ZSEARCH(P1)
- . S:$L(P2) PATH=$S(P2["]":$P(P2,"]",1)_"]",1:$P(P2,":",1)_":")
+ . S:$L(P2) PATH=$S(P2["]":$P(P2,"]",1,$L(P2,"]")-1)_"]",1:$P(P2,":",1)_":")
  . Q
  I %ZOS="NT" D  Q PATH
  . S P1=PATH_$S($E(PATH,$L(PATH))'="\":"\*",1:"*"),P2=$ZSEARCH(P1)
  . S:$L(P2) PATH=$P(P2,"\",1,$L(P2,"\")-1)_"\"
  . Q
+ ;Unix Cache $ZSEARCH uses % around an environment variable
  I %ZOS="UNIX" D  Q PATH
  . S P1=PATH_$S($E(PATH,$L(PATH))'="/":"/*",1:"*"),P2=$ZSEARCH(P1)
  . S:$L(P2) PATH=$P(P2,"/",1,$L(P2,"/")-1)_"/"
@@ -262,7 +262,7 @@ DEFDIR(DF) ;ef. Default Dir and frmt
  . I $L(P2) S:P2'["[" P2="["_P2 S:P2'["]" P2=P2_"]"
  . S DF=P1_P2 S:DF'[":" DF=DF_":"
  . Q
- ;Check syntax, Unix needs /mnt/fl, ./fl, ~/fl $HOME/fl
+ ;Check syntax, Unix needs /mnt/fl, ./fl, ~/fl %HOME%/fl
  I %ZOS="UNIX" D
  . S DF=$TR(DF,"\","/")
  . S:$E(DF,$L(DF))'="/" DF=DF_"/"
@@ -278,32 +278,29 @@ DEFDIR(DF) ;ef. Default Dir and frmt
  . Q
  S DF=$$TRNLNM(DF) ;Resolve logicals
  Q DF
+ ; BEGIN IHS MODIFICATION - XU*8.0*1017
 DF(X) ;Dir frmt  ;TASSC/MFD added DF+2
  Q:X=""
  I $ZV["UNIX" S X=$TR(X,"\","/") S:$E(X,$L(X))'="/" X=X_"/" Q    ;TASSC/MFD added line for UNIX sys
  S X=$TR(X,"/","\")
  I $E(X,$L(X))'="\" S X=X_"\" Q
  Q
+ ; END IHS MODIFICATION - XU*8.0*1017
 FL(X) ;Fl len
  N ZOSHP1,ZOSHP2
  S ZOSHP1=$P(X,"."),ZOSHP2=$P(X,".",2)
- ;I $L(ZOSHP1)>8 S X=4 Q     ;TASSC/MFD we don't care how long the file name is
- ;I $L(ZOSHP2)>3 S X=4 Q     ;TASSC/MFD we don't care how long the file name is
+ I $L(ZOSHP1)>8 S X=4 Q
+ I $L(ZOSHP2)>3 S X=4 Q
  Q
  ;
 STATUS() ;ef,SR. Return EOF status
  U $I
  Q $$EOF($ZEOF)
  ;
-EOF(X) ;Eof flag, pass in $ZC
- Q $ZEOF      ;TASSC/MFD check for $ZEOF rather than ENDOFFILE error
- ;Q (X=-1)    ;TASSC/MFD original line commented out
+EOF(X) ;Eof flag, pass in $ZEOF
+ ;Q (X=-1)  ;XU*8.0*1017 - ORIGINAL LINE - COMMENTED OUT
+ Q $ZEOF  ;TASSC/MFD check for $ZEOF rather than ENDOFFILE error  XU*8.0*1017
  ;
-READREC(X) ;Read record from host file.
- N Y
- U IO R X S Y=$ZC
- U $P
- Q Y
 MAKEREF(HF,IX,OVF) ;Internal call to rebuild global ref.
  ;Return %ZISHF,%ZISHO,%ZISHI,%ZISUB
  N I,F,MX
@@ -311,7 +308,7 @@ MAKEREF(HF,IX,OVF) ;Internal call to rebuild global ref.
  S %ZISHI=$QS(HF,IX),MX=$QL(HF) ;
  S F=$NA(@HF,IX-1) ;Get first part
  I IX=1 S %ZISHF=F_"(%ZISHI" ;Build root, IX=1
-%ZX I IX>1 S %ZISHF=$E(F,1,$L(F)-1)_",%ZISHI" ;Build root
+ I IX>1 S %ZISHF=$E(F,1,$L(F)-1)_",%ZISHI" ;Build root
  S %ZISHO=%ZISHF_","_OVF_",%OVFCNT)" ;Make overflow
  F I=IX+1:1:MX S %ZISHF=%ZISHF_",%ZISUB("_I_")",%ZISUB(I)=$QS(HF,I)
  S %ZISHF=%ZISHF_")"
@@ -325,6 +322,7 @@ READNXT(REC) ;Read any sized record into array. %ZB has terminator
  Q
 READNX ;Check for EOF
  ;I $ZE["ENDOFFILE" S %ZA=-1   ;TASSC/MFD commented out
+ ;S $EC=""                     ;IHS/OIT/FBD - COMMENTED OUT  XU*8.0*1017
  I $ZEOF S %ZA=-1              ;TASSC/MFD added line since we are checking for $ZEOF
  Q
  ;
@@ -334,14 +332,14 @@ FTG(%ZX1,%ZX2,%ZX3,%ZX4,%ZX5) ;ef,SR. Unload contents of host file into global
  ;p3= $NAME REFERENCE INCLUDING STARTING SUBSCRIPT
  ;p4=INCREMENT SUBSCRIPT
  ;p5=Overflow subscript, defaults to "OVF"
- N %ZA,%ZB,%ZC,X,%OVFCNT,%ZISHF,%ZISHO,POP,%ZISUB,$ES,$ET
+ N %ZA,%ZB,%ZC,%XX,%OVFCNT,%ZISHF,%ZISHO,POP,%ZISUB,$ES,$ET
  N I,%ZISH,%ZISH1,%ZISHI,%ZISHL,%ZISHOF,%ZISHOX,%ZISHS,%ZX,%ZISHY
  S %ZX1=$$DEFDIR($G(%ZX1)),%ZISHOF=$G(%ZX5,"OVF")
  D MAKEREF(%ZX3,%ZX4,"%ZISHOF")
  D OPEN^%ZISH(,%ZX1,%ZX2,"R")
  I POP Q 0
  S %ZC=1,%ZA=0,$ET="S %ZC=0,%ZA=-1,$EC="""" Q"
- S X="ERREOF^%ZISH",@^%ZOSF("TRAP") ; Added line from IHS side IHS/OIT/BWF-FBD - XU*8.0*1016
+ S X="ERREOF^%ZISH",@^%ZOSF("TRAP") ; Added line from IHS side IHS/OIT/FBD - XU*8.0*1017
  U IO F  K %XX D READNXT(.%XX) Q:$$EOF($ZEOF)!%ZA  D
  . S @%ZISHF=%XX
  . I $D(%XX)>2 F %OVFCNT=1:1 Q:'$D(%XX(%OVFCNT))  S @%ZISHO=%XX(%OVFCNT)
@@ -349,9 +347,6 @@ FTG(%ZX1,%ZX2,%ZX3,%ZX4,%ZX5) ;ef,SR. Unload contents of host file into global
  . Q
  D CLOSE() ;Normal exit
  Q %ZC
- ;
-ERREOF D CLOSE() ;Error close and exit
- Q 0
  ;
 GTF(%ZX1,%ZX2,%ZX3,%ZX4) ;ef,SR. Load contents of global to host file.
  ;p1=$NAME of global reference
@@ -381,15 +376,16 @@ MGTF(%ZX1,%ZX2,%ZX3,%ZX4,%ZX5) ;
  D MAKEREF(%ZX1,%ZX2)
  D OPEN^%ZISH(,$G(%ZX3),%ZX4,%ZX5) ;Default dir set in open
  I POP Q 0
- ;----- BEGIN IHS MODIFICATION - XU*8.0*1016 IHS/OIT/BWF-FBD
+ ;----- BEGIN IHS MODIFICATION - XU*8.0*1017 IHS/OIT/FBD
  ; commented VA code and added IHS logic
- N X S X="ERREOF^%ZISH",@^%ZOSF("TRAP")
  ;N $ETRAP S $ETRAP="S $EC="""" D CLOSE^%ZISH() Q 0"
- ;----- END IHS MODIFICATION 
+ N X S X="ERREOF^%ZISH",@^%ZOSF("TRAP")
+ ;----- END IHS MODIFICATION - XU*8.0*1017
  F  Q:'($D(@%ZISHF)#2)  S %ZX=@%ZISHF,%ZISHI=%ZISHI+1 U IO W %ZX,!
  D CLOSE()
  Q 1
  ;
+ ; BEGIN IHS MODIFICATION - XU*8.0*1017
  ;
  ; TASSC/MFD all subs below are IHS-added
  ; 
@@ -470,4 +466,4 @@ CLIENT() ;return underlying client name - only works if reverse DNS
 SENDTO1(ZISH1,ZISH2)         ;use sendto1 script
  ;
  Q $$SENDTO1^ZISHMSMU(ZISH1,ZISH2)
- ;----- END IHS MOD - XU*8.0*1011
+ ;----- END IHS MOD - XU*8.0*1017

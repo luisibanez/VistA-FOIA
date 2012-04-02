@@ -1,31 +1,48 @@
-XDRMADD ;SF-IRMFO/IHS/OHPRD/JCM,JLI,REM -  USER CREATED VERIFIED DUPLICATE PAIR ENTRY ;4/6/98  09:24 [ 04/02/2003   8:47 AM ]
- ;;7.3;TOOLKIT;**1001**;APR 1, 2003
- ;;7.3;TOOLKIT;**23**;Apr 25, 1995
+XDRMADD ;SF-IRMFO/IHS/OHPRD/JCM,JLI,REM -  USER CREATED VERIFIED DUPLICATE PAIR ENTRY ;8/28/08  18:25
+ ;;7.3;TOOLKIT;**23,113,124**;Apr 25, 1995;Build 12
+ ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;;
  N XDRFL,XDRCNTR
  S XDRCNTR=0
 START ;
- N XDRADFLG
+ N XDRADFLG,XDRNOPT
  K DIC
- S (XDRQFLG,XDRADFLG)=0
- I '$D(XDRFL) S DIC("A")="Add entries from which File: " D FILE^XDRDQUE
+ ; XT*7.3*113 - Setting of XDRNOPT flag, and checking for XDRFL'=2
+ ;   in this routine and in SCORE entry point, prevent option
+ ;   from using the duplicate record checking code on the PATIENT file.
+ ;   DUPLICATE RECORD entries can be added, but no checking is done.
+ S (XDRQFLG,XDRADFLG,XDRNOPT)=0
+ I '$D(XDRFL) D
+ . S DIC("A")="Add entries from which File: " D FILE^XDRDQUE Q:XDRQFLG  ;XT*7.3*124 stop UNDEF if Y=-1
+ . I XDRFL=2 W "* No potential duplicate threshold % check will be calculated for PATIENTS"
+ . Q
  G:XDRQFLG END
- S XDRDTYPE=$P(XDRD(0),U,5)
- I XDRDTYPE="" D  ;REM -8/20/96 when XDRDTYPE is null set it to basic.
- .S $P(^VA(15.1,XDRFL,0),U,5)="b",XDRDTYPE="b"
+ D:XDRFL'=2
+ . S XDRDTYPE=$P(XDRD(0),U,5)
+ . Q:XDRDTYPE]""
+ . ;REM -8/20/96 when XDRDTYPE is null set it to basic.
+ . S $P(^VA(15.1,XDRFL,0),U,5)="b",XDRDTYPE="b"
+ . Q
  S XDRGL=^DIC(XDRFL,0,"GL")
  D:XDRCNTR>0  G:XDRQFLG END
- .W ! K DIR S DIR(0)="Y",DIR("A")="Do you want to ADD another pair (Y/N)"
- .D ^DIR K DIR S:$D(DIRUT)!('Y) XDRQFLG=1
+ . W ! K DIR S DIR(0)="Y",DIR("A")="Do you want to ADD another pair (Y/N)"
+ . D ^DIR K DIR S:$D(DIRUT)!('Y) XDRQFLG=1
+ . Q
  S XDRCNTR=XDRCNTR+1
- D BYPASS G:XDRQFLG END
+ ; Skip duplicate record checking for patients
+ I XDRFL=2 D
+ . S (XDRDSCOR("MAX"),XDRDSCOR("PDT%"),XDRD("DUPSCORE"),XDRMADD("DUPSCORE%"))=0
+ . S XDRADFLG=1
+ I XDRFL'=2 D BYPASS G:XDRQFLG END
  D LKUP G:XDRQFLG END
  D CHECK G:XDRQFLG<0 START
- D ^XDRDSCOR S:XDRADFLG XDRDSCOR("PDT%")=0 ;REM -8/23/96 to bypass PDT%
- S XDRD("NOADD")="" D ^XDRDUP
+ I XDRFL'=2 D
+ . D ^XDRDSCOR S:XDRADFLG XDRDSCOR("PDT%")=0 ;REM -8/23/96 to bypass PDT%
+ . S XDRD("NOADD")="" D ^XDRDUP
+ . Q
  K XDRDTYPE
  D SCORE
- I XDRMADD("DUPSCORE%")<XDRDSCOR("PDT%") D  G START ; JLI 4/11/96
+ I XDRFL'=2,XDRMADD("DUPSCORE%")<XDRDSCOR("PDT%") D  G START ; JLI 4/11/96
  . W !!,$C(7),"This pair of patients has a duplicate percentage of only ",XDRMADD("DUPSCORE%"),"% which"
  . W !,"is less than the minimal percentage for potential duplicates (",XDRDSCOR("PDT%"),"%)."
  . W !!?30,"Patients not added!!!",!!
@@ -71,9 +88,11 @@ CHECK ;
  Q
  ;
 SCORE ;
- S XDRMADD("DUPSCORE%")=$S($G(XDRDSCOR("MAX"))=0:0,1:(XDRD("DUPSCORE")/XDRDSCOR("MAX")))
- S XDRMADD("DUPSCORE%")=$J(XDRMADD("DUPSCORE%"),1,2)
- S XDRMADD("DUPSCORE%")=$S(XDRMADD("DUPSCORE%")<0:0,XDRMADD("DUPSCORE%")<1:$E(XDRMADD("DUPSCORE%"),3,4),1:100)
+ I XDRFL'=2 D
+ . S XDRMADD("DUPSCORE%")=$S($G(XDRDSCOR("MAX"))=0:0,1:(XDRD("DUPSCORE")/XDRDSCOR("MAX")))
+ . S XDRMADD("DUPSCORE%")=$J(XDRMADD("DUPSCORE%"),1,2)
+ . S XDRMADD("DUPSCORE%")=$S(XDRMADD("DUPSCORE%")<0:0,XDRMADD("DUPSCORE%")<1:$E(XDRMADD("DUPSCORE%"),3,4),1:100)
+ . Q
  S XDRDFR=$S(XDRCD<XDRCD2:XDRCD,1:XDRCD2)
  S XDRDTO=$S(XDRDFR=XDRCD:XDRCD2,1:XDRCD)
  S XDRMADD("STATUS")="X"

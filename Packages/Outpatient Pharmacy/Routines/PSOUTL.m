@@ -1,9 +1,9 @@
-PSOUTL ;BHAM ISC/SAB - pso utility routine ;30-Apr-2008 13:25;SM
- ;;7.0;OUTPATIENT PHARMACY;**1,21,126,1006**;DEC 1997
+PSOUTL ;BHAM ISC/SAB - pso utility routine ;29-Mar-2011 09:37;DU
+ ;;7.0;OUTPATIENT PHARMACY;**1,21,126,1006,1011**;DEC 1997;Build 17
  ;External reference SERV^IBARX1 supported by DBIA 2245
  ;External reference ^PS(55,     supported by DBIA 2228
  ; Modified - IHS/MSC/PLS - 02/21/08 - Line ECAN+7 commented out
- ;                          04/30/08 - Line CAN+7 commented out
+ ;                          03/28/11 - Line CID+1,CIDH, CIDADJ (new EP)
 SUSPCAN ;dcl rx from suspense used in new, renew AND verification of Rxs
  S PSLAST=0 F PSI=0:0 S PSI=$O(^PSRX(PSRX,1,PSI)) Q:'PSI  S PSLAST=PSI
  I PSLAST S PSI=^PSRX(PSRX,1,PSLAST,0) K ^PSRX(PSRX,1,PSLAST),^PSRX(PSRX,1,"B",+PSI,PSLAST) S ^(0)=$P(^PSRX(PSRX,1,0),"^",1,3)_"^"_($P(^(0),"^",4)-1) K PSLAST,PSI,SUSX,SUS1,SUS2 Q
@@ -60,10 +60,25 @@ KILL I SFN D
  S ^PSRX(DA(1),"A",0)="^52.3DA^"_CNT_"^"_CNT,^PSRX(DA(1),"A",CNT,0)=%_"^D^"_DUZ_"^"_DA_"^"_"Refill "_$S($G(RESK):"returned to stock.",$G(PSOPSDAL):"deleted during Controlled Subs release.",1:"deleted during Rx edit.") K CNT,SUB
  Q
 CID ;calculates six months limit on issue dates
- S PSID=X,X="T-6M",%DT="X" D ^%DT S %DT(0)=Y,X=PSID,%DT="EX" D ^%DT K PSID
+ ;IHS/MSC/PLS - 03/28/11 - Next four lines
+ ;S PSID=X,X="T-6M",%DT="X" D ^%DT S %DT(0)=Y,X=PSID,%DT="EX" D ^%DT K PSID
+ S PSID=X
+ S X=$$CIDADJ()
+ S %DT="X" D ^%DT S %DT(0)=Y,X=PSID,%DT="EX" D ^%DT K PSID
  Q
-CIDH S X="T-6M",%DT="X" D ^%DT X ^DD("DD") D EN^DDIOL("Issue Date must be greater or equal to "_Y,"","!")
+CIDH ;IHS/MSC/PLS - 03/28/11 - Next 3 lines
+ ;S X="T-6M",%DT="X" D ^%DT X ^DD("DD") D EN^DDIOL("Issue Date must be greater or equal to "_Y,"","!")
+ S X=$$CIDADJ()
+ S %DT="X" D ^%DT X ^DD("DD") D EN^DDIOL("Issue Date must be greater or equal to "_Y,"","!")
  Q
+ ; Result earliest Issue Date
+CIDADJ() ;EP - p1011
+ N RES
+ S RES="T-6M"
+ I $G(PSODRUG("IEN")) D
+ .Q:$$ISSCH^APSPFNC2(PSODRUG("IEN"),"345")
+ .S RES="T-365"
+ Q RES
 SPR F RF=0:0 S RF=$O(^PSRX(DA(1),1,RF)) Q:'RF  S NODE=RF
  I NODE=1 S $P(^PSRX(DA(1),3),"^",4)=$P(^PSRX(DA(1),2),"^",2) Q
 SREF I $G(NODE) S NODE=NODE-1 G:'$D(^PSRX(DA(1),1,NODE,0)) SREF
@@ -115,8 +130,7 @@ CAN(PSOXRX) ;Clean up Rx when discontinued
  S DA=$O(^PS(52.5,"B",PSOXRX,0)) I DA S DIK="^PS(52.5,",SUSD=$P($G(^PS(52.5,DA,0)),"^",2) D ^DIK K DIK I $O(^PSRX(PSOXRX,1,0)) S DA=PSOXRX D REF^PSOCAN2
  I $D(^PS(52.4,PSOXRX,0)) S DIK="^PS(52.4,",DA=PSOXRX D ^DIK K DIK
  I $G(^PSRX(PSOXRX,"H"))]"" K:$P(^PSRX(PSOXRX,"H"),"^") ^PSRX("AH",$P(^PSRX(PSOXRX,"H"),"^"),PSOXRX) S ^PSRX(PSOXRX,"H")=""
- ; IHS/MSC/PLS - 04/30/08 - Suppress the setting of the Fill Date for prescriptions on HOLD
- ;I '$P($G(^PSRX(PSOXRX,2)),"^",2) K DIE S DIE="^PSRX(",DA=PSOXRX,DR="22///"_DT D ^DIE
+ I '$P($G(^PSRX(PSOXRX,2)),"^",2) K DIE S DIE="^PSRX(",DA=PSOXRX,DR="22///"_DT D ^DIE
  Q
 ECAN(PSOXRX) ;Clean up Rx when expired
  N DA

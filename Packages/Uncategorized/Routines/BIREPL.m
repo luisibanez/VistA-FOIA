@@ -1,5 +1,5 @@
 BIREPL ;IHS/CMI/MWR - REPORT, ADULT IMM; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW ADULT IMMUNIZATION REPORT: PARAMETERS VIEW MENU
  ;
@@ -38,7 +38,7 @@ INIT ;EP
  ;---> Date.
  D WRITE(.BILINE)
  S:'$G(BIQDT) BIQDT=$G(DT)
- D DATE^BIREP(.BILINE,"BIREPL",1,BIQDT,"Quarter Ending Date")
+ D DATE^BIREP(.BILINE,"BIREPL",1,BIQDT,"Quarter Ending Date",,,,1)
  ;
  ;---> Current Community.
  D DISP^BIREP(.BILINE,"BIREPL",.BICC,"Community",2,1)
@@ -55,6 +55,20 @@ INIT ;EP
  S:'$D(BICPTI) BICPTI=0
  S X="     5 - Include CPT Coded Visits...: "
  S X=X_$S($G(BICPTI):"YES",1:"NO")
+ D WRITE(.BILINE,X,1)
+ K X
+ ;
+ ;---> User Population.
+ D:($G(BIUP)="")
+ .I $$GPRAIEN^BIUTL6 S BIUP="a" Q
+ .S BIUP="u"
+ ;
+ S X="     6 - Patient Population Group...: "
+ D
+ .I BIUP="r" S X=X_"Registered Patients (All)" Q
+ .I BIUP="i" S X=X_"Immunization Register Patients (Active)" Q
+ .I BIUP="u" S X=X_"User Population (1 visit, 3 yrs)" Q
+ .I BIUP="a" S X=X_"Active Users (2+ visits, 3 yrs)" Q
  D WRITE(.BILINE,X,1)
  K X
  ;
@@ -109,38 +123,32 @@ HELP1 ;EP
 TEXT1(BITEXT) ;EP
  ;;
  ;;This report will provide statistics on Adult Immunizations.
- ;;The population of patients reviewed are those over the age of 50
- ;;who have been seen at least TWICE in the past THREE YEARS and who
- ;;live in a community specified by the user. (These patients are
- ;;often referred to in RPMS as "Active Clinical Users.")
- ;;
+ ;;The population of patients reviewed are those 19 years and older.
  ;;
  ;;Criteria:
  ;;Tetanus:  The patient must have had a tetanus immunization documented
  ;;in the past 10 years.  This includes any of the following CVX Codes:
- ;;1, 9, 20, 22, 28, 35, 50, 106, 107, 110.
+ ;;1, 9, 20, 22, 28, 50, 106, 107, 110, 113, 115.
+ ;;If parameter 5 "Include CPT Coded Visits" is set to "yes", then any
+ ;;of the following codes will count: 90701,90718,90700,90720,90702,
+ ;;90703,90721,90723.
  ;;
- ;;Influenza:  The patient must have had an influenza immunization
- ;;documented in the past year.  This includes CVX Codes 15, 16, 88, 111
- ;;or a diagnosis of V04.8 or V06.6 or a CPT Code of 90657, 90658, 90659,
- ;;or 90660.
- ;;
- ;;Pneumovax:  The patient must have had a pneumococcal immunization
- ;;documented ever (or 6 years in Alaska).  This includes any of the
- ;;following CVX Codes: 33, 100, 109.
+ ;;Pneumovax:  Adults 65 years and older must have had a pneumococcal
+ ;;immunization documented at or after age 65 years.  This includes any
+ ;;of the following CVX Codes: 33, 100, 109.
  ;;
  ;;When VIEWING the report on-screen, you will be able to view the
  ;;lists of patients who were "Current" or "Not Current."
  ;;In this context, the list of "Current" adults includes those who
- ;;are current for Td, pneumo, and influenza vaccine on the date of
- ;;the report.
+ ;;are current for Td/Tdap (within the last 10 years) and for pneumo
+ ;;vaccines on the date of the report.
  ;;
  ;;The IMMUNIZATION ADULT REPORT screen allows you to adjust the
  ;;report to your needs.
  ;;
- ;;There are 5 items or "parameters" on the screen that you may
+ ;;There are 6 items or "parameters" on the screen that you may
  ;;change in order to select for a specific group of patients.
- ;;To change an item, enter its left column number (1-4) at the
+ ;;To change an item, enter its left column number (1-6) at the
  ;;prompt on the bottom of the screen.  Use "?" at any prompt where
  ;;you would like more information on the parameter you are changing.
  ;;
@@ -177,6 +185,13 @@ TEXT1(BITEXT) ;EP
  ;;the report will search for any immunizations that were only entered
  ;;as CPT Codes, and it will include those immunizations in the
  ;;statistical results of this report.
+ ;;
+ ;;PATIENT POPULATION GROUP: You may select one of four patient groups
+ ;;to be considered in the report: Registered Patients (All),
+ ;;Immunization Register Patients (Active), User Population (1+ visits
+ ;;in 3 yrs), or Active Clinical Users (2+ visits in 3 yrs).
+ ;;Active Clinical Users is the default.
+ ;;
  ;;
  D LOADTX("TEXT1",,.BITEXT)
  Q

@@ -1,8 +1,40 @@
 BIPATUP3 ;IHS/CMI/MWR - UPDATE PATIENT DATA 2; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  IHS FORECAST. UPDATE PATIENT DATA, IMM FORECAST IN ^BIPDUE(.
  ;   HOLDING RTN IN CASE H1N1 (OR SIMILAR) FORECASTING IS NEEDED IN THE FUTURE.
+ ;
+ ;----------
+IHSZOS(BIDFN,BIFLU,BIFFLU,BIRISKP,BINF,BIFDT,BIAGE,BIDUZ2) ;EP
+ ;---> IHS Zoster Forecast.
+ ;---> Parameters:
+ ;     1 - BIDFN   (req) Patient IEN.
+ ;     2 - BIFLU   (req) Influ and Pneumo History array: BIFLU(CVX,INVDATE).
+ ;     3 - BIFFLU  (req) Value (0-4) for force Flu/Pneumo regardless of age.
+ ;     4 - BIRISKP (req) 1=Patient has Risk of Pneumo; otherwise 0.
+ ;     5 - BINF    (opt) Array of Vaccine Grp IEN'S that should not be forecast.
+ ;     6 - BIFDT   (req) Forecast Date (date used for forecast).
+ ;     7 - BIAGE   (req) Patient Age in months for this Forecast Date.
+ ;     8 - BIDUZ2  (req) User's DUZ(2) indicating Immserve Forc Rules.
+ ;
+ ;
+ ;---> Quit if this Pt Age <60 months (5yrs), regardless of risk.
+ Q:BIAGE<720
+ ;
+ ;---> Quit if Site Parameter 11 says NO to Zoster forecast.
+ ;---> (According to Amy, shutting down Varicella Group should not disable Zoster.)
+ Q:('$$ZOSTER^BIPATUP2(BISITE))
+ ;
+ ;---> Quit if patient has a previous Zoster.
+ Q:$D(BIFLU(121))
+ ;
+ ;---> Quit if this patient has a contraindication to Zoster.
+ Q:$$CONTR^BIUTL11(BIDFN,227)
+ ;
+ ;---> Forecast Zoster.
+ D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(121)_U_U_BIFDT)
+ ;
+ Q
  ;
  ;
  ;----------
@@ -10,7 +42,7 @@ IHSH1N1(BIDFN,BIFLU,BIFFLU,BIRISKI,BINF,BIFDT,BIAGE,BIIMMH1,BILIVE) ;EP
  ;---> IHS H1N1 Forecast.
  ;---> Parameters:
  ;     1 - BIDFN   (req) Patient IEN.
- ;     2 - BIFLU   (req) Influ, Pneumo, and H1N1 History array: BIBLU(CVX,INVDATE).
+ ;     2 - BIFLU   (req) Influ, Pneumo, and H1N1 History array: BIFLU(CVX,INVDATE).
  ;     3 - BIFFLU  (req) * NOT USED FOR NOW! *
  ;                       Value (0-4) for force Flu/Pneumo regardless of age.
  ;     4 - BIRISKI (req) 1=Patient has Risk of Influenza; otherwise 0.

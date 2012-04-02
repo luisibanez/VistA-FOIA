@@ -1,5 +1,5 @@
 BIREPA2 ;IHS/CMI/MWR - REPORT, VAC ACCOUNTABILITY; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW OR PRINT VACCINE ACCOUNTABILITY REPORT.
  ;
@@ -37,15 +37,20 @@ HEAD(BIBEGDT,BIENDDT,BICC,BIHCF,BICM,BIBEN,BIHIST,BIVT) ;EP
  S X=$$REPHDR^BIUTL6(DUZ(2)) D CENTERT^BIUTL5(.X)
  D WH^BIW(.BILINE,X)
  ;
- S X="Vaccine Accountability Report" D CENTERT^BIUTL5(.X)
+ S X="*  Vaccine Accountability Report  *" D CENTERT^BIUTL5(.X)
  D WH^BIW(.BILINE,X)
  ;
- S X=$$TXDT1^BIUTL5(DT) D CENTERT^BIUTL5(.X)
+ ;S X=$$TXDT1^BIUTL5(DT) D CENTERT^BIUTL5(.X)
+ ;D WH^BIW(.BILINE,X,1)
+ ;
+ S X=$$SP^BIUTL5(27)_"Report Date: "_$$SLDT1^BIUTL5(DT)
+ D WH^BIW(.BILINE,X)
+ ;
+ S X=$$SP^BIUTL5(28)_"Date Range: "_$$SLDT1^BIUTL5(BIBEGDT)_" - "_$$SLDT1^BIUTL5(BIENDDT)
  D WH^BIW(.BILINE,X,1)
  ;
- S X=" Reporting period: "
- S X=X_$$TXDT1^BIUTL5(BIBEGDT)_" to "_$$TXDT1^BIUTL5(BIENDDT)
- S X=X_$$SP^BIUTL5(10)_"(Historical "_$S(BIHIST:"In",1:"Ex")_"cluded)"
+ ;
+ S X=" (Historical "_$S(BIHIST:"In",1:"Ex")_"cluded)"
  D WH^BIW(.BILINE,X)
  S X=$$SP^BIUTL5(79,"-")
  D WH^BIW(.BILINE,X)
@@ -91,7 +96,7 @@ HEAD(BIBEGDT,BIENDDT,BICC,BIHCF,BICM,BIBEN,BIHIST,BIVT) ;EP
  ;
  ;
  ;----------
-GET(BIBEGDT,BIENDDT,BICC,BIHCF,BICM,BIBEN,BIHIST,BIVT) ;EP
+GET(BIBEGDT,BIENDDT,BICC,BIHCF,BICM,BIBEN,BIHIST,BIVT,BIDLOT) ;EP
  ;----------
  ;---> Produce array for Vaccine Accountability Report.
  ;---> Parameters:
@@ -103,6 +108,7 @@ GET(BIBEGDT,BIENDDT,BICC,BIHCF,BICM,BIBEN,BIHIST,BIVT) ;EP
  ;     6 - BIBEN   (req) Beneficiary Type array.
  ;     7 - BIHIST  (req) Include Historical (1=yes,0=no).
  ;     8 - BIVT    (req) Visit Type array.
+ ;     9 - BIDLOT  (req) If BIDLOT=1, display by Lot Numbers.
  ;
  K ^TMP("BIREPA1",$J)
  N BILINE,BITMP,X S BILINE=0
@@ -116,13 +122,13 @@ GET(BIBEGDT,BIENDDT,BICC,BIHCF,BICM,BIBEN,BIHIST,BIVT) ;EP
  I '$D(BIBEN) D ERRCD^BIUTL2(662,.X) D WRITE(.BILINE,X) Q
  I '$D(BIHIST) D ERRCD^BIUTL2(663,.X) D WRITE(.BILINE,X) Q
  I '$D(BIVT) D ERRCD^BIUTL2(664,.X) D WRITE(.BILINE,X) Q
+ I '$D(BIDLOT) D ERRCD^BIUTL2(681,.X) D WRITE(.BILINE,X) Q
  ;
  ;---> Gather data.
  D GETIMMS^BIREPA3(BIBEGDT,BIENDDT,.BICC,.BIHCF,.BICM,.BIBEN,BIHIST,.BIVT)
  ;
  ;---> Write Stats lines for each Vaccine Group.
  ;---> BIG=Vaccine Group, BIV=Vaccine Name, BIA=Age.
- ;
  N BILINE S BILINE=0
  N BIG S BIG=0
  F  S BIG=$O(BITMP("STATS",BIG)) Q:'BIG  D
@@ -132,22 +138,41 @@ GET(BIBEGDT,BIENDDT,BICC,BIHCF,BICM,BIBEN,BIHIST,BIVT) ;EP
  ..N BILSAV,X
  ..;
  ..;---> Write Vaccine Name line.
- ..S X=BIV D CENTERT^BIUTL5(.X)
+ ..S X=BIV
+ ..I $G(BIDLOT) S X=X_" - All Lots"
+ ..D CENTERT^BIUTL5(.X)
  ..;---> Save this line# for marking as a single record to print.
  ..D WRITE(.BILINE,X) S BILSAV=BILINE
  ..;
  ..;---> Build Age Totals line for this vaccine.
  ..S X=$$SUML() D WRITE(.BILINE,X)
  ..S X="" N BIA
- ..F BIA=1:1:12 S X=X_$J($G(BITMP("STATS",BIG,BIV,"AGE",BIA)),6)
- ..;
- ..;---> Now concat Total (for this vaccine) column.
- ..S X=X_$J($G(BITMP("STATS",BIG,BIV,"TOTAL")),7)
+ ..F BIA=1:1:12 S X=X_$J($G(BITMP("STATS",BIG,BIV,"ALL",BIA)),6)
+ ..;---> Now concat Total column (for this vaccine row).
+ ..S X=X_$J($G(BITMP("STATS",BIG,BIV,"ALL","TOTAL")),7)
  ..D WRITE(.BILINE,X)
  ..D WRITE(.BILINE,$$SP^BIUTL5(79,"-"))
- ..;
  ..;---> Now mark the top line of this vaccine to print as one record.
  ..D:$G(BILSAV) MARK^BIW(BILSAV,BILINE-BILSAV,"BIREPA1")
+ ..;
+ ..Q:'$G(BIDLOT)
+ ..;---> Display rows by individual Lot Number.
+ ..N BIL S BIL=0
+ ..F  S BIL=$O(BITMP("STATS",BIG,BIV,BIL)) Q:BIL=""  D
+ ...Q:(BIL="ALL")
+ ...;---> Write Vaccine Name with Lot Number concatenated.
+ ...S X=BIV_" - "_BIL D CENTERT^BIUTL5(.X)
+ ...D WRITE(.BILINE,X) S BILSAV=BILINE
+ ...S X=$$SUML() D WRITE(.BILINE,X)
+ ...S X="" N BIA
+ ...F BIA=1:1:12 S X=X_$J($G(BITMP("STATS",BIG,BIV,BIL,BIA)),6)
+ ...S X=X_$J($G(BITMP("STATS",BIG,BIV,BIL,"TOTAL")),7)
+ ...D WRITE(.BILINE,X)
+ ...D WRITE(.BILINE,$$SP^BIUTL5(79,"-"))
+ ...D:$G(BILSAV) MARK^BIW(BILSAV,BILINE-BILSAV,"BIREPA1")
+ ...;
+ ...;---> Now mark the top line of this vaccine to print as one record.
+ ...D:$G(BILSAV) MARK^BIW(BILSAV,BILINE-BILSAV,"BIREPA1")
  ;
  ;---> Now write total in .
  S X=" TOTAL IMMUNIZATIONS (for all vaccines in this report)"

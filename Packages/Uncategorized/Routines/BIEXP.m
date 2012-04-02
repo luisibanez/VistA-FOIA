@@ -1,5 +1,5 @@
 BIEXP ;IHS/CMI/MWR - EXPORT IMMUNIZATION RECORDS.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EXPORT IMMUNIZATION RECORDS: MAIN DRIVER.
  ;
@@ -91,16 +91,49 @@ EXIT ;EP
  ;
  ;----------
 EXPVT ;EP
- ;---> Export Vaccine Table to a host file.
+ ;---> Export Vaccine Table to a CVS (Excel compatible) host file.
  D SETVARS^BIUTL5
  N BIFLNM,BIPATH,BIPOP
- S BIFLNM="RPMSVaccineTable.txt"
+ S BIFLNM="RPMS Vaccine Table.csv"
  D HFS^BIEXPRT8(BIFLNM,.BIPATH,1,.BIPOP)
- I $G(BIPOP) W !!?3,"Failure to open Host File." Q
- W "CVX Code"_U_"Name"_U_"Short Name"_U_"Long Name"
+ I $G(BIPOP) D ^%ZISC W !!?3,"Failure to open Host File." D DIRZ^BIUTL3() Q
+ ;
+ ;---> Host file is open.
+ ;---> Use "," for CSV delimiter.
+ N Q,D S Q="""",D=Q_","_Q
+ ;
+ ;---> Write Header row.
+ W Q_"CVX Code"_D_"Name"_D_"Short Name"_D_"Vaccine Group"_D_"VIS Date"_D_"Active"
+ W D_"Related Contra CVX's"_D_"1st Brand Name"_D_"2nd Brand Name"_D_"Long Name"_Q
+ ;
+ ;---> Write data records.
  N N S N=0
  F  S N=$O(^BITN(N)) Q:'N  D
  .N Y,Z S Y=^BITN(N,0),Z=$G(^BITN(N,1))
- .W !,$P(Y,U,3)_U_$P(Y,U,1)_U_$P(Y,U,2)_U_$P(Z,U,14)
+ .W !,Q_$P(Y,U,3)_D_$P(Y,U,1)_D_$P(Y,U,2)_D_$$VGROUP^BIUTL2($P(Y,U,9))
+ .W D_$$SLDT1^BIUTL5($P(Y,U,13))_D_$S($P(Y,U,7)=1:"Inactive",1:"Active")
+ .W D_$P(Y,U,12)_D_$P(Z,U,1)_D_$P(Z,U,3)_D_$P(Z,U,14)_Q
+ ;
+ ;---> Close the host file and report its location.
  D ^%ZISC
+ D TITLE^BIUTL5("EXPORT VACCINE TABLE TO EXCEL FILE")
+ W !!?5,"The Vaccine Table has been exported to:"
+ W !!?10,BIPATH_BIFLNM
+ D TEXT3
+ D DIRZ^BIUTL3()
+ Q
+ ;
+ ;
+ ;----------
+TEXT3 ;EP
+ ;;
+ ;;
+ ;;
+ ;;Note that the path ("folder" or "directory") in which the file
+ ;;was placed is taken from the Immunization Site Parameter #6.
+ ;;You can change that to a different location by editing the site
+ ;;parameter (IMM-->MGR-->ESP-->6).
+ ;;
+ ;
+ D PRINTX("TEXT3")
  Q

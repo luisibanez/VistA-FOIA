@@ -1,5 +1,5 @@
 BIREPL1 ;IHS/CMI/MWR - REPORT, ADULT IMM; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW OR PRINT ADULT IMMUNIZATION REPORT.
  ;
@@ -17,6 +17,8 @@ START(BIX) ;EP
  ;     3 - BIHCF  (req) Health Care Facility array.
  ;     4 - BIBEN  (req) Beneficiary Type array.
  ;     5 - BICPTI (opt) 1=Include CPT Coded Visits, 0=Ignore CPT (default).
+ ;     6 - BIUP   (req) User Population/Group
+ ;                      (Registered, Imm Reg Active, User 1+, Active 2+).
  ;
  ;---> Check for required Variables.
  I '$G(BIQDT) D ERROR(622) D RESET^BIREPL Q
@@ -24,6 +26,7 @@ START(BIX) ;EP
  I '$D(BIHCF) D ERROR(625) D RESET^BIREPL Q
  I '$D(BIBEN) D ERROR(662) D RESET^BIREPL Q
  I '$D(BICPTI) S BICPTI=0
+ S:$G(BIUP)="" BIUP="u"
  ;
  D SETVARS^BIUTL5 N VALMCNT
  I $G(BIX)="PRINT" D PRINT,RESET^BIREPL Q
@@ -32,7 +35,7 @@ START(BIX) ;EP
  ;---> to INIT here.
  ;---> Set BITITL for Report Name in Patient List, if called.
  ;---> Set BIAG for Age Range in header of report.
- N BIAG,BIRTN,BITITL S BIRTN="BIREPL1",BITITL="ADULT",BIAG="50+^1"
+ N BIAG,BIRTN,BITITL S BIRTN="BIREPL1",BITITL="ADULT",BIAG="19+^1"
  D EN
  D RESET^BIREPL
  Q
@@ -50,7 +53,7 @@ PRINT ;EP
  ;---> Prepare report.
  K ^TMP("BIREPL1",$J),^TMP("BIDUL",$J)
  N VALM,VALMHDR
- D HDR,START^BIREPL2(BIQDT,.BICC,.BIHCF,.BIBEN,BICPTI)
+ D HDR,START^BIREPL2(BIQDT,.BICC,.BIHCF,.BIBEN,BICPTI,BIUP)
  ;
  D PRTLST^BIUTL8("BIREPL1")
  D EXIT,RESET^BIREPL
@@ -67,7 +70,7 @@ EN ;EP
  ;----------
 HDR ;EP
  ;---> Header code
- D HEAD^BIREPL2(BIQDT,.BICC,.BIHCF,.BIBEN,BICPTI)
+ D HEAD^BIREPL2(BIQDT,.BICC,.BIHCF,.BIBEN,BICPTI,BIUP)
  Q
  ;
  ;
@@ -78,7 +81,7 @@ INIT ;EP
  S VALM("TITLE")=$$LMVER^BILOGO
  S VALMSG="To view patient rosters, select a group below:"
  W !!?10,"This may take some time.  Please hold on...",!
- D START^BIREPL2(BIQDT,.BICC,.BIHCF,.BIBEN,BICPTI)
+ D START^BIREPL2(BIQDT,.BICC,.BIHCF,.BIBEN,BICPTI,BIUP)
  ;---> Set up ZTSAVE in case user Queues from PL in List.
  D ZSAVES^BIUTL3
  Q
@@ -163,7 +166,7 @@ DEQUEUE ;EP
  ;
  ;---> Prepare and print ADULT Report.
  K VALMHDR,^TMP("BIREPL1",$J)
- D HDR^BIREPL1,START^BIREPL2(BIQDT,.BICC,.BIHCF,.BIBEN,BICPTI)
+ D HDR^BIREPL1,START^BIREPL2(BIQDT,.BICC,.BIHCF,.BIBEN,BICPTI,BIUP)
  D PRTLST^BIUTL8("BIREPL1"),EXIT
  Q
  ;

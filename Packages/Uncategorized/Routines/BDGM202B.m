@@ -1,9 +1,10 @@
 BDGM202B ; IHS/ANMC/LJF - M202 PRINT ; [ 01/04/2005  5:03 PM ]
- ;;5.3;PIMS;**1001,1006,1008**;MAY 28, 2004
+ ;;5.3;PIMS;**1001,1006,1008,1013**;MAY 28, 2004
  ;IHS/ITSC/WAR 09/27/2004 PATCH 1001 Shift transfers Rt 1 position
  ;IHS/ITSC/LJF 10/25/2004 PATCH 1001 remove blank lines to fit new info
  ;IHS/OIT/LJF  08/24/2006 PATCH 1006 added lines for swing beds & observations
  ;cmi/anch/maw 11/07/2007 PATCH 1008 set DGMIN and DGMAX = +$G, just in case they are not set when no data 
+ ;ihs/cmi/maw  04/18/2011 PATCH 1013 RQMT155 added day surgery
  ;
  NEW DGLINE
  S DGLINE=$$REPEAT^XLFSTR("-",80)
@@ -75,7 +76,8 @@ TOT ; -- totals
  W ! W:DGA(4,7) ?40,DGA(4,7)_"t" W:DGA(4,8) ?55,DGA(4,8)_"t"
  ;
  ;IHS/OIT/LJF 08/24/2006 PATCH 1006 add swing bed & observations
- F S=4,8,9 D
+ ;F S=4,8,9 D
+ F S=4,8,9,10 D  ;ihs/cmi/maw 04/18/2011 added day surgery
  . W $P($T(SRV+S),";;",2)
  . W ?32,$J(DGA(S,1),3),?40,$J(DGA(S,2),3) W:DGA(S,7) " ("_DGA(S,7)_"t)"
  . W ?48,$J(DGA(S,3),3),?55,$J(DGA(S,4),3) W:DGA(S,8) " ("_DGA(S,8)_"t)"
@@ -112,3 +114,4 @@ SRV ;;
  ;;MENTAL HEALTH
  ;;SWING BEDS
  ;;OBSERVATIONS
+ ;;DAY SURGERY

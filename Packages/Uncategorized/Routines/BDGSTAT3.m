@@ -1,5 +1,7 @@
 BDGSTAT3 ; IHS/ANMC/LJF - INPT STATS BY SERV ;  [ 06/16/2003  2:47 PM ]
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1013**;APR 26, 2002
+ ;
+ ;ihs/cmi/maw 04/15/2011 PATCH 1013 RQMT155
  ;
  NEW BDGBD,BDGED,BDGIA,BDGTYP
  ;
@@ -8,7 +10,8 @@ BDGSTAT3 ; IHS/ANMC/LJF - INPT STATS BY SERV ;  [ 06/16/2003  2:47 PM ]
  ;
  S BDGIA=$$READ^BDGF("Y","Include INACTIVE Services","NO")
  ;
- S BDGTYP=$$READ^BDGF("S^1:Inpatient Services Only;2:Observation Services Only;3:Both","Select Patient Type","BOTH") Q:BDGTYP=U
+ ;S BDGTYP=$$READ^BDGF("S^1:Inpatient Services Only;2:Observation Services Only;3:Both","Select Patient Type","BOTH") Q:BDGTYP=U
+ S BDGTYP=$$READ^BDGF("S^1:Inpatients Only;2:Observation Patients Only;3:Day Surgery Patients Only;4:All","Select Patient Type","ALL") Q:BDGTYP=U  ;ihs/cmi/maw 04/15/2011 PATCH 1013 RQMT155  
  ;
  D ZIS^BDGF("PQ","EN^BDGSTAT3","STATS BY SERV","BDGBD;BDGED;BDGIA;BDGTYP")
  Q
@@ -24,8 +27,8 @@ HDR ; -- header code
  NEW X
  S X="For "_$$FMTE^XLFDT(BDGBD)_" through "_$$FMTE^XLFDT(BDGED)
  S VALMHDR(1)=$$SP(75-$L(X)\2)_X
- I BDGTYP=3 S X="Includes Inpatients AND Observations"
- E  S X=$S(BDGTYP=1:"Inpatient Services",1:"Observation Services")_" Only"
+ I BDGTYP=4 S X="Includes Inpatients, Observations AND Day Surgery"
+ E  S X=$S(BDGTYP=1:"Inpatients Only",BDGTYP=2:"Observations Only",1:"Day Surgery Only")
  S VALMHDR(2)=$$SP(75-$L(X)\2)_X
  Q
  ;
@@ -44,6 +47,7 @@ INIT ; -- init variables and list array
  . I SVABV="" S SVABV=SERV_"??"
  . I BDGTYP=1 Q:$$GET1^DIQ(45.7,SERV,.01)["OBSERVATION"   ;inpt only
  . I BDGTYP=2 Q:$$GET1^DIQ(45.7,SERV,.01)'["OBSERVATION"  ;obser only
+ . I BDGTYP=3 Q:$$GET1^DIQ(45.7,SERV,.01)'="DAY SURGERY"  ;day surgery only ihs/cmi/maw PATCH 1013
  . ;
  . S DATE=BDGBD-.001
  . F  S DATE=$O(^BDGCTX(SERV,1,DATE)) Q:DATE>BDGED  Q:'DATE  D
@@ -178,8 +182,10 @@ HDG ; heading if printing to paper
  W !,BDGUSR,?30,"Statistics by Service"
  NEW X S X="For "_$$FMTE^XLFDT(BDGBD)_" through "_$$FMTE^XLFDT(BDGED)
  W !,BDGTIME,?(80-$L(X)\2),X,?71,"Page: ",BDGPG
- I BDGTYP=3 S X="Includes Inpatients AND Observations"
- E  S X=$S(BDGTYP=1:"Inpatient Services",1:"Observation Services")_" Only"
+ ;I BDGTYP=3 S X="Includes Inpatients AND Observations"
+ ;E  S X=$S(BDGTYP=1:"Inpatient Services",1:"Observation Services")_" Only"
+ I BDGTYP=4 S X="Includes Inpatients, Observations AND Day Surgery"
+ E  S X=$S(BDGTYP=1:"Inpatients Only",BDGTYP=2:"Observations Only",1:"Day Surgery Only")
  W !,BDGDATE,?(80-$L(X)\2),X
  W !,"Service",?11,"ADM",?17,"TXI",?23,"TXO",?29,"DSC",?35,"DTH"
  W ?40,"1DAY",?47,"DAYS",?55,"ADPL",?64,"LOSD",?74,"LOSA"

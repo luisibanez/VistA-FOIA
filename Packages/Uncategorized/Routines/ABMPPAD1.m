@@ -1,5 +1,5 @@
 ABMPPAD1 ; IHS/SD/SDR - Prior Payments/Adjustments page (CE); 
- ;;2.6;IHS 3P BILLING SYSTEM;**6**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8**;NOV 12, 2009
  ;
  ; IHS/SD/SDR - v2.5 p12 - IM25430
  ;   Made correction for <SUBSCR>EDIT2+3^ABMPPAD1
@@ -10,7 +10,8 @@ ABMPPAD1 ; IHS/SD/SDR - Prior Payments/Adjustments page (CE);
  Q
 DISPCK ;EP
  ;I ABMP("EXP")'=21&(ABMP("EXP")'=22)&(ABMP("EXP")'=23) S ABMCHK=1 Q  ;must be 837  ;abm*2.6*6 5010
- I ABMP("EXP")'=21&(ABMP("EXP")'=22)&(ABMP("EXP")'=23)&(ABMP("EXP")'=32) S ABMCHK=1 Q  ;must be 837  ;abm*2.6*6 5010
+ ;I ABMP("EXP")'=21&(ABMP("EXP")'=22)&(ABMP("EXP")'=23)&(ABMP("EXP")'=32) S ABMCHK=1 Q  ;must be 837  ;abm*2.6*6 5010  ;abm*2.6*8 5010
+ I ABMP("EXP")'=21&(ABMP("EXP")'=22)&(ABMP("EXP")'=23)&(ABMP("EXP")'=31)&(ABMP("EXP")'=32)&(ABMP("EXP")'=33) S ABMCHK=1 Q  ;must be 837  ;abm*2.6*6 5010  ;abm*2.6*8 5010
  S ABMCHK=0
  S ABMEXPM=0
  K ABMEXPMS,ABMSFLG,ABMP("OBAMT")

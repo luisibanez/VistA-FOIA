@@ -1,5 +1,5 @@
 BGPMUDD1 ; IHS/MSC/SAT - Print MI measure NQF0028 ;21-Mar-2011 13:15;DU
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;Delimited output
  ;Get printout for Tobacco Assessment measure 0028A
 TOB2 ;EP
@@ -70,12 +70,16 @@ DATA3(NODE) ;GET DATA
  S DFN=$P(NODE,U,1)
  S NAME=$E($$GET1^DIQ(2,$P(NODE,U,1),.01),1,15)
  S HRN=$$HRN^AUPNPAT(DFN,DUZ(2))
- S AGE=$$AGE^AUPNPAT(DFN,BGPEDATE)
+ S AGE=$$AGE^AUPNPAT(DFN,BGPED)
  S SEX=$$SEX^AUPNPAT(DFN)
  S COMM=$E($$GET1^DIQ(9000001,DFN,1118),1,9)
  S DEN=$P(NODE,U,2)
  S NUM=$P(NODE,U,3)
- S X=NAME_U_HRN_U_COMM_U_SEX_U_AGE_U_DEN_U_$S(NUM'="":"M:"_$E($P(NUM,";",1),16),1:"NM:") D S^BGPMUDEL(X,1,1)
+ S X=NAME_U_HRN_U_COMM_U_SEX_U_AGE
+ S X=X_U_"EN:"_$P($$FMTE^XLFDT($P($P(DEN,":",1),";",1),2),"@",1)
+ S X=X_$S($L($P(DEN,":",1),";")>1:";",1:"")_$S($P($P(DEN,":",1),";",2)'="":"EN:"_$P($$FMTE^XLFDT($P($P(DEN,":",1),";",2),2),"@",1),1:"")_$S($P(DEN,":",2)'="":";"_"HF:"_$P($$FMTE^XLFDT($P(DEN,":",2),2),"@",1),1:"")
+ S X=X_U_$S(NUM'="":"M:"_$P(NUM,";",1)_" "_$$FMTE^XLFDT($P(NUM,";",2),2),1:"NM:")
+ D S^BGPMUDEL(X,1,1)
  Q
  ;
  ;Get printout for Tobacco Cessation measure 0028B
@@ -151,12 +155,16 @@ DATA4(NODE) ;GET DATA
  S DFN=$P(NODE,U,1)
  S NAME=$E($$GET1^DIQ(2,$P(NODE,U,1),.01),1,15)
  S HRN=$$HRN^AUPNPAT(DFN,DUZ(2))
- S AGE=$$AGE^AUPNPAT(DFN,BGPEDATE)
+ S AGE=$$AGE^AUPNPAT(DFN,BGPED)
  S SEX=$$SEX^AUPNPAT(DFN)
  S COMM=$E($$GET1^DIQ(9000001,DFN,1118),1,9)
  S DEN=$P(NODE,U,2),NUM=$P(NODE,U,3)
  ;line 1
- S X=NAME_U_HRN_U_COMM_U_SEX_U_AGE_U_DEN_NUM
+ S X=NAME_U_HRN_U_COMM_U_SEX_U_AGE
+ S X=X_U_$S($P(DEN,";",1)'="":"EN:"_$P($$FMTE^XLFDT($P(DEN,";",1),2),"@",1)_$S($L(DEN,";")>1:";",1:""),1:"")
+ I $L(DEN,";")>1 S X=X_";"_$S($P(DEN,";",2)'="":"EN:"_$P($$FMTE^XLFDT($P(DEN,";",2),2),"@",1),1:"")
+ S X=X_U_$S(NUM'="":"M:"_$E($P(NUM,";",1),1,15),1:"NM:")
+ I $L(NUM,";")>1 S X=X_";"_$S($P(NUM,";",2)'="":$P($$FMTE^XLFDT($P(NUM,";",2),2),"@",1),1:"")
  D S^BGPMUDEL(X,1,1)
  Q
  ;

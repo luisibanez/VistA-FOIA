@@ -1,5 +1,7 @@
-BADEHL4 ;IHS/MSC/MGH - Dentrix HL7 inbound interface  ;12-Feb-2010 09:50;PLS
- ;;1.0;DENTAL/EDR INTERFACE;;Oct 13, 2009
+BADEHL4 ;IHS/MSC/MGH/VAC - Dentrix HL7 inbound interface  ;01-Oct-2010 14:42;MGH
+ ;;1.0;DENTAL/EDR INTERFACE;**1**;AUG 22, 2011
+ ;; Modified - IHS/MSC/AMF - 11/23/10 - More descriptive alert messages
+ ;; Modified - IHS/MSC/AMF 10/2010 fix for hospital location FT1-16,2
 UPD ;EP Update a V Dental entry
  N DIEN,MATCH,DA,APCDVSIT,CODEIEN,APCDSUR,APCDTEE
  N TYPE,TCODE,SCODE,PROV,X,Y,Y2,PIEN,POVIEN2,ADACODE,VTIME
@@ -7,7 +9,8 @@ UPD ;EP Update a V Dental entry
  S APCDALVR("APCDPAT")=DFN    ;patient
  ;visit stored in V Dental file
  S APCDVSIT=$P($G(^AUPNVDEN(EXKEY,0)),U,3)
- I '$D(^AUPNVSIT(APCDVSIT)) S BADERR=" Visit to update in msg does not exist in visit file." D ACK^BADEHL3(BADERR) Q
+ ;Added patient name, DFN, and Visit date. can't add ASUFAC or HLBIEN
+ I '$D(^AUPNVSIT(APCDVSIT)) D ACK^BADEHL3(HLMSGIEN,DFN,"Can't update visit "_APCDVSIT_". Not in RPMS:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  S APCDALVR("APCDVSIT")=APCDVSIT
  ;ADA code stored in V Dental file
  S APCDTSC=$P($G(^AUPNVDEN(EXKEY,0)),U,1)
@@ -15,16 +18,16 @@ UPD ;EP Update a V Dental entry
  S NOOPSITE=$$GET1^DIQ(9999999.31,APCDTSC,.09,"I")="n"
  ;See if the provider was changed
  S PROV=$$GET^HLOPRS(.SEGFT1,20,1)
- I PROV="" S BADERR=" Provider in msg was missing" D ACK^BADEHL3(BADERR) Q
+ I PROV="" D ACK^BADEHL3(HLMSGIEN,DFN,"Missing provider in FT1:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  D CHECKPRV(PROV)
  S APCDALVR("APCDACS")=""
  S TYPE=$$GET^HLOPRS(.SEGFT1,6)
  ;Check the date/time in the message
  S X=$$GET^HLOPRS(.SEGFT1,4)
- I X="" S BADERR=" No date of visit in message" D ACK^BADEHL3(BADERR) Q
+ I X="" D ACK^BADEHL3(HLMSGIEN,DFN,"Missing visit date in FT1:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  I $L(X)=8 D
  .S VTIME=$$GET^XPAR("ALL","BADE EDR DEFAULT TIME")
- .I VTIME="" S VTIME=1200
+ .I VTIME="" S VTIME=1138 ;IHS/MSC/AMF 10/2010 Change in default time
  .S X=X_VTIME
  S Y=$$FMDATE^HLFNC(X)
  S Y2=$P($G(^AUPNVDEN(EXKEY,12)),U,1)
@@ -33,7 +36,7 @@ UPD ;EP Update a V Dental entry
  I Y'=Y2 D DEL,NEW^BADEHL3 Q
  ;ADA code in the message
  S TCODE=$$GET^HLOPRS(.SEGFT1,7)
- I TCODE="" S BADERR=" No dental code in message" D ACK^BADEHL3(BADERR) Q
+ I TCODE="" D ACK^BADEHL3(HLMSGIEN,DFN,"Missing ADA code in FT1:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  I $E(TCODE,1,1)="D" S SCODE=$E(TCODE,2,$L(TCODE))
  E  S SCODE=TCODE
  S CODEIEN=$O(^AUTTADA("B",SCODE,""))
@@ -57,10 +60,10 @@ SETUP ;Setup the variables needed to modifiy or add
  S APCDALVR("APCDTFEE")=APCDTFEE
  ;Date/Time
  S X=$$GET^HLOPRS(.SEGFT1,4)
- I X="" S BADERR=" No date of visit in message" D ACK^BADEHL3(BADERR) Q
+ I X="" D ACK^BADEHL3(HLMSGIEN,DFN,"Missing visit date in FT1:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  I $L(X)=8 D
  .S VTIME=$$GET^XPAR("ALL","BADE EDR DEFAULT TIME")
- .I VTIME="" S VTIME=1200
+ .I VTIME="" S VTIME=1138
  .S X=X_VTIME
  S Y=$$FMDATE^HLFNC(X)
  D DD^%DT S APCDTCDT=Y   ;External format
@@ -74,23 +77,39 @@ SETUP ;Setup the variables needed to modifiy or add
  S MOD=$$GET^HLOPRS(.SEGFT1,26,1)  ; Operative Site Code (may contain text)
  S SURGDES=$$GET^HLOPRS(.SEGFT1,26,2)  ;Operative Site Descriptive Text
  S APCDTOS=$S(NOOPSITE:"",1:$$GETTOS(MOD,SURGDES))
- I 'NOOPSITE,'APCDTOS S BADERR=" Message lacks a valid ADA Code." D ACK^BADEHL3(BADERR) Q
+ I 'NOOPSITE,'APCDTOS D ACK^BADEHL3(HLMSGIEN,DFN,"No valid ADA code in FT1:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  S:APCDTOS APCDALVR("APCDTOS")="`"_APCDTOS
- ;location
- S ASUFAC=$$GET^HLOPRS(.SEGFT1,16,1)
+ ; ----- IHS/MSC/AMF 10/2010 fix for FT1-16,2
+ ;Find the location and clinic location
+ S ASUFAC2=$$GET^HLOPRS(.SEGFT1,16,1)
  S HOSLOC=$$GET^HLOPRS(.SEGFT1,16,2)
- I ASUFAC="" S BADERR=" No location found in msg" D ACK^BADEHL3(BADERR) Q
- S (LOC,PARLOC)=""
- S LOC=$O(^AUTTLOC("C",ASUFAC,LOC))
- I LOC="" S BADERR=" Location does not belong to ASUFAC number" D ACK^BADEHL3(BADERR) Q
- ;Get the clinic location
- I HOSLOC="" D
- .S PARLOC=+$$GET^XPAR("DIV.`"_LOC_"^SYS","BADE EDR DEFAULT CLINIC")
- E  D
- .S PARLOC=+$O(^SC("B",HOSLOC,PARLOC))
- I 'PARLOC S BADERR=" Clinic does not exist in RPMS in msg:" D ACK^BADEHL3(BADERR) Q
- I LOC'=$P($G(^SC(PARLOC,0)),U,4) S BADERR=" Clinic "_HOSLOC_" isn't defined for ASUFAC location" D ACK^BADEHL3(BADERR) Q
+ I $L(ASUFAC2),'$L(HOSLOC) S ASUFAC=ASUFAC2
  ;
+ S BADEWARN=""
+ I $L(HOSLOC)  D
+ .S PARLOC=+$O(^SC("B",HOSLOC,"")) I 'PARLOC S BADEWARN="Warning: Clinic "_HOSLOC_" is not valid ",HOSLOC="" Q
+ .S LOC=+$P($G(^SC(PARLOC,0)),U,4) I 'LOC S BADEWARN="Warning: Location not found for Clinic "_HOSLOC_" ",HOSLOC=""
+ I '$L(HOSLOC) D
+ .S LOC=$O(^AUTTLOC("C",ASUFAC,"")) I '$L(LOC) S BADERR="No location associated ASUFAC "_ASUFAC_":" Q
+ .S PARLOC=+$$GET^XPAR("DIV.`"_LOC_"^SYS","BADE EDR DEFAULT CLINIC") I 'PARLOC S BADERR=" There is no default clinic for this location " Q
+ .S LOCA=+$P($G(^SC(PARLOC,0)),U,4) I LOCA'=LOC S BADERR=" The LOCATION associated with this ASUFAC and BADE EDR DEFAULT CLINIC is incorrect " Q
+ I $L(BADERR) D ACK^BADEHL3(HLMSGIEN,DFN,BADERR) Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
+ I $L(BADEWARN) D ACK^BADEHL3(HLMSGIEN,DFN,BADEWARN) ;IHS/MSC/AMF 11/23/10 More descriptive alert
+ ;location
+ ;S ASUFAC=$$GET^HLOPRS(.SEGFT1,16,1)
+ ;S HOSLOC=$$GET^HLOPRS(.SEGFT1,16,2)
+ ;I ASUFAC="" D ACK^BADEHL3(HLMSGIEN,DFN,"Missing location in FT1:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
+ ;S (LOC,PARLOC)=""
+ ;S LOC=$O(^AUTTLOC("C",ASUFAC,LOC))
+ ;Get the clinic location
+ ;I HOSLOC="" D
+ .;S PARLOC=+$$GET^XPAR("DIV.`"_LOC_"^SYS","BADE EDR DEFAULT CLINIC")
+ ;E  D
+ .;S PARLOC=+$O(^SC("B",HOSLOC,PARLOC))
+ ;I 'PARLOC S BADERR=" Clinic does not exist in RPMS in msg: "_$P($G(^DPT(DFN,0)),"^",1)_" "_DFN_" "_ASUFAC_" "_MIEN D ACK^BADEHL3(BADERR) Q  ;IHS/MSC/VAC 10/2010
+ ;I LOC'=$P($G(^SC(PARLOC,0)),U,4) S BADERR=" Clinic "_HOSLOC_" isn't defined for ASUFAC location "_$P($G(^DPT(DFN,0)),"^",1)_" "_DFN_" "_ASUFAC D ACK^BADEHL3(BADERR) Q  ;IHS/MSC/VAC 10/2010
+ ;
+ ; ----- end IHS/MSC/AMF 10/2010 fix for FT1-16,2
  S APCDALVR("APCDLOC")="`"_LOC
  ;External key
  S APCDALVR("APCDTEXK")=APCDTEXK
@@ -110,10 +129,10 @@ DEL ;EP  Delete V file entry
  N APCDALVR
  S DIEN=EXKEY
  ;Delete the entry
- I '$D(^AUPNVDEN(DIEN)) S BADERR=" Visit in delete message does not exist" D ACK^BADEHL3(BADERR) Q
+ I '$D(^AUPNVDEN(DIEN)) D ACK^BADEHL3(HLMSGIEN,DFN,"Can't delete visit "_DIEN_". Not in RPMS:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  S VSIT=$P($G(^AUPNVDEN(+DIEN,0)),U,3)
  S PROV=$$GET^HLOPRS(.SEGFT1,20,1)
- I PROV="" S BADERR=" Provider in delete message is missing" D ACK^BADEHL3(BADERR) Q
+ I PROV="" D ACK^BADEHL3(HLMSGIEN,DFN,"Missing provider in FT1:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  ;Get the dependent count for this visit
  S DCNT=$P(^AUPNVSIT(VSIT,0),U,9)
  ;If the dependent count is greater than 3, there are other procedures on this visit
@@ -133,7 +152,7 @@ VDEL(FILE,IEN,VSIT) ;Delete a V-file entry
  N X,DIK,DA
  S DIK=FILE,DA=IEN
  S X=$$DEL^APCDALVR(DIK,DA)
- I X>0 S BADERR=" Unable to delete V file entry " D ACK^BADEHL3(BADERR) Q
+ I X>0 D ACK^BADEHL3(HLMSGIEN,DFN,"Can't delete V file entry:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
 VSTDEL(VSIT) ;Delete the visit with zero dependents
  N APCDVDLT,U,APCDVFLE,AUPNVSIT,APCDVNM,APCDVDG,APCDVIGR,APCDVDFN
@@ -169,21 +188,23 @@ CHECK(VSIT,PROV) ;Remove the POV and PRV if those are the 2 remaining dependent 
  S DCNT=$P(^AUPNVSIT(VSIT,0),U,9)
  Q
 CHECKPRV(PROV) ;See if the provider in the message is new
- N VPRV,DPRV,MATCH,PRVIEN,IEN,PPRV
- S MATCH=0
+ N VPRV,DPRV,MATCH,PRVIEN,IEN,PPRV,PRIM ;IHS/MSC/MGH 7/2010 new var PRIM for patch 1
+ S MATCH=0,PRIM="P" ;IHS/MSC/MGH 7/2010 new var PRIM for patch 1
  ;Find the provider in the existing V dental file
  S DPRV=$P($G(^AUPNVDEN(EXKEY,12)),U,2)
  ;If its the same provider quit
  Q:DPRV=PROV
  ;If its not the same provider, check the visit to see if the new provider
  ;is already on this visit
- S VPRV="" F  S VPRV=$O(^AUPNVPRV("AD",APCDVSIT,VPRV)) Q:VPRV=""!(MATCH=1)  D
+ S VPRV="" F  S VPRV=$O(^AUPNVPRV("AD",APCDVSIT,VPRV)) Q:VPRV=""  D
+ .;IHS/MSC/MGH patch 1 check for primary
+ .I $P($G(^AUPNVPRV(VPRV,0)),U,4)="P" S PRIM="S"
  .S PRVIEN=$P($G(^AUPNVPRV(VPRV,0)),U,1)
  .I PROV=PRVIEN S MATCH=1
  ;If this new provider is already attached to this visit we are OK
  Q:MATCH=1
  ;If the new provider is not on this visit,add this provider
- I MATCH=0 D PRV^BADEHL3
+ I MATCH=0 D PRV^BADEHL3(PRIM)   ;patch 1 IHS/MSC/MGH
  ;Now we need to see if we need to delete the old provider.
  ;If this provider does not have any procedures attached we will delete
  S MATCH=0
@@ -193,11 +214,25 @@ CHECKPRV(PROV) ;See if the provider in the message is new
  ;This provider is on other procedures
  Q:MATCH=1
  I MATCH=0 D
+ .N PP,FDA ;IHS/MSC/MGH patch 1 check for primary
+ .S PP=0 ;IHS/MSC/MGH patch 1 check for primary
  .S PIEN="" F  S PIEN=$O(^AUPNVPRV("AD",APCDVSIT,PIEN)) Q:PIEN=""  D
  ..S PROVIEN=$P($G(^AUPNVPRV(PIEN,0)),U,1)
+ ..;IHS/MSC/MGH patch 1 check for primary
+ ..I $P($G(^AUPNVPRV(PIEN,0)),U,4)="P" S PP=1   ; IHS/MSC/MGH patch 1 We are deleting the primary provider
  ..I PROVIEN=DPRV D
  ...S FILE=9000010.06
  ...D VDEL(FILE,PIEN,APCDVSIT)
+ ...;ISH/MSC/MGH PATCH 1  If primary provider was deleted, make the new provider primary
+ ...I PP=1 D
+ ....S PIEN="" F  S IEN=$O(^AUPNVPRV("AD",APCDVSIT,PIEN)) Q:PIEN=""  D
+ .....S PROVIEN=$P($G(^AUPNVPRV(PIEN,0)),U,1)
+ .....I PROVIEN=PROV D
+ ......S FDA=9000010.06
+ ......S FDA=$NA(FDA(FNUM,PIEN_","))
+ ......S @FDA@(.04)="P"
+ ......K FDA
+ ; ----- end ISH/MSC/MGH PATCH 1  If primary provider was deleted
  Q
  ; Returns Dental Operative Code IEN
 GETTOS(CODE,DESC) ;EP

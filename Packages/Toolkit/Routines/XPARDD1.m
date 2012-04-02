@@ -1,6 +1,5 @@
-XPARDD1 ;SLC/KCM - DD Logic for Parameter Definition (8989.51);03:31 PM  22 Apr 1998 [ 04/02/2003   8:47 AM ]
- ;;7.3;TOOLKIT;**1001**;APR 1, 2003
- ;;7.3;TOOLKIT;**26**;Apr 25, 1995
+XPARDD1 ; SLC/KCM - DD Logic for Parameter Definition (8989.51);03:31 PM  22 Apr 1998 ;12/19/07  15:56
+ ;;7.3;TOOLKIT;**26,110**;Apr 25, 1995;Build 16
  ;
 ALLOW(FN) ; Screens allowable entities to variable ptrs in 8989.5,.01
  ; ** VPDD ** see which files 8989.5 can point to
@@ -11,7 +10,7 @@ VALID01 ; -- Input transform for NAME (8989.51,.01), prevent duplicate names
  ; ( Need to figure out how to check for duplicates and have verify
  ;   fields still work )
  I $L(X)>30!($L(X)<3)!'(X'?1P.E) K X Q  ; Length 3-30
- I X'?2A.E K X Q                        ; Must begin with namespace
+ I X'?1U1UN.E K X Q                     ; Must begin with namespace ;p110
  I $D(^XTV(8989.51,"B",X)) D  Q         ; No duplicates
  . K X D EN^DDIOL("Duplicate parameter names not allowed.")
  Q

@@ -1,5 +1,5 @@
 BIDUVLS ;IHS/CMI/MWR - VIEW DUE LIST.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW LIST OF PATIENTS (DUE LIST OR MASTER LIST).
  ;;  CALLED BY PROTOCOL: BI DUE LIST OF PATIENTS ("List of Patients")`
@@ -24,6 +24,8 @@ VIEWDUE ;EP
  ;    12 - BINFO  (opt) Array of Additional Information elements (may be null).
  ;    13 - BIRDT  (opt) Date Range for Received Imms (form BEGDATE:ENDDATE).
  ;    14 - BIDED  (opt) Include Deceased Patients (0=no, 1=yes).
+ ;    15 - BIMMRF (opt) Imms Received Filter array (subscript=CVX's included).
+ ;    16 - BIBEN  (req) Beneficiary Type array: either BIBEN(1) or BIBEN("ALL").
  ;
  ;---> Check for required Variables.
  I '$D(BIAG) D ERROR(613) Q
@@ -38,9 +40,11 @@ VIEWDUE ;EP
  I '$D(BILOT) D ERROR(630) Q
  I '$G(BIORD) D ERROR(618) Q
  ;I '$D(BINFO) D ERROR(629) Q  ;Additional Info not required (may be null).
+ ;  ;BIMMRF not required (may be null).
  ;
  I '$D(BIRDT) S BIRDT=""
- I '$D(BIDED) S BIDED=0 Q
+ I '$D(BIDED) S BIDED=0
+ I '$D(BIBEN) S BIBEN(1)=""
  ;
  D FULL^VALM1 N BIERR
  D TITLE^BIUTL5("PRINT OR VIEW LIST"),TEXT1
@@ -69,7 +73,7 @@ VIEW ;---> User chose to VIEW Due List.
  .;
  .;---> Display list of patients retrieved.
  .K ^TMP("BIDULV",$J)
- .D START^BIDUVLS1(BIFDT,.BINFO,BIPG,BIAG,BIT)
+ .D START^BIDUVLS1(BIFDT,.BINFO,BIPG,BIAG,BIT,,,,,.BIBEN)
  .D EXIT,RESET^BIDU
  ;
  ;
@@ -104,8 +108,7 @@ RETRIEVE(BIT,BIERR) ;EP
  ;     1 - BIT   (ret) Total Patients retrieved.
  ;     2 - BIERR (ret) Error Code.
  ;
- ;   vvv83
- D R^BIDUR(BIAG,BIPG,BIFDT,.BICC,.BICM,.BIMMR,.BIMMD,.BILOT,0,BIORD,BIRDT,BIDED,.BIT,.BIHCF,.BIDPRV,.BIERR)
+ D R^BIDUR(BIAG,BIPG,BIFDT,.BICC,.BICM,.BIMMR,.BIMMD,.BILOT,0,BIORD,BIRDT,BIDED,.BIT,.BIHCF,.BIDPRV,.BIERR,.BIBEN)
  Q
  ;
  ;

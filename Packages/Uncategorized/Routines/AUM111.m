@@ -1,11 +1,11 @@
-AUM111 ;IHS/SD/RNB - ICD 9 CODES FOR FY 2011 ; [ 09/09/2010  8:30 AM ]
- ;;11.0;TABLE MAINTENANCE;;OCT 15,2010
+AUM111 ;IHS/SD/RNB - ICD 9 CODES FOR FY 2012 ; [ 09/09/2010  8:30 AM ]
+ ;;12.0;TABLE MAINTENANCE;;SEP 27,2011
 START ;EP
  I $$VERSION^XPDUTL("BCSV")>0 D ^AUM111RL Q  ;if BCSV is loaded for 2011 ICD codes
 SVARS ;;A,C,E,F,L,M,N,O,P,R,S,T,V;Single-character work variables.
  NEW DA,DIC,DIE,DINUM,DLAYGO,DR,@($P($T(SVARS),";",3))
  S U="^"
- D RSLT("Beginning FY 2011 ICD Update.")
+ D RSLT("Beginning FY 2012 ICD Update.")
  D DASH,ICD9NEW
  D DASH,ICD9REV
  D DASH,ICD9INAC
@@ -13,7 +13,7 @@ SVARS ;;A,C,E,F,L,M,N,O,P,R,S,T,V;Single-character work variables.
  D DASH,ICD0REV
  D DASH,ICD0INAC
  D DASH
- D RSLT("End FY 2011 ICD Update.")
+ D RSLT("End FY 2012 ICD Update.")
  Q
 ADDOK D RSLT($J("",5)_"Added : "_L)
  Q
@@ -63,6 +63,7 @@ ICD9NEW ;
  ;  loads new ICD9 CODES
  NEW AUMDA,AUMI,AUMLN,DA,DIE,DR
  F AUMI=1:1 S AUMLN=$P($T(ICD9NEW+AUMI^AUM111A),";;",2) Q:AUMLN="END"  D ICD9NPRC
+ F AUMI=1:1 S AUMLN=$P($T(ICD9NEW2+AUMI^AUM111E),";;",2) Q:AUMLN="END"  D ICD9NPRC
  D NEWVCODS
  Q
 ICD9NPRC ;
@@ -74,7 +75,7 @@ ICD9NPRC ;
  S DR=DR_";10///"_$P(AUMLN,U,3)  ;description
  S DR=DR_";100///@"              ;inactive flag
  S DR=DR_";102///@"              ;inactive date
- S DR=DR_";9999999.04///3101001" ;date added
+ S DR=DR_";9999999.04///3111001" ;date added
  S DR=DR_";9.5///"_$P(AUMLN,U,4) ;use with sex
  S DR=DR_";5///"_$P(AUMLN,U,5)   ;MDC
  I $P(AUMLN,U,7)=1 S DR=DR_";70///1"  ;complication/comorbidity
@@ -129,7 +130,7 @@ NEWVCODS ;  loads NEW V-CODES
  .S DR=DR_";10///"_$P(AUMLN,U,3)  ;description
  .S DR=DR_";100///@"              ;inactive flag
  .S DR=DR_";102///@"              ;inactive date
- .S DR=DR_";9999999.04///3101001" ;date added
+ .S DR=DR_";9999999.04///3111001" ;date added
  .S DR=DR_";9.5///"_$P(AUMLN,U,4) ;use with sex
  .S DR=DR_";5///"_$P(AUMLN,U,5)   ;MDC
  .S DIE="^ICD9("
@@ -163,7 +164,7 @@ NEWVCODS ;  loads NEW V-CODES
  .S DR=DR_";10///"_$P(AUMLN,U,3)   ;description
  .S DR=DR_";100///@"               ;inactive flag
  .S DR=DR_";102///@"               ;inactive date
- .S DR=DR_";9999999.04///3101001"  ;date added
+ .S DR=DR_";9999999.04///3111001"  ;date added
  .S DR=DR_";9.5///"_$P(AUMLN,U,4)  ;use with sex
  .S DIE="^ICD9("
  .S AUMDA=DA
@@ -182,7 +183,8 @@ ICD9INAC ;
  .I Y=-1 D RSLT(" CODE '"_X_"' not found (that's OK).") Q
  .S DA=+Y,AUMDA=+Y
  .S DIE="^ICD9("
- .S DR="102///3101001"
+ .S DR="102///3111001"
+ .S DR=DR_";100////1"
  .D DIE
  .I $D(Y) D RSLT("ERROR:  Edit of INACTIVE DATE field for CODE '"_$P(AUMLN,U,1)_"' FAILED.") Q
  .D RSLT($J("",8)_$P(^ICD9(AUMDA,0),U,1)_$J("",4)_$E($P(^ICD9(AUMDA,0),U,3),1,30))
@@ -198,7 +200,8 @@ ICD9INAC ;
  .I Y=-1 D RSLT(" CODE '"_X_"' not found (that's OK).") Q
  .S DA=+Y,AUMDA=+Y
  .S DIE="^ICD9("
- .S DR="102///3101001"
+ .S DR="102///3111001"
+ .S DR=DR_";100////1"
  .D DIE
  .I $D(Y) D RSLT("ERROR:  Edit of INACTIVE DATE field for CODE '"_$P(AUMLN,U,1)_"' FAILED.") Q
  .D RSLT($J("",8)_$P(^ICD9(AUMDA,0),U,1)_$J("",4)_$E($P(^ICD9(AUMDA,0),U,3),1,30))
@@ -214,7 +217,8 @@ ICD9OINA ;
  .I Y=-1 D RSLT(" CODE '"_X_"' not found (that's OK).") Q
  .S DA=+Y,AUMDA=+Y
  .S DIE="^ICD9("
- .S DR="102///3101001"
+ .S DR="102///3111001"
+ .S DR=DR_";100////1"
  .D DIE
  .I $D(Y) D RSLT("ERROR:  Edit of INACTIVE DATE field for CODE '"_$P(AUMLN,U,1)_"' FAILED.") Q
  .D RSLT($J("",8)_$P(^ICD9(AUMDA,0),U,1)_$J("",4)_$E($P(^ICD9(AUMDA,0),U,3),1,30))
@@ -235,9 +239,11 @@ PROCESS S AUMLN=$TR(AUMLN,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWX
  S DR=DR_";10///"_$P(AUMLN,U,3)   ;description
  S DR=DR_";100///@"               ;inactive flag
  S DR=DR_";102///@"               ;inactive date
- S DR=DR_";2100000///"_DT         ;date updated
+ ;;S DR=DR_";2100000///3111001"     ;date updated
+ S DR=DR_";2100000///"_DT     ;date updated
  S DR=DR_";9.5///"_$P(AUMLN,U,4)  ;use with sex
  S DR=DR_";5///"_$P(AUMLN,U,5)    ;MDC
+ I $P(AUMLN,U,7)=1 S DR=DR_";70///1"  ;complication/comorbidity
  S DIE="^ICD9("
  S AUMDA=DA
  D DIE
@@ -274,7 +280,7 @@ ICD0NEW ;
  .S DR=DR_";10///"_$P(AUMLN,U,3)  ;description
  .S DR=DR_";100///@"              ;inactive flag
  .S DR=DR_";102///@"              ;inactive date
- .S DR=DR_";9999999.04///3101001" ;date added
+ .S DR=DR_";9999999.04///3111001" ;date added
  .S DR=DR_";9.5///"_$P(AUMLN,U,4) ;use with sex
  .S DIE="^ICD0("
  .S AUMDA=DA
@@ -322,7 +328,8 @@ ICD0REV ;
  .S DR=DR_";10///"_$P(AUMLN,U,3)   ;description
  .S DR=DR_";100///@"               ;inactive flag
  .S DR=DR_";102///@"               ;inactive date
- .S DR=DR_";2100000///"_DT         ;date updated
+ .;;S DR=DR_";2100000///3111001"     ;date updated
+ .S DR=DR_";2100000///"_DT     ;date updated
  .S DR=DR_";9.5///"_$P(AUMLN,U,4)  ;use with sex
  .S DIE="^ICD0("
  .S AUMDA=DA
@@ -366,7 +373,8 @@ ICD0INAC ;
  .I Y=-1 D RSLT(" CODE '"_X_"' not found (that's OK).") Q
  .S DA=+Y
  .S DIE="^ICD0("
- .S DR="102///3101001"
+ .S DR="102///3111001"
+ .S DR=DR_";100////1"
  .S AUMDA=DA
  .D DIE
  .I $D(Y) D RSLT("ERROR:  Edit of INACTIVE DATE field for CODE '"_$P(X,U,1)_"' FAILED.") Q

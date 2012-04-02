@@ -1,5 +1,5 @@
 BIUTL8 ;IHS/CMI/MWR - UTIL: PATLKUP, PRTLST, ZGBL; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  UTILITY: PATIENT LOOKUP, DUPTEST, PRINT LIST, K/ZGBL, KILLALL.
  ;;           HFSPATH, IMMSVDIR.
@@ -78,6 +78,22 @@ PATLKUP(BIDFN,BIADD,DUZ2,BIPOP) ;EP
  .N BIFLD,BIERR S BIFLD(.08)="",BIFLD(.16)=""
  .D FDIE^BIFMAN(9002084,BIDFN,.BIFLD,.BIERR,1)
  .I $G(BIERR)]"" W !!?3,BIERR D DIRZ^BIUTL3() S BIPOP=1
+ Q
+ ;
+ ;
+ ;----------
+VFCSET ;EP
+ ;---> Load VFC Eligibility.  Called by LOADVIS^BIUTL7.
+ ;---> If Patient Ben Type is 01 (Am Indian/AK Native), set VFC default=4.
+ Q:$G(BI("P"))]""
+ Q:'$G(BIDFN)
+ Q:$$BENTYP^BIUTL11(BIDFN,2)'="01"
+ N BIDATE S BIDATE=$G(BI("E"))
+ Q:'BIDATE
+ N BIDOB S BIDOB=$$DOB^BIUTL1(BIDFN)
+ Q:'BIDOB
+ Q:((BIDOB+190000)'<BIDATE)
+ S BI("P")=4
  Q
  ;
  ;
@@ -282,10 +298,12 @@ PDSS(BIVIEN,BICOMP,BIPDSS) ;EP
  ;
  ;
  ;----------
-DOVER(X) ;EP
+DOVER(X,Z) ;EP
  ;---> Return text of Dose Override Code.
  ;---> Parameters:
  ;     1 - X (req) Code for Dose Override text.
+ ;     2 - Z (opt) If Z=1 return Short form (remove "INVALID--" from text).
  ;
  Q:'$G(X) ""
+ Q:$G(Z) $P($P($P($G(^DD(9000010.11,.08,0)),X_":",2),";"),"--",2)
  Q $P($P($G(^DD(9000010.11,.08,0)),X_":",2),";")

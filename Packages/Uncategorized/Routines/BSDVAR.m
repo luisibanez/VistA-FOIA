@@ -1,5 +1,5 @@
 BSDVAR ; IHS/ANMC/LJF - MENU ENTRY AND EXIT ACTIONS ;  [ 01/02/2004  10:20 AM ]
- ;;5.3;PIMS;**1011,1012**;APR 26, 2002
+ ;;5.3;PIMS;**1011,1012,1013**;APR 26, 2002
  ;
  ;This rtn contains the entry & exit actions for the main Scheduling
  ;menu as well as common subrtns for other menus and options.

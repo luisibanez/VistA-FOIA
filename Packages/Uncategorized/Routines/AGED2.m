@@ -1,5 +1,5 @@
 AGED2 ; IHS/ASDS/EFG - EDIT PG 2 - RELIGION/TRIBAL DATA/EMPLOYMENT DATA ; MAR 19, 2010
- ;;7.1;PATIENT REGISTRATION;**2,3,7,8**;AUG 25, 2005
+ ;;7.1;PATIENT REGISTRATION;**2,3,7,8,10**;AUG 25, 2005;Build 7
  ;
  ;AG*7.1*7 - Sections of this routine were re-written to accomplish the following:
  ;           1) Modified code to allow for the new page 10
@@ -9,6 +9,7 @@ AGED2 ; IHS/ASDS/EFG - EDIT PG 2 - RELIGION/TRIBAL DATA/EMPLOYMENT DATA ; MAR 19
  ;AG*7.1*8 - Sections of thsi routine were re-written to accomplish the following:
  ;           1) Added Father/Mother Email/Cell/Alt Phone fields and prompts
  ;           2) Modified code better handle display - line #, tabs, label display/length, field call handling
+ ;AG*7.1*10- Put in validity check on user field selection prompt
  N CLLST
  I "YC"[AGOPT(14) S AG("SVELIG")=""
  I $D(^AUPNPAT(DFN,11)) S AG("SVELIG")=$P($G(^AUPNPAT(DFN,11)),U,12)
@@ -33,6 +34,8 @@ VAR ;
  S AGY=Y
  ;AG*7.1*8 - Replaced existing logic with next 3 lines
  S AGY=Y
+ ;AG*7.1*10;Added next line to stop bad user entry errors
+ I $TR(AGY,",")'?1N.N W !!,"Invalid entry - Enter a line number or line numbers separated by a ',' to edit" H 3 G VAR
  F AGI=1:1 S AG("SEL")=+$P(AGY,",",AGI) Q:AG("SEL")<1!(AG("SEL")>AG("E"))  D
  . D @(CLLST(AG("SEL")))
  D UPDATE1^AGED(DUZ(2),DFN,2,"")

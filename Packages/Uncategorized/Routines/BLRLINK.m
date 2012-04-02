@@ -1,5 +1,5 @@
 BLRLINK ; IHS/DIR/FJE - LAB HOOK FOR APCDALV (PCC) ; [ 08/01/2002  7:56 AM ]
- ;;5.2;LR;**1001,1003,1008,1019,1021,1024**;May 02, 2008
+ ;;5.2;LR;**1001,1003,1008,1019,1021,1024,1030**;NOV 01, 1997
  ;
  ;; This routine makes use of the PCC MASTER CONTROL FILE
  ;; The flag field of this file for the lab package contains the
@@ -56,7 +56,8 @@ START ; EP
  .D PROC
  .D:BLRPCC'="" ERR
  .L -^BLRTXLOG(BLRLOGDA) ;IHS/OIRM TUC/MJL 5/21/98
- .D:BLRBUL BULTNS
+ .; D:BLRBUL BULTNS
+ .D:BLRBUL BULTNS^BLRUTIL3   ; IHS/OIT/MKK - LR*5.2*1030
  .;S $P(^BLRSITE(DUZ(2),21,BLRDH,0),U,3)=BLRLTP
  .S $P(^BLRSITE(BLRQSITE,21,BLRDH,0),U,3)=BLRLTP  ;IHS/DIR TUC/AAB 04/07/98
  .D CLNUP
@@ -65,149 +66,13 @@ START ; EP
  Q
  ;
 PROC ; EP
+ D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("PROC^BLRLINK 1.0")
+ ;
  D ^BLRLINK1 Q:BLRERR
  D ^BLRLINK2 Q:BLRERR
  D ^BLRLINK3
  Q
  ;
-BULTNS ; EP
- NEW SNAPSHOT
- S SNAPSHOT=1
- D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("ENTER BULTNS^BLRLINK")
- ;
- ; BLRBUL=1 SENDS BLRTXLOG BULLETIN
- ; BLRBUL=2 SENDS BLRTXLOGERR BULLETIN
- ; BLRBUL=3 SENDS BLRTXLOG AND BLRTXLOGERR BULLETIN
- ;
- ; I "13"[BLRBUL S XMB="BLRTXLOG" D BULTX Q:BLRBUL=1
- ; S XMB="BLRTXLOGERR" D BULTX
- ;----- BEGIN IHS/OIT/MKK MODIFICATIONS LR*5.2*1024
- I "13"[BLRBUL D BULTX("BLRTXLOG")  Q:BLRBUL=1
- D BULTX("BLRTXLOGERR")
- ;----- END IHS/OIT/MKK MODIFICATIONS LR*5.2*1024
- Q
- ;
- ;----- BEGIN IHS MODIFICATIONS LR*5.2*1019 - IHS/OIT/MKK -- Total rewrite
- ; BULTX ;BULLETIN SENT TO LAB  IF PCC ERROR IN FILING
- ;S (Y,XMB(1),XMB(2),XMB(3),XMB(4),XMB(5),XMB(6),XMB(7),XMB(8))=""
- ;D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("ENTER BULTX^BLRNLINK")
- ;I $G(APCDALVR("APCDDATE")) S Y=$P($G(APCDALVR("APCDDATE")),".") X ^DD("DD")
- ;S XMB(3)=Y
- ;I $G(XMB(3))="" S Y=$P($G(BLRDTC),".") X ^DD("DD") S XMB(3)=Y
- ;I $G(APCDALVR("APCDPAT")) S XMB(1)=$P($G(^DPT(APCDALVR("APCDPAT"),0)),U),XMB(2)=APCDALVR("APCDPAT")
- ;I $G(XMB(1))="" S XMB(1)=$P($G(^DPT($G(BLRDFN,"UNDEF"),0)),U)
- ;S XMB(2)=$G(BLRDFN)
- ;I $G(BLRORD) S XMB(4)=BLRORD
- ;I $G(XMB(4))="" S XMB(4)=$P($G(^BLRTXLOG($G(BLRLOGDA,"UNDEF"),11)),U,3)
- ;S XMB(5)=$G(BLRACCN)
- ;I $G(BLRTEST) S XMB(6)=$P($G(^LAB(60,BLRTEST,0)),U)
- ;I $G(BLRLOGDA) S XMB(7)=BLRLOGDA
- ;S XMB(8)=BLRPCC
- ;S BLRDUZ=DUZ,DUZ=.5 D ^XMB S DUZ=BLRDUZ
- ;K XMB
- ;
- ;BULTX ;BULLETIN SENT TO LAB IF PCC ERROR IN FILING
- ; S (Y,XMB(1),XMB(2),XMB(3),XMB(4),XMB(5),XMB(6),XMB(7),XMB(8))=""
- ; 
- ;----- BEGIN IHS/OIT/MKK MODIFICATIONS LR*5.2*1024
-BULTX(BULLETIN)     ; EP - BULLETIN SENT TO LAB IF PCC ERROR IN FILING
- K XMB                  ; Initialize array
- S Y=""                 ; Initialize variable
- ;----- END IHS/OIT/MKK MODIFICATIONS LR*5.2*1024
- ;
- D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("ENTER BULTX^BLRLINK")
- ;
- ; If BLRTXLOG number exists, use ^BLRTXLOG database
- I +$G(BLRLOGDA)>0 D BULTXSET
- ;
- ; If BLRTXLOG number DOES NOT exist, use variables
- I +$G(BLRLOGDA)=0 D BLTXNSET
- ;       
- ; BLR Transaction Log Number
- S XMB(7)=$G(BLRLOGDA)
- ;
- ; Error Message
- S XMB(8)=BLRPCC
- ;
- ; Send the Bulletin
- S XMB=BULLETIN                                  ; Bulletin to use
- S BLRDUZ=DUZ,DUZ=.5 D ^XMB S DUZ=BLRDUZ
- ;
- ; D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("EXIT (PRE K XMB) BULTX^BLRLINK")
- ;----- BEGIN IHS/OIT/MKK MODIFICATIONS LR*5.2*1024
- D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("EXIT BULTX^BLRLINK","XMB")
- ;----- END IHS/OIT/MKK MODIFICATIONS LR*5.2*1024
- ;
- ; Clean up
- K XMB
- ;
- Q
- ;
- ; Set bulletin parameters from ^BLRTXLOG global
-BULTXSET ; EP
- ; Patient Name
- ; S XMB(1)=$P($G(^DPT($P($G(^BLRTXLOG(BLRLOGDA,0)),U,4),0)),"^",1)
- ;
- ;NEW LRODT,LRSN
- ;S LRODT=+$P($G(^BLRTXLOG(BLRLOGDA,11)),U,1)
- ;S LRSN=+$P($G(^BLRTXLOG(BLRLOGDA,11)),U,2)
- ;I LRODT,LRSN S XMB(2)=$P($G(^LRO(69,LRODT,1,LRSN,0)),U,1)  ; LRDFN
- ;
- ; Date of Visit -- Collection Date
- ;S XMB(3)=$P($G(^BLRTXLOG(BLRLOGDA,12)),U,1)
- ;
- ;----- BEGIN IHS/OIT/MKK MODIFICATIONS LR*5.2*1024
- NEW PTPTR
- S PTPTR=+$P($G(^BLRTXLOG(BLRLOGDA,0)),"^",4)    ; Patient Pointer
- ;
- S XMB(1)=$P($G(^DPT(PTPTR,0)),"^",1)            ; Patient Name
- S XMB(2)=$G(^DPT(PTPTR,"LR"))                   ; LRDFN
- ;
- ; Date of Visit -- Collection Date
- NEW COLLDT
- S COLLDT=$P($G(^BLRTXLOG(BLRLOGDA,12)),"^",1)
- ; Use Kernel Function call to reset to human readable format
- S XMB(3)=$$FMTE^XLFDT(COLLDT,"1D")
- ;----- END IHS/OIT/MKK MODIFICATIONS LR*5.2*1024
- ; 
- ; Order Number
- S XMB(4)=$P($G(^BLRTXLOG(BLRLOGDA,11)),U,3)
- ;
- ; Accession Number
- S XMB(5)=$P($G(^BLRTXLOG(BLRLOGDA,12)),U,2)
- ;
- ; Lab Test
- ; S XMB(6)=$P($G(^BLRTXLOG(BLRLOGDA,0)),U,6)
- ;----- BEGIN IHS/OIT/MKK MODIFICATIONS LR*5.2*1024
- NEW LABTIEN
- S LABTIEN=+$P($G(^BLRTXLOG(BLRLOGDA,0)),"^",6)
- S XMB(6)=$P($G(^LAB(60,LABTIEN,0)),"^",1)       ; Lab Test Description
- ;----- END IHS/OIT/MKK MODIFICATIONS LR*5.2*1024
- ;
- Q
- ;
- ; Set bulletin parameters from variables
-BLTXNSET ; EP
- ; Patient Name and DFN
- I $G(APCDALVR("APCDPAT")) D
- . S XMB(1)=$P($G(^DPT(APCDALVR("APCDPAT"),0)),U)
- . S XMB(2)=APCDALVR("APCDPAT")
- ;
- ; Date -- reset to human readable form -- use Kernel Function call
- S XMB(3)=$$FMTE^XLFDT($G(APCDALVR("APCDDATE")),"1D")
- I $G(XMB(3))="" S XMB(3)=$$FMTE^XLFDT($G(BLRDTC),"1D")
- ;
- ; Order Number
- S XMB(4)=$G(BLRORD)
- ;
- ; Accession Number
- S XMB(5)=$G(BLRACCN)
- ;
- ; Test Description
- I $G(BLRTEST) S XMB(6)=$P($G(^LAB(60,BLRTEST,0)),U)
- ;
- Q
- ;----- END IHS MODIFICATIONS LR*5.2*1019 - IHS/OIT/MKK  -- Total rewrite
  ;
 ERR ; EP - update transaction log with PCC error message value (if transaction is a modification then any previous value needs to be removed)
  K DIE,DA,DR

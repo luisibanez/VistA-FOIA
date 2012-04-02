@@ -1,5 +1,6 @@
-BADEHLZ ;IHS/MSC/MGH/PLS - Dentrix HL7 interface  ;16-Jul-2009 10:35;PLS
- ;;1.0;DENTAL/EDR INTERFACE;;Oct 13, 2009
+BADEHLZ ;IHS/MSC/MGH/PLS/VAC - Dentrix HL7 interface  ;16-Jul-2009 10:35;PLS
+ ;;1.0;DENTAL/EDR INTERFACE;**1**;AUG 22, 2011
+ ;; Modified IHS/MSC/AMF 11/23/10 More descriptive alerts
  Q
 ZP2 ;Create the ZP2 segment
  N AFFIL,TRIBE,ZP2,NODE,NODE11,NODE26,SSN,FLD,K,X,CNT,TEXT,CODE
@@ -130,7 +131,7 @@ ZP2 ;Create the ZP2 segment
  F LP=1:1:$L(X,$E(HLECH)) S VAL=$P(X,$E(HLECH),LP) D
  .D SET^BADEHL1(.ARY,VAL,33,LP)
  S ZP2=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF^BADEHL1(DFN,"ZP2 segment could not be created")
+ I $D(ERR) D NOTIF^BADEHL1(DFN,"Can't create ZP2. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
  ;Return text in WP array
  ;Input:

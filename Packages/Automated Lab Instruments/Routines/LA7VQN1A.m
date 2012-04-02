@@ -1,5 +1,5 @@
 LA7VQN1A ;VA/DALOI/JMC - Process Incoming UI Msgs, continued ;JUL 06, 2010 3:14 PM
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**64,1027**;NOV 01, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**64,1027**;NOV 01, 1997;Build 9
  ; This routine is a continuation of LA7VIN1.
  ; It performs generation of any mail bulletins needed.
  ;

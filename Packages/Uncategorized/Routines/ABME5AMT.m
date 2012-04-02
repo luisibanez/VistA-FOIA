@@ -1,5 +1,5 @@
 ABME5AMT ; IHS/ASDST/DMJ - 837 AMT Segment 
- ;;2.6;IHS Third Party Billing System;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,8**;NOV 12, 2009
  ;Transaction Set Header
  ;
 EP(X) ;EP HERE
@@ -25,7 +25,7 @@ LOOP ;LOOP HERE
  Q
 30 ;AMT02 - Monetary Amount
  ; prior payment - actual
- I ABMEIC="C4"!(ABMEIC="D") D
+ I ABMEIC="D" D
  .D PAYED^ABMERUTL
  .S ABMR("AMT",30)=$G(ABMP("PAYED",+$G(ABMP("INS",ABMPST))))  ;pymt for that insurer
  ;
@@ -41,9 +41,6 @@ LOOP ;LOOP HERE
  ;
  I ABMEIC="F2" D
  .S ABMR("AMT",30)=ABMF2AMT
- ;
- I ABMEIC="B6" D
- .S ABMR("AMT",30)=ABMB6AMT
  ;
  S ABMR("AMT",30)=$FN(ABMR("AMT",30),"-")
  S ABMR("AMT",30)=$J(ABMR("AMT",30),0,2)

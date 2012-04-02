@@ -1,12 +1,13 @@
 SDCWL1 ;ALB/MLI - CLINIC WORKLOAD REPORT PRINTOUT ; 27 APRIL 88 [ 01/07/2005  11:15 AM ]
- ;;5.3;Scheduling;**140,1001**;Aug 13, 1993
+ ;;5.3;Scheduling;**140,1001,1013**;Aug 13, 1993
  G:SDS="C" CLIN
  ;IHS/ITSC/WAR 5/5/2004 PATCH #1001 Alpha/Num SC causing endless loop
  ;F I=2:0 D SCT S I=$O(^TMP($J,"SC",I)) Q:'I!(I=" ")  D ISC S J=0 F J1=0:0 D T:J'="{",AT:J="{" S J=$O(^TMP($J,"SC",I,J)) Q:J=""  D:J="{" ADD I J'="{" F K=-1:0 S K=$O(^TMP($J,"SC",I,J,K)) Q:K=""  I $D(^TMP($J,"SC",1,I)),^(I) D HD1,I,SORT
  ;S I=2 ;IHS/ITSC/WAR PATCH #1001 added next line 5/5/2004
  S I=0 ;IHS/ITSC/WAR PATCH #1001 worked on this with Chinle 12/22/2004
  ;IHS/ITSC/WAR 1/7/2004 PATCH #1001 to long of a string for SAC checker
- ;F  D SCT S I=$O(^TMP($J,"SC",I)) Q:I=""  S I=$S('$D(I(1)):1,'$D(I(2)):2,1:I) D ISC S J=0 F J1=0:0 D T:J'="{",AT:J="{" S J=$O(^TMP($J,"SC",I,J)) Q:J=""  D:J="{" ADD I J'="{" F K=-1:0 S K=$O(^TMP($J,"SC",I,J,K)) Q:K=""  I $D(^TMP($J,"SC",1,I)),^(I) D HD1,I,SORT
+ ;F  D SCT S I=$O(^TMP($J,"SC",I)) Q:I=""  S I=$S('$D(I(1)):1,'$D(I(2)):2,1:I) D ISC S J=0 F J1=0:0 D T:J'="{",AT:J="{" S J=$O(^TMP($J,"SC",I,J)) Q:J=""
+ ;D:J="{" ADD I J'="{" F K=-1:0 S K=$O(^TMP($J,"SC",I,J,K)) Q:K=""  I $D(^TMP($J,"SC",1,I)),^(I) D HD1,I,SORT
  F  D SCT S I=$O(^TMP($J,"SC",I)) Q:I=""  S I=$S('$D(I(1)):1,'$D(I(2)):2,1:I) D ISC S J=0 F J1=0:0 D T:J'="{",AT:J="{" S J=$O(^TMP($J,"SC",I,J)) Q:J=""  D:J="{" ADD I J'="{" F K=-1:0 S K=$O(^TMP($J,"SC",I,J,K)) Q:K=""  D
  .I $D(^TMP($J,"SC",1,I)),^(I) D HD1,I,SORT
  Q
@@ -17,7 +18,10 @@ SORT W !,J W:SDS="S"&K ?24,"***",I," IS THE CREDIT STOP CODE FOR THIS CLINIC***"
 NM S M=0 F M1=0:0 S M=$O(^TMP($J,1,J,R,"NM",M)) Q:M=""  S N=0 F N1=0:0 S N=$O(^TMP($J,1,J,R,"NM",M,N)) Q:N=""  S P=0 F P1=0:0 S P=$O(^TMP($J,1,J,R,"NM",M,N,P)) Q:P=""  S Q=0 F Q1=0:0 S Q=$O(^TMP($J,1,J,R,"NM",M,N,P,Q)) Q:Q=""  D PN
  Q
 PN D:$Y>(IOSL-15) HD1
- W !?12,$S(SDHR'=R:$S(SDF="D":$TR($$FMTE^XLFDT(R,"5DF")," ","0"),1:$E(R,4,5)_"-"_$E(R,2,3)),1:"") S SDHR=R W ?24,$E(M,1,17),?43,$E(N,1,3),"-",$E(N,4,5),"-",$E(N,6,9)
+ ;ihs/cmi/maw 08/09/2011 PATCH 1013 RQMT 159
+ ;W !?12,$S(SDHR'=R:$S(SDF="D":$TR($$FMTE^XLFDT(R,"5DF")," ","0"),1:$E(R,4,5)_"-"_$E(R,2,3)),1:"") S SDHR=R W ?24,$E(M,1,17),?43,$E(N,1,3),"-",$E(N,4,5),"-",$E(N,6,9)
+ ;W ?56,$S(Q["C":"CANCELLED",Q="NT":"ACTION REQ'D",Q["N":"NO-SHOW",Q["I":"INPATIENT",Q="OB":"OVERBOOK",Q="U":"UNSCHEDULED",Q="S":"SCHEDULED",1:" "),?69,"TIME: ",P
+ W !,$S(SDHR'=R:$S(SDF="D":$TR($$FMTE^XLFDT(R,"5DF")," ","0"),1:$E(R,4,5)_"-"_$E(R,2,3)),1:"") S SDHR=R W ?12,$E(M,1,17),?31,N
  W ?56,$S(Q["C":"CANCELLED",Q="NT":"ACTION REQ'D",Q["N":"NO-SHOW",Q["I":"INPATIENT",Q="OB":"OVERBOOK",Q="U":"UNSCHEDULED",Q="S":"SCHEDULED",1:" "),?69,"TIME: ",P
  Q
 PRINT I $Y>(IOSL-12)&$S('SDNAM&(R>-1):1,'SDNAM:0,SDNAM&(M>-1):1,1:0) D HD1

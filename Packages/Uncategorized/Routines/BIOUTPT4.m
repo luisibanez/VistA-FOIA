@@ -1,5 +1,5 @@
 BIOUTPT4 ;IHS/CMI/MWR - PROMPTS FOR REPORTS.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  PROMPTS FOR REPORT PARAMETERS.
  ;
@@ -120,7 +120,7 @@ PGRP11 ;---> Go here if 8 selected with other attributes.
  ;.S X=$P(BIPG,U,5) S BIBEGDF=$P(X,":"),BIENDDF=$P(X,":",2)
  ;.S:'BIBEGDF BIBEGDF=2000101 S:'BIENDDF BIENDDF=$G(DT)
  ;.D TITLE^BIUTL5("SELECT REFUSALS DATE RANGE")
- ;.D TEXT4 W !
+ ;.D TEXT5 W !
  ;.N DIR S DIR(0)="YA",DIR("A")="     Enter Yes or No: ",DIR("B")="YES"
  ;.S Z="       Enter YES to limit the group to Actvated within date range."
  ;.S DIR("?",1)=Z
@@ -145,6 +145,14 @@ PGRP11 ;---> Go here if 8 selected with other attributes.
  ;---> If user failed to choose a Search Template, change Patient Group
  ;--->back to default (Active).
  I $P(BIPG,U)=8&($G(BITMPL)<1) S $P(BIPG,U)=3 G PGRP11
+ ;
+ D:($P(BIPG,U)'=8)
+ .D TITLE^BIUTL5("INDIANS/AK NATIVES ONLY or ALL PATIENTS")
+ .D TEXT7
+ .S B=$S($D(BIBEN("ALL")):"Yes",1:"No") K BIBEN
+ .D DIR^BIFMAN("YAO",.Y,,"     Include non-Native Beneficiaries? (Yes/No): ",B)
+ .I 'Y S BIBEN(1)="" Q
+ .S BIBEN("ALL")=""
  ;
  D @("RESET^"_BIRTN)
  Q
@@ -247,6 +255,45 @@ TEXT4 ;EP
  ;;a later date?
  ;;
  D PRINTX("TEXT4")
+ Q
+ ;
+ ;
+ ;----------
+TEXT5 ;EP
+ ;;You have chosen to limit this list to patients who have Refusals
+ ;;on record.
+ ;;
+ ;;You may include patients who have Refusals for ANY vaccine, or
+ ;;you may limit the list to refusals for one or more specific vaccines.
+ ;;
+ ;;Would you like to limit the list to Refusals of one or more specific
+ ;;vaccines?
+ ;;
+ D PRINTX("TEXT5")
+ Q
+ ;
+ ;
+ ;----------
+TEXT6 ;EP
+ ;;You have chosen to limit this list to patients who have Refusals
+ ;;on record.
+ ;;
+ ;;Would you like to limit the list to Refusals that were recorded
+ ;;within a specific date range?
+ ;;
+ D PRINTX("TEXT6")
+ Q
+ ;
+ ;
+ ;----------
+TEXT7 ;EP
+ ;;Ordinarilly Lists & Letters looks only at American Indians and Alaska
+ ;;Natives, also known by the Beneficiary Type Code 01.
+ ;;
+ ;;Would you like to expand the list to include patients of all Beneficiary
+ ;;Types (includes Dependents of Comm Officers, Retired Military, etc.)?
+ ;;
+ D PRINTX("TEXT7")
  Q
  ;
  ;

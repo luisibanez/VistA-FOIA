@@ -1,5 +1,5 @@
 BGPMUD01 ; IHS/MSC/SAT - MU measure NQF0028A ;11-Feb-2011 15:43;DU
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;code to collect meaningful use report tobacco use assessment
 ENTRY ;EP
  ; expects:
@@ -24,7 +24,7 @@ ENTRY ;EP
  ;look for 2 visits with E&M codes
  ;    OR   1 visit with E&M codes
  S (BGP1,BGP2)=""
- S FIRST=END-1 F  S FIRST=$O(^AUPNVSIT("AA",DFN,FIRST)) Q:FIRST=""!($P(FIRST,".",1)>START)  D  Q:($L(BGP2,";")>1)!(BGP1'="")
+ S FIRST=END-0.1 F  S FIRST=$O(^AUPNVSIT("AA",DFN,FIRST)) Q:FIRST=""!($P(FIRST,".",1)>START)  D  Q:($L(BGP2,";")>1)!(BGP1'="")
  .S VIEN=0 F  S VIEN=$O(^AUPNVSIT("AA",DFN,FIRST,VIEN)) Q:'+VIEN  D  Q:($L(BGP2,";")>1)!(BGP1'="")
  ..S BGPDT=$P($P($G(^AUPNVSIT(VIEN,0)),U,1),".",1)
  ..;Check provider, determine if there are visits with E&M codes
@@ -47,7 +47,7 @@ ENTRY ;EP
  S BGPTOBN=1
  D HFA(.BGPTOBU,.BGPTOBN)
  S START=9999999-$$FMADD^XLFDT(BGPBDATE,-730)
- S FIRST=END-1 F  S FIRST=$O(^AUPNVSIT("AA",DFN,FIRST)) Q:FIRST=""!($P(FIRST,".",1)>START)  D  Q:BGPHFF
+ S FIRST=END-0.1 F  S FIRST=$O(^AUPNVSIT("AA",DFN,FIRST)) Q:FIRST=""!($P(FIRST,".",1)>START)  D  Q:BGPHFF
  .S VIEN=0 F  S VIEN=$O(^AUPNVSIT("AA",DFN,FIRST,VIEN)) Q:'+VIEN  D  Q:BGPHFF
  ..S BGPDT=$P($P($G(^AUPNVSIT(VIEN,0)),U,1),".",1)
  ..S BGPIEN="" F  S BGPIEN=$O(^AUPNVHF("AD",VIEN,BGPIEN)) Q:'+BGPIEN  D

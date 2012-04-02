@@ -1,5 +1,5 @@
 ABMDE8G ; IHS/ASDST/DMJ - Page 8 - ANESTHESIA ;   
- ;;2.6;IHS Third Party Billing;**1,3,6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,3,6,8**;NOV 12, 2009
  ;
  ; IHS/ASDS/DMJ - v2.4 p7 - 9/7/01 NOIS HQW-0701-100066
  ;     Modifications made related to Medicare Part B.
@@ -32,9 +32,11 @@ DISP K ABMZ S ABMZ("TITL")="ANESTHESIA SERVICES",ABMZ("PG")="8G",ABMZ("ADD1")=""
  ;
  D G^ABMDE8X
 FEE S ABMZ("CAT")=23
- S ABMP("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;abm*2.6*1 HEAT6566
- ;S ABMZ("DICS")="I ($P(^ICPT(Y,0),""^"")<70000)&($P($$CPT^ABMCVAPI(Y,ABMP(""VDT"")),""^"",7)'=1)"  ;CSV-c  ;abm*2.6*6
- S ABMZ("DICS")="I ($P(^ICPT(Y,0),""^"")<70000)&($P($$CPT^ABMCVAPI(Y,ABMP(""VDT"")),""^"",7)=1)"  ;CSV-c  ;abm*2.6*6
+ ;S ABMP("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;abm*2.6*1 HEAT6566  ;abm*2.6*8
+ S:ABMP("INS") ABMP("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;abm*2.6*1 HEAT6566  ;abm*2.6*8
+ ;abm*2.6*8 switched below line back; user couldn't manually enter codes
+ S ABMZ("DICS")="I ($P(^ICPT(Y,0),""^"")<70000)&($P($$CPT^ABMCVAPI(Y,ABMP(""VDT"")),""^"",7)'=1)"  ;CSV-c  ;abm*2.6*6
+ ;S ABMZ("DICS")="I ($P(^ICPT(Y,0),""^"")<70000)&($P($$CPT^ABMCVAPI(Y,ABMP(""VDT"")),""^"",7)=1)"  ;CSV-c  ;abm*2.6*6
  S ABMZ("SUB")=39
  D MODE^ABMDE8X
  S:((^ABMDEXP(ABMMODE(7),0)["HCFA")!(^ABMDEXP(ABMMODE(7),0)["CMS")) ABMZ("DIAG")=";.1"

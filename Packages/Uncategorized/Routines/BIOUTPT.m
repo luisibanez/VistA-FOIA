@@ -1,5 +1,5 @@
 BIOUTPT ;IHS/CMI/MWR - HEADERS & PROMPTS FOR REPORTS.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  COMMON HEADERS FOR REPORTS AND PROMPTS FOR REPORT PARAMETERS.
  ;
@@ -91,8 +91,8 @@ TEXT2 ;EP
  ;;June 30, September 30, or December 31.  However, you may enter
  ;;any date you choose and the report will generate immunization
  ;;statistics based on the date entered.  NOTE: The patient ages
- ;;(3 months, 5 months, etc.) will be calculated as of the date
- ;;you enter here.
+ ;;(3 months, 5 months, 91 years, etc.) will be calculated as of
+ ;;the Quarter Ending Date you enter here.
  ;;
  ;;For convenience's sake, if you enter only month/year, such as 9/98,
  ;;the program will automatically assign the report to the last day
@@ -353,7 +353,7 @@ INCLHPV(BIHPV,BIRTN) ;EP
  ;
  ;----------
 TEXT4 ;EP
- ;;This option allows you to include the Varicella & Pneumo
+ ;;This option allows you to include Varicella and Pneumo
  ;;in the statistics of the "Appropriate for Age" row at the
  ;;top of the report.
  ;;

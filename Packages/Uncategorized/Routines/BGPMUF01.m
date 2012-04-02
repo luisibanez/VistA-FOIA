@@ -1,5 +1,5 @@
 BGPMUF01 ;IHS/MSC/MMT - MU Reports Measure NQF0038 ;02-Mar-2011 11:37;DU
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;
 ENTRY ;EP
  N START,END,BGPDEN1,BGPNUM1,BGPNUM2,BGPNUM3,BGPNUM4,BGPNUM5,BGPNUM6,BGPNUM7,BGPNUM8,BGPNUM9,BGPNUM10,BGPNUM11,BGPNUM12
@@ -12,12 +12,14 @@ ENTRY ;EP
  ;Pts must have turned 2 years old during the measurement period
  I '(BGPAGEB=1) Q
  I '(BGPAGEE=2) Q
- S FIRST=END-1 F  S FIRST=$O(^AUPNVSIT("AA",DFN,FIRST)) Q:FIRST=""!($P(FIRST,".",1)>START)  D
+ S FIRST=END-0.1 F  S FIRST=$O(^AUPNVSIT("AA",DFN,FIRST)) Q:FIRST=""!($P(FIRST,".",1)>START)  D
  .S IEN=0 F  S IEN=$O(^AUPNVSIT("AA",DFN,FIRST,IEN)) Q:'+IEN  D
  ..;Check provider, Only visits for chosen provider
  ..Q:'$$PRV^BGPMUUT1(IEN,BGPPROV)
  ..;Quit if the visit does not have a valid E&M code
- ..Q:'$$VSTCPT^BGPMUUT1(DFN,IEN,"BGPMU CIMM ENCOUNTER EM")
+ ..S AENC=$$VSTCPT^BGPMUUT1(DFN,IEN,"BGPMU CIMM ENCOUNTER EM")
+ ..S BENC=$$VSTPOV^BGPMUUT3(DFN,IEN,"BGPMU BMI ENC PEDS DX")  ;borrowing taxonomy from Peds BMI
+ ..Q:(AENC=0)&(BENC=0)
  ..S DATA=$G(^AUPNVSIT(IEN,0))
  ..S VDATE=$P($G(^AUPNVSIT(IEN,0)),U,1),VIEN=IEN
  ..;This pt qualifies to be counted in the denominator
@@ -26,7 +28,7 @@ ENTRY ;EP
  ;Quit if patient will not be in denominator
  I 'BGPDEN1 G EXIT
  ;Calculate the day before the patient's 2nd birthday
- S BGPPTDOB=$$DOB^AUPNPAT(DFN),BGPBDAY2=($E(BGPPTDOB,1,3)+2)_$E(BGPPTDOB,4,7),BGPBDAY=$$FMADD^XLFDT(BGPPTDOB,-1)
+ S BGPPTDOB=$$DOB^AUPNPAT(DFN),BGPBDAY2=($E(BGPPTDOB,1,3)+2)_$E(BGPPTDOB,4,7),BGPBDAY2=$$FMADD^XLFDT(BGPBDAY2,-1)
  ;Num 1 - at least 4 DTaP
  S BGPIVAL=$$DTAP^BGP0D34(DFN,BGPBDAY2)  ;1 IS had immunizations, 3 is had refusal, 4 is disease or NMI or contraindication
  I $P(BGPIVAL,U,1)=1 S BGPNUM1=BGPIVAL

@@ -1,5 +1,5 @@
-BGP1ELLX ; IHS/CMI/LAB - print ind ;
- ;;11.1;IHS CLINICAL REPORTING SYSTEM;;JUN 27, 2011;Build 33
+BGP1ELLX ; IHS/CMI/LAB - print ind ; 30 Jun 2011  10:24 AM
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;
  ;
 I1AGE ;EP
@@ -107,7 +107,7 @@ H3 ;EP
  S X="Age Distribution" D S(X,1,1) S X=" " D S(X,1,1)
  S Y="65-74" D S(Y,1,2)
  S Y="75-84" D S(Y,,3)
- S Y=">84 yrs" D S(Y,,5)
+ S Y=">84 yrs" D S(Y,,4)
  Q
 SB(X) ;EP - Strip leading and trailing blanks from X.
  X ^DD("FUNC",$O(^DD("FUNC","B","STRIPBLANKS",0)),1)

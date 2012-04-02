@@ -1,5 +1,5 @@
 BIREPT ;IHS/CMI/MWR - REPORT, TWO-YR-OLD RATES; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW TWO-YR-OLD IMMUNIZATION RATES REPORT.
  ;
@@ -40,7 +40,7 @@ INIT ;EP
  ;---> Date.
  D WRITE(.BILINE)
  S:'$G(BIQDT) BIQDT=$G(DT)
- D DATE^BIREP(.BILINE,"BIREPT",1,$G(BIQDT),"Quarter Ending Date")
+ D DATE^BIREP(.BILINE,"BIREPT",1,$G(BIQDT),"Quarter Ending Date",,,,1)
  ;
  ;---> Two-Yr-Old Age Range.
  S:'$G(BITAR) BITAR="19-35"
@@ -62,6 +62,20 @@ INIT ;EP
  ;---> Beneficiary Type.
  S:$O(BIBEN(0))="" BIBEN(1)=""
  D DISP^BIREP(.BILINE,"BIREPT",.BIBEN,"Beneficiary Type",6,4)
+ ;
+ ;---> User Population.
+ D:($G(BIUP)="")
+ .I $$GPRAIEN^BIUTL6 S BIUP="i" Q
+ .S BIUP="u"
+ ;
+ S X="     7 - Patient Population Group...: "
+ D
+ .I BIUP="r" S X=X_"Registered Patients (All)" Q
+ .I BIUP="i" S X=X_"Immunization Register Patients (Active)" Q
+ .I BIUP="u" S X=X_"User Population (1 visit, 3 yrs)" Q
+ .I BIUP="a" S X=X_"Active Users (2+ visits, 3 yrs)" Q
+ D WRITE(.BILINE,X,1)
+ K X
  ;
  ;---> Finish up Listmanager List Count.
  S VALMCNT=BILINE
@@ -143,9 +157,9 @@ TEXT1(BITEXT) ;EP
  ;;The TWO-YR-OLD IMMUNIZATIONS RATES screen allows you to adjust
  ;;the report to your needs.
  ;;
- ;;There are 6 items or "parameters" on the screen that you may
+ ;;There are 7 items or "parameters" on the screen that you may
  ;;change in order to select for a specific group of patients.
- ;;To change an item, enter its left column number (1-6) at the
+ ;;To change an item, enter its left column number (1-7) at the
  ;;prompt on the bottom of the screen.  Use "?" at any prompt where
  ;;you would like help or more information on the parameter you are
  ;;changing.
@@ -161,13 +175,6 @@ TEXT1(BITEXT) ;EP
  ;;QUARTER ENDING DATE: The report will compile immunization rates
  ;;as of the date entered.  Typically, this date would be the end
  ;;of a Quarter.
- ;;
- ;;AGE RANGE: This parameter allows you to select the Age Range of
- ;;Patients for the Two-Yr-Old Report, which can be either 19-35 months
- ;;or 24-35 months.
- ;;
- ;;24-Month Column: This parameter allows you to select whether or not
- ;;the 24-Month column is displayed on the Two-Yr-Old Report.
  ;;
  ;;COMMUNITIES: If you select for specific Communities, only patients
  ;;whose Current Community matches one of the Communities selected will
@@ -186,6 +193,17 @@ TEXT1(BITEXT) ;EP
  ;;only patients whose Beneficiary Type is one of those you select
  ;;will be included in the report.  "Beneficiary Type" refers to
  ;;Item 3 on Page 2 of the RPMS Patient Registration.
+ ;;
+ ;;PATIENT POPULATION GROUP: You may select one of four patient groups
+ ;;to be considered in the report: Registered Patients (All),
+ ;;Immunization Register Patients (Active), User Population (1+ visits
+ ;;in 3 yrs), or Active Clinical Users (2+ visits in 3 yrs).
+ ;;Immunization Register Patients (Active) is the default.
+ ;;
+ ;;INCLUDE VARICELLA & PNEUMO: This option allows you to include Varicella
+ ;;and Pneumo in the statistics of the "Appropriate for Age" row at the
+ ;;top of the report.
+ ;;
  ;;
  D LOADTX("TEXT1",,.BITEXT)
  Q

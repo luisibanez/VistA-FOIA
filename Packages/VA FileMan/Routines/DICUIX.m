@@ -1,7 +1,6 @@
-DICUIX ;SEA/TOAD,SF/TKW-FileMan: Lookup Tools, Indexes ;11:18 AM  7 Nov 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**20,28,67**;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DICUIX ;SEA/TOAD,SF/TKW-FileMan: Lookup Tools, Indexes ;23JUN2009
+ ;;22.0;VA FileMan;**20,28,67,164**;Mar 30, 1999;Build 21
+ ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
 INDEX(DIFILE,DIFLAGS,DINDEX,DIFROM,DIPART,DINUMBER,DISCREEN,DILIST,DIOUT) ;
  ;
@@ -88,7 +87,7 @@ X2 ; Build DINDEX for index in IX nodes.
  . . S DINDEX("IXTYPE")=$S(X="":"R",X="KW":"K",X="SO":"S",(X="TR")!(X="BU"):"*",X]"":X,1:"R")
  . . I "KSMU"[DINDEX("IXTYPE") S DIGET=2
  . . S DILENGTH=+$P(Y,"$E(X,1,",2)
- . . S:'DILENGTH!(DILENGTH>100) DILENGTH=30 Q
+ . . S:'DILENGTH DILENGTH=30 Q  ;!(DILENGTH>100)
  . Q
  I $G(DIFROM(2)) S DIFROM("IEN")=DIFROM(2)
  S DISUB=1,DIWAY=1,DIOUT=0

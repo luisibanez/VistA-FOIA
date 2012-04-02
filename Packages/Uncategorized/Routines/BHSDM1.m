@@ -1,5 +1,5 @@
-BHSDM1 ;IHS/CIA/MGH - Health Summary for Diabetic Supplement ;13-Jan-2011 11:27;DU
- ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,4**;March 17, 2006;Build 13
+BHSDM1 ;IHS/CIA/MGH - Health Summary for Diabetic Supplement ;04-Aug-2011 14:30;MGH
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,4,6**;March 17, 2006;Build 5
  ;===================================================================
  ;VA version of IHS components for supplemental summaries
  ;Taken from BDMS9B1
@@ -8,6 +8,7 @@ BHSDM1 ;IHS/CIA/MGH - Health Summary for Diabetic Supplement ;13-Jan-2011 11:27;
  ;Update to patch 15 of IHS health summary
  ;Patch 2 code set versoning changes
  ;Patch 4 includes removing entered in error readings
+ ;Patch 6 updated for tobacco
  ;==================================================================
  ;
  ;IHS/CMI/LAB patch 3 many changes
@@ -27,7 +28,7 @@ W ;write out array
  Q
  ;
 EOJ ;
- K APCHIEN,BHSX,BHSQUIT,BHSY,BHSDFN,BHSBEG,BHSTOB,BHSUPI,BHSED,BHSTOPN,BHSTOP,BHSTEX,BHS,BHSP,BHSLAST,APCHP,APCHV,BHSC,BHSRF,BHSEKG,BHSEX,BHDTOB
+ K APCHIEN,BHSX,BHSQUIT,BHSY,BHSDFN,BHSBEG,BDMSPAT,BHSTOB,BHSUPI,BHSED,BHSTOPN,BHSTOP,BHSTEX,BHS,BHSP,BHSLAST,APCHP,APCHV,BHSC,BHSRF,BHSEKG,BHSEX,BHDTOB
  K N,%,T,F,X,Y,B,C,E,F,H,L,N,P,T,W,BD,ED,APCHC,APCHD,APCHX,APCHDEPP,APCHDEPS
  Q
 EP2(BHSDFN) ;PEP - PASS DFN get back array of patient care summary
@@ -50,8 +51,12 @@ SETARRAY ;set up array containing dm care summary
  D GETHWB(BHSDFN) S X="Last Height:  "_BHSX("HT")_$S(BHSX("HT")]"":" inches",1:""),$E(X,31)=BHSX("HTD") D S(X)
  S X="Last Weight:  "_$S(BHSX("WT")]"":$J(BHSX("WT"),3,0),1:"")_$S(BHSX("WT")]"":" lbs",1:""),$E(X,31)=BHSX("WTD"),$E(X,45)="BMI: "_BHSX("BMI") D S(X)
  I BHSX("WC")]"" S X="Last Waist Cir: "_BHSX("WC"),$E(X,31)=BHSX("WCD") D S(X)
- D TOBACCO^BHSDM6
- S X="Tobacco Use:  "_$G(BHDTOB) D S(X)
+ ;Patch 6
+ N BDMSDFN,BDMTOBC,BDMTOBS
+ S BDMSDFN=BHSDFN
+ D TOBACCO^BDMS9B3
+ S X="Tobacco Use:  "_$P($G(BDMTOBS),U,1) D S(X)
+ I $G(BDMTOBC)]"" S X="              "_$P(BDMTOBC,U,1) D S(X)
  S X="HTN Diagnosed:  "_$$HTN(BHSDFN) D S(X,1)
  S BHSBEG=$$FMADD^XLFDT(DT,-(6*30.5))
  S %=$$ACE^BDMS9B5(BHSDFN,BHSBEG) ;get date of last ACE in last year

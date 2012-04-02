@@ -1,5 +1,5 @@
 BIUTL6 ;IHS/CMI/MWR - UTIL: TEXT FOR POINTERS; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  UTILITY: TEXT FOR PROVIDER, HOSP LOC, INSTIT, OTHER LOC,
  ;;           TRANSLATIONS, REACTION, CONTRA, SITE HDR, CUR COM TXT.
@@ -315,19 +315,35 @@ BENTX(X) ;EP
  ;
  ;
  ;----------
+BIUPTX(X,Y) ;EP
+ ;---> Return text of Patient Group.
+ ;---> Parameters:
+ ;     1 - X  (req) Code for Patient Group.
+ ;     2 - Y  (opt) If Y=1 return the long form.
+ ;
+ Q:X="r" $S($G(Y):"Registered",1:"Registered Patients (All)")
+ Q:X="i" $S($G(Y):"Imm Register",1:"Immunization Register Patients (Active)")
+ Q:X="u" $S($G(Y):"User Population",1:"User Population (1 visit, 3 yrs)")
+ Q:X="a" $S($G(Y):"Active Users",1:"Active Users (2+ visits, 3 yrs)")
+ Q $S($G(Y):"Error",1:"Error (Unknown Patient Group)")
+ ;
+ ;
+ ;----------
 LOTTX(X,Y) ;EP
  ;---> Return text or vaccine of a Lot Number.
  ;---> Parameters:
  ;     1 - X  (req) =IEN in IMMUNIZATION LOT File #9999999.41.
  ;     2 - Y  (opt) If Y=1, return the Vaccine IEN associated with
  ;                  this Lot Number.  If Y=2, return text of Vaccine Name.
+ ;                  If Y=3 return default NDC for this Lot Number.
  ;
  Q:'$G(X) ""
  Q:'$D(^AUTTIML(X,0)) ""
+ ;---> Return Lot Number text.
  Q:'$G(Y) $P(^AUTTIML(X,0),U)
- N Z S Z=$P(^AUTTIML(X,0),U,4)
- Q:(Y=1) Z
- Q:(Y=2) $$VNAME^BIUTL2(Z)
+ I Y=1 Q $P(^AUTTIML(X,0),U,4)
+ I Y=2 Q $$VNAME^BIUTL2(Z)
+ I Y=3 Q $P(^AUTTIML(X,0),U,17)
  Q ""
  ;
  ;

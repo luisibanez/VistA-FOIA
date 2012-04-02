@@ -1,5 +1,5 @@
 ABME5GS ; IHS/ASDST/DMJ - 837 GS Segment 
- ;;2.6;IHS Third Party Billing System;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,8**;NOV 12, 2009
  ;Functional Group Header
  ;
 START ;START HERE
@@ -46,4 +46,6 @@ LOOP ;LOOP HERE
 90 ;GS08 - Version/Release/Industry Identifier Code
  S ABMR("GS",90)=""
  S:ABMP("EXP")=32 ABMR("GS",90)="005010X222A1"
+ S:ABMP("EXP")=31 ABMR("GS",90)="005010X223A2"
+ S:ABMP("EXP")=33 ABMR("GS",90)="005010X224A2"
  Q

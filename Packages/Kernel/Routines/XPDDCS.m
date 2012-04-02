@@ -1,5 +1,7 @@
-XPDDCS ;SFISC/RSD - Display Checksum for a package ;06/05/2006
- ;;8.0;KERNEL;**2,44,108,202,393**;Jul 10, 1995;Build 12
+XPDDCS ;SFISC/RSD - Display Checksum for a package ;05/05/2008
+ ;;8.0;KERNEL;**2,44,108,202,393,511**;Jul 10, 1995;Build 15
+ ;Per VHA Directive 2004-038, this routine should not be modified.
+ Q
 EN1 ;Verify checksums in Transport Global
  N D0,DIC,X,XPD,XPDS,XPDST,XPDT,Y,Z
  ;S DIC="^XPD(9.7,",DIC(0)="AEQMZ",DIC("S")="I $D(^XTMP(""XPDI"",Y))"
@@ -12,7 +14,7 @@ EN1 ;Verify checksums in Transport Global
  X ^%ZOSF("TEST") E  D  Q
  .S IOSL=99999,IOM=80,IOF="#",IOST="",$Y=0 D LST1(9.7)
  S Y="LST1^XPDDCS(9.7)",Z="Checksum Print"
- ;p345-rename AND* to XPD*
+ ;p345-rename AND* to XPD* - Patch was Cancelled keep code for future.
  I '$G(XPDAUTO) D EN^XUTMDEVQ(Y,Z,.XPD)
  I $G(XPDAUTO) S IO=XPDDEV U XPDDEV D LST1^XPDDCS(9.7)
  Q
@@ -31,7 +33,7 @@ EN2 ;print from build (system)
  S XPDST=$$LOOK^XPDB1() Q:XPDST'>0
  S XPDSHW=$$ASK Q:$D(DIRUT)
  S XPD("XPDT(")="",XPD("XPDSHW")="",Y="LST1^XPDDCS(9.6)",Z="Checksum Print"
- ;p345-rename AND* to XPD*
+ ;p345-rename AND* to XPD*- Patch was Cancelled keep code for future.
  I '$G(XPDAUTO) D EN^XUTMDEVQ(Y,Z,.XPD)
  I $G(XPDAUTO) S:'$D(XPDDEV) XPDDEV=0 U XPDDEV D LST1^XPDDCS(9.6)
  Q
@@ -72,7 +74,7 @@ PNT(XPDFIL) ;print
  ..S XPDQ=$$CHK(4)
  Q:XPDQ
  W !!?3,XPDC," Routine"_$S(XPDC>1:"s",1:"")_" checked, ",XPDE," failed.",!
- ;p345-rename AND* to XPD*
+ ;p345-rename AND* to XPD*-Patch was Cancelled keep code for future.
  I $G(XPDAUTO) S XPDCHKSM=XPDE
  Q
  ;
@@ -91,6 +93,7 @@ SUM(XPDR,Z,XPD,XPDBS) ;check checksum
 BEFORE(RN,SUM) ;Check a before Checksum
  N DIF,XCNP,%N,X
  I SUM'?1U1.N Q
+ K ^TMP($J,"XPDDCS",RN) ;patch 511
  S X=RN,DIF="^TMP($J,""XPDDCS"",RN,",XCNP=0
  X ^%ZOSF("TEST") E  W !,RN,?10,"Not on current system." Q
  X ^%ZOSF("LOAD")

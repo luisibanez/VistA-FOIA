@@ -1,5 +1,5 @@
 BIRPC3 ;IHS/CMI/MWR - REMOTE PROCEDURE CALLS; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  ADD/EDIT A VISIT (IMMUNIZATION OR SKIN TEST), DELETE A VISIT.
  ;;  Check validity of data in several fields.
@@ -39,6 +39,7 @@ ADDEDIT(BIERR,BIDATA) ;PEP - Add/Edit an V IMMUNIZATION or V SKIN TEST.
  ;    23 - (req) DUZ(2) for Site Parameters.
  ;    23 - (opt) If this was an imported CPT Coded Imm from PCC (=IEN of V CPT).
  ;    25 - (opt) If this =1, then imported (IF =2, then was edited after import).
+ ;    26 - (opt) NDC pointer IEN (to file #9002084.95).
  ;
  ;---> Define delimiter to pass error and error variable.
  N BI31,BIDUZ2,BIOIEN

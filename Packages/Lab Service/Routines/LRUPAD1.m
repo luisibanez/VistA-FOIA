@@ -1,10 +1,12 @@
 LRUPAD1 ;AVAMC/REG/WTY - LAB ACCESSION LIST COND'T ;9/25/00 [ 04/15/2003  9:28 AM ]
- ;;5.2T9;LR;*1018*;Nov 17, 2004
+ ;;5.2;LR;**1018,1030**;NOV 01, 1997
  ;;5.2;LAB SERVICE;**248**;Sep 27, 1994
  ;
  ;Reference to ^DIC( supported by IA #916
  ;Reference to ^VA(200 supported by IA #10060
  ;Reference to DIC supported by IA #10006
+ ;
+ Q:'$D(^LRO(68,LRAA,1,I,1,N,0))        ; IHS/OIT/MKK - LR*5.2*1030 -- Skip malformed Accessions
  ;
  S X=$S($D(^LRO(68,LRAA,1,I,1,N,5,1,0)):^(0),1:""),C(3)=+X
  S:'C(3) C(3)=LRU(1) S C(2)=$P(X,"^",2) S:'C(2) C(2)=LRU(1)

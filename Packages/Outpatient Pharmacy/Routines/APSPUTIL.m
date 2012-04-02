@@ -1,5 +1,5 @@
-APSPUTIL ;IHS/BAO/DMH - Utilites to Support OP v7.0 -;16-Dec-2009 21:32;SM
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1006,1007,1009**;Sep 23, 2004
+APSPUTIL ;IHS/BAO/DMH - Utilites to Support OP v7.0 -;28-Mar-2011 18:30;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1006,1007,1009,1011**;Sep 23, 2004;Build 17
  ;
 PMS ; EP  ; called from PSORXL before go in to print the label  3/1/2002
  S DIR("A")="Do you want to print a Patient Med Sheet"
@@ -51,6 +51,11 @@ ASKDATE(APSPPMT,APSPDFL,APSPMIN,APSPOPT) ;
  S:Y<0 APSPPOP=1
  Q Y
  ;
+ ; DIR call for required Y/N response
+DIRYNR(APSPPMT,APSPDFL,APSPHLP,APSPPOP) ; EP
+ N Y
+ S Y=$$DIR("Y",.APSPPMT,.APSPDFL,.APSPHLP,.APSPPOP)
+ Q Y
  ; DIR call for Y/N response
 DIRYN(APSPPMT,APSPDFL,APSPHLP,APSPPOP) ; EP
  N Y

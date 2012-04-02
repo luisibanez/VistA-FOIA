@@ -1,7 +1,8 @@
 ABMMUPV3 ;IHS/SD/SDR - MU Patient Volume EP Report ;
- ;;2.6;IHS 3P BILLING SYSTEM;**7**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**7,8**;NOV 12, 2009
  ;
 PRINT ;EP
+ I ABMY("RTYP")="GRP" D GRPPRT^ABMMUPV4 Q  ;abm*2.6*8
  S ABMPRV=0
  F  S ABMPRV=$O(ABMP(ABMPRV)) Q:'ABMPRV  D  D PAZ^ABMDRUTL Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)
  .S ABMPMET=0
@@ -58,6 +59,7 @@ NOTMET ;EP
  .S ABMCNT=0
  .S ABMDT=0
  .F  S ABMDT=$O(^XTMP("ABM-PVP",$J,"PRV PERCENT",ABMDT)) Q:'ABMDT  D
+ ..I $Y+5>IOSL D HD Q:(IOST["C")&((+$G(Y)=0)!($D(DIRUT)!$D(DIROUT)!$D(DTOUT)!$D(DUOUT)))  ;abm*2.6*8
  ..S ABMP("PRV")=0
  ..F  S ABMP("PRV")=$O(^XTMP("ABM-PVP",$J,"PRV PERCENT",ABMDT,ABMP("PRV"))) Q:'ABMP("PRV")  D
  ...I ABMP("PRV")'=ABMPRV Q
@@ -83,13 +85,14 @@ NOTMET ;EP
  W !!,"Patient Volume for the Qualification Year was calculated using the Medicaid"
  W !,$S(+$G(ABMFQHC)=1:"/Needy Individual",1:"")_" calculation method."
  ;
+ I $Y+5>IOSL D HD Q:(IOST["C")&((+$G(Y)=0)!($D(DIRUT)!$D(DIROUT)!$D(DTOUT)!$D(DUOUT)))  ;abm*2.6*8
  S ABMTHPV=0
  S:ABMSDT ABMTHPV=+$G(^XTMP("ABM-PVP",$J,"PRV-DENOM",ABMSDT,ABMPRV))
  S ABMMHPV=0
  S:ABMSDT ABMMHPV=+$G(^XTMP("ABM-PVP",$J,"PRV-NUM",ABMSDT,ABMPRV))
- W !!,"Total Patient Encounters of First Highest Patient Volume Period: ",ABMTHPV,!
+ W !!,"Total Patient Encounters of First Highest Patient Volume Period:",ABMTHPV,!
  S ABMU("TXT")="Total Medicaid"_$S(+$G(ABMFQHC)=1:"/Needy Individual",1:"")
- S ABMU("TXT")=ABMU("TXT")_" Encounters of First Highest Patient Volume Period: "_ABMMHPV
+ S ABMU("TXT")=ABMU("TXT")_" Encounters of First Highest Patient VolumePeriod: "_ABMMHPV
  S ABMU("LM")=0,ABMU("RM")=80,ABMU("LNG")=80
  D ^ABMDWRAP
  D NMHDR
@@ -100,10 +103,19 @@ NOTMET ;EP
  .S ABMP("PRV")=0
  .F  S ABMP("PRV")=$O(^XTMP("ABM-PVP",$J,"PRV-DENOM",ABMSDT,ABMP("PRV"))) Q:'ABMP("PRV")  D
  ..I ABMP("PRV")'=ABMPRV Q
- ..S X1=ABMSDT
- ..S X2=89
- ..D C^%DTC
- ..S ABMEDT=X
+ ..;start old code abm*2.6*8 NOHEAT
+ ..;S X1=ABMSDT
+ ..;S X2=89
+ ..;D C^%DTC
+ ..;S ABMEDT=X
+ ..;end old code start new code
+ ..I +$G(ABMY("EDT"))=0 D
+ ...S X1=ABMSDT
+ ...S X2=89
+ ...D C^%DTC
+ ...S ABMEDT=X
+ ..I +$G(ABMY("EDT"))'=0 S ABMEDT=ABMY("EDT")
+ ..;end new code
  ..S ABMCNT=ABMCNT+1
  ..S ABMLN(ABMCNT)=$TR($P($$MDT^ABMDUTL(ABMSDT),"-",1,2),"-"," ")_" - "_$TR($P($$MDT^ABMDUTL(ABMEDT),"-",1,2),"-"," ")  ;report period
  ..S $P(ABMLN(ABMCNT),U,2)=$J($G(^XTMP("ABM-PVP",$J,"PRV PERCENT",ABMSDT,ABMPRV)),3)_"%"  ;rate
@@ -137,7 +149,7 @@ NMHDR ;EP
  W !
  F ABM=1:1:80 W "="
  Q
-PATIENT ;EP
+PATIENT  ;EP
  S ABM("PG")=1
  S ABMSDT=$P($G(^XTMP("ABM-PVP",$J,"PRV TOP",ABMPRV)),U,2)
  D HDR
@@ -171,7 +183,7 @@ PATIENT ;EP
  ......I $P($G(^XTMP("ABM-PVP",$J,"PT LST",ABMSDT,ABMPRV,ABMVLOC,ABMITYP,ABMINS,ABMPTL,ABMPTF,ABMVDT)),U,4)'="" W ?79,$P(^(ABMVDT),U,4)
  ......I $Y+5>IOSL D HD,PTHDR Q:(IOST["C")&((+$G(Y)=0)!($D(DIRUT)!$D(DIROUT)!$D(DTOUT)!$D(DUOUT)))
  Q
-PTHDR ;
+PTHDR    ;
  I IOST["C",(ABM("PG")=1) D HD  ;start data on 2nd page of report
  W !,"VISIT LOCATION: ",$$GET1^DIQ(9999999.06,ABMVLOC,.02,"E"),!
  F ABM=1:1:80 W "="
@@ -181,7 +193,7 @@ PTHDR ;
  Q
 HD D PAZ^ABMDRUTL Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)
  S ABM("PG")=+$G(ABM("PG"))+1
-HDR ;EP
+HDR      ;EP
  S:ABMSDT="" ABMSDT=ABMY("SDT")
  I ABMY(90)="A"!(ABMY(90)="B") D
  .S X1=ABMSDT
@@ -191,8 +203,10 @@ HDR ;EP
  I ABMY(90)="C" S ABMEDT=ABMY("EDT")
  D EN^ABMVDF("IOF")
  W !
- I ABMY("RFMT")="P" D CENTER^ABMUCUTL("CONFIDENTIAL PATIENT INFORMATION COVERED BY THE PRIVACY ACT") W !
- I ABMY("RTYP")'="HOS" D CENTER^ABMUCUTL("IHS Meaningful Use Patient Volume Report - Eligible Professional    Page "_ABM("PG"))
+ I ABMY("RFMT")="P" D CENTER^ABMUCUTL("CONFIDENTIAL PATIENT INFORMATIONCOVERED BY THE PRIVACY ACT") W !
+ ;I ABMY("RTYP")'="HOS" D CENTER^ABMUCUTL("IHS Meaningful Use Patient Volume Report - Eligible Professional    Page "_ABM("PG"))  ;abm*2.6*8
+ I ABMY("RTYP")="SEL" D CENTER^ABMUCUTL("IHS Meaningful Use Patient Volume Report - Eligible Professional    Page "_ABM("PG"))  ;abm*2.6*8
+ I ABMY("RTYP")="GRP" D CENTER^ABMUCUTL("IHS Meaningful Use Patient Volume Report - Group Practice       Page "_ABM("PG"))  ;abm*2.6*8
  I ABMY("RTYP")="HOS" D CENTER^ABMUCUTL("       IHS Meaningful Use Patient Volume Report - Hospital          Page "_ABM("PG"))
  I ABMY("RFMT")'="P",+$G(ABMPMET)=0 W ! D CENTER^ABMUCUTL("Minimum Patient Volume NOT Achieved")
  I ABMY("RFMT")="P" W ! D CENTER^ABMUCUTL("PATIENT LIST BY PROVIDER")
@@ -208,14 +222,32 @@ HDR ;EP
  .I ABMY("RTYP")="HOS" D
  ..W !!,"Participation Federal fiscal year: ",ABMY("PYR")
  ..W !,"Qualification Federal fiscal year: ",ABMY("QYR")
- .W !,"Reporting Period Identified: ",$S(ABMSDT:$$SDT^ABMDUTL(ABMSDT)_" thru "_$$SDT^ABMDUTL(ABMEDT),ABMY("SDT"):$$SDT^ABMDUTL(ABMY("SDT"))_" thru "_$$SDT^ABMDUTL(ABMEDT),1:"NONE FOUND")
+ .W !,"Reporting Period Identified: ",$S(ABMSDT:$$SDT^ABMDUTL(ABMSDT)_"thru "_$$SDT^ABMDUTL(ABMEDT),ABMY("SDT"):$$SDT^ABMDUTL(ABMY("SDT"))_" thru "_$$SDT^ABMDUTL(ABMEDT),1:"NONE FOUND")
  .I ABMY("RTYP")'="HOS" D
  ..W !,"Facility(s): ",!
  ..S ABML=0
  ..F  S ABML=$O(ABMF(ABML)) Q:'ABML  W ?10,$$GET1^DIQ(9999999.06,ABML,.01,"E"),$S($D(^ABMMUPRM(1,1,"B",ABML)):" (FQHC/RHC)",1:""),! I $D(^ABMMUPRM(1,1,"B",ABML)) S ABMFQHC=1
- I +$G(ABMY("TVDTS"))'=0 W !!,"Number of top volume dates to display if minimum thresholds are not met: ",$J(ABMY("TVDTS"),3),!
+ I +$G(ABMY("TVDTS"))'=0 W !!,"Number of top volume dates to display ifminimum thresholds are not met: ",$J(ABMY("TVDTS"),3),!
  I ABMY("RFMT")="P",ABM("PG")'=1 W !
- I ABMY("RTYP")'="HOS" W !,"Eligible Professional: ",$$GET1^DIQ(200,ABMPRV,".01")_" ("_$$GET1^DIQ(200,ABMPRV,53.5,"E")_")"
+ ;I ABMY("RTYP")'="HOS" W !,"Eligible Professional: ",$$GET1^DIQ(200,ABMPRV,".01")_" ("_$$GET1^DIQ(7,$$DOCLASS^ABMDVST2(ABMPRV),.01,"E")_")"  ;abm*2.6*8
+ I ABMY("RTYP")="SEL" W !,"Eligible Professional: ",$$GET1^DIQ(200,ABMPRV,".01")_" ("_$$GET1^DIQ(7,$$DOCLASS^ABMDVST2(ABMPRV),.01,"E")_")"  ;abm*2.6*8
+ ;start new code abm*2.6*8
+ I ABMY("RTYP")="GRP" D
+ .Q:ABM("PG")'=1  ;only print on first page
+ .W !,"Eligible Professionals: "
+ .I '$D(ABMPRV("E")) W !?3,"<NONE>"
+ .S ABMPRV=0
+ .F  S ABMPRV=$O(ABMPRV("E",ABMPRV)) Q:'ABMPRV  D
+ ..I $Y+5>IOSL D HD Q:(IOST["C")&((+$G(Y)=0)!($D(DIRUT)!$D(DIROUT)!$D(DTOUT)!$D(DUOUT)))
+ ..W !?3,$$GET1^DIQ(200,ABMPRV,".01")_" ("_$$GET1^DIQ(7,$$DOCLASS^ABMDVST2(ABMPRV),.01,"E")_")"
+ .W !!,"Other Professionals: "
+ .I '$D(ABMPRV("O")) W !?3,"<NONE>"
+ .S ABMPRV=0
+ .F  S ABMPRV=$O(ABMPRV("O",ABMPRV)) Q:'ABMPRV  D
+ ..I $Y+5>IOSL D HD Q:(IOST["C")&((+$G(Y)=0)!($D(DIRUT)!$D(DIROUT)!$D(DTOUT)!$D(DUOUT)))
+ ..W !?3,$$GET1^DIQ(200,ABMPRV,".01")_" ("_$$GET1^DIQ(7,$$DOCLASS^ABMDVST2(ABMPRV),.01,"E")_")"
+ .D HD Q:(IOST["C")&((+$G(Y)=0)!($D(DIRUT)!$D(DIROUT)!$D(DTOUT)!$D(DUOUT)))
+ ;end new code abm*2.6*8
  W !
  I ABMY("RFMT")="P" D
  .W !
@@ -226,5 +258,6 @@ HDR ;EP
  .S ABMU("LM")=0,ABMU("RM")=80,ABMU("LNG")=80
  .D ^ABMDWRAP
  .W !
+ I $Y+5>IOSL D HD Q:(IOST["C")&((+$G(Y)=0)!($D(DIRUT)!$D(DIROUT)!$D(DTOUT)!$D(DUOUT)))  ;abm*2.6*8
  ;
  Q

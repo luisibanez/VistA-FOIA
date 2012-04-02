@@ -1,5 +1,5 @@
-BGOVCPT2 ; IHS/BAO/TMD - Manage V CPT PART 2 ;15-Apr-2011 12:56;DU
- ;;1.1;BGO COMPONENTS;**1,3,5,6,8**;Mar 20, 2007
+BGOVCPT2 ; IHS/BAO/TMD - Manage V CPT PART 2 ;20-Jun-2011 09:51;DU
+ ;;1.1;BGO COMPONENTS;**1,3,5,6,8,9**;Mar 20, 2007
  ;---------------------------------------------
  ; Lookup CPT code for input
  ;  INP = Lookup Text [1] ^ Use Lexicon [2] ^ Date [3] ^ Exclude Med [4] ^ Exclude Surg [5] ^
@@ -108,17 +108,20 @@ GETMODS(RET,INP) ;EP
  .S CDT=$$CVTDATE^BGOUTL(CDT)
  .S:'CDT CDT=DT
  .Q:CPTIEN=""
- .;IHS/MSC/MGH account for dates prior to Jan 1,1995
+ .;IHS/MSC/MGH account for dates prior to Jan 1,1990
  .I CDT<2890101 S CDT=2890101
  .D CODM^ICPTCOD(CPTIEN,"MOD",0,CDT)
  .S CODE=""
  .F  S CODE=$O(MOD(CODE)) Q:'$L(CODE)  D
+ ..;PATCH 9 check each mod to see if it applicable
  ..S REC=MOD(CODE)
  ..S NAME=$P(REC,U)
  ..S MOD=$P(REC,U,2)
- ..I NAME="" D
- ...S NAME=MOD
- ..S CNT=CNT+1,RET(CNT)=NAME_U_CODE_U_MOD
+ ..S X=$$MODP^ICPTMOD(CPTIEN,MOD,"I")
+ ..I X>0 D
+ ...I NAME="" D
+ ....S NAME=MOD
+ ...S CNT=CNT+1,RET(CNT)=NAME_U_CODE_U_MOD
  E  D
  .S MOD=0
  .F  S MOD=$O(^AUTTCMOD(MOD)) Q:'MOD  D

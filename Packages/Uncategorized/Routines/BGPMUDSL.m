@@ -1,5 +1,5 @@
 BGPMUDSL ; IHS/MSC/MMT - DISPLAY Measure LISTS ;02-Mar-2011 14:00;DU
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;;
 RT ;EP
  ;
@@ -26,7 +26,7 @@ EN ;EP -- main entry point for  LIST DISPLAY
  Q
  ;
 HDR ; -- header code
- S VALMHDR(1)="IHS Meaningful Use Performance Measure Lists of Patients"
+ S VALMHDR(1)="IHS Meaningful Use Clinical Quality Measure Lists of Patients"
  S VALMHDR(2)="* indicates the list has been selected"
  Q
  ;

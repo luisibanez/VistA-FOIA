@@ -1,5 +1,5 @@
 ABME8SE ; IHS/ASDST/DMJ - 837 SE Segment 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**8**;NOV 12, 2009
  ;Transaction Set Header
  ;
 START ;START HERE
@@ -22,5 +22,6 @@ LOOP ;LOOP HERE
  S ABMR("SE",20)=ABMSTOT
  Q
 30 ;SE02 - Transaction Set Control Number
- S ABMR("SE",30)="0001"
+ ;S ABMR("SE",30)="0001"  ;abm*2.6*8
+ S ABMR("SE",30)=$$FMT^ABMERUTL(ABMER("CNT"),"4NR")  ;abm*2.6*8
  Q

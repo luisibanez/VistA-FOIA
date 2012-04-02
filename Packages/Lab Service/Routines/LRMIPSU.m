@@ -1,5 +1,5 @@
 LRMIPSU ; IHS/DIR/FJE - MICRO PATIENT REPORT 10/7/87 08:42 ; [ 11/19/2002  7:09 AM ]
- ;;5.2;LR;**1013,1015,1018,1022**;September 20, 2007
+ ;;5.2;LR;**1013,1015,1018,1022,1030**;NOV 01, 1997
  ;;5.2;LAB SERVICE;;Sep 27, 1994
 FH ;EP - from LRMIPSZ1, LRMIPSZ2, LRMIPSZ5
  D:$Y>(IOSL-LRFLIP) FOOT,HDR
@@ -24,14 +24,27 @@ WR S X1=^LAB(61.2,LRIFN,"JR",LRNUM,0) Q:$P(X1,U,7)'=1
  W $P(X1,U,5) W:$L($P(X1,U,6)) ",",$E($P(X1,U,6),1,3)+1700
  Q
 FOOT ;EP - from LRMIPSZ1
- F X=1:1 W ! Q:$Y>(IOSL-LRFLIP)
+ ; F X=1:1 W ! Q:$Y>(IOSL-LRFLIP)
+ F X=1:1 W ! Q:$Y>(IOSL-(LRFLIP+6))         ; IHS/OIT/MKK - LR*5.2*1030
  Q:'LRHC  W !,"Collection sample: ",LRCS,?40,"Collection date: ",LRTK
  ;W:LRCS'=LRST !,"Site/Specimen: ",LRST W !!
  W:LRCS'=LRST !,"Site/Specimen: ",LRST W !  ;IHS/ANMC/CLS 08/18/96
  ;W !!,PNM,?$X+3,SSN,?$X+3 W:$D(IA) IA W ?60,"  ROUTING: ",LRPATLOC,!
+ ;
+ D IHSKEY                                   ; IHS/OIT/MKK - LR*5.2*1030
+ ;
  W !,PNM,?$X+3,HRCN,?$X+3 W:$D(IA) IA W ?60,"  ROUTING: ",LRPATLOC,!  ;IHS/ANMC/CLS 08/18/96
  W $$INS^LRU," LABORATORY",?62,LRACC,!,"MICROBIOLOGY",?62,"page ",LRPG,!
  Q
+ ;
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
+IHSKEY ; EP -- Legends for Micro Reports
+ W !,$TR($J("",IOM)," ","=")
+ W !,$$CJ^XLFSTR("S=Sensitive     I=Intermediate     R=Resistant     NI=Not Immune     I=Immune",IOM)
+ W !,$$CJ^XLFSTR(" IB=Inducible Beta Lactam    NR=Non Reactive    WR=Weakly Reactive    R=Reactive",IOM),!
+ Q
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030
+ ;
 HDR ;EP - from LRMIPSZ1
  S LRPG=LRPG+1 D:LRPG>1 WAIT Q:LREND
  W:($G(LRJ02))!($G(LRJ0))!($E(IOST,1,2)="C-") @IOF S LRJ02=1
@@ -69,6 +82,7 @@ WAIT ; EP - from LRMIPSZ1, LRMIPSZ2
  I $P($G(XQY0),U)="LLRS"!($P($G(XQY0),U)="LRRS BY LOC")!($P($G(XQY0),U)="LRRD")!($P($G(XQY0),U)="LRRP2")!($P($G(XQY0),U)="BLR LRRD BY MD") D  ;IHS/HQW/SCR-8/23/01 
  .I $$ADDON^BLRUTIL("LR*5.2*1013","BLRALAF",DUZ(2)) D ^BLRALAU  ;IHS/HQW/SCR-8/23/01     
  ;
+ D IHSKEY     ; IHS/OIT/MKK - LR*5.2*1030
  F I=$Y:1:IOSL-3 W !
  ;I 'LRHC W !,PNM,?25,"  ",SSN,"   ROUTING: ",LRPATLOC,?59," PRESS '^' TO STOP " R X:DTIME S:X="" X=1 S:(".^"[X)!('$T) LREND=1
  I 'LRHC W !,PNM,?25,"  ",HRCN,"   ROUTING: ",LRPATLOC,?59," PRESS '^' TO STOP " R X:DTIME S:X="" X=1 S:(".^"[X)!('$T) LREND=1  ;IHS/ANMC/CLS 08/18/96

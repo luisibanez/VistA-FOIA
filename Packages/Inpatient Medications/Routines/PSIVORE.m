@@ -1,5 +1,5 @@
-PSIVORE ;BIR/PR,MLM-ORDER ENTRY ;25 Nov 98 / 3:34 PM
- ;;5.0; INPATIENT MEDICATIONS ;**18,29,50,56,58,81**;16 DEC 97
+PSIVORE ;BIR/PR,MLM-ORDER ENTRY ;28-Mar-2011 19:51;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**18,29,50,56,58,81,1011**;16 DEC 97;Build 17
  ;
  ; Reference to ^PS(55 is supported by DBIA 2191
  ; Reference to ^ORX2 is supported by DBIA #867
@@ -9,6 +9,7 @@ PSIVORE ;BIR/PR,MLM-ORDER ENTRY ;25 Nov 98 / 3:34 PM
  ; Reference to EN^VALM is supported by DBIA 10118.
  ; Reference to ^VADPT is supported by DBIA 10061.
  ;
+ ; Modified - IHS/MSC/PLS - 03/28/2011 - Line SETN+1
  N PSJNEW,PSJOUT,PSGPTMP,PPAGE S PSJNEW=1
  ;
  D SITE Q:'$G(PSIVQ)  K PSIVQ S PSGOP=""
@@ -28,6 +29,7 @@ ASK ;See if patient has been admitted.
  S:VAIN(4) WSCHADM=+VAIN(4)
  ;
 SETN ;Set up patient 0 node if needed.
+ D SETPTCX^APSPFUNC(DFN)  ;IHS/MSC/PLS - 03/28/11
  I '$D(^PS(55,DFN,0)) K DO,DA,DD,DIC,PSIVFN S:$D(^(5.1)) PSIVFN=^(5.1) K:$D(PSIVFN) ^(5.1) S (DINUM,X)=DFN,DIC(0)="L",DIC="^PS(55," D FILE^DICN S:$D(PSIVFN) ^PS(55,DFN,5.1)=PSIVFN D  K DIC,PSIVFN,DO,DA,DD
  .; Mark PSJ and PSO as converted
  .S $P(^PS(55,DFN,5.1),"^",11)=2
@@ -114,7 +116,7 @@ ENIN1 ;
  S FLAG=1,PSIVTYPE=Y,(P(5),P(23))="" I "SC"[Y D @(Y_"^PSIVORC1") S $P(PSIVTYPE,U,2)=P(23)
  D INMED G:'$D(PSJOUT) ENIN S:$D(PSJOUT) PSJORQF=2
  Q
-NONVF(PSJOC)  ;If file at NonVF then quit with 1
+NONVF(PSJOC) ;If file at NonVF then quit with 1
  NEW PSGOEAV S PSGOEAV=+$P(PSJSYSP0,U,9)
  I +PSJSYSU=3,PSGOEAV Q 0
  I +PSJSYSU=1,PSGOEAV Q 0
@@ -135,4 +137,4 @@ DEL55 ;
  I $P(X,U,21)]"",($G(^PS(55,DFN,"IV",+ON55,2))]"") S $P(^(2),U,6)=ON,$P(^PS(53.1,ON,0),U,25)=ON55 Q
  NEW PSIVORFA S PSIVORFA=1
  D DEL55^PSIVORE2
- Q 
+ Q

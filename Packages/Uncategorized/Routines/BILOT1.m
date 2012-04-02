@@ -1,7 +1,7 @@
-BILOT1 ;IHS/CMI/MWR - EDIT VACCINES.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+BILOT1 ;IHS/CMI/MWR - EDIT LOT NUMBERS.; MAY 10, 2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
- ;;  EDIT VACCINE FIELDS: CURRENT LOT, ACTIVE, VIS DATE DEFAULT.
+ ;;  EDIT LOT NUMBER FIELDS.
  ;
  ;
  ;----------
@@ -77,23 +77,23 @@ LINE(BIIEN,BILINE,BIENT) ;EP
  ;
  ;---> Lot Number.
  S X=X_"  "_$P(BI0,U)
- S X=$$PAD^BIUTL5(X,19,".")
+ S X=$$PAD^BIUTL5(X,27,".")
  ;
  ;---> Vaccine.
  S X=X_$$VNAME^BIUTL2($P(BI0,U,4))
- S X=$$PAD^BIUTL5(X,31,".")
+ S X=$$PAD^BIUTL5(X,39,".")
  ;
  ;---> Manufacturer MVX.
- I $P(BI0,U,2) S X=X_$$MNAME^BIUTL2($P(BI0,U,2),1)
- S X=$$PAD^BIUTL5(X,36,".")
+ ;I $P(BI0,U,2) S X=X_$$MNAME^BIUTL2($P(BI0,U,2),1)
+ ;S X=$$PAD^BIUTL5(X,36,".")
  ;
  ;---> Active/Inactive.
  S X=X_$S($P(BI0,U,3)=1:"Inactive",1:"Active")
- S X=$$PAD^BIUTL5(X,46,".")
+ S X=$$PAD^BIUTL5(X,47,".")
  ;
  ;---> Expiration Date.
  I $P(BI0,U,9) S X=X_$$LOTEXP^BIRPC3(BIIEN,1)
- S X=$$PAD^BIUTL5(X,56,".")
+ S X=$$PAD^BIUTL5(X,57,".")
  ;
  ;---> Starting Count.
  I $P(BI0,U,11) S X=X_$J($P(BI0,U,11),5)
@@ -191,6 +191,7 @@ EDITSCR(BILOT,BINEW) ;EP
  .S BI("H")=$P(Y,U,13)     ;Source VFC or NON-VFC.
  .S BI("M")=$P(Y,U,2)      ;Manufacturer.
  .S BI("N")=$P(Y,U,14)     ;Facility.
+ .S BI("O")=$P(Y,U,17)     ;NDC Code.
  ;
  ;---> Call Screenman to build BI local array of data by user.
  N BISAVE
@@ -204,10 +205,14 @@ EDITSCR(BILOT,BINEW) ;EP
  N BIERR,BIFLD
  S BI("AS")=BI("A")
  I $G(BI("S"))]"" S BI("AS")=BI("AS")_"*"_BI("S")
+ ;
+ ;---> v8.5: If Active Status="", set it to 0, so PCC will be happy.
+ I $G(BI("C"))="" S BI("C")=0
+ ;
  S BIFLD(.01)=$G(BI("AS")),BIFLD(.03)=$G(BI("C")),BIFLD(.09)=$G(BI("D"))
  S BIFLD(.11)=$G(BI("E")),BIFLD(.12)=$G(BI("F")),BIFLD(.15)=$G(BI("G"))
  S BIFLD(.13)=$G(BI("H")),BIFLD(.02)=$G(BI("M")),BIFLD(.14)=$G(BI("N"))
- S BIFLD(.16)=$G(BI("A"))
+ S BIFLD(.16)=$G(BI("A")),BIFLD(.17)=$G(BI("O"))
  ;---> If this is a new Lot Number, include the Vaccine.
  S:$G(BINEW) BIFLD(.04)=$G(BI("B"))
  ;
@@ -280,6 +285,9 @@ LOADLOT ;EP
  ;
  ;---> Load Facility.
  I $G(BI("N"))]"" D PUT^DDSVALF(9,,,BI("N"),"I")
+ ;
+ ;---> Load NDC Code.
+ I $G(BI("O"))]"" D PUT^DDSVALF(4.5,,,BI("O"),"I")
  ;
  ;---> Calculate the number of doses that have been used.
  D CALCDOS($G(BI("E")),$G(BI("F")))
@@ -366,27 +374,8 @@ RESET ;EP
  ;
  ;----------
 CHGORDR ;EP
- ;---> Edit the parameter directing the ImmServe Forecast to return
- ;---> Immunization Due dates for either the Minimum Acceptable Age
- ;---> or the Recommended Age.
- ;---> Called by Protocol BI SITE FORC MIN VS RECOMM
  ;
- D FULL^VALM1,TITLE^BIUTL5("SELECT LOT LISTING ORDER"),TEXT2
- N DIR,Y
- S DIR(0)="SOA^"_$G(BISUBT)
- S DIR("A")="     Please select 1, 2, 3, 4, 5, or 6: "
- S DIR("B")=$G(BICOLL)
- D ^DIR
- S:(Y>0) BICOLL=Y
- I Y="^" D RESET Q
- ;
- ;---> Include Inacive Lots?
- W !!,"   Do you wish to include INACTIVE Lots in this display?"
- S DIR("?")="     Enter YES to include INACTIVE Lots."
- S DIR(0)="Y",DIR("A")="   Enter Yes or No",DIR("B")="NO"
- D ^DIR
- S BIINACT=$S(Y>0:1,1:0)
- D RESET
+ D CHGORDR^BILOT2
  Q
  ;
  ;
@@ -468,4 +457,22 @@ PRINTX(BILINL,BITAB) ;EP
  Q:$G(BILINL)=""
  N I,T,X S T="" S:'$D(BITAB) BITAB=5 F I=1:1:BITAB S T=T_" "
  F I=1:1 S X=$T(@BILINL+I) Q:X'[";;"  W !,T,$P(X,";;",2)
+ Q
+ ;
+ ;
+ ;----------
+NULLACT ;EP
+ ;---> Activate all Lot Numbers that have a Status=null.
+ ;---> Call by postinit for Imm v8.5.
+ ;
+ D ^XBKVAR
+ W !!?5,"Checking Lot Numbers for null Status..."
+ N M,N S M=0,N=0
+ F  S N=$O(^AUTTIML(N)) Q:'N  D
+ .Q:'$D(^AUTTIML(N,0))
+ .;---> Quit if this lot number has a Status .
+ .Q:($P(^AUTTIML(N,0),"^",3)'="")
+ .;---> Okay, Status must be null, so set it to Active.
+ .S $P(^AUTTIML(N,0),"^",3)=0,M=M+1
+ W !!?5,"Done.  ",M," Lot Numbers have been fixed." D DIRZ^BIUTL3()
  Q

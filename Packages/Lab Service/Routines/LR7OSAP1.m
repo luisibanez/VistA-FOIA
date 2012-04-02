@@ -1,6 +1,6 @@
-LR7OSAP1 ;slc/dcm - Silent AP rpt cont. ;8/11/97
- ;;5.2T9;LR;**1018**;Nov 17, 2004
- ;;5.2;LAB SERVICE;**121,227,230**;Sep 27, 1994
+LR7OSAP1 ;slc/dcm/wty/kll - Silent AP rpt cont. ;3/28/2002
+ ;;5.2;LAB SERVICE;**1030**;NOV 01, 1997
+ ;;5.2;LAB SERVICE;**121,227,230,259,317**;Sep 27, 1994
  Q:'$D(^XUSEC("LRLAB",DUZ))
  D LN
  S $P(LR("%"),"-",GIOM)="",^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,LR("%"))
@@ -53,7 +53,7 @@ LN ;Increment the counter
 MOD ;Modified report stuff
  N A,B
  D LN
- S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(28,CCNT,"*** MODIFIED REPORT ***")
+ S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(28,CCNT,"*+* MODIFIED REPORT *+*")
  D LN
  S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,"(Last modified: ")
  S B=0
@@ -63,7 +63,33 @@ MOD ;Modified report stuff
  S ^(0)=^TMP("LRC",$J,GCNT,0)_Y_" typed by "_A_")"
  D:$D(LRQ(9)) M1
  Q
- ;
+MODSR ;Modified Supplementary Report Audit Info
+ N LRTEXT,LRSP1,LRSP2,LRFILE,LRIENS,LRR1,LRR2
+ S LRFILE=$S(LRSS="CY":63.9072,LRSS="SP":63.8172,LRSS="EM":63.2072,1:"")
+ Q:LRFILE=""
+ D LN
+ S LRTEXT="SUPPLEMENTARY REPORT HAS BEEN ADDED/MODIFIED"
+ S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(14,CCNT,"*+* "_LRTEXT_" *+*")
+ D LN
+ S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(1,CCNT,"(Added/Last modified: ")
+ S LRIENS=C_","_LRI_","_LRDFN_","
+ S LRSP1=0
+ F  S LRSP1=$O(^LR(LRDFN,LRSS,LRI,1.2,C,2,LRSP1)) Q:'LRSP1  D
+ .S LRSP2=LRSP1
+ Q:'$D(^LR(LRDFN,LRSS,LRI,1.2,C,2,LRSP2,0))
+ S LRS2=^(0),Y=+LRS2,LRS2A=$P(LRS2,"^",2),LRSGN=" typed by "
+ ;If supp rpt is released, display 'signed by' instead of 'typed by'
+ I $P(LRS2,"^",3) S Y=$P(LRS2,"^",4),LRS2A=$P(LRS2,"^",3),LRSGN=" signed by "
+ D D^LRU
+ S LRS2A=$S($D(^VA(200,LRS2A,0)):$P(^(0),"^"),1:LRS2A)
+ S LRR1=Y,LRR2=LRS2A
+ S ^(0)=^TMP("LRC",$J,GCNT,0)_LRR1_LRSGN_LRR2_")"
+ ;If RELEASED SUPP REPORT MODIFIED set to 1, display "NOT VERIFIED"
+ I $P(^LR(LRDFN,LRSS,LRI,1.2,C,0),"^",3)=1 D
+ .D LN
+ .S LRTEXT="NOT VERIFIED"
+ .S ^TMP("LRC",$J,GCNT,0)=$$S^LR7OS(25,CCNT,"**-* "_LRTEXT_" *-**")
+ Q
 M1 ;
  S A=0
  F  S A=$O(^LR(LRDFN,LRSS,LRI,LR(0),A)) Q:'A  S LRT=^(A,0),Y=+LRT,X=$P(LRT,"^",2),X=$P($G(^VA(200,X,0),X),"^") D

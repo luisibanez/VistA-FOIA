@@ -1,5 +1,5 @@
 DGSEC4 ;ALB/MM,JAP - Utilities for record access & sensitive record processing;10/6/99 ; 1/5/00 2:41pm [ 03/17/2005  12:44 PM ]
- ;;5.3;Registration;**249,281,391,471,1002,1004,1005,1009**;Aug 13, 1993
+ ;;5.3;Registration;**249,281,391,471,1002,1004,1005,1009,1011,1013**;Aug 13, 1993
  ;IHS/ANMC/LJF  8/31/2001 changed warning message text
  ;              1/04/2002 if in log as non-sensitive, track anyway
  ;IHS/ITSC/WAR  3/17/2005 Fix dealing with calls from other apps/pkgs
@@ -56,7 +56,7 @@ PTSEC(RESULT,DFN,DGMSG,DGOPT) ;RPC/API entry point for patient sensitive & recor
  ;IHS/OIT/LJF 01/06/2006 PATCH 1005 account for tracking all patients
  ;I RESULT(1)=1 D
  I (RESULT(1)=1)!(RESULT(1)=0) D
- .I (RESULT(1)=0)&($$GET1^DIQ(43,1,9999999.01)'="YES")&('$G(^DGSL(38.1,+DFN,0))) Q
+ .I (RESULT(1)=0)&($$GET1^DIQ(43,1,9999999.01)'="YES")&('$P($G(^DGSL(38.1,+DFN,0)),U,2)) Q  ;cmi/maw 1/26/2010 PATCH 1011
  .;
  .I $G(DUZ)="" D  Q
  ..;DUZ must be defined to access sensitive record & update DG Security log
@@ -173,6 +173,7 @@ SENS(DGSENS,DFN,DGDUZ,DDS,DGSENFLG) ;Determine if sensitive record
  .S DGSENS(1)=-1
  .S DGSENS(2)="DFN not defined."
  S DGSENS(1)=0
+AUDIT I DFN>0,$$GET^XPAR("ALL","DI AUDIT PATIENT LOOKUPS") D ACCESSED^DIET(2,DFN)  ;ihs/cmi/maw 3/7/2011 added for certification via Medsphere
  I $D(DGSENFLG) Q
  ;Determine if patient is employee
  S DGEMPLEE=$$EMPL(DFN)

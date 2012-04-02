@@ -1,5 +1,5 @@
 AGMSPI5 ; IHS/SD/EFG - MSP INTERVIEW PART 5 ;
- ;;7.1;PATIENT REGISTRATION;**8**;AUG 25, 2005
+ ;;7.1;PATIENT REGISTRATION;**8,10**;AUG 25, 2005;Build 7
  ;
 EN ;EP -
  W !,"PART V - Disability"
@@ -29,7 +29,7 @@ QUES2 ;ASK QUESTION NUMBER 2
  . W !,"If the patient answers no to both questions 1 and 2, Medicare is primary"
  . W !,"unless the patient answered yes to questions in part I or II."
  . S DIR(0)="E"
- . S DIR("A")="STOP. DO NOT PROCEDE. Press any key to exit."
+ . S DIR("A")="STOP. DO NOT PROCEED. Press any key to exit."
  . D ^DIR                                                                 ;AG*7.1*8
  . K DIR
  . Q

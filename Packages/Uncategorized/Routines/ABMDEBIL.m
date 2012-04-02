@@ -1,5 +1,5 @@
 ABMDEBIL ; IHS/ASDST/DMJ - Move Claim Data to Bill File ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**6**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8**;NOV 12, 2009
  ;
  ; IHS/ASDS/DMJ - 06/11/01 v2.4 p5 - NOIS NEA-0601-180026
  ;     Modified to correct problem with lock table filling up
@@ -91,6 +91,28 @@ BIL ;
  .S:ABM("HRN")]"" ABM("BLNM")=ABM("BLNM")_"-"_ABM("HRN")
  I $L(ABM("BLNM")>14) S $P(^ABMDBILL(DUZ(2),ABMP("BDFN"),1),U,15)=$E(ABM("BLNM"),1,14)
  ;end new code abm*2.6*6 NOHEAT
+ ;start new code abm*2.6*6
+ ;line iten control number
+ S ABMBN=$$FMT^ABMERUTL(ABMP("BDFN"),"12NR")
+ I $G(ABMP("FLAT"))'="" D
+ .S DIE="^ABMDBILL("_DUZ(2)_","
+ .S DA=ABMP("BDFN")
+ .S DR=".29////"_ABMBN_"000000"
+ .D ^DIE
+ I $G(ABMP("FLAT"))="" D
+ .K DIC,DIE,DA,DR,X,Y
+ .F ABMI=21,23,25,27,33,35,37,39,43,45,47 D
+ ..S ABMLNNUM=1
+ ..S DA(1)=ABMP("BDFN")
+ ..S ABMIEN=0
+ ..F  S ABMIEN=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),ABMI,ABMIEN)) Q:'ABMIEN  D
+ ...S ABMLNNUM=$$FMT^ABMERUTL(ABMLNNUM,"4NR")
+ ...S DA=ABMIEN
+ ...S DIE="^ABMDBILL("_DUZ(2)_","_DA(1)_","_ABMI_","
+ ...S DR="21////"_ABMBN_ABMI_ABMLNNUM
+ ...D ^DIE
+ ...S ABMLNNUM=+$G(ABMLNNUM)+1
+ ;end new code
  S DA=ABMP("BDFN")
  S DIK="^ABMDBILL(DUZ(2),"
  D IX1^DIK
@@ -114,28 +136,6 @@ BIL ;
  K DD,DO
  D FILE^DICN
  K DIC
- ;start new code abm*2.6*6
- ;line iten control number
- S ABMBN=$$FMT^ABMERUTL(ABMP("BDFN"),"12NR")
- I $G(ABMP("FLAT"))'="" D
- .S DIE="^ABMDBILL("_DUZ(2)_","
- .S DA=ABMP("BDFN")
- .S DR=".29////"_ABMBN_"000000"
- .D ^DIE
- I $G(ABMP("FLAT"))="" D
- .K DIC,DIE,DA,DR,X,Y
- .F ABMI=21,23,25,27,33,35,37,39,43,45,47 D
- ..S ABMLNNUM=1
- ..S DA(1)=ABMP("BDFN")
- ..S ABMIEN=0
- ..F  S ABMIEN=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),ABMI,ABMIEN)) Q:'ABMIEN  D
- ...S ABMLNNUM=$$FMT^ABMERUTL(ABMLNNUM,"4NR")
- ...S DA=ABMIEN
- ...S DIE="^ABMDBILL("_DUZ(2)_","_DA(1)_","_ABMI_","
- ...S DR="21////"_ABMBN_ABMI_ABMLNNUM
- ...D ^DIE
- ...S ABMLNNUM=+$G(ABMLNNUM)+1
- ;end new code
  ;
 REM ;REMARKS
  D MSG^ABMERUTL("Bill Number "_$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U)_" Created.  (Export Mode: "_$P(^ABMDEXP(ABMB("EXP"),0),U)_")")

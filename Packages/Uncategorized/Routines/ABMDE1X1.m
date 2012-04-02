@@ -1,5 +1,5 @@
 ABMDE1X1 ; IHS/ASDST/DMJ - PAGE 1 - DATA CHECK CONT. ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**6**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8**;NOV 12, 2009
  ;
  ; IHS/ASDS/DMJ - 05/16/00 - V2.4 Patch 1 - NOIS HQW-0500-100040
  ;     Modified Location code to check for satellite first.  If no
@@ -65,6 +65,7 @@ LOC ;EP - Entry Pont for setting X3 array Location Info
  .S ABMX("AFFL")=1
  ;start new code abm*2.6*6 5010
  I +$G(ABMP("EXP"))>20 D
+ .Q:(ABMP("INS"))=""  ;abm*2.6*8 HEAT37612
  .S ABMLNPI=$S($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,8)'="":$P(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1),U,8),$P($G(^ABMDPARM(ABMP("LDFN"),1,2)),U,12)'="":$P(^ABMDPARM(ABMP("LDFN"),1,2),U,12),1:ABMP("LDFN"))
  .I $P($$NPI^XUSNPI("Organization_ID",ABMLNPI),U)<1 S ABME(235)=""
  ;end new code abm*2.6*6 5010

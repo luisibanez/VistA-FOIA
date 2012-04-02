@@ -1,5 +1,5 @@
-BEHOPTCX ;MSC/IND/DKM - Patient Context Object ;27-Dec-2010 08:58;DU
- ;;1.1;BEH COMPONENTS;**004004,004005,004006**;Mar 20, 2007
+BEHOPTCX ;MSC/IND/DKM - Patient Context Object ;22-Jun-2011 17:41;PLS
+ ;;1.1;BEH COMPONENTS;**004004,004005,004006,004007**;Mar 20, 2007
  ;=================================================================
  ; Selects patient & returns key information
  ;  1    2   3   4    5      6    7    8      9       10     11  12 13  14  15  16     17     18      19
@@ -88,7 +88,7 @@ HRN(DFN) ;EP
  Q $S($P(X,U,3):"",1:$P(X,U,2))
  ; Return MFN given DFN
 EPI(DFN) ;EP
- Q $$^MSCDPTID(DFN)
+ Q $S($$TEST^CIAUOS("MSCDPTID"):$$^MSCDPTID(DFN),1:"")
  ; Return formatted patient detail report
 PTINQ(DATA,DFN) ;
  S DATA=$$TMPGBL^CIAVMRPC

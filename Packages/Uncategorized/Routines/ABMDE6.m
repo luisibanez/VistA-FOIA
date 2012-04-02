@@ -1,5 +1,5 @@
 ABMDE6 ; IHS/ASDST/DMJ - Page 6 - DENTAL ;
- ;;2.6;IHS Third Party Billing System;**2**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**2,8**;NOV 12, 2009
  ;
  ; IHS/SD/SDR - v2.5 p9 - IM17106 - <UNDEFINED>PC1^ABMDE6 regarding
  ;    a cross reference with no entry
@@ -78,7 +78,8 @@ A ;ADD LINE ITEM
  .S X=$P(Y,U)
  .S DIC("P")=$P(^DD(9002274.3,33,0),U,2)
  .S DIC="^ABMDCLM(DUZ(2),DA(1),33,"
- .K DD,DO D FILE^DICN Q:+Y<0  S DA=+Y
+ .;K DD,DO D FILE^DICN Q:+Y<0  S DA=+Y  ;abm*2.6*8 5010
+ .K DD,DO D FILE^DICN Q:+Y<0  S (DA,ABMXANS)=+Y  ;abm*2.6*8 5010
 E ;EDIT LINE ITEM
  I $E(ABM("ACTION"))="D" D  Q
  .K DIR S DIR(0)="LO^1:"_ABMZ("NUM")_":0"
@@ -102,12 +103,14 @@ E ;EDIT LINE ITEM
  ...D ^DIK
  ;
  I $E(ABM("ACTION"))="E" D
- .I ABMZ("NUM")=1 S (DA,Y)=$P(ABMZ(1),U,2) Q
+ .;I ABMZ("NUM")=1 S (DA,Y)=$P(ABMZ(1),U,2) Q  ;abm*2.6*8
+ .I ABMZ("NUM")=1 S (DA,Y,ABMXANS)=$P(ABMZ(1),U,2) Q  ;abm*2.6*8
  .K DIR S DIR(0)="NO^1:"_ABMZ("NUM")_":0"
  .S DIR("?")="Enter the Sequence Number of "_ABMZ("ITEM")_" to Edit",DIR("A")="Sequence Number to EDIT"
  .D ^DIR K DIR
  .G XIT:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)!(+Y'>0)
- .W !!!,"[",+Y,"]  ",$P(ABMZ(+Y),U) S DA=$P(ABMZ(+Y),U,2)
+ .;W !!!,"[",+Y,"]  ",$P(ABMZ(+Y),U) S DA=$P(ABMZ(+Y),U,2)  ;abm*2.6*8 5010
+ .W !!!,"[",+Y,"]  ",$P(ABMZ(+Y),U) S (DA,ABMXANS)=$P(ABMZ(+Y),U,2)  ;abm*2.6*8 5010
 E2 ;
  G XIT:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)!(+Y'>0)
  S ABMZ("ADACODE")=$P($G(^ABMDCLM(DUZ(2),DA(1),33,DA,0)),U)
@@ -126,4 +129,36 @@ E2 ;
  S DR=".09//1" D ^DIE Q:$D(Y)
  S DR=".08//"_ABMZ("CHRG") D ^DIE Q:$D(Y)
  S DR=".17///M" D ^DIE
+ D PROV  ;abm*2.6*8 5010
  Q
+ ;start new code abm*2.6*8 5010
+PROV ;EP
+ I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),DA,"P",0))>0 D
+ .W !
+ .S ABMIEN=0
+ .F  S ABMIEN=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),DA,"P",ABMIEN)) Q:+ABMIEN=0  D
+ ..W !?5,$P($G(^VA(200,$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),DA,"P",ABMIEN,0)),U),0)),U)
+ ..W ?40,$S($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),DA,"P",ABMIEN,0)),U,2)="R":"RENDERING",$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),DA,"P",ABMIEN,0)),U,2)="D":"ORDERING",1:"")
+ .W !
+ K DIC,DR,DIE,DA
+ S DA(2)=ABMP("CDFN")
+ S DA(1)=ABMXANS
+ S DIC="^ABMDCLM(DUZ(2),"_DA(2)_","_ABMZ("SUB")_","_DA(1)_",""P"","
+ S DIC(0)="AELMQ"
+ S ABMFLNM="9002274.30"_$G(ABMZ("SUB"))
+ S DIC("P")=$P($G(^DD(ABMFLNM,.18,0)),U,2)
+ Q:DIC("P")=""
+ S DIC("DR")=".01;.02//RENDERING"
+ I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),DA(1),"P","C","R",0))>0 S DIC("DR")=".01;.02//ORDERING"
+ D ^DIC
+ K DIC,DR,DIE,DA
+ I +Y>0,(+$P(Y,U,3)=0) D
+ .K DIE,DA,DR
+ .S DA(2)=ABMP("CDFN")
+ .S DA(1)=ABMXANS
+ .S DIE="^ABMDCLM(DUZ(2),"_DA(2)_","_ABMZ("SUB")_","_DA(1)_",""P"","
+ .S DA=+Y
+ .S DR=".01//;.02"
+ .D ^DIE
+ Q
+ ;end new code abm*2.6*8

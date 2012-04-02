@@ -1,22 +1,23 @@
 SDLTP ;ALB/LDB - PRINT SCHEDULING LETTERS ; [ 01/02/2004  9:07 AM ]
- ;;5.3;Scheduling;**79,106,170,80**;Aug 13, 1993
+ ;;5.3;Scheduling;**79,106,170,80,1013**;Aug 13, 1993
  ;IHS/ANMC/LJF 8/18/2000 set DIC(W) to warn if clinic inactivated
  ;                       added variables to kill list
+ ;ihs/cmi/maw 05/02/2011 added W to allowable letters to print
  ;
-R D EXIT S SD9=0,SDLT=1,DIC=407.6,DIC(0)="AEQMZ",DIC("A")="SELECT THE TYPE OF LETTER TO PRINT: ",DIC("S")="I ""^A^C^N^P^""[(""^""_$P($G(^(0)),U)_""^"")" D ^DIC G:Y'>0 EXIT S L0=Y(0,0) K DIC,DA
+R D EXIT S SD9=0,SDLT=1,DIC=407.6,DIC(0)="AEQMZ",DIC("A")="SELECT THE TYPE OF LETTER TO PRINT: ",DIC("S")="I ""^A^C^N^P^W^""[(""^""_$P($G(^(0)),U)_""^"")" D ^DIC G:Y'>0 EXIT S L0=Y(0,0) K DIC,DA  ;ihs/cmi/maw 5/2/2011 PATCH 1013 added W
 R1 R !,"PRINT LETTER ASSIGNED TO THE CLINIC(S)" S %=1 D YN^DICN G:'% HELP1 G:%<0 EXIT I %=1 S SDLET=0 G DIV
 R2 K DIC,X,Y S DIC=407.5,DIC("S")="I $P(^(0),""^"",2)="_""""_L0_"""",DIC(0)="AEQMZ" D ^DIC G:Y'>0 EXIT S SDLET=+Y
-DIV S SDLT1=SDLET,SDV1=$O(^DG(40.8,0)) K DIC,X,Y I $D(^DG(43,1,"GL")),$P(^("GL"),"^",2) S DIC=40.8,DIC(0)="AEQM" D @($S(L0="P":"PALST",L0="C":"CNLET",L0="N":"NSLET1",1:"PCNLET")_"^SDDIV") G:+Y<0 R S SDV1=+Y
+DIV S SDLT1=SDLET,SDV1=$O(^DG(40.8,0)) K DIC,X,Y I $D(^DG(43,1,"GL")),$P(^("GL"),"^",2) S DIC=40.8,DIC(0)="AEQM" D @($S(L0="P":"PALST",L0="C":"CNLET",L0="N":"NSLET1",L0="W":"WLLET",1:"PCNLET")_"^SDDIV") G:+Y<0 R S SDV1=+Y  ;ihs/cmi/maw P1013
  S VAUTD=0,VAUTD(SDV1)=$P(^DG(40.8,SDV1,0),"^"),SDFORM=0,SDTIME="*" I $D(^DG(40.8,SDV1,"LTR")),^("LTR") S SDFORM=1
 L0 I L0="C" D IND G:$D(DTOUT)!(%=-1) R
- S VAUTNI=2 I "AP"[L0!(L0="C"&(SD9)) D PC G:S1=-1 R I "Pp"[S1 D PAT G R:Y<0,DATE
+ S VAUTNI=2 I "APW"[L0!(L0="C"&(SD9)) D PC G:S1=-1 R I "Pp"[S1 D PAT G R:Y<0,DATE  ;ihs/cmi/maw 05/02/2011 added W
  S SDCONC="B" I L0="P" D NCOUNT^SDAL0 I SDCONC=U G R
  D NCLINIC^SDAL0 G:Y<0 R I VAUTC D EX G:%Y="^"!($D(DTOUT)) R I $D(X),X="^" G R
  ;IHS/ITSC/WAR 11/6/03 Commented out 1 line, beginnig with I L0="P"
 DATE ;N %DT D DATE^SDUTL G:POP&('$D(SDBD)) EXIT G:POP&(X="^") EXIT S:'$D(SDED) SDED=SDBD S L2=$S(L0="C"&('SD9):"BEG1^SDC0",L0="N":"BC^SDN1",L0="P":"^SDL1",1:"^SDCNL")
  ;I L0="P" S SDBD=DT,SDED=$$FMADD^XLFDT(DT,365) S L2="^SDL1" G QUE  ;IHS/ANMC/LJF 11/02/2001  don't ask dates for pre-appt letters
  I L0="P" S SDT00="AEF"   ;IHS/ITSC/LJF 1/2/04 assume future dates for pre-appt letters
- N %DT D DATE^SDUTL G:POP&('$D(SDBD)) EXIT G:POP&(X="^") EXIT S:'$D(SDED) SDED=SDBD S L2=$S(L0="C"&('SD9):"BEG1^SDC0",L0="N":"BC^SDN1",L0="P":"^SDL1",1:"^SDCNL")
+ N %DT D DATE^SDUTL G:POP&('$D(SDBD)) EXIT G:POP&(X="^") EXIT S:'$D(SDED) SDED=SDBD S L2=$S(L0="C"&('SD9):"BEG1^SDC0",L0="N":"BC^SDN1",L0="P":"^SDL1",L0="W":"^SDL1",1:"^SDCNL")  ;ihs/cmi/maw 05/02/2011 added W
 QUE S DGPGM=L2,DGVAR="SDCONC^SDLT^SDFORM^SDV1^SDLT1^SDLET^VAUTD#^SDBD^SDED"_$S($D(VAUTNALL):"^VAUTNALL",1:"")_$S($D(VAUTC):"^VAUTC#",1:"")_$S($D(VAUTN):"^VAUTN#",1:"")
  S DGVAR=DGVAR_$S(L2="^SDCNL":"^SD9",1:"^SDTIME")_$S($D(S1):"^S1",1:"")_$S($D(SDVAUTC):"^SDVAUTC#",1:"")
  D ZIS^DGUTQ G:POP EXIT

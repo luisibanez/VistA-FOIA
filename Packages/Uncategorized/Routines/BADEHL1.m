@@ -1,5 +1,7 @@
-BADEHL1 ;IHS/MSC/MGH/PLS - Dentrix HL7 interface  ;07-Jan-2010 12:22;PLS
- ;;1.0;DENTAL/EDR INTERFACE;;Oct 13, 2009
+BADEHL1 ;IHS/MSC/MGH/PLS/VAC/AMF - Dentrix HL7 interface  ;17-Nov-2010;AMF
+ ;;1.0;DENTAL/EDR INTERFACE;**1**;AUG 22, 2011
+ ;; Modified - IHS/MSC/AMF - 11/23/10 - More descriptive alert messages
+ ;; Modified - IHS/MSC/VAC, IHS/SAIC/FJE, IHS/MSC/PLS,AMF - 9/10/10,1/3/11 - Fix for DUZ(2) problem
  Q
  ; Build Outbound A28 or A31 HL7 segments
 NEWMSG(DFN,EVNTTYPE) ;EP
@@ -10,7 +12,7 @@ NEWMSG(DFN,EVNTTYPE) ;EP
  S HLPM("EVENT")=EVNTTYPE
  S HLPM("VERSION")=2.4
  I '$$NEWMSG^HLOAPI(.HLPM,.HLST,.ERR) D  Q
- .D NOTIF(DFN,"Unable to build HL7 message."_$S($D(ERR):" ERR:"_$G(ERR),1:""))
+ .D NOTIF(DFN,"Unable to build HL7 message. "_$G(ERR)) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  S HLFS=HLPM("FIELD SEPARATOR")
  S HLECH=HLPM("ENCODING CHARACTERS")
  S HL1("ECH")=HLECH
@@ -40,7 +42,7 @@ NEWMSG(DFN,EVNTTYPE) ;EP
  .S WHO("FACILITY LINK NAME")="DENTRIX"
  .;S WHO("STATION NUMBER")=11555  ;Used for testing on external RPMS system
  .I '$$SENDONE^HLOAPI1(.HLST,.APPARMS,.WHO,.ERR) D
- ..D NOTIF(DFN,"Unable to send HL7 message."_$S($D(ERR):" ERR:"_$G(ERR),1:""))
+ ..D NOTIF(DFN,"Unable to send HL7 message. "_$G(ERR)) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
  ;
 AACK ; EP - Application ACK callback - called when AA, AE or AR is received.
@@ -71,13 +73,13 @@ CACK ; EP - Commit ACK callback - called when CA, CE or CR is received.
  ; Send Notification to group
  ; Input: DFN = Patient
  ;        MSG = Main message
-NOTIF(DFN,MSG) ;EP
- N PNAM,PVDIEN,RET,X,SAVE
+NOTIF(DFN,MSG) ;EP ----- IHS/MSC/AMF 11/23/10 More descriptive alert
+ N PVDIEN,RET,X,SAVE,STR,LEN
  N XQA,XQAID,XQADATA,XQAMSG
- S PNAM=$P($G(^DPT(DFN,0)),U,1)
- I $L(PNAM)>15 S PNAM=$E(PNAM,1,15)
- S XQAMSG=PNAM_" "
- S XQAMSG=XQAMSG_$G(MSG)
+ S LEN=$L("Patient:  ["_DFN_"]. "_$G(MSG))
+ S STR=$P($G(^DPT(DFN,0)),U,1) I ($L(STR)+LEN)>70 S STR=$E(STR,1,(67-LEN))_"..."
+ S XQAMSG="Patient: "_STR_" ["_DFN_"]. "_$G(MSG)
+ ; ----- end IHS/MSC/AMF 11/23/10 
  S XQAID="ADEN,"_DFN_","_50
  S XQDATA="DFN="_DFN
  S XQA("G.RPMS DENTAL")=""
@@ -105,35 +107,44 @@ EVN(EVNTTYPE) ;Create the EVN segment
  D SET(.ARY,X,2)
  D SET(.ARY,"01",4)
  S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF(EVNTTYPE,"EVT segment could not be created")
+ I $D(ERR) D NOTIF($G(DFN),"Can't create EVN. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
  ; Create PID segment
 PID(DFN) ;EP
  N PID,HRCN,FLD,LP,VAL,ASU
- Q:'$G(DFN)
- Q:$G(^DPT(DFN,0))=""
- Q:$P($G(^DPT(DFN,0)),U,1)=""
+ ;Q:'$G(DFN)
+ I '$G(DFN) S ERR="PID ERROR" D NOTIF(DFN,"Can't create PID for:  "_DFN) Q  ;SAIC/FJE 08/04/2011
+ ;Q:$G(^DPT(DFN,0))=""
+ I $G(^DPT(DFN,0))="" S ERR="PID ERROR" D NOTIF(DFN,"Can't create PID for:  "_DFN) Q  ;SAIC/FJE 08/04/2011
+ ;Q:$P($G(^DPT(DFN,0)),U,1)=""
+ I $P($G(^DPT(DFN,0)),U,1)="" S ERR="PID ERROR" D NOTIF(DFN,"Can't create PID for:  "_DFN) Q  ;SAIC/FJE 08/04/2011
  N ASU,PID,SGM,X,LP,VAL,HLQ,MSTS
  S HLQ=HL1("Q")
  S PID=$$EN^VAFHLPID(DFN,"2,3,5,6,7,8,11,13,14,16,17,19,",1)
- Q:PID=""
+ ;Q:PID=""
+ I PID="" S ERR="PID ERROR" D NOTIF(DFN,"Can't create PID for:  "_DFN) Q  ;SAIC/FJE 08/04/2011
  D SET(.ARY,"PID",0)
  D SET(.ARY,1,1)
  D SET(.ARY,DFN,2)
+ ;IHS/MSC/PLS,AMF 1/3/11 Fix for DUZ problem
  ;S HRCN=$$HRCNF^BDGF2(DFN,DUZ(2))
- S HRCN=$$GETCHART(DFN,DUZ(2))
- I '+HRCN S ERR="No health record number for "_DFN D NOTIF(DFN,ERR) Q
- D SET(.ARY,HRCN,3,1)  ; Patient HRN
+ ;S HRCN=$$GETCHART(DFN,DUZ(2))
+ S HRCN=$$FINDHRN(DFN,$S($G(AGDUZ2):AGDUZ2,1:DUZ(2)))
+ ;end fix for DUZ problem
+ S ASU=0
+ S ASU=$$ASUFAC^BADEHL1(DFN)
+ I ASU=0 I '$G(BADELOAD) S ERR="PID ERROR" D NOTIF(DFN,"No ASUFAC.  Can't create PID.") Q  ;SAIC/FJE 08/04/2011;IHS/MSC/AMF 11/23/10 More descriptive alert
+ I '$G(BADELOAD) I '+HRCN S ERR="PID ERROR" D NOTIF(DFN,"No HRN.  Can't create PID.") Q  ;SAIC/FJE 08/04/2011;IHS/MSC/AMF 11/23/10 More descriptive alert
+ D SET(.ARY,$P(HRCN,U),3,1) ; Patient HRN IHS/MSC/AMF 1/3/11 DUZ problem
  ;D SET(.ARY,"MR",3,5)  ; Medical Record
- S ASU=$$ASUFAC^BADEHL1(DFN)  ;Get all HRCNs for this patient
- I ASU=0 S ERR="No ASUFAC record number for :"_DFN D NOTIF(DFN,ERR) Q
+ ;S ASU=$$ASUFAC^BADEHL1(DFN)  ;Get all HRCNs for this patient
  S FLD=$P(PID,HLFS,6)  ; Patient Name
- I FLD="" S ERR="No name for "_DFN D NOTIF(DFN,ERR) Q
+ I FLD="" S ERR="PID ERROR" D NOTIF(DFN,"No name.  Can't create PID.") Q  ;SAIC/FJE 08/04/2011;IHS/MSC/AMF 11/23/10 More descriptive alert
  F LP=1:1:$L(FLD,$E(HLECH)) S VAL=$P(FLD,$E(HLECH),LP) D
  .D SET(.ARY,VAL,5,LP)
  D SET(.ARY,"L",5,7)
  D ALIAS(DFN)
- I $P(PID,HLFS,8)="" S ERR="No DOB for "_DFN D NOTIF(DFN,ERR) Q
+ I $P(PID,HLFS,8)="" S ERR="PID ERROR" D NOTIF(DFN,"No Date of Birth.  Can't create PID.") Q  ;SAIC/FJE 08/04/2011;IHS/MSC/AMF 11/23/10 More descriptive alert
  S FLD=$$HLNAME^XLFNAME($$GET1^DIQ(2,DFN,.2403))  ; Mother's Maiden Name
  F LP=1:1:$L(FLD,$E(HLECH)) S VAL=$P(FLD,$E(HLECH),LP) D
  .D SET(.ARY,VAL,6,LP)
@@ -162,12 +173,13 @@ PID(DFN) ;EP
  D SET(.ARY,$P(PID,HLFS,20),19)  ; Patient SSN
  D SET(.ARY,$$HLDATE^HLFNC($$GET1^DIQ(2,DFN,.351,"I"),"TS"),29)  ; Patient Date of Death
  S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF(DFN,ERR)
+ I $D(ERR) D NOTIF(DFN,"Can't create PID. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
  ;Add Aliases to segment
 ALIAS(DFN) ;EP
  N AL,FLD,LP,ALN,CNT
- Q:'$G(DFN)
+ ;Q:'$G(DFN)
+ I '$G(DFN) S ERR="ALAIS ERROR" D NOTIF(DFN,"Can't create PID for:  "_DFN) Q  ;SAIC/FJE 08/04/2011
  S CNT=2
  S AL=0 F  S AL=$O(^DPT(DFN,.01,AL)) Q:'AL  D
  .S ALN=$P(^DPT(DFN,.01,AL,0),U)
@@ -179,7 +191,8 @@ ALIAS(DFN) ;EP
  Q
  ; Create Primary Provider segment
 PD1(DFN) ;EP
- Q:'$G(DFN)
+ ;Q:'$G(DFN)
+ I '$G(DFN) S ERR="PID ERROR" D NOTIF(DFN,"Can't create PID for:  "_DFN) Q  ;SAIC/FJE 08/04/2011
  N PPRV,FLD,LP,PD1
  D SET(.ARY,"PD1",0)
  S PPRV=$$GET1^DIQ(9000001,DFN,.14,"I")
@@ -187,7 +200,7 @@ PD1(DFN) ;EP
  F LP=1:1:$L(FLD,$E(HLECH)) S VAL=$P(FLD,$E(HLECH),LP) D
  .D SET(.ARY,VAL,4,LP)
  S PD1=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- I $D(ERR) D NOTIF(DFN,ERR)
+ I $D(ERR) D NOTIF(DFN,"Can't create PD1. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
  ; Create next of kin and emergency contact segment
 NK1 ;EP
@@ -229,7 +242,7 @@ NK1 ;EP
  .D SET(.ARY,K,7)
  .D SET(.ARY,$S(K="EC":"Emergency Contact",K="NOK":"Next of Kin",1:""),7,2)
  .S NK1=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- .I $D(ERR) D NOTIF(DFN,ERR)
+ .I $D(ERR) D NOTIF(DFN,"Can't create NK1. "_ERR) ;IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
 ASUFAC(DFN) ;Set up all the ASUFAC numbers for this patient
  N IEN,DATA,LOC,HRN,DATE,ASUFAC,FAC,LP,VAL,REP,PART
@@ -248,6 +261,15 @@ ASUFAC(DFN) ;Set up all the ASUFAC numbers for this patient
  Q 1
 GETCHART(P,L) ;
  N S,C,%
+ ; ----- IHS/SAIC/FJE 11/5/2010 
+ S (X,LL)=0 F  S X=$O(^AUPNPAT(P,41,X)) Q:+X=0!(LL=L)  D
+ .S Y=$G(^AUPNPAT(P,41,X,0))
+ .Q:$L($P(Y,"^",3))
+ .Q:'$L($P(Y,"^",2))
+ .S LL=$P(Y,"^",1)
+ I +LL I LL'=L S L=LL
+ K LL,X,Y
+ ; ----- end IHS/SAIC/FJE 11/5/2010
  S S=$P(^AUTTLOC(L,0),U,10)
  I S="" Q S
  S S=$E("000000",1,6-$L(S))_S
@@ -257,6 +279,27 @@ GETCHART(P,L) ;
  S %=S_C
  Q %
  ; Create MSA segment
+ ; ----- IHS/MSC/PLS,AMF 1/3/2011 
+FINDHRN(PAT,LOC) ;DD
+ N L,RET,X
+ S RET=""
+ S X=$G(^AUPNPAT(PAT,41,LOC,0))
+ I $L($P(X,U,2)),'$P(X,U,3) S RET=$$FMTHRN(LOC,$P(X,U,2))
+ I RET="" D
+ .S L=0 F  S L=$O(^AUPNPAT(PAT,41,L)) Q:'L  D  Q:$L(RET)
+ ..S X=$G(^AUPNPAT(PAT,41,L,0))
+ ..Q:$P(X,U,3)  ;Inactivated entry
+ ..Q:'$L($P(X,U,2))  ;No HRN
+ ..S RET=$$FMTHRN(L,$P(X,U,2))_U_-1_U_LOC
+ Q RET
+FMTHRN(L,HRN) ;
+ N S
+ S S=$P(^AUTTLOC(L,0),U,10)
+ I S="" Q S
+ S S=$E("000000",1,6-$L(S))_S
+ Q:'$L(HRN) HRN
+ S HRN=$E("000000",1,6-$L(HRN))_HRN
+ Q S_HRN
 MSA ;EP
  N MSA
  D SET(.ARY,"MSA",0)

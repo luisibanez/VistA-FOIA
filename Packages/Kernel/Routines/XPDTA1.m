@@ -1,5 +1,6 @@
-XPDTA1 ;SFISC/RSD - Build Actions for Kernel Files Cont. ;08/27/2007
- ;;8.0;KERNEL;**44,68,85,131,302,399**;Jul 10, 1995;Build 12
+XPDTA1 ;SFISC/RSD - Build Actions for Kernel Files Cont. ;06/24/2008
+ ;;8.0;KERNEL;**44,68,85,131,302,399,507**;Jul 10, 1995;Build 13
+ ;Per VHA Directive 2004-038, this routine should not be modified.
  Q
  ;^XTMP("XPDT",XPDA,"KRN",XPDFILE,DA) is the global root
  ;DA=ien in ^XTMP,XPDNM=package name, XPDA=package ien in ^XPD(9.6,
@@ -13,7 +14,8 @@ HELP ;help frames #9.2
  .I $L(%2) S $P(^XTMP("XPDT",XPDA,"KRN",9.2,DA,10,%,0),U)=%2 Q
  .K ^XTMP("XPDT",XPDA,"KRN",9.2,DA,10,%)
  ;kill under Related Frame (2) "B" x-ref
- K ^XTMP("XPDT",XPDA,"KRN",9.2,DA,2,"B") S %=0
+ K ^XTMP("XPDT",XPDA,"KRN",9.2,DA,2,"B")
+ S %=0
  ;loop thru Related Frame (2) and resolve Related Frame (2;2)
  ;kill if it doesn't resolve
  F  S %=$O(^XTMP("XPDT",XPDA,"KRN",9.2,DA,2,%)) Q:'%  S %1=$P($G(^(%,0)),U,2) D
@@ -25,18 +27,22 @@ BUL ;bulletines #3.6
  ;kill Mailgroups (2)
  K ^XTMP("XPDT",XPDA,"KRN",XPDFILE,DA,2)
  Q
-KEY ;security keys entry action #19
- ;Repoint SUBORDINATE (3) and MUTUALLY EXCLUSIVE KEYS (5).
+KEY ;security keys entry action #19.1
+ ;Repoint SUBORDINATE (3) and MUTUALLY EXCLUSIVE KEYS (5), kill "B" x-ref
  N %,%1,%2 S %=0
- F  S %=$O(^XTMP("XPDT",XPDA,"KRN",XPDFILE,DA,3,%)) Q:%'>0  S %1=+$G(^(%,0))  D
- . S %2=$$PT^XPDTA("^DIC("_XPDFILE_")",%1)
- . I $L(%2) S $P(^XTMP("XPDT",XPDA,"KRN",XPDFILE,DA,3,%,0),U,1)=%2 Q
- . K ^XTMP("XPDT",XPDA,"KRN",XPDFILE,DA,3,%)
+ F  S %=$O(^XTMP("XPDT",XPDA,"KRN",19.1,DA,3,%)) Q:%'>0  S %1=+$G(^(%,0)) D
+ . S %2=$$PT^XPDTA("^DIC(19.1)",%1)
+ . I $L(%2) S $P(^XTMP("XPDT",XPDA,"KRN",19.1,DA,3,%,0),U,1)=%2 Q
+ . K ^XTMP("XPDT",XPDA,"KRN",19.1,DA,3,%)
+ ;kill "B" x-ref
+ K ^XTMP("XPDT",XPDA,"KRN",19.1,DA,3,"B")
  S %=0
- F  S %=$O(^XTMP("XPDT",XPDA,"KRN",XPDFILE,DA,5,%)) Q:%'>0  S %1=+$G(^(%,0))  D
- . S %2=$$PT^XPDTA("^DIC("_XPDFILE_")",%1)
- . I $L(%2) S $P(^XTMP("XPDT",XPDA,"KRN",XPDFILE,DA,5,%,0),U,1)=%2 Q
- . K ^XTMP("XPDT",XPDA,"KRN",XPDFILE,DA,5,%)
+ F  S %=$O(^XTMP("XPDT",XPDA,"KRN",19.1,DA,5,%)) Q:%'>0  S %1=+$G(^(%,0)) D
+ . S %2=$$PT^XPDTA("^DIC(19.1)",%1)
+ . I $L(%2) S $P(^XTMP("XPDT",XPDA,"KRN",19.1,DA,5,%,0),U,1)=%2 Q
+ . K ^XTMP("XPDT",XPDA,"KRN",19.1,DA,5,%)
+ ;kill "B" x-ref
+ K ^XTMP("XPDT",XPDA,"KRN",19.1,DA,5,"B")
  Q
 MAILG ;MAIL GROUP #3.8
  ;remove REFERENCE COUNT (0;4), LAST REFERENCE (0;5), COORDINATOR (0;7)
@@ -46,10 +52,10 @@ MAILG ;MAIL GROUP #3.8
  ;kill MEMBER (1;0), AUTHORIZE SENDER (4;0), DISTRIBUTION LIST (7;0)
  ;p399 add MEMBERS-REMOTE (6;0)
  K ^XTMP("XPDT",XPDA,"KRN",3.8,DA,1),^(4),^(7),^(6)
- ;kill MEMBER GROUP "B" x-ref
+ ;kill MEMBER GROUP "B" x-ref 
  K ^XTMP("XPDT",XPDA,"KRN",3.8,DA,5,"B") S %=0
  ;loop thru MEMBER GROUP and resolve (5;0)
- F  S %=$O(^XTMP("XPDT",XPDA,"KRN",3.8,DA,5,%)) Q:'%  S %1=$P($G(^(%,0)),U)  D
+ F  S %=$O(^XTMP("XPDT",XPDA,"KRN",3.8,DA,5,%)) Q:'%  S %1=$P($G(^(%,0)),U) D
  .S %2=$$PT^XPDTA("^XMB(3.8)",%1)
  .I $L(%2) S $P(^XTMP("XPDT",XPDA,"KRN",3.8,DA,5,%,0),U)=%2 Q
  .K ^XTMP("XPDT",XPDA,"KRN",3.8,DA,5,%)

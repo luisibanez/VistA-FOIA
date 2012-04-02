@@ -1,5 +1,5 @@
 BGPMUA05 ; IHS/MSC/MGH - MI measure NQF0013 ;22-Mar-2011 10:16;DU
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;Code to collect meaningful use report for hypertension and BP reading
 ENTRY ;EP
  N START,END,BGPNUM,BGPDEN,AENC,BENC,STRING,STRING1,STRING2,BGPHYPER,BGPHYPL
@@ -14,7 +14,7 @@ ENTRY ;EP
  ;No need to check further if no age match
  Q:BGPAGEE<18
  S CNT=0
- S FIRST=END-1 F  S FIRST=$O(^AUPNVSIT("AA",DFN,FIRST)) Q:FIRST=""!($P(FIRST,".",1)>START)  D
+ S FIRST=END-0.1 F  S FIRST=$O(^AUPNVSIT("AA",DFN,FIRST)) Q:FIRST=""!($P(FIRST,".",1)>START)  D
  .S IEN=0 F  S IEN=$O(^AUPNVSIT("AA",DFN,FIRST,IEN)) Q:'+IEN  D
  ..;Check provider, Only visits for chosen provider
  ..Q:'$$PRV^BGPMUUT1(IEN,BGPPROV)

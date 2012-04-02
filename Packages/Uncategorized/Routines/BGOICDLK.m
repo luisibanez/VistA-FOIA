@@ -1,5 +1,5 @@
-BGOICDLK ; IHS/BAO/TMD - FHL - PROGRAM TO GET LIST OF DIAGNOSES ;10-May-2011 13:29;DU
- ;;1.1;BGO COMPONENTS;**1,3,6,8**;Mar 20, 2007
+BGOICDLK ; IHS/BAO/TMD - FHL - PROGRAM TO GET LIST OF DIAGNOSES ;01-Jun-2011 13:24;DU
+ ;;1.1;BGO COMPONENTS;**1,3,6,8,9**;Mar 20, 2007
  ;---------------------------------------------------------------
  ; Lookup ICD's matching input
  ;  INP = Lookup Value [1] ^ Use Lexicon [2] ^ Visit Date [3] ^
@@ -70,7 +70,10 @@ CHKHITS Q:$D(@RET@(0,ICD))  S ^(ICD)=""
  .S IEN=$$ICDDX^ICDCODE(ICD,VDT)
  .I IEN>0&($P(IEN,U,10)=1) D     ;PATCH 8
  ..S CNT=CNT+1
- ..S @RET@(CNT)=$P(IEN,U,4)_U_ICD_U_$P(IEN,U,4)_U_$P(IEN,U,2)
+ ..;Patch 9
+ ..S NARR=$G(^ICD9(ICD,1))
+ ..I NARR="" S NARR=$P(IEN,U,4)
+ ..S @RET@(CNT)=$P(IEN,U,4)_U_ICD_U_NARR_U_$P(IEN,U,2)
  E  D
  .S REC=$G(^ICD9(ICD,0))
  .Q:$P(REC,U,9)

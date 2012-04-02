@@ -1,5 +1,5 @@
 SDN ;SF/GFT,ALB/LDB - RECORD NO SHOWS ; [ 09/13/2001  2:35 PM ]
- ;;5.3;Scheduling;**32,79**;Aug 13, 1993
+ ;;5.3;Scheduling;**32,79,1013**;Aug 13, 1993
  ;IHS/ANMC/LJF 11/09/2000 allow rebook & print letters anytime
  ;             11/30/2000 changed $N to $O
  ;             12/01/2000 added ability to select letter to print
@@ -25,6 +25,7 @@ EN1 ; -- entry pt for protocol action
  I SDSTAT=""!(SDSTAT="NT") D  G 72
  .N SDNSHDL,SDDA S SDNSHDL=$$HANDLE^SDAMEVT(1),SDDA=$$FIND^SDAM2(DFN,I,SC)
  .S SDDTM=I D BEFORE^SDAMEVT(.SDATA,DFN,SDDTM,SC,SDDA,SDNSHDL)
+ .I '$G(I) S I=SDDTM  ;ihs/cmi/maw 11/22/2010 patch 1013 bug found at swinomish, call to BEFORE^SDAMEVT calls OE which apparently messes up I
  .S $P(^DPT(+DFN,"S",I,0),U,2)="N",$P(^(0),"^",14)=SDTIME S:$D(DUZ) $P(^(0),"^",12)=DUZ
  .S:'SDYES SDYES=1
  .S:'$D(^UTILITY($J,"CL",DFN,SC,I))&(SDSTAT'="C") ^(I)=""

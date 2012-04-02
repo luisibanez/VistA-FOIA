@@ -1,11 +1,11 @@
 LRWLST1 ;DALOI/CJS/RWF/FHS - ACCESSION SETUP ;JUL 06, 2010 3:14 PM
- ;;5.2;LAB SERVICE;**48,65,121,153,261,286,1027**;NOV 01, 1997
- ;;5.2;LAB SERVICE;**121,128,153,202,286**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**1027,1030**;NOV 01, 1997
+ ;;5.2;LAB SERVICE;**48,65,121,128,153,202,261,286**;Sep 27, 1994
  ;
  ; Reference to ^DIC(42 supported by IA #10039
  ; Reference to ^SC( supported by IA #10040
  ;
- D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("^LRWLST1 0.0")     ; IHS/OIT/MKK - LR*5.2*1027
+ D:+$P($G(^BLRSITE($G(DUZ(2)),0)),U,10) ENTRYAUD^BLRUTIL("^LRWLST1 0.0")     ; IHS/OIT/MKK - LR*5.2*1027
  ;
  S LRWLC=0
  F  S LRWLC=$O(LRTSTS(LRWLC)) Q:LRWLC<1  S LRAD=DT D SPLIT
@@ -15,7 +15,7 @@ LRWLST1 ;DALOI/CJS/RWF/FHS - ACCESSION SETUP ;JUL 06, 2010 3:14 PM
  . N LRDIE
  . D WP^DIE(69.01,LRSN_","_LRODT_",",16,"A","^LRO(69.6,LR696,99)","LRDIE(16)")
  ;
- D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("^LRWLST1 7.0")     ; IHS/OIT/MKK - LR*5.2*1027
+ D:+$P($G(^BLRSITE($G(DUZ(2)),0)),U,10) ENTRYAUD^BLRUTIL("^LRWLST1 7.0")     ; IHS/OIT/MKK - LR*5.2*1027
  ;
  K DIC,DLAYGO,DR,DA,DIE,LRIXX
  Q:$G(LRORDR)="P"
@@ -24,7 +24,7 @@ LRWLST1 ;DALOI/CJS/RWF/FHS - ACCESSION SETUP ;JUL 06, 2010 3:14 PM
  Q
  ;
 SPLIT ;
- D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("SPLIT^LRWLST1 0.0")     ; IHS/OIT/MKK - LR*5.2*1027
+ D:+$P($G(^BLRSITE($G(DUZ(2)),0)),U,10) ENTRYAUD^BLRUTIL("SPLIT^LRWLST1 0.0")     ; IHS/OIT/MKK - LR*5.2*1027
  ;
  N LRAA
  S LRUNQ=0,LREND=0
@@ -43,7 +43,7 @@ SPLIT ;
  . ; F  D GTWLN Q:LREND  D STWLN,ST2,^LRWLST11,EN^LA7ADL(LRUID) Q:$O(LRTSTS(LRWLC,1,LRAA,0))<1
  . F  D GTWLN Q:LREND  D STWLN,ST2,^LRWLST11,IHSLOG,EN^LA7ADL(LRUID)  Q:$O(LRTSTS(LRWLC,1,LRAA,0))<1    ; IHS/OIT/MKK - LR*5.2*1027
  ;
- D:$G(SNAPSHOT) ENTRYAUD^BLRUTIL("SPLIT^LRWLST1 9.0")     ; IHS/OIT/MKK - LR*5.2*1027
+ D:+$P($G(^BLRSITE($G(DUZ(2)),0)),U,10) ENTRYAUD^BLRUTIL("SPLIT^LRWLST1 9.0")     ; IHS/OIT/MKK - LR*5.2*1027
  Q
  ;
  ; ---- BEGIN IHS/OIT/MKK -- LR*5.2*1027
@@ -51,6 +51,9 @@ IHSLOG ; EP -- Create entry for PCC transfer
  Q:'BLRLOG
  ;
  D ^BLREVTQ("C","A",$G(BLROPT),,LRODT_","_LRSN_","_LRAA_","_LRAD_","_LRAN_","_LRACC)  ;IHS/OIRM TUC/AAB 12/12/96
+ ;
+ ;
+ Q
  ; ---- END IHS/OIT/MKK -- LR*5.2*1027
  ;
  ;
@@ -125,7 +128,8 @@ STWLN ; Set accession number
  . . S FDA(LRI,68.05,"+1,"_LR6802,.01)=$P(LRX,"^")
  . . D UPDATE^DIE("","FDA(LRI)","FDAIEN","LRDIE(LRI)")
  . . ; I $D(LRDIE(LRI)) D MAILALRT
- . . I $D(LRDIE(LRI)) D MAILALRT(LRI)  ; IHS/OIT/MKK - LR*5.2*1027
+ . . ; I $D(LRDIE(LRI)) D MAILALRT(LRI)  ; IHS/OIT/MKK - LR*5.2*1027
+ . . I $D(LRDIE(LRI)) D MAILALRT("3 ("_LRI_")")  ; IHS/OIT/MKK - LR*5.2*1030
  ;
  ; Create UID.
  S LRUID=$$LRUID^LRX(LRAA,LRAD,LRAN)
@@ -138,6 +142,7 @@ STWLN ; Set accession number
  D UPD696
  ;
  L -^LRO(68,LRAA,1,LRAD,1,0)
+ ;
  Q
  ;
  ;
@@ -179,7 +184,8 @@ ST2 ; Find next available node in LR global
  I LRX D UPDATE^DIE("","FDA(63)","FDAIEN","LRDIE(63)")
  ;
  ; I $D(LRDIE(63)) D MAILALRT
- I $D(LRDIE(63)) D MAILALRT(63)   ; IHS/OIT/MKK - LR*5.2*1027
+ ; I $D(LRDIE(63)) D MAILALRT(63)   ; IHS/OIT/MKK - LR*5.2*1027
+ I $D(LRDIE(63)) D MAILALRT(4)   ; IHS/OIT/MKK - LR*5.2*102
  ;
  ; Uncomment following code when new field .9 in"MI" subscript is released
  ;I LRSS="MI" D
@@ -263,7 +269,8 @@ CHECK68(LRAA,LRAD) ; Check for/set header node of ^LRO(68) 68.01 subfile.
  . S (FDAIEN(1),FDA(1,68.01,"+1,"_LRAA_",",.01))=LRAD
  . D UPDATE^DIE("","FDA(1)","FDAIEN","LRDIE(1)")
  . ; I $D(LRDIE(1)) D MAILALRT
- . I $D(LRDIE(1)) D MAILALRT(1)   ; IHS/OIT/MKK - LR*5.2*1027
+ . ; I $D(LRDIE(1)) D MAILALRT(1)   ; IHS/OIT/MKK - LR*5.2*1027
+ . I $D(LRDIE(1)) D MAILALRT(5)   ; IHS/OIT/MKK - LR*5.2*1030
  ;
  Q
  ;
@@ -291,7 +298,8 @@ SETAN(LRAA,LRAD,LRAN) ; Create stub entry in file #68 for this acession.
  S FDA(2,68.02,"+1,"_LR6802,.01)=LRDFN
  D UPDATE^DIE("","FDA(2)","FDAIEN","LRDIE(2)")
  ; I $D(LRDIE(2)) D MAILALRT
- I $D(LRDIE(2)) D MAILALRT(2)     ; IHS/OIT/MKK - LR*5.2*1027
+ ; I $D(LRDIE(2)) D MAILALRT(2)     ; IHS/OIT/MKK - LR*5.2*1027
+ I $D(LRDIE(2)) D MAILALRT(6)     ; IHS/OIT/MKK - LR*5.2*1030
  Q
  ;
  ;
@@ -308,8 +316,12 @@ MAILALRT(MSGN) ; Send mail message alert when FileMan DBS errors returned - IHS/
  ;
  S LRMTXT(1)="The following debugging information is provided to assist"
  S LRMTXT(2)="support staff in resolving error during accessioning."
- S LRMTXT(3)=" "
- S LRCNT=3
+ ; S LRMTXT(3)=" "
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030 -- Better identification of where error occurred
+ S LRMTXT(3)="     LRWLST1 Message #:"_$G(MSGN)
+ S LRMTXT(4)=" "
+ S LRCNT=4
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030
  ;
  F J="FDA","FDAIEN","LR68","LRAA","LRAD","LRAN","LRDFN","LRDIE","LRSS","LRTSTS","LRUNQ","LRWLC" D
  . S X=$G(@J)

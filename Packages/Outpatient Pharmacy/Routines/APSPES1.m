@@ -1,5 +1,5 @@
-APSPES1 ;IHS/MSC/PLS - SureScripts HL7 interface  ;13-Oct-2010 09:45;SM
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1008,1009**;Sep 23, 2004
+APSPES1 ;IHS/MSC/PLS - SureScripts HL7 interface  ;03-May-2011 09:59;PLS
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1008,1009,1011**;Sep 23, 2004;Build 17
  Q
  ; Build NewRx HL7 segments
 NEWRX(RXIEN) ;EP
@@ -15,6 +15,7 @@ NEWRX(RXIEN) ;EP
  .S ARY("REASON")="X"
  .S ARY("RX REF")=0
  .S ARY("COM")="E-Prescribe request failed"
+ .S ARY("TYPE")="F"
  .D UPTLOG^APSPFNC2(.RET,RXIEN,0,.ARY)
  S HLFS=HLPM("FIELD SEPARATOR")
  S HLECH=HLPM("ENCODING CHARACTERS")
@@ -43,10 +44,12 @@ NEWRX(RXIEN) ;EP
  .S ARY("REASON")="X"
  .S ARY("RX REF")=0
  .S ARY("COM")="E-Prescribe request failed"
+ .S ARY("TYPE")="F"
  .D UPTLOG^APSPFNC2(.RET,RXIEN,0,.ARY)
  E  D  ; Update activity log
  .S ARY("REASON")="X"
  .S ARY("RX REF")=0
+ .S ARY("TYPE")="T"
  .S ARY("COM")="E-Prescribe request sent to "_$$PHMINFO^APSPES2(RXIEN)
  .D UPTLOG^APSPFNC2(.RET,RXIEN,0,.ARY)
  Q
@@ -74,6 +77,7 @@ AACK ; EP - Application ACK callback - called when AA, AE or AR is received.
  .Q:'RXIEN
  .S ARY("REASON")="X"
  .S ARY("RX REF")=0
+ .S ARY("TYPE")="U"
  .S ARY("COM")="e-Pres update: Received acknowledgement from SureScripts"
  .D UPTLOG^APSPFNC2(.RET,+RXIEN,0,.ARY)
  Q
@@ -109,6 +113,7 @@ ARSP ; EP - callback for ORP/O10 event
  I AACK'="AA" D  Q
  .D BADORP
  .I RXIEN D
+ ..S ARY("TYPE")="F"
  ..S ARY("COM")="ERROR: Electronic Prescription did not transmit."
  ..D UPTLOG^APSPFNC2(.RET,RXIEN,0,.ARY)
  ..D NOTIF(RXIEN,"ERROR: Electronic Prescription did not transmit.")
@@ -121,6 +126,7 @@ ARSP ; EP - callback for ORP/O10 event
  ;.S:$G(OPRV) WHO(OPRV)=""
  ;.D BULL^APSPES2("HL7 ERROR","APSP e-Prescribing Interface",.WHO,.MSG)
  Q:'RXIEN
+ S ARY("TYPE")="U"
  S ARY("COM")="e-Pres update: Prescription delivered to pharmacy."  ;"e-Pres update: Received STATUS update."
  D UPTLOG^APSPFNC2(.RET,RXIEN,0,.ARY)
  Q
@@ -148,6 +154,7 @@ FAILURE ; EP
  S RXIEN=$$GET^HLOPRS(.SEGORC,2,1)
  Q:'RXIEN
  S ARY("REASON")="X"
+ S ARY("TYPE")="F"
  S ARY("COM")="e-Prescribing transmission failed."  ;_$$GET1^DIQ(2,DFN,.01)
  D UPTLOG^APSPFNC2(.RET,RXIEN,0,.ARY)
  D NOTIF(RXIEN,"Medication e-Prescribe order failed transmission!")
@@ -164,7 +171,7 @@ NOTIF(RXN,MSG) ;EP
  S PVDIEN=$$GET1^DIQ(52,RXN,4,"I")  ;TODO - change to Entering Person?
  S XQA(PVDIEN)=""
  S XQAMSG=XQAMSG_$G(MSG)
- S XQAID="OR"_","_DFN_","_50
+ S XQAID="OR"_","_DFN_","_99003
  S XQADATA=$$GET1^DIQ(52,RXN,39.3,"I")_"@"
  D SETUP^XQALERT
  Q

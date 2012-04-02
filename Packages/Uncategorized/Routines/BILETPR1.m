@@ -1,5 +1,5 @@
 BILETPR1 ;IHS/CMI/MWR - PRINT PATIENT LETTERS.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  BUILD ^TMP WP ARRAY FOR PRINTING LETTERS.
  ;
@@ -88,13 +88,15 @@ HISTORY(BILET,BILINE,BIDFN,BIPDSS) ;EP
  ;
  ;
  ;----------
-HISTORY1(BILINE,BIDFN,BIFORM,BINVAL,BIGBL,BIPDSS,BIHDRS,BINOSK,BILOC) ;EP
+HISTORY1(BILINE,BIDFN,BIFORM,BINVAL,BIGBL,BIPDSS,BIHDRS,BINOSK,BILOC,BIMMRF,BIMMLF) ;EP
  ;---> Retrieve and store Imm History in WP ^TMP global.
  ;---> Parameters:
  ;     1 - BILINE (ret) Last line written into ^TMP array.
  ;     2 - BIDFN  (req) Patient's IEN in VA PATIENT File #2.
  ;     3 - BIFORM (opt) 1=List by Date (default), 2=by Date w/Lot#,
- ;                      3=List by Vaccine, 4=Vaccine w/Lot#.
+ ;                      3=List by Vaccine, 4=by Vaccine w/Lot#,
+ ;                      5=by Date w/VFC, 6=by Vaccine w/VFC
+ ;                      7=by Date w/Lot & VFC, 8=by Vaccine w/Lot & VFC.
  ;     4 - BINVAL (opt) 0=Include Invalid Doses, 1=Exclude Invalid Doses.
  ;     5 - BIGBL  (opt) ^TMP global node to write to (def="BILET").
  ;     6 - BIPDSS (opt) Returned string of Visit IEN's that are
@@ -103,6 +105,8 @@ HISTORY1(BILINE,BIDFN,BIFORM,BINVAL,BIGBL,BIPDSS,BIHDRS,BINOSK,BILOC) ;EP
  ;     8 - BINOSK (opt) 0=Include Skin Tests, 1=Do not include Skin Tests
  ;                      2=Include Skin Tests ONLY (NO Immunizations).
  ;     9 - BILOC  (opt) 1=Add Location in the form: [4-char] for BIFORM 1&2.
+ ;    10 - BIMMRF (opt) Imms Received Filter array (subscript=CVX's included).
+ ;    11 - BIMMLF (opt) Lot Number Filter array (subscript=lot number text).
  ;
  S:$G(BIGBL)="" BIGBL="BILET"
  S:$G(BIFORM)="" BIFORM=1 S:$G(BINVAL)="" BINVAL=0
@@ -131,9 +135,10 @@ HISTORY1(BILINE,BIDFN,BIFORM,BINVAL,BIGBL,BIPDSS,BIHDRS,BINOSK,BILOC) ;EP
  ;---> 56 12 = Date of Visit Fileman format (YYYMMDD).
  ;---> 65 13 = Dose Override.
  ;---> 69 14 = Vaccine Component CVX Code.
+ ;---> 77 15 = VFC for this immunization.
  ;
  ;
- F I=4,8,24,26,27,33,38,39,41,44,56,65,69 S BIDE(I)=""
+ F I=4,8,24,26,27,33,38,39,41,44,56,65,69,77 S BIDE(I)=""
  D IMMHX^BIRPC(.BIRETVAL,BIDFN,.BIDE,1,0)
  ;
  ;---> If BIRETERR has a value, store it and quit.
@@ -148,7 +153,7 @@ HISTORY1(BILINE,BIDFN,BIFORM,BINVAL,BIGBL,BIPDSS,BIHDRS,BINOSK,BILOC) ;EP
  ;---> Build Listmanager array from BIHX string.
  ;
  ;---> List Immunization (and Skin Test)  History by Vaccine, and quit.
- I BIFORM>2 D HISTORY2^BILETPR3(.BILINE,BIHX,BIDFN,BIFORM,BINVAL,BIPDSS) Q
+ I (BIFORM=3)!(BIFORM=4) D HISTORY2^BILETPR3(.BILINE,BIHX,BIDFN,BIFORM,BINVAL,BIPDSS) Q
  ;
  D:$G(BINOSK)'=2 WRITE(.BILINE,,BIGBL)
  ;D:'$G(BIHDRS)
@@ -157,8 +162,7 @@ HISTORY1(BILINE,BIDFN,BIFORM,BINVAL,BIGBL,BIPDSS,BIHDRS,BINOSK,BILOC) ;EP
  ;.S X="       -----------  -----------------------"
  ;.D WRITE(.BILINE,X)
  ;
- N BIAR,I,V,Y
- S V="|"
+ N BIAR,I,V,Y S V="|"
  ;
  ;---> List Immunization History by Date (if call is not for Skin Test ONLY).
  ;---> Loop through "^"-pieces of Imm History, getting data.
@@ -172,13 +176,33 @@ HISTORY1(BILINE,BIDFN,BIFORM,BINVAL,BIGBL,BIPDSS,BIHDRS,BINOSK,BILOC) ;EP
  .;---> Quit if not displaying Invalid Doses (but will display a Forced Valid).
  .;Q:((BINVAL=1)&(($P(Y,V,13)&($P(Y,V,13)'=9))!BIPD))
  .;
+ .;---> Do not display if this vaccine is not in the display filter array.
+ .I $D(BIMMRF) Q:('$D(BIMMRF(+$P(Y,V,14))))
+ .;
+ .;---> Do not display if this lot number is not in the display filter array.
+ .I $D(BIMMLF) Q:('$D(BIMMLF(+$P(Y,V,7))))
+ .;
  .;---> Set Vaccine Name.
  .N X S X=$P(Y,V,2)
  .;
  .;---> Tack on Lot# if specified.
- .S:(BIFORM=2&($P(Y,V,7)]"")) X=X_" (#"_$P(Y,V,7)_")"
+ .N BILOT S BILOT=$P(Y,V,7)
+ .S:((BIFORM=2)&(BILOT]"")) X=X_" (#"_BILOT_")"
  .;
- .;---> Tack on Location if specified.   &&&v8.4
+ .;---> Tack on VFC if specified.
+ .N BIVFC S BIVFC=$P(Y,V,15)
+ .S:((BIFORM=5)&(BIVFC>1)) X=X_" (VFC+)"
+ .;
+ .;---> Tack on Lot# & VFC if specified.
+ .I BIFORM=7 D
+ ..I (BILOT="")&(BIVFC<2) Q
+ ..S X=X_" ("
+ ..I BILOT]"" S X=X_"#"_BILOT
+ ..I (BILOT]"")&(BIVFC>1) S X=X_", "
+ ..I BIVFC>1 S X=X_"VFC+"
+ ..S X=X_")"
+ .;
+ .;---> Tack on Location if specified.
  .S:$G(BILOC) X=X_" ["_$E($P(Y,V,5),1,4)_"]"
  .;
  .;---> If this Dose has a User Override or is an ImmServe Problem Dose,
@@ -380,16 +404,8 @@ FORECAST(BILET,BILINE,BIFORCST,BIFDT) ;EP
  ;
  ;----------
 DATELOC(BILET,BILINE,BIDLOC) ;EP
- ;---> Store Date/Location line in WP ^TMP global.
- ;---> Parameters:
- ;     1 - BILET  (req) IEN of Letter in BI LETTER File.
- ;     2 - BILINE (ret) Last line written into ^TMP array.
- ;     3 - BIDLOC (req) Text of Date/Location line.
  ;
- ;---> Quit if this Form Letter does not included a Date/Loc line.
- Q:'$P(^BILET(BILET,0),U,4)
- S:$G(BIDLOC)="" BIDLOC="     Date/Location line not provided."
- D WRITE(.BILINE),WRITE(.BILINE,"     "_BIDLOC),WRITE(.BILINE)
+ D DATELOC^BILETPR2(BILET,BILINE,BIDLOC)
  Q
  ;
  ;

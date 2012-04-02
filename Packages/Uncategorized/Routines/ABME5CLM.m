@@ -1,5 +1,5 @@
 ABME5CLM ; IHS/ASDST/DMJ - 837 CLM Segment 
- ;;2.6;IHS Third Party Billing System;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,8**;NOV 12, 2009
  ;Health Claim
  ;
 START ;EP - START HERE
@@ -43,7 +43,9 @@ LOOP ;LOOP HERE
  .S $P(ABMR("CLM",60),":",3)=1
  Q
 70 ;CLM06 - Provider Signature on File
- S ABMR("CLM",70)="Y"
+ ;S ABMR("CLM",70)="Y"  ;abm*2.6*8 5010
+ S ABMR("CLM",70)=""  ;abm*2.6*8 5010
+ S:ABMP("EXP")'=31 ABMR("CLM",70)="Y"  ;abm*2.6*8 5010
  Q
 80 ;CLM07 - Provider Accept Assignment Code
  S ABMR("CLM",80)="A"
@@ -91,10 +93,13 @@ LOOP ;LOOP HERE
  S ABMR("CLM",180)=""
  Q
 190 ;CLM18 - Explanation of Benefits Indicator
- I ABMP("EXP")=21 D
- .S ABMR("CLM",190)="Y"
- I ABMP("EXP")'=21 D
- .S ABMR("CLM",190)=""
+ S ABMR("CLM",190)=""  ;abm*2.6*8 5010
+ ;start old code abm*2.6*8 5010
+ ;I ABMP("EXP")=21 D
+ ;.S ABMR("CLM",190)="Y"
+ ;I ABMP("EXP")'=21 D
+ ;.S ABMR("CLM",190)=""
+ ;end old code abm*2.6*8 5010
  Q
 200 ;CLM19 - Claim Submission Reason Code-not used
  S ABMR("CLM",200)=""

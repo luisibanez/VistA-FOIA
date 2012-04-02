@@ -1,5 +1,5 @@
-PSOVER1 ;BHAM ISC/SAB - verify one rx ;10-Jul-2008 14:38;PLS
- ;;7.0;OUTPATIENT PHARMACY;**32,46,90,131,1002,1004,1007**;DEC 1997
+PSOVER1 ;BHAM ISC/SAB - verify one rx ;01-Jul-2011 10:13;PLS
+ ;;7.0;OUTPATIENT PHARMACY;**32,46,90,131,1002,1004,1007,1011**;DEC 1997;Build 17
  ;External reference ^PSDRUG( supported by DBIA 221
  ;External reference to PSOUL^PSSLOCK supported by DBIA 2789
  ;External reference ^PS(55 supported by DBIA 2228
@@ -7,12 +7,17 @@ PSOVER1 ;BHAM ISC/SAB - verify one rx ;10-Jul-2008 14:38;PLS
  ; Modified - IHS/CIA/PLS - 01/29/04 - Line CHANGE+3
  ;            IHS/CIA/PLS - 12/16/04 - Lines REDO+1, EDIT+1, new EP (CHKPRV)
  ;            IHS/MSC/PLS - 07/10/08 - Changed references to PSOVER array to PSOVERA
+ ;            IHS/MSC/PLS - 06/30/11 - Lines REDO+5 and new NVA EP to match patch 202
 REDO S (DRG,PSODRUG("NAME"))=$P(^PSDRUG(+$P(^PSRX(PSONV,0),"^",6),0),"^"),PSODRUG("VA CLASS")=$P(^(0),"^",2)
+ I '$D(PSODFN) S PSODFN=$P(^PSRX(PSONV,0),"^",2)
  ; IHS/CIA/PLS - 12/16/04 - Added check and message.
  I '$$CHKPRV(PSONV) D  Q
  .W !,"This prescription lacks an ordering provider and can't",!,"be processed until one is selected!"
  S (STA,DNM)="",PSDPSTOP=0,$P(PSONULN,"-",79)="-" F  S STA=$O(PSOSD(STA)) Q:STA=""  F  S DNM=$O(PSOSD(STA,DNM)) Q:DNM=""  K PSZZZDUP I $P(PSOSD(STA,DNM),"^",2)<10 D
- .I PSODRUG("NAME")=$P(DNM,"^")&(PSONV'=$P(PSOSD(STA,DNM),"^")) S PSZZZDUP=1 K DIR S DIR(0)="E",DIR("A")="Press RETURN to continue" W ! D ^DIR K DIR D DUP^PSODRDUP S PSDTSTOP=1
+ .;IHS/MSC/PLS - 06/30/2011
+ .I STA="ZNONVA" D NVA Q
+ .;I PSODRUG("NAME")=$P(DNM,"^")&(PSONV'=$P(PSOSD(STA,DNM),"^")) S PSZZZDUP=1 K DIR S DIR(0)="E",DIR("A")="Press RETURN to continue" W ! D ^DIR K DIR D DUP^PSODRDUP S PSDTSTOP=1
+ .I PSODRUG("NAME")=$P(DNM,"^")&(PSONV'=$P(PSOSD(STA,DNM),"^")) S PSZZZDUP=1 K DIR S DIR(0)="E",DIR("A")="Press RETURN to continue" W ! D ^DIR K DIR S PSDTSTOP=1
  .I PSODRUG("VA CLASS")]"",$E(PSODRUG("VA CLASS"),1,4)=$E($P(PSOSD(STA,DNM),"^",5),1,4),PSODRUG("NAME")'=$P(DNM,"^") K DIR S DIR(0)="E",DIR("A")="Press RETURN to continue" W ! D ^DIR K DIR D CLS^PSODRDUP S PSDTSTOP=1
  .I $G(PSZZZDUP),$G(PSVFLAG),$P($G(^PSRX($P(PSOSD(STA,DNM),"^"),"STA")),"^")=12,$D(^PS(52.4,$P(PSOSD(STA,DNM),"^"),0)) S DA=$P(PSOSD(STA,DNM),"^"),DIK="^PS(52.4," D ^DIK K DIK
  .I $G(PSZZZDUP),$G(PSVFLAG),$P($G(^PSRX($P(PSOSD(STA,DNM),"^"),"STA")),"^")'=12 S PSZZQUIT=1
@@ -91,6 +96,13 @@ CLEAN ;cleans up tmp("psorxdc") global
 KV1 ;
  K PSOANSQD,DRET,LST,PSOQUIT,PSODRUG,PSONEW,SIG,PSODIR,PHI,PRC,ORCHK,ORDRG,PSOSIGFL,PSORX("ISSUE DATE"),PSORX("FILL DATE"),CLOZPAT
 KV K DIR,DIRUT,DTOUT,DUOUT
+ Q
+NVA ;
+ I $P(PSOSD(STA,DNM),"^",11) D NVA^PSODRDU1 Q
+ N PSOOI,CLASS,FLG,X,Y,RXREC,IFN
+ S (Y,FLG)=""
+ S RXREC=$P(PSOSD(STA,DNM),"^",10),PSOOI=+$G(^PS(55,DFN,"NVA",RXREC,0)),IFN=RXREC N DNM
+ F  S Y=$O(^PSDRUG("ASP",PSOOI,Y)) Q:Y=""!(FLG)  S DNM=$P(^PSDRUG(Y,0),"^"),CLASS=$P(^PSDRUG(Y,0),"^",2) I PSODRUG("NAME")=DNM!(CLASS=PSODRUG("VA CLASS")) D DSP^PSODRDU1 S FLG=1 Q
  Q
  ; Ensure that the prescription has a provider
 CHKPRV(RXIEN) ; EP

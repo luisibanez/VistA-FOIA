@@ -1,14 +1,16 @@
 BGPMUEH ; IHS/MSC/JSM/SAT - IHS MU HOSPITAL PERFORMANCE MEASURE REPORT FRONT-END ;02-Mar-2011 16:48;DU
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;
 ENTRY ;
  W:$D(IOF) @IOF
- W !!,$$CTR("IHS Meaningful Use Clinical Performance Measure Report",80)
+ W !!,$$CTR("IHS Meaningful Use Clinical Quality Measure Report",80)
  W !,$$CTR("Report on all Patients regardless of Community of Residence",80),!!
+ D MUCHECK^BGPMUEP
+ Q:BGPQUIT
 INTRO ;
  D XIT
- W !,"This will produce a Performance Measure Report for one or more measures for a"
- W !,"period you specify.  You will be asked to provide: 1) the length of the"
+ W !,"This will produce a Clinical Quality Measure Report for one or more measures"
+ W !,"for a period you specify.  You will be asked to provide: 1) the length of the"
  W !,"reporting period , 2) the desired start date for your reporting period and,"
  W !,"3) the baseline period to compare data to."
 SETIND ;
@@ -36,6 +38,7 @@ TP ;get time period
  I BGPPER="" W !,"Start date not entered.",! G TP
  ;Setup: BGPBD - begin date & BGPED - end date
  S BGPBD=BGPPER
+ S:$E(BGPBD,4,7)="0000" $E(BGPBD,4,7)="0101"
  S BGPED=$$FMADD^XLFDT(BGPPER,BGPLEN)
  ;I BGPLEN=90 S BGPMON=$E(BGPPER,4,5)+3 S:BGPMON<10 BGPMON="0"_BGPMON S BGPED=$E(BGPPER,1,3)_BGPMON_$E(BGPPER,6,7)
  ;I BGPLEN=365 S BGPED=($E(BGPPER,1,3)+1)_$E(BGPPER,4,7)
@@ -97,7 +100,7 @@ BEN ;
  S BGPBEN=Y
 SUM ;display summary of this report
  W:$D(IOF) @IOF
- W !,$$CTR("SUMMARY OF MEANINGFUL USE PERFORMANCE MEASURE REPORT TO BE GENERATED")
+ W !,$$CTR("SUMMARY OF MEANINGFUL USE CLINICAL QUALITY MEASURE REPORT TO BE GENERATED")
  W !!,"The date ranges for this report are:"
  W !?5,"Report Period: ",?31,$$FMTE^XLFDT(BGPBD)," to ",?31,$$FMTE^XLFDT(BGPED)
  W !?5,"Baseline Period: ",?31,$$FMTE^XLFDT(BGPBBD)," to ",?31,$$FMTE^XLFDT(BGPBED)

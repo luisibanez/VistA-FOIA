@@ -1,5 +1,6 @@
-LRCAPES ;DALOI/FHS-MANUAL PCE CPT WORKLOAD CAPTURE ;5/1/99
- ;;5.2T9;LR;**274,1018**;Nov 17, 2004
+LRCAPES ;DALOI/FHS/KLL -MANUAL PCE CPT WORKLOAD CAPTURE ;5/1/99
+ ;;5.2;LAB SERVICE;**1030**;NOV 01, 1997
+ ;;5.2;LAB SERVICE;**274,259**;Sep 27, 1994
 EN ;
  D EN^LRCAPES1
  Q
@@ -211,7 +212,9 @@ CPT(LRAA,LRAD,LRAN,LRPRO) ;AP Release entry point
  . S DIC(0)="AEZNM" D ^DIC
  . I Y<1 S LRNOP="4^Not an outpatient location",LREND=1 Q
  . S LRLLOC=+Y
- S LRDSSLOC=+$G(LRLLOC)
+ ;KLL - set LRDSSLOC to LRDLOC, instead of LRLLOC to resolve location
+ ;      problem occurring in PCE
+ S LRDSSLOC=+$G(LRDLOC)
  ;I "CMZ"'[$$GET1^DIQ(44,+LRLLOC,2,"I") S LRNOP="4^Not an outpatient location"
  S LRDSSID=+$$GET1^DIQ(44,+LRLLOC,8,"I") ;I 'LRDSSID,'$G(LRNOP) S LRNOP="5^No Stop Code Number"
  S LRNINS=$$GET1^DIQ(44,+LRLLOC,3,"I")

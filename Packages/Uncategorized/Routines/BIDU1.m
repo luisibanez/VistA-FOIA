@@ -1,5 +1,5 @@
 BIDU1 ;IHS/CMI/MWR - DUE LIST/LETTERS, HELP; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  DUE LISTS/LETTERS, HELP.
  ;
@@ -67,7 +67,8 @@ TEXT1(BITEXT) ;EP
  ;;Received, then only patients who have received the Vaccines selected
  ;;will be included in the Lists and Letters.  If you further limit your
  ;;criteria to a date range, then only patients who have received the
- ;;the selected vaccines within the date range will be included.
+ ;;the selected vaccines within the date range will be included.  You can
+ ;;then choose to display only the history of the vaccines you selected.
  ;;
  ;;NOTE: If you select for ALL vaccines and do NOT limit it by date
  ;;range, then this criterium "Immunizations Received" will have

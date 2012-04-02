@@ -1,5 +1,5 @@
 BIUTL3 ;IHS/CMI/MWR - UTIL: ZTSAVE, ASKDATE, DIRZ.; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  UTILITY: SAVE ANY AND ALL BI VARIABLES FOR QUEUEING TO TASKMAN,
  ;;  ASK DATE RANGE, DIRZ (PROMPT TO CONTINUE).
@@ -31,6 +31,7 @@ ZSAVES ;EP
  ;        BIDED   (opt) Include Deceased Patients (0=no, 1=yes).
  ;        BIDFN   (opt) Patient's IEN in VA PATIENT File #2.
  ;        BIDLOC  (opt) Date-Location Line of letter.
+ ;        BIDLOT  (opt) Display report by Lot Number (VAC).
  ;        BIENDDT (opt) End date of report.
  ;        BIFDT   (opt) Forecast/Clinic date.
  ;        BIFH    (opt) F=report on Flu Vaccine Group, H=H1N1 group.
@@ -61,6 +62,8 @@ ZSAVES ;EP
  ;        BILOT   (opt) Lot Number array.
  ;        BIMMD   (opt) Immunization Due array.
  ;        BIMMR   (opt) Immunization Received array.
+ ;        BIMMRF  (opt) Immunization Received Filter array.
+ ;        BIMMLF  (opt) Lot Number Filter array.
  ;        BINFO   (opt) Additional Information for each patient.
  ;        BIVT    (opt) Visit Type array.
  ;
@@ -71,7 +74,7 @@ ZSAVES ;EP
  .S BISV="BI"_BISV
  .I $D(@(BISV)) S ZTSAVE(BISV)=""
  ;
- F BISV="DLOC","ENDDT","FDT","FH","HIST","HPV","LET","MD","NFO","ORD" D
+ F BISV="DLOC","DLOT","ENDDT","FDT","FH","HIST","HPV","LET","MD","NFO","ORD" D
  .S BISV="BI"_BISV
  .I $D(@(BISV)) S ZTSAVE(BISV)=""
  ;
@@ -80,7 +83,7 @@ ZSAVES ;EP
  .I $D(@(BISV)) S ZTSAVE(BISV)=""
  ;
  ;---> Save local arrays for queueing Due List/Letters.
- F BISV="BEN","CC","CM","DPRV","HCF","LOT","MMD","MMR","VT" D
+ F BISV="BEN","CC","CM","DPRV","HCF","LOT","MMD","MMLF","MMR","MMRF","VT" D
  .S BISV="BI"_BISV
  .D:$D(@BISV)
  ..N N S N=0 F  S N=$O(@(BISV_"("""_N_""")")) Q:N=""  D

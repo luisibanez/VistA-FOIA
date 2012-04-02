@@ -1,5 +1,5 @@
 BGPMUFP1 ;IHS/MSC/MMT - MU Reports Measure NQF0038 ;01-Mar-2011 15:50;MGH
- ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  ;
 CHIMM ;EP
  D P1
@@ -29,11 +29,11 @@ P1 ;Print measure details
  .I $Y>(BGPIOSL-7) D HEADER^BGPMUPH Q:BGPQUIT
  .;Setup summary page/iCare ^TMP global
  .S BGPDNCNT=BGPDNCNT+1
- .S BGPSSTR="MU.EP.0038."_N_U_$P($T(ITEXT+N),";;",2)_U_@("CEXC"_N_"CT")_U_@("CDEN"_N_"CT")_U_@("CNUM"_N_"CT")_U_CMP_"^^^^"
+ .S BGPSSTR="MU.EP.0038."_N_U_$P($T(ITEXT+N),";;",2)_U_@("CEXC"_N_"CT")_U_(@("CDEN"_N_"CT")+@("CEXC"_N_"CT"))_U_@("CNUM"_N_"CT")_U_CMP_"^^^^"
  .;                    11                 12                 13                14
- .S BGPSSTR=BGPSSTR_U_@("PEXC"_N_"CT")_U_@("PDEN"_N_"CT")_U_@("PNUM"_N_"CT")_U_PMP
+ .S BGPSSTR=BGPSSTR_U_@("PEXC"_N_"CT")_U_(@("PDEN"_N_"CT")+@("PEXC"_N_"CT"))_U_@("PNUM"_N_"CT")_U_PMP
  .;                    15                 16                 17                18
- .S BGPSSTR=BGPSSTR_U_@("BEXC"_N_"CT")_U_@("BDEN"_N_"CT")_U_@("BNUM"_N_"CT")_U_BMP
+ .S BGPSSTR=BGPSSTR_U_@("BEXC"_N_"CT")_U_(@("BDEN"_N_"CT")+@("BEXC"_N_"CT"))_U_@("BNUM"_N_"CT")_U_BMP
  .S ^TMP("BGPMU SUMMARY",$J,BGPIC,BGPDNCNT)=BGPSSTR
  I $D(BGPLIST(BGPIC)) D P2
  F TF="C","P","B" D KILL
@@ -166,20 +166,20 @@ ITEXT ;
  ;;4 DTaP
  ;;3 IPV
  ;;1 MMR
- ;;2 HiB
+ ;;3 HiB
  ;;3 HepB
  ;;1 VZV
  ;;4 Pneumococcal
  ;;2 HepA
  ;;2 Rotavirus
  ;;2 Influenza
- ;;4:3:1:2:3:1
- ;;4:3:1:2:3:1:4
+ ;;4:3:1:3:3:1
+ ;;4:3:1:3:3:1:4
 NTEXT ;
  ;;# w/4 DTaP
  ;;# w/3 IPV
  ;;# w/1 MMR
- ;;# w/2 HiB
+ ;;# w/3 HiB
  ;;# w/3 Hep B
  ;;# w/1 VZV
  ;;# w/4 Pneumococcal
@@ -192,7 +192,7 @@ OTEXT ;
  ;;# w/o 4 DTaP
  ;;# w/o 3 IPV
  ;;# w/o 1 MMR
- ;;# w/o 2 HiB
+ ;;# w/o 3 HiB
  ;;# w/o 3 Hep B
  ;;# w/o 1 VZV
  ;;# w/o 4 Pneumococcal
@@ -205,15 +205,15 @@ LITEXT ;
  ;;1: 4 DTaP Patients
  ;;2: 3 IPV Patients
  ;;3: 1 MMR Patients
- ;;4: 2 HiB Patients
+ ;;4: 3 HiB Patients
  ;;5: 3 Hepatitis B Patients
  ;;6: 1 VZV Patients
  ;;7: 4 Pneumococcal Patients
  ;;8: 2 Hepatitis A Patients
  ;;9: 2 Rotavirus Patients
  ;;10: 2 Influenza Patients
- ;;11: 4:3:1:2:3:1 Patients
- ;;12: 4:3:1:2:3:1:4 Patients
+ ;;11: 4:3:1:3:3:1 Patients
+ ;;12: 4:3:1:3:3:1:4 Patients
  ;;
  ;;DTAP numerator patients
  ;;IPV numerator patients

@@ -1,5 +1,5 @@
 BSDWLE ; IHS/OIT/LJF - WAITING LIST DATA ENTRY
- ;;5.3;PIMS;**1004,1007,1010**;MAY 28, 2004
+ ;;5.3;PIMS;**1004,1007,1010,1013**;MAY 28, 2004
  ;IHS/OIT/LJF 07/21/2005 PATCH 1004 routine added
  ;
  ;cmi/anch/maw 2/21/2007 added ability to sort report in SRT, INIT PATCH 1007 item 1007.33
@@ -44,13 +44,14 @@ INIT ; -- init variables and list array
  . S IENS=IEN_","_BSDWLN_","
  . ;K BSDATA D GETS^DIQ(FILE,IENS,".01;.07","R","BSDATA")  ;cmi/anch/maw 2/21/2007 orig line
  . K BSDATA D GETS^DIQ(FILE,IENS,".01:.07","R","BSDATA")  ;cmi/anch/maw 2/21/2007 mod line PATCH 1007 item 1007.33
+ . K BSDATAI D GETS^DIQ(FILE,IENS,".01:.07","RI","BSDATAI")  ;ihs/cmi/maw 04/15/2011 PATCH 1013
  . I BSDATA(FILE,IENS,"DATE REMOVED FROM LIST")]"" Q        ;skip if already closed out
  . ;cmi/anch/maw 2/21/2007 maw mod/added following 5 lines PATCH 1007 item 1007.33
  . ;S ^TMP("BSDWLE1",$J,BSDATA(FILE,IENS,"PATIENT"),IEN)=""  ;sort by patient name cmi/anch/maw 2/21/2007 maw orig line PATCH 1007 item 1007.33
  . I BSDSRT="P" S ^TMP("BSDWLE1",$J,BSDATA(FILE,IENS,"PATIENT"),IEN)=""  ;sort by patient name
  . I BSDSRT="D" S ^TMP("BSDWLE1",$J,BSDATA(FILE,IENS,"DATE ADDED TO LIST"),IEN)=""  ;sort by date added to list
  . I BSDSRT="O" S ^TMP("BSDWLE1",$J,$S(BSDATA(FILE,IENS,"PRIORITY")]"":BSDATA(FILE,IENS,"PRIORITY"),1:"MIDDLE"),IEN)=""  ;sort by priority
- . I BSDSRT="R" S ^TMP("BSDWLE1",$J,$S(BSDATA(FILE,IENS,"RECALL DATE")]"":BSDATA(FILE,IENS,"RECALL DATE"),1:"0000000"),IEN)=""  ;sort by recall date
+ . I BSDSRT="R" S ^TMP("BSDWLE1",$J,$S(BSDATAI(FILE,IENS,"RECALL DATE","I")]"":BSDATAI(FILE,IENS,"RECALL DATE","I"),1:"0000000"),IEN)=""  ;sort by recall date
  ;
  ; now take sorted list and build display array
  S NAME=0 F  S NAME=$O(^TMP("BSDWLE1",$J,NAME)) Q:NAME=""  D
@@ -90,6 +91,27 @@ EXIT ; -- exit code
 EXPND ; -- expand code
  Q
  ;
+PRINT ;-- print wait list letters
+ K ^UTILITY($J,"BSDLET")
+ D MAIN^BSDLTP("W")
+ Q:'$G(SDLET)
+ D GETSOME(SDLET)
+ Q:'$D(^UTILITY($J,"BSDLET",SDLET))
+ D ZIS^DGUTQ Q:POP
+ N CNT,REC
+ S CNT=0
+ S A=0 F  S A=$O(^UTILITY($J,"BSDLET",SDLET,A)) Q:'A  D
+ . U IO
+ . I CNT>0 W @IOF
+ . D ^BSDLT
+ . D RECALL^BSDLT(BSDWLN,A)
+ . D REST^BSDLT
+ . S CNT=CNT+1
+ D ^%ZISC
+ D RETURN(1)
+ K ^UTILITY($J,"BSDLET")
+ Q
+ ;
 GETONE ; -- select entry from listing
  NEW X,Y,Z
  D FULL^VALM1
@@ -101,6 +123,22 @@ GETONE ; -- select entry from listing
  . S Z=$O(^TMP("BSDWLE",$J,"IDX",Y,0))
  . Q:^TMP("BSDWLE",$J,"IDX",Y,Z)=""
  . I Z=X S BSDN=+^TMP("BSDWLE",$J,"IDX",Y,Z)
+ Q
+ ;
+GETSOME(LET) ;-- select multiple entries from the list
+ NEW X,Y,Z,BSDP,BSDX
+ D FULL^VALM1
+ S BSDN=""
+ D EN^VALM2(XQORNOD(0),"")
+ I '$D(VALMY) Q
+ S BSDX=0 F  S BSDX=$O(VALMY(BSDX)) Q:'BSDX  D
+ . S Y=0 F  S Y=$O(^TMP("BSDWLE",$J,"IDX",Y)) Q:Y=""  D
+ .. S Z=$O(^TMP("BSDWLE",$J,"IDX",Y,0))
+ .. Q:^TMP("BSDWLE",$J,"IDX",Y,Z)=""
+ .. I Z=BSDX D
+ ... S BSDN=+^TMP("BSDWLE",$J,"IDX",Y,Z)
+ ... S BSDP=$P(^TMP("BSDWLE",$J,"IDX",Y,Z),U,2)
+ ... S ^UTILITY($J,"BSDLET",LET,BSDP,DT)=""
  Q
  ;
 VIEW ;EP; called by BSDWL VIEW protocol

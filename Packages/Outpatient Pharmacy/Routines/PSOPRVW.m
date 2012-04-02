@@ -1,7 +1,8 @@
-PSOPRVW ;BIR/SAB,MHA-enter/edit/view provider ;03/26/96
- ;;7.0;OUTPATIENT PHARMACY;**11,146,153**;DEC 1997
+PSOPRVW ;BIR/SAB,MHA-enter/edit/view provider ;18-Apr-2011 11:14;PLS
+ ;;7.0;OUTPATIENT PHARMACY;**11,146,153,1011**;DEC 1997;Build 17
  ;Ref. to ^VA(200 supp. by IA 224
  ;Ref. to ^DIC(7 supp. by IA 491
+ ;Modified - IHS/MSC/PLS - 04/18/2011 - Line ED1 and ADD+2
 START W ! S DIC("A")="Select Provider: ",DIC("S")="I $D(^VA(200,+Y,""PS""))",DIC="^VA(200,",DIC(0)="AEQMZ" D ^DIC G:"^"[X EX G:Y<0 START K DIC S PRNO=+Y
  W @IOF,"Name: "_$P(^VA(200,PRNO,0),"^")
  I +$P(^VA(200,PRNO,"PS"),"^",4),$P(^("PS"),"^",4)'>DT W ?40,$C(7),"* * * INACTIVE AS OF ",$E($P(^("PS"),"^",4),4,5),"/",$E($P(^("PS"),"^",4),6,7),"/",$E($P(^("PS"),"^",4),2,3)," * * *"
@@ -51,14 +52,18 @@ EDT W ! L +^VA(200,DA):0
  I $P($G(^VA(200,DA,"TPB")),"^",3) D
  .I RTPB=""!('$P(RTPB,"^",3)) S DR="53.96////"_DUZ D ^DIE
  G:$G(PSOTPBFG) QX
-ED1 S DR="53.1:53.7;I 'X S Y=""@1"";53.8;@1;53.9;.111:.116;.131:.134;.136;.141"
+ED1 ;IHS/MSC/PLS - 04/18/2011
+ ;S DR="53.1:53.7;I 'X S Y=""@1"";53.8;@1;53.9;.111:.116;.131:.134;.136;.141"
+ S DR="53.1:53.2;747.44;53.3:53.7;I 'X S Y=""@1"";53.8;@1;53.9;.111:.116;.131:.134;.136;.141;.151;"
  D ^DIE S FADA=DA D:'$D(Y) KEY
 QX K FADA,RTPB L -^VA(200,DA) Q:$G(PSOTPBFG)  G:+$G(VADA) ADD G ASK
  Q
  G:'$D(^VA(200,DA,"TPB")) ED1
 ADD ;add new providers (kernel 7)
  W !
- S VADA=$$ADD^XUSERNEW("53.91;S:'X Y=""@2"";53.92R;53.93R;53.94R;53.95R;D:X MS^PSOPRVW;@2;53.1;53.2;53.3;53.4;53.5;53.6;53.7;S:'X Y=""@1"";53.8;@1;53.9;.111:.116;.131:.134;.136;.141")
+ ;IHS/MSC/PLS - 04/18/2011 - Added .151 and 747.44
+ ;S VADA=$$ADD^XUSERNEW("53.91;S:'X Y=""@2"";53.92R;53.93R;53.94R;53.95R;D:X MS^PSOPRVW;@2;53.1;53.2;53.3;53.4;53.5;53.6;53.7;S:'X Y=""@1"";53.8;@1;53.9;.111:.116;.131:.134;.136;.141")
+ S VADA=$$ADD^XUSERNEW("53.91;S:'X Y=""@2"";53.92R;53.93R;53.94R;53.95R;D:X MS^PSOPRVW;@2;53.1;53.2;747.44;53.3;53.4;53.5;53.6;53.7;S:'X Y=""@1"";53.8;@1;53.9;.111:.116;.131:.134;.136;.141;.151")
  S (FADA,DA)=+VADA,(DIC,DIE)="^VA(200,"
  I VADA>0,$P(VADA,"^",3),$P($G(^VA(200,DA,"TPB")),"^") D
  .S DR="53.96////"_DUZ D ^DIE

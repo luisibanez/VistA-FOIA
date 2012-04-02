@@ -1,5 +1,5 @@
 ABMEHGR2 ; IHS/ASDST/DMJ - GET ANCILLARY SVCS REVENUE CODE INFO ;     
- ;;2.6;IHS 3P BILLING SYSTEM;**6**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8**;NOV 12, 2009
  ;Original;DMJ;03/20/96 9:07 AM
  ;
  ; IHS/SD/SDR - V2.5 P2 - 5/9/02 - NOIS HQW-0302-100190
@@ -65,10 +65,12 @@ ABMEHGR2 ; IHS/ASDST/DMJ - GET ANCILLARY SVCS REVENUE CODE INFO ;
  S DA=0
  F  S DA=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),23,DA)) Q:'DA  D
  .;F J=1:1:6,13,14,19,22,28 S ABM(J)=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),23,DA,0),U,J)  ;abm*2.6*6 5010
- .F J=1:1:6,13,14,19,22,24,25,28 S ABM(J)=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),23,DA,0),U,J)  ;abm*2.6*6 5010
+ .;F J=1:1:6,13,14,19,22,24,25,28 S ABM(J)=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),23,DA,0),U,J)  ;abm*2.6*6 5010  ;abm*2.6*8 HEAT35661
+ .F J=1:1:6,13,14,19,22,24,25,28,29 S ABM(J)=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),23,DA,0),U,J)  ;abm*2.6*6 5010  ;abm*2.6*8 HEAT35661
  .S:'+ABM(3) ABM(3)=1                       ; default units = 1
  .S ABMLCNT=+$G(ABMLCNT)+1
  .S $P(ABMRV(23,DA,ABMLCNT),U)=ABM(2)  ;revenue code IEN
+ .S $P(ABMRV(23,DA,ABMLCNT),U,2)=$S(ABM(29):$P($$CPT^ABMCVAPI(ABM(29),ABMP("VDT")),U,2),1:0)  ;CPT  abm*2.6*8 HEAT35661
  .S $P(ABMRV(23,DA,ABMLCNT),U,5)=ABM(3)  ;units
  .S ABM(7)=ABM(3)*ABM(4)+ABM(5)  ;units * units cost + dispense fee
  .S ABM(7)=$J(ABM(7),1,2)
@@ -85,6 +87,10 @@ ABMEHGR2 ; IHS/ASDST/DMJ - GET ANCILLARY SVCS REVENUE CODE INFO ;
  ..S DIQ="ABM(",DIQ(0)="IE",DIC="^PSRX("
  ..S DR="4;8;27"
  ..D EN^DIQ1
+ .;start new code abm*2.6*8 HEAT35661
+ .S $P(ABMRV(23,DA,ABMLCNT),U,11)=ABM(13)  ;corresponding dx
+ .S $P(ABMRV(23,DA,ABMLCNT),U,38)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),23,DA,2)),U)  ;abm*2.6*6 5010 line item control number
+ .;end new code HEAT35661
  .Q:'$G(ABMDA)
  .S $P(ABMRV(23,DA,ABMLCNT),U,14)=ABM(52,ABMDA,8,"E")  ;days of supply
  .;S $P(ABMRV(23,DA,ABMLCNT),U,15)=ABM(52,ABMDA,27,"E")  ;ndc #  ;abm*2.6*6
@@ -114,6 +120,7 @@ ABMEHGR2 ; IHS/ASDST/DMJ - GET ANCILLARY SVCS REVENUE CODE INFO ;
  .S $P(ABMRV(25,DA,ABMLCNT),U,5)=ABM(2)  ;units
  .S $P(ABMRV(25,DA,ABMLCNT),U,6)=(ABM(2)*ABM(3))+ABM(6)  ;charges
  .S $P(ABMRV(25,DA,ABMLCNT),U,8)=ABM(3)  ;Unit charge
+ .S $P(ABMRV(25,DA,ABMLCNT),U,38)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),25,DA,2)),U)  ;abm*2.6*8 5010 line item control number
  I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),8)),U,10),'$D(ABMRV(25,450,ABMLCNT)) D
  .S ABMRV(25,450,ABMLCNT)=450
  .S $P(ABMRV(25,450,ABMLCNT),U,5)=1
@@ -190,6 +197,12 @@ ABMEHGR2 ; IHS/ASDST/DMJ - GET ANCILLARY SVCS REVENUE CODE INFO ;
  .S $P(ABMRV(33,DA,ABMLCNT),U,11)=ABM(4)  ;corresponding dx
  .S $P(ABMRV(33,DA,ABMLCNT),U,23)=ABM(5)  ;tooth
  .S $P(ABMRV(33,DA,ABMLCNT),U,24)=ABM(6)  ;surface
+ .;start new code abm*2.6*8 5010 service line providers
+ .S ABM(13)=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),33,DA,"P","C","R",0))
+ .I +ABM(13)'=0 S $P(ABMRV(33,DA,ABMLCNT),U,13)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),33,DA,"P",ABM(13),0)),U)  ;rendering provider
+ .S ABM(21)=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),33,DA,"P","C","S",0))
+ .I +ABM(21)'=0 S $P(ABMRV(33,DA,ABMLCNT),U,21)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),33,DA,"P",ABM(21),0)),U)  ;supervising provider
+ .;end new code abm*2.6*8
  .S $P(ABMRV(33,DA,ABMLCNT),U,38)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),33,DA,2)),U)  ;abm*2.6*6 5010 line item control number
  Q
  ;

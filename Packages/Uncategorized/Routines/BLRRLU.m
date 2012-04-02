@@ -1,5 +1,5 @@
 BLRRLU ;cmi/anch/maw - BLR Reference Lab Utilities ;JUL 06, 2010 3:14 PM
- ;;5.2;IHS LABORATORY;**1027**;NOV 01, 1997
+ ;;5.2;IHS LABORATORY;**1027**;NOV 01, 1997;Build 9
  ;;5.2;LR;**1021**;Jul 27, 2006
  ;
  ;
@@ -32,7 +32,7 @@ SITE ;EP - setup the site parameters in BLR MASTER CONTROL
  S DIC("A")="Add this Reference Lab to which Site: "
  D ^DIC
  Q:Y<0
- S DIE=DIC,DA=+Y,DR="3001////"_BLRRL_";3002:3021;3100;3200"  ;cmi/maw 4/3/2008 setup parameters in BLR MASTER CONTROL file
+ S DIE=DIC,DA=+Y,DR="3001////"_BLRRL_";3002:3023;3100;3200"  ;cmi/maw 4/3/2008 setup parameters in BLR MASTER CONTROL file
  D ^DIE
  K DIC,DIE,DR,DA
  W !!,"Now setting up Lab HL7 Message Parameter File.."

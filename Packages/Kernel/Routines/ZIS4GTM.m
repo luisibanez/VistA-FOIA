@@ -1,5 +1,5 @@
-%ZIS4 ;ISF/RWF,DW - DEVICE HANDLER SPECIFIC CODE (GT.M for Unix/VMS) ;1/24/08  16:08
- ;;8.0;KERNEL;**275,425,440**;Jul 10, 1995;Build 13
+%ZIS4 ;ISF/RWF,DW - DEVICE HANDLER SPECIFIC CODE (GT.M for Unix/VMS) ;05/29/2008
+ ;;8.0;KERNEL;**275,425,440,499**;Jul 10, 1995;Build 24
  ;Per VHA Directive 2004-038, this routine should not be modified
 OPEN ;From %ZIS3 for TRM
  G OPN2:$D(IO(1,IO))
@@ -49,7 +49,8 @@ ZIO N %,%1 S (%,%1)=$ZIO
  . S %=$S(%["Host:":$P($P(%,"Host: ",2)," ")_":"_$P(%,"Port: ",2),1:%) S:%[" " %=$TR(%," ")
  I $ZV'["VMS" D
  . S (%,%1)=$ZTRNLNM("REMOTEHOST") S:$L(%) %1="Host:"_% S:'$L(%) %=$ZIO
- S IO("ZIO")=% S:(%1["Host:")&'$D(IO("IP")) IO("IP")=$P(%,":")
+ . S:%1'["Host" %1=$ZTRNLNM("SSH_CLIENT") S:$L(%1) %1="Host:"_$P(%1," ")
+ S IO("ZIO")=% S:(%1["Host:")&'$D(IO("IP")) IO("IP")=$P(%1,":",2)
  Q
  ;
 TCPIP ;For TCP/IP devices, should use ^%ZISTCP

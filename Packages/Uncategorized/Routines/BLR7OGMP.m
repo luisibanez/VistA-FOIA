@@ -1,5 +1,5 @@
 BLR7OGMP ; IHS/OIT/MKK - Lab Interim Report for EHR ; [ 05/31/2011  8:15 AM ]
- ;;5.2;IHS LABORATORY;**1028**;NOV 01, 1997;Build 46
+ ;;5.2;IHS LABORATORY;**1028,1030**;NOV 01, 1997
  ;
  ; Cloned from LR7OGMP. This is a 127 column "report"
  ;
@@ -23,7 +23,7 @@ PRINT(OUTCNT) ; from LR7OGMC
  . S LINE=$$SETSTR^VALM1(" Accession: "_ACC,LINE,54,12+$L(ACC))
  . D SETLINE(LINE,.OUTCNT)
  . S LINE="     Specimen: "_$E($P(^LAB(61,SPEC,0),U),1,25)_"."
- . S LINE=$$SETSTR^VALM1("Spec Collect Date/Time: "_$$UP^XLFSTR($$FMTE^XLFDT(CDT,"5MPZ")),LINE,42,50)     ; IHS/OIT/MKK - LR*5.2*1029
+ . S $E(LINE,42)="Spec Collect Date/Time: "_$$UP^XLFSTR($$FMTE^XLFDT(CDT,"5MPZ"))     ; IHS/OIT/MKK - LR*5.2*1030
  . D SETLINE(LINE,.OUTCNT)
  . D SETLINE(" ",.OUTCNT)
  . K LINESTR
@@ -77,7 +77,7 @@ PRINT(OUTCNT) ; from LR7OGMC
  .. ;
  .. D:$L(LINE) SETLINE(LINE,.OUTCNT)
  .. ;
- .. D:$L(VALUE)>30 MULTIVAL(VALUE)                          ; Result was too long, make multi-line
+ .. D:$L(VALUE)>30 MULTIVAL(VALUE)                          ; Result was too long; make multi-line
  .. ;
  .. I $O(^TMP("LR7OG",$J,"TP",CDT,PORDER,0))>0 D
  ... S INTP=0
@@ -95,14 +95,35 @@ PRINT(OUTCNT) ; from LR7OGMC
 MUMPRNGE(RANGE) ; EP -- MUMPS Code in Reference Range -- Evaluate and store
  NEW LOW,HIGH,RV1,RV2
  ;
- S LOW=$$TRIM^XLFSTR($$TRIM^XLFSTR($P(RANGE,"-"),"R"," "),"L"," ")
- S HIGH=$$TRIM^XLFSTR($$TRIM^XLFSTR($P(RANGE,"-",2),"R"," "),"L"," ")
+ ; S LOW=$$TRIM^XLFSTR($$TRIM^XLFSTR($P(RANGE,"-"),"R"," "),"L"," ")
+ ; S HIGH=$$TRIM^XLFSTR($$TRIM^XLFSTR($P(RANGE,"-",2),"R"," "),"L"," ")
+ ;
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
+ S LOW=$$TRIM^XLFSTR($$TRIM^XLFSTR($P(RANGE," - "),"R"," "),"L"," ")
+ S:LOW[$C(34)_$C(34) LOW=$$DQUOTER(LOW)
+ ;
+ S HIGH=$$TRIM^XLFSTR($$TRIM^XLFSTR($P(RANGE," - ",2),"R"," "),"L"," ")
+ S:HIGH[$C(34)_$C(34) HIGH=$$DQUOTER(HIGH)
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030
  ;
  S RV1=$$MUMPEVAL(LOW)
  S RV2=$$MUMPEVAL(HIGH)
  ;
  S RANGE=RV1_" - "_RV2
+ ;
  Q
+ ;
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
+DQUOTER(STR) ; EP -- Get rid of double quotes in string
+ NEW DBLQ,REMOVED
+ ;
+ S DBLQ=$C(34)_$C(34)                      ; Double Quotes
+ S REMOVED=$$TRIM^XLFSTR(STR,"LR",$C(34))  ; Get rid of leading & traling quotes
+ F  Q:REMOVED'[DBLQ  D
+ . S REMOVED=$P(REMOVED,DBLQ,1)_$C(34)_$P(REMOVED,DBLQ,2,999)
+ ;
+ Q REMOVED
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030
  ;
 MUMPEVAL(EVAL) ; 
  NEW STR,WOT
@@ -143,44 +164,28 @@ PLS ; List performing laboratories
  . D SETLINE(LINE,.OUTCNT)
  ;
  D SETLINE($TR($J("",126)," ","="),.OUTCNT)
- D SETLINE("KEY: L=Abnormal Low     H=Abnormal High     *=Critical value     TR=Therapeutic Range",.OUTCNT)
+ ; D SETLINE("KEY: L=Abnormal Low     H=Abnormal High     *=Critical value     TR=Therapeutic Range",.OUTCNT)
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
+ S STR=$$CJ^XLFSTR("KEY: A=Abnormal        L=Abnormal Low        H=Abnormal High        *=Critical value        TR=Therapeutic Range",127)
+ D SETLINE(STR,.OUTCNT)
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030
  ;
  K ^TMP("LRPLS",$J)
  Q
- ;
+ ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030
 MULTIVAL(VALUE) ; EP - Multiple Line Value String
- NEW BACKUP,STR1,STR2
- ;
- W "VALUE=",VALUE,!
- ; 
- I $L(VALUE)<91 K LINE  S $E(LINE,35)=VALUE  D SETLINE(LINE,.OUTCNT)  Q
- ;
- F  Q:$L(VALUE)<1  D
- . S STR1=$RE($E(VALUE,1,90))
- . I $E(STR1,1)'=" "  F BACKUP=1:1  Q:$E(STR1,BACKUP)=" "
- . S STR1=$E(VALUE,1,(90-+$G(BACKUP)))
- . S STR1=$$TRIM^XLFSTR(STR1,"LR"," ")
- . K LINE
- . S $E(LINE,35)=STR1
- . D SETLINE(LINE,.OUTCNT)
- . S VALUE=$$TRIM^XLFSTR($E(VALUE,(90-+$G(BACKUP))+1,$L(VALUE)),"L"," ")
+ D USEDIWP(VALUE,34,91)
  Q
  ;
- ; S ^TMP("LR7OGX",$J,"OUTPUT",CNT)=LINE
-TESTMULT ; EP - Testing
- NEW OUTCNT,STR1,STR2,STR3,STR4
- ;                1         2         3         4         5         6         7         8         9
- ;       123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
- S STR1="JUST A LITTLE SHORT STRING"
- S STR2="STRING THAT IS LONGER THAN THIRTY CHARACTERS BUT LESS THAN NINETY."
- S STR3="A STRING THAT IS EXACTLY NINETY CHARACTERS LONG. A STRING THAT IS EXACTLY NINETY CHARACTE."
- S STR4="A STRING THAT IS OVER NINETY CHARACTERS LONG.  A STRING THAT IS OVER NINETY CHARACTERS LONG.  A STRING THAT IS OVER NINETY CHARACTERS LONG."
+USEDIWP(X,LM,CW) ; EP -- Use FileMan DIWP to wrap text
+ NEW CNT,LINE,STR
  ;
- S OUTCNT=1
- K ^TMP("LR7OGX",$J,"OUTPUT")
- D MULTIVAL(STR1)
- D MULTIVAL(STR2)
- D MULTIVAL(STR3)
- D MULTIVAL(STR4)
- ;
+ K ^UTILITY($J,"W")
+ S DIWL=LM,DIWR="",DIWF="C"_CW
+ D ^DIWP
+ S LINE=0
+ F  S LINE=$O(^UTILITY($J,"W",LM,LINE))  Q:LINE<1  D
+ . S STR=$J("",LM)_$G(^UTILITY($J,"W",LM,LINE,0))
+ . D SETLINE(STR,.OUTCNT)
  Q
+ ; ----- END IHS/OIT/MKK - LR*5.2*1030

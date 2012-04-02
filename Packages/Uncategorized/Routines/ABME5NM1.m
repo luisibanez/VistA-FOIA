@@ -1,5 +1,5 @@
 ABME5NM1 ; IHS/ASDST/DMJ - 837 NM1 Segment 
- ;;2.6;IHS Third Party Billing System;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,8**;NOV 12, 2009
  ;Submitter Name
  ;
 EP(X,Y) ;EP - START HERE
@@ -32,8 +32,7 @@ LOOP ;LOOP HERE
  ;
 30 ;NM102 - Entity Type Qualifier
  S ABMR("NM1",30)=1
- S:"40^41^85^87^PR^FA^PW^45"[ABMEIC ABMR("NM1",30)=2
- I $G(ABMOUTLB)=1,ABMEIC=77 S ABMR("NM1",30)=2
+ S:"40^41^85^87^PR^77^PW^45"[ABMEIC ABMR("NM1",30)=2
  Q
  ;
 40 ;NM103 - Name Last or Organization Name
@@ -42,7 +41,14 @@ LOOP ;LOOP HERE
  ;
  ; Receiver
  I ABMEIC=40 D
- .S ABMR("NM1",40)=$P($G(^AUTNINS(ABMP("INS"),2)),"^",13)
+ .;S ABMR("NM1",40)=$P($G(^AUTNINS(ABMP("INS"),2)),"^",13)  ;abm*2.6*8
+ .;start new code abm*2.6*6 HEAT28891
+ .I $D(^ABMRECVR("C",ABMP("INS"))) D
+ ..S ABMCHIEN=$O(^ABMRECVR("C",ABMP("INS"),0))
+ ..S ABMR("NM1",40)=$P($G(^ABMRECVR(ABMCHIEN,1,ABMP("INS"),0)),U,3)
+ ..K ABMCHIEN
+ .;end new code HEAT28891
+ .S:ABMR("NM1",40)="" ABMR("NM1",40)=$P($G(^AUTNINS(ABMP("INS"),2)),"^",13)  ;abm*2.6*8
  .S:ABMR("NM1",40)="" ABMR("NM1",40)=$P($G(^AUTNINS(ABMP("INS"),0)),U)
  ;
  ; Submitter ^ Billing Provider
@@ -54,7 +60,7 @@ LOOP ;LOOP HERE
  .S ABMR("NM1",40)=$$LNM^ABMUTLN(2,ABMP("PDFN"))
  ;
  ; Provider
- I "71^72^73^82^QB^DK^DN^DQ^P3"[ABMEIC D
+ I "71^72^ZZ^82^QB^DK^DN^DQ^P3"[ABMEIC D
  .I +ABM("PRV")'=0 D
  ..S ABMR("NM1",40)=$$LNM^ABMUTLN(200,ABM("PRV"))
  .E  S ABMR("NM1",40)=$P(ABM("PRV"),",")
@@ -70,13 +76,9 @@ LOOP ;LOOP HERE
  .S ABMR("NM1",40)=$$LNM^ABMUTLN(ABMSFILE,ABMSIEN)
  ;
  ; Facility
- I ABMEIC="FA" D
+ I ABMEIC="77" D
  .S ABMR("NM1",40)=$P($G(^DIC(4,ABMP("LDFN"),0)),U)
  S:$G(ABMP("ITYPE"))'="D" ABMR("NM1",40)=$TR(ABMR("NM1",40),"-"," ")
- ;
- ; Service Facility (reference lab)
- I ABMEIC="77" D
- .S ABMR("NM1",40)=$P($G(^AUTTVNDR($P($G(^ABMRLABS(ABMNIEN,0)),U),0)),U)
  ;
  ; Ambulance Drop Off Location
  I ABMEIC="45" D
@@ -91,7 +93,7 @@ LOOP ;LOOP HERE
  .S ABMR("NM1",50)=$$FNM^ABMUTLN(2,ABMP("PDFN"))
  ;
  ; Provider
- I "71^72^73^82^QB^DK^DN^DQ^P3"[ABMEIC D
+ I "71^72^ZZ^82^QB^DK^DN^DQ^P3"[ABMEIC D
  .I +ABM("PRV")'=0 D
  ..S ABMR("NM1",50)=$$FNM^ABMUTLN(200,ABM("PRV"))
  .E  S ABMR("NM1",50)=$P(ABM("PRV"),",",2)
@@ -113,12 +115,12 @@ LOOP ;LOOP HERE
  .S ABMR("NM1",60)=$$MI^ABMUTLN(ABMSFILE,ABMSIEN)
  ;
  ; Provider
- I "71^72^73^82^QB^DK^DN^DQ^P3"[ABMEIC D
+ I "71^72^ZZ^82^QB^DK^DN^DQ^P3"[ABMEIC D
  .S ABMR("NM1",50)=$$MI^ABMUTLN(200,ABM("PRV"))
  ;
  Q
  ;
-70 ;NM106 - Name Prefix (Not used)
+70 ;NM106 - Name Prefix (Not Used)
  S ABMR("NM1",70)=""
  Q
  ;
@@ -134,7 +136,7 @@ LOOP ;LOOP HERE
  .S ABMR("NM1",80)=$$SFX^ABMUTLN(ABMSFILE,ABMSIEN)
  ;
  ; Provider
- I "71^72^73^82^QB^DK^DN^DQ^P3"[ABMEIC D
+ I "71^72^ZZ^82^QB^DK^DN^DQ^P3"[ABMEIC D
  .S ABMR("NM1",50)=$$SFX^ABMUTLN(200,ABM("PRV"))
  ;
  Q
@@ -144,16 +146,22 @@ LOOP ;LOOP HERE
  S ABMR("NM1",90)=""
  I "40^41"[ABMEIC S ABMR("NM1",90)=46
  I ABMEIC=85 S ABMR("NM1",90)="XX"
- I "71^72^73^82^DN^QB^DQ^DK"[ABMEIC S ABMR("NM1",90)="XX"
+ I "71^72^77^ZZ^82^DN^QB^DQ^DK"[ABMEIC S ABMR("NM1",90)="XX"
  I ABMEIC="PR" S ABMR("NM1",90)="PI"
  I ABMEIC="IL" S ABMR("NM1",90)="MI"
- I ABMEIC="FA" S ABMR("NM1",90)="XX"
  Q
  ;
 100 ;NM109 - Identification Code
  S ABMR("NM1",100)=""
  I ABMEIC=40 D
- .S ABMR("NM1",100)=$$RCID^ABMUTLP(ABMP("INS"))
+ .;S ABMR("NM1",100)=$$RCID^ABMUTLP(ABMP("INS"))  ;abm*2.6*8
+ .;start new code abm*2.6*8 HEAT45044
+ .I $D(^ABMRECVR("C",ABMP("INS"))) D
+ ..S ABMCHIEN=$O(^ABMRECVR("C",ABMP("INS"),0))
+ ..S:ABMCHIEN ABMR("NM1",100)=$P($G(^ABMRECVR(ABMCHIEN,1,ABMP("INS"),0)),U,2)
+ .I ABMR("NM1",100)="" S ABMR("NM1",100)=$P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),U,19)
+ .I ABMR("NM1",100)="" S ABMR("NM1",100)=$$RCID^ABMUTLP(ABMP("INS"))
+ .;end new code HEAT45044
  ;
  I ABMEIC=41 D
  .S ABMR("NM1",100)=$P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),U,19)
@@ -166,15 +174,21 @@ LOOP ;LOOP HERE
  .S ABMR("NM1",100)=$P($G(^AUTTLOC(DUZ(2),0)),"^",18)
  ;
  ;attending/operating/other provider
- I "71^72^73^82^DN^QB^DQ^DK^P3"[ABMEIC D
- .I ABMEIC="DN" S ABMR("NM1",100)=$P($G(ABMP("PRV","F",ABMIEN)),U,3) Q
- .I ABMEIC="DQ" S ABMR("NM1",100)=$P($G(ABMP("PRV","S",ABMIEN)),U,2) Q
+ I "71^72^ZZ^82^DN^QB^DQ^DK^P3"[ABMEIC D
+ .;I ABMEIC="DQ" S ABMR("NM1",100)=$P($G(ABMP("PRV","S",ABMIEN)),U,2) Q
  .S ABMR("NM1",100)=$P($$NPI^XUSNPI("Individual_ID",+ABM("PRV")),U) Q
  ;
  ; Payer
  I ABMEIC="PR" D
  .K Y
- .S ABMR("NM1",100)=$$RCID^ABMUTLP(ABMNIEN)
+ .;S ABMR("NM1",100)=$$RCID^ABMUTLP(ABMP("INS"))  ;abm*2.6*8
+ .;start new code abm*2.6*8 HEAT45044
+ .I $D(^ABMRECVR("C",ABMP("INS"))) D
+ ..S ABMCHIEN=$O(^ABMRECVR("C",ABMP("INS"),0))
+ ..S:ABMCHIEN ABMR("NM1",100)=$P($G(^ABMRECVR(ABMCHIEN,1,ABMP("INS"),0)),U,2)
+ .I ABMR("NM1",100)="" S ABMR("NM1",100)=$P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),U,19)
+ .I ABMR("NM1",100)="" S ABMR("NM1",100)=$$RCID^ABMUTLP(ABMP("INS"))
+ .;end new code HEAT45044
  .S:$TR(ABMR("NM1",100)," ")="" ABMR("NM1",100)=99999
  ;
  ; Insured or Subscriber
@@ -184,7 +198,7 @@ LOOP ;LOOP HERE
  .S ABMR("NM1",100)=$$PNUM^ABMUTLP(ABMP("BDFN"))
  ;
  ; Facility
- I ABMEIC="FA" D
+ I ABMEIC="77" D
  .I ABMNPIU="N"!(ABMNPIU="B") D  Q
  ..S ABMLNPI=$S($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,8)'="":$P(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1),U,8),$P($G(^ABMDPARM(ABMP("LDFN"),1,2)),U,12)'="":$P(^ABMDPARM(ABMP("LDFN"),1,2),U,12),1:ABMP("LDFN"))
  ..S ABMR("NM1",100)=$S($P($$NPI^XUSNPI("Organization_ID",+ABMLNPI),U)>0:$P($$NPI^XUSNPI("Organization_ID",+ABMLNPI),U),1:"")

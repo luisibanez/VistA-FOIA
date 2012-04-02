@@ -1,5 +1,5 @@
 ABME5L4 ; IHS/ASDST/DMJ - Header 
- ;;2.6;IHS Third Party Billing;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**6,8**;NOV 12, 2009
  ;Header Segments
  ;
 START ;START HERE
@@ -13,6 +13,7 @@ START ;START HERE
  .D WR^ABMUTL8("DTP")
  I $P(ABMB8,U,2) D  ;accident
  .D EP^ABME8DTP(439,"D8",$P(ABMB8,U,2))
+ .D WR^ABMUTL8("DTP")  ;abm*2.6*8 HEAT40129 - Write DPT segment if accident occurs
  I $D(^ABMDBILL(DUZ(2),ABMP("BDFN"),51)) D
  .S ABMP("51IEN")=0,ABMP("LMDT")=""
  .F  S ABMP("51IEN")=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),51,ABMP("51IEN"))) Q:'ABMP("51IEN")  D  Q:($G(ABMP("LMDT"))'="")
@@ -42,11 +43,11 @@ START ;START HERE
  I $P(ABMB7,U,18) D
  .D EP^ABME5DTP(296,"D8",$P(ABMB7,U,18))
  .D WR^ABMUTL8("DTP")
- I $P(ABMB6,U) D
+ I $P(ABMB6,U),($E(ABMP("BTYP"),1,2)=11) D
  .Q:$P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,4)="Y"&($E($G(ABMP("BTYP")),1,2)'="11")  ;dme billing
  .D EP^ABME8DTP(435,"D8",$P(ABMB6,U))
  .D WR^ABMUTL8("DTP")
- I $P(ABMB6,"^",3) D
+ I $P(ABMB6,"^",3),($E(ABMP("BTYP"),1,2)=11) D
  .D EP^ABME8DTP("096","D8",$P(ABMB6,"^",3))
  .D WR^ABMUTL8("DTP")
  I $P(ABMB7,U,19) D
@@ -122,7 +123,8 @@ START ;START HERE
  .D WR^ABMUTL8("CRC")
  ;health care diagnosis code
  D DXSET^ABMUTL8(ABMP("BDFN"))
- D EP^ABME5HI("BZ")
+ ;D EP^ABME5HI("BZ")
+ D EP^ABME5HI("BK")
  D WR^ABMUTL8("HI")
  ;anesthesia related procedure
  D ANES^ABMUTL8(ABMP("BDFN"))

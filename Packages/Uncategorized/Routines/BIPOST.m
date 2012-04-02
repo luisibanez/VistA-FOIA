@@ -1,5 +1,5 @@
 BIPOST ;IHS/CMI/MWR - POST-INIT ROUTINE; OCT 15, 2010
- ;;8.4;IMMUNIZATION;**2**;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  PATCH 1: Comment out unnecessary post-install routines.  START+14
  ;;  PATCH 2: Set older Flu's to Inactive.  START+19
@@ -25,18 +25,18 @@ START ;EP
  ;---> Set NOS (and a couple other) vaccines to Inactive.
  ;N N F N=105,108,110,113,122,124,130,131,139,142,149,155,157,195 D
  ;---> Set older Flu's to Inactive.
- N N F N=108,148,149,229 D
- .S $P(^AUTTIMM(N,0),U,7)=1
- .S $P(^BITN(N,0),U,7)=1
+ ;N N F N=108,148,149,229 D
+ ;.S $P(^AUTTIMM(N,0),U,7)=1
+ ;.S $P(^BITN(N,0),U,7)=1
  ;
  ;F N=200,205,212,213,214,218,228,234,238,239 D
  ;.S $P(^AUTTIMM(N,0),U,7)=1
  ;.S $P(^BITN(N,0),U,7)=1
  ;
- ;---> Set the following vaccines (ROTA-1,-5) to Active.
- ;N N F N=222,225,235 D
- ;.S $P(^AUTTIMM(N,0),U,7)=0
- ;.S $P(^BITN(N,0),U,7)=0
+ ;---> Set the following vaccines (Comvax) to Active.
+ N N F N=167,224,225,237 D
+ .S $P(^AUTTIMM(N,0),U,7)=0
+ .S $P(^BITN(N,0),U,7)=0
  ;
  ;---> Reset Display Order of Vaccine Groups in BI TABLE VACCINE GROUP File #9002084.93.
  ;S $P(^BISERT(1,0),"^",2)=1
@@ -57,12 +57,15 @@ START ;EP
  ;S $P(^BISERT(16,0),"^",2)=15
  ;S $P(^BISERT(17,0),"^",2)=18
  ;S $P(^BISERT(18,0),"^",2)=11
+ S $P(^BISERT(18,0),"^",5)=0
  ;
  ;---> Standardize the VT-100 Codes in the Terminal Type File.
  ;D ^BIVT100
  ;---> Set new Immserve Path.
- ;NO NEW IMMPATH FOR Imm v8.41.
- ;D IMMPATH
+ ;NO NEW IMMPATH FOR Imm v8.5.
+ D IMMPATH
+ ;---> Check and fix any Lot Numbers with a Status of null.
+ D NULLACT^BILOT1
  ;---> Reindex killed globals.
  ;D REINDEX
  ;---> Update Taxonomies.
@@ -98,7 +101,7 @@ TEXT1 ;EP
  ;;
  ;;                       * CONGRATULATIONS! *
  ;;
- ;;        You have successfully installed Immunization v8.4 Patch 2.
+ ;;          You have successfully installed Immunization v8.5.
  ;;
  ;;
  ;;
@@ -153,8 +156,8 @@ PRINTX(BILINL,BITAB) ;EP
 IMMPATH ;EP
  ;---> Update path for new Immserve files.
  N N,X,Y S Y=$$VERSION^%ZOSV(1) D
- .I Y["Windows" S X="C:\Program Files\Immserve84\" Q
- .I Y["UNIX" S X="/usr/local/immserve84/"
+ .I Y["Windows" S X="C:\Program Files\Immserve85\" Q
+ .I Y["UNIX" S X="/usr/local/immserve85/"
  ;
  S N=0
  F  S N=$O(^BISITE(N)) Q:'N  D

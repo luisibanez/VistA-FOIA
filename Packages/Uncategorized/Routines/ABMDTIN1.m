@@ -1,5 +1,5 @@
 ABMDTIN1 ; IHS/ASDST/DMJ - Maintenance of INSURER FILE part 2 ;   
- ;;2.6;IHS Third Party Billing;**1,6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,6,8**;NOV 12, 2009
  ; IHS/SD/SDR - v2.5 p8 IM13693/IM17856 - Ask for new EMC REFERENCE ID
  ; IHS/SD/SDR - v2.5 p8 - task 8 - Added code for replacement insurer prompts
  ; IHS/SD/SDR - v2.5 p9 - IM19305 - Added itemized question to 837I format
@@ -140,13 +140,16 @@ DIC2 S DA=ABM("VTYP")
  ;end old code start new code FIXPMS10028
  S DR=".04Mode of Export......:" D ^DIE
  K DR
- I ("^11^21^51^28^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) S DR=".18Relationship Code?;.12Itemized UB?.....:;115UB-04 Form Locater 38;109ICD PX on Claim?"
- I ("^3^14^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) S DR=".15Block 24K..........:;.17Block 29...........:;.2Block 33 PIN#......:"
+ ;I ("^11^21^51^28^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) S DR=".18Relationship Code?;.12Itemized UB?.....:;115UB-04 Form Locater 38;109ICD PX on Claim?"  ;abm*2.6*8 5010
+ I ("^11^21^31^51^28^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) S DR=".18Relationship Code?;.12Itemized UB?.....:;115UB-04 Form Locater 38;109ICD PX on Claim?;.125Print meds on 2 lines?"  ;abm*2.6*8 5010
+ ;I ("^3^14^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) S DR=".15Block 24K..........:;.17Block 29...........:;.2Block 33 PIN#......:"  ;abm*2.6*8 HEAT32544
+ I ("^3^14^22^27^32^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) S DR=".15Block 24K..........:;.17Block 29...........:;.2Block 33 PIN#......:"  ;abm*2.6*8 HEAT32544
  D:($G(DR)) ^DIE G XIT:$D(Y)
  ;end new code FIXPMS10028
  I ($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4)=3!($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4)=14)),$P($G(^AUTNINS(ABM("DFN"),2)),U)="D" D
  .S DR="107Dash in block 1A?" D ^DIE
- I $P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,DA,0)),U,12)=1!($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,DA,0)),U,4)=11)!($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,DA,0)),U,4)=28) S DR=".24RX# IN FL44?....." D ^DIE
+ I ("^11^21^31^51^28^"[(U_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_U)),$P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,DA,0)),U,12)=1!($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,DA,0)),U,4)=11)!($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,DA,0)),U,4)=28) D
+ .S DR=".24RX# IN FL44?....." D ^DIE
  S ABM(0)=^ABMNINS(DUZ(2),ABM("DFN"),1,DA,0)
  I $P($G(^ABMNINS(DUZ(2),ABM("DFN"),0)),U,9)="L" S DR="18////@" D ^DIE
  ;

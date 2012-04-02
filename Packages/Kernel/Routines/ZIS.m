@@ -1,13 +1,12 @@
-%ZIS ;SFISC/AC,RWF -- DEVICE HANDLER ;1/24/08  16:06
- ;;8.0;KERNEL;**1016**;APR 1, 2003;Build 5
- ;;8.0;KERNEL;**18,23,69,112,199,191,275,363,440**;JUL 10, 1995;Build 13
+%ZIS ;SFISC/AC,RWF -- DEVICE HANDLER ;01/25/10  17:19
+ ;;8.0;KERNEL;**18,23,69,112,199,191,275,363,440,499,524,1016**;JUL 10, 1995;Build 3
  ;Per VHA Directive 2004-038, this routine should not be modified
- ;ROUTINE CONTAINS IHS MOD
  N %ZISOS,%ZISV
- S U="^",%ZISOS=$G(^%ZOSF("OS")),%ZISV=$G(^%ZOSF("VOL"))
+ S U="^",%ZISOS=$G(^%ZOSF("OS")),%ZISV=$G(^%ZOSF("VOL")),POP=0 ;p524
  ;Check SPOOLER special case first
-INIT I $D(ZTQUEUED),$G(IOT)="SPL",$D(IO)#2,$D(IO(0))#2,IO]"",IO=IO(0),$D(IO(1,IO))#2,%ZISOS["VAX DSM"!(%ZISOS["M/VX"),$G(IOP)[ION!(IOP[IO) K %ZIS,%IS,IOP Q
- ;
+INIT ;I $D(ZTQUEUED),$G(IOT)="SPL",$D(IO)#2,$D(IO(0))#2,IO]"",IO=IO(0),$D(IO(1,IO))#2,%ZISOS["VAX DSM"!(%ZISOS["M/VX"),$G(IOP)[ION!(IOP[IO) K %ZIS,%IS,IOP Q
+ I $G(ZTQUEUED),$G(IOT)="SPL",$D(IOP),$L($G(IO)),IO=$G(IO(0)),$D(IO(1,IO))#2,(IOP[$G(ION)!(IOP[IO)) K %ZIS,%IS,IOP Q  ;p524
+ ;p524 Line above for HD141181.
  I '$D(%ZIS),$D(%IS) M %ZIS=%IS
  S:'($D(%ZIS)#2) %ZIS="M" M %IS=%ZIS ;update %IS for now
  I '$D(^XUTL("XQ",$J,"MIXED OS")) S ^XUTL("XQ",$J,"MIXED OS")=$$PRI^%ZOSV
@@ -17,14 +16,15 @@ INIT I $D(ZTQUEUED),$G(IOT)="SPL",$D(IO)#2,$D(IO(0))#2,IO]"",IO=IO(0),$D(IO(1,IO
  .I $D(ZTIO)#2,ZTIO="" S:%IS'[0 %IS=%IS_"0",%ZIS=%ZIS_"0"
  I '$D(ZTQUEUED),%IS["T",$P($G(IOP),";")="Q" S POP=1 G EXIT^%ZIS1
  N %,%A,%E,%H,%I,%X,%XX,%Y,%Z,%Z1,%Z2,%Z9,%Z90,%Z91,%Z95,%ZISB,%ZTIME,%ZTYPE
- N %ZHFN,%ZISOLD,DTOUT,DUOUT
+ N %ZHFN,%ZISOLD,%ZTOUT,%ZISDTIM,DTOUT,DUOUT
+ S %ZISDTIM=$G(DTIME,300)
  ;Save symbols to restore if don't open a device
  D SYMBOL^%ZISUTL(0,$NA(%ZISOLD))
 A D CLEAN ;(p363) K IO("CLOSE"),IO("HFSIO")
  K IO("P"),IO("Q"),IO("S"),IO("T")
 K2 D K2^%ZIS1
  S %ZISB=%ZIS'["N",(%E,%H,POP)=0,%Y="" S:'$D(IO(0)) IO(0)=$I
- I %ZISOS["VAX DSM",$I["SYS$INPUT:.;" S:%ZIS'[0 %IS=%IS_"0",%ZIS=%ZIS_"0"
+ ;I %ZISOS["VAX DSM",$I["SYS$INPUT:.;" S:%ZIS'[0 %IS=%IS_"0",%ZIS=%ZIS_"0"
  ;I %IS["T"&(%IS["0") S (%H,%E)=0 G ^%ZIS1
  I $D(IOP),IOP=$I!(IOP="HOME")!(0[IOP),$D(^XUTL("XQ",$J,"IO")) D HOME K %IS,%Y,%ZIS,%ZISB,%ZISV,IOP Q
  ;Don't worry about HOME if %ZIS[0
@@ -42,8 +42,7 @@ VIRTUAL ;See if a Virtual Terminal (LAT, TELNET)
  ;Change the MSM check for telnet to work with v4.4
  I %ZISOS["MSM" X "I $P($ZV,""Version "",2)'<3 S %ZISVT=$ZDE(+%ZISVT) I %ZISVT?.E1""~""4.5N.E S %ZISVT=""TELNET"""
  ;-----BEGIN IHS MOD
- Q:$G(%ZISVT)=""
- ;IHS/FJE/04-22-03
+ Q:$G(%ZISVT)=""  ;XU*8.0*1016 - IHS/FJE/04-22-03
  ;-----END IHS MOD
  F %ZISI=$L(%ZISVT):-1:0 D:$D(^%ZIS(1,"C",%ZISVT))  Q:$S('%E:0,'$D(^%ZIS(1,%E,"TYPE")):0,^("TYPE")="VTRM":1,1:0)  S %ZISVT=$E(%ZISVT,1,%ZISI)
  .D VTLKUP Q:$S('%E:0,'$D(^%ZIS(1,%E,"TYPE")):0,^("TYPE")="VTRM":1,1:0)
@@ -64,12 +63,13 @@ HOME ;Entry point to establish IO* variables for home device.
  D CLEAN ;(p363)
  N X I '$D(^XUTL("XQ",$J,"IO")) S IOP="HOME" D ^%ZIS Q
  D RESETVAR
+ I $L($G(IO)),$P($G(IO("HOME")),"^",2)=IO,$D(IO(1,IO)) U IO ;p524
  I '$D(IO("C")),$G(IOM),IO=$I,$D(IO(1,IO)),$D(^%ZOSF("RM")) S X=+IOM X ^("RM")
  Q
  ;IO("Q") is checked by many routines after a call to ^%ZISC, so only clean on call to %ZIS.
 CLEAN ;Cleanup env. Called from %ZISC also.
- I $G(IOT)'="SPL" K IO("DOC"),IO("SPOOL") ;(p446)
- I $G(IOT)'="HFS" K IO("HFSIO") ;p446
+ I $G(IOT)'="SPL" K IO("DOC"),IO("SPOOL") ;(p440)
+ I $G(IOT)'="HFS" K IO("HFSIO") ;p440
  S (IOPAR,IOUPAR)=""
  Q
  ;
@@ -88,7 +88,8 @@ SAVEVAR ;Save home IO* variables, called from XUS1,%ZTMS3
 ZISLPC Q  ;No longer called in Kernel v8.
  ;
 HLP1 G EN1^%ZIS7
-HLP2 N %E,%H,%X,%ZISV,X S %ZISV=$S($D(^%ZOSF("VOL")):^("VOL"),1:"") G EN2^%ZIS7
+HLP2 N %E,%H,%X,%ZISV,X,%ZISDTIM
+ S %ZISDTIM=$G(DTIME,60),%ZISV=$S($D(^%ZOSF("VOL")):^("VOL"),1:"") G EN2^%ZIS7
  ;
 REWIND(IO2,IOT,IOPAR) ;Rewind Device
  N %,X,Y,$ES,$ET S $ET="D REWERR^%ZIS Q 0"

@@ -1,7 +1,8 @@
 BDGADD1 ; IHS/ANMC/LJF - A&D DETAILED PRINT CONT. ;  [ 07/01/2002  10:18 AM ]
- ;;5.3;PIMS;**1003**;MAY 28, 2004
+ ;;5.3;PIMS;**1003,1013**;MAY 28, 2004
  ;IHS/ITSC/LJF 6/2/2005 PATCH 1003 adjusted code under Deaths to match other sections
  ;                                 added code for mulitple admits and discharges
+ ;ihs/cmi/maw  9/14/2011 PATCH 1013 added day surgery
  ;
 PATDATA ;EP; build display lines for patient data
  ; called by INIT^BDGADD
@@ -14,10 +15,10 @@ ADMITS ; build array of admits
  ;    first for inpatients, then observations, then newborns
  NEW SUB,SUB2,TITLE,TITLE2,X,NAME,DFN,IFN,LINE,DATA
  F SUB="ADMIT","DSCH" D
- . F SUB2="I","O","N" D
+ . F SUB2="I","O","N","D" D
  .. ;
  .. ; display total admissions for category
- .. S TITLE=$S(SUB2="I":"Inpatient",SUB2="O":"Observation",1:"Newborn")
+ .. S TITLE=$S(SUB2="I":"Inpatient",SUB2="O":"Observation",SUB2="D":"Day Surgery",1:"Newborn")
  .. S TITLE2=$S(SUB="ADMIT":" Admissions:",1:" Discharges:")
  .. S X=$$COUNT(SUB,SUB2) I X>0 D SET("",.VALMCNT),SET($$PAD(TITLE_TITLE2,25)_X,.VALMCNT)
  .. ;
@@ -108,9 +109,10 @@ COUNT(X,X1) ; returns # of events based on type sent in X and X1
  S PIECE=$S(X="ADMIT":3,X="DSCH":4,1:7)     ;piece in ^BDGCTX node
  S SV=0 F  S SV=$O(^BDGCTX(SV)) Q:'SV  D
  . S SNM=$$GET1^DIQ(45.7,SV,.01)
- . I X'="DEATH",X1="I" Q:SNM="NEWBORN"  Q:SNM["OBSERVATION"
+ . I X'="DEATH",X1="I" Q:SNM="NEWBORN"  Q:SNM["OBSERVATION"  Q:SNM="DAY SURGERY"
  . I X'="DEATH",X1="O" Q:SNM'["OBSERVATION"
  . I X'="DEATH",X1="N" Q:SNM'="NEWBORN"
+ . I X'="DEATH",X1="D" Q:SNM'="DAY SURGERY"
  . ;
  . S N=$G(^BDGCTX(SV,1,BDGT,0))
  . S COUNT=$G(COUNT)+$P(N,U,PIECE)+$P(N,U,PIECE+10)

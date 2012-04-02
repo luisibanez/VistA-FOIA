@@ -1,5 +1,5 @@
 BIREP ;IHS/CMI/MWR - REPORT, GENERIC DISPLAYS; MAY 10, 2010
- ;;8.4;IMMUNIZATION;;MAY 10,2010
+ ;;8.5;IMMUNIZATION;;SEP 01,2011
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  GENERIC DISPLAY TEXT FOR REPORTS.
  ;
@@ -68,7 +68,7 @@ DISP(BILINE,BINOD,BIAR,BIITEM,BIMENU,BINDX,BIAL,BINDNT,BITAB2,BIITEM2,BIAPP) ;EP
  ;
  ;
  ;----------
-DATE(BILINE,BINOD,BIMENU,BIDT,BIDTTX,BIAL,BINDNT,BITAB2) ;EP
+DATE(BILINE,BINOD,BIMENU,BIDT,BIDTTX,BIAL,BINDNT,BITAB2,BISL) ;EP
  ;---> Display Report Parameter Date Range.
  ;---> Parameters:
  ;     1 - BILINE  (ret) Last line# written.
@@ -80,6 +80,7 @@ DATE(BILINE,BINOD,BIMENU,BIDT,BIDTTX,BIAL,BINDNT,BITAB2) ;EP
  ;                       display. (Default is 1.)
  ;     7 - BINDNT  (opt) Left indent (default=4).
  ;     8 - BITAB2  (opt) Second tab postion where ":" occurs (default=36).
+ ;     9 - BISL    (opt) If BISL=1 return slash dates.
  ;
  I '$D(BILINE)!('$D(BINOD))!('$D(BIMENU)) D  Q
  .D ERRCD^BIUTL2(669,,1)
@@ -89,13 +90,13 @@ DATE(BILINE,BINOD,BIMENU,BIDT,BIDTTX,BIAL,BINDNT,BITAB2) ;EP
  S X="" F I=1:1:BINDNT S X=X_" "
  S X=X_$S(BIMENU>9:"",1:" ")_BIMENU_" - "_$G(BIDTTX)
  S X=$$PAD^BIUTL5(X,BITAB2,".")_": "
- S:$G(BIDT) X=X_$$TXDT1^BIUTL5(BIDT)
+ S:$G(BIDT) X=X_$S($G(BISL):$$SLDT1^BIUTL5(BIDT),1:$$TXDT1^BIUTL5(BIDT))
  D WL^BIW(.BILINE,BINOD,X,$S($D(BIAL):+BIAL,1:1))
  Q
  ;
  ;
  ;----------
-DATERNG(BILINE,BINOD,BIMENU,BIBEGDT,BIENDDT,BIAL,BIONELN) ;EP
+DATERNG(BILINE,BINOD,BIMENU,BIBEGDT,BIENDDT,BIAL,BIONELN,BISL) ;EP
  ;---> Display Report Parameter Date Range.
  ;---> Parameters:
  ;     1 - BILINE  (ret) Last line# written.
@@ -106,22 +107,24 @@ DATERNG(BILINE,BINOD,BIMENU,BIBEGDT,BIENDDT,BIAL,BIONELN) ;EP
  ;     6 - BIAL    (opt) Add additional linefeeds after paramter
  ;                       display. (Default is 1.)
  ;     7 - BIONELN (opt) Write beginning and end date on one line.
+ ;     8 - BISL    (opt) If BISL=1 return slash dates.
  ;
  I '$D(BILINE)!('$D(BINOD))!('$D(BIMENU)) D  Q
  .D ERRCD^BIUTL2(669,,1)
  ;
  D WL^BIW(.BILINE,BINOD,,1)
  S:'$G(BIBEGDT) BIBEGDT="" S:'$G(BIENDDT) BIENDDT=""
- N X
- S X="    "_$S(BIMENU>9:"",1:" ")_BIMENU_" - Date Range.............from: "
- S X=X_$$TXDT1^BIUTL5(BIBEGDT)
+ N X S X="    "_$S(BIMENU>9:"",1:" ")_BIMENU_" - Date Range............."
+ ;
  ;---> If not "one line" display, split Date Range into two lines.
  D
  .I '$G(BIONELN) D  Q
+ ..S X=X_"from: "_$S($G(BISL):$$SLDT1^BIUTL5(BIBEGDT),1:$$TXDT1^BIUTL5(BIBEGDT))
  ..D WL^BIW(.BILINE,BINOD,X)
  ..S X="                                  to: "
- .S X=X_" to "
- S X=X_$$TXDT1^BIUTL5(BIENDDT)
+ .S X=X_"....: "_$S($G(BISL):$$SLDT1^BIUTL5(BIBEGDT),1:$$TXDT1^BIUTL5(BIBEGDT))
+ .S X=X_" - "
+ S X=X_$S($G(BISL):$$SLDT1^BIUTL5(BIENDDT),1:$$TXDT1^BIUTL5(BIENDDT))
  D WL^BIW(.BILINE,BINOD,X,$S($D(BIAL):+BIAL,1:1))
  Q
  ;
@@ -174,6 +177,48 @@ EXAMPLES ;EP
  S VALMCNT=BILINE
  S BIRTN="BIREPA"
  Q
+ ;
+ ;
+ ;----------
+PPFILTR(BIDFN,BIHCF,BIQDT,BIUP) ;EP
+ ;---> Patient Population Filter.
+ ;---> Return 1 if Patient should be included; otherwise return 0.
+ ;---> Parameters:
+ ;     1 - BIDFN  (req) Patient IEN.
+ ;     2 - BIQDT  (req) Quarter Ending Date.
+ ;     3 - BIHCF  (req) Health Care Facility array.
+ ;     4 - BIUP   (req) User Population/Group (All, Imm, User, Active).
+ ;
+ ;---> Example:
+ ;---> Filter for standard Patient Population parameter.
+ ;Q:'$$PPFILTR^BIREP(BIDFN,.BIHCF,BIQDT,BIUP)
+ ;
+ ;
+ Q:'$G(BIDFN) 0
+ Q:'$G(BIQDT) 0
+ Q:'$D(BIHCF) 0
+ Q:'$D(BIUP) 0
+ ;
+ ;I BIDFN=4 X ^O
+ ;---> If patient died before the Quarter Ending Date, return 0.
+ N X S X=$$DECEASED^BIUTL1(BIDFN,1) I X Q:X<BIQDT 0
+ ;
+ ;---> If patient does not have an Active HRCN at one or more
+ ;---> of the Health Care Facilities selected (BIUP="r"), return 0.
+ Q:$$HRCN^BIEXPRT2(BIDFN,.BIHCF) 0
+ ;
+ ;---> If Patient Pop filter is for patients Active in the Imm Register,
+ ;---> and patient became Inactive before the Quarter Ending Date, return 0.
+ ;---> (Return 0 for patients whose "Inactive Date"="Not in Register.")
+ I BIUP="i" N X S X=$$INACT^BIUTL1(BIDFN) I X]"" Q:X<BIQDT 0
+ ;
+ ;---> Quit if patient is not in selected User Population Group.
+ ;---> Comment out next 2 lines for TESTING PURPOSES - MWRZZZ.
+ I BIUP="u" Q $$USERPOP^BIUTL6(BIDFN,BIQDT)
+ I BIUP="a" Q $$ACTCLIN^BIUTL6(BIDFN,BIQDT)
+ ;
+ ;---> No reason to exclude patient.
+ Q 1
  ;
  ;
  ;----------

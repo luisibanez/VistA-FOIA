@@ -1,5 +1,5 @@
-BEHOENCX ;MSC/IND/DKM - Encounter Context Support ;05-May-2010 20:01;PLS
- ;;1.1;BEH COMPONENTS;**005003,005004**;Sep 18, 2007
+BEHOENCX ;MSC/IND/DKM - Encounter Context Support ;07-Jul-2011 17:28;PLS
+ ;;1.1;BEH COMPONENTS;**005003,005004,005007**;Sep 18, 2007;Build 1
  ;=================================================================
  ; RPC: Fetch visit data given visit file IEN
  ; Returns hosp loc^visit date^service category^dfn^visit id^locked
@@ -28,11 +28,12 @@ LOCIEN(DATA,LOC) ;EP
  ;        1       2       3       4        5       6        7       8      9
  ;     LOCNAME^LOCABBR^ROOMBED^PROVIEN^PROVNAME^VISITIEN^VISITID^LOCKED^ERRORTXT
 FETCH(DATA,DFN,VSTR,PRV,CREATE) ;EP
- N IEN,X
+ N IEN,X,FETCH
  S PRV=+$G(PRV)
+ S FETCH=$$GET^XPAR("ALL","BEHOENCX PROV ENC FETCH")
  I 'PRV,$$ISPROV^BEHOUSCX S PRV=DUZ
  S IEN=$$VSTR2VIS(DFN,.VSTR,.CREATE,PRV)
- I IEN>0,'PRV D
+ I IEN>0,'PRV,FETCH D
  .D GETPRV2(.X,IEN,1)
  .S PRV=+$O(X(0))
  S DATA=$P($G(^SC(+VSTR,0)),U,1,2)
@@ -220,11 +221,13 @@ INPLOC(DATA,FROM,DIR,MAX) ;EP
  ;  LOC = If not specified, return all locations and all active appointments
  ;        If <0, return all locations and all appointments (except checked-in)
  ;        If >0, return only specified location and only active appointments
+ ;SCEXC = Contains service category types to exclude (defaults to HXI)
  ; .DATA= List of results in format:
  ;        VSTR^LOCNAME^DATE^STATUS^LOCKED^PRV^PRVNM^STANDALONE
-VISITLST(DATA,DFN,BEG,END,LOC) ;EP
+VISITLST(DATA,DFN,BEG,END,LOC,SCEXC) ;EP
  N VAERR,VASD,CNT,IDT,IDT2,STS,DTM,LOCNAM,LOCIEN,VSTR,IEN,LP,XI,XE,X
  S CNT=0,DATA=$$TMPGBL^CIAVMRPC,LOC=+$G(LOC)
+ S SCEXC=$G(SCEXC,"XI")  ;p9 removed H
  S:'$G(BEG) BEG=$$DTSTART
  S:'$G(END) END=$$DTSTOP+.9
  ; Return list of visits for a patient
@@ -239,7 +242,7 @@ VISITLST(DATA,DFN,BEG,END,LOC) ;EP
  ..D GETPRV2(.PRV,IEN,1)
  ..S PRV=$P($G(PRV(+$O(PRV(0)))),U,1,2)
  ..S VSTR=LOCIEN_";"_DTM_";"_X_";"_IEN,STS=$$SET^CIAU(X,$P($G(^DD(9000010,.07,0)),U,3))
- ..S:"HX"'[X CNT=CNT+1,@DATA@(-DTM,CNT)=VSTR_U_LOCNAM_U_DTM_U_STS_U_$$ISLOCKED(IEN)_U_PRV_U_'$D(^SCE("AVSIT",IEN))
+ ..S:SCEXC'[X CNT=CNT+1,@DATA@(-DTM,CNT)=VSTR_U_LOCNAM_U_DTM_U_STS_U_$$ISLOCKED(IEN)_U_PRV_U_'$D(^SCE("AVSIT",IEN))
  Q:LOC>0
  ; Get appointments pending check-in
  S VASD("F")=$S(LOC<0:BEG,BEG<DT:DT,1:BEG)

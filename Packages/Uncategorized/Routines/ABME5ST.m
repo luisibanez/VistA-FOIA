@@ -1,5 +1,5 @@
 ABME5ST ; IHS/ASDST/DMJ - 837 ST Segment (Transaction Set Header) ;    
- ;;2.6;IHS Third Party Billing System;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,8**;NOV 12, 2009
  ;Original;DMJ;07/08/96
  ;
 START ;START HERE
@@ -26,5 +26,8 @@ LOOP ;LOOP HERE
  S ABMR("ST",30)=$$FMT^ABMERUTL(ABMER("CNT"),"4NR")
  Q
 40 ;ST03 - Implementation Convention Reference
- S ABMR("ST",40)="005010X222A1"
+ ;S ABMR("ST",40)="005010X222A1"  ;abm*2.6*8 5010
+ S:ABMP("EXP")=32 ABMR("ST",40)="005010X222A1"  ;abm*2.6*8 5010
+ S:ABMP("EXP")=31 ABMR("ST",40)="005010X223A2"  ;abm*2.6*8 5010
+ S:ABMP("EXP")=33 ABMR("ST",40)="005010X224A2"  ;abm*2.6*8 5010
  Q

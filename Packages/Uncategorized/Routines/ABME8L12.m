@@ -1,5 +1,5 @@
 ABME8L12 ; IHS/ASDST/DMJ - Header 
- ;;2.6;IHS 3P BILLING SYSTEM;**6**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8**;NOV 12, 2009
  ;Header Segments
  ;
  ; IHS/SD/SDR - v2.5 p8 - IM12246/IM17548 - Added code to do CLIA number REF segment
@@ -46,6 +46,14 @@ LOOP ;
  .D ^ABME8MEA
  .D WR^ABMUTL8("MEA")
  ;I (($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>79999)&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<90000))!($P(ABMRV(ABMI,ABMJ,ABMK),U,2)="G0107") D  ;abm*2.6*6 HEAT29380
+ ;start new code abm*2.6*8 HEAT31238
+ ;mammography cert number
+ I (($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>77050)&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<77060)) D
+ .Q:ABMP("CLIN")=72  ;don't write if clinic is mammography; cert# already written for claim
+ .Q:$P($G(^ABMDPARM(ABMP("LDFN"),1,5)),U,4)=""  ;no cert#
+ .D EP^ABME8REF("EW")
+ .D WR^ABMUTL8("REF")
+ ;end new code HEAT31238
  I (($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>79999)&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<90000))!($E($P(ABMRV(ABMI,ABMJ,ABMK),U,2))="G") D  ;abm*2.6*6 HEAT29380
  .S ABMCLIA="SV"
  .I $G(ABMOUTLB)'=1 D
